@@ -1,0 +1,27 @@
+schema_version: 1
+destinations:
+  - slug: singapore
+    display_name: Singapore
+    route_type: national
+    implementation_status: planned
+    sources: []
+
+  - slug: japan
+    display_name: Japan
+    route_type: national
+    implementation_status: planned
+    sources: []
+
+  - slug: united-states
+    display_name: United States
+    route_type: national
+    implementation_status: planned
+    sources: []
+
+  - slug: france
+    display_name: France
+    route_type: schengen_member
+    schengen_member: France
+    implementation_status: planned
+    sources: []
+

@@ -1,0 +1,19 @@
+.DS_Store
+.env
+.idea/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+__pycache__/
+*.egg-info/
+*.py[cod]
+build/
+dist/
+htmlcov/
+.coverage
+
+# All runtime research data is disposable and must remain local.
+var/cache/*
+!var/cache/.gitkeep
+
