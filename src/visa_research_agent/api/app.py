@@ -1,9 +1,11 @@
 """FastAPI application factory and default ASGI application."""
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from visa_research_agent import __version__
 from visa_research_agent.api.routes import router
+from visa_research_agent.api.templates import STATIC_DIRECTORY
 from visa_research_agent.config.settings import settings
 
 
@@ -18,6 +20,7 @@ def create_app() -> FastAPI:
             "information and never guarantees visa eligibility or approval."
         ),
     )
+    application.mount("/static", StaticFiles(directory=str(STATIC_DIRECTORY)), name="static")
     application.include_router(router)
     return application
 

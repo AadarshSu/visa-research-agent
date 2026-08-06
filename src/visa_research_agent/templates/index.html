@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A bounded, source-backed personal visa research plan.">
+    <title>Visa Research Desk</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    <script src="{{ url_for('static', path='/app.js') }}" defer></script>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="masthead">
+        <a class="wordmark" href="/" aria-label="Visa Research Desk home">
+          <span class="wordmark-mark">VR</span>
+          <span>Visa Research Desk</span>
+        </a>
+        <span class="mode-chip"><span class="status-dot"></span>{{ source_mode }} mode</span>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="page-title">
+          <p class="eyebrow">Personal travel research · Edinburgh, UK</p>
+          <h1 id="page-title">Turn official guidance into a practical visa plan.</h1>
+          <p class="hero-copy">
+            This offline vertical slice uses a saved Singapore source snapshot for an ordinary
+            Indian passport holder travelling for tourism. It makes no live requests.
+          </p>
+
+          <form id="plan-form" class="research-form">
+            <div class="field-group">
+              <label for="destination">Destination</label>
+              <select id="destination" name="destination">
+                {% for destination in destinations %}
+                  <option
+                    value="{{ destination.slug }}"
+                    {% if destination.implementation_status != 'available' %}disabled{% endif %}
+                  >
+                    {{ destination.display_name }}{% if destination.implementation_status != 'available' %} — future phase{% endif %}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <button id="generate-button" type="submit">Generate fixture plan</button>
+          </form>
+
+          <div id="progress" class="progress" role="status" aria-live="polite" hidden>
+            <span class="progress-track"><span class="progress-bar"></span></span>
+            <span>Reading saved official-source snapshots…</span>
+          </div>
+          <p id="error-message" class="error-message" role="alert" hidden></p>
+        </section>
+
+        <section id="results" class="results" aria-live="polite" aria-busy="false">
+          <div class="empty-state">
+            <p class="eyebrow">Fixture ready</p>
+            <h2>Singapore is available for an offline test run.</h2>
+            <p>Generate a plan to inspect its decision, evidence, application route and caveats.</p>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <p>
+          Research aid only. Requirements can change; confirm everything with the responsible
+          authority before applying. A visa never guarantees entry or approval.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

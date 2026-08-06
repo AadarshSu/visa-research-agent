@@ -25,6 +25,23 @@ def test_france_has_a_country_specific_schengen_route() -> None:
     assert france.schengen_member == "France"
 
 
+def test_singapore_has_bounded_official_sources() -> None:
+    singapore = load_destination_registry().get("singapore")
+
+    assert singapore is not None
+    assert singapore.implementation_status == "available"
+    assert len(singapore.sources) == 6
+    assert {source.url.host for source in singapore.sources} == {
+        "www.ica.gov.sg",
+        "www.mfa.gov.sg",
+        "london.mfa.gov.sg",
+        "visa.vfsglobal.com",
+    }
+    assert [
+        source.source_id for source in singapore.sources if source.research_pass == "follow_up"
+    ] == ["sg_vfs_uk_application"]
+
+
 def test_registry_rejects_duplicate_destination_slugs(tmp_path: Path) -> None:
     duplicate_config = tmp_path / "destinations.yaml"
     duplicate_config.write_text(

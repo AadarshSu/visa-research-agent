@@ -3,8 +3,44 @@ destinations:
   - slug: singapore
     display_name: Singapore
     route_type: national
-    implementation_status: planned
-    sources: []
+    implementation_status: available
+    sources:
+      - source_id: sg_ica_visa_requirement_overview
+        title: Check if You Need an Entry Visa
+        url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements
+        authority: Singapore Immigration & Checkpoints Authority
+        kind: immigration_authority
+        research_pass: primary
+      - source_id: sg_ica_india_visa_details
+        title: Visa Requirements for Indian Travel Documents
+        url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
+        authority: Singapore Immigration & Checkpoints Authority
+        kind: immigration_authority
+        research_pass: primary
+      - source_id: sg_mfa_check_visa
+        title: Check if You Need a Singapore Visa
+        url: https://www.mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa/
+        authority: Singapore Ministry of Foreign Affairs
+        kind: foreign_ministry
+        research_pass: primary
+      - source_id: sg_mfa_london_visa_information
+        title: Visa Information — Singapore High Commission in London
+        url: https://london.mfa.gov.sg/visa-information/
+        authority: High Commission of the Republic of Singapore in London
+        kind: embassy_or_high_commission
+        research_pass: primary
+      - source_id: sg_ica_entry_requirements
+        title: Entering Singapore — General Entry Requirements
+        url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore
+        authority: Singapore Immigration & Checkpoints Authority
+        kind: immigration_authority
+        research_pass: primary
+      - source_id: sg_vfs_uk_application
+        title: Singapore Visa Application in the United Kingdom
+        url: https://visa.vfsglobal.com/gbr/en/sgp/
+        authority: VFS Global, appointed by the Singapore High Commission in London
+        kind: official_application_provider
+        research_pass: follow_up
 
   - slug: japan
     display_name: Japan
@@ -24,4 +60,3 @@ destinations:
     schengen_member: France
     implementation_status: planned
     sources: []
-

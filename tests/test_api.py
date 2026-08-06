@@ -37,6 +37,17 @@ async def test_destinations_endpoint(client: httpx.AsyncClient) -> None:
         "united-states",
         "france",
     ]
+    assert response.json()["destinations"][0]["status"] == "available"
+
+
+@pytest.mark.anyio
+async def test_research_interface_is_available(client: httpx.AsyncClient) -> None:
+    response = await client.get("/")
+
+    assert response.status_code == 200
+    assert 'id="plan-form"' in response.text
+    assert "Generate fixture plan" in response.text
+    assert "Singapore" in response.text
 
 
 @pytest.mark.anyio
@@ -51,10 +62,28 @@ async def test_unsupported_destination_returns_helpful_error(client: httpx.Async
 
 
 @pytest.mark.anyio
-async def test_supported_but_unimplemented_destination_is_explicit(
+async def test_singapore_fixture_plan_is_returned(
     client: httpx.AsyncClient,
 ) -> None:
     response = await client.post("/visa-plans", json={"destination": " Singapore "})
 
+    assert response.status_code == 200
+    plan = response.json()
+    assert plan["destination"] == "Singapore"
+    assert plan["visa_required"] is True
+    assert plan["visa_type"] == "Entry visa for a social visit (tourism)"
+    assert len(plan["requirements"]) == 8
+    assert len(plan["sources"]) == 5
+    assert plan["last_checked"] == "2026-08-06T11:30:00Z"
+
+
+@pytest.mark.anyio
+async def test_supported_but_unimplemented_destination_is_explicit(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post("/visa-plans", json={"destination": "japan"})
+
     assert response.status_code == 503
-    assert "Phase 2" in response.json()["detail"]["message"]
+    assert response.json()["detail"]["message"] == (
+        "Visa-plan generation for Japan is not available yet."
+    )

@@ -1,17 +1,35 @@
-"""HTTP routing kept deliberately thin around the future workflow."""
+"""HTTP routing kept deliberately thin around the research workflow."""
 
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
 
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse
+
+from visa_research_agent.api.dependencies import get_visa_plan_service
 from visa_research_agent.api.schemas import (
     DestinationsResponse,
     DestinationSummary,
     HealthResponse,
     VisaPlanRequest,
 )
+from visa_research_agent.api.templates import templates
 from visa_research_agent.config.loader import get_destination_registry
+from visa_research_agent.config.traveller import TRAVELLER_PROFILE
 from visa_research_agent.domain.models import VisaPlan
+from visa_research_agent.research.errors import VisaResearchError
+from visa_research_agent.research.service import VisaPlanService
 
 router = APIRouter()
+
+
+@router.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def index(request: Request) -> HTMLResponse:
+    registry = get_destination_registry()
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {"destinations": registry.destinations, "source_mode": "fixture"},
+    )
 
 
 @router.get("/health", response_model=HealthResponse, tags=["system"])
@@ -44,7 +62,10 @@ async def destinations() -> DestinationsResponse:
     },
     tags=["visa research"],
 )
-async def create_visa_plan(request: VisaPlanRequest) -> VisaPlan:
+async def create_visa_plan(
+    request: VisaPlanRequest,
+    service: Annotated[VisaPlanService, Depends(get_visa_plan_service)],
+) -> VisaPlan:
     registry = get_destination_registry()
     destination = registry.get(request.destination)
     if destination is None:
@@ -57,12 +78,20 @@ async def create_visa_plan(request: VisaPlanRequest) -> VisaPlan:
             },
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-        detail={
-            "message": (
-                f"Visa-plan generation for {destination.display_name} is not available yet. "
-                "Singapore will be implemented in Phase 2."
-            )
-        },
-    )
+    if destination.implementation_status != "available":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "message": (
+                    f"Visa-plan generation for {destination.display_name} is not available yet."
+                )
+            },
+        )
+
+    try:
+        return await service.generate(destination, TRAVELLER_PROFILE)
+    except VisaResearchError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": "The offline fixture plan could not be generated safely."},
+        ) from exc

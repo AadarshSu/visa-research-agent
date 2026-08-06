@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     app_name: str = "Visa Research Agent"
     source_mode: Literal["fixtures", "live"] = "fixtures"
     cache_directory: Path = Path("var/cache")
+    maximum_fixture_characters: int = 50_000
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None
 

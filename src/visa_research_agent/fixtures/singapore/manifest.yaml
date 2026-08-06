@@ -1,0 +1,24 @@
+schema_version: 1
+destination: singapore
+captured_at: 2026-08-06T11:30:00Z
+sources:
+  - source_id: sg_ica_visa_requirement_overview
+    fixture_file: ica_visa_requirement_overview.txt
+    supporting_excerpt: >-
+      India appears in ICA's list of travel documents requiring a Singapore entry visa.
+  - source_id: sg_ica_india_visa_details
+    fixture_file: ica_india_visa_details.txt
+    supporting_excerpt: >-
+      Indian ordinary-passport applicants need Form 14A, a recent photograph and a passport biodata-page copy.
+  - source_id: sg_mfa_check_visa
+    fixture_file: mfa_check_visa.txt
+    supporting_excerpt: >-
+      Visitors should have six months' travel-document validity at departure, return or onward tickets when applicable, and sufficient funds.
+  - source_id: sg_mfa_london_visa_information
+    fixture_file: mfa_london_visa_information.txt
+    supporting_excerpt: >-
+      UK applications are submitted through the authorised VFS Global centre in London, not at the High Commission.
+  - source_id: sg_ica_entry_requirements
+    fixture_file: ica_entry_requirements.txt
+    supporting_excerpt: >-
+      Travellers need six months' passport validity and must submit the free SG Arrival Card before arrival.

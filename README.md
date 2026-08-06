@@ -6,22 +6,25 @@ not guarantee eligibility, completeness, or visa approval.
 
 ## Current status
 
-Phase 1 provides the project foundation:
+Phase 2 now provides the first end-to-end destination in offline fixture mode:
 
 - strict domain and configuration models;
 - the fixed traveller profile;
-- a country-specific destination registry;
-- FastAPI health, destination, and visa-plan endpoint skeletons;
-- fully offline foundational tests and CI checks.
+- a country-specific destination registry with verified Singapore official-source URLs;
+- saved, paraphrased Singapore source snapshots dated 6 August 2026;
+- deterministic structured extraction with no model or network calls;
+- a working Singapore `POST /visa-plans` response;
+- a small Jinja and vanilla JavaScript research interface;
+- fully offline tests and CI checks.
 
-Research, model extraction, LangGraph routing, caching, and the Jinja interface are intentionally
-deferred to the later approved phases. Until a destination is implemented, `POST /visa-plans`
-returns a clear `503 Service Unavailable` response.
+Live retrieval, OpenAI-backed extraction, caching and LangGraph routing remain intentionally
+deferred. Japan, the United States and France return a clear `503 Service Unavailable` response
+until their later destination phases.
 
 ## Requirements
 
 - Python 3.12 or newer
-- An OpenAI API key is **not** required for Phase 1 or for tests
+- An OpenAI API key is **not** required for fixture mode or for tests
 
 ## Local setup
 
@@ -39,7 +42,8 @@ Run the API:
 uvicorn visa_research_agent.api.app:app --reload
 ```
 
-The API documentation is available at <http://127.0.0.1:8000/docs>.
+Open the research interface at <http://127.0.0.1:8000/>. The API documentation is available at
+<http://127.0.0.1:8000/docs>.
 
 Run the quality checks:
 
@@ -54,8 +58,8 @@ pytest
 
 - `GET /health` reports application health.
 - `GET /destinations` lists the four configured destinations and their implementation status.
-- `POST /visa-plans` validates a destination request. Plan generation begins with the Singapore
-  vertical slice in Phase 2.
+- `POST /visa-plans` generates the validated Singapore fixture plan and rejects unsupported or
+  not-yet-implemented destinations clearly.
 
 Example request:
 
@@ -65,16 +69,23 @@ Example request:
 }
 ```
 
+The source timestamp in the response is the saved snapshot time, not the current time. Fixture
+mode deliberately demonstrates the complete product shape without presenting the result as live
+research.
+
 ## Configuration
 
 The personal traveller settings are deliberately isolated in
 `src/visa_research_agent/config/traveller.py`. Do not add passport numbers or other sensitive
 identity data.
 
-All destinations and, in later phases, all official starting URLs live in
+All destinations and official starting URLs live in
 `src/visa_research_agent/config/destinations.yaml`. France is modelled as its own Schengen member
 route so additional countries can be introduced without a generic, inaccurate “Schengen” route.
 
+The saved Singapore evidence and deterministic output template live under
+`src/visa_research_agent/fixtures/singapore/`. The source text is paraphrased, treated as untrusted
+evidence, and never allowed to control application behaviour.
+
 Runtime cache files will live under `var/cache/`. The directory contents are disposable and
 ignored by Git.
-

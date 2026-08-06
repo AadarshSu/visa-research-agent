@@ -35,7 +35,9 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
+"visa_research_agent" = ["static/*.css", "static/*.js", "templates/*.html"]
 "visa_research_agent.config" = ["*.yaml"]
+"visa_research_agent.fixtures.singapore" = ["*.txt", "*.yaml"]
 
 [tool.pytest.ini_options]
 addopts = "-q"
@@ -52,4 +54,3 @@ select = ["B", "E", "F", "I", "UP"]
 python_version = "3.12"
 strict = true
 files = ["src", "tests"]
-
