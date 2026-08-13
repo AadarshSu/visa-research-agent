@@ -67,8 +67,7 @@ a {
 }
 
 .mode-chip,
-.decision-chip,
-.category-label {
+.decision-chip {
   display: inline-flex;
   gap: 8px;
   align-items: center;
@@ -327,49 +326,24 @@ button:disabled {
   line-height: 1.5;
 }
 
-.requirement-group + .requirement-group {
-  margin-top: 34px;
-}
-
-.category-label {
-  margin-bottom: 14px;
-  padding: 7px 10px;
-  color: var(--green);
-  background: var(--green-soft);
-}
-
-.category-label.conditional {
-  color: var(--amber);
-  background: var(--amber-soft);
-}
-
-.category-label.recommended {
-  color: var(--muted);
-  background: #ecece6;
-}
-
-.requirement-list,
-.source-list {
+.requirement-list {
   display: grid;
   gap: 12px;
 }
 
-.requirement-card,
-.source-card {
+.requirement-card {
   padding: 20px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #fff;
 }
 
-.requirement-card h3,
-.source-card h3 {
+.requirement-card h3 {
   margin: 0 0 8px;
   font-size: 17px;
 }
 
-.requirement-card p,
-.source-card p {
+.requirement-card p {
   margin: 6px 0;
   color: var(--muted);
   line-height: 1.55;
@@ -379,20 +353,82 @@ button:disabled {
   font-size: 14px;
 }
 
-.citations {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+/* One card for every outgoing link. Action and evidence share the same shape;
+   only the role label and a subtle left accent tell them apart. */
+.link-cards {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0 0;
 }
 
-.citation {
-  padding: 5px 8px;
-  border-radius: 7px;
-  background: var(--green-soft);
-  font-size: 12px;
-  font-weight: 700;
+.link-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 760px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  border-radius: 12px;
+  color: var(--ink);
+  background: #fff;
   text-decoration: none;
+  transition: background 140ms ease, transform 140ms ease;
+}
+
+.link-card:hover {
+  background: var(--green-soft);
+  transform: translateY(-1px);
+}
+
+.link-card--action {
+  border-left-color: var(--green);
+}
+
+.link-card--evidence {
+  border-left-color: var(--line);
+}
+
+.link-card-body {
+  display: grid;
+  gap: 3px;
+}
+
+.link-card-role {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.link-card--action .link-card-role {
+  color: var(--green);
+}
+
+.link-card--evidence .link-card-role {
+  color: var(--muted);
+}
+
+.link-card-title {
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.link-card-sub {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.link-card-arrow {
+  flex: none;
+  color: var(--green);
+  font-weight: 700;
+}
+
+.evidence-eyebrow {
+  margin: 22px 0 12px;
 }
 
 .steps {
@@ -409,7 +445,11 @@ button:disabled {
   grid-template-columns: 40px 1fr;
   gap: 14px;
   align-items: start;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
   color: var(--muted);
+  background: #fff;
   line-height: 1.55;
   counter-increment: steps;
 }
@@ -425,6 +465,25 @@ button:disabled {
   content: counter(steps, decimal-leading-zero);
   font-size: 11px;
   font-weight: 800;
+}
+
+.step-content h3 {
+  margin: 2px 0 8px;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.step-content > p:not(.step-timing) {
+  margin: 0;
+}
+
+.step-timing {
+  margin: 0 0 7px;
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .reliability-grid {
@@ -450,7 +509,6 @@ button:disabled {
   line-height: 1.6;
 }
 
-.source-meta,
 .checked-at {
   font-size: 13px;
 }

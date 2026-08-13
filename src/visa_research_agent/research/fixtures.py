@@ -17,7 +17,7 @@ from visa_research_agent.domain.models import (
     StrictModel,
     TravellerProfile,
     VisaPlan,
-    VisaRequirement,
+    VisaPlanDraft,
 )
 from visa_research_agent.research.errors import FixtureDataError
 
@@ -42,18 +42,6 @@ class FixtureManifest(StrictModel):
         if len(source_ids) != len(set(source_ids)):
             raise ValueError("fixture source IDs must be unique")
         return self
-
-
-class FixturePlanTemplate(StrictModel):
-    destination: str
-    visa_required: bool | None
-    visa_type: str | None
-    explanation: str
-    where_to_apply: ApplicationLocation | None
-    requirements: list[VisaRequirement]
-    application_steps: list[str]
-    unresolved_questions: list[str]
-    conflicts: list[str]
 
 
 def _fixture_directory(destination_slug: str) -> Any:
@@ -140,21 +128,35 @@ class FixtureVisaPlanExtractor:
             raise FixtureDataError("Structured extraction requires at least one source")
 
         fixture_directory = _fixture_directory(destination.slug)
-        template = FixturePlanTemplate.model_validate(
-            _load_yaml(fixture_directory.joinpath("plan.yaml"))
-        )
+        template = VisaPlanDraft.model_validate(_load_yaml(fixture_directory.joinpath("plan.yaml")))
         if template.destination != destination.display_name:
             raise FixtureDataError("Fixture plan destination does not match configuration")
 
+        application_source_ids = set(destination.application_document_source_ids)
+        if not application_source_ids:
+            raise FixtureDataError("No application document sources are configured")
+        if any(
+            not application_source_ids.intersection(requirement.source_ids)
+            for requirement in template.requirements
+        ):
+            raise FixtureDataError("Fixture checklist contains a non-application document source")
+
         references = [fetched_source.source for fetched_source in fetched_sources]
         last_checked = max(reference.retrieved_at for reference in references)
+        where_to_apply = (
+            ApplicationLocation.model_validate(template.where_to_apply.model_dump())
+            if template.where_to_apply is not None
+            else None
+        )
         return VisaPlan(
             destination=template.destination,
             visa_required=template.visa_required,
             visa_type=template.visa_type,
             explanation=template.explanation,
-            where_to_apply=template.where_to_apply,
+            decision_source_ids=template.decision_source_ids,
+            where_to_apply=where_to_apply,
             requirements=template.requirements,
+            application_document_source_ids=destination.application_document_source_ids,
             application_steps=template.application_steps,
             sources=references,
             unresolved_questions=template.unresolved_questions,

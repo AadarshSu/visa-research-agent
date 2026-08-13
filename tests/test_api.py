@@ -4,6 +4,8 @@ import httpx
 import pytest
 
 from visa_research_agent.api.app import create_app
+from visa_research_agent.api.dependencies import get_visa_plan_service
+from visa_research_agent.config.settings import settings
 
 
 @pytest.fixture
@@ -12,10 +14,13 @@ def anyio_backend() -> str:
 
 
 @pytest.fixture
-async def client() -> AsyncIterator[httpx.AsyncClient]:
+async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[httpx.AsyncClient]:
+    monkeypatch.setattr(settings, "extraction_mode", "fixture")
+    get_visa_plan_service.cache_clear()
     transport = httpx.ASGITransport(app=create_app())
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
         yield test_client
+    get_visa_plan_service.cache_clear()
 
 
 @pytest.mark.anyio
@@ -45,7 +50,10 @@ async def test_research_interface_is_available(client: httpx.AsyncClient) -> Non
     response = await client.get("/")
 
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
     assert 'id="plan-form"' in response.text
+    assert "/static/styles.css?v=" in response.text
+    assert "/static/app.js?v=" in response.text
     assert "Generate fixture plan" in response.text
     assert "Singapore" in response.text
 
@@ -72,7 +80,27 @@ async def test_singapore_fixture_plan_is_returned(
     assert plan["destination"] == "Singapore"
     assert plan["visa_required"] is True
     assert plan["visa_type"] == "Entry visa for a social visit (tourism)"
-    assert len(plan["requirements"]) == 8
+    assert plan["requirements"]
+    assert plan["application_document_source_ids"] == ["sg_ica_india_visa_details"]
+    assert all("category" not in requirement for requirement in plan["requirements"])
+    assert all(
+        "sg_ica_india_visa_details" in requirement["source_ids"]
+        for requirement in plan["requirements"]
+    )
+    assert 4 <= len(plan["application_steps"]) <= 8
+    assert all(
+        {
+            "title",
+            "action",
+            "timing",
+            "source_ids",
+            "link_target",
+            "link_source_id",
+        }
+        == step.keys()
+        for step in plan["application_steps"]
+    )
+    assert any(step["link_target"] == "application_route" for step in plan["application_steps"])
     assert len(plan["sources"]) == 5
     assert plan["last_checked"] == "2026-08-06T11:30:00Z"
 

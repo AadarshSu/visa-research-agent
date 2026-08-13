@@ -5,63 +5,100 @@ explanation: >-
   An ordinary Indian passport is visa-required for a tourist visit to Singapore. The diplomatic,
   official and service-passport exemptions do not apply to this profile. A visa permits travel to
   seek entry; it does not guarantee admission or determine the length of stay.
+decision_source_ids: [sg_ica_visa_requirement_overview, sg_ica_india_visa_details]
 where_to_apply:
   authority: VFS Global, appointed by the Singapore High Commission in London
   application_method: Book an appointment and submit through the authorised UK visa application centre
   location: 66 Wilson Street, London EC2A 2BT
   application_url: https://visa.vfsglobal.com/gbr/en/sgp/
+  source_ids: [sg_mfa_london_visa_information]
 requirements:
   - name: Signed Form 14A
-    category: mandatory
     description: Complete and sign Singapore's application form for an entry visa.
     reason_it_applies: The traveller is applying for an entry visa for a tourism social visit.
     source_ids: [sg_ica_india_visa_details]
   - name: Recent passport-sized colour photograph
-    category: mandatory
     description: Provide a photograph taken within the previous three months that meets ICA guidance.
     reason_it_applies: ICA lists a recent photograph for Indian travel-document applications.
     source_ids: [sg_ica_india_visa_details]
   - name: Passport biodata-page copy
-    category: mandatory
     description: Provide a copy of the biodata page from a passport valid for at least six months.
     reason_it_applies: The fixed profile uses an ordinary Indian passport.
     source_ids: [sg_ica_india_visa_details, sg_mfa_check_visa, sg_ica_entry_requirements]
   - name: Official English translations
-    category: conditional
     description: Supply originals, copies and accepted official translations for documents not in English.
     reason_it_applies: This only applies if a supporting document is not already in English.
     source_ids: [sg_ica_india_visa_details]
-  - name: Form V39A or additional supporting documents
-    category: conditional
+  - name: Form V39A or case-specific supporting documents
     description: A Letter of Introduction or other evidence may be requested case by case.
     reason_it_applies: ICA does not state that this is required for every Indian applicant.
     source_ids: [sg_ica_india_visa_details]
-  - name: Yellow-fever vaccination certificate
-    category: conditional
-    description: Carry a valid certificate when recent travel or qualifying transit involved a risk country.
-    reason_it_applies: The fixed profile does not include the traveller's recent travel history.
-    source_ids: [sg_ica_entry_requirements]
-  - name: Confirmed onward or return travel evidence
-    category: recommended
-    description: Keep evidence of onward or return travel available for entry checks.
-    reason_it_applies: This is a general entry expectation for a short-term tourist.
-    source_ids: [sg_mfa_check_visa, sg_ica_entry_requirements]
-  - name: Evidence of sufficient funds
-    category: recommended
-    description: Keep suitable evidence that the trip can be funded.
-    reason_it_applies: ICA identifies sufficient funds as an expectation for short-term visitors.
-    source_ids: [sg_mfa_check_visa, sg_ica_entry_requirements]
 application_steps:
-  - Confirm that the passport will meet the six-month validity requirement for the intended trip.
-  - Complete and sign Form 14A, obtain a compliant recent photograph and copy the passport biodata page.
-  - Prepare official translations and Form V39A or other supporting evidence if they apply or are requested.
-  - Apply within 30 days before arrival and book a submission appointment through the authorised VFS UK link.
-  - Attend the VFS centre at 66 Wilson Street, London, submit the application and pay the stated route fees.
-  - Allow at least the stated three-working-day processing period, while recognising that some cases take longer.
-  - If approved, obtain the e-Visa through the submitting agent and check its details before travel.
-  - Submit the free SG Arrival Card within three days before arrival, including the day of arrival; it is separate from the visa.
+  - title: Confirm passport validity
+    action: >-
+      Check that the passport covers at least six months from entry. Because official pages use
+      slightly different reference points, verify the calculation against the intended trip dates.
+    timing: Before booking an appointment or committing to travel.
+    source_ids: [sg_ica_india_visa_details, sg_mfa_check_visa, sg_ica_entry_requirements]
+    link_target: source
+    link_source_id: sg_ica_india_visa_details
+  - title: Prepare the application documents
+    action: >-
+      Complete and sign Form 14A, prepare the recent photograph and passport copy, and add official
+      translations or Form V39A only when relevant or requested.
+    timing: Before opening the appointment-booking flow.
+    source_ids: [sg_ica_india_visa_details]
+    link_target: source
+    link_source_id: sg_ica_india_visa_details
+  - title: Verify the VFS account and return process
+    action: >-
+      Open the official UK application route and confirm account or sign-in requirements, extra UK
+      documents, whether originals are retained, and the collection or courier process. The saved
+      evidence does not establish these details.
+    timing: Before booking; begin within 30 days before the intended arrival.
+    source_ids: [sg_mfa_london_visa_information, sg_ica_india_visa_details]
+    link_target: application_route
+    link_source_id: null
+  - title: Book the London appointment
+    action: >-
+      Use the authorised VFS UK route to choose an available appointment at 66 Wilson Street,
+      London EC2A 2BT.
+    timing: Within 30 days before arrival, subject to VFS appointment availability.
+    source_ids: [sg_mfa_london_visa_information, sg_ica_india_visa_details]
+    link_target: application_route
+    link_source_id: null
+  - title: Attend and submit
+    action: >-
+      Attend VFS at the booked time, submit the application documents and pay the stated £19 visa
+      fee plus £13.50 VFS processing fee.
+    timing: At the booked appointment time.
+    source_ids: [sg_mfa_london_visa_information]
+    link_target: application_route
+    link_source_id: null
+  - title: Monitor the decision
+    action: >-
+      Follow the submitting agent's updates. ICA describes three working days excluding submission
+      day as typical, but some cases take longer and VFS-specific timing is not established here.
+    timing: After submission; do not treat the typical period as a guaranteed deadline.
+    source_ids: [sg_ica_india_visa_details]
+    link_target: source
+    link_source_id: sg_ica_india_visa_details
+  - title: Obtain and check the e-Visa
+    action: >-
+      If approved, obtain the e-Visa from the submitting agent and verify its details before travel.
+    timing: After approval and before departure.
+    source_ids: [sg_ica_india_visa_details]
+    link_target: source
+    link_source_id: sg_ica_india_visa_details
+  - title: Submit the SG Arrival Card
+    action: Submit the free SG Arrival Card separately from the visa application.
+    timing: Within the three days before arrival, including the day of arrival.
+    source_ids: [sg_ica_entry_requirements]
+    link_target: source
+    link_source_id: sg_ica_entry_requirements
 unresolved_questions:
-  - The JavaScript-only VFS page may specify additional UK submission documents, appointment availability or handling instructions not captured by this fixture.
+  - The JavaScript-only VFS page may specify account setup, additional UK submission documents, appointment availability or handling instructions not captured by this fixture.
+  - The saved sources do not say whether VFS retains or returns the passport or other originals, or how any collection or courier process works.
   - ICA may request Form V39A or other supporting documents case by case; this cannot be decided from the fixed profile.
   - Recent travel history is not stored, so yellow-fever certificate applicability cannot be determined.
   - The fixed profile does not contain an itinerary, so onward-ticket details cannot be confirmed.

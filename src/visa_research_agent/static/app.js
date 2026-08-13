@@ -30,26 +30,71 @@ function panel(title, eyebrow) {
   return { container, header };
 }
 
-function renderCitations(sourceIds, sourceMap) {
-  const citations = element("div", "citations");
-  sourceIds.forEach((sourceId) => {
-    const source = sourceMap.get(sourceId);
-    if (source) citations.append(externalLink(source.title, source.url, "citation"));
+function sourceSubtext(source) {
+  const retrieved = new Date(source.retrieved_at).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
-  return citations;
+  return `${source.authority} · retrieved ${retrieved}`;
 }
 
-function renderDecision(plan) {
+// One card component for every outgoing link. Role is either the single action
+// the traveller must take ("action") or supporting provenance ("evidence").
+function linkCard(role, title, url, subtext) {
+  const card = externalLink("", url, `link-card link-card--${role}`);
+  const body = element("div", "link-card-body");
+  body.append(
+    element("span", "link-card-role", role === "action" ? "Go here" : "Evidence"),
+    element("span", "link-card-title", title),
+  );
+  if (subtext) body.append(element("span", "link-card-sub", subtext));
+  card.append(body, element("span", "link-card-arrow", "↗"));
+  return card;
+}
+
+// Give every source a single home section so no link is repeated across the page.
+// Priority runs most-specific first; the first section to claim a source keeps it.
+function assignSourceHomes(plan) {
+  const home = new Map();
+  const claim = (ids, section) =>
+    (ids || []).forEach((id) => {
+      if (!home.has(id)) home.set(id, section);
+    });
+  claim(plan.application_document_source_ids, "requirements");
+  claim(plan.decision_source_ids, "decision");
+  if (plan.where_to_apply) claim(plan.where_to_apply.source_ids, "apply");
+  plan.application_steps.forEach((step) => claim(step.source_ids, "timeline"));
+  return home;
+}
+
+function renderEvidence(sourceIds, ctx, section) {
+  const group = element("div", "link-cards");
+  [...new Set(sourceIds)].forEach((id) => {
+    if (ctx.home.get(id) !== section || ctx.seen.has(id)) return;
+    const source = ctx.sourceMap.get(id);
+    if (!source || ctx.seenUrls.has(String(source.url))) return;
+    ctx.seen.add(id);
+    ctx.seenUrls.add(String(source.url));
+    group.append(linkCard("evidence", source.title, source.url, sourceSubtext(source)));
+  });
+  return group;
+}
+
+function appendIfFilled(container, group) {
+  if (group.childElementCount) container.append(group);
+}
+
+function renderDecision(plan, ctx) {
   const { container, header } = panel(plan.destination, "Visa decision");
   const decision = plan.visa_required === null ? "Uncertain" : plan.visa_required ? "Visa required" : "No visa required";
   header.append(element("span", "decision-chip", decision));
-  container.append(
-    element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`),
-  );
+  container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
+  appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
   return container;
 }
 
-function renderApplicationLocation(plan) {
+function renderApplicationLocation(plan, ctx) {
   const { container } = panel("Where to apply", "UK application route");
   const location = plan.where_to_apply;
   if (!location) {
@@ -68,44 +113,68 @@ function renderApplicationLocation(plan) {
     cell.append(element("span", "", label), element("p", "", value));
     grid.append(cell);
   });
-  container.append(grid, externalLink("Open the official application route ↗", location.application_url));
+  container.append(grid);
+
+  const actions = element("div", "link-cards");
+  ctx.seenUrls.add(String(location.application_url));
+  actions.append(
+    linkCard("action", "Official application route", location.application_url, location.authority),
+  );
+  container.append(actions);
+  appendIfFilled(container, renderEvidence(location.source_ids, ctx, "apply"));
   return container;
 }
 
-function renderRequirements(plan, sourceMap) {
-  const { container } = panel("Document checklist", "Requirements");
-  const labels = {
-    mandatory: "Mandatory",
-    conditional: "Conditional",
-    recommended: "Recommended",
-  };
+function renderRequirements(plan, ctx) {
+  const { container } = panel("Visa application documents", "Official checklist");
 
-  Object.entries(labels).forEach(([category, label]) => {
-    const requirements = plan.requirements.filter((item) => item.category === category);
-    const group = element("div", "requirement-group");
-    group.append(element("span", `category-label ${category}`, `${label} · ${requirements.length}`));
-    const list = element("div", "requirement-list");
-    requirements.forEach((requirement) => {
-      const card = element("article", "requirement-card");
-      card.append(
-        element("h3", "", requirement.name),
-        element("p", "", requirement.description),
-        element("p", "reason", `Why it applies: ${requirement.reason_it_applies}`),
-        renderCitations(requirement.source_ids, sourceMap),
-      );
-      list.append(card);
-    });
-    group.append(list);
-    container.append(group);
+  container.append(
+    element(
+      "p",
+      "lead",
+      "Extracted from the designated official application-document source. Confirm the linked guidance before applying; general entry and travel duties are excluded.",
+    ),
+  );
+  appendIfFilled(container, renderEvidence(plan.application_document_source_ids, ctx, "requirements"));
+
+  const list = element("div", "requirement-list");
+  plan.requirements.forEach((requirement) => {
+    const card = element("article", "requirement-card");
+    card.append(
+      element("h3", "", requirement.name),
+      element("p", "", requirement.description),
+      element("p", "reason", `Source context: ${requirement.reason_it_applies}`),
+    );
+    list.append(card);
   });
+  container.append(list);
   return container;
 }
 
-function renderSteps(plan) {
-  const { container } = panel("Application sequence", "Ordered steps");
+function renderSteps(plan, ctx) {
+  const { container } = panel("Application timeline", "Actionable sequence");
   const list = element("ol", "steps");
-  plan.application_steps.forEach((step) => list.append(element("li", "", step)));
+  plan.application_steps.forEach((step) => {
+    const item = element("li");
+    const content = element("div", "step-content");
+    content.append(
+      element("p", "step-timing", `Timing: ${step.timing}`),
+      element("h3", "", step.title),
+      element("p", "", step.action),
+    );
+    item.append(content);
+    list.append(item);
+  });
   container.append(list);
+
+  // Provenance for the steps, grouped once and deduped against the rest of the page,
+  // rather than a link repeated inside each step.
+  const timelineSources = plan.application_steps.flatMap((step) => step.source_ids);
+  const evidence = renderEvidence(timelineSources, ctx, "timeline");
+  if (evidence.childElementCount) {
+    container.append(element("p", "eyebrow evidence-eyebrow", "Sources for these steps"));
+    container.append(evidence);
+  }
   return container;
 }
 
@@ -131,18 +200,6 @@ function renderReliability(plan) {
     issueBlock("Source conflicts", plan.conflicts),
   );
   container.append(grid);
-
-  const sourceList = element("div", "source-list");
-  plan.sources.forEach((source) => {
-    const card = element("article", "source-card");
-    card.append(
-      externalLink(source.title, source.url),
-      element("p", "source-meta", `${source.authority} · retrieved ${new Date(source.retrieved_at).toLocaleString()}`),
-    );
-    if (source.supporting_excerpt) card.append(element("p", "", source.supporting_excerpt));
-    sourceList.append(card);
-  });
-  container.append(sourceList);
   container.append(
     element(
       "p",
@@ -154,12 +211,17 @@ function renderReliability(plan) {
 }
 
 function renderPlan(plan) {
-  const sourceMap = new Map(plan.sources.map((source) => [source.source_id, source]));
+  const ctx = {
+    sourceMap: new Map(plan.sources.map((source) => [source.source_id, source])),
+    home: assignSourceHomes(plan),
+    seen: new Set(),
+    seenUrls: new Set(),
+  };
   results.replaceChildren(
-    renderDecision(plan),
-    renderApplicationLocation(plan),
-    renderRequirements(plan, sourceMap),
-    renderSteps(plan),
+    renderDecision(plan, ctx),
+    renderApplicationLocation(plan, ctx),
+    renderRequirements(plan, ctx),
+    renderSteps(plan, ctx),
     renderReliability(plan),
   );
 }

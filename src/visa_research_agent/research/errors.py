@@ -7,3 +7,11 @@ class VisaResearchError(RuntimeError):
 
 class FixtureDataError(VisaResearchError):
     """Raised when fixture evidence is missing, inconsistent, or invalid."""
+
+
+class LLMConfigurationError(VisaResearchError):
+    """Raised when model extraction is selected without complete safe configuration."""
+
+
+class LLMExtractionError(VisaResearchError):
+    """Raised when model output cannot be produced or validated safely."""

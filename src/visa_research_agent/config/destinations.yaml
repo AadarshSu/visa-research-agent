@@ -4,6 +4,7 @@ destinations:
     display_name: Singapore
     route_type: national
     implementation_status: available
+    application_document_source_ids: [sg_ica_india_visa_details]
     sources:
       - source_id: sg_ica_visa_requirement_overview
         title: Check if You Need an Entry Visa

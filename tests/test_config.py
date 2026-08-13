@@ -40,6 +40,7 @@ def test_singapore_has_bounded_official_sources() -> None:
     assert [
         source.source_id for source in singapore.sources if source.research_pass == "follow_up"
     ] == ["sg_vfs_uk_application"]
+    assert singapore.application_document_source_ids == ["sg_ica_india_visa_details"]
 
 
 def test_registry_rejects_duplicate_destination_slugs(tmp_path: Path) -> None:

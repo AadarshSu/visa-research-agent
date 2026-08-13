@@ -12,8 +12,9 @@ from visa_research_agent.api.schemas import (
     HealthResponse,
     VisaPlanRequest,
 )
-from visa_research_agent.api.templates import templates
+from visa_research_agent.api.templates import static_asset_version, templates
 from visa_research_agent.config.loader import get_destination_registry
+from visa_research_agent.config.settings import settings
 from visa_research_agent.config.traveller import TRAVELLER_PROFILE
 from visa_research_agent.domain.models import VisaPlan
 from visa_research_agent.research.errors import VisaResearchError
@@ -28,7 +29,13 @@ async def index(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request,
         "index.html",
-        {"destinations": registry.destinations, "source_mode": "fixture"},
+        {
+            "destinations": registry.destinations,
+            "source_mode": settings.source_mode,
+            "extraction_mode": settings.extraction_mode,
+            "static_asset_version": static_asset_version(),
+        },
+        headers={"Cache-Control": "no-store"},
     )
 
 
@@ -93,5 +100,5 @@ async def create_visa_plan(
     except VisaResearchError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": "The offline fixture plan could not be generated safely."},
+            detail={"message": "The visa plan could not be generated safely."},
         ) from exc

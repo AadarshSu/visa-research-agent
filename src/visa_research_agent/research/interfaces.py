@@ -7,6 +7,7 @@ from visa_research_agent.domain.models import (
     FetchedSource,
     TravellerProfile,
     VisaPlan,
+    VisaPlanDraft,
 )
 
 
@@ -24,4 +25,10 @@ class VisaPlanExtractor(Protocol):
         fetched_sources: list[FetchedSource],
     ) -> VisaPlan:
         """Transform bounded evidence into a validated visa plan."""
+        ...
+
+
+class StructuredPlanGenerator(Protocol):
+    async def generate(self, system_prompt: str, research_packet: str) -> VisaPlanDraft:
+        """Make one structured model call over an already bounded research packet."""
         ...

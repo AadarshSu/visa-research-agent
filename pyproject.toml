@@ -35,7 +35,7 @@ dev = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-"visa_research_agent" = ["static/*.css", "static/*.js", "templates/*.html"]
+"visa_research_agent" = ["prompts/*.txt", "static/*.css", "static/*.js", "templates/*.html"]
 "visa_research_agent.config" = ["*.yaml"]
 "visa_research_agent.fixtures.singapore" = ["*.txt", "*.yaml"]
 

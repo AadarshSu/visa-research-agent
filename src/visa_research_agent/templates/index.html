@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="A bounded, source-backed personal visa research plan.">
     <title>Visa Research Desk</title>
-    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
-    <script src="{{ url_for('static', path='/app.js') }}" defer></script>
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}?v={{ static_asset_version }}">
+    <script src="{{ url_for('static', path='/app.js') }}?v={{ static_asset_version }}" defer></script>
   </head>
   <body>
     <div class="page-shell">
@@ -15,7 +15,9 @@
           <span class="wordmark-mark">VR</span>
           <span>Visa Research Desk</span>
         </a>
-        <span class="mode-chip"><span class="status-dot"></span>{{ source_mode }} mode</span>
+        <span class="mode-chip">
+          <span class="status-dot"></span>{{ source_mode }} sources · {{ extraction_mode }} extraction
+        </span>
       </header>
 
       <main>
@@ -23,8 +25,8 @@
           <p class="eyebrow">Personal travel research · Edinburgh, UK</p>
           <h1 id="page-title">Turn official guidance into a practical visa plan.</h1>
           <p class="hero-copy">
-            This offline vertical slice uses a saved Singapore source snapshot for an ordinary
-            Indian passport holder travelling for tourism. It makes no live requests.
+            This controlled vertical slice uses a saved Singapore source snapshot for an ordinary
+            Indian passport holder travelling for tourism.
           </p>
 
           <form id="plan-form" class="research-form">
@@ -41,12 +43,14 @@
                 {% endfor %}
               </select>
             </div>
-            <button id="generate-button" type="submit">Generate fixture plan</button>
+            <button id="generate-button" type="submit">
+              Generate {% if extraction_mode == 'openai' %}AI{% else %}fixture{% endif %} plan
+            </button>
           </form>
 
           <div id="progress" class="progress" role="status" aria-live="polite" hidden>
             <span class="progress-track"><span class="progress-bar"></span></span>
-            <span>Reading saved official-source snapshots…</span>
+            <span>Analysing saved official-source snapshots…</span>
           </div>
           <p id="error-message" class="error-message" role="alert" hidden></p>
         </section>

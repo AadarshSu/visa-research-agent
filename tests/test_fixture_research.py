@@ -47,7 +47,16 @@ async def test_fixture_service_generates_deterministic_validated_plan() -> None:
     assert first_plan.visa_required is True
     assert first_plan.where_to_apply is not None
     assert first_plan.where_to_apply.location == "66 Wilson Street, London EC2A 2BT"
-    assert len(first_plan.unresolved_questions) == 4
+    assert first_plan.requirements
+    assert all(
+        "sg_ica_india_visa_details" in requirement.source_ids
+        for requirement in first_plan.requirements
+    )
+    assert any(step.link_target == "application_route" for step in first_plan.application_steps)
+    assert any("30 days" in step.timing for step in first_plan.application_steps)
+    assert any("three working days" in step.action for step in first_plan.application_steps)
+    assert all(step.source_ids for step in first_plan.application_steps)
+    assert len(first_plan.unresolved_questions) == 5
     assert len(first_plan.conflicts) == 1
     assert {
         source_id for requirement in first_plan.requirements for source_id in requirement.source_ids

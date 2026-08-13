@@ -5,7 +5,6 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
-RequirementCategory = Literal["mandatory", "conditional", "recommended"]
 RouteType = Literal["national", "schengen_member"]
 ImplementationStatus = Literal["planned", "available"]
 SourceKind = Literal[
@@ -61,6 +60,7 @@ class DestinationConfig(StrictModel):
     schengen_member: str | None = None
     implementation_status: ImplementationStatus = "planned"
     sources: list[ConfiguredSource] = Field(default_factory=list)
+    application_document_source_ids: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_route(self) -> "DestinationConfig":
@@ -68,6 +68,17 @@ class DestinationConfig(StrictModel):
             raise ValueError("a Schengen member route must identify its member country")
         if self.route_type == "national" and self.schengen_member is not None:
             raise ValueError("a national route cannot set schengen_member")
+
+        source_ids = {source.source_id for source in self.sources}
+        if len(self.application_document_source_ids) != len(
+            set(self.application_document_source_ids)
+        ):
+            raise ValueError("application document source IDs must be unique")
+
+        unknown_source_ids = set(self.application_document_source_ids).difference(source_ids)
+        if unknown_source_ids:
+            unknown = ", ".join(sorted(unknown_source_ids))
+            raise ValueError(f"application document sources contain unknown IDs: {unknown}")
         return self
 
 
@@ -128,7 +139,6 @@ class VisaRequirement(StrictModel):
     """One evidence-backed document requirement."""
 
     name: str = Field(min_length=1)
-    category: RequirementCategory
     description: str = Field(min_length=1)
     reason_it_applies: str = Field(min_length=1)
     source_ids: list[str] = Field(min_length=1)
@@ -141,6 +151,54 @@ class ApplicationLocation(StrictModel):
     application_method: str = Field(min_length=1)
     location: str | None = None
     application_url: AnyHttpUrl
+    source_ids: list[str] = Field(min_length=1)
+
+
+class ApplicationLocationDraft(StrictModel):
+    """Model-facing application details before the URL is validated by the app."""
+
+    authority: str = Field(min_length=1)
+    application_method: str = Field(min_length=1)
+    location: str | None
+    application_url: str = Field(min_length=1)
+    source_ids: list[str] = Field(min_length=1)
+
+
+class ApplicationStep(StrictModel):
+    """One evidence-backed action in the traveller's ordered application timeline."""
+
+    title: str = Field(min_length=3, max_length=80)
+    action: str = Field(min_length=3, max_length=320)
+    timing: str = Field(min_length=3, max_length=160)
+    source_ids: list[str] = Field(min_length=1)
+    link_target: Literal["application_route", "source", "none"]
+    link_source_id: str | None
+
+    @model_validator(mode="after")
+    def validate_link_target(self) -> "ApplicationStep":
+        if self.link_target == "source":
+            if self.link_source_id is None:
+                raise ValueError("a source step link requires link_source_id")
+            if self.link_source_id not in self.source_ids:
+                raise ValueError("link_source_id must also appear in source_ids")
+        elif self.link_source_id is not None:
+            raise ValueError("link_source_id is only valid for a source step link")
+        return self
+
+
+class VisaPlanDraft(StrictModel):
+    """Structured extraction result before trusted source metadata is attached."""
+
+    destination: str = Field(min_length=1)
+    visa_required: bool | None
+    visa_type: str | None
+    explanation: str = Field(min_length=1)
+    decision_source_ids: list[str] = Field(min_length=1)
+    where_to_apply: ApplicationLocationDraft | None
+    requirements: list[VisaRequirement]
+    application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
+    unresolved_questions: list[str]
+    conflicts: list[str]
 
 
 class VisaPlan(StrictModel):
@@ -150,9 +208,11 @@ class VisaPlan(StrictModel):
     visa_required: bool | None
     visa_type: str | None
     explanation: str = Field(min_length=1)
+    decision_source_ids: list[str] = Field(min_length=1)
     where_to_apply: ApplicationLocation | None
     requirements: list[VisaRequirement]
-    application_steps: list[str]
+    application_document_source_ids: list[str] = Field(min_length=1)
+    application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
     sources: list[SourceReference]
     unresolved_questions: list[str]
     conflicts: list[str]
@@ -166,13 +226,24 @@ class VisaPlan(StrictModel):
         if len(source_ids) != len(set(source_ids)):
             raise ValueError("source IDs in a visa plan must be unique")
 
-        unknown_ids = {
-            source_id
-            for requirement in self.requirements
-            for source_id in requirement.source_ids
-            if source_id not in source_ids
-        }
+        cited_source_ids = set(self.decision_source_ids)
+        cited_source_ids.update(
+            source_id for requirement in self.requirements for source_id in requirement.source_ids
+        )
+        cited_source_ids.update(self.application_document_source_ids)
+        cited_source_ids.update(
+            source_id for step in self.application_steps for source_id in step.source_ids
+        )
+        if self.where_to_apply is not None:
+            cited_source_ids.update(self.where_to_apply.source_ids)
+
+        if self.where_to_apply is None and any(
+            step.link_target == "application_route" for step in self.application_steps
+        ):
+            raise ValueError("application-route step links require an application location")
+
+        unknown_ids = cited_source_ids.difference(source_ids)
         if unknown_ids:
             unknown = ", ".join(sorted(unknown_ids))
-            raise ValueError(f"requirements cite unknown source IDs: {unknown}")
+            raise ValueError(f"visa plan cites unknown source IDs: {unknown}")
         return self
