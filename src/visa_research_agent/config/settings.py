@@ -17,10 +17,19 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "Visa Research Agent"
-    source_mode: Literal["fixtures", "live"] = "fixtures"
-    extraction_mode: Literal["fixture", "openai"] = "fixture"
     cache_directory: Path = Path("var/cache")
     maximum_fixture_characters: int = 50_000
+
+    # Live retrieval tuning only. Which sources are contacted, which extractor runs, and when
+    # stale evidence is refused are reviewable policy and live in `config/runtime.yaml`.
+    source_fetch_timeout_seconds: float = 20.0
+    source_fetch_concurrency: int = 4
+    maximum_source_characters: int = 50_000
+    minimum_source_characters: int = 400
+    source_user_agent: str = (
+        "VisaResearchAgent/0.1 (personal visa research; contact repository owner)"
+    )
+
     maximum_model_input_characters: int = 80_000
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None

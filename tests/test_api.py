@@ -5,7 +5,15 @@ import pytest
 
 from visa_research_agent.api.app import create_app
 from visa_research_agent.api.dependencies import get_visa_plan_service
-from visa_research_agent.config.settings import settings
+from visa_research_agent.domain.models import RuntimePolicy
+
+OFFLINE_POLICY = RuntimePolicy(
+    schema_version=1,
+    source_mode="fixtures",
+    extraction_mode="fixture",
+    source_cache_ttl_hours=24.0,
+    source_maximum_stale_hours=168.0,
+)
 
 
 @pytest.fixture
@@ -15,7 +23,13 @@ def anyio_backend() -> str:
 
 @pytest.fixture
 async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[httpx.AsyncClient]:
-    monkeypatch.setattr(settings, "extraction_mode", "fixture")
+    # Pin the policy so these tests never depend on the committed runtime.yaml or reach a network.
+    # Both modules import the loader by name, so each reference needs replacing.
+    for module in ("dependencies", "routes"):
+        monkeypatch.setattr(
+            f"visa_research_agent.api.{module}.get_runtime_policy",
+            lambda: OFFLINE_POLICY,
+        )
     get_visa_plan_service.cache_clear()
     transport = httpx.ASGITransport(app=create_app())
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:

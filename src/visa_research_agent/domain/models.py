@@ -7,6 +7,8 @@ from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, 
 
 RouteType = Literal["national", "schengen_member"]
 ImplementationStatus = Literal["planned", "available"]
+SourceMode = Literal["fixtures", "live"]
+ExtractionMode = Literal["fixture", "openai"]
 SourceKind = Literal[
     "immigration_authority",
     "foreign_ministry",
@@ -113,6 +115,26 @@ class DestinationRegistry(StrictModel):
         )
 
 
+class RuntimePolicy(StrictModel):
+    """Version-controlled policy for what the agent may contact and how old evidence may be.
+
+    These choices are reviewable rather than environment-local: they decide whether government
+    websites are contacted, whether a paid model is called, and when stale guidance is refused.
+    """
+
+    schema_version: Literal[1]
+    source_mode: SourceMode
+    extraction_mode: ExtractionMode
+    source_cache_ttl_hours: float = Field(gt=0)
+    source_maximum_stale_hours: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_freshness_window(self) -> "RuntimePolicy":
+        if self.source_maximum_stale_hours < self.source_cache_ttl_hours:
+            raise ValueError("the stale ceiling cannot be shorter than the cache TTL")
+        return self
+
+
 class SourceReference(StrictModel):
     """A source actually consulted during a research run."""
 
@@ -133,6 +155,8 @@ class FetchedSource(StrictModel):
     content: str = Field(min_length=1)
     content_hash: str = Field(min_length=1)
     from_cache: bool = False
+    is_stale: bool = False
+    """True when a refresh failed and cached evidence was served past its freshness window."""
 
 
 class VisaRequirement(StrictModel):

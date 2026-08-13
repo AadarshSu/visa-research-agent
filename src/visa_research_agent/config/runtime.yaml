@@ -1,0 +1,20 @@
+schema_version: 1
+
+# Where evidence comes from.
+#   fixtures — saved offline snapshots; never contacts government websites.
+#   live     — retrieves the approved official URLs over HTTP, with hash and TTL caching.
+# Retrieval is still all-or-nothing, so one unreachable page fails the whole run.
+source_mode: fixtures
+
+# How a plan is produced from that evidence.
+#   fixture — deterministic offline output; needs no API key and is the tests' baseline.
+#   openai  — one bounded structured model call; requires OPENAI_API_KEY and OPENAI_MODEL.
+extraction_mode: openai
+
+# Live retrieval freshness window, in hours. Cached pages are reused below the TTL and
+# revalidated above it.
+source_cache_ttl_hours: 24
+
+# The refusal threshold. Once cached evidence is older than this and cannot be refreshed, the
+# source is refused rather than served, so out-of-date guidance can never look current.
+source_maximum_stale_hours: 168

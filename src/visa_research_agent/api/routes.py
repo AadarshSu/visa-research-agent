@@ -13,8 +13,7 @@ from visa_research_agent.api.schemas import (
     VisaPlanRequest,
 )
 from visa_research_agent.api.templates import static_asset_version, templates
-from visa_research_agent.config.loader import get_destination_registry
-from visa_research_agent.config.settings import settings
+from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.traveller import TRAVELLER_PROFILE
 from visa_research_agent.domain.models import VisaPlan
 from visa_research_agent.research.errors import VisaResearchError
@@ -26,13 +25,14 @@ router = APIRouter()
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def index(request: Request) -> HTMLResponse:
     registry = get_destination_registry()
+    policy = get_runtime_policy()
     return templates.TemplateResponse(
         request,
         "index.html",
         {
             "destinations": registry.destinations,
-            "source_mode": settings.source_mode,
-            "extraction_mode": settings.extraction_mode,
+            "source_mode": policy.source_mode,
+            "extraction_mode": policy.extraction_mode,
             "static_asset_version": static_asset_version(),
         },
         headers={"Cache-Control": "no-store"},

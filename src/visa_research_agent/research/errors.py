@@ -9,6 +9,10 @@ class FixtureDataError(VisaResearchError):
     """Raised when fixture evidence is missing, inconsistent, or invalid."""
 
 
+class LiveSourceError(VisaResearchError):
+    """Raised when live retrieval cannot produce trustworthy, current official evidence."""
+
+
 class LLMConfigurationError(VisaResearchError):
     """Raised when model extraction is selected without complete safe configuration."""
 

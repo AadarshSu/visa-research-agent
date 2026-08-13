@@ -2,23 +2,44 @@
 
 from functools import lru_cache
 
+from visa_research_agent.config.loader import get_runtime_policy
 from visa_research_agent.config.settings import settings
+from visa_research_agent.domain.models import RuntimePolicy
 from visa_research_agent.research.errors import LLMConfigurationError
 from visa_research_agent.research.fixtures import FixtureSourceFetcher, FixtureVisaPlanExtractor
+from visa_research_agent.research.interfaces import SourceFetcher
+from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.openai_extraction import (
     LangChainStructuredPlanGenerator,
     OpenAIVisaPlanExtractor,
 )
 from visa_research_agent.research.service import VisaPlanService
+from visa_research_agent.research.source_cache import FileSourceCache
 
 
-@lru_cache(maxsize=1)
-def get_visa_plan_service() -> VisaPlanService:
-    if settings.source_mode != "fixtures":
-        raise RuntimeError("Live research mode has not been implemented")
+def build_source_fetcher(policy: RuntimePolicy) -> SourceFetcher:
+    """Select offline fixture evidence or live retrieval from the reviewed runtime policy."""
 
-    source_fetcher = FixtureSourceFetcher()
-    if settings.extraction_mode == "fixture":
+    if policy.source_mode == "fixtures":
+        return FixtureSourceFetcher()
+
+    return LiveSourceFetcher(
+        FileSourceCache(settings.cache_directory),
+        ttl_hours=policy.source_cache_ttl_hours,
+        maximum_stale_hours=policy.source_maximum_stale_hours,
+        timeout_seconds=settings.source_fetch_timeout_seconds,
+        concurrency=settings.source_fetch_concurrency,
+        maximum_characters=settings.maximum_source_characters,
+        minimum_characters=settings.minimum_source_characters,
+        user_agent=settings.source_user_agent,
+    )
+
+
+def build_visa_plan_service(policy: RuntimePolicy) -> VisaPlanService:
+    """Assemble the retrieval and extraction pipeline described by the runtime policy."""
+
+    source_fetcher = build_source_fetcher(policy)
+    if policy.extraction_mode == "fixture":
         return VisaPlanService(source_fetcher, FixtureVisaPlanExtractor())
 
     if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
@@ -38,3 +59,8 @@ def get_visa_plan_service() -> VisaPlanService:
         maximum_input_characters=settings.maximum_model_input_characters,
     )
     return VisaPlanService(source_fetcher, extractor)
+
+
+@lru_cache(maxsize=1)
+def get_visa_plan_service() -> VisaPlanService:
+    return build_visa_plan_service(get_runtime_policy())

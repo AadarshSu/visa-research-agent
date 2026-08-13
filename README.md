@@ -17,12 +17,30 @@ extraction:
 - optional one-call OpenAI extraction through LangChain structured output;
 - a unified, source-linked visa-application document checklist;
 - a working Singapore `POST /visa-plans` response;
+- optional live retrieval of the configured official pages, with a hash and TTL cache;
 - a small Jinja and vanilla JavaScript research interface;
 - fully offline tests and CI checks.
 
-Live government-page retrieval, caching and LangGraph routing remain intentionally deferred.
-Japan, the United States and France return a clear `503 Service Unavailable` response until their
-later destination phases.
+Source verification against an authority registry, conflict detection across sources, per-source
+failure status and LangGraph routing remain intentionally deferred. Because retrieval is still
+all-or-nothing, one unreachable page fails the whole run, so `source_mode: fixtures` stays the
+default. Japan, the United States and France return a clear `503 Service Unavailable` response
+until their later destination phases.
+
+### Live retrieval
+
+Setting `source_mode: live` in `config/runtime.yaml` fetches only the primary URLs already approved
+in the destination registry. Retrieved HTML is reduced to bounded readable text, and every
+retrieval is cached under `CACHE_DIRECTORY` with its content hash and HTTP validators:
+
+- below `source_cache_ttl_hours`, cached text is reused without a request;
+- above it, the page is revalidated with `If-None-Match` and `If-Modified-Since`, so an unchanged
+  page costs one cheap `304`, and a changed content hash marks that the guidance moved;
+- when a refresh fails, cached text is served flagged as stale and keeps its original retrieval
+  time, so it can never appear freshly checked;
+- once cached text passes `source_maximum_stale_hours`, the source is refused instead of served;
+- a page yielding less than `MINIMUM_SOURCE_CHARACTERS` is refused rather than treated as
+  evidence, which is what happens to client-rendered pages such as the appointed provider's.
 
 ## Requirements
 
@@ -89,20 +107,26 @@ The saved Singapore evidence and deterministic output template live under
 `src/visa_research_agent/fixtures/singapore/`. The source text is paraphrased, treated as untrusted
 evidence, and never allowed to control application behaviour.
 
-### Extraction modes
+### Runtime policy and secrets
+
+Configuration is split by what it is, not by convenience:
+
+| Where | Holds | Why |
+| --- | --- | --- |
+| `src/visa_research_agent/config/runtime.yaml` (committed) | source mode, extraction mode, cache TTL, stale ceiling | These decide whether government sites are contacted, whether a paid model is called, and when stale guidance is refused, so they belong under review |
+| `.env` (never committed) | `OPENAI_API_KEY`, `OPENAI_MODEL`, cache directory, retrieval timeouts and limits | Secrets and machine-local tuning |
 
 Keep the fully deterministic path for development and tests:
 
-```dotenv
-SOURCE_MODE=fixtures
-EXTRACTION_MODE=fixture
+```yaml
+source_mode: fixtures
+extraction_mode: fixture
 ```
 
-To let a model interpret the same saved sources, configure `.env` locally:
+To let a model interpret the same saved sources, set `extraction_mode: openai` in `runtime.yaml`
+and put the credentials in `.env`:
 
 ```dotenv
-SOURCE_MODE=fixtures
-EXTRACTION_MODE=openai
 OPENAI_API_KEY=your-local-secret
 OPENAI_MODEL=gpt-5.6-terra
 ```
