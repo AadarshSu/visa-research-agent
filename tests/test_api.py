@@ -123,9 +123,9 @@ async def test_singapore_fixture_plan_is_returned(
 async def test_supported_but_unimplemented_destination_is_explicit(
     client: httpx.AsyncClient,
 ) -> None:
-    response = await client.post("/visa-plans", json={"destination": "japan"})
+    response = await client.post("/visa-plans", json={"destination": "france"})
 
     assert response.status_code == 503
     assert response.json()["detail"]["message"] == (
-        "Visa-plan generation for Japan is not available yet."
+        "Visa-plan generation for France is not available yet."
     )

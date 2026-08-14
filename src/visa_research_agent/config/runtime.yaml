@@ -4,7 +4,7 @@ schema_version: 1
 #   fixtures — saved offline snapshots; never contacts government websites.
 #   live     — retrieves the approved official URLs over HTTP, with hash and TTL caching.
 # Retrieval is still all-or-nothing, so one unreachable page fails the whole run.
-source_mode: fixtures
+source_mode: live
 
 # How a plan is produced from that evidence.
 #   fixture — deterministic offline output; needs no API key and is the tests' baseline.

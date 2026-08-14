@@ -57,8 +57,57 @@ destinations:
   - slug: japan
     display_name: Japan
     route_type: national
-    implementation_status: planned
-    sources: []
+    implementation_status: available
+    # The checklist and the eVisa terms are published as PDFs behind small forwarding pages, so
+    # this destination only works with PDF retrieval enabled.
+    application_document_source_ids: [jp_embassy_uk_tourism_documents]
+    required_source_ids: [jp_embassy_uk_tourism_documents, jp_mofa_visa_exemptions]
+    # Japan's missions sit on per-country subdomains of emb-japan.go.jp, which the dot-boundary
+    # match covers. Never list a bare suffix such as go.jp.
+    trusted_domains: [mofa.go.jp, emb-japan.go.jp]
+    sources:
+      - source_id: jp_mofa_visa_exemptions
+        title: Exemption of Visa (Short-Term Stay)
+        url: https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+        authority: Ministry of Foreign Affairs of Japan
+        kind: foreign_ministry
+        research_pass: primary
+      - source_id: jp_mofa_visa_overview
+        title: Visa — Application Procedures and Processing
+        url: https://www.mofa.go.jp/j_info/visit/visa/index.html
+        authority: Ministry of Foreign Affairs of Japan
+        kind: foreign_ministry
+        research_pass: primary
+      - source_id: jp_embassy_uk_temporary_visitor
+        title: Temporary Visitor Visa
+        url: https://www.uk.emb-japan.go.jp/itpr_en/index_000070.html
+        authority: Embassy of Japan in the United Kingdom
+        kind: embassy_or_high_commission
+        research_pass: primary
+      - source_id: jp_embassy_uk_tourism_documents
+        title: Checklist for a Temporary Visitor Visa (Tourism)
+        url: https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+        authority: Embassy of Japan in the United Kingdom
+        kind: embassy_or_high_commission
+        research_pass: primary
+      - source_id: jp_embassy_uk_visa_general
+        title: Visa — General Information and Appointments
+        url: https://www.uk.emb-japan.go.jp/itpr_en/index_000025.html
+        authority: Embassy of Japan in the United Kingdom
+        kind: embassy_or_high_commission
+        research_pass: primary
+      - source_id: jp_embassy_uk_evisa
+        title: JAPAN eVISA — Availability for Tourism
+        url: https://www.uk.emb-japan.go.jp/itpr_en/eVISA_System.html
+        authority: Embassy of Japan in the United Kingdom
+        kind: embassy_or_high_commission
+        research_pass: primary
+      - source_id: jp_embassy_uk_visa_fees
+        title: Visa Fees
+        url: https://www.uk.emb-japan.go.jp/itpr_en/index_000075.html
+        authority: Embassy of Japan in the United Kingdom
+        kind: embassy_or_high_commission
+        research_pass: primary
 
   - slug: united-states
     display_name: United States
