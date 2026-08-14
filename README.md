@@ -19,13 +19,18 @@ extraction:
 - a working Singapore `POST /visa-plans` response;
 - optional live retrieval of the configured official pages, with a hash and TTL cache;
 - per-destination domain trust, enforced when configuration loads and after every redirect;
+- PDF retrieval, including following the forwarding pages authorities hide checklists behind;
 - graceful degradation: a run reports which sources failed instead of collapsing;
 - a small Jinja and vanilla JavaScript research interface;
 - fully offline tests and CI checks.
 
 Conflict detection across sources, automatic discovery of official sources, and LangGraph routing
-remain intentionally deferred. Japan, the United States and France return a clear
+remain intentionally deferred. The United States and France return a clear
 `503 Service Unavailable` response until their later destination phases.
+
+Two destinations are configured. Singapore works in either source mode. **Japan has no saved
+snapshots and therefore requires `source_mode: live`**, because both its document checklist and its
+eVisa terms are published only as PDFs, which the offline fixture path was never built for.
 
 Today the model reports disagreements between sources as free text in `conflicts`. That is
 unverified by design: nothing checks the claim, names which pages differ, or decides which one
@@ -102,6 +107,12 @@ retrieval is cached under `CACHE_DIRECTORY` with its content hash and HTTP valid
 - once cached text passes `source_maximum_stale_hours`, the source is refused instead of served;
 - a page yielding less than `MINIMUM_SOURCE_CHARACTERS` is refused rather than treated as
   evidence, which is what happens to client-rendered pages such as the appointed provider's.
+
+Authorities frequently publish a checklist as a PDF behind a small HTML page that forwards to it,
+so retrieval reads PDFs as well as HTML and follows such a forward to reach the real document. A
+forward is treated exactly like a redirect: its target must be on an approved authority domain, or
+the source is refused. Forwards are limited to two hops, and documents above
+`MAXIMUM_SOURCE_BYTES` are refused rather than read.
 
 ### Domain trust
 
