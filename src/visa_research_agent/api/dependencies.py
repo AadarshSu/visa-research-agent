@@ -32,6 +32,7 @@ def build_source_fetcher(policy: RuntimePolicy) -> SourceFetcher:
         maximum_characters=settings.maximum_source_characters,
         minimum_characters=settings.minimum_source_characters,
         user_agent=settings.source_user_agent,
+        maximum_bytes=settings.maximum_source_bytes,
     )
 
 

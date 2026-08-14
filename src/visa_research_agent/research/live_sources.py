@@ -5,13 +5,19 @@ registry, and it prefers refusing a source to serving evidence that may no longe
 """
 
 import asyncio
+import re
 from collections.abc import Callable
 from datetime import UTC, datetime
 from hashlib import sha256
+from io import BytesIO
+from urllib.parse import urljoin
 
 import httpx
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from pydantic import AnyHttpUrl
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 from visa_research_agent.domain.models import (
     ConfiguredSource,
@@ -57,6 +63,73 @@ def clean_source_html(html: str, *, maximum_characters: int) -> str:
     return cleaned[:maximum_characters].strip()
 
 
+# Authorities often publish a checklist as a PDF behind a tiny HTML page that forwards to it.
+# Following that forward is necessary to reach the real guidance, but each hop must still be
+# checked for trust, so this is kept deliberately shallow.
+MAXIMUM_FORWARD_HOPS = 2
+
+
+def _collapse_whitespace(text: str) -> str:
+    lines = (line.strip() for line in text.splitlines())
+    return "\n".join(line for line in lines if line)
+
+
+def extract_pdf_text(data: bytes, *, maximum_characters: int) -> str:
+    """Pull readable text out of a PDF, stopping once the character budget is met."""
+
+    try:
+        reader = PdfReader(BytesIO(data))
+        if reader.is_encrypted:
+            raise ValueError("the PDF is encrypted")
+        collected: list[str] = []
+        length = 0
+        for page in reader.pages:
+            page_text = page.extract_text() or ""
+            collected.append(page_text)
+            length += len(page_text)
+            if length >= maximum_characters:
+                break
+    except (PdfReadError, ValueError, OSError, KeyError) as exc:
+        raise ValueError("the PDF could not be read") from exc
+
+    return _collapse_whitespace("\n".join(collected))[:maximum_characters].strip()
+
+
+def find_forward_target(html: str, base_url: str) -> str | None:
+    """Return the absolute URL a meta-refresh page forwards to, if it is one."""
+
+    soup = BeautifulSoup(html, "html.parser")
+    tag = soup.find("meta", attrs={"http-equiv": re.compile(r"^\s*refresh\s*$", re.IGNORECASE)})
+    if not isinstance(tag, Tag):
+        return None
+    content = tag.get("content")
+    if not isinstance(content, str):
+        return None
+    match = re.search(r"url\s*=\s*['\"]?([^'\";]+)", content, re.IGNORECASE)
+    if match is None:
+        return None
+    target = match.group(1).strip()
+    return urljoin(base_url, target) if target else None
+
+
+def _looks_like_pdf(response: httpx.Response) -> bool:
+    content_type = response.headers.get("content-type", "").lower()
+    if "application/pdf" in content_type:
+        return True
+    # Some authorities serve PDFs with a generic content type, so fall back to the path.
+    return response.url.path.lower().endswith(".pdf")
+
+
+class _ContentProblem(Exception):
+    """Raised when a retrieved document cannot become trustworthy evidence."""
+
+    def __init__(self, outcome: FailureOutcome, reason: str, final_url: str | None = None) -> None:
+        super().__init__(reason)
+        self.outcome = outcome
+        self.reason = reason
+        self.final_url = final_url
+
+
 def _utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -75,6 +148,7 @@ class LiveSourceFetcher:
         maximum_characters: int,
         minimum_characters: int,
         user_agent: str,
+        maximum_bytes: int = 12_000_000,
         transport: httpx.AsyncBaseTransport | None = None,
         now: Callable[[], datetime] = _utc_now,
     ) -> None:
@@ -91,6 +165,7 @@ class LiveSourceFetcher:
         self.maximum_characters = maximum_characters
         self.minimum_characters = minimum_characters
         self.user_agent = user_agent
+        self.maximum_bytes = maximum_bytes
         self.transport = transport
         self.now = now
 
@@ -112,7 +187,7 @@ class LiveSourceFetcher:
             follow_redirects=True,
             headers={
                 "User-Agent": self.user_agent,
-                "Accept": "text/html,application/xhtml+xml",
+                "Accept": "text/html,application/xhtml+xml,application/pdf",
                 "Accept-Language": "en-GB,en;q=0.9",
             },
         ) as client:
@@ -186,7 +261,31 @@ class LiveSourceFetcher:
                 "unreachable",
             )
 
-        content = clean_source_html(response.text, maximum_characters=self.maximum_characters)
+        try:
+            content, document = await self._read_document(client, destination, response)
+        except _ContentProblem as problem:
+            if problem.outcome == "untrusted":
+                return SourceFailure(
+                    source_id=configured_source.source_id,
+                    title=configured_source.title,
+                    authority=configured_source.authority,
+                    outcome="untrusted",
+                    detail=problem.reason,
+                    attempted_url=configured_source.url,
+                    final_url=AnyHttpUrl(problem.final_url) if problem.final_url else None,
+                )
+            return self._serve_stale(
+                configured_source, cached, now, problem.reason, problem.outcome
+            )
+        except httpx.HTTPError as exc:
+            return self._serve_stale(
+                configured_source,
+                cached,
+                now,
+                f"the forwarded document could not be retrieved ({exc})",
+                "unreachable",
+            )
+
         # A near-empty result means a client-rendered or blocked page, not an empty requirement
         # list, so it must never reach extraction as though it were evidence.
         if len(content) < self.minimum_characters:
@@ -200,7 +299,7 @@ class LiveSourceFetcher:
 
         entry = CachedSource(
             url=url,
-            final_url=str(response.url),
+            final_url=str(document.url),
             fetched_at=now,
             content=content,
             content_hash=sha256(content.encode()).hexdigest(),
@@ -210,6 +309,66 @@ class LiveSourceFetcher:
         )
         self.cache.store(entry)
         return self._build(configured_source, entry, from_cache=False, is_stale=False)
+
+    async def _read_document(
+        self,
+        client: httpx.AsyncClient,
+        destination: DestinationConfig,
+        response: httpx.Response,
+        hops: int = 0,
+    ) -> tuple[str, httpx.Response]:
+        """Reduce a response to bounded text, following a forward to a PDF where one exists.
+
+        Returns the text and the response it actually came from, so provenance records the
+        document that was read rather than the page that pointed at it.
+        """
+
+        if len(response.content) > self.maximum_bytes:
+            raise _ContentProblem("unusable", "the document exceeds the configured size limit")
+
+        if _looks_like_pdf(response):
+            try:
+                return (
+                    extract_pdf_text(
+                        response.content, maximum_characters=self.maximum_characters
+                    ),
+                    response,
+                )
+            except ValueError as exc:
+                raise _ContentProblem("unusable", str(exc)) from exc
+
+        html = response.text
+        target = find_forward_target(html, str(response.url))
+        if target is None:
+            return clean_source_html(html, maximum_characters=self.maximum_characters), response
+        if hops >= MAXIMUM_FORWARD_HOPS:
+            raise _ContentProblem("unusable", "the page forwards through too many redirects")
+
+        # A forward is a redirect by another name, so it gets the same trust check.
+        target_host = host_of(target)
+        if not destination.trusts_host(target_host):
+            raise _ContentProblem(
+                "untrusted",
+                f"the page forwards to {target_host}, which is not an approved authority domain "
+                f"for {destination.display_name}",
+                target,
+            )
+
+        forwarded = await client.get(target)
+        if forwarded.status_code != httpx.codes.OK:
+            raise _ContentProblem(
+                "unreachable",
+                f"the forwarded document answered HTTP {forwarded.status_code}",
+            )
+        final_host = host_of(str(forwarded.url))
+        if not destination.trusts_host(final_host):
+            raise _ContentProblem(
+                "untrusted",
+                f"the forwarded document resolved to {final_host}, which is not an approved "
+                f"authority domain for {destination.display_name}",
+                str(forwarded.url),
+            )
+        return await self._read_document(client, destination, forwarded, hops + 1)
 
     async def _request(
         self,

@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     source_fetch_concurrency: int = 4
     maximum_source_characters: int = 50_000
     minimum_source_characters: int = 400
+    maximum_source_bytes: int = 12_000_000
     source_user_agent: str = (
         "VisaResearchAgent/0.1 (personal visa research; contact repository owner)"
     )
