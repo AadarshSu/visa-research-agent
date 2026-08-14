@@ -27,6 +27,46 @@ Conflict detection across sources, automatic discovery of official sources, and 
 remain intentionally deferred. Japan, the United States and France return a clear
 `503 Service Unavailable` response until their later destination phases.
 
+Today the model reports disagreements between sources as free text in `conflicts`. That is
+unverified by design: nothing checks the claim, names which pages differ, or decides which one
+governs.
+
+### Deferred: structured conflict detection
+
+A deterministic version was designed, built and deliberately removed. Recording it here so the same
+ground is not covered twice.
+
+**The approach.** Keep one model call, but change its job. Instead of describing conflicts, the
+model reports what each source states about a few questions in a canonical form, with the wording it
+read — for example `6_months_from_entry` versus `6_months_from_departure`, each with its excerpt.
+The application then compares those answers, so a disagreement is found the same way every run and
+can be checked against the quoted text. Where sources differ, precedence picks the governing answer:
+a page written for this traveller's nationality first, then immigration authority over foreign
+ministry over mission over appointed provider. A tie stays unresolved and downgrades the plan to
+`partial`.
+
+It worked on the real Singapore evidence: two ICA pages and an MFA page all require six months of
+passport validity but measure it from entry, from departure, and from an unstated point, and the
+nationality-specific ICA page correctly governed.
+
+**Why it was dropped.**
+
+- *Scope mismatch is the unsolved problem.* Two pages can look contradictory while describing
+  different populations. A general page listing visa-free nationalities and a nationality-specific
+  page requiring a visa are not in conflict, but nothing in the claim recorded who a statement
+  applied to, so they compared as though they were. A false "sources disagree on whether you need a
+  visa" is the most damaging thing this product could emit.
+- *It cost output tokens on every run*, for every source and every question, to guard against a case
+  that is rare.
+
+**If it is revisited.** Record the population each claim applies to and compare only same-scope
+claims; leave the visa decision itself out of the comparison, since it already has stronger guards
+(declared required sources, mandatory citation, rejection of unknown citations); and restrict
+comparison to quantitative rules such as validity periods, stay lengths and processing times, where
+a wrong flag costs a caveat rather than alarm. Fees should be split per payee before being compared,
+because a government visa fee and an appointed provider's service fee are different amounts rather
+than a disagreement.
+
 ### Evidence status
 
 Every source resolves to one outcome, and the plan is graded from them:
