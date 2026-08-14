@@ -229,16 +229,24 @@ function issueBlock(title, items) {
   const block = element("div", "reliability-block");
   block.append(element("h3", "", title));
   const list = element("ul");
-  const displayItems = items.length ? items : ["None reported in this fixture snapshot."];
+  const displayItems = items.length ? items : ["None reported for this run."];
   displayItems.forEach((item) => list.append(element("li", "", item)));
   block.append(list);
   return block;
 }
 
+// Name the authorities this plan actually rests on, so the caveat is never wrong for a country.
+function authoritiesSentence(plan) {
+  const names = [...new Set(plan.sources.map((source) => source.authority))];
+  if (!names.length) return "the responsible authority";
+  if (names.length === 1) return names[0];
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 function renderReliability(plan) {
   const { container } = panel("Evidence and caveats", "Reliability");
   container.append(
-    element("p", "checked-at", `Fixture snapshot checked ${new Date(plan.last_checked).toLocaleString()}.`),
+    element("p", "checked-at", `Evidence last checked ${new Date(plan.last_checked).toLocaleString()}.`),
   );
 
   const grid = element("div", "reliability-grid");
@@ -251,7 +259,7 @@ function renderReliability(plan) {
     element(
       "p",
       "disclaimer",
-      "Requirements can change. Confirm the current rules, fees, documents and appointment instructions with ICA, the Singapore High Commission and its authorised provider before applying. A visa does not guarantee approval or entry.",
+      `Requirements can change. Confirm the current rules, fees, documents and appointment instructions with ${authoritiesSentence(plan)} before applying. A visa does not guarantee approval or entry.`,
     ),
   );
   return container;

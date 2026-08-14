@@ -25,8 +25,9 @@
           <p class="eyebrow">Personal travel research · Edinburgh, UK</p>
           <h1 id="page-title">Turn official guidance into a practical visa plan.</h1>
           <p class="hero-copy">
-            This controlled vertical slice uses a saved Singapore source snapshot for an ordinary
-            Indian passport holder travelling for tourism.
+            Research for an ordinary Indian passport holder resident in the UK, travelling for
+            tourism. Evidence comes from
+            {% if source_mode == 'live' %}the configured official pages, retrieved live{% else %}saved official-source snapshots{% endif %}.
           </p>
 
           <form id="plan-form" class="research-form">
@@ -57,8 +58,8 @@
 
         <section id="results" class="results" aria-live="polite" aria-busy="false">
           <div class="empty-state">
-            <p class="eyebrow">Fixture ready</p>
-            <h2>Singapore is available for an offline test run.</h2>
+            <p class="eyebrow">Ready</p>
+            <h2>Choose a destination to research.</h2>
             <p>Generate a plan to inspect its decision, evidence, application route and caveats.</p>
           </div>
         </section>
