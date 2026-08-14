@@ -5,10 +5,16 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from visa_research_agent.domain.trust import host_is_within, host_of, is_bare_public_suffix
+
 RouteType = Literal["national", "schengen_member"]
 ImplementationStatus = Literal["planned", "available"]
 SourceMode = Literal["fixtures", "live"]
 ExtractionMode = Literal["fixture", "openai"]
+# Why a source produced no usable evidence. Unreachable and unusable are kept apart because they
+# need different remedies: one is a transient site problem, the other needs a different retriever.
+FailureOutcome = Literal["untrusted", "unreachable", "unusable"]
+PlanStatus = Literal["verified", "partial"]
 SourceKind = Literal[
     "immigration_authority",
     "foreign_ministry",
@@ -53,6 +59,17 @@ class ConfiguredSource(StrictModel):
     research_pass: SourcePass = "primary"
 
 
+class AppointedProvider(StrictModel):
+    """A non-government domain authorised by a named official page.
+
+    Appointed providers cannot pass domain trust by design, so their authority comes only from an
+    official source that names them for this destination.
+    """
+
+    domain: str = Field(min_length=1)
+    appointed_by: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]*$")
+
+
 class DestinationConfig(StrictModel):
     """Country-specific research configuration."""
 
@@ -63,6 +80,22 @@ class DestinationConfig(StrictModel):
     implementation_status: ImplementationStatus = "planned"
     sources: list[ConfiguredSource] = Field(default_factory=list)
     application_document_source_ids: list[str] = Field(default_factory=list)
+    trusted_domains: list[str] = Field(default_factory=list)
+    appointed_providers: list[AppointedProvider] = Field(default_factory=list)
+    required_source_ids: list[str] = Field(default_factory=list)
+
+    @property
+    def load_bearing_source_ids(self) -> list[str]:
+        """Sources the plan cannot be produced without, defaulting to the document checklist."""
+
+        return self.required_source_ids or self.application_document_source_ids
+
+    def trusts_host(self, host: str) -> bool:
+        """True when a host is an approved authority domain or an appointed provider domain."""
+
+        return host_is_within(host, self.trusted_domains) or host_is_within(
+            host, [provider.domain for provider in self.appointed_providers]
+        )
 
     @model_validator(mode="after")
     def validate_route(self) -> "DestinationConfig":
@@ -81,6 +114,40 @@ class DestinationConfig(StrictModel):
         if unknown_source_ids:
             unknown = ", ".join(sorted(unknown_source_ids))
             raise ValueError(f"application document sources contain unknown IDs: {unknown}")
+
+        unknown_required_ids = set(self.required_source_ids).difference(source_ids)
+        if unknown_required_ids:
+            unknown = ", ".join(sorted(unknown_required_ids))
+            raise ValueError(f"required sources contain unknown IDs: {unknown}")
+
+        for domain in self.trusted_domains:
+            if is_bare_public_suffix(domain):
+                raise ValueError(
+                    f"trusted domain {domain} is a public suffix and would trust every site "
+                    "beneath it"
+                )
+
+        for provider in self.appointed_providers:
+            if provider.appointed_by not in source_ids:
+                raise ValueError(
+                    f"appointed provider {provider.domain} names an unknown appointing source: "
+                    f"{provider.appointed_by}"
+                )
+
+        # Every hand-configured URL must already satisfy the destination's own trust rules, so a
+        # mistake in review fails at load time rather than during a research run.
+        if self.sources and not self.trusted_domains:
+            raise ValueError("a destination with sources must declare its trusted domains")
+        untrusted = sorted(
+            {
+                str(source.url)
+                for source in self.sources
+                if not self.trusts_host(host_of(str(source.url)))
+            }
+        )
+        if untrusted:
+            listed = ", ".join(untrusted)
+            raise ValueError(f"configured sources are not on a trusted domain: {listed}")
         return self
 
 
@@ -144,6 +211,8 @@ class SourceReference(StrictModel):
     authority: str = Field(min_length=1)
     retrieved_at: datetime
     supporting_excerpt: str | None = None
+    is_stale: bool = False
+    """True when a refresh failed and cached text was served past its freshness window."""
 
     _validate_retrieved_at = field_validator("retrieved_at")(_require_aware_datetime)
 
@@ -155,8 +224,37 @@ class FetchedSource(StrictModel):
     content: str = Field(min_length=1)
     content_hash: str = Field(min_length=1)
     from_cache: bool = False
-    is_stale: bool = False
-    """True when a refresh failed and cached evidence was served past its freshness window."""
+
+
+class SourceFailure(StrictModel):
+    """A configured source that produced no usable evidence, and why."""
+
+    source_id: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]*$")
+    title: str = Field(min_length=1)
+    authority: str = Field(min_length=1)
+    outcome: FailureOutcome
+    detail: str = Field(min_length=1)
+    """A safe summary of the cause. Never carries retrieved page text."""
+
+    attempted_url: AnyHttpUrl
+    final_url: AnyHttpUrl | None = None
+    """Where the request actually landed, recorded when a redirect left the trusted domains."""
+
+
+class RetrievalReport(StrictModel):
+    """Everything one retrieval pass produced: usable evidence and explained gaps."""
+
+    fetched: list[FetchedSource] = Field(default_factory=list)
+    failures: list[SourceFailure] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_unique_source_ids(self) -> "RetrievalReport":
+        source_ids = [item.source.source_id for item in self.fetched] + [
+            failure.source_id for failure in self.failures
+        ]
+        if len(source_ids) != len(set(source_ids)):
+            raise ValueError("a retrieval report cannot report the same source twice")
+        return self
 
 
 class VisaRequirement(StrictModel):
@@ -241,8 +339,21 @@ class VisaPlan(StrictModel):
     unresolved_questions: list[str]
     conflicts: list[str]
     last_checked: datetime
+    status: PlanStatus
+    unavailable_sources: list[SourceFailure] = Field(default_factory=list)
 
     _validate_last_checked = field_validator("last_checked")(_require_aware_datetime)
+
+    @model_validator(mode="after")
+    def validate_status_matches_evidence(self) -> "VisaPlan":
+        """A verified plan must have complete, current evidence behind every source."""
+
+        if self.status == "verified":
+            if self.unavailable_sources:
+                raise ValueError("a verified plan cannot report unavailable sources")
+            if any(source.is_stale for source in self.sources):
+                raise ValueError("a verified plan cannot rest on stale evidence")
+        return self
 
     @model_validator(mode="after")
     def validate_requirement_sources(self) -> "VisaPlan":

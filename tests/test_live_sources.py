@@ -9,9 +9,12 @@ from pydantic import AnyHttpUrl
 from visa_research_agent.api.dependencies import build_source_fetcher
 from visa_research_agent.config.loader import load_runtime_policy
 from visa_research_agent.domain.models import (
+    AppointedProvider,
     ConfiguredSource,
     DestinationConfig,
+    FetchedSource,
     RuntimePolicy,
+    SourceFailure,
     SourceMode,
 )
 from visa_research_agent.research.errors import LiveSourceError
@@ -40,6 +43,10 @@ def destination() -> DestinationConfig:
         route_type="national",
         implementation_status="available",
         application_document_source_ids=["tl_visa_documents"],
+        trusted_domains=["immigration.gov.example"],
+        appointed_providers=[
+            AppointedProvider(domain="provider.example", appointed_by="tl_visa_documents")
+        ],
         sources=[
             ConfiguredSource(
                 source_id="tl_visa_documents",
@@ -102,6 +109,23 @@ def build_fetcher(
     )
 
 
+async def fetch_usable(fetcher: LiveSourceFetcher) -> list[FetchedSource]:
+    """Retrieve and assert nothing was reported as a gap, for the happy-path tests."""
+
+    report = await fetcher.fetch(destination())
+    assert not report.failures, f"unexpected gaps: {report.failures}"
+    return report.fetched
+
+
+async def fetch_failure(fetcher: LiveSourceFetcher) -> SourceFailure:
+    """Retrieve and return the single reported gap, for the degraded-path tests."""
+
+    report = await fetcher.fetch(destination())
+    assert not report.fetched
+    assert len(report.failures) == 1
+    return report.failures[0]
+
+
 def test_clean_source_html_drops_chrome_and_blank_lines() -> None:
     cleaned = clean_source_html(page("Requirement text."), maximum_characters=50_000)
 
@@ -127,14 +151,14 @@ async def test_first_fetch_retrieves_live_text_and_records_real_provenance(
         tmp_path, clock, lambda _: httpx.Response(200, text=page(PAGE_BODY)), requests
     )
 
-    fetched = await fetcher.fetch(destination())
+    fetched = await fetch_usable(fetcher)
 
     # Only the primary source is retrieved; the follow-up provider is left alone.
     assert len(requests) == 1
     assert len(fetched) == 1
     assert fetched[0].source.source_id == "tl_visa_documents"
     assert fetched[0].from_cache is False
-    assert fetched[0].is_stale is False
+    assert fetched[0].source.is_stale is False
     assert fetched[0].source.retrieved_at == clock.moment
     assert "Indian passport holders require an entry visa." in fetched[0].content
     assert len(fetched[0].content_hash) == 64
@@ -150,14 +174,14 @@ async def test_second_fetch_inside_the_ttl_uses_cache_and_keeps_the_original_tim
         tmp_path, clock, lambda _: httpx.Response(200, text=page(PAGE_BODY)), requests
     )
 
-    first = await fetcher.fetch(destination())
+    first = await fetch_usable(fetcher)
     first_retrieved_at = first[0].source.retrieved_at
     clock.advance(5)
-    second = await fetcher.fetch(destination())
+    second = await fetch_usable(fetcher)
 
     assert len(requests) == 1, "a fetch inside the TTL must not hit the network again"
     assert second[0].from_cache is True
-    assert second[0].is_stale is False
+    assert second[0].source.is_stale is False
     # The honesty rule: cached evidence reports when it was really retrieved, not now.
     assert second[0].source.retrieved_at == first_retrieved_at
     assert second[0].source.retrieved_at != clock.moment
@@ -177,14 +201,14 @@ async def test_revalidation_past_the_ttl_sends_validators_and_accepts_not_modifi
 
     fetcher = build_fetcher(tmp_path, clock, handler, requests)
 
-    await fetcher.fetch(destination())
+    await fetch_usable(fetcher)
     clock.advance(30)
-    revalidated = await fetcher.fetch(destination())
+    revalidated = await fetch_usable(fetcher)
 
     assert len(requests) == 2
     assert requests[1].headers["If-None-Match"] == 'W/"v1"'
     assert revalidated[0].from_cache is True
-    assert revalidated[0].is_stale is False
+    assert revalidated[0].source.is_stale is False
     # A validator match confirms currency, so the clock advances to the moment of that check.
     assert revalidated[0].source.retrieved_at == clock.moment
 
@@ -200,9 +224,9 @@ async def test_changed_page_past_the_ttl_replaces_content_and_hash(tmp_path: Pat
 
     fetcher = build_fetcher(tmp_path, clock, handler, requests)
 
-    first = await fetcher.fetch(destination())
+    first = await fetch_usable(fetcher)
     clock.advance(30)
-    second = await fetcher.fetch(destination())
+    second = await fetch_usable(fetcher)
 
     assert first[0].content_hash != second[0].content_hash
     assert "electronic visa" in second[0].content
@@ -224,17 +248,19 @@ async def test_failed_refresh_serves_cache_flagged_stale_with_its_true_age(
 
     fetcher = build_fetcher(tmp_path, clock, handler, requests)
 
-    first = await fetcher.fetch(destination())
+    first = await fetch_usable(fetcher)
     clock.advance(48)
-    degraded = await fetcher.fetch(destination())
+    degraded = await fetch_usable(fetcher)
 
-    assert degraded[0].is_stale is True
+    assert degraded[0].source.is_stale is True
     assert degraded[0].from_cache is True
     assert degraded[0].source.retrieved_at == first[0].source.retrieved_at
 
 
 @pytest.mark.anyio
-async def test_refusal_once_cached_evidence_passes_the_stale_ceiling(tmp_path: Path) -> None:
+async def test_cached_evidence_past_the_stale_ceiling_is_reported_not_served(
+    tmp_path: Path,
+) -> None:
     clock = Clock()
     requests: list[httpx.Request] = []
 
@@ -245,15 +271,16 @@ async def test_refusal_once_cached_evidence_passes_the_stale_ceiling(tmp_path: P
 
     fetcher = build_fetcher(tmp_path, clock, handler, requests, maximum_stale_hours=72.0)
 
-    await fetcher.fetch(destination())
+    await fetch_usable(fetcher)
     clock.advance(200)
+    failure = await fetch_failure(fetcher)
 
-    with pytest.raises(LiveSourceError, match="hours old"):
-        await fetcher.fetch(destination())
+    assert failure.outcome == "unreachable"
+    assert "past the 72 hour limit" in failure.detail
 
 
 @pytest.mark.anyio
-async def test_refusal_when_retrieval_fails_and_nothing_is_cached(tmp_path: Path) -> None:
+async def test_unreachable_source_with_no_cache_is_reported_as_a_gap(tmp_path: Path) -> None:
     clock = Clock()
     requests: list[httpx.Request] = []
 
@@ -261,13 +288,14 @@ async def test_refusal_when_retrieval_fails_and_nothing_is_cached(tmp_path: Path
         raise httpx.ConnectError("the authority is unreachable")
 
     fetcher = build_fetcher(tmp_path, clock, handler, requests)
+    failure = await fetch_failure(fetcher)
 
-    with pytest.raises(LiveSourceError, match="Could not retrieve tl_visa_documents"):
-        await fetcher.fetch(destination())
+    assert failure.outcome == "unreachable"
+    assert failure.source_id == "tl_visa_documents"
 
 
 @pytest.mark.anyio
-async def test_refusal_on_a_client_rendered_shell_rather_than_treating_it_as_evidence(
+async def test_client_rendered_shell_is_reported_unusable_not_treated_as_evidence(
     tmp_path: Path,
 ) -> None:
     clock = Clock()
@@ -275,18 +303,45 @@ async def test_refusal_on_a_client_rendered_shell_rather_than_treating_it_as_evi
     shell = '<html><body><div id="root"></div><script>render()</script></body></html>'
     fetcher = build_fetcher(tmp_path, clock, lambda _: httpx.Response(200, text=shell), requests)
 
-    with pytest.raises(LiveSourceError, match="too little readable text"):
-        await fetcher.fetch(destination())
+    failure = await fetch_failure(fetcher)
+
+    assert failure.outcome == "unusable"
+    assert "too little readable text" in failure.detail
 
 
 @pytest.mark.anyio
-async def test_refusal_on_an_error_status_without_cached_evidence(tmp_path: Path) -> None:
+async def test_error_status_without_cached_evidence_is_reported_as_a_gap(tmp_path: Path) -> None:
     clock = Clock()
     requests: list[httpx.Request] = []
     fetcher = build_fetcher(tmp_path, clock, lambda _: httpx.Response(503), requests)
 
-    with pytest.raises(LiveSourceError, match="HTTP 503"):
-        await fetcher.fetch(destination())
+    failure = await fetch_failure(fetcher)
+
+    assert failure.outcome == "unreachable"
+    assert "HTTP 503" in failure.detail
+
+
+@pytest.mark.anyio
+async def test_redirect_off_the_trusted_domains_is_refused_as_untrusted(tmp_path: Path) -> None:
+    clock = Clock()
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        # The approved URL redirects away to a domain the destination never approved, which then
+        # serves perfectly plausible visa text. Content quality must not rescue it.
+        if request.url.host == "immigration.gov.example":
+            return httpx.Response(302, headers={"Location": "https://cheap-visas.example/testland"})
+        return httpx.Response(200, text=page(PAGE_BODY))
+
+    fetcher = build_fetcher(tmp_path, clock, handler, requests)
+    failure = await fetch_failure(fetcher)
+
+    assert failure.outcome == "untrusted"
+    assert failure.final_url is not None
+    assert failure.final_url.host == "cheap-visas.example"
+    assert "cheap-visas.example" in failure.detail
+    # The redirect really was followed; the refusal is about trust, not a failed request.
+    assert len(requests) == 2
 
 
 @pytest.mark.anyio

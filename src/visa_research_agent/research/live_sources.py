@@ -11,13 +11,18 @@ from hashlib import sha256
 
 import httpx
 from bs4 import BeautifulSoup
+from pydantic import AnyHttpUrl
 
 from visa_research_agent.domain.models import (
     ConfiguredSource,
     DestinationConfig,
+    FailureOutcome,
     FetchedSource,
+    RetrievalReport,
+    SourceFailure,
     SourceReference,
 )
+from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LiveSourceError
 from visa_research_agent.research.source_cache import CachedSource, FileSourceCache
 
@@ -89,8 +94,8 @@ class LiveSourceFetcher:
         self.transport = transport
         self.now = now
 
-    async def fetch(self, destination: DestinationConfig) -> list[FetchedSource]:
-        """Retrieve every configured primary source, or fail the run."""
+    async def fetch(self, destination: DestinationConfig) -> RetrievalReport:
+        """Retrieve every configured primary source, reporting any that could not be used."""
 
         configured_sources = [
             source for source in destination.sources if source.research_pass == "primary"
@@ -112,21 +117,29 @@ class LiveSourceFetcher:
             },
         ) as client:
 
-            async def fetch_one(configured_source: ConfiguredSource) -> FetchedSource:
+            async def fetch_one(
+                configured_source: ConfiguredSource,
+            ) -> FetchedSource | SourceFailure:
                 async with limit:
-                    return await self._fetch_source(client, configured_source)
+                    return await self._fetch_source(client, destination, configured_source)
 
-            return list(
-                await asyncio.gather(
-                    *(fetch_one(source) for source in configured_sources),
-                )
+            results = await asyncio.gather(
+                *(fetch_one(source) for source in configured_sources),
             )
+
+        # One unusable source no longer ends the run; it is reported as an explained gap and the
+        # decision about whether the plan can still stand is made downstream.
+        return RetrievalReport(
+            fetched=[item for item in results if isinstance(item, FetchedSource)],
+            failures=[item for item in results if isinstance(item, SourceFailure)],
+        )
 
     async def _fetch_source(
         self,
         client: httpx.AsyncClient,
+        destination: DestinationConfig,
         configured_source: ConfiguredSource,
-    ) -> FetchedSource:
+    ) -> FetchedSource | SourceFailure:
         url = str(configured_source.url)
         now = self.now()
         cached = self.cache.load(url)
@@ -137,7 +150,26 @@ class LiveSourceFetcher:
         try:
             response = await self._request(client, url, cached)
         except httpx.HTTPError as exc:
-            return self._serve_stale(configured_source, cached, now, f"the request failed ({exc})")
+            return self._serve_stale(
+                configured_source, cached, now, f"the request failed ({exc})", "unreachable"
+            )
+
+        # Follow where the request actually landed. A page that redirects off the approved
+        # authority domains is refused outright rather than quoted as official guidance.
+        final_host = host_of(str(response.url))
+        if not destination.trusts_host(final_host):
+            return SourceFailure(
+                source_id=configured_source.source_id,
+                title=configured_source.title,
+                authority=configured_source.authority,
+                outcome="untrusted",
+                detail=(
+                    f"the request was redirected to {final_host}, which is not an approved "
+                    f"authority domain for {destination.display_name}"
+                ),
+                attempted_url=configured_source.url,
+                final_url=AnyHttpUrl(str(response.url)),
+            )
 
         # A validator match proves the cached text is still current, so only the clock moves.
         if response.status_code == httpx.codes.NOT_MODIFIED and cached is not None:
@@ -151,6 +183,7 @@ class LiveSourceFetcher:
                 cached,
                 now,
                 f"the source answered HTTP {response.status_code}",
+                "unreachable",
             )
 
         content = clean_source_html(response.text, maximum_characters=self.maximum_characters)
@@ -162,6 +195,7 @@ class LiveSourceFetcher:
                 cached,
                 now,
                 "the page returned too little readable text to trust",
+                "unusable",
             )
 
         entry = CachedSource(
@@ -197,19 +231,28 @@ class LiveSourceFetcher:
         cached: CachedSource | None,
         now: datetime,
         reason: str,
-    ) -> FetchedSource:
+        outcome: FailureOutcome,
+    ) -> FetchedSource | SourceFailure:
         """Fall back to cached evidence, but only while it is still inside the stale ceiling."""
 
-        if cached is None:
-            raise LiveSourceError(
-                f"Could not retrieve {configured_source.source_id} because {reason}",
+        def failure(detail: str) -> SourceFailure:
+            return SourceFailure(
+                source_id=configured_source.source_id,
+                title=configured_source.title,
+                authority=configured_source.authority,
+                outcome=outcome,
+                detail=detail,
+                attempted_url=configured_source.url,
             )
+
+        if cached is None:
+            return failure(reason)
 
         age_hours = cached.age_hours(now)
         if age_hours > self.maximum_stale_hours:
-            raise LiveSourceError(
-                f"Cached evidence for {configured_source.source_id} is {age_hours:.0f} hours old "
-                f"and could not be refreshed because {reason}",
+            return failure(
+                f"{reason}, and the cached copy is {age_hours:.0f} hours old, past the "
+                f"{self.maximum_stale_hours:.0f} hour limit for serving stale guidance"
             )
         return self._build(configured_source, cached, from_cache=True, is_stale=True)
 
@@ -230,9 +273,9 @@ class LiveSourceFetcher:
                 # The recorded retrieval time, never the request time, so cached evidence
                 # cannot present itself as freshly checked.
                 retrieved_at=entry.fetched_at,
+                is_stale=is_stale,
             ),
             content=entry.content,
             content_hash=entry.content_hash,
             from_cache=from_cache,
-            is_stale=is_stale,
         )

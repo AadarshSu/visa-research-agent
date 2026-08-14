@@ -16,5 +16,5 @@ class VisaPlanService:
         destination: DestinationConfig,
         traveller_profile: TravellerProfile,
     ) -> VisaPlan:
-        fetched_sources = await self.source_fetcher.fetch(destination)
-        return await self.extractor.extract(destination, traveller_profile, fetched_sources)
+        report = await self.source_fetcher.fetch(destination)
+        return await self.extractor.extract(destination, traveller_profile, report)

@@ -91,6 +91,7 @@ def test_visa_plan_rejects_unknown_requirement_source_ids() -> None:
             unresolved_questions=[],
             conflicts=[],
             last_checked=checked_at,
+            status="verified",
         )
 
 

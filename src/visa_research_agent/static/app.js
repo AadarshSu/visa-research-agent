@@ -36,18 +36,19 @@ function sourceSubtext(source) {
     month: "short",
     day: "numeric",
   });
-  return `${source.authority} · retrieved ${retrieved}`;
+  const freshness = source.is_stale ? "could not be re-checked since" : "retrieved";
+  return `${source.authority} · ${freshness} ${retrieved}`;
 }
 
 // One card component for every outgoing link. Role is either the single action
 // the traveller must take ("action") or supporting provenance ("evidence").
-function linkCard(role, title, url, subtext) {
-  const card = externalLink("", url, `link-card link-card--${role}`);
+function linkCard(role, title, url, subtext, isStale = false) {
+  const card = externalLink("", url, `link-card link-card--${role}${isStale ? " link-card--stale" : ""}`);
   const body = element("div", "link-card-body");
-  body.append(
-    element("span", "link-card-role", role === "action" ? "Go here" : "Evidence"),
-    element("span", "link-card-title", title),
-  );
+  const roleRow = element("span", "link-card-role-row");
+  roleRow.append(element("span", "link-card-role", role === "action" ? "Go here" : "Evidence"));
+  if (isStale) roleRow.append(element("span", "stale-badge", "Not re-checked"));
+  body.append(roleRow, element("span", "link-card-title", title));
   if (subtext) body.append(element("span", "link-card-sub", subtext));
   card.append(body, element("span", "link-card-arrow", "↗"));
   return card;
@@ -76,7 +77,9 @@ function renderEvidence(sourceIds, ctx, section) {
     if (!source || ctx.seenUrls.has(String(source.url))) return;
     ctx.seen.add(id);
     ctx.seenUrls.add(String(source.url));
-    group.append(linkCard("evidence", source.title, source.url, sourceSubtext(source)));
+    group.append(
+      linkCard("evidence", source.title, source.url, sourceSubtext(source), source.is_stale),
+    );
   });
   return group;
 }
@@ -85,10 +88,54 @@ function appendIfFilled(container, group) {
   if (group.childElementCount) container.append(group);
 }
 
+// A partial plan is still useful, but it must never look as complete as a verified one.
+function renderEvidenceBanner(plan) {
+  const staleSources = plan.sources.filter((source) => source.is_stale);
+  const missing = plan.unavailable_sources || [];
+  if (plan.status === "verified" && !staleSources.length && !missing.length) return null;
+
+  const banner = element("div", "evidence-banner");
+  banner.append(element("p", "evidence-banner-title", "Evidence is incomplete"));
+
+  const list = element("ul");
+  missing.forEach((failure) => {
+    list.append(
+      element("li", "", `${failure.title} (${failure.authority}) — ${failure.detail}`),
+    );
+  });
+  staleSources.forEach((source) => {
+    const checked = new Date(source.retrieved_at).toLocaleDateString();
+    list.append(
+      element(
+        "li",
+        "",
+        `${source.title} could not be re-checked; showing the copy retrieved ${checked}.`,
+      ),
+    );
+  });
+  banner.append(list);
+  banner.append(
+    element(
+      "p",
+      "evidence-banner-note",
+      "Everything below is still drawn only from official sources, but confirm these points "
+        + "directly with the responsible authority before you rely on them.",
+    ),
+  );
+  return banner;
+}
+
 function renderDecision(plan, ctx) {
   const { container, header } = panel(plan.destination, "Visa decision");
   const decision = plan.visa_required === null ? "Uncertain" : plan.visa_required ? "Visa required" : "No visa required";
-  header.append(element("span", "decision-chip", decision));
+  const chips = element("div", "chip-group");
+  chips.append(
+    element("span", "decision-chip", decision),
+    element("span", `status-chip status-chip--${plan.status}`, plan.status === "verified" ? "Evidence verified" : "Evidence partial"),
+  );
+  header.append(chips);
+  const banner = renderEvidenceBanner(plan);
+  if (banner) container.append(banner);
   container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
   return container;
@@ -210,6 +257,39 @@ function renderReliability(plan) {
   return container;
 }
 
+// Refusing is a legitimate outcome for high-stakes guidance, so it gets a real explanation
+// rather than a generic failure message.
+function renderRefusal(detail) {
+  const { container } = panel("No verified plan", "Evidence unavailable");
+  container.append(
+    element(
+      "p",
+      "lead",
+      detail.message || "A verified plan could not be produced from official sources.",
+    ),
+  );
+
+  const reasons = detail.reasons || [];
+  if (reasons.length) {
+    const block = element("div", "reliability-block");
+    block.append(element("h3", "", "What could not be verified"));
+    const list = element("ul");
+    reasons.forEach((reason) => list.append(element("li", "", reason)));
+    block.append(list);
+    container.append(block);
+  }
+
+  container.append(
+    element(
+      "p",
+      "disclaimer",
+      "Rather than show guidance that may be wrong or out of date, no plan is produced. "
+        + "Try again later, or check the responsible authority directly.",
+    ),
+  );
+  results.replaceChildren(container);
+}
+
 function renderPlan(plan) {
   const ctx = {
     sourceMap: new Map(plan.sources.map((source) => [source.source_id, source])),
@@ -240,7 +320,13 @@ async function generatePlan(event) {
       body: JSON.stringify({ destination: destinationSelect.value }),
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.detail?.message || "The plan could not be generated.");
+    if (!response.ok) {
+      // A refusal names the evidence it could not verify, rather than failing opaquely.
+      const detail = payload.detail || {};
+      renderRefusal(detail);
+      results.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     renderPlan(payload);
     results.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (error) {

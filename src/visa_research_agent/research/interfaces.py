@@ -4,7 +4,7 @@ from typing import Protocol
 
 from visa_research_agent.domain.models import (
     DestinationConfig,
-    FetchedSource,
+    RetrievalReport,
     TravellerProfile,
     VisaPlan,
     VisaPlanDraft,
@@ -12,8 +12,8 @@ from visa_research_agent.domain.models import (
 
 
 class SourceFetcher(Protocol):
-    async def fetch(self, destination: DestinationConfig) -> list[FetchedSource]:
-        """Retrieve the configured evidence for one destination."""
+    async def fetch(self, destination: DestinationConfig) -> RetrievalReport:
+        """Retrieve the configured evidence for one destination, reporting any gaps."""
         ...
 
 
@@ -22,7 +22,7 @@ class VisaPlanExtractor(Protocol):
         self,
         destination: DestinationConfig,
         traveller_profile: TravellerProfile,
-        fetched_sources: list[FetchedSource],
+        report: RetrievalReport,
     ) -> VisaPlan:
         """Transform bounded evidence into a validated visa plan."""
         ...

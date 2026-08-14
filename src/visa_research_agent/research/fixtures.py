@@ -13,6 +13,7 @@ from visa_research_agent.domain.models import (
     ApplicationLocation,
     DestinationConfig,
     FetchedSource,
+    RetrievalReport,
     SourceReference,
     StrictModel,
     TravellerProfile,
@@ -20,6 +21,7 @@ from visa_research_agent.domain.models import (
     VisaPlanDraft,
 )
 from visa_research_agent.research.errors import FixtureDataError
+from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
 
 
 class FixtureSourceEntry(StrictModel):
@@ -61,7 +63,7 @@ class FixtureSourceFetcher:
     def __init__(self, maximum_characters: int | None = None) -> None:
         self.maximum_characters = maximum_characters or settings.maximum_fixture_characters
 
-    async def fetch(self, destination: DestinationConfig) -> list[FetchedSource]:
+    async def fetch(self, destination: DestinationConfig) -> RetrievalReport:
         fixture_directory = _fixture_directory(destination.slug)
         manifest = FixtureManifest.model_validate(
             _load_yaml(fixture_directory.joinpath("manifest.yaml"))
@@ -108,7 +110,8 @@ class FixtureSourceFetcher:
                     from_cache=True,
                 )
             )
-        return fetched_sources
+        # Offline snapshots are complete by construction, so a fixture run never reports gaps.
+        return RetrievalReport(fetched=fetched_sources, failures=[])
 
 
 class FixtureVisaPlanExtractor:
@@ -118,14 +121,16 @@ class FixtureVisaPlanExtractor:
         self,
         destination: DestinationConfig,
         traveller_profile: TravellerProfile,
-        fetched_sources: list[FetchedSource],
+        report: RetrievalReport,
     ) -> VisaPlan:
         if traveller_profile.passport_nationality != "India":
             raise FixtureDataError("The Singapore fixture only supports the fixed Indian profile")
         if traveller_profile.travel_purpose != "tourism":
             raise FixtureDataError("The Singapore fixture only supports tourism")
+        fetched_sources = report.fetched
         if not fetched_sources:
             raise FixtureDataError("Structured extraction requires at least one source")
+        require_load_bearing_sources(destination, report)
 
         fixture_directory = _fixture_directory(destination.slug)
         template = VisaPlanDraft.model_validate(_load_yaml(fixture_directory.joinpath("plan.yaml")))
@@ -162,4 +167,6 @@ class FixtureVisaPlanExtractor:
             unresolved_questions=template.unresolved_questions,
             conflicts=template.conflicts,
             last_checked=last_checked,
+            status=resolve_plan_status(report),
+            unavailable_sources=report.failures,
         )

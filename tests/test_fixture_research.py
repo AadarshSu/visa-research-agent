@@ -16,10 +16,13 @@ def singapore_config() -> DestinationConfig:
 
 @pytest.mark.anyio
 async def test_fixture_fetcher_loads_primary_sources_without_network() -> None:
-    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+    report = await FixtureSourceFetcher().fetch(singapore_config())
+    fetched_sources = report.fetched
 
+    assert not report.failures
     assert len(fetched_sources) == 5
     assert all(source.from_cache for source in fetched_sources)
+    assert all(not source.source.is_stale for source in fetched_sources)
     assert all(len(source.content_hash) == 64 for source in fetched_sources)
     assert {source.source.source_id for source in fetched_sources} == {
         "sg_ica_visa_requirement_overview",
@@ -44,6 +47,8 @@ async def test_fixture_service_generates_deterministic_validated_plan() -> None:
     second_plan = await service.generate(singapore_config(), TRAVELLER_PROFILE)
 
     assert first_plan == second_plan
+    assert first_plan.status == "verified"
+    assert not first_plan.unavailable_sources
     assert first_plan.visa_required is True
     assert first_plan.where_to_apply is not None
     assert first_plan.where_to_apply.location == "66 Wilson Street, London EC2A 2BT"

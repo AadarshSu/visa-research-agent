@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "visa-research-agent",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "visa_research_agent.api.app:create_app", "--factory", "--port", "8099"],
+      "port": 8099
+    }
+  ]
+}

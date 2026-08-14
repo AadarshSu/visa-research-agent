@@ -289,6 +289,72 @@ button:disabled {
   background: var(--green-soft);
 }
 
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 760;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.status-chip--verified {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
+.status-chip--partial {
+  color: var(--amber);
+  background: var(--amber-soft);
+}
+
+/* Incomplete evidence is stated before the guidance, not buried beneath it. */
+.evidence-banner {
+  margin-bottom: 24px;
+  padding: 20px;
+  border-left: 4px solid var(--amber);
+  border-radius: 8px;
+  background: var(--amber-soft);
+  color: #684319;
+}
+
+.evidence-banner-title {
+  margin: 0 0 10px;
+  font-weight: 800;
+}
+
+.evidence-banner ul {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.evidence-banner-note {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.stale-badge {
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--amber);
+  background: var(--amber-soft);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .lead {
   max-width: 780px;
   color: var(--muted);
@@ -395,11 +461,21 @@ button:disabled {
   gap: 3px;
 }
 
+.link-card-role-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .link-card-role {
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
+}
+
+.link-card--stale {
+  border-left-color: var(--amber);
 }
 
 .link-card--action .link-card-role {

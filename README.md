@@ -18,14 +18,35 @@ extraction:
 - a unified, source-linked visa-application document checklist;
 - a working Singapore `POST /visa-plans` response;
 - optional live retrieval of the configured official pages, with a hash and TTL cache;
+- per-destination domain trust, enforced when configuration loads and after every redirect;
+- graceful degradation: a run reports which sources failed instead of collapsing;
 - a small Jinja and vanilla JavaScript research interface;
 - fully offline tests and CI checks.
 
-Source verification against an authority registry, conflict detection across sources, per-source
-failure status and LangGraph routing remain intentionally deferred. Because retrieval is still
-all-or-nothing, one unreachable page fails the whole run, so `source_mode: fixtures` stays the
-default. Japan, the United States and France return a clear `503 Service Unavailable` response
-until their later destination phases.
+Conflict detection across sources, automatic discovery of official sources, and LangGraph routing
+remain intentionally deferred. Japan, the United States and France return a clear
+`503 Service Unavailable` response until their later destination phases.
+
+### Evidence status
+
+Every source resolves to one outcome, and the plan is graded from them:
+
+| Outcome | Evidence usable | Meaning |
+| --- | --- | --- |
+| `ok` | yes | Retrieved fresh, or cached inside the TTL, from a trusted domain |
+| `stale` | yes | A refresh failed, so cached text was served inside the stale ceiling |
+| `untrusted` | no | The final URL after redirects left the approved authority domains |
+| `unreachable` | no | Timeout, connection error, or an error status |
+| `unusable` | no | Retrieved but not evidence — a client-rendered shell or too little text |
+
+Each destination declares `required_source_ids` — the sources a plan cannot stand without,
+defaulting to the document checklist. From there:
+
+- **all sources `ok`** → the plan is `verified`;
+- **a non-required source failed, or any source is stale** → the plan is `partial`, and the
+  interface states which evidence is incomplete above the guidance itself;
+- **a required source failed** → the run is refused before any model call is made, and the API
+  answers `503` naming the evidence it could not verify.
 
 ### Live retrieval
 
@@ -41,6 +62,23 @@ retrieval is cached under `CACHE_DIRECTORY` with its content hash and HTTP valid
 - once cached text passes `source_maximum_stale_hours`, the source is refused instead of served;
 - a page yielding less than `MINIMUM_SOURCE_CHARACTERS` is refused rather than treated as
   evidence, which is what happens to client-rendered pages such as the appointed provider's.
+
+### Domain trust
+
+Officialness is treated as a property of who controls the domain, never of how a page reads, so a
+convincing blog can never qualify. Each destination declares its own `trusted_domains`, and a host
+matches on a dot boundary, so `london.mfa.gov.sg` sits under `mfa.gov.sg` while `notmfa.gov.sg`
+does not. Listing a bare public suffix such as `gov.sg` is rejected outright, because it would
+trust every site beneath it — that guard is rule-based and should be reviewed as countries are
+added.
+
+Appointed providers such as VFS are not government domains and cannot pass domain trust. They are
+authorised only by naming the official page that appoints them, and that page must itself be a
+configured source.
+
+Trust is checked twice: when configuration loads, so a mistake in review never reaches a research
+run, and again on the final URL after redirects, so a page that redirects off the approved domains
+is refused rather than quoted as official guidance.
 
 ## Requirements
 

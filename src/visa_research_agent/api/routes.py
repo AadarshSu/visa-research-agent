@@ -16,7 +16,7 @@ from visa_research_agent.api.templates import static_asset_version, templates
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.traveller import TRAVELLER_PROFILE
 from visa_research_agent.domain.models import VisaPlan
-from visa_research_agent.research.errors import VisaResearchError
+from visa_research_agent.research.errors import InsufficientEvidenceError, VisaResearchError
 from visa_research_agent.research.service import VisaPlanService
 
 router = APIRouter()
@@ -97,6 +97,22 @@ async def create_visa_plan(
 
     try:
         return await service.generate(destination, TRAVELLER_PROFILE)
+    except InsufficientEvidenceError as exc:
+        # A refusal explains which official evidence was missing, rather than failing opaquely.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "message": (
+                    f"A verified plan for {destination.display_name} could not be produced "
+                    "because required official evidence was unavailable."
+                ),
+                "status": "unable_to_verify",
+                "reasons": exc.reasons,
+                "unavailable_sources": [
+                    failure.model_dump(mode="json") for failure in exc.failures
+                ],
+            },
+        ) from exc
     except VisaResearchError as exc:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

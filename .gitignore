@@ -17,3 +17,6 @@ htmlcov/
 var/cache/*
 !var/cache/.gitkeep
 
+# Machine-local tool settings. The shared launch configuration is tracked.
+.claude/settings.local.json
+

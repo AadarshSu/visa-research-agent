@@ -12,12 +12,14 @@ from visa_research_agent.domain.models import (
     ApplicationLocation,
     DestinationConfig,
     FetchedSource,
+    RetrievalReport,
     TravellerProfile,
     VisaPlan,
     VisaPlanDraft,
 )
 from visa_research_agent.research.errors import LLMExtractionError, VisaResearchError
 from visa_research_agent.research.interfaces import StructuredPlanGenerator
+from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
 
 
 def load_extraction_prompt() -> str:
@@ -129,10 +131,13 @@ class OpenAIVisaPlanExtractor:
         self,
         destination: DestinationConfig,
         traveller_profile: TravellerProfile,
-        fetched_sources: list[FetchedSource],
+        report: RetrievalReport,
     ) -> VisaPlan:
+        fetched_sources = report.fetched
         if not fetched_sources:
             raise LLMExtractionError("Structured extraction requires at least one source")
+        # Refuse before the model call, so a run that cannot succeed costs nothing.
+        require_load_bearing_sources(destination, report)
 
         research_packet = build_research_packet(
             destination,
@@ -186,6 +191,8 @@ class OpenAIVisaPlanExtractor:
                 unresolved_questions=draft.unresolved_questions,
                 conflicts=draft.conflicts,
                 last_checked=max(reference.retrieved_at for reference in references),
+                status=resolve_plan_status(report),
+                unavailable_sources=report.failures,
             )
         except ValidationError as exc:
             raise LLMExtractionError("Model output failed source and schema validation") from exc

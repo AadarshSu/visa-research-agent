@@ -5,6 +5,17 @@ destinations:
     route_type: national
     implementation_status: available
     application_document_source_ids: [sg_ica_india_visa_details]
+    # Sources the plan cannot stand without: the nationality-specific checklist and the page that
+    # establishes the visa decision itself. Everything else degrades to a caveat.
+    required_source_ids: [sg_ica_india_visa_details, sg_ica_visa_requirement_overview]
+    # Approved authority domains. Subdomains are covered, so london.mfa.gov.sg sits under
+    # mfa.gov.sg. Never list a bare suffix such as gov.sg.
+    trusted_domains: [ica.gov.sg, mfa.gov.sg]
+    # VFS is not a government domain and cannot pass domain trust. Its authority comes only from
+    # the High Commission page that appoints it.
+    appointed_providers:
+      - domain: visa.vfsglobal.com
+        appointed_by: sg_mfa_london_visa_information
     sources:
       - source_id: sg_ica_visa_requirement_overview
         title: Check if You Need an Entry Visa
