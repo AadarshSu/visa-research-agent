@@ -4,6 +4,11 @@ A personal learning project that will generate bounded, source-backed visa appli
 one fixed traveller profile. The application reports what configured official sources say; it does
 not guarantee eligibility, completeness, or visa approval.
 
+> **Picking the project up?** Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) — current state,
+> open problems and what is next. Then [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built,
+> [DECISIONS.md](DECISIONS.md) for why, and [TODO.md](TODO.md) for what remains. This README covers
+> what the application does and how to run it.
+
 ## Current status
 
 Phase 2 now provides the first end-to-end destination with offline sources and switchable
