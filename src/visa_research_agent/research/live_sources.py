@@ -31,6 +31,7 @@ from visa_research_agent.domain.models import (
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LiveSourceError
 from visa_research_agent.research.source_cache import CachedSource, FileSourceCache
+from visa_research_agent.research.tls import build_ssl_context
 
 # Government pages carry heavy navigation furniture that would otherwise dominate the
 # evidence and dilute the text the extractor reasons over.
@@ -112,6 +113,17 @@ def find_forward_target(html: str, base_url: str) -> str | None:
     return urljoin(base_url, target) if target else None
 
 
+# Content types that are data for a program, not guidance for a person. Discovery can surface an
+# API endpoint that returns several hundred characters of JSON, which would otherwise clear the
+# readable-text floor and be quoted as though it were official advice.
+MACHINE_CONTENT_TYPES = ("application/json", "application/xml", "text/csv", "text/xml")
+
+
+def looks_machine_readable(response: httpx.Response) -> bool:
+    content_type = response.headers.get("content-type", "").lower()
+    return any(marker in content_type for marker in MACHINE_CONTENT_TYPES)
+
+
 def looks_like_pdf(response: httpx.Response) -> bool:
     content_type = response.headers.get("content-type", "").lower()
     if "application/pdf" in content_type:
@@ -185,6 +197,8 @@ class LiveSourceFetcher:
             transport=self.transport,
             timeout=self.timeout_seconds,
             follow_redirects=True,
+            # Verification stays on; the context only completes chains servers fail to send.
+            verify=build_ssl_context(),
             headers={
                 "User-Agent": self.user_agent,
                 "Accept": "text/html,application/xhtml+xml,application/pdf",
@@ -325,6 +339,11 @@ class LiveSourceFetcher:
 
         if len(response.content) > self.maximum_bytes:
             raise _ContentProblem("unusable", "the document exceeds the configured size limit")
+
+        if looks_machine_readable(response):
+            raise _ContentProblem(
+                "unusable", "it returns data for a program rather than readable guidance"
+            )
 
         if looks_like_pdf(response):
             try:

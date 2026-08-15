@@ -20,6 +20,7 @@ from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLi
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
 from visa_research_agent.domain.models import DestinationConfig
 from visa_research_agent.domain.trust import host_of
+from visa_research_agent.research.tls import build_ssl_context
 
 HEADING_TAGS = ("h1", "h2", "h3")
 
@@ -222,6 +223,7 @@ class LinkCrawler:
             transport=self.fetcher.transport,
             timeout=self.fetcher.timeout_seconds,
             follow_redirects=True,
+            verify=build_ssl_context(),
             headers={
                 "User-Agent": self.fetcher.user_agent,
                 "Accept": "text/html,application/xhtml+xml",

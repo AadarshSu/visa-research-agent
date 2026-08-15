@@ -223,3 +223,25 @@ def test_the_cache_directory_is_only_created_when_something_is_stored(tmp_path: 
 
     assert cache.load("https://immigration.gov.example/visa") is None
     assert not (tmp_path / "unused").exists()
+
+
+@pytest.mark.anyio
+async def test_a_json_api_response_is_not_treated_as_guidance(tmp_path: Path) -> None:
+    """Discovery surfaced Vietnam's e-visa language API, whose JSON cleared the readable-text
+    floor and would otherwise have been quoted as official advice."""
+
+    clock = Clock()
+    requests: list[httpx.Request] = []
+    entries = ",".join(f'{{"id":{index},"name":"language {index}"}}' for index in range(40))
+    payload = '{"data":[' + entries + "]}"
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=payload, headers={"Content-Type": "application/json"})
+
+    fetcher = build_fetcher(tmp_path, clock, handler, requests)
+    report = await fetcher.fetch(destination())
+
+    assert len(payload) > 400, "the payload must be long enough to clear the text floor"
+    assert not report.fetched
+    assert report.failures[0].outcome == "unusable"
+    assert "data for a program" in report.failures[0].detail
