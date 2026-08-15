@@ -1,0 +1,93 @@
+# Country reference data for discovery.
+#
+# `host_labels` exists because ISO codes and the labels authorities actually use in hostnames
+# disagree: the United Kingdom is GB in ISO 3166-1, but its Japanese mission is uk.emb-japan.go.jp.
+# That mismatch must be data, not a special case in code.
+#
+# `demonyms` are the forms that appear in URL paths and link text ("india", "indian").
+
+schema_version: 1
+countries:
+  - code: GB
+    name: United Kingdom
+    synonyms: [united kingdom, uk, great britain, britain, england, scotland, wales]
+    demonyms: [british]
+    host_labels: [uk, gb, unitedkingdom, greatbritain]
+
+  - code: IN
+    name: India
+    synonyms: [india, republic of india]
+    demonyms: [indian, indians]
+    host_labels: [in, india]
+
+  - code: SG
+    name: Singapore
+    synonyms: [singapore, republic of singapore]
+    demonyms: [singaporean]
+    host_labels: [sg, singapore]
+
+  - code: JP
+    name: Japan
+    synonyms: [japan]
+    demonyms: [japanese]
+    host_labels: [jp, japan]
+
+  - code: US
+    name: United States
+    synonyms: [united states, usa, us, united states of america, america]
+    demonyms: [american]
+    host_labels: [us, usa, unitedstates]
+
+  - code: CA
+    name: Canada
+    synonyms: [canada]
+    demonyms: [canadian]
+    host_labels: [ca, canada]
+
+  - code: AU
+    name: Australia
+    synonyms: [australia]
+    demonyms: [australian]
+    host_labels: [au, australia]
+
+  - code: FR
+    name: France
+    synonyms: [france, french republic]
+    demonyms: [french]
+    host_labels: [fr, france]
+
+  - code: DE
+    name: Germany
+    synonyms: [germany, federal republic of germany]
+    demonyms: [german]
+    host_labels: [de, germany]
+
+  - code: CN
+    name: China
+    synonyms: [china, people's republic of china]
+    demonyms: [chinese]
+    host_labels: [cn, china]
+
+  - code: AE
+    name: United Arab Emirates
+    synonyms: [united arab emirates, uae, dubai, abu dhabi]
+    demonyms: [emirati]
+    host_labels: [ae, uae]
+
+  - code: BR
+    name: Brazil
+    synonyms: [brazil, federative republic of brazil]
+    demonyms: [brazilian]
+    host_labels: [br, brazil]
+
+  - code: VN
+    name: Vietnam
+    synonyms: [vietnam, viet nam, socialist republic of vietnam]
+    demonyms: [vietnamese]
+    host_labels: [vn, vietnam]
+
+  - code: TH
+    name: Thailand
+    synonyms: [thailand, kingdom of thailand]
+    demonyms: [thai]
+    host_labels: [th, thailand]

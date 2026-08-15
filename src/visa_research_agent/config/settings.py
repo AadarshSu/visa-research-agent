@@ -31,6 +31,12 @@ class Settings(BaseSettings):
         "VisaResearchAgent/0.1 (personal visa research; contact repository owner)"
     )
 
+    # Source discovery. The search key is a secret; the rest is machine-local tuning. Whether
+    # discovery may run at all is not a setting: it is a separate command, run deliberately.
+    search_api_key: SecretStr | None = None
+    search_timeout_seconds: float = 15.0
+    discovery_host_delay_seconds: float = 0.5
+
     maximum_model_input_characters: int = 80_000
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None

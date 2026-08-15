@@ -1,0 +1,209 @@
+# Scoring vocabulary for source discovery.
+#
+# Kept as data rather than Python so the weights can be inspected and tuned without a code change,
+# for the same reason AGENTS.md keeps prompts in files.
+#
+# Weights are additive points. Two rules matter more than any individual number:
+#   1. Link text outweighs the URL. Japan's tourism checklist lives at "index_000070.html", which
+#      carries no signal at all; only its anchor text "Temporary Visitor Visa" identifies it.
+#   2. Negative terms are decisive. A student or spouse visa page on the correct domain, in the
+#      correct format, is the most dangerous candidate in the pool.
+
+schema_version: 1
+
+# Multiplier applied to a role score earned from the link's own text rather than the URL.
+link_text_weight: 1.2
+
+# The nearest heading above a link is weaker evidence than the link's own label: every form
+# under a "Visa Application Documents" heading would otherwise look like a checklist.
+heading_weight: 0.5
+
+# A link that names the traveller's purpose is worth considering even with no other signal.
+# Japan's tourism checklist is reached by a link labelled only "Tourism", at a URL that says
+# nothing and never mentions visas.
+base_purpose_weight: 18
+
+# An index page mentions every topic, so it scores on every role and beats the page that
+# actually answers one of them. Body scores are divided by the square root of how many roles
+# the page scored on, which leaves a focused page untouched and pushes a directory down.
+breadth_threshold: 2
+
+# A page whose final path segment is exactly "index", "top" or "home" is a section front
+# door, not the page that answers a question. Matched on the whole stem, so Japan's
+# "index_000070.html" (a real content page with an unhelpful name) is unaffected.
+index_page_penalty: -18
+index_page_stems: [index, top, home, default, main]
+
+roles:
+  visa_decision:
+    terms:
+      - {phrase: visa requirement, weight: 25}
+      - {phrase: visa requirements, weight: 25}
+      - {phrase: do i need a visa, weight: 25}
+      - {phrase: check if you need, weight: 22}
+      - {phrase: visa exemption, weight: 22}
+      - {phrase: visa exemptions, weight: 22}
+      - {phrase: visa free, weight: 18}
+      - {phrase: visa waiver, weight: 18}
+      - {phrase: novisa, weight: 20}
+      - {phrase: entry visa, weight: 15}
+      - {phrase: entry requirements, weight: 12}
+
+  document_checklist:
+    terms:
+      - {phrase: documents required, weight: 25}
+      - {phrase: required documents, weight: 25}
+      - {phrase: items required, weight: 25}
+      - {phrase: checklist, weight: 25}
+      - {phrase: supporting documents, weight: 20}
+      - {phrase: what to submit, weight: 18}
+      - {phrase: application documents, weight: 18}
+      - {phrase: necessary documents, weight: 18}
+
+  application_route:
+    terms:
+      # Visa category names. These identify the page a traveller actually starts from, and are
+      # often the only signal it has: Japan's is labelled "Temporary Visitor Visa" at a URL of
+      # "index_000070.html".
+      - {phrase: temporary visitor, weight: 18}
+      - {phrase: visitor visa, weight: 18}
+      - {phrase: tourist visa, weight: 18}
+      - {phrase: short-term stay, weight: 15}
+      - {phrase: how to apply, weight: 25}
+      - {phrase: evisa, weight: 22}
+      - {phrase: e-visa, weight: 22}
+      - {phrase: online application, weight: 20}
+      - {phrase: apply online, weight: 20}
+      - {phrase: application centre, weight: 18}
+      - {phrase: application center, weight: 18}
+      - {phrase: appointment, weight: 15}
+      - {phrase: apply, weight: 8}
+
+  fees:
+    terms:
+      - {phrase: visa fee, weight: 25}
+      - {phrase: visa fees, weight: 25}
+      - {phrase: fees, weight: 12}
+      - {phrase: charges, weight: 10}
+
+  processing_times:
+    terms:
+      - {phrase: processing time, weight: 25}
+      - {phrase: processing times, weight: 25}
+      - {phrase: how long does it take, weight: 20}
+
+  general_entry:
+    terms:
+      - {phrase: entering, weight: 12}
+      - {phrase: arrival card, weight: 15}
+      - {phrase: customs, weight: 8}
+
+# Purpose words. A page matching the traveller's purpose gains; a page matching a different
+# purpose is penalised hard, because that is the wrong-checklist failure mode.
+purposes:
+  tourism:
+    terms: [tourism, tourist, sightseeing, visit, temporary visitor, short-term stay, short stay, holiday]
+    weight: 20
+  business:
+    terms: [business, conference, commercial]
+    weight: 20
+  study:
+    terms: [student, study, college, university]
+    weight: 20
+  transit:
+    terms: [transit, transfer]
+    weight: 20
+
+# Terms that indicate a page is for a different traveller entirely. Applied as a penalty unless the
+# term belongs to the traveller's own purpose.
+off_scope:
+  weight: -30
+  terms:
+    - student
+    - study
+    - work
+    - working
+    - employment
+    - spouse
+    - dependant
+    - dependent
+    - residence permit
+    - long-term
+    - long term
+    - long stay
+    - permanent
+    - diplomatic
+    - official passport
+    - medical stay
+    - working holiday
+
+# Audiences a tourist is definitively not. Unlike the scored off_scope terms, these reject the
+# page outright when they appear in the link that led to it, because no score should be able to
+# outweigh them: the diplomatic-passport exemption list mentions many nationalities and would
+# otherwise look like a strong match for an ordinary passport holder.
+hard_off_scope:
+  - diplomatic
+  - official passport
+  - service passport
+  - spouse
+  - working holiday
+  - residence permit
+  - long-term resident
+
+# Path tokens that mark a page as archived or otherwise not current guidance. Auto-reject, not a
+# penalty: an archived checklist that still reads plausibly is precisely what must never be used.
+archive_tokens: [archive, archived, old, backup, legacy, superseded]
+
+# A blank form is not a list of what to bring. Both say "application" and "documents", and the
+# forms are usually PDFs, so without this they outrank the real checklist. Observed on Japan's
+# ministry site, where the application form PDFs beat the embassy's actual checklist.
+form_penalty: -35
+form_terms:
+  - application form
+  - form1
+  - application1
+  - invitation letter
+  - letter of guarantee
+  - letter of invitation
+  - sample form
+  - blank form
+  - download form
+
+# Translated copies of the same document. Penalised rather than rejected, so an English page is
+# preferred without discarding a country that publishes only in its own language.
+language_penalty: -25
+language_terms:
+  - spanish
+  - portuguese
+  - korean
+  - chinese
+  - russian
+  - arabic
+  - french
+  - german
+  - italian
+  - vietnamese
+  - thai
+  - indonesian
+  - mongolian
+
+# A small score for any link that plainly concerns visas, so a real page is never scored zero
+# purely because it uses no stock phrase. It is small on purpose: it makes a page eligible to be
+# ranked, and the nationality and purpose signals decide which one wins.
+base_visa_weight: 6
+
+nationality_weight: 40
+purpose_bonus_weight: 20
+shallow_path_weight: 8
+depth_penalty_weight: -10
+# The mission serving the traveller's residence is the authority for how *they* apply, so it
+# should win the checklist and route roles against a ministry's general pages. Applied only to
+# those two roles: the ministry remains the better source for the decision itself.
+mission_host_bonus: 30
+pdf_checklist_bonus: 10
+
+authority_kind_bonus:
+  immigration_authority: 6
+  foreign_ministry: 4
+  embassy_or_high_commission: 2
+  official_application_provider: 0

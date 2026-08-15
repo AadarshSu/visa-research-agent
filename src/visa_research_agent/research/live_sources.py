@@ -112,7 +112,7 @@ def find_forward_target(html: str, base_url: str) -> str | None:
     return urljoin(base_url, target) if target else None
 
 
-def _looks_like_pdf(response: httpx.Response) -> bool:
+def looks_like_pdf(response: httpx.Response) -> bool:
     content_type = response.headers.get("content-type", "").lower()
     if "application/pdf" in content_type:
         return True
@@ -326,7 +326,7 @@ class LiveSourceFetcher:
         if len(response.content) > self.maximum_bytes:
             raise _ContentProblem("unusable", "the document exceeds the configured size limit")
 
-        if _looks_like_pdf(response):
+        if looks_like_pdf(response):
             try:
                 return (
                     extract_pdf_text(

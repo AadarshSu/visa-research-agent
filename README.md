@@ -24,9 +24,43 @@ extraction:
 - a small Jinja and vanilla JavaScript research interface;
 - fully offline tests and CI checks.
 
-Conflict detection across sources, automatic discovery of official sources, and LangGraph routing
-remain intentionally deferred. The United States and France return a clear
-`503 Service Unavailable` response until their later destination phases.
+Conflict detection across sources and LangGraph routing remain intentionally deferred. The United
+States and France return a clear `503 Service Unavailable` response until their later destination
+phases.
+
+### Source discovery
+
+Adding a country used to mean hand-searching for its official pages. `visa-discover` does that
+instead, for a specific traveller:
+
+```bash
+visa-discover bootstrap --destination-name Brazil        # propose official domains to approve
+visa-discover corridor --destination japan --nationality IN --from GB --purpose tourism
+```
+
+The correct pages depend on the **corridor** — destination, passport nationality, and the country
+applied from — because authorities publish per-nationality pages and route applicants to the mission
+serving where they live. There are far too many corridors to curate by hand, which is why this is
+automated and per-country trust is not.
+
+**Search finds candidates; it never decides what may be believed.** Two gates, and only one is new:
+
+- *Finding pages* for a configured country: results are restricted to approved domains by the
+  `site:` operator and filtered again by `trusts_host`, so a commercial visa agency is discarded
+  before anything is fetched.
+- *Finding domains* for a new country: the only place search adds real risk, so it is human-gated.
+  A denylist removes agencies first, a domain must appear in at least two independent queries, bare
+  public suffixes are rejected, and government-shaped domains are ranked higher but never admitted
+  automatically. Nothing is approved without a person.
+
+Queries are built from templates and the corridor alone — never written by a model, never derived
+from fetched page content — so a page cannot influence what is searched for next.
+
+Discovery then crawls two hops from the best results, staying inside approved domains, because
+search lands on a section index while the checklist is usually one link further on. Candidates are
+scored deterministically, with **no model calls**; page selection is free. If no page can
+confidently fill a load-bearing role, the corridor is refused with a diagnosis rather than filled
+with a plausible substitute.
 
 Two destinations are configured. Singapore works in either source mode. **Japan has no saved
 snapshots and therefore requires `source_mode: live`**, because both its document checklist and its

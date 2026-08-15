@@ -1,0 +1,57 @@
+# Domains that must never be proposed as official authorities.
+#
+# Search ranks commercial visa agencies highly because they are optimised to outrank government
+# pages. Removing them before a human ever sees them keeps the review list short and honest, so
+# that approving a domain stays a real decision rather than a scroll past noise.
+#
+# This list is a convenience, not the safety mechanism. The safety mechanism is that a human
+# approves every domain and that pages must sit on an approved domain to be read at all. Entries
+# match on a dot boundary, so a denied domain also denies its subdomains.
+
+schema_version: 1
+
+# Commercial visa services, agencies and resellers.
+commercial:
+  - ivisa.com
+  - visahq.com
+  - visaexpress.com
+  - evisa-express.com
+  - visaguide.world
+  - visacentral.com
+  - travelvisapro.com
+  - visaservices.com
+  - visa-fast.com
+  - onlinevisa.com
+  - visagov.com
+  - visadirect.com
+  - byevisa.com
+  - visa24.com
+  - passportvisasexpress.com
+
+# General reference and user-generated content. Frequently accurate, never authoritative, and
+# never a source this product should cite.
+reference:
+  - wikipedia.org
+  - wikivoyage.org
+  - tripadvisor.com
+  - tripadvisor.co.uk
+  - reddit.com
+  - quora.com
+  - facebook.com
+  - x.com
+  - twitter.com
+  - youtube.com
+  - medium.com
+  - blogspot.com
+  - wordpress.com
+
+# Travel media and aggregators.
+media:
+  - lonelyplanet.com
+  - timeout.com
+  - forbes.com
+  - cntraveller.com
+  - skyscanner.net
+  - expedia.com
+  - booking.com
+  - kayak.com
