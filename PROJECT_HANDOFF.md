@@ -6,9 +6,10 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-15, at commit `4032824` |
+| **Last updated** | 2026-08-15 — update this line when you touch the handoff |
 | **Tests** | 157 passing; `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
+| **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
 ---
 
@@ -115,13 +116,24 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-Discovery is built and committed. The immediate open thread is **whether its ranking generalises
-beyond the two countries it was tuned on**.
+**Reading JavaScript-rendered government sites** — known problem 1, and the largest coverage limit.
+Whole corridors are unservable because the authority publishes a client-rendered page that retrieval
+returns as empty. See the "Handle JavaScript-rendered sites" entry in [TODO.md](TODO.md), which
+carries the measured character counts per site, both fetch paths that would need changing, and the
+four questions to settle before building — including how it can be tested when tests may not touch
+the network.
 
-Vietnam was the held-out test. It behaved correctly — it found the one readable Vietnamese official
+Nothing has been built for this yet. The first decision is whether a headless browser is worth its
+weight at all; deciding *not* to is defensible and should be recorded either way.
+
+### Also open
+
+**Whether discovery's ranking generalises** beyond Singapore and Japan, which it was tuned against.
+Vietnam was the held-out test and behaved correctly — it found the one readable Vietnamese official
 page, classified it correctly, and refused the checklist rather than substituting something
-plausible — but it refused because the portal is JavaScript-rendered, so it could not exercise
-ranking. A destination that publishes readable HTML is needed to answer the question.
+plausible — but it refused because the portal is JavaScript-rendered, so it never exercised ranking.
+A destination publishing readable HTML is still needed to answer this. Note the two threads are
+related: fixing rendering would also let Vietnam finally test ranking.
 
 ---
 
@@ -129,12 +141,13 @@ ranking. A destination that publishes readable HTML is needed to answer the ques
 
 In the order that makes sense. Detail and reasoning in [TODO.md](TODO.md).
 
-1. **Run a third country with readable HTML** — Thailand or Brazil. This is the outstanding
-   validation, not a new feature.
-2. **Make the traveller profile variable** — nationality, residence, purpose, duration as input.
+1. **Decide on rendering JavaScript sites** — the current task above.
+2. **Run a third country with readable HTML** — Thailand or Brazil. Outstanding validation, not a
+   new feature.
+3. **Make the traveller profile variable** — nationality, residence, purpose, duration as input.
    Everything in discovery is already corridor-aware; the profile is the last fixed piece.
-3. **Wire discovery into request time**, behind caching, once the ranking is trusted.
-4. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
+4. **Wire discovery into request time**, behind caching, once the ranking is trusted.
+5. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
 
 ---
 

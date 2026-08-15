@@ -48,12 +48,44 @@ corridor-keyed. See the layering table in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 **Why:** the single largest coverage limit. It blocks Vietnam's e-visa portal, Singapore's VFS page,
 and any corridor whose authority uses a client-rendered site. No amount of scoring works around it,
-and search does not fix it either.
+and search does not fix it either — the page is unreadable however you arrive at it.
 
-**Do:** decide whether to add a headless browser for retrieval. This is a real weight increase — a
-new heavy dependency, slower fetches, more failure modes — so it deserves a considered decision
-recorded in [DECISIONS.md](DECISIONS.md), not a quiet addition. The alternative is to keep refusing
-and accept that some corridors cannot be served.
+**Measured evidence** (taken 2026-08-15 against the live sites, so it does not need re-deriving):
+
+| URL | HTTP | Readable characters after cleaning |
+| --- | --- | --- |
+| `https://evisa.gov.vn/` | 200 | **39** |
+| `https://xuatnhapcanh.gov.vn/en` | 200 | **0** |
+| `https://immigration.gov.vn/` | 200 | 736 |
+| `https://mofa.gov.vn/` | 200 | 4992 |
+
+The floor is `minimum_source_characters`, default **400**, in `config/settings.py`. Anything below
+it becomes the `unusable` outcome — deliberately, because an empty shell would otherwise read as
+"this authority requires no documents", which is far worse than refusing.
+
+**Where the change would go.** There are **two** fetch paths and both would need it:
+
+- `research/live_sources.py` — `LiveSourceFetcher`, the audited path for anything a traveller sees.
+- `discovery/crawl.py` — `CrawlFetcher`, which needs raw HTML for link extraction.
+
+**Decide before building:**
+
+1. *Is a headless browser worth it?* It is a heavy dependency, much slower per page, and a new class
+   of failure. Record the decision in [DECISIONS.md](DECISIONS.md) either way — including a decision
+   **not** to, which is defensible: refusing a corridor is already a supported, honest outcome.
+2. *How is it tested?* `AGENTS.md` forbids network access in tests, and a browser cannot be faked by
+   `httpx.MockTransport`. Likely answer: put rendering behind a protocol like `SourceFetcher`, so
+   tests inject a fake renderer and only an opt-in manual check ever launches a real browser.
+3. *Does it apply to everything, or only on demand?* Rendering every page would be wasteful and
+   slow. Rendering only when a fetch comes back below the character floor is cheaper and targets
+   exactly the failure being solved.
+4. *Does it change the trust model?* It must not. A rendered page is still subject to the same
+   domain checks, and script execution must not be allowed to navigate somewhere untrusted.
+
+**Good first test case:** `xuatnhapcanh.gov.vn` (0 characters today) or Vietnam's `evisa.gov.vn`.
+Vietnam is already configured with approved domains and currently refuses, so success is
+unambiguous: `visa-discover corridor --destination vietnam --nationality IN --from GB` moves from
+exit code 2 to finding a document checklist.
 
 ---
 

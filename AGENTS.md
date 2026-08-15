@@ -6,6 +6,9 @@ Read [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) before doing anything else. It is 
 for where the project stands; a chat transcript is not. It links to
 [ARCHITECTURE.md](ARCHITECTURE.md), [DECISIONS.md](DECISIONS.md) and [TODO.md](TODO.md).
 
+[CLAUDE.md](CLAUDE.md) carries the same pointers and the critical safety rules, for tools that load
+it automatically at the start of a session.
+
 Before finishing a session, update the handoff:
 
 - **PROJECT_HANDOFF.md** — current state, current task, known problems. A stale handoff is worse
