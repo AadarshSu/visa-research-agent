@@ -56,6 +56,11 @@ automated and per-country trust is not.
 Queries are built from templates and the corridor alone — never written by a model, never derived
 from fetched page content — so a page cannot influence what is searched for next.
 
+Bootstrap also checks that a proposed domain belongs to the **destination country**, using its own
+top-level domain. "Looks governmental" is satisfied by any country's `.gov`, which is how the US
+embassy in Vietnam initially outranked Vietnam's own immigration department; a foreign government's
+page is still shown for review, but flagged and never first.
+
 Discovery then crawls two hops from the best results, staying inside approved domains, because
 search lands on a section index while the checklist is usually one link further on. Candidates are
 scored deterministically, with **no model calls**; page selection is free. If no page can

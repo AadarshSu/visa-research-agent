@@ -6,12 +6,13 @@ from pydantic import ValidationError
 from visa_research_agent.config.loader import load_destination_registry
 
 
-def test_registry_contains_the_four_mvp_destinations() -> None:
+def test_registry_contains_the_configured_destinations() -> None:
     registry = load_destination_registry()
 
     assert [destination.slug for destination in registry.destinations] == [
         "singapore",
         "japan",
+        "vietnam",
         "united-states",
         "france",
     ]

@@ -51,6 +51,9 @@ KIND_HINTS: tuple[tuple[str, str], ...] = (
 )
 
 MINIMUM_CORROBORATING_QUERIES = 2
+# A governmental domain under the destination's own top-level domain is such a strong signal that
+# one query is enough. Vietnam's own foreign ministry was otherwise discarded for appearing once.
+MINIMUM_CORROBORATING_QUERIES_FOR_OWN_GOVERNMENT = 1
 
 
 def registrable_domain(host: str) -> str:
@@ -75,6 +78,9 @@ class DomainProposal(StrictModel):
 
     domain: str = Field(min_length=1)
     looks_governmental: bool
+    belongs_to_destination: bool = False
+    """True when the domain sits under the destination country's own top-level domain."""
+
     suggested_kind: str | None = None
     queries: list[str] = Field(default_factory=list)
     example_urls: list[str] = Field(default_factory=list)
@@ -98,6 +104,17 @@ def looks_governmental(domain: str) -> bool:
     return any(pattern.search(domain) for pattern in GOVERNMENT_PATTERNS)
 
 
+def belongs_to_destination(domain: str, destination_tlds: list[str]) -> bool:
+    """True when a domain sits under one of the destination country's own top-level domains.
+
+    This is what separates Vietnam's immigration department from the US embassy in Vietnam. Both
+    are real governments and both look governmental; only one sets Vietnam's entry rules.
+    """
+
+    lowered = domain.lower().strip(".")
+    return any(lowered == tld or lowered.endswith(f".{tld}") for tld in destination_tlds)
+
+
 def suggest_kind(domain: str) -> str | None:
     for token, kind in KIND_HINTS:
         if token in domain:
@@ -109,6 +126,7 @@ def propose_domains(
     destination_name: str,
     results_by_query: dict[str, list[SearchResult]],
     denylist: Denylist,
+    destination_tlds: list[str] | None = None,
 ) -> BootstrapReport:
     """Turn raw search results into a short reviewable list of candidate authority domains."""
 
@@ -138,6 +156,9 @@ def propose_domains(
                 proposal = DomainProposal(
                     domain=domain,
                     looks_governmental=looks_governmental(domain),
+                    belongs_to_destination=belongs_to_destination(
+                        domain, destination_tlds or []
+                    ),
                     suggested_kind=suggest_kind(domain),
                 )
                 grouped[domain] = proposal
@@ -149,17 +170,32 @@ def propose_domains(
 
     proposals: list[DomainProposal] = []
     for domain, proposal in grouped.items():
-        if proposal.corroboration < MINIMUM_CORROBORATING_QUERIES:
+        own_government = proposal.belongs_to_destination and proposal.looks_governmental
+        needed = (
+            MINIMUM_CORROBORATING_QUERIES_FOR_OWN_GOVERNMENT
+            if own_government
+            else MINIMUM_CORROBORATING_QUERIES
+        )
+        if proposal.corroboration < needed:
             rejected[domain] = (
                 f"appeared in only {proposal.corroboration} of the queries; at least "
-                f"{MINIMUM_CORROBORATING_QUERIES} are needed"
+                f"{needed} are needed"
             )
             continue
         proposals.append(proposal)
 
-    # Government-shaped domains first, then better-corroborated ones, then alphabetically so the
-    # list is stable between runs.
-    proposals.sort(key=lambda p: (not p.looks_governmental, -p.corroboration, p.domain))
+    # The destination's own government first. Another country's government may still be worth
+    # seeing, but it must never head the list: it describes its own citizens' rules, not this
+    # destination's.
+    proposals.sort(
+        key=lambda p: (
+            not (p.belongs_to_destination and p.looks_governmental),
+            not p.belongs_to_destination,
+            not p.looks_governmental,
+            -p.corroboration,
+            p.domain,
+        )
+    )
     return BootstrapReport(
         destination_name=destination_name,
         proposals=proposals,
@@ -173,6 +209,7 @@ async def bootstrap_destination(
     provider: SearchProvider,
     denylist: Denylist,
     *,
+    destination_tlds: list[str] | None = None,
     results_per_query: int = 10,
 ) -> BootstrapReport:
     """Search for a country's official authorities and return candidates for human approval."""
@@ -180,7 +217,7 @@ async def bootstrap_destination(
     results_by_query: dict[str, list[SearchResult]] = {}
     for query in bootstrap_queries(destination_name):
         results_by_query[query] = await provider.search(query, count=results_per_query)
-    return propose_domains(destination_name, results_by_query, denylist)
+    return propose_domains(destination_name, results_by_query, denylist, destination_tlds)
 
 
 def entry_point_for(proposal: DomainProposal) -> str | None:

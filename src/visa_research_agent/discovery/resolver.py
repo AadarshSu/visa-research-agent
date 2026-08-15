@@ -214,6 +214,15 @@ class CorridorResolver:
         crawled = await crawler.crawl(destination, corridor, seeds)
         page_titles = crawler.titles
 
+        # Name the domains that could not be read at all. Without this a refusal reads as "nothing
+        # scored well enough" when the real cause was an unreachable or client-rendered site, which
+        # tells the reader to look in a completely different place.
+        unreadable: dict[str, str] = {}
+        for url, reason in self.crawl_fetcher.failures.items():
+            unreadable.setdefault(host_of(url), reason)
+        for host, reason in sorted(unreadable.items()):
+            notes.append(f"{host} could not be read because {reason}")
+
         candidates: dict[str, CandidatePage] = dict(search_candidates)
         for candidate in crawled:
             existing = candidates.get(candidate.link.url)

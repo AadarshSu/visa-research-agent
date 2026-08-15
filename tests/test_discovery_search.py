@@ -240,3 +240,55 @@ async def test_a_failing_search_provider_raises_a_domain_error() -> None:
 def test_a_missing_api_key_is_refused_at_construction() -> None:
     with pytest.raises(SearchError, match="search API key"):
         BraveSearchProvider("   ")
+
+
+def test_another_countrys_government_never_outranks_the_destinations_own() -> None:
+    """Found on the first real Vietnam run: the US embassy in Vietnam ranked above Vietnam's own
+    immigration department, because any country's .gov satisfies "looks governmental"."""
+
+    report = propose_domains(
+        "Vietnam",
+        {
+            "q1": [
+                result("https://vn.usembassy.gov/vietnamese-visas/", "q1"),
+                result("https://immigration.gov.vn/", "q1"),
+            ],
+            "q2": [
+                result("https://travel.state.gov/vietnam", "q2"),
+                result("https://vn.usembassy.gov/entry-exit/", "q2"),
+                result("https://immigration.gov.vn/apply", "q2"),
+            ],
+        },
+        get_denylist(),
+        ["vn"],
+    )
+
+    assert report.proposals[0].domain == "immigration.gov.vn"
+    assert report.proposals[0].belongs_to_destination
+    # The foreign government pages still appear for review, flagged, but never first.
+    assert not report.proposals[1].belongs_to_destination
+
+
+def test_the_destinations_own_government_needs_only_one_corroborating_query() -> None:
+    """Vietnam's own foreign ministry was discarded for appearing in a single query."""
+
+    report = propose_domains(
+        "Vietnam",
+        {"q1": [result("https://mofa.gov.vn/visa", "q1")]},
+        get_denylist(),
+        ["vn"],
+    )
+
+    assert [proposal.domain for proposal in report.proposals] == ["mofa.gov.vn"]
+
+
+def test_a_foreign_government_domain_still_needs_full_corroboration() -> None:
+    report = propose_domains(
+        "Vietnam",
+        {"q1": [result("https://travel.state.gov/vietnam", "q1")]},
+        get_denylist(),
+        ["vn"],
+    )
+
+    assert report.proposals == []
+    assert "at least 2" in report.rejected["state.gov"]

@@ -105,6 +105,9 @@ class CrawlFetcher:
         self.sleep = sleep
         self.host_delay_seconds = host_delay_seconds
         self.requested: list[str] = []
+        # Why a page could not be read. Reporting "nothing scored well enough" when the real
+        # cause was an unreachable site would hide the actual problem from the reader.
+        self.failures: dict[str, str] = {}
 
     async def fetch_html(
         self,
@@ -122,17 +125,31 @@ class CrawlFetcher:
             if self.host_delay_seconds:
                 await self.sleep(self.host_delay_seconds)
             response = await client.get(url)
-        except httpx.HTTPError:
+        except httpx.HTTPError as exc:
+            reason = str(exc).strip()
+            if "CERTIFICATE_VERIFY_FAILED" in reason:
+                reason = "its TLS certificate could not be verified"
+            elif not reason:
+                # Several httpx errors carry no message, and "because " reads as a broken sentence.
+                reason = f"the request failed ({type(exc).__name__})"
+            self.failures[url] = reason[:120]
             return None
 
         # Redirects are followed, so the landing host must be re-checked exactly as retrieval does.
         if not destination.trusts_host(host_of(str(response.url))):
+            self.failures[url] = "it redirected off the approved domains"
             return None
         if response.status_code != httpx.codes.OK:
+            self.failures[url] = f"it answered HTTP {response.status_code}"
             return None
         if len(response.content) > self.maximum_bytes:
+            self.failures[url] = "it is larger than the size limit"
             return None
         if "html" not in response.headers.get("content-type", "text/html").lower():
+            self.failures[url] = "it is not an HTML page"
+            return None
+        if not response.text.strip():
+            self.failures[url] = "it returned no content"
             return None
         return response.text
 

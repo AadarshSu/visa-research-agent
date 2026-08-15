@@ -22,6 +22,7 @@ class Country(StrictModel):
     synonyms: list[str] = Field(default_factory=list)
     demonyms: list[str] = Field(default_factory=list)
     host_labels: list[str] = Field(default_factory=list)
+    tlds: list[str] = Field(default_factory=list)
 
     @property
     def text_tokens(self) -> list[str]:

@@ -5,6 +5,11 @@
 # That mismatch must be data, not a special case in code.
 #
 # `demonyms` are the forms that appear in URL paths and link text ("india", "indian").
+#
+# `tlds` are the country's own top-level domains. A candidate under the destination's own TLD
+# almost certainly belongs to that government, whereas "looks governmental" is satisfied by
+# any country's .gov — which is how the US embassy in Vietnam outranked Vietnam's own
+# immigration department.
 
 schema_version: 1
 countries:
@@ -13,81 +18,95 @@ countries:
     synonyms: [united kingdom, uk, great britain, britain, england, scotland, wales]
     demonyms: [british]
     host_labels: [uk, gb, unitedkingdom, greatbritain]
+    tlds: [uk]
 
   - code: IN
     name: India
     synonyms: [india, republic of india]
     demonyms: [indian, indians]
     host_labels: [in, india]
+    tlds: [in]
 
   - code: SG
     name: Singapore
     synonyms: [singapore, republic of singapore]
     demonyms: [singaporean]
     host_labels: [sg, singapore]
+    tlds: [sg]
 
   - code: JP
     name: Japan
     synonyms: [japan]
     demonyms: [japanese]
     host_labels: [jp, japan]
+    tlds: [jp]
 
   - code: US
     name: United States
     synonyms: [united states, usa, us, united states of america, america]
     demonyms: [american]
     host_labels: [us, usa, unitedstates]
+    tlds: [us, gov]
 
   - code: CA
     name: Canada
     synonyms: [canada]
     demonyms: [canadian]
     host_labels: [ca, canada]
+    tlds: [ca]
 
   - code: AU
     name: Australia
     synonyms: [australia]
     demonyms: [australian]
     host_labels: [au, australia]
+    tlds: [au]
 
   - code: FR
     name: France
     synonyms: [france, french republic]
     demonyms: [french]
     host_labels: [fr, france]
+    tlds: [fr]
 
   - code: DE
     name: Germany
     synonyms: [germany, federal republic of germany]
     demonyms: [german]
     host_labels: [de, germany]
+    tlds: [de]
 
   - code: CN
     name: China
     synonyms: [china, people's republic of china]
     demonyms: [chinese]
     host_labels: [cn, china]
+    tlds: [cn]
 
   - code: AE
     name: United Arab Emirates
     synonyms: [united arab emirates, uae, dubai, abu dhabi]
     demonyms: [emirati]
     host_labels: [ae, uae]
+    tlds: [ae]
 
   - code: BR
     name: Brazil
     synonyms: [brazil, federative republic of brazil]
     demonyms: [brazilian]
     host_labels: [br, brazil]
+    tlds: [br]
 
   - code: VN
     name: Vietnam
     synonyms: [vietnam, viet nam, socialist republic of vietnam]
     demonyms: [vietnamese]
     host_labels: [vn, vietnam]
+    tlds: [vn]
 
   - code: TH
     name: Thailand
     synonyms: [thailand, kingdom of thailand]
     demonyms: [thai]
     host_labels: [th, thailand]
+    tlds: [th]

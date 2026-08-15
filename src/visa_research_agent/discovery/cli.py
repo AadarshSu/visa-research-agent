@@ -25,7 +25,7 @@ from visa_research_agent.discovery.bootstrap import (
     entry_point_for,
 )
 from visa_research_agent.discovery.crawl import CrawlFetcher
-from visa_research_agent.discovery.lexicon import get_denylist
+from visa_research_agent.discovery.lexicon import get_country_registry, get_denylist
 from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
 from visa_research_agent.discovery.proposal import render_corridor_yaml
 from visa_research_agent.discovery.resolver import CorridorResolver
@@ -65,9 +65,20 @@ def print_bootstrap(report: BootstrapReport, stream: TextIO) -> None:
     if not report.proposals:
         print("  none survived the checks.", file=stream)
     for proposal in report.proposals:
-        marker = "gov" if proposal.looks_governmental else "   "
+        if proposal.belongs_to_destination and proposal.looks_governmental:
+            marker = "OWN GOV"
+        elif proposal.looks_governmental:
+            marker = "gov    "
+        else:
+            marker = "       "
         print(f"  [{marker}] {proposal.domain}", file=stream)
         print(f"        seen in {proposal.corroboration} queries", file=stream)
+        if proposal.looks_governmental and not proposal.belongs_to_destination:
+            print(
+                f"        WARNING: governmental, but not under {report.destination_name}'s own "
+                "domain — this may be another country's advice about this destination",
+                file=stream,
+            )
         if proposal.suggested_kind:
             print(f"        looks like: {proposal.suggested_kind}", file=stream)
         entry = entry_point_for(proposal)
@@ -103,8 +114,29 @@ def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
 
 
 async def run_bootstrap(args: argparse.Namespace, stream: TextIO) -> int:
+    # Knowing the destination's own top-level domains is what separates its authorities from
+    # another government's pages about it.
+    country = next(
+        (
+            item
+            for item in get_country_registry().countries
+            if item.name.lower() == args.destination_name.strip().lower()
+        ),
+        None,
+    )
+    if country is None:
+        print(
+            f"{args.destination_name} is not in countries.yaml. Add it so its own domains can be "
+            "told apart from other governments' pages about it.",
+            file=stream,
+        )
+        return 3
+
     report = await bootstrap_destination(
-        args.destination_name, build_search_provider(), get_denylist()
+        args.destination_name,
+        build_search_provider(),
+        get_denylist(),
+        destination_tlds=country.tlds,
     )
     print_bootstrap(report, stream)
     return 0 if report.proposals else 2

@@ -109,6 +109,17 @@ destinations:
         kind: embassy_or_high_commission
         research_pass: primary
 
+  - slug: vietnam
+    display_name: Vietnam
+    route_type: national
+    # Domains proposed by `visa-discover bootstrap` and approved by hand. They are Vietnam's own
+    # authorities: the bootstrap also surfaced usembassy.gov and travel.state.gov, which are real
+    # government sites but describe the rules for US citizens, so they were not approved.
+    trusted_domains: [evisa.gov.vn, xuatnhapcanh.gov.vn, immigration.gov.vn, mofa.gov.vn]
+    # No pages are configured: this destination exists to test whether discovery can find them.
+    implementation_status: planned
+    sources: []
+
   - slug: united-states
     display_name: United States
     route_type: national
