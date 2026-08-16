@@ -134,55 +134,59 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    "governmental" and "under its own ccTLD" are independent tests; for the United States they are
    the same test, so any federal agency is trusted as a visa authority. This is the current task
    above. Do not fix it by naming the US — the defect is the shape of the rule.
-2. **A destination is now trusted on a rule, with no human in the loop.** The rule reproduces all
+2. **A cold request takes 70 seconds, synchronously.** 53.4s to resolve a corridor and 17.3s to
+   extract the plan, inside one `POST`. Warm is instant, and the local `var/` stores are what make
+   it warm — so an ephemeral container would make every request cold. This is the constraint that
+   shapes any deployment, not a tuning problem.
+3. **A destination is now trusted on a rule, with no human in the loop.** The rule reproduces all
    22 recorded human decisions, but it has only ever been checked against six countries. A country
    whose government publishes outside its own TLD would resolve to nothing; one whose TLD hosts a
    convincing government-shaped domain it does not control would be a genuine hole. Watch the
    `withheld_domains` on resolved corridors for domains being declined that should not be.
-3. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
+4. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
    Both produce the same empty result, and since a missing checklist no longer refuses the corridor,
    a find-or-read failure now yields a plan with a visibly empty checklist rather than a refusal.
    The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
    start shipping empty checklists for countries that do publish one, this is the cause; a
    per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
-4. **The heuristic decider still mis-ranks, and is still the fallback.** With
+5. **The heuristic decider still mis-ranks, and is still the fallback.** With
    `discovery_decider: model` the failing case is fixed, but a failed model call falls back to the
    heuristic, which picked a Riyadh page for a UK applicant before entry 15's fixes. Two fixes
    landed — a checklist is known by the documents it names, and the traveller's post governs — but
    both rest on English vocabulary and per-country city labels, so the fallback will keep degrading
    on new countries and languages.
-5. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
+6. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
-6. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
+7. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
    `france-visas.gouv.fr` and `www.france-visas.gouv.fr` (which make France unservable) and
    Singapore's VFS page. This is **not** a bug to fix — working around a block is forbidden by
    [DECISIONS.md](DECISIONS.md) entry 18 and by the rules in `CLAUDE.md`. They now produce the
    `blocked` outcome and appear under `inaccessible_domains`, so a refusal reads as "we were not
    allowed to check" rather than "nothing found".
-7. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
+8. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
    because two of China's correct picks carry dated paths and one is from 2013. Content-hash drift
    detection remains a TODO and covers configured sources only.
-8. **Scoring is English-only.** A destination publishing solely in its own language will score near
+9. **Scoring is English-only.** A destination publishing solely in its own language will score near
    zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
    characters of Vietnamese, which scores nothing.
-9. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
+10. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
    `location: http://localhost:4000/vi` header and an empty body — a misconfigured Next.js i18n
    redirect. Browsers ignore `Location` on a `200`, so **rendering does not fix this one either**;
    it renders to 0 characters. The site root works; only the `/en` path is broken.
-10. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
+11. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
    text-rich, so every check passes.
-11. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
+12. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
    for a consolidated portal. `_mission_domains` returns `[]` for Brazil, whose every mission sits
    on `www.gov.br` with the post in the *path* — so Riyadh and Atlanta outrank Edinburgh for a UK
    applicant. It also misses Singapore's `london.mfa.gov.sg`, which is named by city rather than
    country code. Recorded here as latent; Brazil proved it changes the answer.
-12. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
+13. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
    structured replacement was built and deliberately removed — see [DECISIONS.md](DECISIONS.md).
-13. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
+14. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
    usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
    when testing a retrieval change, or a fix will appear not to work.
 
@@ -190,8 +194,11 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
+Two, both at the top of [TODO.md](TODO.md): **the United States corridor refuses**, and **nothing
+is deployed**.
+
 **The United States refuses a tourist visa for an Indian passport holder** — one of the highest
-volume corridors there is. Top of [TODO.md](TODO.md), with the reproduction and diagnosis.
+volume corridors there is, with the reproduction and diagnosis in the todo.
 
 The short form: the own-government rule **degenerates for the US**, because its own TLD *is* `gov`,
 so both halves of the rule collapse into one test and every federal agency is auto-trusted — the
@@ -202,6 +209,13 @@ flip: two consecutive runs of the identical corridor, one resolved, one refused.
 
 Readable correct pages do exist: `in.usembassy.gov/visas/` is the US mission *in India* and already
 resolves as the traveller's own post. Discovery is losing evidence it has, not lacking it.
+
+**Nothing is deployed, and the current shape will not survive being hosted as-is.** A cold request
+takes **70.7s** end to end — 53.4s to resolve the corridor, 17.3s to extract the plan — all
+synchronously inside one `POST`. Ordinary proxy timeouts are 30–60s, so the first request for any
+new corridor would fail even though the work succeeds. The same corridor warm takes **0.0s**, which
+is what makes resolving ahead of time attractive. `var/cache/` and `var/corridors/` are also local
+directories, so on an ephemeral container every request is cold.
 
 ### Otherwise complete end to end Any traveller, any destination: the request
 describes who is travelling, the destination is researched if nobody configured it, and the plan

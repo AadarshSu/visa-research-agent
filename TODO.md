@@ -13,7 +13,7 @@ Status: `next` · `soon` · `later` · `blocked`
 
 **Why:** this is one of the highest-volume visa corridors in the world, and it produces
 `EVIDENCE UNAVAILABLE`. A corridor this ordinary failing is worse than an exotic one failing: it is
-what most people will try first.
+what most people will try first. Resolving this is imperative for resolving similar issues with other corridors.
 
 **Reproduce:** `united-states/IN/IN/tourism` through the automatic path, with a cleared
 `var/corridors/`. It refuses with *"no page could be confirmed as the visa decision, document
@@ -60,6 +60,56 @@ short of evidence; it is failing to keep hold of it.
 **Careful:** do not special-case the United States by name. The general defect is "a country whose
 own TLD is also the generic governmental marker", and hard-coding `US` would leave the same hole
 for any country that later gets one.
+
+### Deploy it — `next`
+
+**Why:** it runs on one laptop with a `.env`. Nothing about it is deployed, and the shape it has
+now will not survive being put behind an ordinary HTTP server without deliberate changes.
+
+**Measured on 2026-08-17**, one cold request for `brazil/IN/GB/tourism`:
+
+| | |
+| --- | --- |
+| Corridor resolution (bootstrap, crawl, 10 fetches, 1 model call) | **53.4s** |
+| Plan extraction (1 model call) | **17.3s** |
+| **Total, cold** | **70.7s** |
+| Same corridor, warm | **0.0s** |
+
+**That number decides the deployment shape.** Seventy seconds happens *synchronously inside a
+`POST /visa-plans`*. Most proxies and platforms give up long before: 30s on Heroku, 60s on an AWS
+ALB by default, 10–60s on typical serverless. The first request for any new corridor would fail
+even though the work eventually succeeds. So this is not "pick a host" — the request path needs to
+stop being synchronous, or corridors need resolving ahead of time, before anything is hosted.
+
+**Decide these, in roughly this order:**
+
+1. **What happens during those 70 seconds.** Options: accept the request and poll or stream for the
+   result; resolve corridors on a schedule so common ones are always warm and a cold one refuses
+   politely; or keep it synchronous and accept that only warm corridors work. The warm number
+   being *zero* is what makes pre-resolution attractive.
+2. **Where `var/cache/` and `var/corridors/` live.** Both are local directories today
+   (`settings.cache_directory`, `settings.corridor_directory`). On an ephemeral container every
+   request is cold, so the 70s becomes *every* request rather than the first. This alone probably
+   rules out plain serverless unless the stores move to something shared.
+3. **Whether rendering ships.** `render_mode: on_demand` needs Chromium and its system libraries in
+   the image — roughly 150MB and a much heavier base. It is committed as `never`, so decide
+   explicitly rather than discovering it when Vietnam returns nothing.
+4. **Authentication and abuse.** `POST /visa-plans` is unauthenticated and, on a cold corridor,
+   spends real money: search queries plus two model calls. Anyone who finds the URL can spend it,
+   and 198 destinations × any corridor is a large space to walk. Rate limiting and a key are the
+   minimum.
+5. **Secrets.** `OPENAI_API_KEY` and `SEARCH_API_KEY` come from `.env`, which is gitignored. They
+   need to be real deployment secrets, and nothing should log them.
+6. **Whether CI deploys.** `.github/workflows/ci.yml` runs ruff, mypy and pytest and stops there.
+   The test suite touches neither the network nor a model, so it stays a safe gate.
+
+**Careful:** the offline paths are what make this safe to iterate on — `source_mode: fixtures` and
+`extraction_mode: fixture` need to keep working in whatever gets deployed, because they are the
+deterministic regression baseline and the only way to exercise the app without spending money.
+
+**Also worth stating publicly** wherever it is deployed: this shows official guidance with
+citations and makes no promise of correctness or currency. That is the product's own framing, and
+it belongs in the interface rather than only in these documents.
 
 ### Tell "no checklist exists" apart from "we failed to find it" — `next`
 
