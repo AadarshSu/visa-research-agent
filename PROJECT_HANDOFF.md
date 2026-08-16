@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-15 — update this line when you touch the handoff |
-| **Tests** | 231 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 247 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -69,9 +69,14 @@ means `render_mode: on_demand` plus the optional extra:
 
 Selecting `on_demand` without the extra raises rather than silently skipping rendering.
 
-**The traveller profile is still fixed**: Indian ordinary passport, resident in the UK, tourism.
-It lives in `config/traveller.py`. Making it variable is the next significant piece of work and is
-a prerequisite for wiring discovery into request time.
+**The traveller comes from the request.** Passport, country applied from and purpose are required;
+city, residence status and permit expiry are optional. Countries are ISO codes, normalised at the
+API from whatever the caller wrote. `config/traveller.py` holds the default the interface opens on
+and the profile the Singapore fixture was recorded against.
+
+Ordinary passports only, and that is deliberate: diplomatic and official passport pages are a hard
+veto in scoring, so such a plan cannot be researched and the schema refuses it rather than
+answering with the ordinary-passport rules.
 
 ---
 
@@ -176,10 +181,14 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-**Make the traveller profile variable.** It is the last fixed piece. Discovery is corridor-aware
-end to end, and `corridor_for` in `api/routes.py` already derives the corridor from the profile
-rather than hard-coding it — so this changes one function and the request schema, not the pipeline.
-`TravellerProfile` still carries UK-specific fields and `travel_purpose` is `Literal["tourism"]`.
+**None — the pipeline is complete end to end.** Any traveller, any destination: the request
+describes who is travelling, the destination is researched if nobody configured it, and the plan
+cites what it found or says what it could not verify. Verified live on a corridor nobody had run —
+Chinese passport, UAE resident, Brazil — which resolved to Brazil's visa waiver page for China,
+where an Indian passport resolves to a VIVIS checklist.
+
+What is left is hardening rather than building. The known problems below are ordered by how much
+they limit it; the first three are the ones that would change an answer a traveller sees.
 
 ### Answered, for background
  Six corridors run live. The model

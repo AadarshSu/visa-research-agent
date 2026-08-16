@@ -9,6 +9,44 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 20. The traveller becomes input; countries become codes
+**2026-08-16**
+
+The last fixed piece. `TravellerProfile` was one constant — Indian passport, UK resident, tourism —
+with `uk_immigration_status` and `uk_permission_expiry` baked into the model and `travel_purpose`
+narrowed to `Literal["tourism"]`.
+
+**Decided:** the profile comes from the request. Three things are required, because three things
+select the guidance: the passport, the country applied from, and the purpose. Everything else is
+optional — a plan that does not use a detail should not ask for it, and this is personal data.
+
+**Countries are stored as ISO codes, not names.** A name has many spellings and a code has one, and
+every corridor, cache key and lexicon lookup is already keyed by code. The API accepts whatever a
+person wrote — "IN", "in", "India", "Republic of India" — and normalises once, at the edge. A
+country with no reference data is refused there too, before anything runs, because without its own
+domains and demonyms the right pages cannot be identified.
+
+**But the model is shown names.** The packet renders "India (IN)": codes are the canonical *key*
+and the wrong *input* for something reading government prose, where an entry table may say either
+and the prompt forbids using knowledge the packet does not contain. Caught by a test that had
+asserted "India" and started seeing "IN" — the assertion was right and the change was wrong.
+
+**`uk_immigration_status` became `residence_status`, and optional.** Not a rename: a citizen of
+where they live holds no permit. It stays because it is frequently decisive — Brazil and China both
+require a non-citizen resident to prove regular status, and the Brazil plan cited exactly that.
+
+**`passport_type` stays `Literal["ordinary"]`, deliberately.** Diplomatic and official passport
+pages are a hard veto in discovery's scoring (entry 8), so those travellers cannot be researched.
+Widening the field would let a request be accepted and then answered with the ordinary-passport
+rules, which is precisely the confident wrong answer this project refuses. Refusing at the schema
+is the honest form.
+
+**Verified:** a corridor nobody had run — Chinese passport, resident in the UAE, to Brazil —
+resolved to Brazil's **visa waiver page for China**, where the same destination for an Indian
+passport resolves to a VIVIS document checklist. The traveller changes the answer, end to end.
+
+---
+
 ## 19. The human approval gate becomes a rule, not an absence
 **2026-08-16**
 

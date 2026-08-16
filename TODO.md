@@ -27,7 +27,7 @@ countries that do publish one; that is the signal this decision is failing.
 **Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists"
 look identical from inside the crawler, which is the whole problem.
 
-### Watch where the two deciders disagree — `soon`
+### Watch where the two deciders disagree — `next`
 
 **Why:** the last step now asks a model (DECISIONS entry 16) and the heuristic remains as shortlist
 builder and fallback. Both are recorded: `decided_by` says which chose, and the heuristic's score is
@@ -58,32 +58,6 @@ fill the gap from another page — `VisaPlan` already forbids inventing a checkl
 discipline applies here.
 
 **Do not:** work around the block. See `CLAUDE.md`; that decision is closed.
-
----
-
-## Soon
-
-### Make the traveller profile variable — `next`
-
-**Why:** the profile is fixed at Indian passport / resident in the UK / tourism in
-`config/traveller.py`. Discovery is already corridor-aware and takes nationality, residence and
-purpose as input; the profile is the last piece that is not. Nothing can be offered to a real user
-until this changes.
-
-**Do:** replace the fixed constant with request input. `TravellerProfile` currently carries
-UK-specific fields (`uk_immigration_status`, `uk_permission_expiry`) that need generalising, and
-`travel_purpose` is `Literal["tourism"]` and needs widening. Country values need normalising to ISO
-codes — `discovery/lexicon.py` already holds that reference data.
-
-**Watch for:** `destinations.yaml` holds one set of sources per destination, which silently assumes
-one corridor. That assumption no longer binds the automatic path — corridors are stored keyed by
-the whole corridor, nationality and purpose included — but it still binds the hand-configured
-destinations. See the layering table in [ARCHITECTURE.md](ARCHITECTURE.md).
-
-**Already done for you:** `corridor_for` in `api/routes.py` derives the corridor from the profile
-rather than hard-coding it, so the request path does not change — only that function and the
-request schema.
-
 
 ---
 
