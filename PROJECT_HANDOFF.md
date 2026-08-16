@@ -32,12 +32,15 @@ forms, or claiming an approval is guaranteed.
 
 **Working end to end.** Two destinations produce real plans from live government sources.
 
-| | Singapore | Japan | Vietnam |
-| --- | --- | --- | --- |
-| Configured sources | 6 | 7 | none (discovery test case) |
-| Offline snapshots | yes | no | no |
-| Live retrieval | works | works | works, with rendering on |
-| Discovery finds the right pages | 2/2 roles | 2/2 roles | resolves; no checklist exists |
+| | Singapore | Japan | Vietnam | Brazil |
+| --- | --- | --- | --- | --- |
+| Configured sources | 6 | 7 | none (discovery test case) | none (discovery test case) |
+| Offline snapshots | yes | no | no | no |
+| Live retrieval | works | works | works, with rendering on | works |
+| Discovery finds the right pages | 2/2 roles | 2/2 roles | resolves; no checklist exists | **exits 0 with the wrong checklist** |
+
+Singapore and Japan are **in-sample**: the scoring was tuned against them. Brazil is the first real
+out-of-sample test, and it fails — see *Current task* below.
 
 Runtime mode is `source_mode: live`, `extraction_mode: openai`, `render_mode: never` in
 `src/visa_research_agent/config/runtime.yaml`. Japan only works live, because its checklist is a PDF
@@ -109,11 +112,11 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
    start shipping empty checklists for countries that do publish one, this is the cause; a
    per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
-2. **Discovery's scoring is tuned against Singapore and Japan**, so their results are in-sample.
-   Vietnam was meant to be the held-out check, and it cannot serve as one: it publishes **no
-   document checklist at all**, so there is nothing for ranking to get right or wrong. **Whether
-   ranking generalises remains unknown**, and only a third country with a real checklist can
-   settle it.
+2. **Discovery's ranking does not generalise, and says so with full confidence.** Brazil is the
+   first out-of-sample corridor and it exits `0` having picked a **Riyadh** page as the checklist
+   for a UK applicant; the correct Edinburgh page was fetched and read and ranked third. The
+   scorer rewards pages that talk *about* documents over pages that *list* them. This is the
+   biggest open problem in the project — [DECISIONS.md](DECISIONS.md) entry 15.
 3. **Singapore's VFS page answers HTTP 403** — a bot-block, not a client-rendered page as this file
    previously recorded. Rendering does not apply to it: the render only runs after a `200` whose
    text was thin, and a `403` never gets that far.
@@ -126,8 +129,11 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    it renders to 0 characters. The site root works; only the `/en` path is broken.
 6. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
    text-rich, so every check passes.
-7. **Mission detection is country-code based**, so Singapore's London high commission
-   (`london.mfa.gov.sg`, named by city) is not recognised as the mission serving a UK applicant.
+7. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
+   for a consolidated portal. `_mission_domains` returns `[]` for Brazil, whose every mission sits
+   on `www.gov.br` with the post in the *path* — so Riyadh and Atlanta outrank Edinburgh for a UK
+   applicant. It also misses Singapore's `london.mfa.gov.sg`, which is named by city rather than
+   country code. Recorded here as latent; Brazil proved it changes the answer.
 8. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
    structured replacement was built and deliberately removed — see [DECISIONS.md](DECISIONS.md).
 9. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
@@ -138,8 +144,31 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-**Whether discovery's ranking generalises** beyond Singapore and Japan, which it was tuned against.
-This is now the live question, because rendering removed the reason Vietnam could not test it.
+**Discovery's ranking does not generalise, and the failure is silent.** Brazil answered the
+question Vietnam could not. Full analysis in [DECISIONS.md](DECISIONS.md) entry 15; the short form:
+
+`visa-discover corridor --destination brazil --nationality IN --from GB` **exits 0** — every
+load-bearing role filled, full confidence — having chosen a **Riyadh** page as the document
+checklist for a traveller applying in the UK. The correct Edinburgh page was found by search,
+shortlisted, fetched and read, and ranked **third** (32.3 against Riyadh's 43.1).
+
+Two causes, both general rather than Brazil-specific:
+
+1. **The scorer rewards pages that talk *about* documents over pages that *list* them.** Riyadh's
+   generic e-consular boilerplate repeats "documents required" / "required documents"; the real
+   Edinburgh checklist names passport, bank statement, proof of funds, itinerary and return ticket
+   in prose. Singapore and Japan hid this because their checklists contain the literal phrases too.
+2. **Mission detection does nothing for a consolidated portal.** `_mission_domains` returns `[]`
+   for Brazil, because every mission sits on `www.gov.br` with the post in the *path*. Riyadh,
+   Kuala Lumpur, Atlanta and Abu Dhabi therefore compete equally with Edinburgh, and four of six
+   resolved roles came from missions on the wrong continent.
+
+**Nothing has been changed in response.** Any fix made now would be fitted to Brazil, and this is
+the only out-of-sample signal available. The next step is to decide what *should* identify a
+checklist — does it name specific documents, and does it belong to the mission serving this
+traveller — and only then check Singapore and Japan still pass.
+
+### Previously the current task, now answered
 
 **Vietnam now resolves at exit 1**, with `render_mode: on_demand`:
 

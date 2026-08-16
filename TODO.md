@@ -27,26 +27,33 @@ countries that do publish one; that is the signal this decision is failing.
 **Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists"
 look identical from inside the crawler, which is the whole problem.
 
-### Run a third country that actually publishes a checklist — `next`
+### Fix what Brazil showed: ranking picks the wrong checklist — `next`
 
-**Why:** discovery's scoring was tuned against Singapore and Japan, so their 2/2 results are
-in-sample. Vietnam was meant to be the held-out check, and it is now fully readable — rendering is
-done, two shortlisting bugs found along the way are fixed, and it resolves at exit 1. But it cannot
-answer the question: Vietnam publishes **no document checklist page at all**, so there is nothing
-for ranking to get right or wrong. Its e-visa states requirements as upload fields inside the
-application form, and `evisa.gov.vn`, its FAQ and its support page carry eligibility law rather than
-a document list — all eight readable candidates score **exactly 0.0** for the role.
+**Why:** Brazil was the out-of-sample test and discovery failed it, silently. It exits `0` — every
+load-bearing role filled — with a **Riyadh** page as the document checklist for a traveller applying
+in the UK. The correct Edinburgh page was found by search, shortlisted, fetched and read, and ranked
+**third** (32.3 against Riyadh's 43.1). Full analysis in [DECISIONS.md](DECISIONS.md) entry 15.
 
-**Whether ranking generalises is still unknown**, and a destination that does publish a checklist is
-the only way to find out.
+Two causes, both general rather than Brazil-specific:
 
-**Do:** pick a destination that publishes readable HTML *and a real checklist* — Thailand or Brazil
-are likely candidates. Run `visa-discover bootstrap`, approve its domains, run
-`visa-discover corridor`, then judge the result against the real pages by hand. There is no gold
-answer to diff against, which is the point: it cannot be tuned to pass.
+1. **The scorer rewards pages that talk *about* documents over pages that *list* them.** Riyadh's
+   generic e-consular boilerplate repeats "documents required" and "required documents"; Edinburgh's
+   real checklist names passport, bank statement, proof of funds, itinerary and return ticket in
+   prose. Singapore and Japan hid this because their checklists contain the literal phrases too.
+2. **Mission detection does nothing for a consolidated portal.** `_mission_domains` matches the
+   residence country's label against the *host*, but Brazil puts every mission on `www.gov.br` with
+   the post in the *path*. It returns `[]`, so Riyadh, Kuala Lumpur, Atlanta and Abu Dhabi compete
+   equally with Edinburgh — four of six resolved roles came from the wrong continent.
 
-**Careful:** resist tuning weights to make the third country pass. That would consume the only
-out-of-sample signal available. Record what it got wrong instead.
+**Do:** decide what *should* identify a checklist before touching a weight. The two candidate
+signals are whether a page **names specific documents** (passport, photograph, bank statement,
+itinerary) rather than the phrase "documents required", and whether it **belongs to the mission
+serving this traveller** — which needs path-based mission detection, not host-based. Then confirm
+Singapore and Japan still pass; they are the regression baseline.
+
+**Careful:** Brazil is now in-sample the moment you tune against it. If a fourth country is needed
+to check the fix, budget for one — Thailand is a poor choice for this traveller, since Indian
+nationals have visa exemption and there would be no checklist to rank.
 
 ---
 
@@ -73,7 +80,7 @@ corridor-keyed. See the layering table in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Later
 
-### Wire discovery into request time — `later` · blocked by the third-country check
+### Wire discovery into request time — `later` · blocked by discovery's ranking being trustworthy
 
 **Why:** discovery is an offline command. Serving arbitrary corridors eventually needs it in the
 request path.
@@ -104,14 +111,6 @@ constantly. **Never** auto-rediscover and swap a role-bearing source: that is th
 failure with the human removed. A persistent failure over several runs is the honest trigger to
 propose a replacement.
 
-### Recognise missions named by city — `later`
-
-**Why:** mission detection matches the residence country's code against the host, so
-`uk.emb-japan.go.jp` is found but Singapore's `london.mfa.gov.sg` is not, because it is named by
-city. Singapore still resolves correctly, so this is a latent gap rather than a live bug.
-
-**Do:** add major city names per country to `countries.yaml` alongside `host_labels`.
-
 ---
 
 ## Smaller things
@@ -124,10 +123,10 @@ city. Singapore still resolves correctly, so this is a latent gap rather than a 
   body: a misconfigured Next.js i18n redirect. Browsers ignore `Location` on a `200`, so rendering
   does not fix it either. The site root works. Possibly worth reporting to the authority; there is
   nothing to fix in this codebase.
-- **The whole repo was reformatted** by `ruff format` in this change. Nothing was edited by hand:
-  ruff 0.16.2 formats differently from whatever version the files were last written with, and
-  `ruff format --check .` was already failing on 16 untouched files before any of this work. It is
-  a large, purely mechanical part of the diff — read it separately from the rendering change.
+- **Missions named by city are still unrecognised** — Singapore's `london.mfa.gov.sg`. Folded into
+  the ranking item above, since path-based mission detection has to solve the same problem: the
+  residence country is not always a host label. Add city names to `countries.yaml` beside
+  `host_labels` as part of that work.
 - **Cache invalidation on rule changes.** After changing what counts as usable, cached entries still
   serve the old result until the TTL expires. This cost real debugging time — a fix appeared not to
   work until `var/cache/` was cleared. Consider keying entries by a rules version.

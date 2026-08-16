@@ -9,6 +9,53 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 15. Brazil, the out-of-sample test: discovery ranks the wrong page, confidently
+**2026-08-16**
+
+Discovery's scoring was tuned against Singapore and Japan; Vietnam turned out to publish no
+checklist, so it could not test ranking. Brazil is the first corridor that genuinely could, and the
+answer is that **ranking does not generalise**. Recorded rather than fixed, deliberately: this is
+the only out-of-sample signal there is, and tuning weights to make it pass would spend it.
+
+`visa-discover corridor --destination brazil --nationality IN --from GB` **exits 0** — every
+load-bearing role filled, full confidence — and picks this as the document checklist:
+
+    43.1  embaixada-riade/how-to-apply-for-services-on-e-consular      (Riyadh, Saudi Arabia)
+
+The correct page exists, was found by search at depth 0, was shortlisted, and was fetched and read:
+
+    32.3  consulado-edimburgo/.../visit-visa-vivis-1/tourism-and-transit-vivis   (Edinburgh, UK)
+
+It ranked **third**, behind Riyadh and a Kuala Lumpur page. So this is not a crawl or a rendering
+failure — the right answer was in hand and the ranking rejected it.
+
+**Finding 1 — the scorer rewards pages that talk *about* documents over pages that *list* them.**
+The Riyadh page is generic e-consular boilerplate; it scored `body:documents required+25`,
+`body:required documents+25`, `body:application documents+18` purely by repeating the phrases. The
+Edinburgh page is the actual checklist and names passport, bank statement, proof of funds,
+itinerary and return ticket — in prose, without chanting "documents required". Singapore and Japan
+hid this because their checklists happen to contain the literal phrases too.
+
+**Finding 2 — mission detection is inoperative for a consolidated portal, and it is not latent.**
+`_mission_domains` returned `[]` for Brazil. It looks for the residence country's label in the
+*host*, but Brazil publishes every mission on one host with the post in the *path*
+(`www.gov.br/mre/pt-br/consulado-edimburgo`). So Riyadh, Kuala Lumpur, Atlanta and Abu Dhabi
+compete on equal terms with Edinburgh for a UK applicant, and four of the six resolved roles came
+from missions on the wrong continent. This was recorded as a latent gap; Brazil shows it changing
+the answer.
+
+**Finding 3 — the failure is silent, which is the worst part.** Exit 0 means "every load-bearing
+role filled". Nothing in the output suggests the checklist belongs to a different mission from the
+one serving this traveller, because nothing checks that. A refusal would have been safe; this is a
+confident wrong answer, the outcome entries 5 and 6 exist to prevent.
+
+**Not fixed here, on purpose.** Any change now would be fitted to Brazil. The honest next step is
+to decide what *should* rank a checklist — plausibly: does the page name specific documents, and
+does it belong to the mission serving this traveller — and only then to look at whether Singapore
+and Japan still pass.
+
+---
+
 ## 14. A missing document checklist stops refusing the corridor
 **2026-08-16**
 
