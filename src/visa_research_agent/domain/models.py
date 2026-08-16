@@ -89,9 +89,16 @@ class DestinationConfig(StrictModel):
 
     @property
     def load_bearing_source_ids(self) -> list[str]:
-        """Sources the plan cannot be produced without, defaulting to the document checklist."""
+        """Sources the plan cannot be produced without: the checklist, plus anything else required.
 
-        return self.required_source_ids or self.application_document_source_ids
+        A union, not a fallback. This used to be `required_source_ids or
+        application_document_source_ids`, so naming any required source silently discarded the
+        checklist requirement — a destination could declare a checklist and still produce a plan
+        without it. Order is preserved so the reported reason names the checklist first.
+        """
+
+        combined = [*self.application_document_source_ids, *self.required_source_ids]
+        return list(dict.fromkeys(combined))
 
     def trusts_host(self, host: str) -> bool:
         """True when a host is an approved authority domain or an appointed provider domain."""
@@ -337,7 +344,8 @@ class VisaPlan(StrictModel):
     decision_source_ids: list[str] = Field(min_length=1)
     where_to_apply: ApplicationLocation | None
     requirements: list[VisaRequirement]
-    application_document_source_ids: list[str] = Field(min_length=1)
+    application_document_source_ids: list[str]
+    """May be empty: some authorities publish no checklist. See `validate_absent_checklist`."""
     application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
     sources: list[SourceReference]
     unresolved_questions: list[str]
@@ -357,6 +365,29 @@ class VisaPlan(StrictModel):
                 raise ValueError("a verified plan cannot report unavailable sources")
             if any(source.is_stale for source in self.sources):
                 raise ValueError("a verified plan cannot rest on stale evidence")
+        return self
+
+    @model_validator(mode="after")
+    def validate_absent_checklist(self) -> "VisaPlan":
+        """With no document source, a plan may state the gap but never fill it.
+
+        This is the guard that makes a checklist-less corridor safe to serve. Without a designated
+        document source there is nothing a requirement could honestly cite, so listing one means it
+        was inferred from a page that is not a checklist — an eligibility rule or an application
+        form read as though it were guidance. That is the single most damaging output this project
+        can produce, so it is refused structurally rather than asked for politely in the prompt.
+        """
+
+        if self.application_document_source_ids:
+            return self
+        if self.requirements:
+            raise ValueError(
+                "a plan with no document checklist source cannot list document requirements"
+            )
+        if not self.unresolved_questions:
+            raise ValueError(
+                "a plan with no document checklist source must record what could not be answered"
+            )
         return self
 
     @model_validator(mode="after")

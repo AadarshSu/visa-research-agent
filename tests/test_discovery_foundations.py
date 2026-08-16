@@ -143,15 +143,26 @@ def test_an_unknown_country_is_refused_rather_than_guessed() -> None:
         get_country_registry().require("ZZ")
 
 
-def test_a_corridor_is_usable_only_with_both_load_bearing_roles() -> None:
-    decision = source("jp_a", "https://www.mofa.go.jp/a", "visa_decision")
+def test_a_corridor_without_the_visa_decision_is_never_usable() -> None:
     checklist = source("jp_b", "https://www.uk.emb-japan.go.jp/b", "document_checklist")
 
     assert not ResolvedCorridor(
-        corridor=corridor(), resolved_at=RESOLVED_AT, sources=[decision]
+        corridor=corridor(), resolved_at=RESOLVED_AT, sources=[checklist]
     ).is_usable
+
+
+def test_a_corridor_is_usable_without_a_document_checklist() -> None:
+    """Some authorities publish no checklist, so its absence cannot refuse the corridor.
+
+    Vietnam states its e-visa requirements as upload fields inside the application form. Refusing
+    that corridor forever would be refusing reality. The absence is reported instead, and
+    `VisaPlan` is what stops a checklist ever appearing without a source behind it.
+    """
+
+    decision = source("jp_a", "https://www.mofa.go.jp/a", "visa_decision")
+
     assert ResolvedCorridor(
-        corridor=corridor(), resolved_at=RESOLVED_AT, sources=[decision, checklist]
+        corridor=corridor(), resolved_at=RESOLVED_AT, sources=[decision]
     ).is_usable
 
 

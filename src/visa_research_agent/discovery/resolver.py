@@ -7,6 +7,11 @@ freshness rules as hand-configured ones.
 If a load-bearing role cannot be filled confidently the corridor is refused. A plausible substitute
 for a document checklist is worse than no answer, because the traveller would be told to bring the
 wrong papers with full confidence.
+
+A missing checklist is the one exception, and it is not a relaxation of that rule. Some authorities
+publish no checklist anywhere — Vietnam states its e-visa requirements as upload fields inside the
+application form — so the corridor resolves and the absence is reported instead. What must never
+happen is a checklist appearing without a source behind it, which `VisaPlan` refuses structurally.
 """
 
 import re
@@ -22,7 +27,7 @@ from visa_research_agent.discovery.lexicon import (
     get_lexicon,
 )
 from visa_research_agent.discovery.models import (
-    LOAD_BEARING_ROLES,
+    REPORTED_ROLES,
     ROLE_ORDER,
     CandidatePage,
     Corridor,
@@ -395,7 +400,9 @@ class CorridorResolver:
                 if score >= self.minimum_role_score
             ]
             if not ranked:
-                if role in LOAD_BEARING_ROLES:
+                # Reported, not only load-bearing: a missing checklist no longer refuses the
+                # corridor, but leaving it unsaid would hide it from whoever reviews the result.
+                if role in REPORTED_ROLES:
                     unresolved.append(role)
                     notes.append(f"no page scored high enough to be the {role.replace('_', ' ')}")
                 continue
@@ -445,7 +452,7 @@ class CorridorResolver:
             corridor=corridor,
             resolved_at=self.now(),
             sources=[],
-            unresolved_roles=list(LOAD_BEARING_ROLES),
+            unresolved_roles=list(REPORTED_ROLES),
             notes=[*notes, reason],
             queries=queries,
         )

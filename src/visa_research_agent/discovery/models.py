@@ -31,7 +31,22 @@ TravelPurpose = Literal["tourism", "business", "study", "transit"]
 DecidedBy = Literal["heuristic", "model"]
 
 # The roles a corridor cannot be considered resolved without. Everything else is useful context.
-LOAD_BEARING_ROLES: tuple[DiscoveryRole, ...] = ("visa_decision", "document_checklist")
+#
+# `document_checklist` is deliberately **not** here. Some authorities publish no checklist at all:
+# Vietnam states its e-visa requirements as upload fields inside the application form, so there is
+# no page to find, and refusing the corridor forever would be refusing reality.
+#
+# This is safe only because the absence is carried through rather than papered over. A plan built
+# without a document source may not contain document requirements — `VisaPlan` enforces that — and
+# must say so in its unresolved questions. The model is never left to infer a checklist from a page
+# that is not one. Removing that enforcement re-creates the wrong-checklist failure this project
+# exists to prevent; see DECISIONS.md entry 14.
+LOAD_BEARING_ROLES: tuple[DiscoveryRole, ...] = ("visa_decision",)
+
+# Roles whose absence must be named in the result even when it no longer refuses the corridor.
+# A missing checklist stops being fatal, but it must never become invisible: it changes what the
+# traveller can be told, so it is reported and moves the command's exit code from 0 to 1.
+REPORTED_ROLES: tuple[DiscoveryRole, ...] = (*LOAD_BEARING_ROLES, "document_checklist")
 
 # Display and output order, so proposals diff cleanly between runs.
 ROLE_ORDER: tuple[DiscoveryRole, ...] = (

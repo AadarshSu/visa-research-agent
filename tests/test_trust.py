@@ -111,7 +111,14 @@ def test_load_bearing_sources_default_to_the_document_checklist() -> None:
     assert build().load_bearing_source_ids == ["tl_docs"]
 
 
-def test_declared_required_sources_override_the_default() -> None:
+def test_declared_required_sources_add_to_the_checklist_rather_than_replacing_it() -> None:
+    """Naming a required source must not quietly drop the document checklist.
+
+    This was a fallback (`required_source_ids or application_document_source_ids`), so declaring
+    any required source discarded the checklist requirement entirely — a destination could list a
+    checklist and still produce a plan without it.
+    """
+
     config = build(
         required_source_ids=["tl_decision"],
         application_document_source_ids=["tl_docs"],
@@ -121,7 +128,7 @@ def test_declared_required_sources_override_the_default() -> None:
         ],
     )
 
-    assert config.load_bearing_source_ids == ["tl_decision"]
+    assert config.load_bearing_source_ids == ["tl_docs", "tl_decision"]
 
 
 def test_required_sources_must_exist() -> None:

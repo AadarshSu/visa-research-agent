@@ -21,6 +21,12 @@ Follow these rules:
    or travel-readiness items such as passport-validity checks, arrival cards, onward tickets, funds,
    vaccination certificates or permission for a later destination unless a designated application-
    document source explicitly says they are submitted with the visa application.
+8a. If destination.application_document_source_ids is empty, this authority publishes no document
+   checklist. Return an empty requirements list and an empty application_document_source_ids, and
+   record an unresolved question saying no official checklist was published and where the traveller
+   should look instead if the evidence says. Never assemble a checklist from an eligibility rule, an
+   application form or a general entry page: those are not checklists, and a plan is rejected if it
+   lists requirements without a document source behind them.
 9. Return four to eight ordered application steps that form a genuinely actionable timeline. Cover
    the supported route end to end: what to prepare, which official page to open, account or sign-in
    setup only if evidenced, appointment booking, where to attend, what to submit or pay, the stated
