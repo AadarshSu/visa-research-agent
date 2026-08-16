@@ -49,6 +49,21 @@ class CountryRegistry(StrictModel):
             raise ValueError("country codes must be unique")
         return self
 
+    def code_for_name(self, name: str) -> str | None:
+        """The ISO code for a country written the way a person writes it.
+
+        The traveller profile records "India" and "United Kingdom"; corridors are keyed by IN and
+        GB. Synonyms are matched too, so "UK" and "Britain" resolve as well.
+        """
+
+        wanted = name.strip().lower()
+        for country in self.countries:
+            if country.name.lower() == wanted:
+                return country.code
+            if any(synonym.lower() == wanted for synonym in country.synonyms):
+                return country.code
+        return None
+
     def get(self, code: str) -> Country | None:
         normalized = code.strip().upper()
         return next((c for c in self.countries if c.code == normalized), None)
