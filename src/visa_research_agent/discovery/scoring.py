@@ -66,6 +66,55 @@ def _matches_country(link: PageLink, country: Country) -> bool:
     return any(label in host_labels for label in country.host_labels)
 
 
+def mission_in_path(url: str, lexicon: Lexicon) -> str | None:
+    """The post a URL belongs to, when its path names one.
+
+    Brazil publishes every mission under one host as `/consulado-edimburgo`, `/embaixada-riade`,
+    so a host-based check cannot tell them apart. Returns what follows the marker — "edimburgo",
+    "riade" — or None when the path names no post at all, which is the common case.
+    """
+
+    for segment in path_segments(url):
+        for marker in lexicon.mission_path_markers:
+            if segment == marker:
+                continue  # A bare "/embassy/" section index names no particular post.
+            for separator in ("-", "_"):
+                prefix = f"{marker}{separator}"
+                if segment.startswith(prefix):
+                    return segment[len(prefix) :]
+    return None
+
+
+def mission_affinity(url: str, residence: Country, lexicon: Lexicon) -> str | None:
+    """Whether a page belongs to the post serving this traveller, another post, or no post.
+
+    Returns "own", "other", or None. "other" is only ever concluded from a path that explicitly
+    names a different post: inferring it from a host would misread the many ministry pages that
+    belong to no mission at all.
+    """
+
+    labels = {label.lower() for label in residence.mission_labels}
+    if labels and any(label in host_of(url).split(".") for label in labels):
+        return "own"
+
+    post = mission_in_path(url, lexicon)
+    if post is None:
+        return None
+    if post.lower() in labels or any(part in labels for part in post.lower().split("-")):
+        return "own"
+    return "other"
+
+
+def names_documents(haystack: str, lexicon: Lexicon) -> list[str]:
+    """The distinct documents a page names.
+
+    Distinct, not counted occurrences: a page repeating "passport" twenty times is a passport page,
+    not a list of what to bring.
+    """
+
+    return [noun for noun in lexicon.document_nouns if _contains_phrase(haystack, noun)]
+
+
 def is_archived(url: str, lexicon: Lexicon) -> bool:
     """True when a path marks a page as superseded.
 
@@ -269,12 +318,23 @@ def score_link(
         signals[scored_role].extend(shared_reasons)
 
     # How this traveller applies is set by the mission serving where they live, so it outranks a
-    # ministry's general pages for those two roles only.
-    if mission_domains and host_is_within(host_of(link.url), mission_domains):
+    # ministry's general pages for those two roles only — and a *different* post's page loses them,
+    # because its fees, address and appointment system are not the ones this traveller will use.
+    on_mission_host = bool(mission_domains) and host_is_within(
+        host_of(link.url), mission_domains or []
+    )
+    affinity = mission_affinity(link.url, residence, lexicon)
+    if on_mission_host and affinity is None:
+        affinity = "own"
+    if affinity is not None:
+        adjustment = (
+            lexicon.mission_host_bonus if affinity == "own" else lexicon.other_mission_penalty
+        )
+        label_text = "mission" if affinity == "own" else "other-mission"
         for mission_role in ("document_checklist", "application_route"):
             if mission_role in scores:
-                scores[mission_role] += lexicon.mission_host_bonus
-                signals[mission_role].append(f"mission+{lexicon.mission_host_bonus:g}")
+                scores[mission_role] += adjustment
+                signals[mission_role].append(f"{label_text}{adjustment:+g}")
 
     # Authorities routinely publish checklists as PDFs, so a PDF is evidence for that role only.
     if is_pdf_url(link.url) and "document_checklist" in scores:
@@ -290,10 +350,14 @@ def score_body(
     corridor: Corridor,
     lexicon: Lexicon,
     nationality: Country,
+    *,
+    url: str = "",
 ) -> RoleScores:
     """Score a page from its own text, confirming or contradicting what the link suggested."""
 
     haystack = f"{title}\n{text}".lower()
+    # Where the page says it is about this nationality, as opposed to merely mentioning it.
+    identity = f"{title}\n{searchable_url(url)}".lower()
     scores: dict[str, float] = {}
     signals: dict[str, list[str]] = {}
 
@@ -301,22 +365,45 @@ def score_body(
         role_terms = lexicon.roles.get(role_name)
         if role_terms is None:
             continue
-        total = 0.0
-        reasons: list[str] = []
-        for term in role_terms.terms:
-            if _contains_phrase(haystack, term.phrase):
-                total += term.weight
-                reasons.append(f"body:{term.phrase}+{term.weight:g}")
-        if total:
-            scores[role_name] = total
-            signals[role_name] = reasons
+        # The strongest single phrase, not the sum of every synonym for it. "documents required",
+        # "required documents", "application documents" and "necessary documents" all assert the
+        # same one thing, and summing them let a page earn 86 points for saying it four ways —
+        # which is precisely how a generic "how to apply" page outscored a real checklist. This is
+        # the rule the off-scope penalty already follows: what matters is that the signal is
+        # present, not how many ways the page phrases it.
+        matched = [term for term in role_terms.terms if _contains_phrase(haystack, term.phrase)]
+        if matched:
+            strongest = max(matched, key=lambda term: term.weight)
+            scores[role_name] = strongest.weight
+            signals[role_name] = [f"body:{strongest.phrase}+{strongest.weight:g}"]
+            if len(matched) > 1:
+                signals[role_name].append(f"({len(matched) - 1} more phrasings, not added)")
+
+    # What separates a checklist from a page about checklists: the documents it names. Every
+    # phrase in roles.document_checklist is met by talking *about* documents, which is how a
+    # generic "how to apply" page outscored a real tourism checklist that says "checklist" nowhere.
+    named = names_documents(haystack, lexicon)
+    if len(named) >= lexicon.minimum_document_nouns:
+        bonus = min(len(named), lexicon.document_noun_cap) * lexicon.document_noun_weight
+        scores["document_checklist"] = scores.get("document_checklist", 0.0) + bonus
+        signals.setdefault("document_checklist", []).append(
+            f"names {len(named)} documents ({', '.join(named[:4])})+{bonus:g}"
+        )
 
     if not scores:
         return RoleScores()
 
     shared = 0.0
     shared_reasons: list[str] = []
-    if any(_contains_phrase(haystack, token) for token in nationality.text_tokens):
+    # In the title or the URL, not anywhere in the text. This is the same discipline the
+    # off-scope check below already applies, for the same reason: a passing mention is normal and
+    # harmless. Japan's ministry-wide checklist names India once, inside a table of nationality
+    # exceptions; that made it read as a page written for Indians and beat the UK post's own
+    # tourism checklist. Singapore's genuinely per-nationality page says so in its URL.
+    written_for_nationality = any(
+        _contains_phrase(identity, token) for token in nationality.text_tokens
+    )
+    if written_for_nationality:
         shared += lexicon.nationality_weight
         shared_reasons.append(f"body-nationality:{nationality.code}+{lexicon.nationality_weight:g}")
 
@@ -348,11 +435,8 @@ def score_body(
     # dampened. The exception is a page written for this nationality: Singapore's per-nationality
     # page genuinely covers the decision, the documents, the fee and the timing, and penalising it
     # for being comprehensive hands the checklist role to a narrower, wrong page.
-    mentions_nationality = any(
-        _contains_phrase(haystack, token) for token in nationality.text_tokens
-    )
     breadth = len([role for role, value in scores.items() if value > 0])
-    if breadth > lexicon.breadth_threshold and not mentions_nationality:
+    if breadth > lexicon.breadth_threshold and not written_for_nationality:
         factor = (lexicon.breadth_threshold / breadth) ** 0.5
         for scored_role in list(scores):
             scores[scored_role] *= factor

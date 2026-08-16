@@ -22,6 +22,13 @@ class Country(StrictModel):
     synonyms: list[str] = Field(default_factory=list)
     demonyms: list[str] = Field(default_factory=list)
     host_labels: list[str] = Field(default_factory=list)
+    mission_labels: list[str] = Field(default_factory=list)
+    """How a post serving this country is named, in any language the authority might use.
+
+    Brazil calls its Edinburgh consulate `consulado-edimburgo` and its London one
+    `consulado-londres`, so the labels are Portuguese. Like `host_labels`, this mismatch is data
+    rather than a special case in code.
+    """
     tlds: list[str] = Field(default_factory=list)
 
     @property
@@ -97,6 +104,12 @@ class Lexicon(StrictModel):
     shallow_path_weight: float = 8.0
     depth_penalty_weight: float = -10.0
     mission_host_bonus: float = 8.0
+    other_mission_penalty: float = -45.0
+    mission_path_markers: list[str] = Field(default_factory=list)
+    document_nouns: list[str] = Field(default_factory=list)
+    document_noun_weight: float = 9.0
+    document_noun_cap: int = 5
+    minimum_document_nouns: int = 3
     pdf_checklist_bonus: float = 10.0
     authority_kind_bonus: dict[str, float] = Field(default_factory=dict)
 

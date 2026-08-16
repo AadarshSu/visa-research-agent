@@ -4,6 +4,12 @@
 # disagree: the United Kingdom is GB in ISO 3166-1, but its Japanese mission is uk.emb-japan.go.jp.
 # That mismatch must be data, not a special case in code.
 #
+# `mission_labels` names the post serving a country, in whatever language the authority writes it.
+# Brazil publishes every mission under www.gov.br with the post in the path, in Portuguese, so a
+# UK applicant is served by `consulado-edimburgo` and `consulado-londres`. It also carries the
+# cities, because a post is usually named after its city rather than its country — which is why
+# Singapore's `london.mfa.gov.sg` was never recognised as the mission serving a UK applicant.
+#
 # `demonyms` are the forms that appear in URL paths and link text ("india", "indian").
 #
 # `tlds` are the country's own top-level domains. A candidate under the destination's own TLD
@@ -18,6 +24,7 @@ countries:
     synonyms: [united kingdom, uk, great britain, britain, england, scotland, wales]
     demonyms: [british]
     host_labels: [uk, gb, unitedkingdom, greatbritain]
+    mission_labels: [uk, gb, london, londres, londra, edinburgh, edimburgo, edimburgh, manchester, glasgow, belfast, cardiff, liverpool]
     tlds: [uk]
 
   - code: IN
@@ -25,6 +32,7 @@ countries:
     synonyms: [india, republic of india]
     demonyms: [indian, indians]
     host_labels: [in, india]
+    mission_labels: [in, india, delhi, new-delhi, novadeli, nova-delhi, mumbai, bombay, chennai, kolkata, bengaluru, hyderabad]
     tlds: [in]
 
   - code: SG
@@ -32,6 +40,7 @@ countries:
     synonyms: [singapore, republic of singapore]
     demonyms: [singaporean]
     host_labels: [sg, singapore]
+    mission_labels: [sg, singapore, singapura, singapura-cidade]
     tlds: [sg]
 
   - code: JP
@@ -39,6 +48,7 @@ countries:
     synonyms: [japan]
     demonyms: [japanese]
     host_labels: [jp, japan]
+    mission_labels: [jp, japan, tokyo, toquio, toquio-cidade, osaka, nagoya]
     tlds: [jp]
 
   - code: US
@@ -46,6 +56,7 @@ countries:
     synonyms: [united states, usa, us, united states of america, america]
     demonyms: [american]
     host_labels: [us, usa, unitedstates]
+    mission_labels: [us, usa, washington, washington-dc, new-york, novayork, nova-york, atlanta, chicago, miami, boston, houston, los-angeles, san-francisco]
     tlds: [us, gov]
 
   - code: CA
@@ -53,6 +64,7 @@ countries:
     synonyms: [canada]
     demonyms: [canadian]
     host_labels: [ca, canada]
+    mission_labels: [ca, canada, ottawa, toronto, montreal, vancouver]
     tlds: [ca]
 
   - code: AU
@@ -60,6 +72,7 @@ countries:
     synonyms: [australia]
     demonyms: [australian]
     host_labels: [au, australia]
+    mission_labels: [au, australia, canberra, sydney, melbourne]
     tlds: [au]
 
   - code: FR
@@ -67,6 +80,7 @@ countries:
     synonyms: [france, french republic]
     demonyms: [french]
     host_labels: [fr, france]
+    mission_labels: [fr, france, paris, marseille, lyon]
     tlds: [fr]
 
   - code: DE
@@ -74,6 +88,7 @@ countries:
     synonyms: [germany, federal republic of germany]
     demonyms: [german]
     host_labels: [de, germany]
+    mission_labels: [de, germany, berlin, berlim, frankfurt, munich, munique, hamburg, hamburgo]
     tlds: [de]
 
   - code: CN
@@ -81,6 +96,7 @@ countries:
     synonyms: [china, people's republic of china]
     demonyms: [chinese]
     host_labels: [cn, china]
+    mission_labels: [cn, china, beijing, pequim, shanghai, xangai, guangzhou, hong-kong, hongkong]
     tlds: [cn]
 
   - code: AE
@@ -88,6 +104,7 @@ countries:
     synonyms: [united arab emirates, uae, dubai, abu dhabi]
     demonyms: [emirati]
     host_labels: [ae, uae]
+    mission_labels: [ae, uae, abu-dhabi, abudhabi, dubai, dubai-cidade]
     tlds: [ae]
 
   - code: BR
@@ -95,6 +112,7 @@ countries:
     synonyms: [brazil, federative republic of brazil]
     demonyms: [brazilian]
     host_labels: [br, brazil]
+    mission_labels: [br, brazil, brasil, brasilia, rio-de-janeiro, sao-paulo, saopaulo]
     tlds: [br]
 
   - code: VN
@@ -102,6 +120,7 @@ countries:
     synonyms: [vietnam, viet nam, socialist republic of vietnam]
     demonyms: [vietnamese]
     host_labels: [vn, vietnam]
+    mission_labels: [vn, vietnam, hanoi, ha-noi, ho-chi-minh, hochiminh, saigon]
     tlds: [vn]
 
   - code: TH
@@ -109,4 +128,5 @@ countries:
     synonyms: [thailand, kingdom of thailand]
     demonyms: [thai]
     host_labels: [th, thailand]
+    mission_labels: [th, thailand, bangkok, banguecoque, chiang-mai]
     tlds: [th]

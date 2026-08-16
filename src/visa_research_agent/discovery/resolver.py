@@ -371,6 +371,7 @@ class CorridorResolver:
                 corridor,
                 self.lexicon,
                 self.countries.require(corridor.passport_nationality),
+                url=fetched_candidate.link.url,
             )
             fetched_candidate.content_hash = item.content_hash
         # Only pages that were actually readable can be proposed.

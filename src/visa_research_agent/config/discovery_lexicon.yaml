@@ -207,3 +207,78 @@ authority_kind_bonus:
   foreign_ministry: 4
   embassy_or_high_commission: 2
   official_application_provider: 0
+
+# --- What a document checklist actually is -------------------------------------------------
+#
+# Every phrase under roles.document_checklist above is *meta*: a page earns them by talking about
+# documents. Brazil showed why that is not enough. A generic "how to apply on e-consular" page in
+# Riyadh repeats "documents required" and "required documents" and names not one document, and it
+# outscored Edinburgh's real tourism checklist — which names a passport, a bank statement, proof of
+# funds, an itinerary and a return ticket in prose, and says "checklist" nowhere.
+#
+# So a checklist is identified by the documents it names. Distinct nouns are counted, not
+# occurrences, because a page repeating "passport" twenty times is a passport page, not a list.
+document_nouns:
+  - passport
+  - photograph
+  - passport photo
+  - application form
+  - bank statement
+  - proof of funds
+  - proof of accommodation
+  - proof of address
+  - proof of residence
+  - itinerary
+  - return ticket
+  - onward ticket
+  - flight reservation
+  - hotel booking
+  - invitation letter
+  - letter of invitation
+  - employment letter
+  - payslip
+  - travel insurance
+  - yellow fever
+  - birth certificate
+  - marriage certificate
+  - police certificate
+  - criminal record
+  - bank reference
+  - proof of income
+  - certificate of employment
+document_noun_weight: 9
+document_noun_cap: 5
+# Below this many distinct documents a page is talking about a checklist rather than being one,
+# so it earns nothing here. One page mentioning "passport" is almost every page on a visa site.
+minimum_document_nouns: 3
+
+# --- Which post serves this traveller ------------------------------------------------------
+#
+# A mission's pages describe how to apply *at that post*: its fees, its address, its appointment
+# system. Brazil publishes every mission under one host with the post in the path, so
+# `embaixada-riade` and `consulado-edimburgo` are indistinguishable to a host-based check, and a
+# Riyadh page won the checklist role for a traveller applying in the UK.
+#
+# A segment beginning with one of these names a post. What follows it is matched against the
+# residence country's `mission_labels` in countries.yaml.
+mission_path_markers:
+  - consulate
+  - consulate-general
+  - consulado
+  - consulado-geral
+  - consulat
+  - consulado-general
+  - consulaat
+  - embassy
+  - embaixada
+  - embajada
+  - ambassade
+  - botschaft
+  - high-commission
+  - highcommission
+  - mission
+
+# Another post's page, for the two roles where the post genuinely governs. Large enough to lose to
+# the traveller's own mission outright, but not a veto: the content is often replicated across
+# posts, so it may still be the only readable copy of something.
+other_mission_penalty: -45
