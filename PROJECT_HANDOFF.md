@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-15 — update this line when you touch the handoff |
-| **Tests** | 157 passing; `ruff` and `mypy --strict` clean |
+| **Tests** | 189 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -36,12 +36,21 @@ forms, or claiming an approval is guaranteed.
 | --- | --- | --- | --- |
 | Configured sources | 6 | 7 | none (discovery test case) |
 | Offline snapshots | yes | no | no |
-| Live retrieval | works | works | partly |
-| Discovery finds the right pages | 2/2 roles | 2/2 roles | refuses, correctly |
+| Live retrieval | works | works | works, with rendering on |
+| Discovery finds the right pages | 2/2 roles | 2/2 roles | resolves; no checklist exists |
 
-Runtime mode is `source_mode: live`, `extraction_mode: openai` in
+Runtime mode is `source_mode: live`, `extraction_mode: openai`, `render_mode: never` in
 `src/visa_research_agent/config/runtime.yaml`. Japan only works live, because its checklist is a PDF
 and there are no snapshots for it.
+
+**Client-rendered pages can now be read**, but rendering is off in committed config. Turning it on
+means `render_mode: on_demand` plus the optional extra:
+
+```bash
+.venv/bin/pip install -e ".[render]" && .venv/bin/playwright install chromium
+```
+
+Selecting `on_demand` without the extra raises rather than silently skipping rendering.
 
 **The traveller profile is still fixed**: Indian ordinary passport, resident in the UK, tourism.
 It lives in `config/traveller.py`. Making it variable is the next significant piece of work and is
@@ -94,21 +103,34 @@ why.
 
 Ordered by how much they limit the product. None of these are secretly fixed; they are all live.
 
-1. **JavaScript-only sites cannot be read at all.** Retrieval has no browser. Vietnam's e-visa
-   portal and Singapore's VFS page are both unreadable for this reason. This blocks whole corridors
-   and no amount of scoring works around it.
+1. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
+   Both produce the same empty result, and since a missing checklist no longer refuses the corridor,
+   a find-or-read failure now yields a plan with a visibly empty checklist rather than a refusal.
+   The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
+   start shipping empty checklists for countries that do publish one, this is the cause; a
+   per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
 2. **Discovery's scoring is tuned against Singapore and Japan**, so their results are in-sample.
-   Vietnam is held out but refuses for unrelated reasons, so *whether the ranking generalises is
-   still unknown*. This is the biggest open question about discovery.
-3. **Scoring is English-only.** A destination publishing solely in its own language will score near
-   zero and refuse.
-4. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
+   Vietnam was meant to be the held-out check, and it cannot serve as one: it publishes **no
+   document checklist at all**, so there is nothing for ranking to get right or wrong. **Whether
+   ranking generalises remains unknown**, and only a third country with a real checklist can
+   settle it.
+3. **Singapore's VFS page answers HTTP 403** — a bot-block, not a client-rendered page as this file
+   previously recorded. Rendering does not apply to it: the render only runs after a `200` whose
+   text was thin, and a `403` never gets that far.
+4. **Scoring is English-only.** A destination publishing solely in its own language will score near
+   zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
+   characters of Vietnamese, which scores nothing.
+5. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
+   `location: http://localhost:4000/vi` header and an empty body — a misconfigured Next.js i18n
+   redirect. Browsers ignore `Location` on a `200`, so **rendering does not fix this one either**;
+   it renders to 0 characters. The site root works; only the `/en` path is broken.
+6. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
    text-rich, so every check passes.
-5. **Mission detection is country-code based**, so Singapore's London high commission
+7. **Mission detection is country-code based**, so Singapore's London high commission
    (`london.mfa.gov.sg`, named by city) is not recognised as the mission serving a UK applicant.
-6. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
+8. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
    structured replacement was built and deliberately removed — see [DECISIONS.md](DECISIONS.md).
-7. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
+9. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
    usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
    when testing a retrieval change, or a fix will appear not to work.
 
@@ -116,24 +138,39 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-**Reading JavaScript-rendered government sites** — known problem 1, and the largest coverage limit.
-Whole corridors are unservable because the authority publishes a client-rendered page that retrieval
-returns as empty. See the "Handle JavaScript-rendered sites" entry in [TODO.md](TODO.md), which
-carries the measured character counts per site, both fetch paths that would need changing, and the
-four questions to settle before building — including how it can be tested when tests may not touch
-the network.
-
-Nothing has been built for this yet. The first decision is whether a headless browser is worth its
-weight at all; deciding *not* to is defensible and should be recorded either way.
-
-### Also open
-
 **Whether discovery's ranking generalises** beyond Singapore and Japan, which it was tuned against.
-Vietnam was the held-out test and behaved correctly — it found the one readable Vietnamese official
-page, classified it correctly, and refused the checklist rather than substituting something
-plausible — but it refused because the portal is JavaScript-rendered, so it never exercised ranking.
-A destination publishing readable HTML is still needed to answer this. Note the two threads are
-related: fixing rendering would also let Vietnam finally test ranking.
+This is now the live question, because rendering removed the reason Vietnam could not test it.
+
+**Vietnam now resolves at exit 1**, with `render_mode: on_demand`:
+
+| role | source | score |
+| --- | --- | --- |
+| `visa_decision`, `general_entry` | `mofa.gov.vn` — Viet Nam's visa exemption list | 74.6 |
+| `application_route`, `fees` | `evisa.immigration.gov.vn` — Vietnam evisa | 65.8 |
+| `document_checklist` | **none published** — reported, no longer fatal | — |
+
+Vietnam genuinely publishes no checklist: `evisa.gov.vn` is fully read now (21,853 characters
+rendered) and scores exactly zero for the role, because its text, FAQ and support page are
+*eligibility* law and process steps. The requirements are upload fields inside the application form.
+`document_checklist` is therefore no longer load-bearing — see [DECISIONS.md](DECISIONS.md) entry
+14, **including the reservation recorded there**, which is live rather than resolved.
+
+**The safety net that makes that survivable:** `VisaPlan.validate_absent_checklist` refuses any plan
+that, with no document source, either lists document requirements or says nothing about the gap. A
+missing checklist can therefore produce a visibly incomplete plan, never an invented one. Do not
+remove that validator.
+
+**What is still genuinely unknown:** whether ranking generalises when a checklist *does* exist.
+Vietnam cannot answer that, because it has no such page. A third country is the only way.
+
+**Do not tune the weights to make Vietnam fill the checklist.** There is nothing there to rank.
+
+### Rendering, as built
+
+Done and verified live. `research/rendering.py`, behind the `PageRenderer` protocol, on demand only,
+with per-caller render budgets and the trust rules unchanged. Measured: `evisa.gov.vn` 39 → 21,853
+characters; `xuatnhapcanh.gov.vn` 402 characters of translation keys → 9,327 of real text. See
+[DECISIONS.md](DECISIONS.md) entry 13 for what was rejected and what it did **not** fix.
 
 ---
 
@@ -141,9 +178,9 @@ related: fixing rendering would also let Vietnam finally test ranking.
 
 In the order that makes sense. Detail and reasoning in [TODO.md](TODO.md).
 
-1. **Decide on rendering JavaScript sites** — the current task above.
-2. **Run a third country with readable HTML** — Thailand or Brazil. Outstanding validation, not a
-   new feature.
+1. **Run a third country that actually publishes a checklist** — Thailand or Brazil. Now the only
+   way to learn whether discovery's ranking generalises, since Vietnam turned out to have no
+   checklist page to rank. This is the highest-value thing left.
 3. **Make the traveller profile variable** — nationality, residence, purpose, duration as input.
    Everything in discovery is already corridor-aware; the profile is the last fixed piece.
 4. **Wire discovery into request time**, behind caching, once the ranking is trusted.

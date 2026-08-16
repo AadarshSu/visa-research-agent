@@ -9,17 +9,41 @@ Status: `next` · `soon` · `later` · `blocked`
 
 ## Next
 
-### Run a third country with readable HTML — `next`
+### Tell "no checklist exists" apart from "we failed to find it" — `next`
+
+**Why:** `document_checklist` is no longer load-bearing (DECISIONS entry 14), so a corridor now
+resolves without one. That is right for Vietnam, which publishes none. It is wrong for a country
+that publishes one we simply failed to find or read — a crawl that stopped short, a language we do
+not score, a bot-block — and **discovery emits the same result in both cases**. The plan is honest
+either way (`VisaPlan` forces it to state the gap and forbids inventing requirements), but nobody is
+told which case they are looking at.
+
+**Do:** the design already considered is a reviewed per-country declaration —
+`no_official_checklist: true` in `destinations.yaml`, with a required note saying where the
+requirements actually live. A human decides once, in git, exactly as `trusted_domains` works.
+Undeclared countries would go back to refusing. Adopt it if empty checklists start appearing for
+countries that do publish one; that is the signal this decision is failing.
+
+**Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists"
+look identical from inside the crawler, which is the whole problem.
+
+### Run a third country that actually publishes a checklist — `next`
 
 **Why:** discovery's scoring was tuned against Singapore and Japan, so their 2/2 results are
-in-sample. Vietnam was meant to be the held-out check but refuses for an unrelated reason (its
-portal is JavaScript-rendered), so it never exercised ranking. **Whether discovery generalises is
-currently unknown**, and that is the single biggest open question about the feature.
+in-sample. Vietnam was meant to be the held-out check, and it is now fully readable — rendering is
+done, two shortlisting bugs found along the way are fixed, and it resolves at exit 1. But it cannot
+answer the question: Vietnam publishes **no document checklist page at all**, so there is nothing
+for ranking to get right or wrong. Its e-visa states requirements as upload fields inside the
+application form, and `evisa.gov.vn`, its FAQ and its support page carry eligibility law rather than
+a document list — all eight readable candidates score **exactly 0.0** for the role.
 
-**Do:** pick a destination that publishes readable HTML — Thailand or Brazil are likely candidates.
-Run `visa-discover bootstrap`, approve its domains, run `visa-discover corridor`, then judge the
-result against the real pages by hand. There is no gold answer to diff against, which is the point:
-it cannot be tuned to pass.
+**Whether ranking generalises is still unknown**, and a destination that does publish a checklist is
+the only way to find out.
+
+**Do:** pick a destination that publishes readable HTML *and a real checklist* — Thailand or Brazil
+are likely candidates. Run `visa-discover bootstrap`, approve its domains, run
+`visa-discover corridor`, then judge the result against the real pages by hand. There is no gold
+answer to diff against, which is the point: it cannot be tuned to pass.
 
 **Careful:** resist tuning weights to make the third country pass. That would consume the only
 out-of-sample signal available. Record what it got wrong instead.
@@ -44,48 +68,6 @@ codes — `discovery/lexicon.py` already holds that reference data.
 one corridor. Once the profile varies, that assumption breaks and sources need to become
 corridor-keyed. See the layering table in [ARCHITECTURE.md](ARCHITECTURE.md).
 
-### Handle JavaScript-rendered sites — `soon`
-
-**Why:** the single largest coverage limit. It blocks Vietnam's e-visa portal, Singapore's VFS page,
-and any corridor whose authority uses a client-rendered site. No amount of scoring works around it,
-and search does not fix it either — the page is unreadable however you arrive at it.
-
-**Measured evidence** (taken 2026-08-15 against the live sites, so it does not need re-deriving):
-
-| URL | HTTP | Readable characters after cleaning |
-| --- | --- | --- |
-| `https://evisa.gov.vn/` | 200 | **39** |
-| `https://xuatnhapcanh.gov.vn/en` | 200 | **0** |
-| `https://immigration.gov.vn/` | 200 | 736 |
-| `https://mofa.gov.vn/` | 200 | 4992 |
-
-The floor is `minimum_source_characters`, default **400**, in `config/settings.py`. Anything below
-it becomes the `unusable` outcome — deliberately, because an empty shell would otherwise read as
-"this authority requires no documents", which is far worse than refusing.
-
-**Where the change would go.** There are **two** fetch paths and both would need it:
-
-- `research/live_sources.py` — `LiveSourceFetcher`, the audited path for anything a traveller sees.
-- `discovery/crawl.py` — `CrawlFetcher`, which needs raw HTML for link extraction.
-
-**Decide before building:**
-
-1. *Is a headless browser worth it?* It is a heavy dependency, much slower per page, and a new class
-   of failure. Record the decision in [DECISIONS.md](DECISIONS.md) either way — including a decision
-   **not** to, which is defensible: refusing a corridor is already a supported, honest outcome.
-2. *How is it tested?* `AGENTS.md` forbids network access in tests, and a browser cannot be faked by
-   `httpx.MockTransport`. Likely answer: put rendering behind a protocol like `SourceFetcher`, so
-   tests inject a fake renderer and only an opt-in manual check ever launches a real browser.
-3. *Does it apply to everything, or only on demand?* Rendering every page would be wasteful and
-   slow. Rendering only when a fetch comes back below the character floor is cheaper and targets
-   exactly the failure being solved.
-4. *Does it change the trust model?* It must not. A rendered page is still subject to the same
-   domain checks, and script execution must not be allowed to navigate somewhere untrusted.
-
-**Good first test case:** `xuatnhapcanh.gov.vn` (0 characters today) or Vietnam's `evisa.gov.vn`.
-Vietnam is already configured with approved domains and currently refuses, so success is
-unambiguous: `visa-discover corridor --destination vietnam --nationality IN --from GB` moves from
-exit code 2 to finding a document checklist.
 
 ---
 
@@ -134,6 +116,18 @@ city. Singapore still resolves correctly, so this is a latent gap rather than a 
 
 ## Smaller things
 
+- **Singapore's VFS page is a 403, not a JavaScript problem.** It was recorded as client-rendered;
+  it is actually bot-blocked at the HTTP layer, so rendering never applies (the render only runs
+  after a `200` whose text was thin). Whether to do anything about it is an open question —
+  defeating bot detection is not obviously something this project should do.
+- **`xuatnhapcanh.gov.vn/en` answers `200` with `location: http://localhost:4000/vi`** and an empty
+  body: a misconfigured Next.js i18n redirect. Browsers ignore `Location` on a `200`, so rendering
+  does not fix it either. The site root works. Possibly worth reporting to the authority; there is
+  nothing to fix in this codebase.
+- **The whole repo was reformatted** by `ruff format` in this change. Nothing was edited by hand:
+  ruff 0.16.2 formats differently from whatever version the files were last written with, and
+  `ruff format --check .` was already failing on 16 untouched files before any of this work. It is
+  a large, purely mechanical part of the diff — read it separately from the rendering change.
 - **Cache invalidation on rule changes.** After changing what counts as usable, cached entries still
   serve the old result until the TTL expires. This cost real debugging time — a fix appeared not to
   work until `var/cache/` was cleared. Consider keying entries by a rules version.

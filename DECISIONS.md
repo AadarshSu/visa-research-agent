@@ -9,6 +9,114 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 14. A missing document checklist stops refusing the corridor
+**2026-08-16**
+
+Entry 13 established that Vietnam publishes **no document checklist anywhere** on its approved
+domains — its e-visa states requirements as upload fields inside the application form. Discovery
+treated `document_checklist` as load-bearing, so Vietnam refused permanently for having correctly
+observed reality.
+
+**Decided:** `LOAD_BEARING_ROLES` is now `("visa_decision",)` alone. A corridor resolves without a
+checklist; `visa-discover` exits `1` rather than `2`, and the absence is still named in
+`unresolved_roles` and the notes via a new `REPORTED_ROLES`. Vietnam now resolves at exit 1 with
+`visa_decision`, `general_entry`, `application_route` and `fees` filled.
+
+**The reservation, recorded because it did not go away.** Discovery cannot distinguish *"this
+country publishes no checklist"* from *"one exists and we failed to find or read it"* — a crawl that
+stopped short, a language we do not score, a bot-block. Both emit the same note. Accepting the
+absence everywhere therefore converts every find-or-read failure into a plan with a silently missing
+checklist, and those are the more common case. A per-country human declaration was proposed instead,
+matching how `trusted_domains` works; the global relaxation was chosen deliberately over it.
+
+**What makes it survivable, and must not be removed.** The absence is carried structurally rather
+than trusted to the prompt. `VisaPlan.validate_absent_checklist` refuses any plan that, with no
+document source, either lists document requirements or stays silent about the gap. So the failure
+mode this opens is a *visibly* incomplete plan, never a confidently invented checklist — the
+distinction entry 6 was deleted over. Deleting that validator re-opens the worst outcome this
+product can produce. The prompt gained a matching rule (8a), but the prompt is the polite request
+and the validator is the guarantee.
+
+**Fixed alongside, and independently a bug:** `load_bearing_source_ids` was
+`required_source_ids or application_document_source_ids`. The `or` meant that naming any required
+source silently discarded the checklist requirement — a destination could declare a checklist and
+still produce a plan without it. It is now a union.
+
+**Still open:** nothing tells a reviewer which of the two cases they are looking at. If plans start
+shipping with empty checklists for countries that *do* publish one, that is this decision failing,
+and the per-country declaration is the fix that was already designed.
+
+---
+
+## 13. Render client-side pages, on demand only, trusting nothing new
+**2026-08-15**
+
+Whole corridors were unservable because the authority publishes a client-rendered page. Measured
+before deciding, through the project's own cleaning: `evisa.gov.vn` gave **39** readable characters;
+`xuatnhapcanh.gov.vn` gave **402**, and those 402 turned out to be *translation keys*
+(`home.banner-huong-dan-viet-nam`, `lienKet`) with the real strings fetched client-side.
+
+That second finding decided more than the first. 402 characters **clears the 400-character floor**,
+so a page saying nothing would have passed into extraction as though it were official guidance —
+the wrong-checklist failure the floor exists to prevent. Whatever was decided about browsers, that
+hole had to be closed, so `looks_untranslated` marks such a page unusable. It was checked against
+all 13 configured Singapore and Japan sources first: **zero false positives**.
+
+**Decided:** a headless Chromium behind a `PageRenderer` protocol, attempted at exactly one point —
+after an ordinary fetch already failed to produce readable text. Pages that work today never meet a
+browser. `render_mode` in `runtime.yaml` is committed as `never`; Playwright is an optional extra.
+
+**The trust model did not move**, which was the precondition for doing this at all. Every request
+the rendered page makes — document *and* subresource — is aborted unless its host is already
+approved. Verified live: rendering `evisa.gov.vn` blocked `firebase.googleapis.com`,
+`firebaseinstallations.googleapis.com` and `www.googletagmanager.com`, and the page still rendered
+to 21,853 characters of real guidance. Where a render lands is re-checked exactly as a redirect is.
+
+**Rejected — always rendering.** Slower on every page, and it exposes the pages that already work
+to a whole new class of failure for no gain.
+
+**Rejected — declining to render.** Defensible, and refusing is a supported honest outcome, but the
+measurement showed this is not a scoring problem that could be worked around: the text is simply
+absent from the response, however you arrive at it.
+
+**Rejected — parsing the embedded framework payload** (the Next.js flight data) instead of running
+a browser. It is per-site, per-framework, and breaks silently on redesign — the kind of fragility
+that produces a confidently wrong checklist rather than a visible failure.
+
+**Got wrong once, then fixed:** retrieval and the crawl first shared one render budget. The crawl
+spent all five renders before the shortlist was read, so a working renderer produced no evidence.
+Each caller now holds its own allowance. Worth remembering as a shape: a shared budget between a
+broad phase and a narrow one always starves the narrow one.
+
+**Two shortlisting bugs this exposed, both fixed.** Rendering made `evisa.gov.vn` readable, and it
+*still* never became evidence. Chasing that found two defects that had nothing to do with browsers:
+
+1. `api.evisa.gov.vn/client-service/public/ngon-ngu/get-all` — a JSON endpoint listing the site's
+   *languages* — scored 56.4 and took the third and last `application_route` place, pushing every
+   readable `evisa.gov.vn` page off the shortlist, then failed as "not an HTML page". Retrieval
+   already refused JSON, but only *after* the fetch, by which time the place was spent.
+   `is_machine_endpoint` now rejects it before it can be a candidate.
+2. `_shortlist` took three per role and stopped, using **six of its ten places** while every
+   `evisa.gov.vn` page sat just outside the per-role cut. The budget is now filled with the next
+   best overall after the per-role picks.
+
+Together: 6 pages read → 10, and `evisa.gov.vn` is now actually fetched.
+
+**Vietnam still refuses, and that is the correct answer.** With both fixes and rendering on, every
+one of the eight readable candidates scores **exactly 0.0** for `document_checklist` — zero, not
+just below the threshold. Reading the rendered text by hand says why: `evisa.gov.vn` (21,853
+characters), its FAQ (15,786) and its support page carry *eligibility* law — "not falling under
+Clauses 1, 2, 3, and 4 of Article 8" — and process steps, not a list of documents. Vietnam's e-visa
+states its requirements as upload fields inside the application form itself. **There is no document
+checklist page on the approved domains to find.** Refusing beats nominating the eligibility page as
+a checklist, which is decision 5 working exactly as intended.
+
+**Also corrected:** Singapore's VFS page answers **HTTP 403**, a bot-block rather than a
+client-rendered page, so rendering never applies to it. The handoff had recorded it under the wrong
+cause.
+
+---
+
 ## 12. Complete certificate chains; never disable verification
 **2026-08-15 · commit `4032824`**
 

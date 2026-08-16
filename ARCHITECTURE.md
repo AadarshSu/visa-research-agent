@@ -84,8 +84,16 @@ needs a different retriever. They demand different remedies even though they gra
 `research/outcomes.py`, shared by both extractors so the modes can never disagree.
 
 - Each destination declares `required_source_ids` — what the plan cannot stand without.
+  `load_bearing_source_ids` is the **union** of those and the document checklist, never a fallback
+  between them: naming a required source must not quietly discard the checklist requirement.
 - A required source missing → **refuse before the model is called**, so a doomed run costs nothing.
   The API answers `503` naming the missing evidence.
+- **A destination may legitimately have no checklist at all.** Some authorities publish none —
+  Vietnam states its e-visa requirements as upload fields inside the application form. That is not
+  a refusal, but the absence must be carried rather than smoothed over: `VisaPlan` rejects any plan
+  that lists document requirements without a document source behind them, and rejects one that
+  stays silent about the gap. The model is never left to infer a checklist from a page that is not
+  one. See [DECISIONS.md](DECISIONS.md) entry 14.
 - Any failure or any stale source → plan status `partial`, and the interface states what is
   incomplete *above* the guidance.
 - Everything present and current → `verified`.
@@ -117,6 +125,30 @@ written atomically.
 meta-refresh to them. Retrieval reads PDFs and follows one such forward, capped at two hops, with
 the trust check applied to each. Provenance records the document actually read, not the page that
 pointed at it.
+
+**Rendering.** Some authorities publish an application shell and fetch the guidance client-side, so
+an ordinary request returns nothing usable. `research/rendering.py` re-reads such a page in a
+headless Chromium, behind the `PageRenderer` protocol.
+
+It is deliberately narrow:
+
+- **On demand only.** Rendering is attempted at exactly one point — after a fetch produced text
+  below the readable floor, or text that is translation placeholders rather than sentences. Pages
+  that already work never meet a browser, and never pay for one.
+- **It widens no trust.** Every request the page makes, document *and* subresource, is aborted
+  unless its host is already approved for that destination. A third-party script is not evidence,
+  but it decides what the evidence says. Where the render lands is re-checked exactly as a redirect
+  is; landing off the approved domains is an `untrusted` failure and the rendered text is discarded.
+- **Off by default.** `render_mode` in `config/runtime.yaml` is committed as `never`. Selecting
+  `on_demand` without the optional `[render]` extra installed raises rather than silently
+  degrading, because the policy line is a reviewed statement about how sites are contacted.
+- **Budgeted per caller.** Retrieval and discovery's crawl hold separate allowances. A single
+  shared count let the crawl spend everything before the shortlist — the pages that actually become
+  evidence — was read, so a working renderer produced no evidence at all.
+
+`looks_untranslated` in `research/live_sources.py` is what catches the second failure: a page of
+i18n keys can clear the character floor while saying nothing, and it must not reach extraction as
+though it were guidance.
 
 **TLS.** Some authorities send an incomplete certificate chain. Missing intermediates are bundled in
 `config/tls_intermediates/`, which fixes the connection **without weakening verification** — each
@@ -157,8 +189,9 @@ this is automated while per-country trust is not.
    an off-domain candidate cannot even be constructed.
 4. **Score** (`scoring.py`) — deterministic, **no model calls**. Vocabulary and weights live in
    `config/discovery_lexicon.yaml` so they can be tuned without touching Python.
-5. **Assign roles or refuse** — no confident checklist means the corridor is unresolved, with a
-   report naming what was considered and why each candidate was rejected.
+5. **Assign roles or refuse** — only `visa_decision` is load-bearing. A missing checklist is
+   reported and moves the exit code from `0` to `1` rather than refusing, because some authorities
+   publish none. Any refusal names what was considered and why each candidate was rejected.
 
 ### Scoring, in brief
 
@@ -207,13 +240,16 @@ Split by what a thing *is*, not by convenience.
 ## Testing
 
 `AGENTS.md` requires that tests never touch the network or an LLM. The seams that make this possible
-are `transport=` (an `httpx.MockTransport`) and `now=` (a controllable clock) on both fetchers, and
-fake generators for the model.
+are `transport=` (an `httpx.MockTransport`) and `now=` (a controllable clock) on both fetchers,
+`renderer=` (a `PageRenderer`) for the browser, and fake generators for the model.
 
 - `tests/discovery_site.py` is a fake two-host government site reproducing the shapes actually hit
   in the wild: an opaque URL identifiable only by anchor text, a per-nationality page two hops deep,
-  a checklist behind a forward to a PDF, a wrong-audience sibling, and an off-domain link that must
-  never be requested.
+  a checklist behind a forward to a PDF, a wrong-audience sibling, a client-rendered shell, and an
+  off-domain link that must never be requested.
+- `tests/test_rendering.py` injects a fake renderer rather than starting a browser. Its one real
+  Chromium check is marked `manual` and skipped unless `VISA_RENDER_MANUAL=1`, and even then it
+  renders a `data:` URL rather than reaching the network.
 - `tests/test_pdf_sources.py` builds real PDFs by hand, so there are no binary fixtures.
 - The load-bearing assertions are the safety ones: no off-domain host is ever requested, a spam
   result is dropped before any fetch, and zero model calls when the heuristics are confident.
