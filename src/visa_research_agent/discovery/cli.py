@@ -19,6 +19,10 @@ from typing import TextIO
 
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.settings import settings
+from visa_research_agent.discovery.adjudication import (
+    LangChainRoleAdjudicator,
+    RoleAdjudicator,
+)
 from visa_research_agent.discovery.bootstrap import (
     BootstrapReport,
     bootstrap_destination,
@@ -30,7 +34,8 @@ from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
 from visa_research_agent.discovery.proposal import render_corridor_yaml
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
-from visa_research_agent.research.errors import VisaResearchError
+from visa_research_agent.domain.models import RuntimePolicy
+from visa_research_agent.research.errors import LLMConfigurationError, VisaResearchError
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.rendering import (
     PageRenderer,
@@ -45,7 +50,32 @@ def build_search_provider() -> BraveSearchProvider:
     return BraveSearchProvider(key, timeout_seconds=settings.search_timeout_seconds)
 
 
-def build_resolver(renderer: PageRenderer | None = None) -> CorridorResolver:
+def build_role_adjudicator(policy: RuntimePolicy) -> RoleAdjudicator | None:
+    """Build the decider the policy asks for, or none when it asks for the heuristic.
+
+    Missing credentials raise rather than silently falling back: `discovery_decider` is a
+    committed, reviewed line, so a machine that cannot honour it should say so.
+    """
+
+    if policy.discovery_decider == "heuristic":
+        return None
+    if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
+        raise LLMConfigurationError("OPENAI_API_KEY is required for model role adjudication")
+    if settings.openai_model is None or not settings.openai_model.strip():
+        raise LLMConfigurationError("OPENAI_MODEL is required for model role adjudication")
+    return LangChainRoleAdjudicator(
+        api_key=settings.openai_api_key.get_secret_value(),
+        model_name=settings.openai_model,
+        request_timeout_seconds=settings.openai_request_timeout_seconds,
+        max_output_tokens=settings.openai_max_output_tokens,
+        reasoning_effort=settings.openai_reasoning_effort,
+    )
+
+
+def build_resolver(
+    renderer: PageRenderer | None = None,
+    adjudicator: RoleAdjudicator | None = None,
+) -> CorridorResolver:
     # One renderer for both fetchers, so a corridor starts at most one browser and its render
     # budget is shared between finding pages and reading them.
     crawl_fetcher = CrawlFetcher(
@@ -68,7 +98,9 @@ def build_resolver(renderer: PageRenderer | None = None) -> CorridorResolver:
         renderer=renderer,
         maximum_renders=settings.maximum_source_renders,
     )
-    return CorridorResolver(build_search_provider(), crawl_fetcher, live_fetcher)
+    return CorridorResolver(
+        build_search_provider(), crawl_fetcher, live_fetcher, adjudicator=adjudicator
+    )
 
 
 def print_bootstrap(report: BootstrapReport, stream: TextIO) -> None:
@@ -174,9 +206,11 @@ async def run_corridor(args: argparse.Namespace, stream: TextIO) -> int:
         applying_from=getattr(args, "from").upper(),
         purpose=args.purpose,
     )
-    renderer = build_page_renderer(get_runtime_policy())
+    policy = get_runtime_policy()
+    renderer = build_page_renderer(policy)
+    adjudicator = build_role_adjudicator(policy)
     try:
-        resolved = await build_resolver(renderer).resolve(destination, corridor)
+        resolved = await build_resolver(renderer, adjudicator).resolve(destination, corridor)
     finally:
         # The browser outlives the resolver, so closing it is this function's job.
         if isinstance(renderer, PlaywrightPageRenderer):

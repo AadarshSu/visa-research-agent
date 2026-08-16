@@ -22,6 +22,16 @@ extraction_mode: openai
 # Selecting on_demand without it is a loud error, not a silent fallback.
 render_mode: never
 
+# Which decider assigns roles at the end of discovery.
+#   heuristic — deterministic keyword scoring. Free, offline, explainable, and the regression
+#               baseline. It ranks by vocabulary, so it mis-ranks pages that phrase things in a
+#               way the lexicon does not carry.
+#   model     — one bounded structured call that chooses among pages already fetched from approved
+#               domains. It cannot introduce a page, cannot widen trust, and may refuse. Requires
+#               OPENAI_API_KEY and OPENAI_MODEL, and costs one call per corridor.
+# The heuristic still produces the shortlist either way, and still answers if the call fails.
+discovery_decider: model
+
 # Live retrieval freshness window, in hours. Cached pages are reused below the TTL and
 # revalidated above it.
 source_cache_ttl_hours: 24

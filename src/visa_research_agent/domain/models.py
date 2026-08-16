@@ -14,6 +14,9 @@ ExtractionMode = Literal["fixture", "openai"]
 # Whether a real browser may be started for pages that return nothing readable. Kept as policy
 # rather than tuning because it changes how government sites are contacted.
 RenderMode = Literal["never", "on_demand"]
+# Which decider assigns roles during discovery. `heuristic` is deterministic, free and offline;
+# `model` asks one bounded question over pages already fetched and trusted.
+DiscoveryDecider = Literal["heuristic", "model"]
 # Why a source produced no usable evidence. Unreachable and unusable are kept apart because they
 # need different remedies: one is a transient site problem, the other needs a different retriever.
 FailureOutcome = Literal["untrusted", "unreachable", "unusable"]
@@ -203,6 +206,7 @@ class RuntimePolicy(StrictModel):
     source_mode: SourceMode
     extraction_mode: ExtractionMode
     render_mode: RenderMode = "never"
+    discovery_decider: DiscoveryDecider = "heuristic"
     source_cache_ttl_hours: float = Field(gt=0)
     source_maximum_stale_hours: float = Field(gt=0)
 

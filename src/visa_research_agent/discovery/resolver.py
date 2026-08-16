@@ -19,6 +19,15 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
+from pydantic import Field
+
+from visa_research_agent.discovery.adjudication import (
+    AdjudicationError,
+    RoleAdjudicator,
+    build_candidate_packet,
+    load_adjudication_prompt,
+    validated_choices,
+)
 from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
 from visa_research_agent.discovery.lexicon import (
     CountryRegistry,
@@ -56,12 +65,29 @@ from visa_research_agent.domain.models import (
     ConfiguredSource,
     DestinationConfig,
     SourceKind,
+    StrictModel,
 )
 from visa_research_agent.domain.trust import host_is_within, host_of
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 
 MINIMUM_ROLE_SCORE = 20.0
 DEFAULT_SHORTLIST_SIZE = 10
+# Per candidate, not per packet. Ten pages of full government prose would be mostly navigation
+# furniture and would push the call past any sensible input bound.
+DEFAULT_EXCERPT_CHARACTERS = 6_000
+
+
+class FetchedShortlist(StrictModel):
+    """The shortlisted pages that could actually be read, and the text they yielded.
+
+    The ids and text are carried rather than discarded because adjudication needs to name pages
+    back to the application, and the application must be able to check that what came back was a
+    page it actually fetched.
+    """
+
+    candidates: list[CandidatePage] = Field(default_factory=list)
+    by_id: dict[str, CandidatePage] = Field(default_factory=dict)
+    contents: dict[str, str] = Field(default_factory=dict)
 
 
 def _slugify(value: str, *, maximum: int = 24) -> str:
@@ -146,6 +172,8 @@ class CorridorResolver:
         shortlist_size: int = DEFAULT_SHORTLIST_SIZE,
         minimum_role_score: float = MINIMUM_ROLE_SCORE,
         results_per_query: int = 8,
+        adjudicator: RoleAdjudicator | None = None,
+        excerpt_characters: int = DEFAULT_EXCERPT_CHARACTERS,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self.provider = provider
@@ -156,6 +184,10 @@ class CorridorResolver:
         self.shortlist_size = shortlist_size
         self.minimum_role_score = minimum_role_score
         self.results_per_query = results_per_query
+        # Optional on purpose. Without one the resolver behaves exactly as it did before
+        # adjudication existed, which keeps the deterministic path as a regression baseline.
+        self.adjudicator = adjudicator
+        self.excerpt_characters = excerpt_characters
         self.now = now
 
     async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
@@ -243,7 +275,9 @@ class CorridorResolver:
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
 
         # 4. Assign roles from the combined evidence.
-        sources, unresolved = self._assign_roles(destination, fetched, notes)
+        sources, unresolved, model_calls = await self._decide_roles(
+            destination, corridor, fetched, notes
+        )
         return ResolvedCorridor(
             corridor=corridor,
             resolved_at=self.now(),
@@ -252,6 +286,7 @@ class CorridorResolver:
             notes=notes,
             queries=queries,
             pages_fetched=len(shortlist),
+            model_calls=model_calls,
         )
 
     def _mission_domains(self, destination: DestinationConfig, residence: object) -> list[str]:
@@ -315,7 +350,7 @@ class CorridorResolver:
         shortlist: list[CandidatePage],
         corridor: Corridor,
         nationality: object,
-    ) -> list[CandidatePage]:
+    ) -> "FetchedShortlist":
         """Read each shortlisted page and score its own text.
 
         The throwaway config is the point: building it re-runs `validate_route`, so a candidate
@@ -328,7 +363,7 @@ class CorridorResolver:
             if host_is_within(host_of(candidate.link.url), destination.trusted_domains)
         ]
         if not shortlist:
-            return shortlist
+            return FetchedShortlist()
 
         taken: set[str] = set()
         probe_sources: list[ConfiguredSource] = []
@@ -361,7 +396,9 @@ class CorridorResolver:
         probe = DestinationConfig.model_validate(payload)
 
         report = await self.live_fetcher.fetch(probe)
+        contents: dict[str, str] = {}
         for item in report.fetched:
+            contents[item.source.source_id] = item.content
             fetched_candidate = by_id.get(item.source.source_id)
             if fetched_candidate is None:
                 continue
@@ -375,8 +412,100 @@ class CorridorResolver:
             )
             fetched_candidate.content_hash = item.content_hash
         # Only pages that were actually readable can be proposed.
-        readable = {item.source.source_id for item in report.fetched}
-        return [by_id[source_id] for source_id in readable if source_id in by_id]
+        readable = [source_id for source_id in contents if source_id in by_id]
+        return FetchedShortlist(
+            candidates=[by_id[source_id] for source_id in readable],
+            by_id={source_id: by_id[source_id] for source_id in readable},
+            contents=contents,
+        )
+
+    async def _decide_roles(
+        self,
+        destination: DestinationConfig,
+        corridor: Corridor,
+        fetched: "FetchedShortlist",
+        notes: list[str],
+    ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int]:
+        """Choose the page for each role, by judgement when an adjudicator is configured.
+
+        The heuristic is not replaced. It produced the shortlist these candidates come from, it is
+        the answer when no adjudicator is configured, and it is the fallback when a model call
+        fails — a corridor should degrade to a worse answer, never to no answer.
+        """
+
+        if self.adjudicator is None or not fetched.candidates:
+            sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
+            return sources, unresolved, 0
+
+        packet = build_candidate_packet(
+            corridor,
+            fetched.by_id,
+            fetched.contents,
+            excerpt_characters=self.excerpt_characters,
+        )
+        try:
+            adjudication = await self.adjudicator.adjudicate(load_adjudication_prompt(), packet)
+        except AdjudicationError as exc:
+            notes.append(f"role adjudication failed ({exc}), so the heuristic ranking was used")
+            sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
+            return sources, unresolved, 1
+
+        chosen, discarded = validated_choices(adjudication, fetched.by_id)
+        notes.extend(discarded)
+        sources, unresolved = self._sources_from_choices(destination, fetched, chosen, notes)
+        return sources, unresolved, 1
+
+    def _sources_from_choices(
+        self,
+        destination: DestinationConfig,
+        fetched: "FetchedShortlist",
+        chosen: dict[DiscoveryRole, tuple[str, str]],
+        notes: list[str],
+    ) -> tuple[list[ResolvedSource], list[DiscoveryRole]]:
+        """Turn validated model choices into sources, honouring every refusal."""
+
+        by_url: dict[str, tuple[CandidatePage, list[DiscoveryRole], list[str]]] = {}
+        unresolved: list[DiscoveryRole] = []
+
+        for role in ROLE_ORDER:
+            decision = chosen.get(role)
+            if decision is None:
+                if role in REPORTED_ROLES:
+                    unresolved.append(role)
+                    notes.append(f"no candidate was judged to be the {role.replace('_', ' ')}")
+                continue
+            source_id, reason = decision
+            candidate = fetched.by_id[source_id]
+            url = candidate.link.url
+            if url in by_url:
+                _, roles, reasons = by_url[url]
+                roles.append(role)
+                reasons.append(f"{role}: {reason}")
+            else:
+                by_url[url] = (candidate, [role], [f"{role}: {reason}"])
+
+        taken: set[str] = set()
+        sources: list[ResolvedSource] = []
+        for candidate, roles, reasons in sorted(
+            by_url.values(), key=lambda item: (ROLE_ORDER.index(item[1][0]), item[0].link.url)
+        ):
+            authority, kind = derive_authority(candidate.link.url, destination)
+            sources.append(
+                ResolvedSource(
+                    source_id=build_source_id(destination.slug, candidate.link.url, taken),
+                    title=clean_title(candidate.title, candidate.link.url),
+                    url=candidate.link.url,  # type: ignore[arg-type]
+                    authority=authority,
+                    kind=kind,
+                    roles=roles,
+                    # The heuristic score is still recorded, so a reviewer can see where the two
+                    # deciders disagreed rather than only what the model concluded.
+                    score=round(max(candidate.combined(role) for role in roles), 1),
+                    decided_by="model",
+                    signals=[reason[:160] for reason in reasons][:6],
+                )
+            )
+        return sources, unresolved
 
     def _assign_roles(
         self,
