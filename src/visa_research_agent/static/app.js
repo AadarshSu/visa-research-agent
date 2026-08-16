@@ -145,7 +145,7 @@ function renderDecision(plan, ctx) {
 }
 
 function renderApplicationLocation(plan, ctx) {
-  const { container } = panel("Where to apply", "UK application route");
+  const { container } = panel("Where to apply", "Application route");
   const location = plan.where_to_apply;
   if (!location) {
     container.append(element("p", "lead", "The application location remains unresolved."));

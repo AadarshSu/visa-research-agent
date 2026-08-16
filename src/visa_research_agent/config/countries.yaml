@@ -130,3 +130,1306 @@ countries:
     host_labels: [th, thailand]
     mission_labels: [th, thailand, bangkok, banguecoque, chiang-mai]
     tlds: [th]
+
+# --- Every other country, generated rather than curated -------------------------------------
+#
+# The fourteen above carry hand-written synonyms, demonyms, host labels and mission cities,
+# learned from corridors that were actually run. The rest carry only what can be stated without
+# guessing: the name, and the country-code top-level domain, which is the ISO alpha-2 lowercased
+# for every one of them.
+#
+# `tlds` is the load-bearing field: it decides whether a domain belongs to the destination's own
+# government, which is the rule that replaced human approval. The others are scoring aids the
+# model decider does not depend on, so a country here is fully researchable — just with weaker
+# heuristic hints than one that has been through a real corridor. Promote a country upward, with
+# its demonyms and mission cities, once you have run it and seen what it needs.
+#
+# Every scalar is quoted. Unquoted, YAML reads Norway's "NO" as the boolean false.
+
+  - code: "AF"
+    name: "Afghanistan"
+    synonyms: ["afghanistan"]
+    host_labels: ["af"]
+    mission_labels: ["af"]
+    tlds: ["af"]
+
+  - code: "AL"
+    name: "Albania"
+    synonyms: ["albania"]
+    host_labels: ["al"]
+    mission_labels: ["al"]
+    tlds: ["al"]
+
+  - code: "DZ"
+    name: "Algeria"
+    synonyms: ["algeria"]
+    host_labels: ["dz"]
+    mission_labels: ["dz"]
+    tlds: ["dz"]
+
+  - code: "AD"
+    name: "Andorra"
+    synonyms: ["andorra"]
+    host_labels: ["ad"]
+    mission_labels: ["ad"]
+    tlds: ["ad"]
+
+  - code: "AO"
+    name: "Angola"
+    synonyms: ["angola"]
+    host_labels: ["ao"]
+    mission_labels: ["ao"]
+    tlds: ["ao"]
+
+  - code: "AG"
+    name: "Antigua and Barbuda"
+    synonyms: ["antigua and barbuda"]
+    host_labels: ["ag"]
+    mission_labels: ["ag"]
+    tlds: ["ag"]
+
+  - code: "AR"
+    name: "Argentina"
+    synonyms: ["argentina"]
+    host_labels: ["ar"]
+    mission_labels: ["ar"]
+    tlds: ["ar"]
+
+  - code: "AM"
+    name: "Armenia"
+    synonyms: ["armenia"]
+    host_labels: ["am"]
+    mission_labels: ["am"]
+    tlds: ["am"]
+
+  - code: "AT"
+    name: "Austria"
+    synonyms: ["austria"]
+    host_labels: ["at"]
+    mission_labels: ["at"]
+    tlds: ["at"]
+
+  - code: "AZ"
+    name: "Azerbaijan"
+    synonyms: ["azerbaijan"]
+    host_labels: ["az"]
+    mission_labels: ["az"]
+    tlds: ["az"]
+
+  - code: "BS"
+    name: "Bahamas"
+    synonyms: ["bahamas"]
+    host_labels: ["bs"]
+    mission_labels: ["bs"]
+    tlds: ["bs"]
+
+  - code: "BH"
+    name: "Bahrain"
+    synonyms: ["bahrain"]
+    host_labels: ["bh"]
+    mission_labels: ["bh"]
+    tlds: ["bh"]
+
+  - code: "BD"
+    name: "Bangladesh"
+    synonyms: ["bangladesh"]
+    host_labels: ["bd"]
+    mission_labels: ["bd"]
+    tlds: ["bd"]
+
+  - code: "BB"
+    name: "Barbados"
+    synonyms: ["barbados"]
+    host_labels: ["bb"]
+    mission_labels: ["bb"]
+    tlds: ["bb"]
+
+  - code: "BY"
+    name: "Belarus"
+    synonyms: ["belarus"]
+    host_labels: ["by"]
+    mission_labels: ["by"]
+    tlds: ["by"]
+
+  - code: "BE"
+    name: "Belgium"
+    synonyms: ["belgium"]
+    host_labels: ["be"]
+    mission_labels: ["be"]
+    tlds: ["be"]
+
+  - code: "BZ"
+    name: "Belize"
+    synonyms: ["belize"]
+    host_labels: ["bz"]
+    mission_labels: ["bz"]
+    tlds: ["bz"]
+
+  - code: "BJ"
+    name: "Benin"
+    synonyms: ["benin"]
+    host_labels: ["bj"]
+    mission_labels: ["bj"]
+    tlds: ["bj"]
+
+  - code: "BT"
+    name: "Bhutan"
+    synonyms: ["bhutan"]
+    host_labels: ["bt"]
+    mission_labels: ["bt"]
+    tlds: ["bt"]
+
+  - code: "BO"
+    name: "Bolivia"
+    synonyms: ["bolivia"]
+    host_labels: ["bo"]
+    mission_labels: ["bo"]
+    tlds: ["bo"]
+
+  - code: "BA"
+    name: "Bosnia and Herzegovina"
+    synonyms: ["bosnia and herzegovina"]
+    host_labels: ["ba"]
+    mission_labels: ["ba"]
+    tlds: ["ba"]
+
+  - code: "BW"
+    name: "Botswana"
+    synonyms: ["botswana"]
+    host_labels: ["bw"]
+    mission_labels: ["bw"]
+    tlds: ["bw"]
+
+  - code: "BN"
+    name: "Brunei"
+    synonyms: ["brunei"]
+    host_labels: ["bn"]
+    mission_labels: ["bn"]
+    tlds: ["bn"]
+
+  - code: "BG"
+    name: "Bulgaria"
+    synonyms: ["bulgaria"]
+    host_labels: ["bg"]
+    mission_labels: ["bg"]
+    tlds: ["bg"]
+
+  - code: "BF"
+    name: "Burkina Faso"
+    synonyms: ["burkina faso"]
+    host_labels: ["bf"]
+    mission_labels: ["bf"]
+    tlds: ["bf"]
+
+  - code: "BI"
+    name: "Burundi"
+    synonyms: ["burundi"]
+    host_labels: ["bi"]
+    mission_labels: ["bi"]
+    tlds: ["bi"]
+
+  - code: "KH"
+    name: "Cambodia"
+    synonyms: ["cambodia"]
+    host_labels: ["kh"]
+    mission_labels: ["kh"]
+    tlds: ["kh"]
+
+  - code: "CM"
+    name: "Cameroon"
+    synonyms: ["cameroon"]
+    host_labels: ["cm"]
+    mission_labels: ["cm"]
+    tlds: ["cm"]
+
+  - code: "CV"
+    name: "Cabo Verde"
+    synonyms: ["cabo verde"]
+    host_labels: ["cv"]
+    mission_labels: ["cv"]
+    tlds: ["cv"]
+
+  - code: "CF"
+    name: "Central African Republic"
+    synonyms: ["central african republic"]
+    host_labels: ["cf"]
+    mission_labels: ["cf"]
+    tlds: ["cf"]
+
+  - code: "TD"
+    name: "Chad"
+    synonyms: ["chad"]
+    host_labels: ["td"]
+    mission_labels: ["td"]
+    tlds: ["td"]
+
+  - code: "CL"
+    name: "Chile"
+    synonyms: ["chile"]
+    host_labels: ["cl"]
+    mission_labels: ["cl"]
+    tlds: ["cl"]
+
+  - code: "CO"
+    name: "Colombia"
+    synonyms: ["colombia"]
+    host_labels: ["co"]
+    mission_labels: ["co"]
+    tlds: ["co"]
+
+  - code: "KM"
+    name: "Comoros"
+    synonyms: ["comoros"]
+    host_labels: ["km"]
+    mission_labels: ["km"]
+    tlds: ["km"]
+
+  - code: "CG"
+    name: "Congo"
+    synonyms: ["congo"]
+    host_labels: ["cg"]
+    mission_labels: ["cg"]
+    tlds: ["cg"]
+
+  - code: "CD"
+    name: "Democratic Republic of the Congo"
+    synonyms: ["democratic republic of the congo"]
+    host_labels: ["cd"]
+    mission_labels: ["cd"]
+    tlds: ["cd"]
+
+  - code: "CR"
+    name: "Costa Rica"
+    synonyms: ["costa rica"]
+    host_labels: ["cr"]
+    mission_labels: ["cr"]
+    tlds: ["cr"]
+
+  - code: "CI"
+    name: "Cote d'Ivoire"
+    synonyms: ["cote d'ivoire"]
+    host_labels: ["ci"]
+    mission_labels: ["ci"]
+    tlds: ["ci"]
+
+  - code: "HR"
+    name: "Croatia"
+    synonyms: ["croatia"]
+    host_labels: ["hr"]
+    mission_labels: ["hr"]
+    tlds: ["hr"]
+
+  - code: "CU"
+    name: "Cuba"
+    synonyms: ["cuba"]
+    host_labels: ["cu"]
+    mission_labels: ["cu"]
+    tlds: ["cu"]
+
+  - code: "CY"
+    name: "Cyprus"
+    synonyms: ["cyprus"]
+    host_labels: ["cy"]
+    mission_labels: ["cy"]
+    tlds: ["cy"]
+
+  - code: "CZ"
+    name: "Czechia"
+    synonyms: ["czechia"]
+    host_labels: ["cz"]
+    mission_labels: ["cz"]
+    tlds: ["cz"]
+
+  - code: "DK"
+    name: "Denmark"
+    synonyms: ["denmark"]
+    host_labels: ["dk"]
+    mission_labels: ["dk"]
+    tlds: ["dk"]
+
+  - code: "DJ"
+    name: "Djibouti"
+    synonyms: ["djibouti"]
+    host_labels: ["dj"]
+    mission_labels: ["dj"]
+    tlds: ["dj"]
+
+  - code: "DM"
+    name: "Dominica"
+    synonyms: ["dominica"]
+    host_labels: ["dm"]
+    mission_labels: ["dm"]
+    tlds: ["dm"]
+
+  - code: "DO"
+    name: "Dominican Republic"
+    synonyms: ["dominican republic"]
+    host_labels: ["do"]
+    mission_labels: ["do"]
+    tlds: ["do"]
+
+  - code: "EC"
+    name: "Ecuador"
+    synonyms: ["ecuador"]
+    host_labels: ["ec"]
+    mission_labels: ["ec"]
+    tlds: ["ec"]
+
+  - code: "EG"
+    name: "Egypt"
+    synonyms: ["egypt"]
+    host_labels: ["eg"]
+    mission_labels: ["eg"]
+    tlds: ["eg"]
+
+  - code: "SV"
+    name: "El Salvador"
+    synonyms: ["el salvador"]
+    host_labels: ["sv"]
+    mission_labels: ["sv"]
+    tlds: ["sv"]
+
+  - code: "GQ"
+    name: "Equatorial Guinea"
+    synonyms: ["equatorial guinea"]
+    host_labels: ["gq"]
+    mission_labels: ["gq"]
+    tlds: ["gq"]
+
+  - code: "ER"
+    name: "Eritrea"
+    synonyms: ["eritrea"]
+    host_labels: ["er"]
+    mission_labels: ["er"]
+    tlds: ["er"]
+
+  - code: "EE"
+    name: "Estonia"
+    synonyms: ["estonia"]
+    host_labels: ["ee"]
+    mission_labels: ["ee"]
+    tlds: ["ee"]
+
+  - code: "SZ"
+    name: "Eswatini"
+    synonyms: ["eswatini"]
+    host_labels: ["sz"]
+    mission_labels: ["sz"]
+    tlds: ["sz"]
+
+  - code: "ET"
+    name: "Ethiopia"
+    synonyms: ["ethiopia"]
+    host_labels: ["et"]
+    mission_labels: ["et"]
+    tlds: ["et"]
+
+  - code: "FJ"
+    name: "Fiji"
+    synonyms: ["fiji"]
+    host_labels: ["fj"]
+    mission_labels: ["fj"]
+    tlds: ["fj"]
+
+  - code: "FI"
+    name: "Finland"
+    synonyms: ["finland"]
+    host_labels: ["fi"]
+    mission_labels: ["fi"]
+    tlds: ["fi"]
+
+  - code: "GA"
+    name: "Gabon"
+    synonyms: ["gabon"]
+    host_labels: ["ga"]
+    mission_labels: ["ga"]
+    tlds: ["ga"]
+
+  - code: "GM"
+    name: "Gambia"
+    synonyms: ["gambia"]
+    host_labels: ["gm"]
+    mission_labels: ["gm"]
+    tlds: ["gm"]
+
+  - code: "GE"
+    name: "Georgia"
+    synonyms: ["georgia"]
+    host_labels: ["ge"]
+    mission_labels: ["ge"]
+    tlds: ["ge"]
+
+  - code: "GH"
+    name: "Ghana"
+    synonyms: ["ghana"]
+    host_labels: ["gh"]
+    mission_labels: ["gh"]
+    tlds: ["gh"]
+
+  - code: "GR"
+    name: "Greece"
+    synonyms: ["greece"]
+    host_labels: ["gr"]
+    mission_labels: ["gr"]
+    tlds: ["gr"]
+
+  - code: "GD"
+    name: "Grenada"
+    synonyms: ["grenada"]
+    host_labels: ["gd"]
+    mission_labels: ["gd"]
+    tlds: ["gd"]
+
+  - code: "GT"
+    name: "Guatemala"
+    synonyms: ["guatemala"]
+    host_labels: ["gt"]
+    mission_labels: ["gt"]
+    tlds: ["gt"]
+
+  - code: "GN"
+    name: "Guinea"
+    synonyms: ["guinea"]
+    host_labels: ["gn"]
+    mission_labels: ["gn"]
+    tlds: ["gn"]
+
+  - code: "GW"
+    name: "Guinea-Bissau"
+    synonyms: ["guinea-bissau"]
+    host_labels: ["gw"]
+    mission_labels: ["gw"]
+    tlds: ["gw"]
+
+  - code: "GY"
+    name: "Guyana"
+    synonyms: ["guyana"]
+    host_labels: ["gy"]
+    mission_labels: ["gy"]
+    tlds: ["gy"]
+
+  - code: "HT"
+    name: "Haiti"
+    synonyms: ["haiti"]
+    host_labels: ["ht"]
+    mission_labels: ["ht"]
+    tlds: ["ht"]
+
+  - code: "HN"
+    name: "Honduras"
+    synonyms: ["honduras"]
+    host_labels: ["hn"]
+    mission_labels: ["hn"]
+    tlds: ["hn"]
+
+  - code: "HK"
+    name: "Hong Kong"
+    synonyms: ["hong kong"]
+    host_labels: ["hk"]
+    mission_labels: ["hk"]
+    tlds: ["hk"]
+
+  - code: "HU"
+    name: "Hungary"
+    synonyms: ["hungary"]
+    host_labels: ["hu"]
+    mission_labels: ["hu"]
+    tlds: ["hu"]
+
+  - code: "IS"
+    name: "Iceland"
+    synonyms: ["iceland"]
+    host_labels: ["is"]
+    mission_labels: ["is"]
+    tlds: ["is"]
+
+  - code: "ID"
+    name: "Indonesia"
+    synonyms: ["indonesia"]
+    host_labels: ["id"]
+    mission_labels: ["id"]
+    tlds: ["id"]
+
+  - code: "IR"
+    name: "Iran"
+    synonyms: ["iran"]
+    host_labels: ["ir"]
+    mission_labels: ["ir"]
+    tlds: ["ir"]
+
+  - code: "IQ"
+    name: "Iraq"
+    synonyms: ["iraq"]
+    host_labels: ["iq"]
+    mission_labels: ["iq"]
+    tlds: ["iq"]
+
+  - code: "IE"
+    name: "Ireland"
+    synonyms: ["ireland"]
+    host_labels: ["ie"]
+    mission_labels: ["ie"]
+    tlds: ["ie"]
+
+  - code: "IL"
+    name: "Israel"
+    synonyms: ["israel"]
+    host_labels: ["il"]
+    mission_labels: ["il"]
+    tlds: ["il"]
+
+  - code: "IT"
+    name: "Italy"
+    synonyms: ["italy"]
+    host_labels: ["it"]
+    mission_labels: ["it"]
+    tlds: ["it"]
+
+  - code: "JM"
+    name: "Jamaica"
+    synonyms: ["jamaica"]
+    host_labels: ["jm"]
+    mission_labels: ["jm"]
+    tlds: ["jm"]
+
+  - code: "JO"
+    name: "Jordan"
+    synonyms: ["jordan"]
+    host_labels: ["jo"]
+    mission_labels: ["jo"]
+    tlds: ["jo"]
+
+  - code: "KZ"
+    name: "Kazakhstan"
+    synonyms: ["kazakhstan"]
+    host_labels: ["kz"]
+    mission_labels: ["kz"]
+    tlds: ["kz"]
+
+  - code: "KE"
+    name: "Kenya"
+    synonyms: ["kenya"]
+    host_labels: ["ke"]
+    mission_labels: ["ke"]
+    tlds: ["ke"]
+
+  - code: "KI"
+    name: "Kiribati"
+    synonyms: ["kiribati"]
+    host_labels: ["ki"]
+    mission_labels: ["ki"]
+    tlds: ["ki"]
+
+  - code: "KW"
+    name: "Kuwait"
+    synonyms: ["kuwait"]
+    host_labels: ["kw"]
+    mission_labels: ["kw"]
+    tlds: ["kw"]
+
+  - code: "KG"
+    name: "Kyrgyzstan"
+    synonyms: ["kyrgyzstan"]
+    host_labels: ["kg"]
+    mission_labels: ["kg"]
+    tlds: ["kg"]
+
+  - code: "LA"
+    name: "Laos"
+    synonyms: ["laos"]
+    host_labels: ["la"]
+    mission_labels: ["la"]
+    tlds: ["la"]
+
+  - code: "LV"
+    name: "Latvia"
+    synonyms: ["latvia"]
+    host_labels: ["lv"]
+    mission_labels: ["lv"]
+    tlds: ["lv"]
+
+  - code: "LB"
+    name: "Lebanon"
+    synonyms: ["lebanon"]
+    host_labels: ["lb"]
+    mission_labels: ["lb"]
+    tlds: ["lb"]
+
+  - code: "LS"
+    name: "Lesotho"
+    synonyms: ["lesotho"]
+    host_labels: ["ls"]
+    mission_labels: ["ls"]
+    tlds: ["ls"]
+
+  - code: "LR"
+    name: "Liberia"
+    synonyms: ["liberia"]
+    host_labels: ["lr"]
+    mission_labels: ["lr"]
+    tlds: ["lr"]
+
+  - code: "LY"
+    name: "Libya"
+    synonyms: ["libya"]
+    host_labels: ["ly"]
+    mission_labels: ["ly"]
+    tlds: ["ly"]
+
+  - code: "LI"
+    name: "Liechtenstein"
+    synonyms: ["liechtenstein"]
+    host_labels: ["li"]
+    mission_labels: ["li"]
+    tlds: ["li"]
+
+  - code: "LT"
+    name: "Lithuania"
+    synonyms: ["lithuania"]
+    host_labels: ["lt"]
+    mission_labels: ["lt"]
+    tlds: ["lt"]
+
+  - code: "LU"
+    name: "Luxembourg"
+    synonyms: ["luxembourg"]
+    host_labels: ["lu"]
+    mission_labels: ["lu"]
+    tlds: ["lu"]
+
+  - code: "MO"
+    name: "Macao"
+    synonyms: ["macao"]
+    host_labels: ["mo"]
+    mission_labels: ["mo"]
+    tlds: ["mo"]
+
+  - code: "MG"
+    name: "Madagascar"
+    synonyms: ["madagascar"]
+    host_labels: ["mg"]
+    mission_labels: ["mg"]
+    tlds: ["mg"]
+
+  - code: "MW"
+    name: "Malawi"
+    synonyms: ["malawi"]
+    host_labels: ["mw"]
+    mission_labels: ["mw"]
+    tlds: ["mw"]
+
+  - code: "MY"
+    name: "Malaysia"
+    synonyms: ["malaysia"]
+    host_labels: ["my"]
+    mission_labels: ["my"]
+    tlds: ["my"]
+
+  - code: "MV"
+    name: "Maldives"
+    synonyms: ["maldives"]
+    host_labels: ["mv"]
+    mission_labels: ["mv"]
+    tlds: ["mv"]
+
+  - code: "ML"
+    name: "Mali"
+    synonyms: ["mali"]
+    host_labels: ["ml"]
+    mission_labels: ["ml"]
+    tlds: ["ml"]
+
+  - code: "MT"
+    name: "Malta"
+    synonyms: ["malta"]
+    host_labels: ["mt"]
+    mission_labels: ["mt"]
+    tlds: ["mt"]
+
+  - code: "MH"
+    name: "Marshall Islands"
+    synonyms: ["marshall islands"]
+    host_labels: ["mh"]
+    mission_labels: ["mh"]
+    tlds: ["mh"]
+
+  - code: "MR"
+    name: "Mauritania"
+    synonyms: ["mauritania"]
+    host_labels: ["mr"]
+    mission_labels: ["mr"]
+    tlds: ["mr"]
+
+  - code: "MU"
+    name: "Mauritius"
+    synonyms: ["mauritius"]
+    host_labels: ["mu"]
+    mission_labels: ["mu"]
+    tlds: ["mu"]
+
+  - code: "MX"
+    name: "Mexico"
+    synonyms: ["mexico"]
+    host_labels: ["mx"]
+    mission_labels: ["mx"]
+    tlds: ["mx"]
+
+  - code: "FM"
+    name: "Micronesia"
+    synonyms: ["micronesia"]
+    host_labels: ["fm"]
+    mission_labels: ["fm"]
+    tlds: ["fm"]
+
+  - code: "MD"
+    name: "Moldova"
+    synonyms: ["moldova"]
+    host_labels: ["md"]
+    mission_labels: ["md"]
+    tlds: ["md"]
+
+  - code: "MC"
+    name: "Monaco"
+    synonyms: ["monaco"]
+    host_labels: ["mc"]
+    mission_labels: ["mc"]
+    tlds: ["mc"]
+
+  - code: "MN"
+    name: "Mongolia"
+    synonyms: ["mongolia"]
+    host_labels: ["mn"]
+    mission_labels: ["mn"]
+    tlds: ["mn"]
+
+  - code: "ME"
+    name: "Montenegro"
+    synonyms: ["montenegro"]
+    host_labels: ["me"]
+    mission_labels: ["me"]
+    tlds: ["me"]
+
+  - code: "MA"
+    name: "Morocco"
+    synonyms: ["morocco"]
+    host_labels: ["ma"]
+    mission_labels: ["ma"]
+    tlds: ["ma"]
+
+  - code: "MZ"
+    name: "Mozambique"
+    synonyms: ["mozambique"]
+    host_labels: ["mz"]
+    mission_labels: ["mz"]
+    tlds: ["mz"]
+
+  - code: "MM"
+    name: "Myanmar"
+    synonyms: ["myanmar"]
+    host_labels: ["mm"]
+    mission_labels: ["mm"]
+    tlds: ["mm"]
+
+  - code: "NA"
+    name: "Namibia"
+    synonyms: ["namibia"]
+    host_labels: ["na"]
+    mission_labels: ["na"]
+    tlds: ["na"]
+
+  - code: "NR"
+    name: "Nauru"
+    synonyms: ["nauru"]
+    host_labels: ["nr"]
+    mission_labels: ["nr"]
+    tlds: ["nr"]
+
+  - code: "NP"
+    name: "Nepal"
+    synonyms: ["nepal"]
+    host_labels: ["np"]
+    mission_labels: ["np"]
+    tlds: ["np"]
+
+  - code: "NL"
+    name: "Netherlands"
+    synonyms: ["netherlands"]
+    host_labels: ["nl"]
+    mission_labels: ["nl"]
+    tlds: ["nl"]
+
+  - code: "NZ"
+    name: "New Zealand"
+    synonyms: ["new zealand"]
+    host_labels: ["nz"]
+    mission_labels: ["nz"]
+    tlds: ["nz"]
+
+  - code: "NI"
+    name: "Nicaragua"
+    synonyms: ["nicaragua"]
+    host_labels: ["ni"]
+    mission_labels: ["ni"]
+    tlds: ["ni"]
+
+  - code: "NE"
+    name: "Niger"
+    synonyms: ["niger"]
+    host_labels: ["ne"]
+    mission_labels: ["ne"]
+    tlds: ["ne"]
+
+  - code: "NG"
+    name: "Nigeria"
+    synonyms: ["nigeria"]
+    host_labels: ["ng"]
+    mission_labels: ["ng"]
+    tlds: ["ng"]
+
+  - code: "KP"
+    name: "North Korea"
+    synonyms: ["north korea"]
+    host_labels: ["kp"]
+    mission_labels: ["kp"]
+    tlds: ["kp"]
+
+  - code: "MK"
+    name: "North Macedonia"
+    synonyms: ["north macedonia"]
+    host_labels: ["mk"]
+    mission_labels: ["mk"]
+    tlds: ["mk"]
+
+  - code: "NO"
+    name: "Norway"
+    synonyms: ["norway"]
+    host_labels: ["no"]
+    mission_labels: ["no"]
+    tlds: ["no"]
+
+  - code: "OM"
+    name: "Oman"
+    synonyms: ["oman"]
+    host_labels: ["om"]
+    mission_labels: ["om"]
+    tlds: ["om"]
+
+  - code: "PK"
+    name: "Pakistan"
+    synonyms: ["pakistan"]
+    host_labels: ["pk"]
+    mission_labels: ["pk"]
+    tlds: ["pk"]
+
+  - code: "PW"
+    name: "Palau"
+    synonyms: ["palau"]
+    host_labels: ["pw"]
+    mission_labels: ["pw"]
+    tlds: ["pw"]
+
+  - code: "PS"
+    name: "Palestine"
+    synonyms: ["palestine"]
+    host_labels: ["ps"]
+    mission_labels: ["ps"]
+    tlds: ["ps"]
+
+  - code: "PA"
+    name: "Panama"
+    synonyms: ["panama"]
+    host_labels: ["pa"]
+    mission_labels: ["pa"]
+    tlds: ["pa"]
+
+  - code: "PG"
+    name: "Papua New Guinea"
+    synonyms: ["papua new guinea"]
+    host_labels: ["pg"]
+    mission_labels: ["pg"]
+    tlds: ["pg"]
+
+  - code: "PY"
+    name: "Paraguay"
+    synonyms: ["paraguay"]
+    host_labels: ["py"]
+    mission_labels: ["py"]
+    tlds: ["py"]
+
+  - code: "PE"
+    name: "Peru"
+    synonyms: ["peru"]
+    host_labels: ["pe"]
+    mission_labels: ["pe"]
+    tlds: ["pe"]
+
+  - code: "PH"
+    name: "Philippines"
+    synonyms: ["philippines"]
+    host_labels: ["ph"]
+    mission_labels: ["ph"]
+    tlds: ["ph"]
+
+  - code: "PL"
+    name: "Poland"
+    synonyms: ["poland"]
+    host_labels: ["pl"]
+    mission_labels: ["pl"]
+    tlds: ["pl"]
+
+  - code: "PT"
+    name: "Portugal"
+    synonyms: ["portugal"]
+    host_labels: ["pt"]
+    mission_labels: ["pt"]
+    tlds: ["pt"]
+
+  - code: "QA"
+    name: "Qatar"
+    synonyms: ["qatar"]
+    host_labels: ["qa"]
+    mission_labels: ["qa"]
+    tlds: ["qa"]
+
+  - code: "RO"
+    name: "Romania"
+    synonyms: ["romania"]
+    host_labels: ["ro"]
+    mission_labels: ["ro"]
+    tlds: ["ro"]
+
+  - code: "RU"
+    name: "Russia"
+    synonyms: ["russia"]
+    host_labels: ["ru"]
+    mission_labels: ["ru"]
+    tlds: ["ru"]
+
+  - code: "RW"
+    name: "Rwanda"
+    synonyms: ["rwanda"]
+    host_labels: ["rw"]
+    mission_labels: ["rw"]
+    tlds: ["rw"]
+
+  - code: "KN"
+    name: "Saint Kitts and Nevis"
+    synonyms: ["saint kitts and nevis"]
+    host_labels: ["kn"]
+    mission_labels: ["kn"]
+    tlds: ["kn"]
+
+  - code: "LC"
+    name: "Saint Lucia"
+    synonyms: ["saint lucia"]
+    host_labels: ["lc"]
+    mission_labels: ["lc"]
+    tlds: ["lc"]
+
+  - code: "VC"
+    name: "Saint Vincent and the Grenadines"
+    synonyms: ["saint vincent and the grenadines"]
+    host_labels: ["vc"]
+    mission_labels: ["vc"]
+    tlds: ["vc"]
+
+  - code: "WS"
+    name: "Samoa"
+    synonyms: ["samoa"]
+    host_labels: ["ws"]
+    mission_labels: ["ws"]
+    tlds: ["ws"]
+
+  - code: "SM"
+    name: "San Marino"
+    synonyms: ["san marino"]
+    host_labels: ["sm"]
+    mission_labels: ["sm"]
+    tlds: ["sm"]
+
+  - code: "ST"
+    name: "Sao Tome and Principe"
+    synonyms: ["sao tome and principe"]
+    host_labels: ["st"]
+    mission_labels: ["st"]
+    tlds: ["st"]
+
+  - code: "SA"
+    name: "Saudi Arabia"
+    synonyms: ["saudi arabia"]
+    host_labels: ["sa"]
+    mission_labels: ["sa"]
+    tlds: ["sa"]
+
+  - code: "SN"
+    name: "Senegal"
+    synonyms: ["senegal"]
+    host_labels: ["sn"]
+    mission_labels: ["sn"]
+    tlds: ["sn"]
+
+  - code: "RS"
+    name: "Serbia"
+    synonyms: ["serbia"]
+    host_labels: ["rs"]
+    mission_labels: ["rs"]
+    tlds: ["rs"]
+
+  - code: "SC"
+    name: "Seychelles"
+    synonyms: ["seychelles"]
+    host_labels: ["sc"]
+    mission_labels: ["sc"]
+    tlds: ["sc"]
+
+  - code: "SL"
+    name: "Sierra Leone"
+    synonyms: ["sierra leone"]
+    host_labels: ["sl"]
+    mission_labels: ["sl"]
+    tlds: ["sl"]
+
+  - code: "SK"
+    name: "Slovakia"
+    synonyms: ["slovakia"]
+    host_labels: ["sk"]
+    mission_labels: ["sk"]
+    tlds: ["sk"]
+
+  - code: "SI"
+    name: "Slovenia"
+    synonyms: ["slovenia"]
+    host_labels: ["si"]
+    mission_labels: ["si"]
+    tlds: ["si"]
+
+  - code: "SB"
+    name: "Solomon Islands"
+    synonyms: ["solomon islands"]
+    host_labels: ["sb"]
+    mission_labels: ["sb"]
+    tlds: ["sb"]
+
+  - code: "SO"
+    name: "Somalia"
+    synonyms: ["somalia"]
+    host_labels: ["so"]
+    mission_labels: ["so"]
+    tlds: ["so"]
+
+  - code: "ZA"
+    name: "South Africa"
+    synonyms: ["south africa"]
+    host_labels: ["za"]
+    mission_labels: ["za"]
+    tlds: ["za"]
+
+  - code: "KR"
+    name: "South Korea"
+    synonyms: ["south korea"]
+    host_labels: ["kr"]
+    mission_labels: ["kr"]
+    tlds: ["kr"]
+
+  - code: "SS"
+    name: "South Sudan"
+    synonyms: ["south sudan"]
+    host_labels: ["ss"]
+    mission_labels: ["ss"]
+    tlds: ["ss"]
+
+  - code: "ES"
+    name: "Spain"
+    synonyms: ["spain"]
+    host_labels: ["es"]
+    mission_labels: ["es"]
+    tlds: ["es"]
+
+  - code: "LK"
+    name: "Sri Lanka"
+    synonyms: ["sri lanka"]
+    host_labels: ["lk"]
+    mission_labels: ["lk"]
+    tlds: ["lk"]
+
+  - code: "SD"
+    name: "Sudan"
+    synonyms: ["sudan"]
+    host_labels: ["sd"]
+    mission_labels: ["sd"]
+    tlds: ["sd"]
+
+  - code: "SR"
+    name: "Suriname"
+    synonyms: ["suriname"]
+    host_labels: ["sr"]
+    mission_labels: ["sr"]
+    tlds: ["sr"]
+
+  - code: "SE"
+    name: "Sweden"
+    synonyms: ["sweden"]
+    host_labels: ["se"]
+    mission_labels: ["se"]
+    tlds: ["se"]
+
+  - code: "CH"
+    name: "Switzerland"
+    synonyms: ["switzerland"]
+    host_labels: ["ch"]
+    mission_labels: ["ch"]
+    tlds: ["ch"]
+
+  - code: "SY"
+    name: "Syria"
+    synonyms: ["syria"]
+    host_labels: ["sy"]
+    mission_labels: ["sy"]
+    tlds: ["sy"]
+
+  - code: "TW"
+    name: "Taiwan"
+    synonyms: ["taiwan"]
+    host_labels: ["tw"]
+    mission_labels: ["tw"]
+    tlds: ["tw"]
+
+  - code: "TJ"
+    name: "Tajikistan"
+    synonyms: ["tajikistan"]
+    host_labels: ["tj"]
+    mission_labels: ["tj"]
+    tlds: ["tj"]
+
+  - code: "TZ"
+    name: "Tanzania"
+    synonyms: ["tanzania"]
+    host_labels: ["tz"]
+    mission_labels: ["tz"]
+    tlds: ["tz"]
+
+  - code: "TL"
+    name: "Timor-Leste"
+    synonyms: ["timor-leste"]
+    host_labels: ["tl"]
+    mission_labels: ["tl"]
+    tlds: ["tl"]
+
+  - code: "TG"
+    name: "Togo"
+    synonyms: ["togo"]
+    host_labels: ["tg"]
+    mission_labels: ["tg"]
+    tlds: ["tg"]
+
+  - code: "TO"
+    name: "Tonga"
+    synonyms: ["tonga"]
+    host_labels: ["to"]
+    mission_labels: ["to"]
+    tlds: ["to"]
+
+  - code: "TT"
+    name: "Trinidad and Tobago"
+    synonyms: ["trinidad and tobago"]
+    host_labels: ["tt"]
+    mission_labels: ["tt"]
+    tlds: ["tt"]
+
+  - code: "TN"
+    name: "Tunisia"
+    synonyms: ["tunisia"]
+    host_labels: ["tn"]
+    mission_labels: ["tn"]
+    tlds: ["tn"]
+
+  - code: "TR"
+    name: "Turkey"
+    synonyms: ["turkey"]
+    host_labels: ["tr"]
+    mission_labels: ["tr"]
+    tlds: ["tr"]
+
+  - code: "TM"
+    name: "Turkmenistan"
+    synonyms: ["turkmenistan"]
+    host_labels: ["tm"]
+    mission_labels: ["tm"]
+    tlds: ["tm"]
+
+  - code: "TV"
+    name: "Tuvalu"
+    synonyms: ["tuvalu"]
+    host_labels: ["tv"]
+    mission_labels: ["tv"]
+    tlds: ["tv"]
+
+  - code: "UG"
+    name: "Uganda"
+    synonyms: ["uganda"]
+    host_labels: ["ug"]
+    mission_labels: ["ug"]
+    tlds: ["ug"]
+
+  - code: "UA"
+    name: "Ukraine"
+    synonyms: ["ukraine"]
+    host_labels: ["ua"]
+    mission_labels: ["ua"]
+    tlds: ["ua"]
+
+  - code: "UY"
+    name: "Uruguay"
+    synonyms: ["uruguay"]
+    host_labels: ["uy"]
+    mission_labels: ["uy"]
+    tlds: ["uy"]
+
+  - code: "UZ"
+    name: "Uzbekistan"
+    synonyms: ["uzbekistan"]
+    host_labels: ["uz"]
+    mission_labels: ["uz"]
+    tlds: ["uz"]
+
+  - code: "VU"
+    name: "Vanuatu"
+    synonyms: ["vanuatu"]
+    host_labels: ["vu"]
+    mission_labels: ["vu"]
+    tlds: ["vu"]
+
+  - code: "VA"
+    name: "Vatican City"
+    synonyms: ["vatican city"]
+    host_labels: ["va"]
+    mission_labels: ["va"]
+    tlds: ["va"]
+
+  - code: "VE"
+    name: "Venezuela"
+    synonyms: ["venezuela"]
+    host_labels: ["ve"]
+    mission_labels: ["ve"]
+    tlds: ["ve"]
+
+  - code: "YE"
+    name: "Yemen"
+    synonyms: ["yemen"]
+    host_labels: ["ye"]
+    mission_labels: ["ye"]
+    tlds: ["ye"]
+
+  - code: "ZM"
+    name: "Zambia"
+    synonyms: ["zambia"]
+    host_labels: ["zm"]
+    mission_labels: ["zm"]
+    tlds: ["zm"]
+
+  - code: "ZW"
+    name: "Zimbabwe"
+    synonyms: ["zimbabwe"]
+    host_labels: ["zw"]
+    mission_labels: ["zw"]
+    tlds: ["zw"]

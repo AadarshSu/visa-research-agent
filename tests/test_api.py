@@ -8,6 +8,7 @@ from visa_research_agent.api.dependencies import (
     get_automatic_destinations,
     get_visa_plan_service,
 )
+from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.domain.models import RuntimePolicy
 
 OFFLINE_POLICY = RuntimePolicy(
@@ -55,6 +56,7 @@ async def test_destinations_endpoint(client: httpx.AsyncClient) -> None:
     response = await client.get("/destinations")
 
     assert response.status_code == 200
+    # Under `configured` this is the hand-written registry, in its own order.
     assert [item["slug"] for item in response.json()["destinations"]] == [
         "singapore",
         "japan",
@@ -76,7 +78,7 @@ async def test_research_interface_is_available(client: httpx.AsyncClient) -> Non
     assert 'id="plan-form"' in response.text
     assert "/static/styles.css?v=" in response.text
     assert "/static/app.js?v=" in response.text
-    assert "Generate fixture plan" in response.text
+    assert "Generate Plan" in response.text
     assert "Singapore" in response.text
 
 
@@ -190,3 +192,46 @@ async def test_a_country_with_no_reference_data_is_rejected_before_anything_runs
     )
 
     assert response.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_the_interface_does_not_describe_one_particular_traveller(
+    client: httpx.AsyncClient,
+) -> None:
+    """The page used to announce it researched an Indian passport holder living in Edinburgh.
+
+    Any traveller can be asked about now, so copy naming one is simply wrong.
+    """
+
+    response = await client.get("/")
+
+    for hardcoded in ("Edinburgh", "Indian passport holder", "resident in the UK"):
+        assert hardcoded not in response.text
+
+
+@pytest.mark.anyio
+async def test_every_known_country_can_be_asked_for_when_destinations_are_automatic(
+    client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Destinations stop being the handful in `destinations.yaml`.
+
+    An unconfigured country is researched when it is asked for, so offering only the configured
+    ones would hide most of what the agent can actually do.
+    """
+
+    automatic = OFFLINE_POLICY.model_copy(update={"destination_mode": "automatic"})
+    for module in ("dependencies", "routes"):
+        monkeypatch.setattr(
+            f"visa_research_agent.api.{module}.get_runtime_policy", lambda: automatic
+        )
+
+    slugs = [item["slug"] for item in (await client.get("/destinations")).json()["destinations"]]
+
+    assert "united-arab-emirates" in slugs
+    assert "thailand" in slugs
+    assert len(slugs) == len(get_country_registry().countries)
+    # Nothing is offered that cannot be acted on.
+    assert all(
+        item["status"] == "available"
+        for item in (await client.get("/destinations")).json()["destinations"]
+    )

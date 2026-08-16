@@ -3,6 +3,7 @@
 All three are version-controlled YAML so they can be reviewed and tuned without a code change.
 """
 
+import re
 from functools import lru_cache
 from typing import Any, Literal
 
@@ -32,6 +33,16 @@ class Country(StrictModel):
     tlds: list[str] = Field(default_factory=list)
 
     @property
+    def slug(self) -> str:
+        """The country as a URL-safe identifier, matching `DestinationConfig.slug`.
+
+        Derived rather than stored so a country cannot be listed under one slug and researched
+        under another: "United Arab Emirates" is always "united-arab-emirates".
+        """
+
+        return re.sub(r"[^a-z0-9]+", "-", self.name.lower()).strip("-")
+
+    @property
     def text_tokens(self) -> list[str]:
         """Every phrase that means this country in prose or a URL path."""
 
@@ -48,6 +59,9 @@ class CountryRegistry(StrictModel):
         if len(codes) != len(set(codes)):
             raise ValueError("country codes must be unique")
         return self
+
+    def by_slug(self, slug: str) -> "Country | None":
+        return next((country for country in self.countries if country.slug == slug), None)
 
     def code_for_name(self, name: str) -> str | None:
         """The ISO code for a country written the way a person writes it.

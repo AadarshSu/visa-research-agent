@@ -38,13 +38,12 @@ router = APIRouter()
 
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def index(request: Request) -> HTMLResponse:
-    registry = get_destination_registry()
     policy = get_runtime_policy()
     return templates.TemplateResponse(
         request,
         "index.html",
         {
-            "destinations": registry.destinations,
+            "destinations": researchable_destinations(),
             "countries": sorted(get_country_registry().countries, key=lambda c: c.name),
             "purposes": get_args(TravelPurpose),
             "traveller": DEFAULT_TRAVELLER_PROFILE,
@@ -56,16 +55,19 @@ async def index(request: Request) -> HTMLResponse:
     )
 
 
-@router.get("/health", response_model=HealthResponse, tags=["system"])
-async def health() -> HealthResponse:
-    return HealthResponse()
+def researchable_destinations() -> list[DestinationSummary]:
+    """Every destination a plan can be asked for.
 
+    Under `destination_mode: automatic` that is every country the agent holds reference data for,
+    not only the handful written into `destinations.yaml` — an unconfigured one is researched when
+    it is asked for. A configured entry keeps its own route type, because Schengen membership is a
+    fact about the destination rather than about how its sources were found.
+    """
 
-@router.get("/destinations", response_model=DestinationsResponse, tags=["visa research"])
-async def destinations() -> DestinationsResponse:
     registry = get_destination_registry()
-    return DestinationsResponse(
-        destinations=[
+    configured = {destination.slug: destination for destination in registry.destinations}
+    if get_runtime_policy().destination_mode == "configured":
+        return [
             DestinationSummary(
                 slug=destination.slug,
                 name=destination.display_name,
@@ -74,7 +76,29 @@ async def destinations() -> DestinationsResponse:
             )
             for destination in registry.destinations
         ]
-    )
+
+    summaries: list[DestinationSummary] = []
+    for country in sorted(get_country_registry().countries, key=lambda item: item.name):
+        entry = configured.get(country.slug)
+        summaries.append(
+            DestinationSummary(
+                slug=country.slug,
+                name=country.name,
+                route_type=entry.route_type if entry is not None else "national",
+                status="available",
+            )
+        )
+    return summaries
+
+
+@router.get("/health", response_model=HealthResponse, tags=["system"])
+async def health() -> HealthResponse:
+    return HealthResponse()
+
+
+@router.get("/destinations", response_model=DestinationsResponse, tags=["visa research"])
+async def destinations() -> DestinationsResponse:
+    return DestinationsResponse(destinations=researchable_destinations())
 
 
 def corridor_for(destination_slug: str, traveller: TravellerProfile) -> Corridor:
@@ -123,6 +147,18 @@ async def resolve_destination(
         )
 
     name = destination.display_name if destination is not None else requested
+    if automatic.country_named(name) is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": (
+                    f"{requested} is not a country this agent holds reference data for, so its "
+                    "own government's domains cannot be told apart from other countries' pages "
+                    "about it."
+                ),
+                "supported_destinations": [item.slug for item in researchable_destinations()],
+            },
+        )
     try:
         discovered = await automatic.destination_for(name, corridor_for(requested, traveller))
     except AutomaticDiscoveryError as exc:

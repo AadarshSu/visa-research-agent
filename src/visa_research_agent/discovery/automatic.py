@@ -117,12 +117,23 @@ class AutomaticDestinationService:
         self.now = now
 
     def country_named(self, name: str) -> Country | None:
+        """Find a country however it was referred to: by name, synonym, or destination slug.
+
+        The interface sends a slug, the registry stores display names, and a person may type
+        either. All three have to land on the same country or a destination becomes unresearchable
+        purely because of how it was spelled.
+        """
+
         wanted = name.strip().lower()
+        by_slug = self.countries.by_slug(wanted)
+        if by_slug is not None:
+            return by_slug
         return next(
             (
                 country
                 for country in self.countries.countries
-                if country.name.lower() == wanted or wanted in {s.lower() for s in country.synonyms}
+                if country.name.lower() == wanted
+                or wanted in {synonym.lower() for synonym in country.synonyms}
             ),
             None,
         )

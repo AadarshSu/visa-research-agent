@@ -11,6 +11,8 @@ Two rules do most of the work:
 No model is involved. Scores are explainable, repeatable, and free.
 """
 
+import re
+
 from visa_research_agent.discovery.lexicon import (
     Country,
     CountryRegistry,
@@ -32,6 +34,18 @@ from visa_research_agent.domain.trust import host_is_within, host_of
 
 def _contains_phrase(haystack: str, phrase: str) -> bool:
     return phrase.lower() in haystack.lower()
+
+
+def _contains_word(haystack: str, phrase: str) -> bool:
+    """True when a phrase appears as whole words rather than inside a longer one.
+
+    Country tokens must never match inside a word. "us" sits in "business", "house" and "because";
+    "chad" in "Chadwick"; "oman" in "Romania". Since `wrong_country` is a veto, a substring match
+    silently rejected the most relevant page a corridor had — every business-purpose page was
+    being thrown away as though it were about the United States.
+    """
+
+    return re.search(rf"\b{re.escape(phrase.lower())}\b", haystack.lower()) is not None
 
 
 def searchable_url(url: str) -> str:
@@ -59,7 +73,7 @@ def _matches_country(link: PageLink, country: Country) -> bool:
     host_labels = host_of(link.url).split(".")
 
     for token in country.text_tokens:
-        if token in text:
+        if _contains_word(text, token):
             return True
         if any(token == segment or token in segment.split("-") for segment in segments):
             return True

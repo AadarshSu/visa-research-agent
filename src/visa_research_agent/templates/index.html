@@ -22,11 +22,11 @@
 
       <main>
         <section class="hero" aria-labelledby="page-title">
-          <p class="eyebrow">Personal travel research · Edinburgh, UK</p>
+          <p class="eyebrow">Source-backed visa research</p>
           <h1 id="page-title">Turn official guidance into a practical visa plan.</h1>
           <p class="hero-copy">
-            Research for an ordinary Indian passport holder resident in the UK, travelling for
-            tourism. Evidence comes from
+            Every claim is grounded in an official government page, and anything that could not be
+            verified is said plainly. Ordinary passports only. Evidence comes from
             {% if source_mode == 'live' %}the configured official pages, retrieved live{% else %}saved official-source snapshots{% endif %}.
           </p>
 
@@ -37,9 +37,9 @@
                 {% for destination in destinations %}
                   <option
                     value="{{ destination.slug }}"
-                    {% if destination.implementation_status != 'available' %}disabled{% endif %}
+                    {% if destination.status != 'available' %}disabled{% endif %}
                   >
-                    {{ destination.display_name }}{% if destination.implementation_status != 'available' %} — future phase{% endif %}
+                    {{ destination.name }}{% if destination.status != 'available' %} — future phase{% endif %}
                   </option>
                 {% endfor %}
               </select>
@@ -75,7 +75,7 @@
               </select>
             </div>
             <button id="generate-button" type="submit">
-              Generate {% if extraction_mode == 'openai' %}AI{% else %}fixture{% endif %} plan
+              Generate Plan
             </button>
           </form>
 

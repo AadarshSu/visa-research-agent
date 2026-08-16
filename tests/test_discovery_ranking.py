@@ -21,8 +21,10 @@ from visa_research_agent.discovery.scoring import (
     names_documents,
     score_body,
     score_link,
+    wrong_country,
 )
 from visa_research_agent.discovery.urls import published_date_in_path
+from visa_research_agent.domain.models import TravelPurpose
 
 BR = "https://www.gov.br/mre/pt-br"
 VIVIS = "visa-section/types-of-visa/visit-visa-vivis-1/tourism-and-transit-vivis"
@@ -238,3 +240,58 @@ def test_an_explicit_archive_section_is_still_vetoed() -> None:
 
     assert is_archived("https://immigration.gov.example/visa/2019/tourist-checklist.html", lexicon)
     assert is_archived("https://immigration.gov.example/visa/archive/checklist.html", lexicon)
+
+
+# --- a country name must not match inside a word ---------------------------------------------
+
+
+def wrong_country_for(text: str, purpose: TravelPurpose = "business") -> str | None:
+    registry = get_country_registry()
+    return wrong_country(
+        PageLink(
+            url="https://www.mofa.go.jp/visa",
+            text=text,
+            heading="",
+            depth=0,
+            discovered_from="seed",
+        ),
+        Corridor(
+            destination_slug="japan",
+            passport_nationality="IN",
+            applying_from="GB",
+            purpose=purpose,
+        ),
+        registry,
+        "JP",
+    )
+
+
+def test_a_country_code_inside_an_ordinary_word_is_not_a_country() -> None:
+    """`wrong_country` is a veto, so a substring match silently threw the best page away.
+
+    "us" sits inside "business", "house" and "because" — every business-purpose page was being
+    rejected as though it were about the United States.
+    """
+
+    for harmless in ("Business visa", "Because of the pandemic", "Campus visit", "Chadwick House"):
+        assert wrong_country_for(harmless) is None, harmless
+
+
+def test_a_country_named_in_full_is_still_vetoed() -> None:
+    # The fix must not blunt the veto: a page genuinely about another country still goes.
+    assert wrong_country_for("Visa for United States nationals") == "United States"
+    assert wrong_country_for("Visa requirements for China") == "China"
+
+
+def test_every_country_has_the_field_the_trust_rule_depends_on() -> None:
+    """`tlds` decides whether a domain is the destination's own government.
+
+    A country without it is not merely weaker at scoring — it can never have a domain trusted, so
+    it would silently be unresearchable.
+    """
+
+    countries = get_country_registry().countries
+
+    assert len(countries) > 150, "destinations should not be limited to a curated handful"
+    assert all(country.tlds for country in countries)
+    assert all(country.code.isupper() and len(country.code) == 2 for country in countries)

@@ -9,6 +9,42 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 21. Any country is a destination, and a country name stops matching inside a word
+**2026-08-16**
+
+The interface still offered the seven entries in `destinations.yaml`, most of them disabled, and
+its copy announced research "for an ordinary Indian passport holder resident in the UK". Both were
+left over from when that was true.
+
+**Decided:** the destination list is every country the agent holds reference data for, and the copy
+describes the product rather than one traveller. `countries.yaml` grew from 14 to **198**. A country
+is now identified by a slug derived from its name, so "United Arab Emirates" and
+"united-arab-emirates" reach the same place however a caller writes it.
+
+The fourteen curated entries keep their hand-written synonyms, demonyms, host labels and mission
+cities, learned from corridors actually run. The other 184 carry only what can be stated without
+guessing: the name and the ccTLD, which is the ISO alpha-2 lowercased for every one of them.
+**`tlds` is the load-bearing field** — it is what decides whether a domain belongs to the
+destination's own government, the rule that replaced human approval. The rest are scoring aids the
+model decider does not need, so a generated country is fully researchable, just with weaker hints.
+
+**A live bug this uncovered, and the reason the expansion was not safe without it.**
+`_matches_country` matched country tokens as **substrings** of link text. Its own docstring promised
+codes are "never matched inside a word", but that guard was only ever applied to path segments. So:
+
+    "Business visa"   -> vetoed as United States      ("us" inside "business")
+    "Chadwick House"  -> vetoed as United States      ("us" inside "House")
+
+`wrong_country` is a **veto**, so every business-purpose corridor was silently throwing away its
+most relevant page. Matching is now on word boundaries. Adding 184 more country names to a
+substring veto would have multiplied this — "oman" sits inside "Romania", "chad" inside "Chadwick" —
+which is what made the bug worth finding before the data grew.
+
+**Verified after the change:** Brazil still resolves the Edinburgh checklist with 198 countries in
+the veto list, and a page genuinely about another country is still rejected.
+
+---
+
 ## 20. The traveller becomes input; countries become codes
 **2026-08-16**
 
