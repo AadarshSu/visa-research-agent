@@ -33,6 +33,7 @@ from visa_research_agent.discovery.models import (
     Corridor,
     DiscoveryRole,
 )
+from visa_research_agent.discovery.urls import published_date_in_path
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.research.errors import VisaResearchError
 
@@ -100,6 +101,10 @@ def build_candidate_packet(
                 "source_id": source_id,
                 "title": candidate.title or candidate.link.text or "",
                 "url": candidate.link.url,
+                # What the URL claims about when it was published, where it claims anything. A
+                # publication date is not staleness, and only something holding the page's text
+                # can tell the difference — which is exactly what this call is.
+                "published_in_path": published_date_in_path(candidate.link.url),
                 "untrusted_content": contents.get(source_id, "")[:excerpt_characters],
             }
             for source_id, candidate in candidates.items()

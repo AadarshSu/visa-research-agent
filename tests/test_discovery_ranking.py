@@ -15,12 +15,14 @@ out of sample, and failed it. Both cases below are taken from the real pages:
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, PageLink
 from visa_research_agent.discovery.scoring import (
+    is_archived,
     mission_affinity,
     mission_in_path,
     names_documents,
     score_body,
     score_link,
 )
+from visa_research_agent.discovery.urls import published_date_in_path
 
 BR = "https://www.gov.br/mre/pt-br"
 VIVIS = "visa-section/types-of-visa/visit-visa-vivis-1/tourism-and-transit-vivis"
@@ -187,3 +189,52 @@ def test_a_ministry_page_is_not_penalised_for_belonging_to_no_post() -> None:
     assert not any(
         "other-mission" in signal for signals in scores.signals.values() for signal in signals
     )
+
+
+# --- publication dates in CMS paths ---------------------------------------------------------
+
+
+def test_a_cms_date_in_the_path_is_read_rather_than_guessed_at() -> None:
+    """Widened from the old rule, which only saw a bare four-digit year segment.
+
+    China's UK embassy serves its current checklist from `/201303/t20130315_...`, so the date was
+    invisible to `is_archived` and nothing reported it.
+    """
+
+    china = "https://gb.china-embassy.gov.cn/eng/visa/qzxz/201303/t20130315_3383966.htm"
+    fees = "https://manchester.china-consulate.gov.cn/eng/visa/visa/202408/t20240802_11465159.htm"
+
+    assert published_date_in_path(china) == "2013-03"
+    assert published_date_in_path(fees) == "2024-08"
+
+
+def test_a_path_with_no_date_reports_none() -> None:
+    for url in (
+        "https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html",
+        "https://www.gov.br/mre/pt-br/consulado-edimburgo/visa-section",
+        "https://x.gov.example/visa/100000/page.htm",
+        "https://x.gov.example/visa/201399/page.htm",
+    ):
+        assert published_date_in_path(url) is None, url
+
+
+def test_a_publication_date_does_not_archive_a_page() -> None:
+    """The load-bearing distinction: publication is not staleness.
+
+    Both of China's correct picks carry dated paths, and one is from 2013. Treating a dated path as
+    an archive marker would have discarded the only two roles that corridor resolved.
+    """
+
+    lexicon = get_lexicon()
+    china = "https://gb.china-embassy.gov.cn/eng/visa/qzxz/201303/t20130315_3383966.htm"
+
+    assert published_date_in_path(china) is not None
+    assert not is_archived(china, lexicon)
+
+
+def test_an_explicit_archive_section_is_still_vetoed() -> None:
+    # Widening detection must not have loosened the veto that already worked.
+    lexicon = get_lexicon()
+
+    assert is_archived("https://immigration.gov.example/visa/2019/tourist-checklist.html", lexicon)
+    assert is_archived("https://immigration.gov.example/visa/archive/checklist.html", lexicon)

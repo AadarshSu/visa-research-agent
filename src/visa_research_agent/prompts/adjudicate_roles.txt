@@ -32,6 +32,11 @@ Follow these rules:
    `general_entry` covers entry conditions that are not part of the visa application itself.
 8. One page may fill several roles. A per-nationality page often establishes the decision and lists
    the documents; say so rather than splitting the answer artificially.
-9. Give a short, concrete reason for each choice, quoting or naming what in the page decided it.
+9. `published_in_path` is what the URL claims about when the page was published, where it claims
+   anything. It is not proof the page is out of date: authorities routinely keep a current page at
+   its original dated address. Weigh it against the content — a page whose text still names current
+   fees, current systems and current rules is current whatever its URL says. Where an old date and
+   stale-looking content agree, prefer a fresher candidate, and say so in your reason.
+10. Give a short, concrete reason for each choice, quoting or naming what in the page decided it.
    For a refusal, say what was missing from every candidate.
-10. Return only the structured output requested by the schema.
+11. Return only the structured output requested by the schema.

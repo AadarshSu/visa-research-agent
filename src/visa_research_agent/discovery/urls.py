@@ -91,6 +91,32 @@ def path_segments(url: str) -> list[str]:
     return [segment.lower() for segment in urlsplit(url).path.split("/") if segment]
 
 
+# Government CMSs date their paths: /201303/t20130315_3383966.htm, /202408/t20240802_11465159.htm.
+# Year, then month, optionally day, optionally prefixed "t" in the filename.
+CMS_DATE = re.compile(r"^t?((?:19|20)\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])?(?:$|[_.\-])")
+
+
+def published_date_in_path(url: str) -> str | None:
+    """When a URL's own path says the page was published, if it says so at all.
+
+    This is *publication*, not staleness, and the distinction is load-bearing. China's UK embassy
+    serves its current tourist-visa checklist from a 2013-dated path and its 2024 fee table from a
+    2024 one; both are correct and current. Vetoing dated paths would have thrown away both.
+
+    So this reports rather than rejects. `is_archived` still vetoes an explicit archive section;
+    what a bare publication date deserves is a reader — a human, or a decider holding the page's
+    text — not a rule that guesses from the URL alone.
+    """
+
+    for segment in path_segments(url):
+        match = CMS_DATE.match(segment)
+        if match is None:
+            continue
+        year, month, day = match.group(1), match.group(2), match.group(3)
+        return f"{year}-{month}-{day}" if day else f"{year}-{month}"
+    return None
+
+
 def is_machine_endpoint(url: str) -> bool:
     """True when a URL serves a program rather than a person.
 
