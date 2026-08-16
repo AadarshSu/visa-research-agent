@@ -5,7 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
 
-from visa_research_agent.api.dependencies import get_visa_plan_service
+from visa_research_agent.api.dependencies import (
+    get_automatic_destinations,
+    get_visa_plan_service,
+)
 from visa_research_agent.api.schemas import (
     DestinationsResponse,
     DestinationSummary,
@@ -15,7 +18,13 @@ from visa_research_agent.api.schemas import (
 from visa_research_agent.api.templates import static_asset_version, templates
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.traveller import TRAVELLER_PROFILE
-from visa_research_agent.domain.models import VisaPlan
+from visa_research_agent.discovery.automatic import (
+    AutomaticDestinationService,
+    AutomaticDiscoveryError,
+)
+from visa_research_agent.discovery.lexicon import get_country_registry
+from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.domain.models import DestinationConfig, TravellerProfile, VisaPlan
 from visa_research_agent.research.errors import InsufficientEvidenceError, VisaResearchError
 from visa_research_agent.research.service import VisaPlanService
 
@@ -60,40 +69,88 @@ async def destinations() -> DestinationsResponse:
     )
 
 
+def corridor_for(destination_slug: str, traveller: TravellerProfile) -> Corridor:
+    """The corridor a traveller profile describes.
+
+    The profile is still fixed, so this is a single corridor today. It is derived rather than
+    hard-coded so that making the profile variable changes one function, not the request path.
+    """
+
+    countries = get_country_registry()
+    nationality = countries.code_for_name(traveller.passport_nationality)
+    residence = countries.code_for_name(traveller.country_of_residence)
+    if nationality is None or residence is None:
+        raise AutomaticDiscoveryError(
+            "The traveller's nationality or country of residence is not one this agent holds "
+            "reference data for, so the right official pages cannot be identified."
+        )
+    return Corridor(
+        destination_slug=destination_slug,
+        passport_nationality=nationality,
+        applying_from=residence,
+        purpose=traveller.travel_purpose,
+    )
+
+
+async def resolve_destination(
+    requested: str,
+    automatic: AutomaticDestinationService | None,
+) -> DestinationConfig:
+    """Use the configured destination when there is one, otherwise research it."""
+
+    registry = get_destination_registry()
+    destination = registry.get(requested)
+    if destination is not None and destination.implementation_status == "available":
+        return destination
+
+    if automatic is None:
+        if destination is not None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail={
+                    "message": (
+                        f"Visa-plan generation for {destination.display_name} is not available yet."
+                    )
+                },
+            )
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": f"Unsupported destination: {requested}",
+                "supported_destinations": [item.slug for item in registry.destinations],
+            },
+        )
+
+    name = destination.display_name if destination is not None else requested
+    try:
+        discovered = await automatic.destination_for(
+            name, corridor_for(requested, TRAVELLER_PROFILE)
+        )
+    except AutomaticDiscoveryError as exc:
+        # A refusal, not a fault. It names what could not be established rather than offering a
+        # plan assembled from whatever happened to be readable.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": str(exc), "status": "unable_to_verify"},
+        ) from exc
+    return discovered.config
+
+
 @router.post(
     "/visa-plans",
     response_model=VisaPlan,
     responses={
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Unsupported destination"},
-        status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Destination not implemented yet"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Could not be verified"},
     },
     tags=["visa research"],
 )
 async def create_visa_plan(
     request: VisaPlanRequest,
     service: Annotated[VisaPlanService, Depends(get_visa_plan_service)],
+    automatic: Annotated[AutomaticDestinationService | None, Depends(get_automatic_destinations)],
 ) -> VisaPlan:
-    registry = get_destination_registry()
-    destination = registry.get(request.destination)
-    if destination is None:
-        supported = [item.slug for item in registry.destinations]
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail={
-                "message": f"Unsupported destination: {request.destination}",
-                "supported_destinations": supported,
-            },
-        )
-
-    if destination.implementation_status != "available":
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "message": (
-                    f"Visa-plan generation for {destination.display_name} is not available yet."
-                )
-            },
-        )
+    destination = await resolve_destination(request.destination, automatic)
 
     try:
         return await service.generate(destination, TRAVELLER_PROFILE)

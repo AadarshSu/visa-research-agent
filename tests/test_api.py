@@ -4,7 +4,10 @@ import httpx
 import pytest
 
 from visa_research_agent.api.app import create_app
-from visa_research_agent.api.dependencies import get_visa_plan_service
+from visa_research_agent.api.dependencies import (
+    get_automatic_destinations,
+    get_visa_plan_service,
+)
 from visa_research_agent.domain.models import RuntimePolicy
 
 OFFLINE_POLICY = RuntimePolicy(
@@ -31,10 +34,12 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[httpx.AsyncCl
             lambda: OFFLINE_POLICY,
         )
     get_visa_plan_service.cache_clear()
+    get_automatic_destinations.cache_clear()
     transport = httpx.ASGITransport(app=create_app())
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
         yield test_client
     get_visa_plan_service.cache_clear()
+    get_automatic_destinations.cache_clear()
 
 
 @pytest.mark.anyio

@@ -4,6 +4,8 @@ from functools import lru_cache
 
 from visa_research_agent.config.loader import get_runtime_policy
 from visa_research_agent.config.settings import settings
+from visa_research_agent.discovery.automatic import AutomaticDestinationService
+from visa_research_agent.discovery.corridor_store import FileCorridorStore
 from visa_research_agent.domain.models import RuntimePolicy
 from visa_research_agent.research.errors import LLMConfigurationError
 from visa_research_agent.research.fixtures import FixtureSourceFetcher, FixtureVisaPlanExtractor
@@ -65,6 +67,43 @@ def build_visa_plan_service(policy: RuntimePolicy) -> VisaPlanService:
     return VisaPlanService(source_fetcher, extractor)
 
 
+def build_automatic_destinations(policy: RuntimePolicy) -> AutomaticDestinationService | None:
+    """Build request-time discovery when the policy asks for it, or none when it does not."""
+
+    if policy.destination_mode == "configured":
+        return None
+
+    # Imported here: the CLI owns how a resolver is assembled, and importing it at module scope
+    # would make the API depend on the command line rather than the other way round.
+    from visa_research_agent.discovery.cli import (
+        build_resolver,
+        build_role_adjudicator,
+        build_search_provider,
+    )
+    from visa_research_agent.research.rendering import build_page_renderer
+
+    renderer = build_page_renderer(policy)
+    adjudicator = build_role_adjudicator(policy)
+    return AutomaticDestinationService(
+        build_search_provider(),
+        lambda: build_resolver(renderer, adjudicator),
+        FileCorridorStore(settings.corridor_directory),
+        maximum_age_hours=settings.corridor_maximum_age_hours,
+    )
+
+
 @lru_cache(maxsize=1)
 def get_visa_plan_service() -> VisaPlanService:
     return build_visa_plan_service(get_runtime_policy())
+
+
+@lru_cache(maxsize=1)
+def get_automatic_destinations() -> AutomaticDestinationService | None:
+    """The service itself is cached; **resolved corridors are not.**
+
+    Caching the service is safe because it holds no corridor state. Corridors expire, so they live
+    in a file store with an age check rather than in a process-lifetime memo that could serve a
+    weeks-old answer for as long as the server stays up.
+    """
+
+    return build_automatic_destinations(get_runtime_policy())

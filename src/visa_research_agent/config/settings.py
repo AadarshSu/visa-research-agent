@@ -18,6 +18,11 @@ class Settings(BaseSettings):
 
     app_name: str = "Visa Research Agent"
     cache_directory: Path = Path("var/cache")
+    corridor_directory: Path = Path("var/corridors")
+    # Three weeks. A corridor is not evidence: which pages answer it changes when a site is
+    # redesigned, not when its guidance is edited. The pages themselves are re-fetched under the
+    # much shorter evidence TTL every time a plan is produced.
+    corridor_maximum_age_hours: float = 24.0 * 21
     maximum_fixture_characters: int = 50_000
 
     # Live retrieval tuning only. Which sources are contacted, which extractor runs, and when

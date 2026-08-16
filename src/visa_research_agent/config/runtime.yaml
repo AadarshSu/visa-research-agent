@@ -32,6 +32,19 @@ render_mode: never
 # The heuristic still produces the shortlist either way, and still answers if the call fails.
 discovery_decider: model
 
+# Where a destination's sources come from.
+#   configured — only the destinations hand-written in destinations.yaml can produce a plan.
+#   automatic  — a destination nobody configured is researched at request time: its own
+#                government's domains are identified, the corridor is resolved, and the plan is
+#                built from what was found. No human approves a domain.
+# What replaces that approval is a rule, not trust in search: a domain is used only when it is
+# both governmental *and* under the destination country's own top-level domain. That rule
+# reproduces every human approval made so far and keeps out commercial insurers, visa agencies,
+# and other governments' pages about the destination. Everything downstream is unchanged — public
+# suffixes are still refused, redirects re-checked, and a corridor missing a load-bearing role is
+# still refused rather than guessed at.
+destination_mode: automatic
+
 # Live retrieval freshness window, in hours. Cached pages are reused below the TTL and
 # revalidated above it.
 source_cache_ttl_hours: 24
