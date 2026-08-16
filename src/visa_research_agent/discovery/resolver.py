@@ -240,8 +240,16 @@ class CorridorResolver:
                 url = canonicalise_url(result.url)
                 if not is_crawlable(url, destination):
                     continue
+                # Truncated exactly as the crawler truncates anchor text. A search engine will
+                # return a title far longer than any link on a page — China's ministry returned a
+                # 300-plus character speech headline — and an over-long one raised rather than
+                # being trimmed, taking the whole corridor down.
                 link = PageLink(
-                    url=url, text=result.title, heading="", depth=0, discovered_from=query
+                    url=url,
+                    text=result.title[:300],
+                    heading="",
+                    depth=0,
+                    discovered_from=query,
                 )
                 if reject(link) is not None:
                     continue

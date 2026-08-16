@@ -54,11 +54,14 @@ class StubSearchProvider:
     def __init__(self, urls: list[str]) -> None:
         self.urls = urls
         self.queries: list[str] = []
+        self.title = ""
+
+    title: str = ""
 
     async def search(self, query: str, *, count: int) -> list[SearchResult]:
         self.queries.append(query)
         return [
-            SearchResult(url=url, title="", snippet="", query=query, rank=rank)
+            SearchResult(url=url, title=self.title, snippet="", query=query, rank=rank)
             for rank, url in enumerate(self.urls[:count])
         ]
 
@@ -292,3 +295,20 @@ def test_a_candidate_no_role_wants_is_not_worth_fetching(tmp_path: Path) -> None
     ]
 
     assert resolver._shortlist(candidates) == []
+
+
+@pytest.mark.anyio
+async def test_a_very_long_search_title_does_not_take_down_the_corridor(tmp_path: Path) -> None:
+    """Search returns titles far longer than any anchor text on a page.
+
+    China's foreign ministry returned a 300-plus character speech headline, and building the link
+    raised instead of trimming, so one long title failed the whole corridor.
+    """
+
+    resolver, _ = build_resolver(tmp_path, [], [INDEX])
+    resolver.provider.urls = [INDEX]  # type: ignore[attr-defined]
+    resolver.provider.title = "Remarks of the Vice Foreign Minister " * 20  # type: ignore[attr-defined]
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert resolved is not None
