@@ -41,15 +41,22 @@ prompting against. Four corridors currently disagree on `general_entry` and `vis
 **Careful:** do not tune the lexicon to agree with the model. The heuristic's job is to build a good
 shortlist and to be a safe fallback, not to reproduce the model's judgement.
 
-### Run a fifth corridor against the model decider — `soon`
+### Decide whether to render past a bot block — `next`
 
-**Why:** the model decider is evidenced by four corridors on a single day. Its *containment* is
-tested and deterministic; its *judgement* is not. A destination none of this was built against —
-publishing in a language the lexicon does not carry — is the real test, and is now much cheaper to
-try, because nothing needs tuning first.
+**Why:** access, not ranking, is now what fails. France is unservable because both its government
+domains answer `403` to non-browser clients; Singapore's VFS page does the same. A headless Chromium
+would very likely pass those checks, and the renderer already exists — it was deliberately not
+pointed at them, because a site refusing non-browser clients is stating a preference and quietly
+engineering around it is a different posture from every other decision in this project.
 
-**Do:** bootstrap a country, approve its domains by hand, run the corridor, judge the result against
-the real pages. Record what it got wrong, exactly as with Brazil.
+**Do:** decide it explicitly and record it either way, as with rendering itself. If yes, the change
+is small — allow the render path to trigger on a `403` as well as on thin text — and the trust rules
+already hold, since a rendered page is subject to the same domain checks. If no, France and any
+similarly protected authority stay permanently unservable, and that should be stated in the README
+rather than looking like a bug.
+
+**Note:** this is not the same as evading detection for volume. One traveller, public pages, the
+authority's own domain. But it is the project's call, not an implementation detail.
 
 ---
 

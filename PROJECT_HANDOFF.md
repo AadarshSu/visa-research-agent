@@ -32,16 +32,21 @@ forms, or claiming an approval is guaranteed.
 
 **Working end to end.** Two destinations produce real plans from live government sources.
 
-| | Singapore | Japan | Vietnam | Brazil |
-| --- | --- | --- | --- | --- |
-| Configured sources | 6 | 7 | none (discovery test case) | none (discovery test case) |
-| Offline snapshots | yes | no | no | no |
-| Live retrieval | works | works | works, with rendering on | works |
-| Discovery finds the right pages | yes | yes | resolves; no checklist exists | yes |
+| | Singapore | Japan | Vietnam | Brazil | France | China |
+| --- | --- | --- | --- | --- | --- | --- |
+| Configured sources | 6 | 7 | none | none | none | none |
+| Offline snapshots | yes | no | no | no | no | no |
+| Live retrieval | works | works | needs rendering | works | **403 bot-blocked** | works |
+| Discovery exit code | 0 | 0 | 1 | 0 | **2** | **2** |
+| Checklist found | yes | yes | none published | yes | no — site unreadable | yes |
 
-All four verified live on 2026-08-16 with `discovery_decider: model`. Brazil was the out-of-sample
-test: keyword ranking failed it silently, and the last step now asks a model instead — see
-[DECISIONS.md](DECISIONS.md) entries 15 and 16.
+All six verified live on 2026-08-16 with `discovery_decider: model`. Brazil was the out-of-sample
+test that broke keyword ranking, so the last step now asks a model — entries 15 and 16. France and
+China were the confirmation runs, and both **refuse correctly**: entry 17.
+
+**The limit has moved from ranking to access.** Of six corridors, none now fails because a page was
+mis-ranked. They fail because a page could not be read at all — bot-blocked portals, client-rendered
+shells, dead endpoints.
 
 Runtime mode is `source_mode: live`, `extraction_mode: openai`, `render_mode: never`,
 `discovery_decider: model` in `src/visa_research_agent/config/runtime.yaml`. `visa-discover` now
@@ -121,30 +126,39 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    landed — a checklist is known by the documents it names, and the traveller's post governs — but
    both rest on English vocabulary and per-country city labels, so the fallback will keep degrading
    on new countries and languages.
-3. **The model decider is non-deterministic and unverified beyond four corridors.** Its containment
-   is tested; its *judgement* is evidenced by four corridors on one day. Re-run them after any
-   prompt change, and read `decided_by` and the recorded heuristic score to see where the two
-   deciders disagreed.
-4. **Singapore's VFS page answers HTTP 403** — a bot-block, not a client-rendered page as this file
-   previously recorded. Rendering does not apply to it: the render only runs after a `200` whose
-   text was thin, and a `403` never gets that far.
-5. **Scoring is English-only.** A destination publishing solely in its own language will score near
+3. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
+   containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
+   six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
+   the two deciders disagreed.
+4. **Bot-blocked official portals are now the largest coverage limit.** Three found so far:
+   `france-visas.gouv.fr` and `www.diplomatie.gouv.fr` (which together make France unservable) and
+   Singapore's VFS page. All answer `403` to non-browser clients. Rendering does not currently
+   apply — the render only runs after a `200` whose text was thin, and a `403` never gets that far.
+   Whether to render past them is an open decision, not an oversight; see
+   [DECISIONS.md](DECISIONS.md) entry 17.
+5. **Discovered pages have no staleness check at all.** China's chosen checklist sits at a
+   2013-dated CMS path and `is_archived` did not fire, because it only recognises a bare four-digit
+   year segment, not `201303`. That page looks maintained, so widening the regex would have
+   discarded a good source — the real gap is that a URL date is not a staleness signal and nothing
+   else checks. Content-hash drift detection is still only a TODO, and covers configured sources
+   only.
+6. **Scoring is English-only.** A destination publishing solely in its own language will score near
    zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
    characters of Vietnamese, which scores nothing.
-6. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
+7. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
    `location: http://localhost:4000/vi` header and an empty body — a misconfigured Next.js i18n
    redirect. Browsers ignore `Location` on a `200`, so **rendering does not fix this one either**;
    it renders to 0 characters. The site root works; only the `/en` path is broken.
-7. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
+8. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
    text-rich, so every check passes.
-8. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
+9. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
    for a consolidated portal. `_mission_domains` returns `[]` for Brazil, whose every mission sits
    on `www.gov.br` with the post in the *path* — so Riyadh and Atlanta outrank Edinburgh for a UK
    applicant. It also misses Singapore's `london.mfa.gov.sg`, which is named by city rather than
    country code. Recorded here as latent; Brazil proved it changes the answer.
-9. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
+10. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
    structured replacement was built and deliberately removed — see [DECISIONS.md](DECISIONS.md).
-10. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
+11. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
    usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
    when testing a retrieval change, or a fix will appear not to work.
 
@@ -152,12 +166,16 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-**None — the ranking question is answered.** Brazil showed keyword scoring does not generalise
-(entry 15); the last step now asks a model, bounded so it cannot introduce a page, widen trust, or
-be anchored by the ranking that failed (entry 16). All four corridors verified live.
+**None. Ranking is answered; access is the new frontier.** Six corridors run live. The model
+decider refuses well under pressure — France gave it ten fetched pages and it still declined both
+load-bearing roles rather than guess — and its judgement is better than the scorer's where it can
+read at all: for China it picked the UK embassy checklist because that page "names the required
+passport, photo, **UK legal-stay evidence for non-British applicants**", noticing the traveller is
+an Indian national resident in the UK, which no lexicon keyword expresses.
 
-Pick up from *Next steps*. The most valuable open item is telling "no checklist exists" apart from
-"we failed to find it", which is known problem 1 and is now the largest silent-failure risk left.
+The open decision is **whether to render past bot blocks** (entry 17). A headless Chromium would
+very likely pass France's 403s, and rendering already exists — it was deliberately not pointed at
+them. France is unservable until that is decided, one way or the other.
 
 ## Next steps
 

@@ -9,6 +9,47 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 17. France and China: the decider refuses well, and the wall is now access, not ranking
+**2026-08-16**
+
+Two fresh corridors against the model decider, neither built against. Both **exit 2**, and what
+they refused on is the finding.
+
+**France.** Both approved government domains answer **HTTP 403** to anything that is not a browser
+— `france-visas.gouv.fr`, the authoritative portal, and `www.diplomatie.gouv.fr`. Ten pages were
+still fetched from paths that slipped through, so the model had ample plausible material. It filled
+only `general_entry`, and refused `visa_decision` and `document_checklist` outright. That is the
+behaviour the containment was built for, tested under real pressure rather than with a fake.
+
+**China.** Reachable, and the two roles it filled are the best evidence yet that judgement beats
+scoring. For `document_checklist` it chose the UK embassy's own page and justified it with "names
+the required passport, photo, **UK legal-stay evidence for non-British applicants**, and round-trip
+tickets" — it noticed the traveller is an Indian national *resident in* the UK, which no keyword in
+the lexicon expresses. For `fees` it read a rate table and reasoned "gives the rate for 'Other
+countries,' which includes an Indian passport holder". It refused `visa_decision`, which is
+load-bearing, so the corridor is refused.
+
+**Where the limit has moved.** Of six corridors, ranking is no longer what fails. What fails now is
+**access**: bot-blocked portals (France ×2, Singapore's VFS), client-rendered shells, and
+502-ing endpoints. Discovery cannot judge a page it was never allowed to read.
+
+**Deliberately not done: defeating the bot blocks.** A headless Chromium would very likely pass
+those 403 checks, and rendering is already built. It was not pointed at them. A site refusing
+non-browser clients is stating a preference, and this project reads government pages on behalf of
+one traveller — quietly engineering around that is a different posture from the one every other
+decision here takes. Recorded as an open question rather than settled, because the cost is real:
+France is unservable without it.
+
+**A staleness gap this surfaced.** China's chosen checklist lives at
+`/eng/visa/qzxz/201303/t20130315_3383966.htm` — a 2013-dated CMS path. `is_archived` did **not**
+fire, because it only recognises a bare four-digit year segment and this is `201303`. The page
+itself references 2024 and appears maintained, so vetoing every `YYYYMM` path would have thrown
+away the one good checklist China produced. The honest conclusion is not "extend the regex" but
+that **a URL date is not a staleness signal**, and discovered pages have no staleness check at all —
+the content-hash drift work is still only a TODO, and only covers configured sources.
+
+---
+
 ## 16. Judgement decides the last step; heuristics decide everything before it
 **2026-08-16**
 
