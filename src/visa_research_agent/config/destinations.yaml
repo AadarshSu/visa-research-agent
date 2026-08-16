@@ -120,6 +120,23 @@ destinations:
     implementation_status: planned
     sources: []
 
+  - slug: brazil
+    display_name: Brazil
+    route_type: national
+    # Domains proposed by `visa-discover bootstrap` and approved by hand. Brazil publishes its
+    # whole government under one portal, so www.gov.br carries the ministry and every consulate;
+    # itamaraty.gov.br redirects there, and is listed because crawlability is judged before the
+    # request, so an unlisted legacy host is dropped rather than followed to its trusted landing.
+    # Bare gov.br is deliberately absent: it is a public suffix, and trusting it would trust every
+    # site beneath it. The bootstrap also surfaced state.gov and usembassy.gov — real government
+    # sites describing the rules for US citizens — and VFS, which is an appointed provider and can
+    # only ever be authorised by an official page naming it. None of those were approved.
+    trusted_domains: [www.gov.br, itamaraty.gov.br]
+    # No pages are configured: this destination is the out-of-sample test of whether discovery's
+    # ranking generalises past Singapore and Japan, which it was tuned against.
+    implementation_status: planned
+    sources: []
+
   - slug: united-states
     display_name: United States
     route_type: national

@@ -54,6 +54,7 @@ async def test_destinations_endpoint(client: httpx.AsyncClient) -> None:
         "singapore",
         "japan",
         "vietnam",
+        "brazil",
         "united-states",
         "france",
     ]
@@ -80,7 +81,14 @@ async def test_unsupported_destination_returns_helpful_error(client: httpx.Async
     assert response.status_code == 422
     assert response.json()["detail"] == {
         "message": "Unsupported destination: canada",
-        "supported_destinations": ["singapore", "japan", "vietnam", "united-states", "france"],
+        "supported_destinations": [
+            "singapore",
+            "japan",
+            "vietnam",
+            "brazil",
+            "united-states",
+            "france",
+        ],
     }
 
 
