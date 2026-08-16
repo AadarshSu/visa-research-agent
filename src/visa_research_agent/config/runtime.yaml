@@ -11,6 +11,17 @@ source_mode: live
 #   openai  — one bounded structured model call; requires OPENAI_API_KEY and OPENAI_MODEL.
 extraction_mode: openai
 
+# Whether a headless browser may read pages that return nothing readable without one.
+#   never     — no browser is ever started. A client-rendered page is refused, honestly.
+#   on_demand — only after an ordinary fetch came back below the readable-text floor, or with
+#               translation placeholders instead of sentences. Pages that already work are
+#               never rendered.
+# Rendering widens no trust: every request the page makes is aborted unless its host is already
+# approved, and where it lands is re-checked exactly as a redirect is.
+# Requires the optional extra: `pip install -e ".[render]"` then `playwright install chromium`.
+# Selecting on_demand without it is a loud error, not a silent fallback.
+render_mode: never
+
 # Live retrieval freshness window, in hours. Cached pages are reused below the TTL and
 # revalidated above it.
 source_cache_ttl_hours: 24

@@ -20,9 +20,23 @@ from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLi
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
 from visa_research_agent.domain.models import DestinationConfig
 from visa_research_agent.domain.trust import host_of
+from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.tls import build_ssl_context
 
 HEADING_TAGS = ("h1", "h2", "h3")
+
+# Below this many links a page has told the crawler nothing, which is what a client-rendered
+# shell looks like from here. The readable-character floor retrieval uses is the wrong test:
+# crawling wants anchors, and a page can be rich in prose yet lead nowhere.
+#
+# Kept low on purpose. The failure being solved is the shell that yields *no* links; a page with
+# a few real ones has already said something, and rendering it would spend a render budget that
+# the genuinely empty pages need.
+MINIMUM_CRAWL_LINKS = 3
+
+# How many pages one crawl may render. A site that is unreadable throughout would otherwise
+# render every page it visits, and each render costs seconds rather than milliseconds.
+MAXIMUM_CRAWL_RENDERS = 12
 
 
 def page_title_of(html: str) -> str:
@@ -95,6 +109,9 @@ class CrawlFetcher:
         timeout_seconds: float = 20.0,
         maximum_bytes: int = 4_000_000,
         user_agent: str = "VisaResearchAgent/0.1 (source discovery)",
+        renderer: PageRenderer | None = None,
+        minimum_links: int = MINIMUM_CRAWL_LINKS,
+        maximum_renders: int = MAXIMUM_CRAWL_RENDERS,
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         host_delay_seconds: float = 0.5,
@@ -102,6 +119,12 @@ class CrawlFetcher:
         self.timeout_seconds = timeout_seconds
         self.maximum_bytes = maximum_bytes
         self.user_agent = user_agent
+        self.renderer = renderer
+        self.minimum_links = minimum_links
+        # Discovery's own allowance. It visits far more pages than retrieval, so without a
+        # separate count it would spend the whole browser budget before evidence was ever read.
+        self.maximum_renders = maximum_renders
+        self.renders = 0
         self.transport = transport
         self.sleep = sleep
         self.host_delay_seconds = host_delay_seconds
@@ -109,6 +132,9 @@ class CrawlFetcher:
         # Why a page could not be read. Reporting "nothing scored well enough" when the real
         # cause was an unreachable site would hide the actual problem from the reader.
         self.failures: dict[str, str] = {}
+        # Where each request actually landed. Relative links must resolve against that, not
+        # against the URL that was asked for, or a redirected page's links all point nowhere.
+        self.final_urls: dict[str, str] = {}
 
     async def fetch_html(
         self,
@@ -149,10 +175,47 @@ class CrawlFetcher:
         if "html" not in response.headers.get("content-type", "text/html").lower():
             self.failures[url] = "it is not an HTML page"
             return None
-        if not response.text.strip():
+        # An empty body is not a separate failure from a shell that renders to nothing: it is the
+        # same page, one step further along. So it goes to the renderer too, and only becomes a
+        # failure once rendering has had its turn.
+        self.final_urls[url] = str(response.url)
+        html = await self._render_if_empty(response.text, url, destination)
+        if html is not None and not html.strip():
             self.failures[url] = "it returned no content"
             return None
-        return response.text
+        return html
+
+    async def _render_if_empty(
+        self, html: str, url: str, destination: DestinationConfig
+    ) -> str | None:
+        """Re-read a page in a browser when it offered the crawler no links to follow.
+
+        Only when it offered none worth having: rendering is slow, so a page that already leads
+        somewhere is returned as it arrived.
+        """
+
+        base = self.final_urls.get(url, url)
+        found = len(extract_links(html, base))
+        if self.renderer is None or found >= self.minimum_links:
+            return html
+        if self.renders >= self.maximum_renders:
+            return html
+
+        self.renders += 1
+        rendered = await self.renderer.render(base, destination)
+        if rendered is None:
+            # Nothing better is available, so the thin page still stands as what was found.
+            return html
+
+        # Scripts can navigate, so where rendering ended up gets the same check a redirect gets.
+        if not destination.trusts_host(host_of(rendered.final_url)):
+            self.failures[url] = "rendering it navigated off the approved domains"
+            return None
+        if len(extract_links(rendered.html, rendered.final_url)) <= found:
+            return html
+
+        self.final_urls[url] = rendered.final_url
+        return rendered.html
 
 
 class LinkCrawler:
@@ -251,7 +314,10 @@ class LinkCrawler:
                 if depth >= self.maximum_depth:
                     continue
 
-                for found in extract_links(html, url):
+                # Resolve relative links against where the request landed, not where it was
+                # aimed. They differ after a redirect, and again after a render.
+                base = self.fetcher.final_urls.get(url, url)
+                for found in extract_links(html, base):
                     if found.url in visited or not is_crawlable(found.url, destination):
                         continue
                     child = found.model_copy(update={"depth": depth + 1})

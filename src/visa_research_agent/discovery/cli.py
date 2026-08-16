@@ -17,7 +17,7 @@ import sys
 from collections.abc import Sequence
 from typing import TextIO
 
-from visa_research_agent.config.loader import get_destination_registry
+from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.settings import settings
 from visa_research_agent.discovery.bootstrap import (
     BootstrapReport,
@@ -32,6 +32,11 @@ from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
 from visa_research_agent.research.errors import VisaResearchError
 from visa_research_agent.research.live_sources import LiveSourceFetcher
+from visa_research_agent.research.rendering import (
+    PageRenderer,
+    PlaywrightPageRenderer,
+    build_page_renderer,
+)
 from visa_research_agent.research.source_cache import FileSourceCache
 
 
@@ -40,11 +45,15 @@ def build_search_provider() -> BraveSearchProvider:
     return BraveSearchProvider(key, timeout_seconds=settings.search_timeout_seconds)
 
 
-def build_resolver() -> CorridorResolver:
+def build_resolver(renderer: PageRenderer | None = None) -> CorridorResolver:
+    # One renderer for both fetchers, so a corridor starts at most one browser and its render
+    # budget is shared between finding pages and reading them.
     crawl_fetcher = CrawlFetcher(
         timeout_seconds=settings.source_fetch_timeout_seconds,
         user_agent=settings.source_user_agent,
         host_delay_seconds=settings.discovery_host_delay_seconds,
+        renderer=renderer,
+        maximum_renders=settings.maximum_crawl_renders,
     )
     live_fetcher = LiveSourceFetcher(
         FileSourceCache(settings.cache_directory),
@@ -56,6 +65,8 @@ def build_resolver() -> CorridorResolver:
         minimum_characters=settings.minimum_source_characters,
         user_agent=settings.source_user_agent,
         maximum_bytes=settings.maximum_source_bytes,
+        renderer=renderer,
+        maximum_renders=settings.maximum_source_renders,
     )
     return CorridorResolver(build_search_provider(), crawl_fetcher, live_fetcher)
 
@@ -163,7 +174,13 @@ async def run_corridor(args: argparse.Namespace, stream: TextIO) -> int:
         applying_from=getattr(args, "from").upper(),
         purpose=args.purpose,
     )
-    resolved = await build_resolver().resolve(destination, corridor)
+    renderer = build_page_renderer(get_runtime_policy())
+    try:
+        resolved = await build_resolver(renderer).resolve(destination, corridor)
+    finally:
+        # The browser outlives the resolver, so closing it is this function's job.
+        if isinstance(renderer, PlaywrightPageRenderer):
+            await renderer.aclose()
     print_corridor(resolved, stream)
 
     if args.format == "yaml":

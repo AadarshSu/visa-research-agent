@@ -31,6 +31,15 @@ class Settings(BaseSettings):
         "VisaResearchAgent/0.1 (personal visa research; contact repository owner)"
     )
 
+    # Rendering tuning only. Whether rendering happens at all is policy and lives in
+    # `config/runtime.yaml`, because it changes how government sites are contacted.
+    render_timeout_seconds: float = 20.0
+    render_settle_milliseconds: int = 2_500
+    # Separate allowances: discovery visits many more pages than retrieval, and a single shared
+    # count let the crawl spend it all before the pages that become evidence were read.
+    maximum_source_renders: int = 5
+    maximum_crawl_renders: int = 12
+
     # Source discovery. The search key is a secret; the rest is machine-local tuning. Whether
     # discovery may run at all is not a setting: it is a separate command, run deliberately.
     search_api_key: SecretStr | None = None

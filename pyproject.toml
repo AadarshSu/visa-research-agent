@@ -28,6 +28,10 @@ dependencies = [
 visa-discover = "visa_research_agent.discovery.cli:main"
 
 [project.optional-dependencies]
+# Rendering client-side pages needs a real browser engine. It is optional so the default install
+# and the test run stay browser-free; `render_mode` in config/runtime.yaml decides whether it is
+# used. After installing, run `playwright install chromium` to fetch the browser itself.
+render = ["playwright>=1.4,<2"]
 dev = [
     "mypy>=1.14,<2",
     "pytest>=8.3,<9",
@@ -47,6 +51,9 @@ where = ["src"]
 [tool.pytest.ini_options]
 addopts = "-q"
 testpaths = ["tests"]
+markers = [
+    "manual: needs a real browser and is skipped unless VISA_RENDER_MANUAL=1 is set",
+]
 
 [tool.ruff]
 line-length = 100
@@ -59,3 +66,9 @@ select = ["B", "E", "F", "I", "UP"]
 python_version = "3.12"
 strict = true
 files = ["src", "tests"]
+
+# Playwright is an optional extra, so a default checkout has no stubs for it. Only
+# research/rendering.py imports it, and always inside a function or a TYPE_CHECKING block.
+[[tool.mypy.overrides]]
+module = ["playwright.*"]
+ignore_missing_imports = true

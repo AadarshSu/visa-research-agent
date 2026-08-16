@@ -7,7 +7,8 @@ naive implementations:
   * a per-nationality detail page two hops from the entry point;
   * a checklist behind a page that forwards to a PDF;
   * a wrong-audience page on the correct domain;
-  * an off-domain link that must never be requested.
+  * an off-domain link that must never be requested;
+  * a client-rendered shell that offers nothing until its scripts have run.
 """
 
 import httpx
@@ -28,6 +29,32 @@ MISSION_CHECKLIST = f"https://{MISSION}/visa/sightseeing.html"
 MISSION_CHECKLIST_PDF = f"https://{MISSION}/files/checklist.pdf"
 MISSION_SPOUSE = f"https://{MISSION}/visa/spouse.html"
 OFF_DOMAIN = "https://cheap-visas.example/apply-now"
+
+# A single-page application, as Vietnam's e-visa portal is: the served HTML is an empty mount
+# point, and every link only exists once the scripts have run. It is deliberately not linked from
+# any other page, so it is only ever reached by a test that seeds it.
+SPA_PORTAL = f"https://{AUTHORITY}/visa/portal"
+
+
+def spa_shell() -> str:
+    return (
+        '<html><head><title>Visa portal</title></head><body><div id="app"></div>'
+        "<script>boot()</script></body></html>"
+    )
+
+
+def spa_rendered() -> str:
+    """What the same URL looks like after its scripts have run."""
+
+    return page(
+        "Visa portal",
+        "<h1>Visa portal</h1>"
+        + link(DETAIL_INDIA, "India")
+        + link(EXEMPTIONS, "Visa Exemption Countries and Regions")
+        + link(MISSION_INDEX, "Embassy in the United Kingdom")
+        + link(f"https://{AUTHORITY}/visa/detail", "Check if You Need an Entry Visa")
+        + link(INDEX, "Visa"),
+    )
 
 
 def page(title: str, body: str) -> str:
@@ -94,6 +121,7 @@ def site_pages() -> dict[str, str]:
             "<h1>Temporary Visitor Visa</h1><p>For tourism and short stays of up to 90 days.</p>"
             + link(MISSION_CHECKLIST, "Tourism"),
         ),
+        SPA_PORTAL: spa_shell(),
         MISSION_CHECKLIST: forwarding_shell(MISSION_CHECKLIST_PDF),
         MISSION_SPOUSE: page(
             "Visa: Spouse Visa Documents Required",

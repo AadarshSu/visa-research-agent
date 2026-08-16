@@ -13,6 +13,7 @@ from visa_research_agent.research.openai_extraction import (
     LangChainStructuredPlanGenerator,
     OpenAIVisaPlanExtractor,
 )
+from visa_research_agent.research.rendering import build_page_renderer
 from visa_research_agent.research.service import VisaPlanService
 from visa_research_agent.research.source_cache import FileSourceCache
 
@@ -33,6 +34,8 @@ def build_source_fetcher(policy: RuntimePolicy) -> SourceFetcher:
         minimum_characters=settings.minimum_source_characters,
         user_agent=settings.source_user_agent,
         maximum_bytes=settings.maximum_source_bytes,
+        renderer=build_page_renderer(policy),
+        maximum_renders=settings.maximum_source_renders,
     )
 
 

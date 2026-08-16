@@ -30,6 +30,7 @@ from visa_research_agent.domain.models import (
 )
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LiveSourceError
+from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.source_cache import CachedSource, FileSourceCache
 from visa_research_agent.research.tls import build_ssl_context
 
@@ -62,6 +63,35 @@ def clean_source_html(html: str, *, maximum_characters: int) -> str:
     lines = (line.strip() for line in text.splitlines())
     cleaned = "\n".join(line for line in lines if line)
     return cleaned[:maximum_characters].strip()
+
+
+# A line that is one unspaced token of dotted or camel-cased words: "home.banner-huong-dan",
+# "lienKet", "vanBanQuyPhamPhapLuat". Real guidance is written in sentences with spaces.
+PLACEHOLDER_KEY = re.compile(r"^[a-z][a-z0-9]*(?:[.\-_][a-z0-9\-]+)+$|^[a-z]+(?:[A-Z][a-z0-9]*)+$")
+
+MINIMUM_PLACEHOLDER_LINES = 4
+PLACEHOLDER_SHARE = 0.5
+
+
+def looks_untranslated(text: str) -> bool:
+    """True when a page's text is translation keys rather than words a traveller could read.
+
+    Vietnam's immigration department returns 402 characters of `home.banner-huong-dan-viet-nam`
+    and `lienKet`, fetching the actual strings client-side. That clears the readable-text floor,
+    so without this check a page of placeholders would reach extraction as though it were
+    guidance — the wrong-checklist failure the floor exists to prevent.
+
+    Deliberately conservative: it needs a handful of such lines and a majority share, because the
+    cost of a false positive is refusing a source that was perfectly good.
+    """
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if len(lines) < MINIMUM_PLACEHOLDER_LINES:
+        return False
+    keys = sum(1 for line in lines if PLACEHOLDER_KEY.match(line))
+    if keys < MINIMUM_PLACEHOLDER_LINES:
+        return False
+    return keys / len(lines) >= PLACEHOLDER_SHARE
 
 
 # Authorities often publish a checklist as a PDF behind a tiny HTML page that forwards to it.
@@ -161,6 +191,8 @@ class LiveSourceFetcher:
         minimum_characters: int,
         user_agent: str,
         maximum_bytes: int = 12_000_000,
+        renderer: PageRenderer | None = None,
+        maximum_renders: int = 5,
         transport: httpx.AsyncBaseTransport | None = None,
         now: Callable[[], datetime] = _utc_now,
     ) -> None:
@@ -178,6 +210,13 @@ class LiveSourceFetcher:
         self.minimum_characters = minimum_characters
         self.user_agent = user_agent
         self.maximum_bytes = maximum_bytes
+        # Optional on purpose. Without a renderer this class behaves exactly as it did before
+        # rendering existed, which is what keeps the offline and fixture paths unchanged.
+        self.renderer = renderer
+        # Retrieval's own allowance, held separately from discovery's. Sharing one count let the
+        # crawl spend it all before the shortlist — the pages that become evidence — was read.
+        self.maximum_renders = maximum_renders
+        self.renders = 0
         self.transport = transport
         self.now = now
 
@@ -277,6 +316,14 @@ class LiveSourceFetcher:
 
         try:
             content, document = await self._read_document(client, destination, response)
+            final_url = str(document.url)
+            # A page that gave up nothing readable may still be a real page whose text only
+            # exists once its scripts have run. Rendering is tried here and nowhere else, so
+            # the pages that already work never meet a browser.
+            if self._thin_reason(content) is not None and not looks_like_pdf(document):
+                rendered = await self._render(destination, final_url)
+                if rendered is not None:
+                    content, final_url = rendered
         except _ContentProblem as problem:
             if problem.outcome == "untrusted":
                 return SourceFailure(
@@ -302,18 +349,13 @@ class LiveSourceFetcher:
 
         # A near-empty result means a client-rendered or blocked page, not an empty requirement
         # list, so it must never reach extraction as though it were evidence.
-        if len(content) < self.minimum_characters:
-            return self._serve_stale(
-                configured_source,
-                cached,
-                now,
-                "the page returned too little readable text to trust",
-                "unusable",
-            )
+        thin_reason = self._thin_reason(content)
+        if thin_reason is not None:
+            return self._serve_stale(configured_source, cached, now, thin_reason, "unusable")
 
         entry = CachedSource(
             url=url,
-            final_url=str(document.url),
+            final_url=final_url,
             fetched_at=now,
             content=content,
             content_hash=sha256(content.encode()).hexdigest(),
@@ -323,6 +365,46 @@ class LiveSourceFetcher:
         )
         self.cache.store(entry)
         return self._build(configured_source, entry, from_cache=False, is_stale=False)
+
+    def _thin_reason(self, content: str) -> str | None:
+        """Why this text cannot be trusted as guidance, or None when it can.
+
+        Both cases produce prose that a traveller could be shown, because this reason is what a
+        refusal ends up saying.
+        """
+
+        if len(content) < self.minimum_characters:
+            return "the page returned too little readable text to trust"
+        if looks_untranslated(content):
+            return "the page returned translation placeholders rather than readable guidance"
+        return None
+
+    async def _render(self, destination: DestinationConfig, url: str) -> tuple[str, str] | None:
+        """Re-read a page through the renderer, returning its text and where it landed.
+
+        Raises `_ContentProblem` when the rendered page ends up off the approved domains, which is
+        the same answer retrieval gives to a redirect that leaves them.
+        """
+
+        if self.renderer is None or self.renders >= self.maximum_renders:
+            return None
+        self.renders += 1
+        rendered = await self.renderer.render(url, destination)
+        if rendered is None:
+            return None
+
+        # Rendering runs scripts, and a script can navigate. The landing host gets exactly the
+        # check a redirect gets, because that is what this is.
+        final_host = host_of(rendered.final_url)
+        if not destination.trusts_host(final_host):
+            raise _ContentProblem(
+                "untrusted",
+                f"rendering the page navigated to {final_host}, which is not an approved "
+                f"authority domain for {destination.display_name}",
+                rendered.final_url,
+            )
+        content = clean_source_html(rendered.html, maximum_characters=self.maximum_characters)
+        return content, rendered.final_url
 
     async def _read_document(
         self,
