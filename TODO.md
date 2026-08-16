@@ -41,22 +41,23 @@ prompting against. Four corridors currently disagree on `general_entry` and `vis
 **Careful:** do not tune the lexicon to agree with the model. The heuristic's job is to build a good
 shortlist and to be a safe fallback, not to reproduce the model's judgement.
 
-### Decide whether to render past a bot block — `next`
+### Tell a traveller what an inaccessible source means — `next`
 
-**Why:** access, not ranking, is now what fails. France is unservable because both its government
-domains answer `403` to non-browser clients; Singapore's VFS page does the same. A headless Chromium
-would very likely pass those checks, and the renderer already exists — it was deliberately not
-pointed at them, because a site refusing non-browser clients is stating a preference and quietly
-engineering around it is a different posture from every other decision in this project.
+**Why:** discovery now distinguishes a blocked authority from a broken one, and says so
+(`blocked`, `inaccessible_domains`, DECISIONS entry 18). The *plan* side does not yet. A traveller
+seeing a partial plan is told a source "could not be used"; they are not told the difference between
+"this site is down", "this page said nothing usable", and "this authority does not permit automated
+retrieval, so we could not verify its guidance here — check it yourself at this URL".
 
-**Do:** decide it explicitly and record it either way, as with rendering itself. If yes, the change
-is small — allow the render path to trigger on a `403` as well as on thin text — and the trust rules
-already hold, since a rendered page is subject to the same domain checks. If no, France and any
-similarly protected authority stay permanently unservable, and that should be stated in the README
-rather than looking like a bug.
+The third is the one worth saying out loud, because the traveller *can* act on it: they can open the
+page in their own browser. That turns a gap into a next step.
 
-**Note:** this is not the same as evading detection for volume. One traveller, public pages, the
-authority's own domain. But it is the project's call, not an implementation detail.
+**Do:** surface the `blocked` outcome distinctly in the plan interface, with the URL and a plain
+sentence naming what we could not verify. Do not soften it into "unavailable"; do not let the model
+fill the gap from another page — `VisaPlan` already forbids inventing a checklist, and the same
+discipline applies here.
+
+**Do not:** work around the block. See `CLAUDE.md`; that decision is closed.
 
 ---
 

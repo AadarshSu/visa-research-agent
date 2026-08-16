@@ -9,6 +9,40 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 18. A block is not a fact about the guidance; never work around one
+**2026-08-16**
+
+France's portal answers `403` to anything that is not a browser. A headless Chromium would very
+likely pass that check, and the renderer is already built and already trusted. The tempting fix is
+one line: render on `403` as well as on thin text.
+
+**Decided: never.** No user-agent spoofing, no pointing the renderer at a refusal, no retrying past
+a rate limit. The reasoning is about what a block actually licenses us to say. It is not evidence
+that the guidance is wrong, missing, or stale. It supports exactly one claim:
+
+> We cannot independently retrieve and verify this in this execution environment.
+
+That is narrower than "unreachable", and far narrower than anything that would justify filling the
+gap from a different page. So the source is marked inaccessible, the role goes unfilled, and
+nothing is inferred in its place. `FailureOutcome` gained `blocked` to say it precisely, and
+`ResolvedCorridor.inaccessible_domains` carries it as data rather than prose, so a refusal can
+never be mistaken for "nothing found".
+
+**Why this is a feature.** The alternative architecture is "if France blocks us, figure out how to
+defeat the bot protection", and that is a posture, not a patch — it would sit oddly beside every
+other rule here, all of which prefer refusing to guessing. For visa requirements specifically,
+inferred or stale information sends someone to a visa centre without the right papers. A product
+that cannot verify something should say so.
+
+**What it costs, stated plainly:** France is unservable. Singapore's VFS page stays unread. That is
+the correct trade, and it is recorded in `CLAUDE.md` under the rules that must not be broken,
+because the "helpful" one-line fix will occur to someone again.
+
+**Not the same as:** reading a page a site serves us normally. Rendering client-side pages stays on
+demand and unchanged — that is running a page the way it was published, not circumventing a refusal.
+
+---
+
 ## 17. France and China: the decider refuses well, and the wall is now access, not ranking
 **2026-08-16**
 
@@ -33,20 +67,17 @@ load-bearing, so the corridor is refused.
 **access**: bot-blocked portals (France ×2, Singapore's VFS), client-rendered shells, and
 502-ing endpoints. Discovery cannot judge a page it was never allowed to read.
 
-**Deliberately not done: defeating the bot blocks.** A headless Chromium would very likely pass
-those 403 checks, and rendering is already built. It was not pointed at them. A site refusing
-non-browser clients is stating a preference, and this project reads government pages on behalf of
-one traveller — quietly engineering around that is a different posture from the one every other
-decision here takes. Recorded as an open question rather than settled, because the cost is real:
-France is unservable without it.
+**Deliberately not done: defeating the bot blocks.** Settled in entry 18.
 
-**A staleness gap this surfaced.** China's chosen checklist lives at
-`/eng/visa/qzxz/201303/t20130315_3383966.htm` — a 2013-dated CMS path. `is_archived` did **not**
-fire, because it only recognises a bare four-digit year segment and this is `201303`. The page
-itself references 2024 and appears maintained, so vetoing every `YYYYMM` path would have thrown
-away the one good checklist China produced. The honest conclusion is not "extend the regex" but
-that **a URL date is not a staleness signal**, and discovered pages have no staleness check at all —
-the content-hash drift work is still only a TODO, and only covers configured sources.
+**A staleness gap this surfaced**, now addressed. China's chosen checklist lives at
+`/eng/visa/qzxz/201303/t20130315_3383966.htm`, and `is_archived` did not fire because it only
+recognised a bare four-digit year segment. Detection is now widened — `published_date_in_path`
+reads `YYYYMM`, `YYYYMMDD` and `tYYYYMMDD` — but the *consequence* deliberately is not a veto.
+Measured first: **two of China's correct picks carry dated paths**, the checklist at `2013-03` and
+the fee table at `2024-08`. Vetoing dated paths would have discarded the only two roles that
+corridor resolved. Publication is not staleness, and a URL cannot tell them apart. So the date is
+reported — to the adjudicator, which holds the page's text and can weigh the two, and in the
+proposal, where a human sees "published in path: 2013-03" beside the choice.
 
 ---
 

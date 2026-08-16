@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-15 — update this line when you touch the handoff |
-| **Tests** | 213 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 220 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -130,18 +130,17 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
-4. **Bot-blocked official portals are now the largest coverage limit.** Three found so far:
-   `france-visas.gouv.fr` and `www.diplomatie.gouv.fr` (which together make France unservable) and
-   Singapore's VFS page. All answer `403` to non-browser clients. Rendering does not currently
-   apply — the render only runs after a `200` whose text was thin, and a `403` never gets that far.
-   Whether to render past them is an open decision, not an oversight; see
-   [DECISIONS.md](DECISIONS.md) entry 17.
-5. **Discovered pages have no staleness check at all.** China's chosen checklist sits at a
-   2013-dated CMS path and `is_archived` did not fire, because it only recognises a bare four-digit
-   year segment, not `201303`. That page looks maintained, so widening the regex would have
-   discarded a good source — the real gap is that a URL date is not a staleness signal and nothing
-   else checks. Content-hash drift detection is still only a TODO, and covers configured sources
-   only.
+4. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
+   `france-visas.gouv.fr` and `www.france-visas.gouv.fr` (which make France unservable) and
+   Singapore's VFS page. This is **not** a bug to fix — working around a block is forbidden by
+   [DECISIONS.md](DECISIONS.md) entry 18 and by the rules in `CLAUDE.md`. They now produce the
+   `blocked` outcome and appear under `inaccessible_domains`, so a refusal reads as "we were not
+   allowed to check" rather than "nothing found".
+5. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
+   path and reported — to the adjudicator, which can weigh it against the page's text, and in the
+   proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
+   because two of China's correct picks carry dated paths and one is from 2013. Content-hash drift
+   detection remains a TODO and covers configured sources only.
 6. **Scoring is English-only.** A destination publishing solely in its own language will score near
    zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
    characters of Vietnamese, which scores nothing.
@@ -173,9 +172,11 @@ read at all: for China it picked the UK embassy checklist because that page "nam
 passport, photo, **UK legal-stay evidence for non-British applicants**", noticing the traveller is
 an Indian national resident in the UK, which no lexicon keyword expresses.
 
-The open decision is **whether to render past bot blocks** (entry 17). A headless Chromium would
-very likely pass France's 403s, and rendering already exists — it was deliberately not pointed at
-them. France is unservable until that is decided, one way or the other.
+**That decision is now settled: never work around a block** (entry 18). No user-agent spoofing, no
+pointing the renderer at a `403`, no retrying past a rate limit. A block is not evidence that the
+guidance is wrong or missing — it means only *we cannot independently retrieve and verify it in
+this execution environment*. The source is marked inaccessible, the role goes unfilled, and nothing
+is inferred in its place. France is unservable as a result, and that is the accepted trade.
 
 ## Next steps
 
