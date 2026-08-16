@@ -42,6 +42,14 @@ SourceKind = Literal[
 ]
 SourcePass = Literal["primary", "follow_up"]
 
+# Why someone is travelling. Shared with discovery, which scores pages against it, so the two can
+# never drift apart into a corridor nobody can research.
+TravelPurpose = Literal["tourism", "business", "study", "transit"]
+
+# ISO 3166-1 alpha-2. Countries are held as codes rather than names because a name has many
+# spellings and a code has one, and every corridor, cache key and lexicon lookup is keyed by code.
+COUNTRY_CODE_PATTERN = r"^[A-Z]{2}$"
+
 
 class StrictModel(BaseModel):
     """Base model that rejects unexpected data instead of silently discarding it."""
@@ -56,15 +64,30 @@ def _require_aware_datetime(value: datetime) -> datetime:
 
 
 class TravellerProfile(StrictModel):
-    """The deliberately fixed, non-sensitive traveller details used by the MVP."""
+    """Who is travelling, in the terms that change which official pages apply.
 
-    passport_nationality: str = Field(min_length=1)
+    Only four things actually select the guidance: the passport, where the traveller applies from,
+    why they are going, and — where they are not a citizen of the country they live in — what
+    permission they hold there. Everything else is optional, because asking for detail a plan does
+    not use is asking for personal data with no purpose.
+    """
+
+    passport_nationality: str = Field(pattern=COUNTRY_CODE_PATTERN)
     passport_type: Literal["ordinary"]
-    country_of_residence: str = Field(min_length=1)
-    city_of_residence: str = Field(min_length=1)
-    uk_immigration_status: str = Field(min_length=1)
-    uk_permission_expiry: date
-    travel_purpose: Literal["tourism"]
+    """Ordinary only, deliberately. Diplomatic and official passport pages are a hard veto in
+    discovery's scoring, so a plan for one of those travellers could not be researched and must
+    not be silently approximated with the ordinary-passport rules."""
+
+    country_of_residence: str = Field(pattern=COUNTRY_CODE_PATTERN)
+    travel_purpose: TravelPurpose = "tourism"
+
+    city_of_residence: str | None = None
+    residence_status: str | None = None
+    """The permission a traveller holds where they live, when they are not a citizen of it — a UK
+    Graduate visa, a US green card. Frequently decisive: Brazil and China both require proof of
+    regular status from a non-citizen resident. None when they are a citizen, or did not say."""
+
+    residence_permission_expiry: date | None = None
 
 
 class ConfiguredSource(StrictModel):

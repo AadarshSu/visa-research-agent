@@ -11,11 +11,13 @@ from typing import Literal
 from pydantic import AnyHttpUrl, Field, field_validator, model_validator
 
 from visa_research_agent.domain.models import (
+    COUNTRY_CODE_PATTERN,
     ConfiguredSource,
     DestinationConfig,
     SourceKind,
     SourcePass,
     StrictModel,
+    TravelPurpose,
 )
 
 DiscoveryRole = Literal[
@@ -27,7 +29,6 @@ DiscoveryRole = Literal[
     "general_entry",
     "irrelevant",
 ]
-TravelPurpose = Literal["tourism", "business", "study", "transit"]
 DecidedBy = Literal["heuristic", "model"]
 
 # The roles a corridor cannot be considered resolved without. Everything else is useful context.
@@ -57,8 +58,6 @@ ROLE_ORDER: tuple[DiscoveryRole, ...] = (
     "processing_times",
     "general_entry",
 )
-
-COUNTRY_CODE_PATTERN = r"^[A-Z]{2}$"
 
 
 def _require_aware(value: datetime) -> datetime:

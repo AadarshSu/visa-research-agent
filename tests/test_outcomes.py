@@ -8,7 +8,7 @@ import yaml
 from pydantic import AnyHttpUrl
 
 from visa_research_agent.config.loader import load_destination_registry
-from visa_research_agent.config.traveller import TRAVELLER_PROFILE
+from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.domain.models import (
     DestinationConfig,
     FailureOutcome,
@@ -129,7 +129,7 @@ async def test_missing_required_source_refuses_before_spending_a_model_call() ->
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
     with pytest.raises(InsufficientEvidenceError) as raised:
-        await extractor.extract(singapore_config(), TRAVELLER_PROFILE, report)
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, report)
 
     assert generator.calls == 0, "a doomed run must not reach the model"
     assert raised.value.reasons
@@ -143,7 +143,7 @@ async def test_missing_optional_source_still_produces_a_plan_marked_partial() ->
     generator = FakeStructuredPlanGenerator(draft_without(load_golden_draft(), OPTIONAL_SOURCE))
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
-    plan = await extractor.extract(singapore_config(), TRAVELLER_PROFILE, report)
+    plan = await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, report)
 
     assert generator.calls == 1
     assert plan.status == "partial"
@@ -155,7 +155,9 @@ async def test_missing_optional_source_still_produces_a_plan_marked_partial() ->
 async def test_stale_evidence_produces_a_partial_plan_on_the_offline_path() -> None:
     report = mark_stale(await singapore_report(), OPTIONAL_SOURCE)
 
-    plan = await FixtureVisaPlanExtractor().extract(singapore_config(), TRAVELLER_PROFILE, report)
+    plan = await FixtureVisaPlanExtractor().extract(
+        singapore_config(), DEFAULT_TRAVELLER_PROFILE, report
+    )
 
     assert plan.status == "partial"
     assert not plan.unavailable_sources
@@ -181,4 +183,4 @@ async def test_refusal_when_the_run_produced_no_usable_evidence_at_all() -> None
     )
 
     with pytest.raises(Exception, match="at least one source"):
-        await extractor.extract(singapore_config(), TRAVELLER_PROFILE, empty)
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, empty)

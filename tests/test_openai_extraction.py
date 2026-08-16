@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from visa_research_agent.config.loader import load_destination_registry
-from visa_research_agent.config.traveller import TRAVELLER_PROFILE
+from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.domain.models import DestinationConfig, VisaPlanDraft
 from visa_research_agent.research.errors import LLMExtractionError
 from visa_research_agent.research.fixtures import FixtureSourceFetcher
@@ -53,7 +53,7 @@ async def test_openai_extractor_uses_one_bounded_structured_call() -> None:
     fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
-    plan = await extractor.extract(singapore_config(), TRAVELLER_PROFILE, fetched_sources)
+    plan = await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
     assert generator.calls == 1
     assert generator.system_prompt is not None
@@ -64,7 +64,7 @@ async def test_openai_extractor_uses_one_bounded_structured_call() -> None:
     assert "Never claim that an account" in generator.system_prompt
     assert generator.research_packet is not None
     packet = json.loads(generator.research_packet)
-    assert packet["traveller_profile"]["passport_nationality"] == "India"
+    assert packet["traveller_profile"]["passport_nationality"] == "India (IN)"
     assert packet["destination"]["application_document_source_ids"] == ["sg_ica_india_visa_details"]
     assert len(packet["sources"]) == 5
     assert plan.visa_required is True
@@ -92,7 +92,7 @@ async def test_openai_extractor_rejects_an_invented_source_id() -> None:
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
     with pytest.raises(LLMExtractionError, match="source and schema validation"):
-        await extractor.extract(singapore_config(), TRAVELLER_PROFILE, fetched_sources)
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
 
 @pytest.mark.anyio
@@ -108,7 +108,7 @@ async def test_openai_extractor_omits_documents_from_general_entry_sources() -> 
     fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
-    plan = await extractor.extract(singapore_config(), TRAVELLER_PROFILE, fetched_sources)
+    plan = await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
     assert "SG Arrival Card" not in {requirement.name for requirement in plan.requirements}
 
@@ -129,7 +129,7 @@ async def test_openai_extractor_requires_a_designated_application_document_sourc
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
     with pytest.raises(LLMExtractionError, match="no source-backed application documents"):
-        await extractor.extract(singapore_config(), TRAVELLER_PROFILE, fetched_sources)
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
 
 @pytest.mark.anyio
@@ -139,6 +139,6 @@ async def test_openai_extractor_stops_before_call_when_input_is_too_large() -> N
     extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=10)
 
     with pytest.raises(LLMExtractionError, match="input exceeds"):
-        await extractor.extract(singapore_config(), TRAVELLER_PROFILE, fetched_sources)
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
     assert generator.calls == 0

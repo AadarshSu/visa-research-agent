@@ -1,7 +1,7 @@
 import pytest
 
 from visa_research_agent.config.loader import load_destination_registry
-from visa_research_agent.config.traveller import TRAVELLER_PROFILE
+from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.domain.models import DestinationConfig
 from visa_research_agent.research.errors import FixtureDataError
 from visa_research_agent.research.fixtures import FixtureSourceFetcher, FixtureVisaPlanExtractor
@@ -43,8 +43,8 @@ async def test_fixture_fetcher_enforces_content_size_limit() -> None:
 async def test_fixture_service_generates_deterministic_validated_plan() -> None:
     service = VisaPlanService(FixtureSourceFetcher(), FixtureVisaPlanExtractor())
 
-    first_plan = await service.generate(singapore_config(), TRAVELLER_PROFILE)
-    second_plan = await service.generate(singapore_config(), TRAVELLER_PROFILE)
+    first_plan = await service.generate(singapore_config(), DEFAULT_TRAVELLER_PROFILE)
+    second_plan = await service.generate(singapore_config(), DEFAULT_TRAVELLER_PROFILE)
 
     assert first_plan == second_plan
     assert first_plan.status == "verified"

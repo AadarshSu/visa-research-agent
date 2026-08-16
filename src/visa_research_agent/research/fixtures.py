@@ -123,7 +123,7 @@ class FixtureVisaPlanExtractor:
         traveller_profile: TravellerProfile,
         report: RetrievalReport,
     ) -> VisaPlan:
-        if traveller_profile.passport_nationality != "India":
+        if traveller_profile.passport_nationality != "IN":
             raise FixtureDataError("The Singapore fixture only supports the fixed Indian profile")
         if traveller_profile.travel_purpose != "tourism":
             raise FixtureDataError("The Singapore fixture only supports tourism")

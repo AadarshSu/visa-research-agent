@@ -8,6 +8,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr, ValidationError
 
+from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.domain.models import (
     ApplicationLocation,
     DestinationConfig,
@@ -36,6 +37,18 @@ def load_extraction_prompt() -> str:
     return prompt
 
 
+def describe_country(code: str) -> str:
+    """A country as both a person and a page would write it.
+
+    The profile stores ISO codes, because corridors and cache keys need one canonical form. A
+    model reading government prose needs the other: an entry table may list "India" or "IN", and
+    "IN" alone would leave it inferring the mapping from knowledge the packet does not contain.
+    """
+
+    country = get_country_registry().get(code)
+    return f"{country.name} ({code})" if country is not None else code
+
+
 def build_research_packet(
     destination: DestinationConfig,
     traveller_profile: TravellerProfile,
@@ -50,7 +63,11 @@ def build_research_packet(
             "route_type": destination.route_type,
             "application_document_source_ids": destination.application_document_source_ids,
         },
-        "traveller_profile": traveller_profile.model_dump(mode="json"),
+        "traveller_profile": {
+            **traveller_profile.model_dump(mode="json"),
+            "passport_nationality": describe_country(traveller_profile.passport_nationality),
+            "country_of_residence": describe_country(traveller_profile.country_of_residence),
+        },
         "sources": [
             {
                 "source_id": fetched_source.source.source_id,
