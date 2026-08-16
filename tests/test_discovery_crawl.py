@@ -48,8 +48,9 @@ def link_for(url: str, text: str = "", depth: int = 1) -> PageLink:
     return PageLink(url=url, text=text, heading="", depth=depth, discovered_from="seed")
 
 
-def scores_for(url: str, text: str = "", *, nationality: str = "IN", purpose: str = "tourism",
-               depth: int = 1) -> RoleScores:
+def scores_for(
+    url: str, text: str = "", *, nationality: str = "IN", purpose: str = "tourism", depth: int = 1
+) -> RoleScores:
     registry = get_country_registry()
     return score_link(
         link_for(url, text, depth),
@@ -70,9 +71,7 @@ def build_crawler(requests: list[httpx.Request], **kwargs: Any) -> LinkCrawler:
     traveller = corridor()
 
     def score(link: PageLink) -> RoleScores:
-        return score_link(
-            link, traveller, lexicon, registry.require("IN"), registry.require("GB")
-        )
+        return score_link(link, traveller, lexicon, registry.require("IN"), registry.require("GB"))
 
     fetcher = CrawlFetcher(
         transport=httpx.MockTransport(handler(requests)),  # type: ignore[arg-type]
@@ -266,8 +265,9 @@ async def test_a_wrong_audience_sibling_is_ranked_below_the_right_page() -> None
     by_url = {candidate.link.url: candidate for candidate in candidates}
 
     assert MISSION_SPOUSE in by_url and MISSION_OPAQUE in by_url
-    assert by_url[MISSION_OPAQUE].link_scores.best()[1] > (
-        by_url[MISSION_SPOUSE].link_scores.best()[1]
+    assert (
+        by_url[MISSION_OPAQUE].link_scores.best()[1]
+        > (by_url[MISSION_SPOUSE].link_scores.best()[1])
     )
 
 

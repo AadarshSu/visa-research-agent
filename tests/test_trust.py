@@ -86,9 +86,7 @@ def test_a_planned_destination_without_sources_needs_no_trusted_domains() -> Non
 
 def test_an_appointed_provider_is_trusted_only_via_a_named_official_source() -> None:
     config = build(
-        appointed_providers=[
-            AppointedProvider(domain="provider.example", appointed_by="tl_docs")
-        ],
+        appointed_providers=[AppointedProvider(domain="provider.example", appointed_by="tl_docs")],
         sources=[
             source("tl_docs", "https://immigration.gov.example/visa"),
             source("tl_apply", "https://provider.example/apply", "official_application_provider"),

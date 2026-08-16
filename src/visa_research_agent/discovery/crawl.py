@@ -274,8 +274,6 @@ class LinkCrawler:
                     # follow a PDF: it is a destination, not a signpost.
                     if best >= self.expansion_threshold and not is_pdf_url(child.url):
                         counter += 1
-                        heapq.heappush(
-                            frontier, (-best, depth + 1, child.url, counter, child)
-                        )
+                        heapq.heappush(frontier, (-best, depth + 1, child.url, counter, child))
 
         return list(candidates.values())

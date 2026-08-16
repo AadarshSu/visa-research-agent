@@ -348,9 +348,7 @@ class LiveSourceFetcher:
         if looks_like_pdf(response):
             try:
                 return (
-                    extract_pdf_text(
-                        response.content, maximum_characters=self.maximum_characters
-                    ),
+                    extract_pdf_text(response.content, maximum_characters=self.maximum_characters),
                     response,
                 )
             except ValueError as exc:

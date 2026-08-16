@@ -40,7 +40,7 @@ def link(url: str, text: str) -> str:
 
 def forwarding_shell(target: str) -> str:
     return (
-        f'<html><head><title>Items required</title>'
+        f"<html><head><title>Items required</title>"
         f'<meta http-equiv="refresh" content="0;URL={target}">'
         f"</head><body></body></html>"
     )

@@ -26,8 +26,7 @@ def render_corridor_yaml(resolved: ResolvedCorridor) -> str:
     body = {
         "application_document_source_ids": resolved.source_ids_for("document_checklist"),
         "required_source_ids": (
-            resolved.source_ids_for("document_checklist")
-            + resolved.source_ids_for("visa_decision")
+            resolved.source_ids_for("document_checklist") + resolved.source_ids_for("visa_decision")
         ),
         "sources": sources,
     }

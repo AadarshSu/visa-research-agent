@@ -61,9 +61,7 @@ def test_government_shapes_are_recognised_without_being_decisive() -> None:
 
 def test_corridor_queries_are_restricted_to_approved_domains() -> None:
     registry = get_country_registry()
-    corridor = Corridor(
-        destination_slug="japan", passport_nationality="IN", applying_from="GB"
-    )
+    corridor = Corridor(destination_slug="japan", passport_nationality="IN", applying_from="GB")
     nationality, residence = resolve_corridor_countries(corridor, registry)
 
     queries = corridor_queries(corridor, japan(), nationality, residence)

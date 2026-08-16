@@ -153,9 +153,7 @@ class CorridorResolver:
         self.results_per_query = results_per_query
         self.now = now
 
-    async def resolve(
-        self, destination: DestinationConfig, corridor: Corridor
-    ) -> ResolvedCorridor:
+    async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
         nationality, residence = resolve_corridor_countries(corridor, self.countries)
         destination_code = self._destination_code(destination)
         notes: list[str] = []
@@ -288,9 +286,7 @@ class CorridorResolver:
         for role in ROLE_ORDER:
             for candidate, _ in rank_for_role(candidates, role)[:3]:
                 chosen.setdefault(candidate.link.url, candidate)
-        ordered = sorted(
-            chosen.values(), key=lambda c: (-c.link_scores.best()[1], c.link.url)
-        )
+        ordered = sorted(chosen.values(), key=lambda c: (-c.link_scores.best()[1], c.link.url))
         return ordered[: self.shortlist_size]
 
     async def _fetch_bodies(

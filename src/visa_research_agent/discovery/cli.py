@@ -109,8 +109,10 @@ def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
             print(f"    {role}", file=stream)
     for note in resolved.notes:
         print(f"  note: {note}", file=stream)
-    print(f"\n  {resolved.pages_fetched} pages read, {resolved.model_calls} model calls\n",
-          file=stream)
+    print(
+        f"\n  {resolved.pages_fetched} pages read, {resolved.model_calls} model calls\n",
+        file=stream,
+    )
 
 
 async def run_bootstrap(args: argparse.Namespace, stream: TextIO) -> int:

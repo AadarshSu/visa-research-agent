@@ -112,9 +112,7 @@ class BraveSearchProvider:
                 timeout=self.timeout_seconds,
                 headers=headers,
             ) as client:
-                response = await client.get(
-                    self.endpoint, params={"q": query, "count": count}
-                )
+                response = await client.get(self.endpoint, params={"q": query, "count": count})
                 if response.status_code != httpx.codes.OK:
                     raise SearchError(f"The search provider answered HTTP {response.status_code}")
                 payload = response.json()

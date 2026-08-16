@@ -50,8 +50,7 @@ def minimal_pdf(lines: list[str], *, encrypted: bool = False) -> bytes:
         document += f"{offset:010d} 00000 n \n".encode()
     encrypt = "/Encrypt 6 0 R" if encrypted else ""
     document += (
-        f"trailer\n<</Size {len(objects) + 1}/Root 1 0 R{encrypt}>>\n"
-        f"startxref\n{xref_at}\n%%EOF\n"
+        f"trailer\n<</Size {len(objects) + 1}/Root 1 0 R{encrypt}>>\nstartxref\n{xref_at}\n%%EOF\n"
     ).encode()
     return bytes(document)
 

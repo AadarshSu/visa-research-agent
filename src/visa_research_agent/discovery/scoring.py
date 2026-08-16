@@ -179,8 +179,10 @@ def score_link(
     # checklist is reached by a link saying just "Tourism", whose URL never mentions visas, so
     # without this the correct page is scored zero and never even fetched.
     purpose_label = lexicon.purposes.get(corridor.purpose)
-    if purpose_label and label and any(
-        _contains_phrase(label, term) for term in purpose_label.terms
+    if (
+        purpose_label
+        and label
+        and any(_contains_phrase(label, term) for term in purpose_label.terms)
     ):
         for role_name in ("document_checklist", "application_route"):
             if role_name not in scores:
@@ -327,8 +329,11 @@ def score_body(
     # because a passing mention in a list of visa types is normal and harmless.
     title_lower = title.lower()
     hit = next(
-        (term for term in lexicon.off_scope_terms_for(corridor.purpose)
-         if _contains_phrase(title_lower, term)),
+        (
+            term
+            for term in lexicon.off_scope_terms_for(corridor.purpose)
+            if _contains_phrase(title_lower, term)
+        ),
         None,
     )
     if hit is not None:

@@ -101,8 +101,9 @@ def test_the_printed_report_explains_each_choice() -> None:
 def test_the_printed_report_names_what_could_not_be_found() -> None:
     stream = io.StringIO()
 
-    print_corridor(resolved(unresolved_roles=["document_checklist"], notes=["nothing scored"]),
-                   stream)
+    print_corridor(
+        resolved(unresolved_roles=["document_checklist"], notes=["nothing scored"]), stream
+    )
     output = stream.getvalue()
 
     assert "could not be identified" in output

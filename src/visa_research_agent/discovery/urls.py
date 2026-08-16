@@ -19,9 +19,29 @@ TRACKING_PARAMETERS = frozenset(
 # checklists as PDFs and retrieval can read them.
 SKIPPED_EXTENSIONS = frozenset(
     {
-        ".zip", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
-        ".jpg", ".jpeg", ".png", ".gif", ".svg", ".webp", ".ico",
-        ".mp3", ".mp4", ".avi", ".mov", ".css", ".js", ".xml", ".rss", ".json",
+        ".zip",
+        ".doc",
+        ".docx",
+        ".xls",
+        ".xlsx",
+        ".ppt",
+        ".pptx",
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".svg",
+        ".webp",
+        ".ico",
+        ".mp3",
+        ".mp4",
+        ".avi",
+        ".mov",
+        ".css",
+        ".js",
+        ".xml",
+        ".rss",
+        ".json",
     }
 )
 

@@ -156,9 +156,7 @@ def propose_domains(
                 proposal = DomainProposal(
                     domain=domain,
                     looks_governmental=looks_governmental(domain),
-                    belongs_to_destination=belongs_to_destination(
-                        domain, destination_tlds or []
-                    ),
+                    belongs_to_destination=belongs_to_destination(domain, destination_tlds or []),
                     suggested_kind=suggest_kind(domain),
                 )
                 grouped[domain] = proposal

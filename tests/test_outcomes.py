@@ -155,9 +155,7 @@ async def test_missing_optional_source_still_produces_a_plan_marked_partial() ->
 async def test_stale_evidence_produces_a_partial_plan_on_the_offline_path() -> None:
     report = mark_stale(await singapore_report(), OPTIONAL_SOURCE)
 
-    plan = await FixtureVisaPlanExtractor().extract(
-        singapore_config(), TRAVELLER_PROFILE, report
-    )
+    plan = await FixtureVisaPlanExtractor().extract(singapore_config(), TRAVELLER_PROFILE, report)
 
     assert plan.status == "partial"
     assert not plan.unavailable_sources
