@@ -145,3 +145,48 @@ async def test_supported_but_unimplemented_destination_is_explicit(
     assert response.json()["detail"]["message"] == (
         "Visa-plan generation for France is not available yet."
     )
+
+
+@pytest.mark.anyio
+async def test_the_interface_lets_a_traveller_be_described(client: httpx.AsyncClient) -> None:
+    response = await client.get("/")
+
+    assert response.status_code == 200
+    for field in ('id="nationality"', 'id="residence"', 'id="purpose"'):
+        assert field in response.text
+    # The default the interface opens on, so an unchanged form reproduces the fixture baseline.
+    assert '<option value="IN" selected>' in response.text
+    assert '<option value="GB" selected>' in response.text
+    assert '<option value="business"' in response.text
+
+
+@pytest.mark.anyio
+async def test_a_request_may_name_a_different_traveller(client: httpx.AsyncClient) -> None:
+    """The fixture is recorded for one traveller, so a different one must be refused clearly
+    rather than answered with the wrong person's plan."""
+
+    response = await client.post(
+        "/visa-plans",
+        json={
+            "destination": "singapore",
+            "traveller": {"passport_nationality": "CN", "country_of_residence": "AE"},
+        },
+    )
+
+    assert response.status_code == 503
+    assert "could not be generated safely" in response.json()["detail"]["message"]
+
+
+@pytest.mark.anyio
+async def test_a_country_with_no_reference_data_is_rejected_before_anything_runs(
+    client: httpx.AsyncClient,
+) -> None:
+    response = await client.post(
+        "/visa-plans",
+        json={
+            "destination": "singapore",
+            "traveller": {"passport_nationality": "Atlantis", "country_of_residence": "GB"},
+        },
+    )
+
+    assert response.status_code == 422

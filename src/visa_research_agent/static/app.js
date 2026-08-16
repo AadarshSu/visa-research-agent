@@ -1,5 +1,8 @@
 const form = document.querySelector("#plan-form");
 const destinationSelect = document.querySelector("#destination");
+const nationalitySelect = document.querySelector("#nationality");
+const residenceSelect = document.querySelector("#residence");
+const purposeSelect = document.querySelector("#purpose");
 const generateButton = document.querySelector("#generate-button");
 const progress = document.querySelector("#progress");
 const errorMessage = document.querySelector("#error-message");
@@ -325,7 +328,14 @@ async function generatePlan(event) {
     const response = await fetch("/visa-plans", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ destination: destinationSelect.value }),
+      body: JSON.stringify({
+        destination: destinationSelect.value,
+        traveller: {
+          passport_nationality: nationalitySelect.value,
+          country_of_residence: residenceSelect.value,
+          travel_purpose: purposeSelect.value,
+        },
+      }),
     });
     const payload = await response.json();
     if (!response.ok) {

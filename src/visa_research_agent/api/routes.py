@@ -1,6 +1,6 @@
 """HTTP routing kept deliberately thin around the research workflow."""
 
-from typing import Annotated
+from typing import Annotated, get_args
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse
@@ -17,14 +17,19 @@ from visa_research_agent.api.schemas import (
 )
 from visa_research_agent.api.templates import static_asset_version, templates
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
-from visa_research_agent.config.traveller import TRAVELLER_PROFILE
+from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.discovery.automatic import (
     AutomaticDestinationService,
     AutomaticDiscoveryError,
 )
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import Corridor
-from visa_research_agent.domain.models import DestinationConfig, TravellerProfile, VisaPlan
+from visa_research_agent.domain.models import (
+    DestinationConfig,
+    TravellerProfile,
+    TravelPurpose,
+    VisaPlan,
+)
 from visa_research_agent.research.errors import InsufficientEvidenceError, VisaResearchError
 from visa_research_agent.research.service import VisaPlanService
 
@@ -40,6 +45,9 @@ async def index(request: Request) -> HTMLResponse:
         "index.html",
         {
             "destinations": registry.destinations,
+            "countries": sorted(get_country_registry().countries, key=lambda c: c.name),
+            "purposes": get_args(TravelPurpose),
+            "traveller": DEFAULT_TRAVELLER_PROFILE,
             "source_mode": policy.source_mode,
             "extraction_mode": policy.extraction_mode,
             "static_asset_version": static_asset_version(),
@@ -72,28 +80,21 @@ async def destinations() -> DestinationsResponse:
 def corridor_for(destination_slug: str, traveller: TravellerProfile) -> Corridor:
     """The corridor a traveller profile describes.
 
-    The profile is still fixed, so this is a single corridor today. It is derived rather than
-    hard-coded so that making the profile variable changes one function, not the request path.
+    A straight mapping now that the profile holds ISO codes: the schema normalised whatever the
+    caller wrote into the one form corridors, cache keys and the lexicon all use.
     """
 
-    countries = get_country_registry()
-    nationality = countries.code_for_name(traveller.passport_nationality)
-    residence = countries.code_for_name(traveller.country_of_residence)
-    if nationality is None or residence is None:
-        raise AutomaticDiscoveryError(
-            "The traveller's nationality or country of residence is not one this agent holds "
-            "reference data for, so the right official pages cannot be identified."
-        )
     return Corridor(
         destination_slug=destination_slug,
-        passport_nationality=nationality,
-        applying_from=residence,
+        passport_nationality=traveller.passport_nationality,
+        applying_from=traveller.country_of_residence,
         purpose=traveller.travel_purpose,
     )
 
 
 async def resolve_destination(
     requested: str,
+    traveller: TravellerProfile,
     automatic: AutomaticDestinationService | None,
 ) -> DestinationConfig:
     """Use the configured destination when there is one, otherwise research it."""
@@ -123,9 +124,7 @@ async def resolve_destination(
 
     name = destination.display_name if destination is not None else requested
     try:
-        discovered = await automatic.destination_for(
-            name, corridor_for(requested, TRAVELLER_PROFILE)
-        )
+        discovered = await automatic.destination_for(name, corridor_for(requested, traveller))
     except AutomaticDiscoveryError as exc:
         # A refusal, not a fault. It names what could not be established rather than offering a
         # plan assembled from whatever happened to be readable.
@@ -150,10 +149,17 @@ async def create_visa_plan(
     service: Annotated[VisaPlanService, Depends(get_visa_plan_service)],
     automatic: Annotated[AutomaticDestinationService | None, Depends(get_automatic_destinations)],
 ) -> VisaPlan:
-    destination = await resolve_destination(request.destination, automatic)
+    # A request that describes nobody gets the default traveller, which is what the interface
+    # opens on and what the offline Singapore fixture was recorded against.
+    traveller = (
+        request.traveller.to_profile()
+        if request.traveller is not None
+        else DEFAULT_TRAVELLER_PROFILE
+    )
+    destination = await resolve_destination(request.destination, traveller, automatic)
 
     try:
-        return await service.generate(destination, TRAVELLER_PROFILE)
+        return await service.generate(destination, traveller)
     except InsufficientEvidenceError as exc:
         # A refusal explains which official evidence was missing, rather than failing opaquely.
         raise HTTPException(

@@ -44,6 +44,36 @@
                 {% endfor %}
               </select>
             </div>
+            <div class="field-group">
+              <label for="nationality">Passport</label>
+              <select id="nationality" name="nationality">
+                {% for country in countries %}
+                  <option value="{{ country.code }}" {% if country.code == traveller.passport_nationality %}selected{% endif %}>
+                    {{ country.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="residence">Applying from</label>
+              <select id="residence" name="residence">
+                {% for country in countries %}
+                  <option value="{{ country.code }}" {% if country.code == traveller.country_of_residence %}selected{% endif %}>
+                    {{ country.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="field-group">
+              <label for="purpose">Purpose</label>
+              <select id="purpose" name="purpose">
+                {% for value in purposes %}
+                  <option value="{{ value }}" {% if value == traveller.travel_purpose %}selected{% endif %}>
+                    {{ value | capitalize }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
             <button id="generate-button" type="submit">
               Generate {% if extraction_mode == 'openai' %}AI{% else %}fixture{% endif %} plan
             </button>
