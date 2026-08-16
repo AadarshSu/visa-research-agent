@@ -9,6 +9,50 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 19. The human approval gate becomes a rule, not an absence
+**2026-08-16**
+
+Discovery was an offline command whose output a person reviewed before anything could serve a
+traveller (entry 7). The product needs destinations nobody has configured, so that gate is removed
+and discovery runs in the request path.
+
+**What removing it does not mean.** The gate was the concentration point for the entire added risk
+of search (entry 11), so deleting it outright would put a commercial visa agency one lucky ranking
+away from being quoted as an authority. Reading back six real bootstraps, the human was not
+exercising taste. Every accept and reject reduced to one question — *is this the destination
+country's own government?* — which is `looks_governmental and belongs_to_destination`, both already
+computed. Checked against all 22 recorded decisions: **22 agreements, 0 disagreements.**
+
+**Decided:** `destination_mode: automatic` resolves an unconfigured destination at request time,
+trusting only domains that pass that rule. What it keeps out is the point: France's bootstrap
+surfaced `axa-schengen.com`, a commercial travel insurer; Vietnam's ranked `usembassy.gov` first, a
+real government describing the rules for *Americans*; Brazil's offered VFS, an appointed provider
+that by design cannot pass domain trust.
+
+Everything downstream is untouched. Public suffixes are still refused, so `gov.br` cannot be
+trusted whole. Pages are still fetched only from approved domains, redirects and renders still
+re-checked, a corridor missing a load-bearing role still refused, and `VisaPlan` still rejects a
+checklist with no source behind it. If no own-government domain is found, **nothing is fetched**.
+
+**Verified end to end.** Brazil, which has no configured sources, produced a `verified` plan:
+visa required, Visitor Visa (VIVIS), six requirements each citing a discovered page — including
+"proof of regular UK immigration status", correct for an Indian national resident in the UK.
+
+**Why this is safe to ship without human review**, in the product's own terms: the plan promises
+nothing. It shows information, shows its citations, and says plainly what it could not verify. The
+traveller decides. That only holds while the refusals stay honest, which is why every refusal path
+above is load-bearing rather than decorative.
+
+**A latent crash this surfaced:** a search engine returns titles far longer than any anchor text,
+and `PageLink.text` caps at 300 characters. China's ministry returned a 300-plus character speech
+headline and the corridor raised instead of trimming. Search titles are now truncated exactly as
+crawled anchor text always was.
+
+**Still fixed, and next to change:** the traveller profile. The corridor is derived from it rather
+than hard-coded, so making it variable changes one function instead of the request path.
+
+---
+
 ## 18. A block is not a fact about the guidance; never work around one
 **2026-08-16**
 

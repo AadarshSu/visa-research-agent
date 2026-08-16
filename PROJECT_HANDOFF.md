@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-15 — update this line when you touch the handoff |
-| **Tests** | 220 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 231 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -48,8 +48,14 @@ China were the confirmation runs, and both **refuse correctly**: entry 17.
 mis-ranked. They fail because a page could not be read at all — bot-blocked portals, client-rendered
 shells, dead endpoints.
 
+**Discovery is wired into the request path.** A destination nobody configured is researched when
+it is asked for: its own government's domains are identified, the corridor resolved, and the plan
+built from what was found. No human approves anything. Verified end to end — Brazil, with zero
+configured sources, produces a `verified` plan with six source-cited requirements.
+
 Runtime mode is `source_mode: live`, `extraction_mode: openai`, `render_mode: never`,
-`discovery_decider: model` in `src/visa_research_agent/config/runtime.yaml`. `visa-discover` now
+`discovery_decider: model`, `destination_mode: automatic` in
+`src/visa_research_agent/config/runtime.yaml`. `visa-discover` now
 needs `OPENAI_API_KEY`; set `discovery_decider: heuristic` for the free, offline, deterministic
 path, which is still tested and still the regression baseline. Japan only works live, because its checklist is a PDF
 and there are no snapshots for it.
@@ -114,50 +120,55 @@ why.
 
 Ordered by how much they limit the product. None of these are secretly fixed; they are all live.
 
-1. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
+1. **A destination is now trusted on a rule, with no human in the loop.** The rule reproduces all
+   22 recorded human decisions, but it has only ever been checked against six countries. A country
+   whose government publishes outside its own TLD would resolve to nothing; one whose TLD hosts a
+   convincing government-shaped domain it does not control would be a genuine hole. Watch the
+   `withheld_domains` on resolved corridors for domains being declined that should not be.
+2. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
    Both produce the same empty result, and since a missing checklist no longer refuses the corridor,
    a find-or-read failure now yields a plan with a visibly empty checklist rather than a refusal.
    The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
    start shipping empty checklists for countries that do publish one, this is the cause; a
    per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
-2. **The heuristic decider still mis-ranks, and is still the fallback.** With
+3. **The heuristic decider still mis-ranks, and is still the fallback.** With
    `discovery_decider: model` the failing case is fixed, but a failed model call falls back to the
    heuristic, which picked a Riyadh page for a UK applicant before entry 15's fixes. Two fixes
    landed — a checklist is known by the documents it names, and the traveller's post governs — but
    both rest on English vocabulary and per-country city labels, so the fallback will keep degrading
    on new countries and languages.
-3. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
+4. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
-4. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
+5. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
    `france-visas.gouv.fr` and `www.france-visas.gouv.fr` (which make France unservable) and
    Singapore's VFS page. This is **not** a bug to fix — working around a block is forbidden by
    [DECISIONS.md](DECISIONS.md) entry 18 and by the rules in `CLAUDE.md`. They now produce the
    `blocked` outcome and appear under `inaccessible_domains`, so a refusal reads as "we were not
    allowed to check" rather than "nothing found".
-5. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
+6. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
    because two of China's correct picks carry dated paths and one is from 2013. Content-hash drift
    detection remains a TODO and covers configured sources only.
-6. **Scoring is English-only.** A destination publishing solely in its own language will score near
+7. **Scoring is English-only.** A destination publishing solely in its own language will score near
    zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
    characters of Vietnamese, which scores nothing.
-7. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
+8. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
    `location: http://localhost:4000/vi` header and an empty body — a misconfigured Next.js i18n
    redirect. Browsers ignore `Location` on a `200`, so **rendering does not fix this one either**;
    it renders to 0 characters. The site root works; only the `/en` path is broken.
-8. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
+9. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
    text-rich, so every check passes.
-9. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
+10. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
    for a consolidated portal. `_mission_domains` returns `[]` for Brazil, whose every mission sits
    on `www.gov.br` with the post in the *path* — so Riyadh and Atlanta outrank Edinburgh for a UK
    applicant. It also misses Singapore's `london.mfa.gov.sg`, which is named by city rather than
    country code. Recorded here as latent; Brazil proved it changes the answer.
-10. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
+11. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
    structured replacement was built and deliberately removed — see [DECISIONS.md](DECISIONS.md).
-11. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
+12. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
    usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
    when testing a retrieval change, or a fix will appear not to work.
 
@@ -165,7 +176,13 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-**None. Ranking is answered; access is the new frontier.** Six corridors run live. The model
+**Make the traveller profile variable.** It is the last fixed piece. Discovery is corridor-aware
+end to end, and `corridor_for` in `api/routes.py` already derives the corridor from the profile
+rather than hard-coding it — so this changes one function and the request schema, not the pipeline.
+`TravellerProfile` still carries UK-specific fields and `travel_purpose` is `Literal["tourism"]`.
+
+### Answered, for background
+ Six corridors run live. The model
 decider refuses well under pressure — France gave it ten fetched pages and it still declined both
 load-bearing roles rather than guess — and its judgement is better than the scorer's where it can
 read at all: for China it picked the UK embassy checklist because that page "names the required

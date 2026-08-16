@@ -29,8 +29,14 @@ produces a serious defect.
   traveller brings.
 - **Refusing is a correct output.** A plausible but wrong document checklist is worse than no
   answer. Prefer refusing with a diagnosis over substituting something that looks right.
-- **Web search belongs only in `discovery/`, and only as a candidate generator.** Generating a plan
-  never searches. Nothing search returns becomes evidence until it passes the domain-trust rules.
+- **Web search belongs only in `discovery/`, and only as a candidate generator.** Nothing search
+  returns becomes evidence until it passes the domain-trust rules.
+- **A domain is trusted automatically only when it is the destination's *own* government** —
+  governmental **and** under that country's own top-level domain. No human approves domains any
+  more, but the rule they were applying still runs, and both halves are load-bearing: without the
+  first, a commercial insurer under `.fr` gets in; without the second, the US embassy's page about
+  Vietnam does. Never relax it to "looks official". If no such domain is found, nothing is fetched
+  and the destination is refused.
 - **Never work around an authority that blocks automated retrieval.** France's visa portal and
   Singapore's VFS page answer `403` to anything that is not a browser. Do not spoof a user agent,
   do not point the renderer at them, do not retry to get around a rate limit. A block is not

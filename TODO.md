@@ -63,7 +63,7 @@ discipline applies here.
 
 ## Soon
 
-### Make the traveller profile variable — `soon`
+### Make the traveller profile variable — `next`
 
 **Why:** the profile is fixed at Indian passport / resident in the UK / tourism in
 `config/traveller.py`. Discovery is already corridor-aware and takes nationality, residence and
@@ -76,23 +76,18 @@ UK-specific fields (`uk_immigration_status`, `uk_permission_expiry`) that need g
 codes — `discovery/lexicon.py` already holds that reference data.
 
 **Watch for:** `destinations.yaml` holds one set of sources per destination, which silently assumes
-one corridor. Once the profile varies, that assumption breaks and sources need to become
-corridor-keyed. See the layering table in [ARCHITECTURE.md](ARCHITECTURE.md).
+one corridor. That assumption no longer binds the automatic path — corridors are stored keyed by
+the whole corridor, nationality and purpose included — but it still binds the hand-configured
+destinations. See the layering table in [ARCHITECTURE.md](ARCHITECTURE.md).
+
+**Already done for you:** `corridor_for` in `api/routes.py` derives the corridor from the profile
+rather than hard-coding it, so the request path does not change — only that function and the
+request schema.
 
 
 ---
 
 ## Later
-
-### Wire discovery into request time — `later` · blocked by discovery's ranking being trustworthy
-
-**Why:** discovery is an offline command. Serving arbitrary corridors eventually needs it in the
-request path.
-
-**Do:** resolve a corridor from cache when fresh, otherwise resolve it live, otherwise refuse.
-Cache per corridor for weeks, not hours; a resolved corridor is not evidence and has a different
-lifetime from the evidence cache. **Do not** `@lru_cache` corridor lookups the way the registry is
-cached — corridor artifacts expire, and a stale one would be served for the process lifetime.
 
 ### Revisit conflict detection, with claim scope — `later`
 
