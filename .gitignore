@@ -13,9 +13,12 @@ dist/
 htmlcov/
 .coverage
 
-# All runtime research data is disposable and must remain local.
+# All runtime research data is disposable and must remain local. Corridors are kept apart from
+# the evidence cache because they expire on a different timescale, but neither is ever committed.
 var/cache/*
 !var/cache/.gitkeep
+var/corridors/*
+!var/corridors/.gitkeep
 
 # Machine-local tool settings. The shared launch configuration is tracked.
 .claude/settings.local.json
