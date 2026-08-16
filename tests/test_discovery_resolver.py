@@ -19,7 +19,13 @@ from discovery_site import (
 )
 
 from visa_research_agent.discovery.crawl import CrawlFetcher
-from visa_research_agent.discovery.models import Corridor, SearchResult
+from visa_research_agent.discovery.models import (
+    CandidatePage,
+    Corridor,
+    PageLink,
+    RoleScores,
+    SearchResult,
+)
 from visa_research_agent.discovery.resolver import (
     CorridorResolver,
     build_source_id,
@@ -236,3 +242,53 @@ async def test_resolution_costs_no_model_calls(tmp_path: Path) -> None:
     resolved = await resolver.resolve(destination(), corridor())
 
     assert resolved.model_calls == 0
+
+
+def test_the_shortlist_budget_is_filled_rather_than_left_part_used(tmp_path: Path) -> None:
+    """Taking only the top few per role left most of the fetch budget unspent.
+
+    Vietnam used six of ten places while every readable `evisa.gov.vn` page sat just outside the
+    per-role cut, so the one site that needed rendering was never read at all.
+    """
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    candidates = [
+        CandidatePage(
+            link=PageLink(
+                url=f"https://immigration.gov.example/visa/p{index}",
+                text="Visa documents required",
+                heading="",
+                depth=1,
+                discovered_from="seed",
+            ),
+            link_scores=RoleScores(scores={"document_checklist": 50.0 - index}),
+            found_by="crawl",
+        )
+        for index in range(12)
+    ]
+
+    shortlist = resolver._shortlist(candidates)
+
+    assert len(shortlist) == resolver.shortlist_size
+    # Still best-first: filling spare places must not promote a weak page over a strong one.
+    assert shortlist[0].link.url.endswith("p0")
+
+
+def test_a_candidate_no_role_wants_is_not_worth_fetching(tmp_path: Path) -> None:
+    resolver, _ = build_resolver(tmp_path, [], [])
+    candidates = [
+        CandidatePage(
+            link=PageLink(
+                url=f"https://immigration.gov.example/visa/p{index}",
+                text="",
+                heading="",
+                depth=1,
+                discovered_from="seed",
+            ),
+            link_scores=RoleScores(scores={}),
+            found_by="crawl",
+        )
+        for index in range(12)
+    ]
+
+    assert resolver._shortlist(candidates) == []

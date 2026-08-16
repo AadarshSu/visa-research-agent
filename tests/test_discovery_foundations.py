@@ -216,3 +216,44 @@ def test_a_source_converts_to_the_registry_shape_without_discovery_fields() -> N
     assert configured.source_id == "jp_a"
     assert configured.url == AnyHttpUrl("https://www.mofa.go.jp/a")
     assert configured.research_pass == "primary"
+
+
+def test_an_api_endpoint_is_never_crawlable() -> None:
+    """A JSON endpoint is not a page, and it must not occupy a place a real page needed.
+
+    Vietnam's `api.evisa.gov.vn/client-service/public/ngon-ngu/get-all` — an endpoint listing the
+    site's languages — outscored every readable evisa.gov.vn page and pushed all of them off the
+    shortlist, where it then failed as "not an HTML page".
+    """
+
+    config = DestinationConfig(
+        slug="testland",
+        display_name="Testland",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["immigration.gov.example"],
+    )
+    for url in (
+        "https://api.immigration.gov.example/client-service/public/ngon-ngu/get-all",
+        "https://www.immigration.gov.example/client-service/languages",
+        "https://www.immigration.gov.example/api/v2/visa",
+        "https://graphql.immigration.gov.example/query",
+    ):
+        assert not is_crawlable(url, config), url
+
+
+def test_a_page_that_merely_discusses_an_api_is_still_crawlable() -> None:
+    # Matching is on whole segments and the host label, so ordinary prose URLs are unaffected.
+    config = DestinationConfig(
+        slug="testland",
+        display_name="Testland",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["immigration.gov.example"],
+    )
+    for url in (
+        "https://www.immigration.gov.example/visa/rapid-application",
+        "https://www.immigration.gov.example/visa/apis-and-documents",
+        "https://www.immigration.gov.example/visa/documents-required",
+    ):
+        assert is_crawlable(url, config), url

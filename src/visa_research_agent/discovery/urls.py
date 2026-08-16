@@ -91,6 +91,24 @@ def path_segments(url: str) -> list[str]:
     return [segment.lower() for segment in urlsplit(url).path.split("/") if segment]
 
 
+def is_machine_endpoint(url: str) -> bool:
+    """True when a URL serves a program rather than a person.
+
+    Retrieval already refuses JSON once it has been fetched, but by then the URL has taken a place
+    on the shortlist that a real page needed. Vietnam's `api.evisa.gov.vn/client-service/public/
+    ngon-ngu/get-all` — an endpoint listing the site's *languages* — outranked every readable
+    evisa.gov.vn page and pushed all of them out.
+
+    Matched on the host label and whole path segments only, so a page about "the API" is unaffected.
+    """
+
+    host = host_of(url)
+    if host.split(".")[0] in {"api", "apis", "ws", "rest", "graphql"}:
+        return True
+    segments = path_segments(url)
+    return any(segment in {"api", "rest", "graphql", "client-service"} for segment in segments)
+
+
 def is_crawlable(url: str, destination: DestinationConfig) -> bool:
     """True when a URL is on an approved domain and looks like readable guidance.
 
@@ -106,5 +124,7 @@ def is_crawlable(url: str, destination: DestinationConfig) -> bool:
 
     path = parts.path.lower()
     if any(path.endswith(extension) for extension in SKIPPED_EXTENSIONS):
+        return False
+    if is_machine_endpoint(url):
         return False
     return not SKIPPED_PATH_PATTERN.search(path)

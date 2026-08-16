@@ -280,12 +280,27 @@ class CorridorResolver:
         return country.code if country else None
 
     def _shortlist(self, candidates: list[CandidatePage]) -> list[CandidatePage]:
-        """The best few candidates per role, so only a handful of pages are ever fetched."""
+        """The best few candidates per role, so only a handful of pages are ever fetched.
+
+        Per-role first, so no role is crowded out by another's strong results, then the budget is
+        filled with the next best overall. Filling it matters: taking three per role left four of
+        Vietnam's ten places empty while every readable `evisa.gov.vn` page sat just outside the
+        per-role cut, so the site that needed rendering most was never read.
+        """
 
         chosen: dict[str, CandidatePage] = {}
         for role in ROLE_ORDER:
             for candidate, _ in rank_for_role(candidates, role)[:3]:
                 chosen.setdefault(candidate.link.url, candidate)
+
+        by_score = sorted(candidates, key=lambda c: (-c.link_scores.best()[1], c.link.url))
+        for candidate in by_score:
+            if len(chosen) >= self.shortlist_size:
+                break
+            # Only pages that scored for something. A candidate no role wants is not worth a fetch.
+            if candidate.link_scores.best()[1] > 0:
+                chosen.setdefault(candidate.link.url, candidate)
+
         ordered = sorted(chosen.values(), key=lambda c: (-c.link_scores.best()[1], c.link.url))
         return ordered[: self.shortlist_size]
 
