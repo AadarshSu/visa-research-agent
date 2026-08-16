@@ -14,6 +14,7 @@ def test_registry_contains_the_configured_destinations() -> None:
         "japan",
         "vietnam",
         "brazil",
+        "china",
         "united-states",
         "france",
     ]

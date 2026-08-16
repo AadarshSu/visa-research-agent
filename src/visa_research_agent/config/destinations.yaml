@@ -137,6 +137,23 @@ destinations:
     implementation_status: planned
     sources: []
 
+  - slug: china
+    display_name: China
+    route_type: national
+    # Domains proposed by `visa-discover bootstrap` and approved by hand: the embassy network, the
+    # consulate network, the foreign ministry's consular portal and the National Immigration
+    # Administration. The bootstrap also surfaced www.gov.cn, english.gov.cn and fmprc.gov.cn —
+    # genuine State Council portals, but broad and thin on visa guidance, so they were not
+    # approved. visaforchina.cn is the appointed application-centre operator and is not a
+    # government domain, so it can only ever be authorised by an official page naming it.
+    # Bare gov.cn is absent as a public suffix.
+    trusted_domains:
+      [china-embassy.gov.cn, china-consulate.gov.cn, mfa.gov.cn, nia.gov.cn]
+    # No pages configured: the sixth corridor, and the first reachable test of the model decider
+    # against a destination that publishes partly in a language the lexicon does not carry.
+    implementation_status: planned
+    sources: []
+
   - slug: united-states
     display_name: United States
     route_type: national
@@ -147,5 +164,16 @@ destinations:
     display_name: France
     route_type: schengen_member
     schengen_member: France
+    # Domains proposed by `visa-discover bootstrap` and approved by hand. france-visas.gouv.fr is
+    # the authoritative portal and is listed even though it currently answers HTTP 403 to anything
+    # that is not a browser: approving it means the run reports "bot-blocked" rather than the
+    # quieter and more misleading "not an approved domain". diplomatie.gouv.fr carries the embassy
+    # and consulate network, named by country label (uk.diplomatie.gouv.fr).
+    # Bare gouv.fr is deliberately absent — a public suffix. The bootstrap also surfaced europa.eu,
+    # which is the EU's page about France rather than France's own, and TLScontact and VFS, which
+    # are appointed providers and can only be authorised by an official page naming them.
+    trusted_domains: [diplomatie.gouv.fr, france-visas.gouv.fr]
+    # No pages are configured: this is the fifth corridor, testing the model decider against a
+    # destination publishing in a language the lexicon does not carry.
     implementation_status: planned
     sources: []

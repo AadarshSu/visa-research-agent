@@ -55,6 +55,7 @@ async def test_destinations_endpoint(client: httpx.AsyncClient) -> None:
         "japan",
         "vietnam",
         "brazil",
+        "china",
         "united-states",
         "france",
     ]
@@ -86,6 +87,7 @@ async def test_unsupported_destination_returns_helpful_error(client: httpx.Async
             "japan",
             "vietnam",
             "brazil",
+            "china",
             "united-states",
             "france",
         ],

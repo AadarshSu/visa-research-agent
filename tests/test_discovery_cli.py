@@ -150,10 +150,11 @@ async def test_an_unknown_destination_is_a_configuration_error() -> None:
 @pytest.mark.anyio
 async def test_a_destination_without_approved_domains_is_refused_with_guidance() -> None:
     args = build_parser().parse_args(
-        ["corridor", "--destination", "france", "--nationality", "IN", "--from", "GB"]
+        ["corridor", "--destination", "united-states", "--nationality", "IN", "--from", "GB"]
     )
     stream = io.StringIO()
 
-    # France is configured but has no trusted domains yet, so discovery has nowhere safe to look.
+    # Configured, but with no trusted domains approved yet, so discovery has nowhere safe to look.
+    # It must say so rather than search: nothing is fetched until a human has approved a domain.
     assert await run_corridor(args, stream) == 3
     assert "bootstrap" in stream.getvalue()
