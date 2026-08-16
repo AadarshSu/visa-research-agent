@@ -9,6 +9,58 @@ Status: `next` · `soon` · `later` · `blocked`
 
 ## Next
 
+### The United States refuses a tourist visa for an Indian passport holder — `next`
+
+**Why:** this is one of the highest-volume visa corridors in the world, and it produces
+`EVIDENCE UNAVAILABLE`. A corridor this ordinary failing is worse than an exotic one failing: it is
+what most people will try first.
+
+**Reproduce:** `united-states/IN/IN/tourism` through the automatic path, with a cleared
+`var/corridors/`. It refuses with *"no page could be confirmed as the visa decision, document
+checklist"*.
+
+**It is not deterministic**, which is the first thing to know. Two consecutive runs of the identical
+corridor gave different answers — one resolved `usa.gov/tourist-visa` and
+`dhs.gov/visit-united-states`, the next refused outright. So this is a marginal corridor being
+tipped either way by search ordering, not a corridor that cannot be researched.
+
+**Three causes, compounding. The first is structural and the most important:**
+
+1. **The own-government rule degenerates for the United States.** Every other country is checked
+   as "governmental **and** under its own ccTLD" — two independent tests. The US's own TLD *is*
+   `gov`, so both halves reduce to the same question and **every federal agency is auto-trusted**:
+   `doi.gov` (the Interior), `federalregister.gov`, and equally `nasa.gov` or `irs.gov` were they
+   to rank. Eight domains were trusted for the US, against Brazil's one, France's two, China's
+   four. The crawl budget and the ten-slot shortlist are then spread across agencies with nothing
+   to do with visas, and the right page has to win a much noisier field.
+2. **`travel.state.gov` answers HTTP 403.** The canonical B1/B2 page — the single most
+   authoritative source for this corridor — is bot-blocked. Per `CLAUDE.md` and DECISIONS entry 18
+   that is not to be worked around, so it must simply be treated as absent.
+3. **Nothing narrows a federal government to its visa authorities.** For most countries the
+   ccTLD does that implicitly, because a small government has few domains.
+
+**The parts needed are already there.** Readable, correct, unblocked pages exist:
+`https://in.usembassy.gov/visas/` returns 200 and is the US mission *in India* — precisely the post
+serving this traveller — and `mission_affinity` already resolves it as `own`, because `in` is in
+India's `mission_labels`. `https://www.usa.gov/tourist-visa` returns 200 as well. Discovery is not
+short of evidence; it is failing to keep hold of it.
+
+**Do, in this order:**
+
+1. Make the trusted set for a country whose TLD is `gov` narrower than "every federal agency".
+   The honest options are ranking `usembassy.gov` and `state.gov` above general agencies for visa
+   roles, or capping how many domains one bootstrap may auto-trust and taking the best-corroborated.
+   Decide which, and record it — this is a change to the rule that replaced human approval, so it
+   deserves a DECISIONS entry.
+2. Give the shortlist a floor per *domain*, so eight trusted domains cannot crowd out the one that
+   matters, in the same spirit as the crawl's existing per-host budget.
+3. Re-run `united-states/IN/IN/tourism` several times and require it to resolve **consistently**.
+   A corridor that passes once is not fixed; the current failure is exactly a coin-flip.
+
+**Careful:** do not special-case the United States by name. The general defect is "a country whose
+own TLD is also the generic governmental marker", and hard-coding `US` would leave the same hole
+for any country that later gets one.
+
 ### Tell "no checklist exists" apart from "we failed to find it" — `next`
 
 **Why:** `document_checklist` is no longer load-bearing (DECISIONS entry 14), so a corridor now
