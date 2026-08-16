@@ -9,6 +9,59 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 16. Judgement decides the last step; heuristics decide everything before it
+**2026-08-16**
+
+Entry 15 recorded that keyword ranking does not generalise. Two fixes followed — a checklist is
+identified by the documents it *names*, and the post serving the traveller governs the roles that
+depend on the post — and both worked: Brazil picked the right page, Japan and Singapore held. But
+they worked by adding **27 English document nouns** and per-country city labels in Portuguese, and
+that is a treadmill. It will not survive an authority publishing in Thai.
+
+The decisive observation is *where* the failure was. In every Brazil run the correct page was found
+by search, passed domain trust, survived the crawl, made the shortlist, and was fetched and read
+with its full text available. Only the final choice among ten trusted, already-fetched pages was
+wrong. Everything upstream — the safety-critical part — was right.
+
+**Decided:** keep search, trust, crawl, shortlisting and refusal deterministic, and ask a model
+exactly one question: which of these fetched pages fills each role. `ResolvedSource.decided_by`
+was already `Literal["heuristic", "model"]` and `ResolvedCorridor.model_calls` already existed —
+the seam was designed in and left unused.
+
+**The containment is the whole safety story**, and none of it may be removed:
+
+- the model chooses from an explicit list of candidates the application built; an id it invents is
+  **discarded** and the role left unfilled, so it can never introduce a page that did not pass
+  domain trust;
+- it never widens trust — officialness was settled by who controls the domain, long before this
+  runs;
+- page text reaches it under `untrusted_content` and the prompt says so;
+- it may refuse, and is told refusing beats guessing;
+- heuristic scores are **withheld** from the packet, because passing them would anchor the model to
+  the very ranking that got Brazil wrong;
+- a failed call falls back to the heuristic, so a corridor degrades to a worse answer, never none.
+
+**Measured on all four corridors** (`discovery_decider: model`): Brazil picks the Edinburgh
+checklist and explains why — "it specifically lists the application form/RER, valid passport,
+passport photo, return-ticket evidence, financial evidence" — and reads India's row out of a
+national visa table for the decision. Japan picks the UK embassy's items-required page. Singapore
+puts five roles on the ICA per-nationality page, arriving unaided at what entry 9 had to be taught.
+**Vietnam still refuses the checklist**, which was the risk worth testing: the model did not invent
+one where none is published.
+
+**Rejected — staying fully deterministic.** It keeps zero model calls and total explainability, but
+buys them with a new failure mode per country and per language, and Brazil showed those failures are
+silent.
+
+**Rejected — model classification earlier in the pipeline.** Letting a model decide what to crawl or
+what to trust would put it upstream of the domain rules, which is the one place it must never be.
+
+**What this costs:** one model call per corridor, non-determinism in the final choice, and a new
+dependence on `OPENAI_API_KEY` for `visa-discover`. The heuristic path remains, is tested, and stays
+the regression baseline.
+
+---
+
 ## 15. Brazil, the out-of-sample test: discovery ranks the wrong page, confidently
 **2026-08-16**
 

@@ -27,33 +27,29 @@ countries that do publish one; that is the signal this decision is failing.
 **Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists"
 look identical from inside the crawler, which is the whole problem.
 
-### Fix what Brazil showed: ranking picks the wrong checklist — `next`
+### Watch where the two deciders disagree — `soon`
 
-**Why:** Brazil was the out-of-sample test and discovery failed it, silently. It exits `0` — every
-load-bearing role filled — with a **Riyadh** page as the document checklist for a traveller applying
-in the UK. The correct Edinburgh page was found by search, shortlisted, fetched and read, and ranked
-**third** (32.3 against Riyadh's 43.1). Full analysis in [DECISIONS.md](DECISIONS.md) entry 15.
+**Why:** the last step now asks a model (DECISIONS entry 16) and the heuristic remains as shortlist
+builder and fallback. Both are recorded: `decided_by` says which chose, and the heuristic's score is
+kept beside the model's choice. That divergence is free evidence about both, and nobody is reading
+it yet.
 
-Two causes, both general rather than Brazil-specific:
+**Do:** on a corridor run, note every role where the model chose a page the heuristic did not rank
+first. A pattern in those disagreements is either a lexicon gap worth closing or a model error worth
+prompting against. Four corridors currently disagree on `general_entry` and `visa_decision` most.
 
-1. **The scorer rewards pages that talk *about* documents over pages that *list* them.** Riyadh's
-   generic e-consular boilerplate repeats "documents required" and "required documents"; Edinburgh's
-   real checklist names passport, bank statement, proof of funds, itinerary and return ticket in
-   prose. Singapore and Japan hid this because their checklists contain the literal phrases too.
-2. **Mission detection does nothing for a consolidated portal.** `_mission_domains` matches the
-   residence country's label against the *host*, but Brazil puts every mission on `www.gov.br` with
-   the post in the *path*. It returns `[]`, so Riyadh, Kuala Lumpur, Atlanta and Abu Dhabi compete
-   equally with Edinburgh — four of six resolved roles came from the wrong continent.
+**Careful:** do not tune the lexicon to agree with the model. The heuristic's job is to build a good
+shortlist and to be a safe fallback, not to reproduce the model's judgement.
 
-**Do:** decide what *should* identify a checklist before touching a weight. The two candidate
-signals are whether a page **names specific documents** (passport, photograph, bank statement,
-itinerary) rather than the phrase "documents required", and whether it **belongs to the mission
-serving this traveller** — which needs path-based mission detection, not host-based. Then confirm
-Singapore and Japan still pass; they are the regression baseline.
+### Run a fifth corridor against the model decider — `soon`
 
-**Careful:** Brazil is now in-sample the moment you tune against it. If a fourth country is needed
-to check the fix, budget for one — Thailand is a poor choice for this traveller, since Indian
-nationals have visa exemption and there would be no checklist to rank.
+**Why:** the model decider is evidenced by four corridors on a single day. Its *containment* is
+tested and deterministic; its *judgement* is not. A destination none of this was built against —
+publishing in a language the lexicon does not carry — is the real test, and is now much cheaper to
+try, because nothing needs tuning first.
+
+**Do:** bootstrap a country, approve its domains by hand, run the corridor, judge the result against
+the real pages. Record what it got wrong, exactly as with Brazil.
 
 ---
 

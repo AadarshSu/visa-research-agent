@@ -189,9 +189,32 @@ this is automated while per-country trust is not.
    an off-domain candidate cannot even be constructed.
 4. **Score** (`scoring.py`) — deterministic, **no model calls**. Vocabulary and weights live in
    `config/discovery_lexicon.yaml` so they can be tuned without touching Python.
-5. **Assign roles or refuse** — only `visa_decision` is load-bearing. A missing checklist is
-   reported and moves the exit code from `0` to `1` rather than refusing, because some authorities
-   publish none. Any refusal names what was considered and why each candidate was rejected.
+5. **Assign roles or refuse** — by judgement when `discovery_decider: model`, otherwise by the
+   heuristic. Only `visa_decision` is load-bearing; a missing checklist is reported and moves the
+   exit code from `0` to `1` rather than refusing, because some authorities publish none.
+
+### Who decides the last step
+
+Keyword ranking got Brazil wrong, and wrong *confidently* — see [DECISIONS.md](DECISIONS.md)
+entry 15. The failure was localised: the correct page was found, trusted, crawled, shortlisted and
+read, and only the final choice among ten fetched pages was wrong. So that one step, and no other,
+asks a model (`discovery/adjudication.py`).
+
+What it may do is bounded hard, and the bounds are the safety story:
+
+- it chooses from an explicit candidate list the application built. **An id it invents is discarded
+  and the role left unfilled** — it cannot introduce a page that never passed domain trust.
+- it never widens trust. Officialness is settled by who controls the domain, before this runs.
+- candidate text reaches it under `untrusted_content`, and the prompt says it is evidence rather
+  than instructions.
+- it may return null for a role, and the prompt states that refusing beats guessing. A refusal is
+  honoured rather than filled in from the ranking.
+- heuristic scores are withheld from the packet, so the ranking that failed cannot anchor it.
+- a failed call falls back to the heuristic: a corridor degrades to a worse answer, never to none.
+
+The heuristic is not replaced. It builds the shortlist the model chooses from, it answers when no
+adjudicator is configured, and its score is still recorded beside the model's choice so a reviewer
+can see where the two disagreed.
 
 ### Scoring, in brief
 
