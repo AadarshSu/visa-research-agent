@@ -60,7 +60,11 @@ from visa_research_agent.discovery.search import (
     resolve_corridor_countries,
     usable_results,
 )
-from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable
+from visa_research_agent.discovery.urls import (
+    canonicalise_url,
+    is_crawlable,
+    published_date_in_path,
+)
 from visa_research_agent.domain.models import (
     ConfiguredSource,
     DestinationConfig,
@@ -141,6 +145,13 @@ def derive_authority(url: str, destination: DestinationConfig) -> tuple[str, Sou
     if "immi" in lowered or "ica" in lowered:
         return f"{destination.display_name} immigration authority", "immigration_authority"
     return f"{destination.display_name} authority ({host})", "foreign_ministry"
+
+
+def _with_published_date(url: str, signals: list[str]) -> list[str]:
+    """Prefix what the URL says about publication, so a reviewer sees it without digging."""
+
+    published = published_date_in_path(url)
+    return [f"published in path: {published}", *signals] if published else signals
 
 
 def clean_title(raw: str | None, fallback: str) -> str:
@@ -257,6 +268,12 @@ class CorridorResolver:
             unreadable.setdefault(host_of(url), reason)
         for host, reason in sorted(unreadable.items()):
             notes.append(f"{host} could not be read because {reason}")
+        # An authority refusing this client is a different fact from a site being broken, and the
+        # difference matters to a reader: one means "we were not allowed to check", not "no
+        # guidance exists". Kept as data so nothing downstream has to parse prose to find it.
+        inaccessible = sorted(
+            host for host, reason in unreadable.items() if "refused automated retrieval" in reason
+        )
 
         candidates: dict[str, CandidatePage] = dict(search_candidates)
         for candidate in crawled:
@@ -284,6 +301,7 @@ class CorridorResolver:
             sources=sources,
             unresolved_roles=unresolved,
             notes=notes,
+            inaccessible_domains=inaccessible,
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
@@ -502,7 +520,9 @@ class CorridorResolver:
                     # deciders disagreed rather than only what the model concluded.
                     score=round(max(candidate.combined(role) for role in roles), 1),
                     decided_by="model",
-                    signals=[reason[:160] for reason in reasons][:6],
+                    signals=_with_published_date(
+                        candidate.link.url, [reason[:160] for reason in reasons][:6]
+                    ),
                 )
             )
         return sources, unresolved

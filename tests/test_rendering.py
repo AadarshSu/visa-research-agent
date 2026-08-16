@@ -439,3 +439,60 @@ async def test_a_real_browser_runs_the_scripts_on_a_page() -> None:
 
     assert rendered is not None
     assert "Rendered guidance" in rendered.html
+
+
+# --- an authority that refuses automated retrieval -------------------------------------------
+
+
+async def test_a_refused_request_is_blocked_rather_than_unreachable(tmp_path: Path) -> None:
+    """A `403` is the authority declining this client, not a fault and not missing guidance.
+
+    The distinction is the whole point: "unreachable" invites a reader to conclude the site is
+    broken, and neither outcome may ever be softened into an inference from some other page.
+    """
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(403, text="Checking if the site connection is secure")
+
+    fetcher = build_fetcher(tmp_path, "")
+    fetcher.transport = httpx.MockTransport(respond)
+    result = await only_result(fetcher)
+
+    assert isinstance(result, SourceFailure)
+    assert result.outcome == "blocked"
+    assert "refused automated retrieval" in result.detail
+    assert "could not be independently verified here" in result.detail
+
+
+async def test_a_blocked_page_is_never_rendered_to_get_around_the_block(tmp_path: Path) -> None:
+    """Rendering must not become the way past a refusal.
+
+    A headless browser would very likely pass these checks. Pointing it at them would make the
+    architecture "if they block us, defeat the block", which this project deliberately refuses.
+    """
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(403, text="Access denied")
+
+    renderer = FakeRenderer(page(GUIDANCE))
+    fetcher = build_fetcher(tmp_path, "", renderer)
+    fetcher.transport = httpx.MockTransport(respond)
+    result = await only_result(fetcher)
+
+    assert isinstance(result, SourceFailure)
+    assert result.outcome == "blocked"
+    assert renderer.calls == [], "a refusal must not be worked around with a browser"
+
+
+async def test_a_crawl_records_a_refusal_in_its_own_words() -> None:
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, text="Too many requests")
+
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(respond), sleep=sleep_none, host_delay_seconds=0.0
+    )
+    url = f"https://{AUTHORITY}/visa/index.html"
+    html = await crawl_html(fetcher, url)
+
+    assert html is None
+    assert "refused automated retrieval" in fetcher.failures[url]

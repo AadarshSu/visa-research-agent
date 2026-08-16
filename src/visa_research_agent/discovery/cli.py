@@ -146,6 +146,15 @@ def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
         print(f"  {'':<34} {'':>6}  {source.title}", file=stream)
         if source.signals:
             print(f"  {'':<34} {'':>6}  why: {', '.join(source.signals[:4])}", file=stream)
+    if resolved.inaccessible_domains:
+        print("\n  refused automated retrieval:", file=stream)
+        for domain in resolved.inaccessible_domains:
+            print(f"    {domain}", file=stream)
+        print(
+            "    These authorities were not read, so nothing here rests on them. That is not a\n"
+            "    judgement about their guidance: it could not be verified from here.",
+            file=stream,
+        )
     if resolved.unresolved_roles:
         print("\n  could not be identified:", file=stream)
         for role in resolved.unresolved_roles:

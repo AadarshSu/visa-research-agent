@@ -20,6 +20,7 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 
 from visa_research_agent.domain.models import (
+    BLOCKING_STATUS_CODES,
     ConfiguredSource,
     DestinationConfig,
     FailureOutcome,
@@ -304,6 +305,20 @@ class LiveSourceFetcher:
             revalidated = cached.model_copy(update={"fetched_at": now})
             self.cache.store(revalidated)
             return self._build(configured_source, revalidated, from_cache=True, is_stale=False)
+
+        if response.status_code in BLOCKING_STATUS_CODES:
+            # Not a fault, and not evidence that the guidance is wrong or absent: the authority is
+            # refusing this client. Say exactly that, and let the source be missing.
+            return self._serve_stale(
+                configured_source,
+                cached,
+                now,
+                (
+                    f"the authority refused automated retrieval (HTTP {response.status_code}), so "
+                    "its guidance could not be independently verified here"
+                ),
+                "blocked",
+            )
 
         if response.status_code != httpx.codes.OK:
             return self._serve_stale(

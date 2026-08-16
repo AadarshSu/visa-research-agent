@@ -18,7 +18,7 @@ from bs4.element import Tag
 
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
-from visa_research_agent.domain.models import DestinationConfig
+from visa_research_agent.domain.models import BLOCKING_STATUS_CODES, DestinationConfig
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.tls import build_ssl_context
@@ -165,6 +165,14 @@ class CrawlFetcher:
         # Redirects are followed, so the landing host must be re-checked exactly as retrieval does.
         if not destination.trusts_host(host_of(str(response.url))):
             self.failures[url] = "it redirected off the approved domains"
+            return None
+        if response.status_code in BLOCKING_STATUS_CODES:
+            # The authority is refusing this client, which says nothing about whether its guidance
+            # is correct. Recorded in its own words so a refusal cannot read as "nothing found".
+            self.failures[url] = (
+                f"it refused automated retrieval (HTTP {response.status_code}), so its guidance "
+                "could not be independently verified here"
+            )
             return None
         if response.status_code != httpx.codes.OK:
             self.failures[url] = f"it answered HTTP {response.status_code}"

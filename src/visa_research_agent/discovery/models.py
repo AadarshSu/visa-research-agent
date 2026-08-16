@@ -196,6 +196,14 @@ class ResolvedCorridor(StrictModel):
     sources: list[ResolvedSource] = Field(default_factory=list)
     unresolved_roles: list[DiscoveryRole] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+    inaccessible_domains: list[str] = Field(default_factory=list)
+    """Domains that refused automated retrieval.
+
+    Carried separately from `notes` because it supports a different statement. These authorities
+    did not fail and are not wrong; this program was not permitted to read them, so their guidance
+    could not be independently verified here. Nothing may be inferred in their place.
+    """
+
     queries: list[str] = Field(default_factory=list)
     model_calls: int = 0
     pages_fetched: int = 0

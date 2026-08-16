@@ -17,9 +17,17 @@ RenderMode = Literal["never", "on_demand"]
 # Which decider assigns roles during discovery. `heuristic` is deterministic, free and offline;
 # `model` asks one bounded question over pages already fetched and trusted.
 DiscoveryDecider = Literal["heuristic", "model"]
-# Why a source produced no usable evidence. Unreachable and unusable are kept apart because they
-# need different remedies: one is a transient site problem, the other needs a different retriever.
-FailureOutcome = Literal["untrusted", "unreachable", "unusable"]
+# Why a source produced no usable evidence. These are kept apart because they need different
+# remedies and, more importantly, they support different statements to a traveller.
+#
+# `blocked` is the subtle one. A site refusing automated clients is not saying its guidance is
+# wrong or missing — it is saying this program may not read it. The only honest claim is then
+# "we could not independently retrieve and verify this here", which is a much narrower statement
+# than "unreachable" and must never be softened into an inference from some other page.
+FailureOutcome = Literal["untrusted", "unreachable", "unusable", "blocked"]
+
+# Statuses an authority returns to refuse an automated client rather than to report a fault.
+BLOCKING_STATUS_CODES = frozenset({401, 403, 429})
 PlanStatus = Literal["verified", "partial"]
 SourceKind = Literal[
     "immigration_authority",

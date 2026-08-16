@@ -31,6 +31,14 @@ produces a serious defect.
   answer. Prefer refusing with a diagnosis over substituting something that looks right.
 - **Web search belongs only in `discovery/`, and only as a candidate generator.** Generating a plan
   never searches. Nothing search returns becomes evidence until it passes the domain-trust rules.
+- **Never work around an authority that blocks automated retrieval.** France's visa portal and
+  Singapore's VFS page answer `403` to anything that is not a browser. Do not spoof a user agent,
+  do not point the renderer at them, do not retry to get around a rate limit. A block is not
+  evidence that the guidance is wrong or missing — it means *we cannot independently retrieve and
+  verify it in this execution environment*, which is a narrower claim and the only honest one.
+  Mark the source inaccessible, say so, and let the role go unfilled. Never substitute plausibility
+  for evidence. This costs real coverage — France is unservable — and that is the correct trade for
+  a product whose wrong answers send someone to a visa centre without the right papers.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Tests must not touch the network or an LLM.** Use the `transport=` and `now=` seams and the fake
