@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-15 — update this line when you touch the handoff |
-| **Tests** | 252 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 245 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -30,7 +30,8 @@ forms, or claiming an approval is guaranteed.
 
 ## Current state
 
-**Working end to end.** Two destinations produce real plans from live government sources.
+**Working end to end for any traveller and any of 198 destinations.** Six corridors verified live;
+the table below is what each one actually did.
 
 | | Singapore | Japan | Vietnam | Brazil | France | China |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -48,9 +49,9 @@ China were the confirmation runs, and both **refuse correctly**: entry 17.
 mis-ranked. They fail because a page could not be read at all — bot-blocked portals, client-rendered
 shells, dead endpoints.
 
-**Any of 198 countries can be asked for.** `countries.yaml` covers ISO 3166-1; fourteen entries are
-curated from corridors actually run, and the rest carry the name and ccTLD, which is all the
-own-government trust rule needs.
+`countries.yaml` covers ISO 3166-1. Fourteen entries are curated from corridors actually run; the
+rest carry the name and ccTLD, which is all the own-government trust rule needs. A country only
+needs promoting to curated status once you have run it and seen which hints it lacks.
 
 **Discovery is wired into the request path.** A destination nobody configured is researched when
 it is asked for: its own government's domains are identified, the corridor resolved, and the plan
