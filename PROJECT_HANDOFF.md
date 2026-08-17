@@ -18,10 +18,9 @@ source of truth for where things stand. The chat is not the source of truth; thi
 Produce visa application plans for a traveller where **every claim is grounded in an official
 government source**, and the traveller is told plainly when something could not be verified.
 
-The headline production goal is **automatic source discovery**: finding the right official pages for
-a given traveller and destination without a human curating URLs. Hand-configuring sources is the
-bottleneck that stops the product working across countries, and removing it is the point of the
-current work.
+The headline production goal — **automatic source discovery**, finding the right official pages for
+a traveller and destination with nobody curating URLs — is **done and running in the request path**.
+What remains is making it fast enough and correct enough to host; see [TODO.md](TODO.md).
 
 Deliberately out of scope, permanently: submitting applications, booking appointments, filling
 forms, or claiming an approval is guaranteed.
@@ -94,8 +93,8 @@ DestinationConfig ──▶ SourceFetcher ──▶ RetrievalReport ──▶ Vi
                       fixtures | live    fetched+failures    fixture | openai
 ```
 
-Discovery sits *before* this, offline, and produces the `DestinationConfig` that the pipeline
-consumes:
+Discovery sits *before* this and produces the `DestinationConfig` the pipeline consumes. It runs
+either as the `visa-discover` command or, for a destination nobody configured, inside the request:
 
 ```
 Corridor ──▶ search ──▶ crawl ──▶ fetch shortlist ──▶ score ──▶ ResolvedCorridor
