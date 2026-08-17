@@ -71,11 +71,15 @@ from visa_research_agent.domain.models import (
     SourceKind,
     StrictModel,
 )
-from visa_research_agent.domain.trust import host_is_within, host_of
+from visa_research_agent.domain.trust import host_is_within, host_of, registrable_domain
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 
 MINIMUM_ROLE_SCORE = 20.0
 DEFAULT_SHORTLIST_SIZE = 10
+# Places held for each trusted domain before the rest are filled best-first. One is enough for what
+# this protects against — an authority being shut out of the fetch entirely — and cheap: with the
+# trusted set capped, the reserved places cannot crowd out the fill they exist to balance.
+DEFAULT_SHORTLIST_DOMAIN_FLOOR = 1
 # Per candidate, not per packet. Ten pages of full government prose would be mostly navigation
 # furniture and would push the call past any sensible input bound.
 DEFAULT_EXCERPT_CHARACTERS = 6_000
@@ -181,6 +185,7 @@ class CorridorResolver:
         lexicon: Lexicon | None = None,
         countries: CountryRegistry | None = None,
         shortlist_size: int = DEFAULT_SHORTLIST_SIZE,
+        shortlist_domain_floor: int = DEFAULT_SHORTLIST_DOMAIN_FLOOR,
         minimum_role_score: float = MINIMUM_ROLE_SCORE,
         results_per_query: int = 8,
         adjudicator: RoleAdjudicator | None = None,
@@ -193,6 +198,7 @@ class CorridorResolver:
         self.lexicon = lexicon or get_lexicon()
         self.countries = countries or get_country_registry()
         self.shortlist_size = shortlist_size
+        self.shortlist_domain_floor = shortlist_domain_floor
         self.minimum_role_score = minimum_role_score
         self.results_per_query = results_per_query
         # Optional on purpose. Without one the resolver behaves exactly as it did before
@@ -352,6 +358,12 @@ class CorridorResolver:
         filled with the next best overall. Filling it matters: taking three per role left four of
         Vietnam's ten places empty while every readable `evisa.gov.vn` page sat just outside the
         per-role cut, so the site that needed rendering most was never read.
+
+        Then each domain's own best page is reserved a place, because the places are what decide
+        what is read at all: an authority whose pages all fall below another's is never fetched, so
+        it can never fill a role, so the corridor refuses with the answer sitting one place outside
+        the cut. That is how a United States corridor refused while the mission serving the
+        traveller went unread and eight federal domains competed for ten places.
         """
 
         chosen: dict[str, CandidatePage] = {}
@@ -367,8 +379,51 @@ class CorridorResolver:
             if candidate.link_scores.best()[1] > 0:
                 chosen.setdefault(candidate.link.url, candidate)
 
+        # Reserved from every candidate rather than from those already chosen: a domain's best page
+        # can be fourth for its role, which is exactly where the per-role cut leaves it.
+        reserved = self._reserved_per_domain(by_score)
+        for candidate in reserved:
+            chosen.setdefault(candidate.link.url, candidate)
+
         ordered = sorted(chosen.values(), key=lambda c: (-c.link_scores.best()[1], c.link.url))
-        return ordered[: self.shortlist_size]
+        if len(ordered) <= self.shortlist_size:
+            return ordered
+
+        # The truncation is where crowding out happens, so this is where the reservation has to be
+        # honoured. Anything held back earlier would simply be cut here instead.
+        reserved_urls = {candidate.link.url for candidate in reserved}
+        kept = [candidate for candidate in ordered if candidate.link.url in reserved_urls]
+        del kept[self.shortlist_size :]
+        for candidate in ordered:
+            if len(kept) >= self.shortlist_size:
+                break
+            if candidate.link.url not in reserved_urls:
+                kept.append(candidate)
+        return sorted(kept, key=lambda c: (-c.link_scores.best()[1], c.link.url))
+
+    def _reserved_per_domain(self, by_score: list[CandidatePage]) -> list[CandidatePage]:
+        """Each trusted domain's best-scoring pages, up to the floor.
+
+        Keyed on the registrable domain rather than the host, which is the unit trust is granted in.
+        A mission network gives every post its own subdomain, so a per-host floor would let one
+        authority reserve every place and recreate the crowding this exists to prevent. That is a
+        deliberate difference from the crawl's per-host budget, which is about not hammering one
+        site rather than about one site starving another.
+
+        A page no role scored for is still not worth fetching, so the floor cannot admit one.
+        """
+
+        reserved: list[CandidatePage] = []
+        per_domain: dict[str, int] = {}
+        for candidate in by_score:
+            if candidate.link_scores.best()[1] <= 0:
+                continue
+            domain = registrable_domain(host_of(candidate.link.url))
+            if per_domain.get(domain, 0) >= self.shortlist_domain_floor:
+                continue
+            per_domain[domain] = per_domain.get(domain, 0) + 1
+            reserved.append(candidate)
+        return reserved
 
     async def _fetch_bodies(
         self,

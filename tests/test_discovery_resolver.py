@@ -275,6 +275,89 @@ def test_the_shortlist_budget_is_filled_rather_than_left_part_used(tmp_path: Pat
     assert len(shortlist) == resolver.shortlist_size
     # Still best-first: filling spare places must not promote a weak page over a strong one.
     assert shortlist[0].link.url.endswith("p0")
+    # One domain, so reserving a place per domain reserves one and changes nothing else.
+    assert [page.link.url for page in shortlist] == [
+        candidate.link.url for candidate in candidates[: resolver.shortlist_size]
+    ]
+
+
+def page(url: str, score: float, *, role: str = "document_checklist") -> CandidatePage:
+    return CandidatePage(
+        link=PageLink(
+            url=url,
+            text="Visa documents required",
+            heading="",
+            depth=1,
+            discovered_from="seed",
+        ),
+        link_scores=RoleScores(scores={role: score}),
+        found_by="crawl",
+    )
+
+
+def test_one_authority_cannot_take_every_place_in_the_shortlist(tmp_path: Path) -> None:
+    """How the United States refused a corridor it had the evidence for.
+
+    Eight federal domains were trusted, because the country's own top-level domain is `gov`. The
+    ten fetch places went to whichever of them scored loudest, and the mission serving the
+    traveller was never read — so it could not fill a role, so the corridor refused.
+
+    The quiet page here is outside the per-role cut *and* outside the ten best by score, so it is
+    reached only by looking at every candidate. A reservation drawn from the pages already chosen
+    would find exactly the pages that did not need reserving.
+    """
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    loud = [page(f"https://interior.gov.example/p{index}", 50.0 - index) for index in range(12)]
+    quiet = page("https://in.mission.gov.example/visas/", 5.0)
+
+    shortlist = resolver._shortlist([*loud, quiet])
+
+    assert quiet.link.url in [candidate.link.url for candidate in shortlist]
+    assert len(shortlist) == resolver.shortlist_size
+
+
+def test_a_mission_network_does_not_reserve_a_place_for_every_post(tmp_path: Path) -> None:
+    """Keyed on the registrable domain, which is the unit trust is granted in.
+
+    Per host, one authority's posts would reserve every place and recreate the crowding.
+    """
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    posts = [
+        page(f"https://{label}.mission.gov.example/visas/", 80.0)
+        for label in ("in", "de", "uk", "fr", "jp", "br", "cn", "sg", "za", "mx", "ke", "pe")
+    ]
+    other = page("https://immigration.gov.example/checklist", 1.0)
+
+    shortlist = resolver._shortlist([*posts, other])
+    urls = [candidate.link.url for candidate in shortlist]
+
+    assert other.link.url in urls
+    assert len(shortlist) == resolver.shortlist_size
+
+
+def test_reserving_a_place_never_admits_a_page_no_role_wants(tmp_path: Path) -> None:
+    """A domain being trusted is not a reason to spend a fetch on a page nothing scored."""
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    wanted = [page(f"https://immigration.gov.example/p{index}", 40.0) for index in range(3)]
+    unwanted = CandidatePage(
+        link=PageLink(
+            url="https://interior.gov.example/press-release",
+            text="",
+            heading="",
+            depth=1,
+            discovered_from="seed",
+        ),
+        link_scores=RoleScores(scores={}),
+        found_by="crawl",
+    )
+
+    shortlist = resolver._shortlist([*wanted, unwanted])
+
+    assert unwanted.link.url not in [candidate.link.url for candidate in shortlist]
+    assert len(shortlist) == 3
 
 
 def test_a_candidate_no_role_wants_is_not_worth_fetching(tmp_path: Path) -> None:
