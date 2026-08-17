@@ -208,7 +208,11 @@ this is automated while per-country trust is not.
 3. **Fetch the shortlist** (`resolver.py`) — by building a throwaway `DestinationConfig` and passing
    it to the ordinary `LiveSourceFetcher`. This inherits redirect trust, PDF reading, forwarding,
    size caps and caching with no duplicated code — and because `validate_route` runs on that config,
-   an off-domain candidate cannot even be constructed.
+   an off-domain candidate cannot even be constructed. Ten places: the best three per role, then the
+   next best overall, then **one place reserved for each registrable domain's best page**. The
+   reservation matters because these places decide what is *read*, and only a read page can fill a
+   role — so without it an authority whose pages all score below another's is absent rather than
+   merely ranked low, and the corridor refuses with the answer one place outside the cut.
 4. **Score** (`scoring.py`) — deterministic, **no model calls**. Vocabulary and weights live in
    `config/discovery_lexicon.yaml` so they can be tuned without touching Python.
 5. **Assign roles or refuse** — by judgement when `discovery_decider: model`, otherwise by the
@@ -261,18 +265,26 @@ top-level domain. Both halves are load-bearing, and it reproduces all 22 recorde
 bounded by an approved domain:
 
 - a **denylist** removes commercial visa agencies before anyone reads the list;
-- a domain must be **corroborated** by two independent queries — relaxed to one when it is under
-  the destination's own top-level domain;
+- a domain must be **corroborated** by two independent queries — relaxed to one when it is the
+  destination's own government, and *only* where that is genuinely two independent signals. Where a
+  country's own top-level domain is itself the governmental marker the two halves ask one question,
+  so the ordinary bar applies (entry 22);
 - **bare public suffixes** are rejected outright;
 - the domain must plausibly **belong to the destination country**. "Looks governmental" is satisfied
   by any country's `.gov`, which is how the US embassy in Vietnam once outranked Vietnam's own
   immigration department. Foreign government pages are shown, flagged, and never first.
 
-**A known hole in that rule:** for a country whose own top-level domain *is* `gov` — the United
-States — both halves collapse into the same test, so every federal agency is trusted as a visa
-authority. It is the top item in [TODO.md](TODO.md).
+**The rule says which domains may be used, and a bound says how many.** A large government passes it
+with far more domains than a small one — the United States with eight, Brazil with one — and width is
+expensive three times over: three searches are run per trusted domain, the crawl's per-host budget is
+the page budget divided by the hosts seeded, and the shortlist has ten places. So at most five are put
+to use, ordered by the authority hint in the hostname (`emb`, `consul`, `immi`, `mofa`) and then by
+corroboration. Everything left out is reported with its reason, and the reason distinguishes "this
+destination's own government, not among the best evidenced" from "another country's government" —
+they are different problems with different fixes. See entry 22.
 
-Nothing is approved automatically.
+The `bootstrap` command still approves nothing: it prints the whole list for a person to read. The
+cap applies where domains are put to use without one, in `automatic.py`.
 
 ---
 

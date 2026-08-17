@@ -9,6 +9,148 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 23. Entry 14's decision never reached a traveller, because extraction refused first
+**2026-08-17**
+
+With the corridor fixed (entry 22), `united-states/IN/IN/tourism` still answered *"The visa plan
+could not be generated safely."* Discovery resolved; the **extractor** refused:
+
+```
+LLMExtractionError: Application document sources are not available in this run
+```
+
+**The bug is an unimplemented decision, not a new one.** Entry 14 stopped a missing checklist
+refusing the corridor and built `VisaPlan.validate_absent_checklist` to make the resulting plan safe:
+with no document source a plan may state the gap but never fill it. `VisaPlan.requirements` was
+documented as *"May be empty: some authorities publish no checklist"*. But
+`openai_extraction.extract` still required `application_document_source_ids` to be non-empty, so that
+validator could never run and no traveller ever saw the outcome entry 14 chose. Vietnam — the
+country entry 14 was written for — would have hit the same wall.
+
+**Decided:** an *undeclared* checklist is a fact about the world and is allowed. A *declared but
+unretrieved* one is a broken run and still refuses, before the model call, via
+`require_load_bearing_sources`. The distinction is the whole point: relaxing the first must not
+relax the second.
+
+Two consequences kept deliberately strict:
+
+- **Anything the model offers as a document requirement is dropped** when no checklist source backs
+  it. Nothing could honestly cite one, so keeping it would mean publishing a checklist inferred from
+  an eligibility rule or an application form — the single most damaging output this project can
+  produce, and what entry 6 was deleted over. The prompt asks; the filter and the validator
+  guarantee.
+- **A plan with no checklist source is never `verified`.** It is missing evidence a traveller would
+  expect a complete plan to rest on, and `verified` beside an empty document list is the one label
+  that would hide that. `resolve_plan_status` takes `has_checklist_source` so both extraction paths
+  answer this the same way. The interface already renders `partial` with a reliability block.
+
+**Also fixed:** the old code made the model call and *then* refused, so a run that could not succeed
+still cost money — contradicting the comment three lines above it. Both remaining preconditions now
+run before the call.
+
+**Verified live, 2026-08-17.** `POST /visa-plans` for an Indian passport, resident in India,
+travelling to the United States for tourism: **HTTP 200 in 16.6s**, `status: partial`,
+`visa_required: true`, `B-2 visitor (tourist) visa`, five application steps, three cited sources,
+zero document requirements, and three unresolved questions — the first of which names the missing
+checklist and points the traveller at the Department of State and their nearest post. That is the
+honest shape of this corridor: the canonical B1/B2 checklist is on `travel.state.gov`, which answers
+403, and by entry 18 we may not work around it.
+
+**What this exposes, and does not fix.** The plan cannot say *why* the checklist is missing. Its
+`unavailable_sources` covers only its own retrieval, and this block happened during **discovery**, so
+`ResolvedCorridor.inaccessible_domains` never reaches the plan. The traveller is told the checklist
+is absent but not that an authority refused us — which is the more useful sentence, because they can
+open that page themselves. That is the existing todo *"Tell a traveller what an inaccessible source
+means"*, now with a concrete instance rather than a hypothetical one.
+
+---
+
+## 22. A large government passes the same rule with far more domains, so how many is capped
+**2026-08-17**
+
+`united-states/IN/IN/tourism` refused, and not reliably: two runs of the identical corridor, one
+resolved, one refused. One of the highest-volume corridors there is, decided by search ordering.
+
+**The rule was not wrong; it was calibrated against small governments.** Entry 19 trusts a domain
+that is `looks_governmental and belongs_to_destination`, and for the United States that still admits
+only the US government — nothing foreign gets in. But its own top-level domain *is* `gov`, so the
+second test stops narrowing anything and the whole federal namespace qualifies: `doi.gov` (the
+Interior) and `federalregister.gov` alongside State and USCIS. Measured: **eight domains**, against
+Brazil's one, France's two, China's four. `countries.yaml` has exactly one entry like this today,
+which is why six corridors never showed it.
+
+Width is expensive in three places at once, and this is the part worth remembering: three search
+queries are run **per trusted domain**, the crawl's per-host budget is the page budget **divided by**
+the hosts seeded, and the shortlist has ten places. So a wide set spends more, reads less of each
+site, and makes the right page compete with more noise. The measured US bootstrap:
+
+| domain | queries seen in | hostname hint |
+| --- | --- | --- |
+| `state.gov`, `usa.gov` | 4 | — |
+| `dhs.gov` | 3 | — |
+| `usembassy.gov` | 2 | embassy |
+| `doi.gov`, `federalregister.gov`, `ice.gov`, `uscis.gov` | 1 | — |
+
+**Decided, in two parts, neither naming a country.**
+
+1. **The relaxed evidence bar is scoped to where it was earned.** One corroborating query is enough
+   for the destination's own government (entry 19) *because* that is two independent signals. Where
+   the country's own top-level domain is itself the governmental marker it is one signal, so the
+   ordinary two-query bar applies. The test is which top-level domain actually matched, so it is a
+   property of `countries.yaml` data and not of any country. This is what removes all four
+   single-query agencies above — and it does **not** touch `usembassy.gov`, which is corroborated
+   twice.
+2. **A universal cap of five, ordered by the hostname's authority hint.** A bound on the consequence
+   rather than a test for the cause: a large government under a plain ccTLD would cost the same.
+   `suggest_kind` — `emb`, `consul`, `immi`, `mofa` — is already committed, country-neutral, and
+   already used to name authorities; ordering by it is the generic form of "rank the mission network
+   first", where hardcoding those names would be special-casing one country in effect.
+
+**Five is calibration, not derivation.** It is chosen to sit above every accept in entry 19's audit
+(one, two and four) so no recorded decision changes, and below the eight that caused this. Say it
+plainly, because a reader will otherwise look for the reasoning that produced the number.
+
+**Two admissions about the ordering.** Ranking the mission network above the State Department is
+desirable here only because `travel.state.gov` answers 403 — a happy accident, not a principle. And
+among equally-corroborated domains with no hint the order is alphabetical: a hostname simply carries
+no signal about whether that part of a government issues visas. On this corridor the corroboration
+bar made that moot, but a wider case would be decided arbitrarily-but-stably.
+
+**Third part, downstream and independent of trust: the shortlist reserves a place per domain.** The
+ten places decide what is *read*, and only a read page can fill a role, so an authority whose pages
+all score below another's is not merely ranked low — it is absent, and the corridor refuses with the
+answer one slot outside the cut. Each registrable domain's best page is now reserved one place.
+Keyed on the registrable domain, not the host, or a mission network's posts would reserve every
+place; that is a deliberate difference from the crawl's per-host budget, which prevents hammering
+one site rather than one site starving another. Reservation is drawn from **every** candidate rather
+than those already picked, since the per-role cut takes three and a domain's best page can be fourth.
+
+**Rejected: raising `shortlist_size` from ten.** It makes the right page more likely to be read
+without ever guaranteeing it, at similar cost. The floor guarantees it.
+
+**Rejected: detecting the collapsed rule and treating that country specially.** Considered and
+dropped in favour of the two changes above precisely so that no code path tests for the condition.
+Nothing here can be a country-shaped fix, because nothing here asks about a country.
+
+**Verified live, 2026-08-17.** The US corridor run three times with `var/cache/` and `var/corridors/`
+cleared between runs gave **identical** results each time — trusted set `usembassy.gov`, `state.gov`,
+`usa.gov`, `dhs.gov`; `visa_decision`, `application_route` and `general_entry` filled by the model;
+twelve corridor queries where eight domains had produced twenty-four. `document_checklist` stays
+unfilled, correctly: the canonical B1/B2 checklist is `travel.state.gov`, which answers 403, so it is
+reported as `blocked` and nothing is substituted (entry 18). Brazil filled every role including the
+Edinburgh post for a UK applicant; China returned its checklist and fees and still declined
+`visa_decision`, matching what entry 17 recorded. No corridor changed for the worse.
+
+**What the runs also showed, and did not fix.** Half the US shortlist is spent on hosts that cannot
+be read: `sample2.usembassy.gov` and `go.usa.gov` do not resolve in DNS, and two `travel.state.gov`
+pages are the 403. The reserved place for a domain goes to its best-scoring candidate even when the
+crawl has already recorded that host as unreachable, so Brazil spends one place on
+`brics2019.itamaraty.gov.br` the same way. Recorded in [TODO.md](TODO.md) rather than fixed here: a
+DNS failure is host-level and definitive, but a 403 on one path is not evidence about another, so the
+two cannot be skipped by the same test.
+
+---
+
 ## 21. Any country is a destination, and a country name stops matching inside a word
 **2026-08-16**
 

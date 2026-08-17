@@ -9,57 +9,29 @@ Status: `next` · `soon` · `later` · `blocked`
 
 ## Next
 
-### The United States refuses a tourist visa for an Indian passport holder — `next`
+### Stop spending fetch places on hosts already known to be unreadable — `next`
 
-**Why:** this is one of the highest-volume visa corridors in the world, and it produces
-`EVIDENCE UNAVAILABLE`. A corridor this ordinary failing is worse than an exotic one failing: it is
-what most people will try first. Resolving this is imperative for resolving similar issues with other corridors.
+**Why:** it is now the largest waste in a corridor, and it was invisible until the shortlist was
+inspected directly. Of the ten places the US corridor spends, **five go to pages that cannot be
+read**: `sample2.usembassy.gov` (a sample host that does not resolve in DNS) takes the top place at
+122.2, `go.usa.gov` twice (a decommissioned shortener, also no DNS), and `travel.state.gov` twice
+(the 403). Brazil spends one of its ten on `brics2019.itamaraty.gov.br`, also DNS-dead. So a
+corridor reads five or nine pages while reporting ten.
 
-**Reproduce:** `united-states/IN/IN/tourism` through the automatic path, with a cleared
-`var/corridors/`. It refuses with *"no page could be confirmed as the visa decision, document
-checklist"*.
+The per-domain reservation (DECISIONS entry 22) makes this slightly worse rather than better: a
+domain's reserved place goes to its best-*scoring* candidate, and score knows nothing about whether
+the host answered.
 
-**It is not deterministic**, which is the first thing to know. Two consecutive runs of the identical
-corridor gave different answers — one resolved `usa.gov/tourist-visa` and
-`dhs.gov/visit-united-states`, the next refused outright. So this is a marginal corridor being
-tipped either way by search ordering, not a corridor that cannot be researched.
+**Do:** when building the shortlist, skip a candidate whose **host already failed DNS during the
+crawl** — `CrawlFetcher.failures` is on the resolver already, and `_reserved_per_domain` is where the
+reservation is chosen. Then re-check the US shortlist: freeing five places should be worth more than
+any ranking change, since `document_checklist` currently goes unfilled.
 
-**Three causes, compounding. The first is structural and the most important:**
-
-1. **The own-government rule degenerates for the United States.** Every other country is checked
-   as "governmental **and** under its own ccTLD" — two independent tests. The US's own TLD *is*
-   `gov`, so both halves reduce to the same question and **every federal agency is auto-trusted**:
-   `doi.gov` (the Interior), `federalregister.gov`, and equally `nasa.gov` or `irs.gov` were they
-   to rank. Eight domains were trusted for the US, against Brazil's one, France's two, China's
-   four. The crawl budget and the ten-slot shortlist are then spread across agencies with nothing
-   to do with visas, and the right page has to win a much noisier field.
-2. **`travel.state.gov` answers HTTP 403.** The canonical B1/B2 page — the single most
-   authoritative source for this corridor — is bot-blocked. Per `CLAUDE.md` and DECISIONS entry 18
-   that is not to be worked around, so it must simply be treated as absent.
-3. **Nothing narrows a federal government to its visa authorities.** For most countries the
-   ccTLD does that implicitly, because a small government has few domains.
-
-**The parts needed are already there.** Readable, correct, unblocked pages exist:
-`https://in.usembassy.gov/visas/` returns 200 and is the US mission *in India* — precisely the post
-serving this traveller — and `mission_affinity` already resolves it as `own`, because `in` is in
-India's `mission_labels`. `https://www.usa.gov/tourist-visa` returns 200 as well. Discovery is not
-short of evidence; it is failing to keep hold of it.
-
-**Do, in this order:**
-
-1. Make the trusted set for a country whose TLD is `gov` narrower than "every federal agency".
-   The honest options are ranking `usembassy.gov` and `state.gov` above general agencies for visa
-   roles, or capping how many domains one bootstrap may auto-trust and taking the best-corroborated.
-   Decide which, and record it — this is a change to the rule that replaced human approval, so it
-   deserves a DECISIONS entry.
-2. Give the shortlist a floor per *domain*, so eight trusted domains cannot crowd out the one that
-   matters, in the same spirit as the crawl's existing per-host budget.
-3. Re-run `united-states/IN/IN/tourism` several times and require it to resolve **consistently**.
-   A corridor that passes once is not fixed; the current failure is exactly a coin-flip.
-
-**Careful:** do not special-case the United States by name. The general defect is "a country whose
-own TLD is also the generic governmental marker", and hard-coding `US` would leave the same hole
-for any country that later gets one.
+**Careful — the two failure kinds are not interchangeable.** A DNS failure is a fact about the host,
+so skipping every URL under it is sound. A `403` is a fact about *one request*: `travel.state.gov`
+refusing one path is not evidence about another, and per entry 18 a block must still be **reported**
+as `blocked` rather than quietly dropped. Do not collapse both into "host failed". And do not use
+this to retry or work around a block.
 
 ### Make a cold corridor faster than 53 seconds — `next`
 
@@ -97,7 +69,7 @@ promises not to do.
 **Verify:** re-time the same corridor and re-run the six known corridors. Speed must not change
 which pages are chosen; if it does, the crawl order was load-bearing and that is worth knowing.
 
-### Put it somewhere others can open it — `next`
+### Put it somewhere others can open it aka deployment — `next`
 
 **Why:** it runs on one laptop with a `.env`. The goal is a URL to share. Keep this simple — a host,
 some environment variables, done. No pipelines, no orchestration; CI already runs the checks and
@@ -141,8 +113,13 @@ the interface rather than only in these files.
 resolves without one. That is right for Vietnam, which publishes none. It is wrong for a country
 that publishes one we simply failed to find or read — a crawl that stopped short, a language we do
 not score, a bot-block — and **discovery emits the same result in both cases**. The plan is honest
-either way (`VisaPlan` forces it to state the gap and forbids inventing requirements), but nobody is
-told which case they are looking at.
+either way (`VisaPlan` forces it to state the gap and forbids inventing requirements) and is now
+marked `partial` rather than `verified`, but nobody is told which case they are looking at.
+
+**This is live rather than hypothetical now.** The United States ships exactly such a plan: no
+document requirements, because the canonical B1/B2 checklist is a 403. That is the third case again —
+not "none exists" and not "we failed to find it" but "we were not allowed to read it" — and it is the
+one a traveller can act on, which is the item below.
 
 **Do:** the design already considered is a reviewed per-country declaration —
 `no_official_checklist: true` in `destinations.yaml`, with a required note saying where the
@@ -183,6 +160,14 @@ sentence naming what we could not verify. Do not soften it into "unavailable"; d
 fill the gap from another page — `VisaPlan` already forbids inventing a checklist, and the same
 discipline applies here.
 
+**The structural gap to close first, found on the US corridor.** A plan's `unavailable_sources`
+covers only **its own** retrieval, and a discovery-time block never reaches it: `travel.state.gov`
+answers 403 while the corridor is being resolved, so `ResolvedCorridor.inaccessible_domains` holds it
+and the plan knows nothing. The US plan therefore tells a traveller the checklist is absent without
+telling them an authority refused us — the one sentence they could act on. Carry
+`inaccessible_domains` from the resolved corridor into the plan before writing any interface for it,
+or the interface has nothing to render.
+
 **Do not:** work around the block. See `CLAUDE.md`; that decision is closed.
 
 ---
@@ -214,6 +199,33 @@ propose a replacement.
 
 ## Smaller things
 
+- **A plan can leak an internal field name into traveller-facing text.** The US plan's first
+  unresolved question reads "no official application-document checklist was published in the
+  configured `application_document_source_ids`". That is the model repeating a key from the research
+  packet. Harmless but unpolished, and a prompt matter rather than a code one.
+- **A reserved shortlist place guarantees a domain, not a page.** The floor from DECISIONS entry 22
+  reserves each domain's best *link-scored* candidate, so the US mission's reserved place went to
+  `in.usembassy.gov/scheduling-immigrant-visas-appointments` — right post, wrong visa class — rather
+  than to `/visas/`. If that pattern matters, the fix is in mission scoring, not in the floor:
+  `mission_affinity`'s bonus applies only to `document_checklist` and `application_route`, and only
+  when those roles already scored, so a bare `/visas/` URL on the traveller's own post earns nothing
+  for `visa_decision`.
+- **`_mission_domains` returns `[]` for every automatically discovered destination.** It reads
+  `destination.sources`, and `AutomaticDestinationService._base_config` builds a `DestinationConfig`
+  with none — so the `on_mission_host` bonus never fires in the request path at all. This is a
+  second and broader cause than the path-based one recorded as known problem 13, which describes only
+  Brazil. Mission detection survives in the automatic path solely through `mission_affinity`'s host
+  label check.
+- **The corridor's 40-page crawl budget is spent entirely at depth 0.** Seeds enter the frontier at
+  priority `-1000.0`, so every seed is popped before any child. Twelve corridor queries at eight
+  results each produce well over 40 unique seeds, so "crawl to pinpoint" never reaches depth 1 for a
+  multi-domain destination. Depth-1 links still become candidates without being fetched, so the loss
+  is depth-2 discovery — which is where Japan's checklist was found. A per-domain **seed** cap would
+  restore it without lowering `maximum_pages`, which must not be lowered.
+- **Nothing validates `countries.yaml` against a `tlds` entry that widens trust.** Adding `gov` to a
+  country's `tlds` would change what is trusted with no review of the rule itself. The consequence is
+  now bounded by the cap and the corroboration bar (entry 22), but the data is still the place where
+  a mistake would not be caught.
 - **Singapore's VFS page is a 403, not a JavaScript problem.** It was recorded as client-rendered;
   it is actually bot-blocked at the HTTP layer, so rendering never applies (the render only runs
   after a `200` whose text was thin). Whether to do anything about it is an open question —
