@@ -54,9 +54,22 @@ def require_load_bearing_sources(
         )
 
 
-def resolve_plan_status(report: RetrievalReport) -> PlanStatus:
-    """Grade a run: verified only when every source was retrieved and is current."""
+def resolve_plan_status(
+    report: RetrievalReport,
+    *,
+    has_checklist_source: bool = True,
+) -> PlanStatus:
+    """Grade a run: verified only when every source was retrieved and is current.
 
+    A plan with no page designated as its document checklist is **never** verified, however cleanly
+    its other sources were read. It is missing evidence a traveller would expect a complete plan to
+    rest on — whether because the authority publishes none or because we were not allowed to read
+    it — and "verified" beside an empty document list is the one label that would make that
+    invisible. It stays honest without refusing, which is what DECISIONS entry 14 chose.
+    """
+
+    if not has_checklist_source:
+        return "partial"
     if report.failures:
         return "partial"
     if any(item.source.is_stale for item in report.fetched):

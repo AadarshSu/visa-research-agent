@@ -8,7 +8,10 @@ import yaml
 from visa_research_agent.config.loader import load_destination_registry
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.domain.models import DestinationConfig, VisaPlanDraft
-from visa_research_agent.research.errors import LLMExtractionError
+from visa_research_agent.research.errors import (
+    InsufficientEvidenceError,
+    LLMExtractionError,
+)
 from visa_research_agent.research.fixtures import FixtureSourceFetcher
 from visa_research_agent.research.openai_extraction import OpenAIVisaPlanExtractor
 
@@ -140,5 +143,106 @@ async def test_openai_extractor_stops_before_call_when_input_is_too_large() -> N
 
     with pytest.raises(LLMExtractionError, match="input exceeds"):
         await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    assert generator.calls == 0
+
+
+def checklist_less(destination: DestinationConfig) -> DestinationConfig:
+    """The same destination with no page designated as its document checklist.
+
+    What discovery produces when a country publishes no checklist, or publishes one behind a block
+    we are not permitted to read. `required_source_ids` still names the decision source, so the plan
+    is not resting on nothing.
+    """
+
+    payload = destination.model_dump(mode="json")
+    payload["application_document_source_ids"] = []
+    payload["required_source_ids"] = ["sg_ica_visa_requirement_overview"]
+    return DestinationConfig.model_validate(payload)
+
+
+@pytest.mark.anyio
+async def test_a_corridor_with_no_checklist_source_still_produces_a_plan() -> None:
+    """DECISIONS entry 14 stopped a missing checklist refusing the corridor, and built
+    `validate_absent_checklist` to make the resulting plan safe. The extractor refused first, so
+    that validator could never run and the decision reached no traveller.
+
+    Found on `united-states/IN/IN/tourism`: discovery resolved, and the request still answered
+    "the visa plan could not be generated safely" because the canonical checklist is a 403.
+    """
+
+    golden_draft = load_golden_draft()
+    draft = golden_draft.model_copy(
+        update={
+            "requirements": [],
+            "unresolved_questions": ["The official document checklist could not be retrieved."],
+        }
+    )
+    generator = FakeStructuredPlanGenerator(draft)
+    destination = checklist_less(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.application_document_source_ids == []
+    assert plan.requirements == []
+    # The gap has to be stated. Without this the plan reads as though nothing were missing.
+    assert plan.unresolved_questions
+    # And it must not wear the badge of a complete one, however cleanly the rest was read.
+    assert plan.status == "partial"
+
+
+@pytest.mark.anyio
+async def test_documents_are_never_kept_when_no_checklist_source_backs_them() -> None:
+    """The failure mode that must stay closed: a checklist assembled from pages that are not one.
+
+    The model is asked not to, but a request is not a guarantee — entry 6 was deleted over exactly
+    this — so anything it offers here is dropped rather than published.
+    """
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={"unresolved_questions": ["The document checklist could not be retrieved."]}
+        )
+    )
+    destination = checklist_less(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.requirements == []
+
+
+@pytest.mark.anyio
+async def test_a_declared_checklist_that_was_not_retrieved_still_refuses() -> None:
+    """Undeclared and unretrieved are different: one is the world, the other is a broken run.
+
+    Relaxing the first must not relax the second. A destination that names its checklist page is
+    saying the plan depends on it, so a run that could not read it has no plan to offer — and it is
+    refused before the model call rather than after.
+    """
+
+    generator = FakeStructuredPlanGenerator(load_golden_draft())
+    destination = singapore_config()
+    assert destination.application_document_source_ids == ["sg_ica_india_visa_details"]
+    complete = await FixtureSourceFetcher().fetch(destination)
+    without_checklist = complete.model_copy(
+        update={
+            "fetched": [
+                item
+                for item in complete.fetched
+                if item.source.source_id != "sg_ica_india_visa_details"
+            ]
+        }
+    )
+
+    with pytest.raises(InsufficientEvidenceError):
+        await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+            destination, DEFAULT_TRAVELLER_PROFILE, without_checklist
+        )
 
     assert generator.calls == 0

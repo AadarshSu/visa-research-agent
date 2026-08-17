@@ -156,6 +156,15 @@ class OpenAIVisaPlanExtractor:
         # Refuse before the model call, so a run that cannot succeed costs nothing.
         require_load_bearing_sources(destination, report)
 
+        fetched_source_ids = {item.source.source_id for item in fetched_sources}
+        application_source_ids = set(destination.application_document_source_ids)
+        # A declared checklist that was not retrieved is a refusal, and knowable here rather than
+        # after the call. An *undeclared* one is not: some authorities publish none, and some
+        # publish one we were not allowed to read. Either way the plan states the gap and lists no
+        # documents, which `VisaPlan.validate_absent_checklist` enforces structurally.
+        if not application_source_ids.issubset(fetched_source_ids):
+            raise LLMExtractionError("Application document sources are not available in this run")
+
         research_packet = build_research_packet(
             destination,
             traveller_profile,
@@ -175,17 +184,16 @@ class OpenAIVisaPlanExtractor:
             raise LLMExtractionError("Model output does not match the configured destination")
 
         references = [fetched_source.source for fetched_source in fetched_sources]
-        fetched_source_ids = {reference.source_id for reference in references}
-        application_source_ids = set(destination.application_document_source_ids)
-        if not application_source_ids or not application_source_ids.issubset(fetched_source_ids):
-            raise LLMExtractionError("Application document sources are not available in this run")
-
         requirements = [
             requirement
             for requirement in draft.requirements
             if application_source_ids.intersection(requirement.source_ids)
         ]
-        if not requirements:
+        # With no checklist source there is nothing a document requirement could honestly cite, so
+        # anything the model offered is dropped rather than kept on a page that is not a checklist —
+        # an eligibility rule or an application form read as though it were guidance. The plan then
+        # has to say what it could not answer, or the validator refuses it.
+        if application_source_ids and not requirements:
             raise LLMExtractionError("Model output contains no source-backed application documents")
 
         try:
@@ -208,7 +216,9 @@ class OpenAIVisaPlanExtractor:
                 unresolved_questions=draft.unresolved_questions,
                 conflicts=draft.conflicts,
                 last_checked=max(reference.retrieved_at for reference in references),
-                status=resolve_plan_status(report),
+                status=resolve_plan_status(
+                    report, has_checklist_source=bool(application_source_ids)
+                ),
                 unavailable_sources=report.failures,
             )
         except ValidationError as exc:
