@@ -97,39 +97,43 @@ promises not to do.
 **Verify:** re-time the same corridor and re-run the six known corridors. Speed must not change
 which pages are chosen; if it does, the crawl order was load-bearing and that is worth knowing.
 
-### Deploy it so others can use it — `next`
+### Put it somewhere others can open it — `next`
 
-**Why:** it runs on one laptop with a `.env`. The goal is a link someone can open — Vercel or
-similar — without cloning anything.
+**Why:** it runs on one laptop with a `.env`. The goal is a URL to share. Keep this simple — a host,
+some environment variables, done. No pipelines, no orchestration; CI already runs the checks and
+that is enough.
 
-**The one hard constraint.** A cold request is **70.7s** end to end (53.4s corridor + 17.3s plan).
-Vercel's Hobby limit is 60s, and its filesystem is ephemeral, so `var/cache/` and `var/corridors/`
-do not survive between invocations — which means *every* request is cold, not just the first. As
-written, the app would time out on Vercel for every destination.
+**The one thing that makes it non-trivial.** A cold request is **70.7s** (53.4s corridor + 17.3s
+plan), all inside a single `POST`. Typical request timeouts are 30–60s, so the first request for any
+destination would fail even though the work succeeds. And `var/cache/` and `var/corridors/` are
+local directories, so anywhere with a disposable filesystem makes **every** request cold, not just
+the first.
 
-**The simple way through, in order:**
+**The simple way through:** a warm corridor takes **0.0s**, so resolve the popular ones ahead of
+time rather than on demand.
 
-1. **Ship pre-resolved corridors.** A warm corridor takes **0.0s**. Resolve the common ones offline
-   with `visa-discover`, commit them, and have `FileCorridorStore` read that committed directory.
-   The deployed app then answers instantly for anything precomputed and refuses politely for the
-   rest — which is already an honest, supported outcome. This alone makes it deployable, with no
-   external services.
-2. **Or give the stores somewhere shared to live** — Vercel Blob, KV, Upstash — if cold corridors
-   must work in production. `FileCorridorStore` and `FileSourceCache` are both small classes with
-   `load`/`store`, so a second implementation is a contained change.
-3. **Keep `render_mode: never`.** Chromium will not run on Vercel's serverless runtime, and it is
-   already the committed default. Vietnam will refuse there; that is correct rather than broken.
-4. **Set the secrets** in the platform: `OPENAI_API_KEY`, `OPENAI_MODEL`, `SEARCH_API_KEY`. They
-   come from `.env` today, which is gitignored.
-5. **Put a key or rate limit on `POST /visa-plans`.** It is unauthenticated and a cold corridor
+1. **Precompute and ship corridors.** Resolve them locally with `visa-discover`, keep the JSON, and
+   point `FileCorridorStore` at that directory. The deployed app then answers instantly for anything
+   precomputed and refuses politely for the rest — already an honest, supported outcome. No external
+   services, nothing to orchestrate.
+2. **Prefer a host that keeps a disk and a long-running process** over a disposable one. It removes
+   the whole problem: the stores persist, warm requests stay warm, and a slow cold request has time
+   to finish. If a disposable host is preferred anyway, the stores need somewhere shared to live —
+   both are small classes with `load`/`store`, so a second implementation is contained.
+3. **Set three secrets:** `OPENAI_API_KEY`, `OPENAI_MODEL`, `SEARCH_API_KEY`. They come from `.env`
+   today, which is gitignored.
+4. **Keep `render_mode: never`** unless the host can carry Chromium (~150MB plus system libraries).
+   It is already the committed default; Vietnam will refuse without it, which is correct rather than
+   broken.
+5. **Put a key or a rate limit on `POST /visa-plans`.** It is unauthenticated and a cold corridor
    spends real money — search queries plus two model calls — so a public URL is a public wallet.
 
 **Do not** deploy with `source_mode: fixtures`: it only knows Singapore, and would look like a
-working product that answers one corridor.
+working product that answers exactly one corridor.
 
 **Say it on the page:** this shows official guidance with citations and promises nothing about
-correctness or currency. That framing is the reason the product is safe to publish, so it belongs
-in the interface rather than only in these files.
+correctness or currency. That framing is what makes the product safe to publish, so it belongs in
+the interface rather than only in these files.
 
 ### Tell "no checklist exists" apart from "we failed to find it" — `next`
 
