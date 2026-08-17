@@ -1,8 +1,9 @@
 # Visa Research Agent
 
-A personal learning project that will generate bounded, source-backed visa application plans for
-one fixed traveller profile. The application reports what configured official sources say; it does
-not guarantee eligibility, completeness, or visa approval.
+Generates bounded, source-backed visa application plans for any traveller and any of 198
+destinations. It reports what official government sources say, cites every claim, and states
+plainly what it could not verify. It does not guarantee eligibility, completeness, or visa
+approval, and it never submits anything on anyone's behalf.
 
 > **Picking the project up?** Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) — current state,
 > open problems and what is next. Then [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built,
@@ -15,7 +16,7 @@ Phase 2 now provides the first end-to-end destination with offline sources and s
 extraction:
 
 - strict domain and configuration models;
-- the fixed traveller profile;
+- a traveller described by the request — passport, country applied from, purpose;
 - a country-specific destination registry with verified Singapore official-source URLs;
 - saved, paraphrased Singapore source snapshots dated 6 August 2026;
 - deterministic fixture extraction for free, repeatable development;
@@ -29,9 +30,12 @@ extraction:
 - a small Jinja and vanilla JavaScript research interface;
 - fully offline tests and CI checks.
 
-Conflict detection across sources and LangGraph routing remain intentionally deferred. The United
-States and France return a clear `503 Service Unavailable` response until their later destination
-phases.
+A destination nobody has configured is **researched when it is asked for**: its own government's
+domains are identified, the corridor resolved, and the plan built from what was found. A corridor
+that cannot be established refuses with a reason rather than guessing — France, whose visa portal
+refuses automated retrieval, is a standing example.
+
+Conflict detection across sources and LangGraph routing remain intentionally deferred.
 
 ### Source discovery
 
@@ -53,10 +57,12 @@ automated and per-country trust is not.
 - *Finding pages* for a configured country: results are restricted to approved domains by the
   `site:` operator and filtered again by `trusts_host`, so a commercial visa agency is discarded
   before anything is fetched.
-- *Finding domains* for a new country: the only place search adds real risk, so it is human-gated.
-  A denylist removes agencies first, a domain must appear in at least two independent queries, bare
-  public suffixes are rejected, and government-shaped domains are ranked higher but never admitted
-  automatically. Nothing is approved without a person.
+- *Finding domains* for a new country: the only place search adds real risk. A domain is used only
+  when it is the destination country's **own** government — governmental *and* under that country's
+  own top-level domain. That rule replaced a human approval gate and reproduces every decision the
+  human made; both halves are load-bearing. A denylist removes agencies first, a domain must appear
+  in at least two independent queries, and bare public suffixes are rejected. If no such domain is
+  found, nothing is fetched and the destination is refused.
 
 Queries are built from templates and the corridor alone — never written by a model, never derived
 from fetched page content — so a page cannot influence what is searched for next.

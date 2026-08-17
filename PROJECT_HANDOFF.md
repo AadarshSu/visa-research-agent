@@ -6,7 +6,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-15 — update this line when you touch the handoff |
+| **Last updated** | 2026-08-17 — update this line when you touch the handoff |
 | **Tests** | 245 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
@@ -209,6 +209,10 @@ flip: two consecutive runs of the identical corridor, one resolved, one refused.
 
 Readable correct pages do exist: `in.usembassy.gov/visas/` is the US mission *in India* and already
 resolves as the traveller's own post. Discovery is losing evidence it has, not lacking it.
+
+**A cold corridor takes 53 seconds, and three quarters of that is avoidable** — the crawl applies
+its 0.5s politeness delay globally rather than per host, and walks pages one at a time. Second item
+in the todo, with the phase-by-phase measurements.
 
 **Nothing is deployed, and the current shape will not survive being hosted as-is.** A cold request
 takes **70.7s** end to end — 53.4s to resolve the corridor, 17.3s to extract the plan — all

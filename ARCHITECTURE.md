@@ -11,7 +11,8 @@ Everything else follows from this, so it comes first.
 
 > **Officialness is a property of who controls the domain, never of how a page reads.**
 
-A page is evidence because it sits on a domain a human approved, not because it looks authoritative.
+A page is evidence because it sits on a domain belonging to the destination country's **own
+government**, not because it looks authoritative.
 Convincing prose earns nothing. This makes an unofficial page *unreachable* rather than merely
 low-scoring, which is a much stronger property than filtering.
 
@@ -75,6 +76,13 @@ Every configured source resolves to exactly one outcome. Two carry content; thre
 | `untrusted` | no | Final URL left the approved domains |
 | `unreachable` | no | Timeout, connection error, or error status |
 | `unusable` | no | Retrieved but not evidence — client-rendered shell, unreadable PDF, JSON API, too little text |
+| `blocked` | no | The authority refused automated retrieval (`401`, `403`, `429`) |
+
+`blocked` is the subtle one and is kept apart on purpose. A site refusing automated clients is not
+saying its guidance is wrong or missing — it is saying this program may not read it. The only claim
+that supports is *"we could not independently retrieve and verify this here"*, which is narrower
+than "unreachable" and must never be softened into an inference from another page. Working around
+such a block is forbidden; see [DECISIONS.md](DECISIONS.md) entry 18 and the rules in `CLAUDE.md`.
 
 `unreachable` and `unusable` are kept apart deliberately: one is a transient site problem, the other
 needs a different retriever. They demand different remedies even though they grade the same.
@@ -159,7 +167,21 @@ that expired, self-signed, hostname-mismatched and unknown-CA certificates are s
 
 ## Source discovery
 
-`discovery/`. Runs offline as `visa-discover`, never inside a plan request.
+`discovery/`. Runs two ways, on the same code:
+
+- **`visa-discover`**, a deliberate command with a person reading the result. Still the way to
+  investigate a corridor.
+- **In the request path**, when `destination_mode: automatic` — a destination nobody configured is
+  researched when a plan is asked for. No human approves a domain; the rule below does. See
+  `discovery/automatic.py` and [DECISIONS.md](DECISIONS.md) entry 19.
+
+Resolving a corridor cold costs about **53 seconds** — a bootstrap, a crawl, ten fetches and a model
+call — so results go in `discovery/corridor_store.py`, one JSON file per corridor, keyed by the
+whole corridor and expiring in **weeks**. That is deliberately a much longer life than the evidence
+cache's hours: which *pages* answer a corridor changes when a site is redesigned, not when its
+guidance is edited, and the pages themselves are re-fetched under their own short TTL every time a
+plan is produced. It is a file store rather than an `lru_cache` because a process-lifetime memo
+would serve a weeks-old corridor for as long as the server stayed up.
 
 ### The corridor
 
@@ -172,7 +194,7 @@ this is automated while per-country trust is not.
 | --- | --- | --- |
 | Corridor-dependent? | No — `mofa.go.jp` serves everyone | Yes |
 | How many | ~3 per country | Tens of thousands |
-| Decided by | **A human, once per country** | **The machine, every corridor** |
+| Decided by | **A rule, once per country** | **The machine, every corridor** |
 
 ### The stages
 
@@ -232,8 +254,11 @@ decision source and the checklist.
 
 ### Bootstrapping a new country
 
-`bootstrap.py` proposes authority domains from search, for human approval. The safeguards exist
-because this is the one place search results are not already bounded by an approved domain:
+`bootstrap.py` proposes authority domains from search. A human used to approve them; the rule that
+replaced that approval is **`is_own_government`** — governmental **and** under the destination's own
+top-level domain. Both halves are load-bearing, and it reproduces all 22 recorded human decisions
+(entry 19). The safeguards exist because this is the one place search results are not already
+bounded by an approved domain:
 
 - a **denylist** removes commercial visa agencies before anyone reads the list;
 - a domain must be **corroborated** by two independent queries — relaxed to one when it is under
@@ -242,6 +267,10 @@ because this is the one place search results are not already bounded by an appro
 - the domain must plausibly **belong to the destination country**. "Looks governmental" is satisfied
   by any country's `.gov`, which is how the US embassy in Vietnam once outranked Vietnam's own
   immigration department. Foreign government pages are shown, flagged, and never first.
+
+**A known hole in that rule:** for a country whose own top-level domain *is* `gov` — the United
+States — both halves collapse into the same test, so every federal agency is trusted as a visa
+authority. It is the top item in [TODO.md](TODO.md).
 
 Nothing is approved automatically.
 

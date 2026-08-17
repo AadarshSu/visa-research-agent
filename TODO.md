@@ -61,55 +61,75 @@ short of evidence; it is failing to keep hold of it.
 own TLD is also the generic governmental marker", and hard-coding `US` would leave the same hole
 for any country that later gets one.
 
-### Deploy it — `next`
+### Make a cold corridor faster than 53 seconds — `next`
 
-**Why:** it runs on one laptop with a `.env`. Nothing about it is deployed, and the shape it has
-now will not survive being put behind an ordinary HTTP server without deliberate changes.
+**Why:** it is what makes the thing hard to host, and it is mostly one avoidable thing. Measured on
+2026-08-17 for `brazil/IN/GB/tourism`:
 
-**Measured on 2026-08-17**, one cold request for `brazil/IN/GB/tourism`:
-
-| | |
+| phase | time |
 | --- | --- |
-| Corridor resolution (bootstrap, crawl, 10 fetches, 1 model call) | **53.4s** |
-| Plan extraction (1 model call) | **17.3s** |
-| **Total, cold** | **70.7s** |
-| Same corridor, warm | **0.0s** |
+| bootstrap — 4 searches | 4.5s |
+| **search + crawl** | **41.9s** |
+| shortlist fetch — 10 pages, already concurrent | 7.2s |
+| model adjudication — 1 call | 8.1s |
+| corridor total | **53.4s** |
 
-**That number decides the deployment shape.** Seventy seconds happens *synchronously inside a
-`POST /visa-plans`*. Most proxies and platforms give up long before: 30s on Heroku, 60s on an AWS
-ALB by default, 10–60s on typical serverless. The first request for any new corridor would fail
-even though the work eventually succeeds. So this is not "pick a host" — the request path needs to
-stop being synchronous, or corridors need resolving ahead of time, before anything is hosted.
+**The crawl is 73% of it, and it is sequential by accident rather than by design.**
+`CrawlFetcher.fetch_html` awaits `self.sleep(self.host_delay_seconds)` — 0.5s — before *every*
+request, whatever host it is for, and `LinkCrawler.crawl` walks its frontier one page at a time.
+Forty pages therefore cost at least twenty seconds of pure waiting, and a second host waits behind
+the first for no reason. The delay is meant to be politeness *to one host*; applied globally it is
+just latency.
 
-**Decide these, in roughly this order:**
+**Do:**
 
-1. **What happens during those 70 seconds.** Options: accept the request and poll or stream for the
-   result; resolve corridors on a schedule so common ones are always warm and a cold one refuses
-   politely; or keep it synchronous and accept that only warm corridors work. The warm number
-   being *zero* is what makes pre-resolution attractive.
-2. **Where `var/cache/` and `var/corridors/` live.** Both are local directories today
-   (`settings.cache_directory`, `settings.corridor_directory`). On an ephemeral container every
-   request is cold, so the 70s becomes *every* request rather than the first. This alone probably
-   rules out plain serverless unless the stores move to something shared.
-3. **Whether rendering ships.** `render_mode: on_demand` needs Chromium and its system libraries in
-   the image — roughly 150MB and a much heavier base. It is committed as `never`, so decide
-   explicitly rather than discovering it when Vietnam returns nothing.
-4. **Authentication and abuse.** `POST /visa-plans` is unauthenticated and, on a cold corridor,
-   spends real money: search queries plus two model calls. Anyone who finds the URL can spend it,
-   and 198 destinations × any corridor is a large space to walk. Rate limiting and a key are the
-   minimum.
-5. **Secrets.** `OPENAI_API_KEY` and `SEARCH_API_KEY` come from `.env`, which is gitignored. They
-   need to be real deployment secrets, and nothing should log them.
-6. **Whether CI deploys.** `.github/workflows/ci.yml` runs ruff, mypy and pytest and stops there.
-   The test suite touches neither the network nor a model, so it stays a safe gate.
+1. Make the delay per host, keyed off `host_of(url)`, and crawl different hosts concurrently. This
+   is **more** correct about politeness, not less — each host still gets its spacing. Expect most
+   of the 42s back, since a corridor typically spans two to four hosts.
+2. Run the four bootstrap searches concurrently. Small, ~4.5s, and trivially safe.
+3. Leave the shortlist fetch alone: 7.2s for 10 pages is already concurrent and reasonable.
 
-**Careful:** the offline paths are what make this safe to iterate on — `source_mode: fixtures` and
-`extraction_mode: fixture` need to keep working in whatever gets deployed, because they are the
-deterministic regression baseline and the only way to exercise the app without spending money.
+**Careful:** do not buy speed by lowering `maximum_pages` or `maximum_pages_per_host`. Those bound
+coverage, and Japan's checklist was found two hops deep — cutting depth would trade a real answer
+for a fast refusal. And keep the delay: hammering a government site is exactly what the user agent
+promises not to do.
 
-**Also worth stating publicly** wherever it is deployed: this shows official guidance with
-citations and makes no promise of correctness or currency. That is the product's own framing, and
-it belongs in the interface rather than only in these documents.
+**Verify:** re-time the same corridor and re-run the six known corridors. Speed must not change
+which pages are chosen; if it does, the crawl order was load-bearing and that is worth knowing.
+
+### Deploy it so others can use it — `next`
+
+**Why:** it runs on one laptop with a `.env`. The goal is a link someone can open — Vercel or
+similar — without cloning anything.
+
+**The one hard constraint.** A cold request is **70.7s** end to end (53.4s corridor + 17.3s plan).
+Vercel's Hobby limit is 60s, and its filesystem is ephemeral, so `var/cache/` and `var/corridors/`
+do not survive between invocations — which means *every* request is cold, not just the first. As
+written, the app would time out on Vercel for every destination.
+
+**The simple way through, in order:**
+
+1. **Ship pre-resolved corridors.** A warm corridor takes **0.0s**. Resolve the common ones offline
+   with `visa-discover`, commit them, and have `FileCorridorStore` read that committed directory.
+   The deployed app then answers instantly for anything precomputed and refuses politely for the
+   rest — which is already an honest, supported outcome. This alone makes it deployable, with no
+   external services.
+2. **Or give the stores somewhere shared to live** — Vercel Blob, KV, Upstash — if cold corridors
+   must work in production. `FileCorridorStore` and `FileSourceCache` are both small classes with
+   `load`/`store`, so a second implementation is a contained change.
+3. **Keep `render_mode: never`.** Chromium will not run on Vercel's serverless runtime, and it is
+   already the committed default. Vietnam will refuse there; that is correct rather than broken.
+4. **Set the secrets** in the platform: `OPENAI_API_KEY`, `OPENAI_MODEL`, `SEARCH_API_KEY`. They
+   come from `.env` today, which is gitignored.
+5. **Put a key or rate limit on `POST /visa-plans`.** It is unauthenticated and a cold corridor
+   spends real money — search queries plus two model calls — so a public URL is a public wallet.
+
+**Do not** deploy with `source_mode: fixtures`: it only knows Singapore, and would look like a
+working product that answers one corridor.
+
+**Say it on the page:** this shows official guidance with citations and promises nothing about
+correctness or currency. That framing is the reason the product is safe to publish, so it belongs
+in the interface rather than only in these files.
 
 ### Tell "no checklist exists" apart from "we failed to find it" — `next`
 
