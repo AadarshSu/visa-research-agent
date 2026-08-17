@@ -1,7 +1,9 @@
 """Crawling within approved domains, and scoring what is found."""
 
+import socket
 from typing import Any
 
+import httpcore
 import httpx
 import pytest
 from discovery_site import (
@@ -19,7 +21,12 @@ from discovery_site import (
     handler,
 )
 
-from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler, extract_links
+from visa_research_agent.discovery.crawl import (
+    CrawlFetcher,
+    LinkCrawler,
+    extract_links,
+    host_does_not_resolve,
+)
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.scoring import (
@@ -315,3 +322,58 @@ def test_a_comprehensive_nationality_page_is_not_penalised_for_breadth() -> None
     assert with_nationality.score_for("document_checklist") > (
         without_nationality.score_for("document_checklist")
     )
+
+
+def test_a_dns_failure_is_recognised_by_type_not_by_message() -> None:
+    """The errno and wording differ between platforms — macOS `[Errno 8] nodename nor servname
+    provided`, Linux `[Errno -2] Name or service not known` — so the message is the wrong thing to
+    match on. `socket.gaierror` is the same everywhere, and httpx wraps it two layers deep."""
+
+    resolution = httpx.ConnectError("[Errno 8] nodename nor servname provided, or not known")
+    resolution.__cause__ = httpcore.ConnectError()
+    resolution.__cause__.__cause__ = socket.gaierror(8, "nodename nor servname provided")
+
+    assert host_does_not_resolve(resolution)
+    # A refused connection or a timeout is about this attempt, not about the name.
+    assert not host_does_not_resolve(httpx.ConnectError("[Errno 61] Connection refused"))
+    assert not host_does_not_resolve(httpx.ReadTimeout("timed out"))
+
+
+@pytest.mark.anyio
+async def test_a_host_that_does_not_resolve_is_recorded_once_for_the_whole_host() -> None:
+    """Every other failure is about one request; this one is about the name, so it is held per host
+    and every path beneath it can be skipped without asking."""
+
+    dead = f"https://gone.{AUTHORITY}/visa/index.html"
+
+    def failing(request: httpx.Request) -> httpx.Response:
+        error = httpx.ConnectError("[Errno 8] nodename nor servname provided, or not known")
+        error.__cause__ = socket.gaierror(8, "nodename nor servname provided")
+        raise error
+
+    fetcher = CrawlFetcher(transport=httpx.MockTransport(failing), host_delay_seconds=0.0)
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        assert await fetcher.fetch_html(client, dead, destination()) is None
+
+    assert fetcher.unresolvable_hosts == {host_of(dead)}
+    assert fetcher.outcomes[dead] == "unreachable"
+    # The sentence a reader sees is kept alongside the outcome, not replaced by it.
+    assert "nodename" in fetcher.failures[dead]
+
+
+@pytest.mark.anyio
+async def test_a_refusal_is_recorded_as_blocked_rather_than_as_a_broken_page() -> None:
+    """`inaccessible_domains` is derived from this, so it must not depend on the wording."""
+
+    refused = f"https://{AUTHORITY}/visa/blocked.html"
+
+    def refusing(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(403, text="Access denied")
+
+    fetcher = CrawlFetcher(transport=httpx.MockTransport(refusing), host_delay_seconds=0.0)
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        assert await fetcher.fetch_html(client, refused, destination()) is None
+
+    assert fetcher.outcomes[refused] == "blocked"
+    assert fetcher.blocked_urls() == {refused}
+    assert not fetcher.unresolvable_hosts

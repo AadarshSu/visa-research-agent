@@ -10,6 +10,7 @@ made, and the final host is checked again after redirects.
 
 import asyncio
 import heapq
+import socket
 from collections.abc import Awaitable, Callable
 
 import httpx
@@ -18,7 +19,11 @@ from bs4.element import Tag
 
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
-from visa_research_agent.domain.models import BLOCKING_STATUS_CODES, DestinationConfig
+from visa_research_agent.domain.models import (
+    BLOCKING_STATUS_CODES,
+    DestinationConfig,
+    FailureOutcome,
+)
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.tls import build_ssl_context
@@ -37,6 +42,28 @@ MINIMUM_CRAWL_LINKS = 3
 # How many pages one crawl may render. A site that is unreadable throughout would otherwise
 # render every page it visits, and each render costs seconds rather than milliseconds.
 MAXIMUM_CRAWL_RENDERS = 12
+
+
+def host_does_not_resolve(error: httpx.HTTPError) -> bool:
+    """True when the failure was the hostname itself not resolving.
+
+    Tested by exception type rather than by reading the message: the errno and wording differ
+    between platforms — macOS says `[Errno 8] nodename nor servname provided`, Linux says
+    `[Errno -2] Name or service not known` — while `socket.gaierror` is the same everywhere.
+
+    This is the one failure that is a fact about a **host** rather than about one request, which is
+    why it is worth telling apart. Every other kind says only that this URL, this time, did not
+    work.
+    """
+
+    seen = 0
+    cause: BaseException | None = error
+    while cause is not None and seen < 8:
+        if isinstance(cause, socket.gaierror):
+            return True
+        cause = cause.__cause__ or cause.__context__
+        seen += 1
+    return False
 
 
 def page_title_of(html: str) -> str:
@@ -132,9 +159,38 @@ class CrawlFetcher:
         # Why a page could not be read. Reporting "nothing scored well enough" when the real
         # cause was an unreachable site would hide the actual problem from the reader.
         self.failures: dict[str, str] = {}
+        # The same facts as `failures`, in a form nothing has to read prose to use. Whether an
+        # authority refused us decides both what a traveller is told and whether a fetch place is
+        # worth spending, and neither should depend on a sentence someone may reword.
+        self.outcomes: dict[str, FailureOutcome] = {}
+        # Hosts whose name does not resolve. Held per host rather than per URL because that is the
+        # scope of the fact: no path under this name can be read, so none is worth a fetch place.
+        self.unresolvable_hosts: set[str] = set()
         # Where each request actually landed. Relative links must resolve against that, not
         # against the URL that was asked for, or a redirected page's links all point nowhere.
         self.final_urls: dict[str, str] = {}
+
+    def _record_failure(self, url: str, outcome: FailureOutcome, reason: str) -> None:
+        """Record why a page could not be read, once, in both forms.
+
+        The sentence is for whoever reads the run; the outcome is for whatever has to act on it.
+        Kept together so the two can never describe different things.
+        """
+
+        self.failures[url] = reason
+        self.outcomes[url] = outcome
+
+    def blocked_urls(self) -> set[str]:
+        """URLs an authority refused this client.
+
+        Asking again is pointless — same client, same URL, same answer — and spending a fetch place
+        on one costs a page that could have been read. It is **not** a fact about the host: another
+        path on the same site may be served normally, so nothing here is skipped by domain.
+        Reporting is unaffected: `inaccessible_domains` is derived from these records, not from
+        whether the page was later fetched.
+        """
+
+        return {url for url, outcome in self.outcomes.items() if outcome == "blocked"}
 
     async def fetch_html(
         self,
@@ -159,29 +215,33 @@ class CrawlFetcher:
             elif not reason:
                 # Several httpx errors carry no message, and "because " reads as a broken sentence.
                 reason = f"the request failed ({type(exc).__name__})"
-            self.failures[url] = reason[:120]
+            self._record_failure(url, "unreachable", reason[:120])
+            if host_does_not_resolve(exc):
+                self.unresolvable_hosts.add(host_of(url))
             return None
 
         # Redirects are followed, so the landing host must be re-checked exactly as retrieval does.
         if not destination.trusts_host(host_of(str(response.url))):
-            self.failures[url] = "it redirected off the approved domains"
+            self._record_failure(url, "untrusted", "it redirected off the approved domains")
             return None
         if response.status_code in BLOCKING_STATUS_CODES:
             # The authority is refusing this client, which says nothing about whether its guidance
             # is correct. Recorded in its own words so a refusal cannot read as "nothing found".
-            self.failures[url] = (
+            self._record_failure(
+                url,
+                "blocked",
                 f"it refused automated retrieval (HTTP {response.status_code}), so its guidance "
-                "could not be independently verified here"
+                "could not be independently verified here",
             )
             return None
         if response.status_code != httpx.codes.OK:
-            self.failures[url] = f"it answered HTTP {response.status_code}"
+            self._record_failure(url, "unusable", f"it answered HTTP {response.status_code}")
             return None
         if len(response.content) > self.maximum_bytes:
-            self.failures[url] = "it is larger than the size limit"
+            self._record_failure(url, "unusable", "it is larger than the size limit")
             return None
         if "html" not in response.headers.get("content-type", "text/html").lower():
-            self.failures[url] = "it is not an HTML page"
+            self._record_failure(url, "unusable", "it is not an HTML page")
             return None
         # An empty body is not a separate failure from a shell that renders to nothing: it is the
         # same page, one step further along. So it goes to the renderer too, and only becomes a
@@ -189,7 +249,7 @@ class CrawlFetcher:
         self.final_urls[url] = str(response.url)
         html = await self._render_if_empty(response.text, url, destination)
         if html is not None and not html.strip():
-            self.failures[url] = "it returned no content"
+            self._record_failure(url, "unusable", "it returned no content")
             return None
         return html
 
@@ -217,7 +277,9 @@ class CrawlFetcher:
 
         # Scripts can navigate, so where rendering ended up gets the same check a redirect gets.
         if not destination.trusts_host(host_of(rendered.final_url)):
-            self.failures[url] = "rendering it navigated off the approved domains"
+            self._record_failure(
+                url, "untrusted", "rendering it navigated off the approved domains"
+            )
             return None
         if len(extract_links(rendered.html, rendered.final_url)) <= found:
             return html
