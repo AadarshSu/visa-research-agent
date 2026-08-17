@@ -11,6 +11,7 @@ from discovery_site import (
     DETAIL_INDIA,
     EXEMPTIONS,
     INDEX,
+    MISSION_CHECKLIST,
     MISSION_INDEX,
     MISSION_SPOUSE,
     OFF_DOMAIN,
@@ -395,3 +396,64 @@ async def test_a_very_long_search_title_does_not_take_down_the_corridor(tmp_path
     resolved = await resolver.resolve(destination(), corridor())
 
     assert resolved is not None
+
+
+def test_a_host_whose_name_does_not_resolve_takes_no_fetch_place(tmp_path: Path) -> None:
+    """A place spent on an unreachable host buys nothing, and the US was spending half of them.
+
+    `sample2.usembassy.gov` — a sample host that does not exist — scored highest of all its
+    candidates and took the place reserved for the mission network, while `go.usa.gov`, a
+    decommissioned shortener, took two more.
+    """
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    resolver.crawl_fetcher.unresolvable_hosts = {"sample.embassy.gov.example"}
+    dead = [page(f"https://sample.embassy.gov.example/visa/p{index}", 90.0) for index in range(3)]
+    alive = [page(f"https://immigration.gov.example/visa/p{index}", 20.0) for index in range(3)]
+
+    shortlist = resolver._shortlist([*dead, *alive])
+    urls = [candidate.link.url for candidate in shortlist]
+
+    assert urls == [candidate.link.url for candidate in alive]
+
+
+def test_a_page_the_crawl_could_not_use_is_still_worth_fetching(tmp_path: Path) -> None:
+    """The exclusion must stay narrow. Retrieval is not the crawler: it reads PDFs, renders, and
+    carries different limits, so a page that was too large, was not HTML, or answered `502` may
+    still be readable evidence. Dropping those would trade real answers for a tidier count."""
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    unusable = "https://immigration.gov.example/visa/big.html"
+    resolver.crawl_fetcher._record_failure(unusable, "unusable", "it is larger than the size limit")
+
+    shortlist = resolver._shortlist([page(unusable, 40.0)])
+
+    assert [candidate.link.url for candidate in shortlist] == [unusable]
+
+
+@pytest.mark.anyio
+async def test_a_url_an_authority_refused_is_not_asked_for_a_second_time(tmp_path: Path) -> None:
+    """Asking again is a retry, which is the one thing a block must never provoke — and it would
+    answer the same way. The refusal is still reported: `inaccessible_domains` is read from what the
+    crawl recorded, not from whether the page was later fetched."""
+
+    requests: list[httpx.Request] = []
+    site = handler(requests)
+
+    def refusing(request: httpx.Request) -> httpx.Response:
+        if str(request.url).rstrip("/") == MISSION_CHECKLIST:
+            requests.append(request)
+            return httpx.Response(403, text="Access denied")
+        served: httpx.Response = site(request)  # type: ignore[operator]
+        return served
+
+    transport = httpx.MockTransport(refusing)
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, MISSION_INDEX])
+    resolver.crawl_fetcher.transport = transport
+    resolver.live_fetcher.transport = transport
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert host_of(MISSION_CHECKLIST) in resolved.inaccessible_domains
+    # Once, by the crawl. The shortlist must not spend a place asking a second time.
+    assert [str(request.url) for request in requests].count(MISSION_CHECKLIST) == 1

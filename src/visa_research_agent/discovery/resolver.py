@@ -284,9 +284,14 @@ class CorridorResolver:
             notes.append(f"{host} could not be read because {reason}")
         # An authority refusing this client is a different fact from a site being broken, and the
         # difference matters to a reader: one means "we were not allowed to check", not "no
-        # guidance exists". Kept as data so nothing downstream has to parse prose to find it.
+        # guidance exists". Read from the recorded outcome rather than by matching the sentence,
+        # so rewording a message cannot silently empty this list.
         inaccessible = sorted(
-            host for host, reason in unreadable.items() if "refused automated retrieval" in reason
+            {
+                host_of(url)
+                for url, outcome in self.crawl_fetcher.outcomes.items()
+                if outcome == "blocked"
+            }
         )
 
         candidates: dict[str, CandidatePage] = dict(search_candidates)
@@ -364,8 +369,12 @@ class CorridorResolver:
         it can never fill a role, so the corridor refuses with the answer sitting one place outside
         the cut. That is how a United States corridor refused while the mission serving the
         traveller went unread and eight federal domains competed for ten places.
+
+        Pages the crawl already proved unreadable are dropped before any of that. A place spent on
+        one buys nothing, and the United States was spending half of them that way.
         """
 
+        candidates = self._readable_only(candidates)
         chosen: dict[str, CandidatePage] = {}
         for role in ROLE_ORDER:
             for candidate, _ in rank_for_role(candidates, role)[:3]:
@@ -400,6 +409,30 @@ class CorridorResolver:
             if candidate.link.url not in reserved_urls:
                 kept.append(candidate)
         return sorted(kept, key=lambda c: (-c.link_scores.best()[1], c.link.url))
+
+    def _readable_only(self, candidates: list[CandidatePage]) -> list[CandidatePage]:
+        """Drop candidates the crawl already found it could not read.
+
+        Only two kinds are dropped, and only because each is a fact already established rather than
+        a guess about what a fetch would do:
+
+        * a host whose **name does not resolve** — no path under it can be read;
+        * a URL an authority **refused this client** — asking again is a retry, which is exactly
+          what must not be done, and it would answer the same way.
+
+        Everything else stays. A page that was too large, was not HTML, or answered `502` is left in
+        on purpose: retrieval is not the crawler. It reads PDFs, renders, and carries different
+        limits, so a page the crawl could not use may still be readable evidence — and dropping
+        those would trade a real answer for a tidier count.
+        """
+
+        blocked = self.crawl_fetcher.blocked_urls()
+        unresolvable = self.crawl_fetcher.unresolvable_hosts
+        return [
+            candidate
+            for candidate in candidates
+            if candidate.link.url not in blocked and host_of(candidate.link.url) not in unresolvable
+        ]
 
     def _reserved_per_domain(self, by_score: list[CandidatePage]) -> list[CandidatePage]:
         """Each trusted domain's best-scoring pages, up to the floor.
