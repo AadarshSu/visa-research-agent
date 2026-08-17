@@ -12,6 +12,13 @@ describing the rules for *Americans*; Brazil's offered VFS, an appointed provide
 cannot pass domain trust. None of those is under the destination's own government, and none is
 admitted.
 
+The rule says which domains *may* be used. It does not say how many should be, and that turned out
+to matter: it was calibrated against countries whose government is small enough that its own
+top-level domain names only a handful of domains. A large government's whole namespace passes the
+same rule, and the cost lands on everything downstream — three searches per trusted domain, a crawl
+budget divided by the hosts seeded, ten places in the shortlist. So the set is also capped, and
+ordered by the authority hint the hostname carries, before anything is fetched.
+
 Everything downstream is unchanged. Approved domains still pass `is_bare_public_suffix`, pages are
 still fetched only from them, redirects and renders are still re-checked, and a corridor that
 cannot fill a load-bearing role is still refused rather than filled in.
@@ -44,37 +51,75 @@ class AutomaticDiscoveryError(VisaResearchError):
     """Raised when a destination cannot be resolved automatically, with a reason to show."""
 
 
-def is_own_government(proposal: DomainProposal) -> bool:
-    """The rule that replaces the human approval gate.
+# How many of a destination's own domains one bootstrap may put into use. A bound on the
+# consequence rather than a test for any particular cause: whatever makes a trusted set wide, the
+# cost is the same. Three searches are run per trusted domain, the crawl's per-host budget is the
+# page budget divided by the number of hosts seeded, and the shortlist has ten places — so a wide
+# set spends more, reads less of each site, and makes the right page compete with more noise.
+#
+# Five is calibration against the corridors run so far, not a derived number: the ones that resolve
+# accepted one, two and four domains, and the United States accepted eight. It is deliberately
+# above every accept in the audit behind DECISIONS entry 19, so no recorded decision changes.
+MAXIMUM_AUTO_TRUSTED_DOMAINS = 5
 
-    Both halves are load-bearing. `looks_governmental` alone admits any country's government —
-    the US embassy's page about Vietnam. `belongs_to_destination` alone admits any site under the
-    country's TLD, including its commercial ones.
+
+def is_own_government(proposal: DomainProposal) -> bool:
+    """The rule that replaces the human approval gate."""
+
+    return proposal.is_own_government
+
+
+def _trust_priority(proposal: DomainProposal) -> tuple[int, int, str]:
+    """Order own-government domains by how likely they are to be a visa authority.
+
+    This ranks *within* a set every member of which has already passed domain trust; it is not part
+    of deciding whether a domain is official. `suggested_kind` is read from the hostname alone —
+    `emb`, `consul`, `immi`, `mofa` — the same class of evidence as `looks_governmental` and the
+    same inference `derive_authority` makes when naming an authority. Nothing about how a page reads
+    or where search ranked it enters here, so two runs over the same proposals order them the same.
+
+    Among domains with no hint and equal corroboration the order is alphabetical, which is
+    arbitrary but stable: a hostname carries no further signal about whether that part of a
+    government issues visas.
     """
 
-    return proposal.looks_governmental and proposal.belongs_to_destination
+    return (0 if proposal.suggested_kind else 1, -proposal.corroboration, proposal.domain)
 
 
-def auto_trusted_domains(report: BootstrapReport) -> tuple[list[str], dict[str, str]]:
+def auto_trusted_domains(
+    report: BootstrapReport,
+    *,
+    maximum_trusted: int = MAXIMUM_AUTO_TRUSTED_DOMAINS,
+) -> tuple[list[str], dict[str, str]]:
     """Split a bootstrap into what may be trusted without a person, and what may not.
 
     The withheld list is returned rather than dropped: a corridor that then resolves nothing should
-    be able to say which plausible-looking domains it declined to trust, and why.
+    be able to say which plausible-looking domains it declined to trust, and why. It carries what
+    bootstrap rejected outright as well, so everything declined leaves one trace in one place.
     """
 
     accepted: list[str] = []
-    withheld: dict[str, str] = {}
+    withheld: dict[str, str] = dict(report.rejected)
 
-    for proposal in report.proposals:
-        if is_own_government(proposal):
+    for proposal in sorted(report.proposals, key=_trust_priority):
+        if not proposal.is_own_government:
+            if proposal.looks_governmental:
+                withheld[proposal.domain] = (
+                    "governmental, but not under this destination's own government, so it "
+                    "describes another country's rules"
+                )
+            else:
+                withheld[proposal.domain] = "not a government domain for this destination"
+        elif len(accepted) < maximum_trusted:
             accepted.append(proposal.domain)
-        elif proposal.looks_governmental:
-            withheld[proposal.domain] = (
-                "governmental, but not under this destination's own government, so it describes "
-                "another country's rules"
-            )
         else:
-            withheld[proposal.domain] = "not a government domain for this destination"
+            # This one is the destination's own government. Saying so is the point: whoever reads
+            # this must not be told it belongs to another country, which is a different problem
+            # with a different fix.
+            withheld[proposal.domain] = (
+                "this destination's own government, but not among the "
+                f"{maximum_trusted} best-evidenced visa authorities found, so it was not read"
+            )
     return accepted, withheld
 
 

@@ -108,7 +108,7 @@ def print_bootstrap(report: BootstrapReport, stream: TextIO) -> None:
     if not report.proposals:
         print("  none survived the checks.", file=stream)
     for proposal in report.proposals:
-        if proposal.belongs_to_destination and proposal.looks_governmental:
+        if proposal.is_own_government:
             marker = "OWN GOV"
         elif proposal.looks_governmental:
             marker = "gov    "

@@ -22,7 +22,26 @@ from visa_research_agent.discovery.lexicon import Denylist
 from visa_research_agent.discovery.models import SearchResult
 from visa_research_agent.discovery.search import SearchProvider, bootstrap_queries
 from visa_research_agent.domain.models import StrictModel
-from visa_research_agent.domain.trust import host_of, is_bare_public_suffix
+from visa_research_agent.domain.trust import (
+    host_of,
+    is_bare_public_suffix,
+    registrable_domain,
+)
+
+# Re-exported: reducing a host to the domain worth trusting is a trust rule and lives beside the
+# others, but it was named here first and is imported from here by callers and tests.
+__all__ = [
+    "BootstrapReport",
+    "DomainProposal",
+    "belongs_to_destination",
+    "bootstrap_destination",
+    "entry_point_for",
+    "looks_governmental",
+    "matched_destination_tlds",
+    "propose_domains",
+    "registrable_domain",
+    "suggest_kind",
+]
 
 # Hostname shapes that governments use. A strong hint, never a decision: legitimate authorities sit
 # outside these patterns and spam imitates them.
@@ -53,24 +72,11 @@ KIND_HINTS: tuple[tuple[str, str], ...] = (
 MINIMUM_CORROBORATING_QUERIES = 2
 # A governmental domain under the destination's own top-level domain is such a strong signal that
 # one query is enough. Vietnam's own foreign ministry was otherwise discarded for appearing once.
+#
+# It is only that strong when the two halves are *independent* signals, which is what
+# `DomainProposal.ownership_is_independent` decides. Where they are not, appearing once means only
+# "one of this government's many domains happened to rank once", and the ordinary bar applies.
 MINIMUM_CORROBORATING_QUERIES_FOR_OWN_GOVERNMENT = 1
-
-
-def registrable_domain(host: str) -> str:
-    """Reduce a hostname to the domain worth trusting.
-
-    Keeps three labels for multi-part public suffixes (`ica.gov.sg`) and two otherwise
-    (`example.com`), which matches how `trusted_domains` entries are written by hand.
-    """
-
-    labels = host.lower().strip(".").split(".")
-    if len(labels) <= 2:
-        return ".".join(labels)
-    candidate_two = ".".join(labels[-2:])
-    # If the last two labels are themselves a suffix, the registrable domain needs a third.
-    if is_bare_public_suffix(candidate_two):
-        return ".".join(labels[-3:])
-    return candidate_two
 
 
 class DomainProposal(StrictModel):
@@ -81,6 +87,9 @@ class DomainProposal(StrictModel):
     belongs_to_destination: bool = False
     """True when the domain sits under the destination country's own top-level domain."""
 
+    matched_tlds: list[str] = Field(default_factory=list)
+    """Which of the destination's own top-level domains this domain was found to sit under."""
+
     suggested_kind: str | None = None
     queries: list[str] = Field(default_factory=list)
     example_urls: list[str] = Field(default_factory=list)
@@ -89,6 +98,31 @@ class DomainProposal(StrictModel):
     @property
     def corroboration(self) -> int:
         return len(set(self.queries))
+
+    @property
+    def is_own_government(self) -> bool:
+        """The destination country's own government: governmental **and** under its own domain.
+
+        Both halves are load-bearing. `looks_governmental` alone admits any country's government —
+        the US embassy's page about Vietnam. `belongs_to_destination` alone admits any site under
+        the country's top-level domain, including its commercial ones.
+        """
+
+        return self.looks_governmental and self.belongs_to_destination
+
+    @property
+    def ownership_is_independent(self) -> bool:
+        """True when belonging to the destination says something `looks_governmental` did not.
+
+        For almost every country the two halves ask different questions: `gouv.fr` is governmental,
+        `.fr` is France's. But a country whose own top-level domain *is* the generic governmental
+        marker — `gov` — collapses them into one question, and the whole of that government's
+        namespace is admitted rather than its visa authorities. The test is which top-level domain
+        actually matched, so it is a property of the data in `countries.yaml` and never of a
+        particular country.
+        """
+
+        return any(not looks_governmental(tld) for tld in self.matched_tlds)
 
 
 class BootstrapReport(StrictModel):
@@ -104,6 +138,20 @@ def looks_governmental(domain: str) -> bool:
     return any(pattern.search(domain) for pattern in GOVERNMENT_PATTERNS)
 
 
+def matched_destination_tlds(domain: str, destination_tlds: list[str]) -> list[str]:
+    """Which of the destination country's own top-level domains a domain sits under.
+
+    Which one matched is kept rather than only whether one did, because a match on a plain country
+    code and a match on `gov` are not equally informative. See
+    `DomainProposal.ownership_is_independent`.
+    """
+
+    lowered = domain.lower().strip(".")
+    return [
+        tld for tld in destination_tlds if lowered == tld or lowered.endswith(f".{tld.strip('.')}")
+    ]
+
+
 def belongs_to_destination(domain: str, destination_tlds: list[str]) -> bool:
     """True when a domain sits under one of the destination country's own top-level domains.
 
@@ -111,8 +159,7 @@ def belongs_to_destination(domain: str, destination_tlds: list[str]) -> bool:
     are real governments and both look governmental; only one sets Vietnam's entry rules.
     """
 
-    lowered = domain.lower().strip(".")
-    return any(lowered == tld or lowered.endswith(f".{tld}") for tld in destination_tlds)
+    return bool(matched_destination_tlds(domain, destination_tlds))
 
 
 def suggest_kind(domain: str) -> str | None:
@@ -153,10 +200,12 @@ def propose_domains(
 
             proposal = grouped.get(domain)
             if proposal is None:
+                matched = matched_destination_tlds(domain, destination_tlds or [])
                 proposal = DomainProposal(
                     domain=domain,
                     looks_governmental=looks_governmental(domain),
-                    belongs_to_destination=belongs_to_destination(domain, destination_tlds or []),
+                    belongs_to_destination=bool(matched),
+                    matched_tlds=matched,
                     suggested_kind=suggest_kind(domain),
                 )
                 grouped[domain] = proposal
@@ -168,10 +217,14 @@ def propose_domains(
 
     proposals: list[DomainProposal] = []
     for domain, proposal in grouped.items():
-        own_government = proposal.belongs_to_destination and proposal.looks_governmental
+        # The relaxed bar is earned by the two halves of the own-government rule being two
+        # separate signals. Where the destination's own top-level domain is itself the
+        # governmental marker they are one, so a single appearance is not evidence that this
+        # domain, out of that government's whole namespace, is a visa authority.
+        relaxed = proposal.is_own_government and proposal.ownership_is_independent
         needed = (
             MINIMUM_CORROBORATING_QUERIES_FOR_OWN_GOVERNMENT
-            if own_government
+            if relaxed
             else MINIMUM_CORROBORATING_QUERIES
         )
         if proposal.corroboration < needed:
@@ -187,7 +240,7 @@ def propose_domains(
     # destination's.
     proposals.sort(
         key=lambda p: (
-            not (p.belongs_to_destination and p.looks_governmental),
+            not p.is_own_government,
             not p.belongs_to_destination,
             not p.looks_governmental,
             -p.corroboration,

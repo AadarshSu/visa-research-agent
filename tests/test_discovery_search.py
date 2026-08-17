@@ -290,3 +290,83 @@ def test_a_foreign_government_domain_still_needs_full_corroboration() -> None:
 
     assert report.proposals == []
     assert "at least 2" in report.rejected["state.gov"]
+
+
+def test_a_country_whose_own_domain_is_the_governmental_marker_gets_no_relaxed_bar() -> None:
+    """The relaxed bar is earned by two separate signals, and here there is only one.
+
+    Written against a fictional country rather than the one that exposed this, because the defect
+    is the shape of the rule: a top-level domain that is itself the generic governmental marker
+    makes "governmental" and "under its own domain" the same question, and admits that
+    government's whole namespace rather than its visa authorities.
+    """
+
+    report = propose_domains(
+        "Wonderland",
+        {"q1": [result("https://interior.gov/international", "q1")]},
+        get_denylist(),
+        ["wl", "gov"],
+    )
+
+    assert report.proposals == []
+    assert "at least 2" in report.rejected["interior.gov"]
+
+
+def test_the_same_country_still_admits_a_corroborated_own_domain() -> None:
+    """Narrowing the bar must not close the door: two queries is the ordinary bar, not a veto."""
+
+    report = propose_domains(
+        "Wonderland",
+        {
+            "q1": [result("https://wlembassy.gov/visas/", "q1")],
+            "q2": [result("https://wlembassy.gov/visas/tourist", "q2")],
+        },
+        get_denylist(),
+        ["wl", "gov"],
+    )
+
+    assert [proposal.domain for proposal in report.proposals] == ["wlembassy.gov"]
+    assert report.proposals[0].is_own_government
+
+
+def test_ownership_under_a_plain_country_code_remains_a_second_signal() -> None:
+    """Only the top-level domain that actually matched decides this, not the country's whole list.
+
+    A country holding both a plain code and a governmental one must keep the relaxed bar for
+    domains under the plain code, or one entry in `countries.yaml` would quietly raise the bar for
+    every domain of that country.
+    """
+
+    report = propose_domains(
+        "Wonderland",
+        {"q1": [result("https://immigration.go.wl/apply", "q1")]},
+        get_denylist(),
+        ["wl", "gov"],
+    )
+
+    assert [proposal.domain for proposal in report.proposals] == ["immigration.go.wl"]
+    proposal = report.proposals[0]
+    assert proposal.matched_tlds == ["wl"]
+    assert proposal.ownership_is_independent
+
+
+def test_a_multipart_governmental_suffix_is_recognised_as_the_marker() -> None:
+    report = propose_domains(
+        "Wonderland",
+        {"q1": [result("https://interior.gov.wl/international", "q1")]},
+        get_denylist(),
+        ["wl", "gov.wl"],
+    )
+
+    # Matched under both, but `wl` is a plain code, so ownership still says something extra.
+    assert [proposal.domain for proposal in report.proposals] == ["interior.gov.wl"]
+    assert report.proposals[0].matched_tlds == ["wl", "gov.wl"]
+    # And the bare suffix itself can never be proposed, whatever the country lists.
+    assert registrable_domain("interior.gov.wl") == "interior.gov.wl"
+
+
+def test_registrable_domain_is_still_importable_from_bootstrap() -> None:
+    """It moved to `domain.trust` beside the other hostname rules; callers here are unchanged."""
+
+    assert registrable_domain("in.usembassy.gov") == "usembassy.gov"
+    assert registrable_domain("www.ica.gov.sg") == "ica.gov.sg"

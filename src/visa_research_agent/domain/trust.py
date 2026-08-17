@@ -46,6 +46,23 @@ def is_bare_public_suffix(domain: str) -> bool:
     return len(labels) == 2 and labels[0] in SUFFIX_MARKER_LABELS
 
 
+def registrable_domain(host: str) -> str:
+    """Reduce a hostname to the domain worth trusting.
+
+    Keeps three labels for multi-part public suffixes (`ica.gov.sg`) and two otherwise
+    (`example.com`), which matches how `trusted_domains` entries are written by hand.
+    """
+
+    labels = host.lower().strip(".").split(".")
+    if len(labels) <= 2:
+        return ".".join(labels)
+    candidate_two = ".".join(labels[-2:])
+    # If the last two labels are themselves a suffix, the registrable domain needs a third.
+    if is_bare_public_suffix(candidate_two):
+        return ".".join(labels[-3:])
+    return candidate_two
+
+
 def host_is_within(host: str, domains: Iterable[str]) -> bool:
     """True when a host equals one of the domains or is a subdomain of one.
 

@@ -15,12 +15,17 @@ from pathlib import Path
 import pytest
 
 from visa_research_agent.discovery.automatic import (
+    MAXIMUM_AUTO_TRUSTED_DOMAINS,
     AutomaticDestinationService,
     AutomaticDiscoveryError,
     auto_trusted_domains,
     is_own_government,
 )
-from visa_research_agent.discovery.bootstrap import BootstrapReport, DomainProposal
+from visa_research_agent.discovery.bootstrap import (
+    BootstrapReport,
+    DomainProposal,
+    suggest_kind,
+)
 from visa_research_agent.discovery.corridor_store import FileCorridorStore
 from visa_research_agent.discovery.models import (
     Corridor,
@@ -141,6 +146,129 @@ def test_what_is_withheld_is_reported_with_a_reason() -> None:
     assert accepted == ["diplomatie.gouv.fr"]
     assert "another country's rules" in withheld["europa.eu"]
     assert "not a government domain" in withheld["axa-schengen.com"]
+
+
+def test_what_bootstrap_rejected_outright_is_reported_too() -> None:
+    """Everything declined leaves one trace in one place.
+
+    A domain dropped for too little corroboration was previously visible only in the bootstrap
+    report, which the request path never prints, so a corridor could not say it had seen it.
+    """
+
+    report = BootstrapReport(
+        destination_name="Wonderland",
+        proposals=[proposal("mfa.gov.wl", governmental=True, own=True)],
+        rejected={"agency.example": "on the denylist of agencies and non-authoritative sites"},
+    )
+
+    accepted, withheld = auto_trusted_domains(report)
+
+    assert accepted == ["mfa.gov.wl"]
+    assert "denylist" in withheld["agency.example"]
+
+
+# --- how many of its own government's domains one bootstrap may put into use ------------------
+
+
+def own_government(domain: str, *, corroboration: int = 1) -> DomainProposal:
+    return DomainProposal(
+        domain=domain,
+        looks_governmental=True,
+        belongs_to_destination=True,
+        matched_tlds=["gov"],
+        suggested_kind=suggest_kind(domain),
+        queries=[f"q{index}" for index in range(corroboration)],
+    )
+
+
+def test_only_the_best_evidenced_own_government_domains_are_put_to_use() -> None:
+    """A government large enough to have many domains passes the rule with all of them.
+
+    Every domain here is genuinely this destination's own government, so nothing is being called
+    unofficial. They are competing for a crawl budget and ten fetch places, and an authority whose
+    hostname says it serves travellers should not lose them to one that says nothing.
+    """
+
+    report = BootstrapReport(
+        destination_name="Wonderland",
+        proposals=[
+            own_government("statedept.gov", corroboration=4),
+            own_government("portal.gov", corroboration=4),
+            own_government("homeland.gov", corroboration=3),
+            own_government("wlembassy.gov", corroboration=2),
+            own_government("interior.gov"),
+            own_government("registry.gov"),
+            own_government("enforcement.gov"),
+            own_government("services.gov"),
+        ],
+    )
+
+    accepted, withheld = auto_trusted_domains(report)
+
+    assert len(accepted) == MAXIMUM_AUTO_TRUSTED_DOMAINS
+    # The mission network is the one page in this list that serves a traveller abroad, and it is
+    # the least corroborated of the four that matter. Its hostname is what keeps it in.
+    assert accepted[0] == "wlembassy.gov"
+    assert set(accepted) >= {"wlembassy.gov", "statedept.gov", "portal.gov", "homeland.gov"}
+    assert set(withheld) and set(withheld).isdisjoint(accepted)
+
+
+def test_a_domain_left_out_is_not_described_as_another_countrys() -> None:
+    """The reason has to be true. These are this destination's own government, and saying otherwise
+    would send whoever reads `withheld_domains` after a different problem entirely."""
+
+    report = BootstrapReport(
+        destination_name="Wonderland",
+        proposals=[own_government(f"agency{index}.gov", corroboration=2) for index in range(7)],
+    )
+
+    _, withheld = auto_trusted_domains(report)
+
+    reasons = " ".join(withheld.values())
+    assert "another country" not in reasons
+    assert "not a government domain" not in reasons
+    assert "own government" in reasons
+
+
+def test_the_cap_does_not_reach_an_ordinary_corridor() -> None:
+    """Brazil put one domain to use, France two, China four. None of them changes."""
+
+    report = BootstrapReport(
+        destination_name="China",
+        proposals=[
+            proposal("china-embassy.gov.cn", governmental=True, own=True),
+            proposal("china-consulate.gov.cn", governmental=True, own=True),
+            proposal("mfa.gov.cn", governmental=True, own=True),
+            proposal("nia.gov.cn", governmental=True, own=True),
+        ],
+    )
+
+    accepted, withheld = auto_trusted_domains(report)
+
+    assert len(accepted) == 4
+    assert withheld == {}
+
+
+def test_which_domains_are_used_does_not_depend_on_the_order_search_returned_them() -> None:
+    """The failure this fixes was a coin flip, so the same evidence must give the same set."""
+
+    proposals = [
+        own_government("statedept.gov", corroboration=4),
+        own_government("portal.gov", corroboration=4),
+        own_government("homeland.gov", corroboration=3),
+        own_government("wlembassy.gov", corroboration=2),
+        own_government("interior.gov"),
+        own_government("registry.gov"),
+    ]
+
+    forwards, _ = auto_trusted_domains(
+        BootstrapReport(destination_name="Wonderland", proposals=list(proposals))
+    )
+    backwards, _ = auto_trusted_domains(
+        BootstrapReport(destination_name="Wonderland", proposals=list(reversed(proposals)))
+    )
+
+    assert forwards == backwards
 
 
 # --- resolving a destination from nothing ----------------------------------------------------
