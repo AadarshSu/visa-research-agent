@@ -9,29 +9,30 @@ Status: `next` · `soon` · `later` · `blocked`
 
 ## Next
 
-### Stop spending fetch places on hosts already known to be unreadable — `next`
+### Decide whether a host that has refused every request should be skipped — `soon`
 
-**Why:** it is now the largest waste in a corridor, and it was invisible until the shortlist was
-inspected directly. Of the ten places the US corridor spends, **five go to pages that cannot be
-read**: `sample2.usembassy.gov` (a sample host that does not resolve in DNS) takes the top place at
-122.2, `go.usa.gov` twice (a decommissioned shortener, also no DNS), and `travel.state.gov` twice
-(the 403). Brazil spends one of its ten on `brics2019.itamaraty.gov.br`, also DNS-dead. So a
-corridor reads five or nine pages while reporting ten.
+**Why:** DECISIONS entry 24 stopped a fetch place being spent on a page already proved unreadable,
+and recovered three of the US corridor's five wasted places. **Two remain**, both
+`travel.state.gov` — and they remain because neither URL was ever crawled, so nothing was observed
+about them. One is a PDF, which the crawl skips by design; the other only ever appeared as a search
+result. The per-URL rule cannot help, and every other `travel.state.gov` request has been refused.
 
-The per-domain reservation (DECISIONS entry 22) makes this slightly worse rather than better: a
-domain's reserved place goes to its best-*scoring* candidate, and score knows nothing about whether
-the host answered.
+**The question, and it is a judgement rather than a lookup:** may a host that has refused *every*
+request and served *none* be treated as blocked for URLs never tried? It would recover two places out
+of ten. It is inductive, which is why it was not simply done.
 
-**Do:** when building the shortlist, skip a candidate whose **host already failed DNS during the
-crawl** — `CrawlFetcher.failures` is on the resolver already, and `_reserved_per_domain` is where the
-reservation is chosen. Then re-check the US shortlist: freeing five places should be worth more than
-any ranking change, since `document_checklist` currently goes unfilled.
+**Do:** count requests and refusals per host, and only consider this where the refusal count is high
+and the served count is zero. Then measure whether the two recovered places change what the corridor
+resolves. If they do not, leave the rule out — an inductive skip that buys nothing is not worth its
+risk.
 
-**Careful — the two failure kinds are not interchangeable.** A DNS failure is a fact about the host,
-so skipping every URL under it is sound. A `403` is a fact about *one request*: `travel.state.gov`
-refusing one path is not evidence about another, and per entry 18 a block must still be **reported**
-as `blocked` rather than quietly dropped. Do not collapse both into "host failed". And do not use
-this to retry or work around a block.
+**Careful:** a `403` on one path is genuinely not evidence about another. Real sites put WAF rules on
+some paths and serve the rest, so a host-level skip can silently lose a readable page, and losing
+evidence costs a refusal. Whatever is decided, the block must still be **reported** as `blocked`
+(entry 18), and nothing here may become a retry.
+
+**Also still overstated:** `pages_fetched` is the shortlist length, so the US reports ten pages read
+when eight are readable. Worth making it the count that was actually read.
 
 ### Make a cold corridor faster than 53 seconds — `next`
 

@@ -208,7 +208,11 @@ this is automated while per-country trust is not.
 3. **Fetch the shortlist** (`resolver.py`) — by building a throwaway `DestinationConfig` and passing
    it to the ordinary `LiveSourceFetcher`. This inherits redirect trust, PDF reading, forwarding,
    size caps and caching with no duplicated code — and because `validate_route` runs on that config,
-   an off-domain candidate cannot even be constructed. Ten places: the best three per role, then the
+   an off-domain candidate cannot even be constructed. Pages the crawl already proved unreadable are
+   dropped first — a host whose name does not resolve, or a URL an authority refused, both facts
+   already established rather than predicted. A page that was merely too large, not HTML, or `502`
+   stays: retrieval reads PDFs and renders where the crawler does not, so it may still be evidence.
+   Ten places: the best three per role, then the
    next best overall, then **one place reserved for each registrable domain's best page**. The
    reservation matters because these places decide what is *read*, and only a read page can fill a
    role — so without it an authority whose pages all score below another's is absent rather than

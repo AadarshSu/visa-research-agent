@@ -9,6 +9,57 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 24. A fetch place is not spent on a page already proved unreadable
+**2026-08-17**
+
+Inspecting the US shortlist directly showed **five of its ten fetch places going to pages that
+cannot be read**: `sample2.usembassy.gov` — a documentation sample host that does not exist in DNS —
+scoring highest of everything at 122.2 and taking the place reserved for the mission network,
+`go.usa.gov` twice (a decommissioned shortener, also no DNS), and `travel.state.gov` twice (the 403).
+Brazil spent one of its ten on `brics2019.itamaraty.gov.br`, likewise dead. Ten places decide what is
+read, and only a read page can fill a role, so this was the largest remaining waste in a corridor.
+
+**Decided: drop a candidate only for a failure already observed, never for one predicted.** Two
+kinds qualify, and the distinction between them is the whole design:
+
+- **A host whose name does not resolve** is skipped for every path beneath it. DNS failure is a fact
+  about the *host*, so nothing under it can be read.
+- **A URL an authority refused** is not requested again. Asking twice is a retry, which is the one
+  thing a block must never provoke, and it would answer the same way.
+
+**Detected by exception type, not by message.** `host_does_not_resolve` walks the cause chain for
+`socket.gaierror`, because the wording differs per platform — macOS `[Errno 8] nodename nor servname
+provided`, Linux `[Errno -2] Name or service not known` — while the exception type does not.
+`CrawlFetcher` now records a `FailureOutcome` beside each prose reason, which also lets
+`inaccessible_domains` be derived from `outcome == "blocked"` instead of matching the substring
+"refused automated retrieval" in a sentence someone could reword.
+
+**Deliberately not skipped: everything else.** A page that was too large, was not HTML, or answered
+`502` stays a candidate, because **retrieval is not the crawler** — it reads PDFs, renders, and
+carries different limits, so a page the crawl could not use may still be readable evidence. Losing a
+real page costs a refusal, and that is the more expensive mistake.
+
+**Measured, 2026-08-17.** Three of the five places came back, and they went to real pages:
+`in.usembassy.gov/apply-for-a-nonimmigrant-visa` (95.6), `in.usembassy.gov/immigrant-visas`, and
+`www.usa.gov/non-immigrant-visas` now sit in the shortlist where dead hosts did. Identical across two
+cleared-cache runs. Brazil's roles are unchanged, all still filled including the Edinburgh checklist.
+China is untouched by design: its unreadable hosts answered `502`, which stays a candidate.
+
+**`document_checklist` is still unfilled for the US, and the freed places did not change that** — the
+prediction in the todo that they might was wrong. The canonical B1/B2 checklist is on
+`travel.state.gov`, which is blocked, and no mission page was judged to be one. That is the honest
+outcome rather than a remaining bug.
+
+**What is left, and why it was not taken.** Two places still go to `travel.state.gov`, because those
+two URLs were never crawled — one is a PDF, which the crawl skips by design — so nothing was observed
+about them and the per-URL rule does not apply. Skipping the whole host would recover them, and
+`travel.state.gov` has in fact refused every request made to it. It is not taken here because a `403`
+on one path is genuinely not evidence about another: real sites refuse some paths and serve others.
+Recorded in [TODO.md](TODO.md) as a measured follow-up — a host that has refused every request and
+served none — rather than assumed now.
+
+---
+
 ## 23. Entry 14's decision never reached a traveller, because extraction refused first
 **2026-08-17**
 

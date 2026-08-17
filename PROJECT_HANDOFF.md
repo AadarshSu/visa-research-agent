@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-17 — update this line when you touch the handoff |
-| **Tests** | 258 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 267 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -143,16 +143,11 @@ why.
 
 Ordered by how much they limit the product. None of these are secretly fixed; they are all live.
 
-1. **Half a corridor's fetch places can go to hosts that cannot be read.** The US spends five of ten
-   on DNS-dead hosts (`sample2.usembassy.gov`, `go.usa.gov` twice) and the `travel.state.gov` 403;
-   Brazil spends one on `brics2019.itamaraty.gov.br`. Score decides which page reserves a domain's
-   place, and score knows nothing about whether the host answered. First item in
-   [TODO.md](TODO.md) — and note a DNS failure and a `403` must not be treated as the same fact.
-2. **A cold request takes 70 seconds, synchronously.** 53.4s to resolve a corridor and 17.3s to
+1. **A cold request takes 70 seconds, synchronously.** 53.4s to resolve a corridor and 17.3s to
    extract the plan, inside one `POST`. Warm is instant, and the local `var/` stores are what make
    it warm — so an ephemeral container would make every request cold. This is the constraint that
    shapes any deployment, not a tuning problem.
-3. **A destination is now trusted on a rule, with no human in the loop.** The rule reproduces all
+2. **A destination is now trusted on a rule, with no human in the loop.** The rule reproduces all
    22 recorded human decisions, but it has only ever been checked against seven countries. A country
    whose government publishes outside its own TLD would resolve to nothing; one whose TLD hosts a
    convincing government-shaped domain it does not control would be a genuine hole. Watch the
@@ -162,49 +157,49 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    domains are used, ordered by the hostname's authority hint then corroboration, so a country whose
    guidance genuinely spans six or more of its own domains loses one, and that reason is the only
    warning. Five is calibrated against corridors run, not derived.
-4. **A discovery-time block never reaches the plan.** A plan's `unavailable_sources` describes only
+3. **A discovery-time block never reaches the plan.** A plan's `unavailable_sources` describes only
    its own retrieval, so `travel.state.gov` refusing us while the *corridor* was being resolved is
    held in `ResolvedCorridor.inaccessible_domains` and the plan knows nothing about it. The US plan
    therefore tells a traveller the checklist is absent without telling them an authority declined —
    the one sentence they could act on, by opening the page themselves. Carrying that through is a
    prerequisite for the interface work in [TODO.md](TODO.md).
-5. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
+4. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
    Both produce the same empty result, and since a missing checklist no longer refuses the corridor,
    a find-or-read failure now yields a plan with a visibly empty checklist rather than a refusal.
    The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
    start shipping empty checklists for countries that do publish one, this is the cause; a
    per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
-6. **The heuristic decider still mis-ranks, and is still the fallback.** With
+5. **The heuristic decider still mis-ranks, and is still the fallback.** With
    `discovery_decider: model` the failing case is fixed, but a failed model call falls back to the
    heuristic, which picked a Riyadh page for a UK applicant before entry 15's fixes. Two fixes
    landed — a checklist is known by the documents it names, and the traveller's post governs — but
    both rest on English vocabulary and per-country city labels, so the fallback will keep degrading
    on new countries and languages.
-7. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
+6. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
-8. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
+7. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
    `france-visas.gouv.fr` and `www.france-visas.gouv.fr` (which make France unservable) and
    Singapore's VFS page. This is **not** a bug to fix — working around a block is forbidden by
    [DECISIONS.md](DECISIONS.md) entry 18 and by the rules in `CLAUDE.md`. They now produce the
    `blocked` outcome and appear under `inaccessible_domains`, so a refusal reads as "we were not
    allowed to check" rather than "nothing found".
-9. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
+8. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
    because two of China's correct picks carry dated paths and one is from 2013. Content-hash drift
    detection remains a TODO and covers configured sources only.
-10. **Scoring is English-only.** A destination publishing solely in its own language will score near
+9. **Scoring is English-only.** A destination publishing solely in its own language will score near
    zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
    characters of Vietnamese, which scores nothing.
-11. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
+10. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
    `location: http://localhost:4000/vi` header and an empty body — a misconfigured Next.js i18n
    redirect. Browsers ignore `Location` on a `200`, so **rendering does not fix this one either**;
    it renders to 0 characters. The site root works; only the `/en` path is broken.
-12. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
+11. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
    text-rich, so every check passes.
-13. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
+12. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
    for a consolidated portal. `_mission_domains` returns `[]` for Brazil, whose every mission sits
    on `www.gov.br` with the post in the *path* — so Riyadh and Atlanta outrank Edinburgh for a UK
    applicant. It also misses Singapore's `london.mfa.gov.sg`, which is named by city rather than
@@ -213,9 +208,9 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    with none, so it returns `[]` for **every** discovered destination regardless of how its missions
    are named. Mission detection survives there only through `mission_affinity`'s host-label check —
    which is what still recognises `in.usembassy.gov` as the post serving an Indian traveller.
-14. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
+13. **`conflicts` on a plan is unverified free text** written by the model. Nothing checks it. The
    structured replacement was built and deliberately removed — see [DECISIONS.md](DECISIONS.md).
-15. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
+14. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
    usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
    when testing a retrieval change, or a fix will appear not to work.
 
@@ -223,8 +218,8 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-Two, both at the top of [TODO.md](TODO.md): **fetch places are being spent on unreadable hosts**, and
-**nothing is deployed**.
+**Nothing is deployed**, and that is now the largest thing outstanding — first item in
+[TODO.md](TODO.md) after the two speed and honesty items.
 
 **The United States corridor is fixed** — entry 22, done on 2026-08-17. The own-government rule was
 not wrong, it was calibrated against small governments: because the US's own TLD *is* `gov`, its whole
@@ -236,11 +231,15 @@ reserves a place per registrable domain, so an authority can no longer be shut o
 entirely. The corridor now resolves **identically on three consecutive cleared-cache runs**, on
 twelve corridor queries instead of twenty-four.
 
-**Half the US fetch budget is still wasted**, which is what that work uncovered and the new first
-todo item. Five of ten places go to hosts that cannot be read — two DNS-dead subdomains, a dead URL
-shortener, and the `travel.state.gov` 403 — so the corridor reads five pages while reporting ten.
-Freeing those places is now the cheapest available improvement, and probably what would fill the
-US `document_checklist`.
+**Most of the wasted fetch budget is recovered** — entry 24. Five of the US corridor's ten places had
+been going to pages that cannot be read; a candidate is now dropped when the crawl has already
+established the failure, either a host whose name does not resolve or a URL an authority refused.
+Three places came back and went to real mission pages. Everything else — too large, not HTML, `502` —
+stays a candidate on purpose, because retrieval reads PDFs and renders where the crawler does not.
+**The freed places did not fill `document_checklist`**, which the todo had predicted they might: the
+canonical checklist is the blocked one. Two places still go to `travel.state.gov` URLs that were
+never crawled, and whether a host that has refused everything may be skipped wholesale is left as a
+measured question rather than assumed.
 
 **A cold corridor takes 53 seconds, and three quarters of that is avoidable** — the crawl applies
 its 0.5s politeness delay globally rather than per host, and walks pages one at a time. Second item
@@ -282,16 +281,17 @@ In the order that makes sense. Detail and reasoning in [TODO.md](TODO.md). The t
 head this list — run a country that publishes a checklist, make the traveller profile variable, wire
 discovery into request time — are all done; see *Current state*.
 
-1. **Stop spending fetch places on hosts already known to be unreadable.** Cheapest real improvement
-   available: it would free half the US budget, and a DNS failure is a definitive fact about a host.
-   A `403` is not the same fact and must still be reported rather than dropped.
-2. **Make a cold corridor faster than 53 seconds** — the crawl's politeness delay is applied globally
+1. **Make a cold corridor faster than 53 seconds** — the crawl's politeness delay is applied globally
    rather than per host, which is most of it.
-3. **Deploy it**, which the 70.7s cold request shapes rather than blocks: resolve popular corridors
+2. **Deploy it**, which the 70.7s cold request shapes rather than blocks: resolve popular corridors
    ahead of time and ship them.
-4. **Tell "no checklist exists" apart from "we failed to find it."** The US now makes this concrete
+3. **Tell "no checklist exists" apart from "we failed to find it."** The US now makes this concrete
    rather than hypothetical: its checklist is unfilled because a page is blocked, and that is a third
    case again.
+4. **Carry `inaccessible_domains` into the plan**, so a traveller learns an authority declined rather
+   than only that something is missing. Prerequisite for the interface work on blocked sources.
+5. **Decide whether a host that refused every request may be skipped** — two US fetch places turn on
+   it, and it is inductive, so measure before adopting.
 6. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
 
 ---
