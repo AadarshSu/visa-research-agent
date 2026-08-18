@@ -34,6 +34,7 @@ from visa_research_agent.discovery.models import (
     ResolvedSource,
     SearchResult,
 )
+from visa_research_agent.discovery.registry import AuthorityRegistry, CountryAuthorities
 from visa_research_agent.domain.models import DestinationConfig
 
 pytestmark = pytest.mark.anyio
@@ -105,17 +106,31 @@ class StubResolver:
         return self.outcome
 
 
+def registry(*rows: CountryAuthorities) -> AuthorityRegistry:
+    return AuthorityRegistry(schema_version=1, generated_at=NOW, countries=list(rows))
+
+
+def france(trusted: list[str] | None = None) -> CountryAuthorities:
+    return CountryAuthorities(
+        code="FR",
+        name="France",
+        trusted=["france-visas.gouv.fr"] if trusted is None else trusted,
+    )
+
+
 def build_service(
     tmp_path: Path,
     provider: StubProvider,
     resolver: StubResolver,
     *,
     now: datetime = NOW,
+    authorities: AuthorityRegistry | None = None,
 ) -> AutomaticDestinationService:
     return AutomaticDestinationService(
         provider,
         lambda: resolver,  # type: ignore[arg-type,return-value]
         FileCorridorStore(tmp_path / "corridors"),
+        authorities=authorities if authorities is not None else registry(france()),
         now=lambda: now,
     )
 
@@ -338,22 +353,44 @@ async def test_a_destination_nobody_configured_is_researched(tmp_path: Path) -> 
     assert discovered.config.application_document_source_ids == ["fr_visa_decision"]
 
 
-async def test_nothing_is_fetched_when_no_own_government_domain_is_found(
+async def test_nothing_is_fetched_when_no_own_government_domain_is_confirmed(
     tmp_path: Path,
 ) -> None:
     """The refusal that keeps the gate's removal honest.
 
-    Search returned only a commercial agency and another country's government. There is nothing
-    safe to read, so nothing is read — rather than falling back to the best available.
+    The rule confirmed nothing for this country when the registry was generated — search had
+    offered only a commercial agency and another country's government. There is nothing safe to
+    read, so nothing is read, rather than falling back to the best available.
     """
 
-    provider = StubProvider(["https://axa-schengen.com/visa", "https://travel.state.gov/france"])
+    provider = StubProvider([])
     resolver = StubResolver(resolved())
+    service = build_service(tmp_path, provider, resolver, authorities=registry(france(trusted=[])))
 
     with pytest.raises(AutomaticDiscoveryError, match="own government"):
-        await build_service(tmp_path, provider, resolver).destination_for("France", corridor())
+        await service.destination_for("France", corridor())
 
     assert resolver.trusted_seen == [], "nothing may be crawled without an approved domain"
+
+
+async def test_a_country_absent_from_the_registry_is_refused_not_searched(
+    tmp_path: Path,
+) -> None:
+    """The failure mode the registry introduces, and it must not be papered over.
+
+    Falling back to a live bootstrap here would reintroduce exactly the per-request variance
+    DECISIONS entry 34 removed, and would do it silently, on the countries nobody had reviewed.
+    """
+
+    provider = StubProvider(["https://france-visas.gouv.fr/en/applying"])
+    resolver = StubResolver(resolved())
+    service = build_service(tmp_path, provider, resolver, authorities=registry())
+
+    with pytest.raises(AutomaticDiscoveryError, match="reviewed authority registry"):
+        await service.destination_for("France", corridor())
+
+    assert provider.queries == [], "a missing row must never fall back to searching"
+    assert resolver.trusted_seen == []
 
 
 async def test_a_refusal_names_the_candidates_the_rule_could_not_confirm(tmp_path: Path) -> None:
@@ -364,13 +401,24 @@ async def test_a_refusal_names_the_candidates_the_rule_could_not_confirm(tmp_pat
     that message goes looking at search or at ranking, when the gap is the trust rule itself.
     """
 
-    provider = StubProvider(
-        ["https://www.auswaertiges-amt.de/en/visa", "https://germany-visa-agency.com/apply"]
-    )
+    provider = StubProvider([])
     resolver = StubResolver(resolved())
+    service = build_service(
+        tmp_path,
+        provider,
+        resolver,
+        authorities=registry(
+            CountryAuthorities(
+                code="DE",
+                name="Germany",
+                trusted=[],
+                unconfirmable=["auswaertiges-amt.de"],
+            )
+        ),
+    )
 
     with pytest.raises(AutomaticDiscoveryError) as raised:
-        await build_service(tmp_path, provider, resolver).destination_for("Germany", corridor())
+        await service.destination_for("Germany", corridor())
 
     message = str(raised.value)
     assert "auswaertiges-amt.de" in message, "name what was found rather than implying nothing was"
@@ -378,7 +426,8 @@ async def test_a_refusal_names_the_candidates_the_rule_could_not_confirm(tmp_pat
     assert "named in reviewed data" in message
     # Not "could not be identified": they were, and saying otherwise is what sent readers astray.
     assert "could not be identified" not in message
-    # The agency is not offered as a candidate authority: it is not under Germany's own TLD.
+    # Only candidates under Germany's own TLD are named; a commercial agency never reaches the
+    # registry's `unconfirmable` list, so it cannot be offered here as a candidate authority.
     assert "germany-visa-agency.com" not in message
     assert resolver.trusted_seen == [], "still nothing crawled — this changes wording, not trust"
 
@@ -472,6 +521,7 @@ async def test_every_corridor_is_resolved_through_a_freshly_built_resolver(
         provider,
         build,  # type: ignore[arg-type]
         FileCorridorStore(tmp_path / "corridors"),
+        authorities=registry(france()),
         now=lambda: NOW,
     )
 

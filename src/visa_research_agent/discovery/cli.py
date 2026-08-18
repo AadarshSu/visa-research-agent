@@ -15,9 +15,14 @@ import argparse
 import asyncio
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from typing import TextIO
 
-from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
+from visa_research_agent.config.loader import (
+    config_path,
+    get_destination_registry,
+    get_runtime_policy,
+)
 from visa_research_agent.config.settings import settings
 from visa_research_agent.discovery.adjudication import (
     LangChainRoleAdjudicator,
@@ -29,9 +34,19 @@ from visa_research_agent.discovery.bootstrap import (
     entry_point_for,
 )
 from visa_research_agent.discovery.crawl import CrawlFetcher
-from visa_research_agent.discovery.lexicon import get_country_registry, get_denylist
+from visa_research_agent.discovery.lexicon import (
+    CountryRegistry,
+    get_country_registry,
+    get_denylist,
+)
 from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
 from visa_research_agent.discovery.proposal import render_corridor_yaml
+from visa_research_agent.discovery.registry import REGISTRY_FILENAME, load_authority_registry
+from visa_research_agent.discovery.registry_build import (
+    BuildProgress,
+    build_authority_registry,
+    write_registry,
+)
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
 from visa_research_agent.domain.models import RuntimePolicy
@@ -196,6 +211,81 @@ async def run_bootstrap(args: argparse.Namespace, stream: TextIO) -> int:
     return 0 if report.proposals else 2
 
 
+async def run_registry(args: argparse.Namespace, stream: TextIO) -> int:
+    """Generate the committed authority registry — the one command that costs search quota.
+
+    Deliberately not something a request can trigger. Four queries per country times 198 countries
+    is most of an hour and a real bill, and the whole point of DECISIONS entry 34 is that this
+    happens once and is reviewed, rather than on every cold request for a nationality nobody has
+    asked about before.
+    """
+
+    destination = Path(args.output)
+    existing = None
+    if destination.exists() and not args.rebuild:
+        existing = load_authority_registry(str(destination))
+        print(
+            f"resuming: {len(existing.countries)} countries already in {destination}",
+            file=stream,
+        )
+
+    countries = get_country_registry()
+    if args.only:
+        # A subset is a first-class operation, not a shortcut: after a review finds a country's
+        # trusted set wrong, rebuilding that one country must not cost 792 searches. It also lets
+        # the file be grown deliberately rather than all at once.
+        wanted = {code.strip().upper() for code in args.only.split(",") if code.strip()}
+        unknown = wanted - {country.code for country in countries.countries}
+        if unknown:
+            print(f"not in countries.yaml: {', '.join(sorted(unknown))}", file=stream)
+            return 3
+        countries = CountryRegistry(
+            schema_version=1,
+            countries=[c for c in countries.countries if c.code in wanted],
+        )
+
+    remaining = len(countries.countries) - sum(
+        1 for c in countries.countries if existing and existing.get(c.code)
+    )
+    print(f"{remaining} countries to build, about {remaining * 4} searches\n", file=stream)
+
+    def report(progress: BuildProgress) -> None:
+        if progress.error is not None:
+            print(f"  {progress.country.code}  FAILED  {progress.error}", file=stream)
+            return
+        row = progress.row
+        assert row is not None
+        trusted = ", ".join(row.trusted) if row.trusted else "(none — refused)"
+        print(f"  {row.code}  {trusted}", file=stream)
+        if row.unconfirmable:
+            print(f"      unconfirmable: {', '.join(row.unconfirmable)}", file=stream)
+
+    registry, failures = await build_authority_registry(
+        countries,
+        build_search_provider(),
+        get_denylist(),
+        existing=existing,
+        on_progress=report,
+        write=lambda current: write_registry(current, destination),
+    )
+    write_registry(registry, destination)
+
+    confirmed = sum(1 for row in registry.countries if row.trusted)
+    print(
+        f"\n{len(registry.countries)} countries written to {destination}; "
+        f"{confirmed} have a confirmed domain, {len(registry.countries) - confirmed} are refused.",
+        file=stream,
+    )
+    if failures:
+        # Named rather than counted: these are not in the file at all, so a later run will retry
+        # exactly these, and a reader has to be able to tell them from a country that was refused.
+        print(f"{len(failures)} could not be searched and were left out:", file=stream)
+        for code, reason in sorted(failures.items()):
+            print(f"  {code}  {reason}", file=stream)
+        return 2
+    return 0
+
+
 async def run_corridor(args: argparse.Namespace, stream: TextIO) -> int:
     destination = get_destination_registry().get(args.destination)
     if destination is None:
@@ -246,6 +336,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     bootstrap.add_argument("--destination-name", required=True, help='e.g. "Brazil"')
 
+    registry = commands.add_parser(
+        "registry", help="generate the reviewed authority-domain registry for every country"
+    )
+    registry.add_argument(
+        "--output",
+        default=str(config_path(REGISTRY_FILENAME)),
+        help="where to write the registry",
+    )
+    registry.add_argument(
+        "--rebuild",
+        action="store_true",
+        help="rebuild every country instead of resuming; costs the full search quota again",
+    )
+    registry.add_argument(
+        "--only",
+        default="",
+        help="comma-separated ISO codes to build, e.g. FR,DE,JP; the rest of the file is kept",
+    )
+
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
@@ -264,6 +373,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         if args.command == "bootstrap":
             return asyncio.run(run_bootstrap(args, sys.stderr))
+        if args.command == "registry":
+            return asyncio.run(run_registry(args, sys.stderr))
         return asyncio.run(run_corridor(args, sys.stderr))
     except SearchError as exc:
         print(f"Search is unavailable: {exc}", file=sys.stderr)

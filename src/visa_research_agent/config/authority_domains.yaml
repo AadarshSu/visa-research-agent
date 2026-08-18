@@ -1,0 +1,339 @@
+# Which domains each country's own government may be researched from.
+#
+# GENERATED, then reviewed by a person, then committed. Regenerate with:
+#
+#     visa-discover registry --output src/visa_research_agent/config/authority_domains.yaml
+#
+# It is generated rather than curated, and reviewed rather than trusted: `bootstrap.py` proposes,
+# the same `auto_trusted_domains` rule the request path used to run live decides, and a person
+# reads the result once. See DECISIONS entry 34 for why this is not the URL-approval gate entry 19
+# removed, and entry 33 for what `unconfirmable` is.
+#
+#   trusted       — confirmed as this country's own government; the only domains ever fetched from.
+#                   Empty means the country is refused, which is a real answer and not a bug.
+#   unconfirmable — under the country's own top-level domain, but the hostname carries no marker
+#                   this rule recognises as governmental. A real immigration authority may well be
+#                   sitting here: 19 of 51 countries measured have theirs here, because no `gov.de`
+#                   or `gov.nl` convention exists for one to be found under. Reported so a refusal
+#                   can name it. **Never trusted** — that would be "looks official", which is the
+#                   one thing the trust rule refuses to do.
+#
+# Editing `trusted` by hand is a trust decision. Do it deliberately, and say why in DECISIONS.md.
+schema_version: 1
+generated_at: '2026-08-18T17:54:10.886134+00:00'
+countries:
+- code: AE
+  name: United Arab Emirates
+  trusted:
+  - mofa.gov.ae
+  - gdrfad.gov.ae
+  - icp.gov.ae
+  - moet.gov.ae
+  - uaelegislation.gov.ae
+  unconfirmable:
+  - u.ae
+- code: AT
+  name: Austria
+  trusted: []
+  unconfirmable:
+  - gv.at
+- code: AU
+  name: Australia
+  trusted:
+  - embassy.gov.au
+  - foreignminister.gov.au
+  - homeaffairs.gov.au
+  - dfat.gov.au
+  - abf.gov.au
+  unconfirmable: []
+- code: BE
+  name: Belgium
+  trusted: []
+  unconfirmable:
+  - belgium.be
+  - diplomatie.be
+  - ibz.be
+- code: BR
+  name: Brazil
+  trusted:
+  - www.gov.br
+  unconfirmable: []
+- code: CA
+  name: Canada
+  trusted:
+  - travel.gc.ca
+  - international.gc.ca
+  - cbsa-asfc.gc.ca
+  - cic.gc.ca
+  - geds-sage.gc.ca
+  unconfirmable:
+  - canada.ca
+- code: CH
+  name: Switzerland
+  trusted:
+  - admin.ch
+  unconfirmable:
+  - swiss-visa.ch
+- code: CN
+  name: China
+  trusted:
+  - china-embassy.gov.cn
+  - china-consulate.gov.cn
+  - mfa.gov.cn
+  - nia.gov.cn
+  - www.gov.cn
+  unconfirmable: []
+- code: CZ
+  name: Czechia
+  trusted:
+  - ipc.gov.cz
+  - mzv.gov.cz
+  - mv.gov.cz
+  unconfirmable: []
+- code: DE
+  name: Germany
+  trusted: []
+  unconfirmable:
+  - auswaertiges-amt.de
+  - bundesregierung.de
+  - diplo.de
+- code: DK
+  name: Denmark
+  trusted: []
+  unconfirmable:
+  - denmark.dk
+  - nyidanmark.dk
+  - um.dk
+- code: EG
+  name: Egypt
+  trusted:
+  - emigration.gov.eg
+  - moi.gov.eg
+  - visa2egypt.gov.eg
+  unconfirmable:
+  - presidency.eg
+- code: ES
+  name: Spain
+  trusted:
+  - administracionespublicas.gob.es
+  - exteriores.gob.es
+  - inclusion.gob.es
+  - interior.gob.es
+  - lamoncloa.gob.es
+  unconfirmable: []
+- code: FR
+  name: France
+  trusted:
+  - diplomatie.gouv.fr
+  - france-visas.gouv.fr
+  - service-public.gouv.fr
+  unconfirmable: []
+- code: GB
+  name: United Kingdom
+  trusted:
+  - immigrationadviceauthority.gov.uk
+  - www.gov.uk
+  - homeoffice.gov.uk
+  unconfirmable: []
+- code: GR
+  name: Greece
+  trusted:
+  - immigration.gov.gr
+  - migration.gov.gr
+  unconfirmable:
+  - mfa.gr
+- code: HR
+  name: Croatia
+  trusted:
+  - mvep.gov.hr
+  - mup.gov.hr
+  unconfirmable:
+  - mvep.hr
+- code: HU
+  name: Hungary
+  trusted:
+  - mfa.gov.hu
+  - enterhungary.gov.hu
+  - oif.gov.hu
+  unconfirmable: []
+- code: ID
+  name: Indonesia
+  trusted:
+  - imigrasi.go.id
+  - bps.go.id
+  - kemlu.go.id
+  unconfirmable:
+  - vfsevisa.id
+- code: IE
+  name: Ireland
+  trusted:
+  - www.gov.ie
+  - inis.gov.ie
+  unconfirmable:
+  - ireland.ie
+  - irishimmigration.ie
+- code: IN
+  name: India
+  trusted:
+  - indianembassyusa.gov.in
+  - cgichicago.gov.in
+  - indianvisaonline.gov.in
+  - india.gov.in
+  - mha.gov.in
+  unconfirmable: []
+- code: IT
+  name: Italy
+  trusted:
+  - integrazionemigranti.gov.it
+  - mise.gov.it
+  unconfirmable:
+  - esteri.it
+- code: JP
+  name: Japan
+  trusted:
+  - mofa.go.jp
+  - emb-japan.go.jp
+  - japan.go.jp
+  - e-gov.go.jp
+  - moj.go.jp
+  unconfirmable: []
+- code: KR
+  name: South Korea
+  trusted:
+  - mofa.go.kr
+  - immigration.go.kr
+  - e-arrivalcard.go.kr
+  - goesan.go.kr
+  - k-eta.go.kr
+  unconfirmable: []
+- code: MA
+  name: Morocco
+  trusted:
+  - mre.gov.ma
+  unconfirmable:
+  - acces-maroc.ma
+  - consulat.ma
+  - diplomatie.ma
+- code: MX
+  name: Mexico
+  trusted:
+  - inm.gob.mx
+  - sre.gob.mx
+  - www.gob.mx
+  unconfirmable: []
+- code: MY
+  name: Malaysia
+  trusted:
+  - imi.gov.my
+  - kln.gov.my
+  - spab.gov.my
+  - malaysia.gov.my
+  unconfirmable: []
+- code: NL
+  name: Netherlands
+  trusted:
+  - business.gov.nl
+  unconfirmable:
+  - government.nl
+  - netherlandsandyou.nl
+  - netherlandsworldwide.nl
+- code: NZ
+  name: New Zealand
+  trusted:
+  - immigration.govt.nz
+  - mfat.govt.nz
+  - www.govt.nz
+  - iaa.govt.nz
+  - mbie.govt.nz
+  unconfirmable: []
+- code: PH
+  name: Philippines
+  trusted:
+  - immigration.gov.ph
+  - evisa.gov.ph
+  - foi.gov.ph
+  - dfa.gov.ph
+  - dmw.gov.ph
+  unconfirmable: []
+- code: PL
+  name: Poland
+  trusted:
+  - www.gov.pl
+  - e-konsulat.gov.pl
+  - study.gov.pl
+  - cudzoziemcy.gov.pl
+  - uw.gov.pl
+  unconfirmable: []
+- code: PT
+  name: Portugal
+  trusted:
+  - mne.gov.pt
+  - www2.gov.pt
+  - portugal.gov.pt
+  unconfirmable:
+  - sef.pt
+- code: SA
+  name: Saudi Arabia
+  trusted:
+  - mofa.gov.sa
+  - my.gov.sa
+  - moi.gov.sa
+  - sta.gov.sa
+  unconfirmable: []
+- code: SE
+  name: Sweden
+  trusted: []
+  unconfirmable:
+  - government.se
+  - migrationsverket.se
+  - swedenabroad.se
+- code: SG
+  name: Singapore
+  trusted:
+  - mfa.gov.sg
+  - ica.gov.sg
+  - sgdi.gov.sg
+  - ask.gov.sg
+  - mha.gov.sg
+  unconfirmable: []
+- code: TH
+  name: Thailand
+  trusted:
+  - mfa.go.th
+  - immigration.go.th
+  - thaievisa.go.th
+  unconfirmable: []
+- code: TR
+  name: Turkey
+  trusted:
+  - mfa.gov.tr
+  - evisa.gov.tr
+  - goc.gov.tr
+  - konsolosluk.gov.tr
+  - turkiye.gov.tr
+  unconfirmable: []
+- code: US
+  name: United States
+  trusted:
+  - usembassy.gov
+  - state.gov
+  - usa.gov
+  - dhs.gov
+  - uscis.gov
+  unconfirmable: []
+- code: VN
+  name: Vietnam
+  trusted:
+  - immigration.gov.vn
+  - mofa.gov.vn
+  - evisa.gov.vn
+  - xuatnhapcanh.gov.vn
+  unconfirmable: []
+- code: ZA
+  name: South Africa
+  trusted:
+  - dha.gov.za
+  - www.gov.za
+  - dirco.gov.za
+  - bma.gov.za
+  unconfirmable: []

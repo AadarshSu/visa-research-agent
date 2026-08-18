@@ -6,6 +6,14 @@ Reviewing six bootstraps, every accept and every reject reduced to one question:
 the destination country's own government?* Those are the two properties `bootstrap.py` already
 computes, and the rule reproduces all 22 recorded human decisions with no disagreements.
 
+**Where that rule runs changed on 2026-08-18 (DECISIONS entry 34).** It used to run inside every
+cold request, cached per *corridor*, so a country's trusted set was re-derived from that day's
+search rankings for every new nationality — entry 22's United States coin flip was this, diagnosed
+at the time as ranking. The rule is unchanged and `auto_trusted_domains` below is still the whole of
+it; what moved is *when*. It is now run offline for all 198 countries, read once by a person, and
+committed as `authority_domains.yaml`. This service reads that file. Nothing here searches for a
+domain any more, so two requests for the same country cannot disagree about whose government it is.
+
 What the rule keeps out is the point of it. France's bootstrap surfaced `axa-schengen.com`, a
 commercial travel insurer; Vietnam's ranked `usembassy.gov` first, which is a real government
 describing the rules for *Americans*; Brazil's offered VFS, an appointed provider that by design
@@ -27,11 +35,7 @@ cannot fill a load-bearing role is still refused rather than filled in.
 from collections.abc import Callable
 from datetime import UTC, datetime
 
-from visa_research_agent.discovery.bootstrap import (
-    BootstrapReport,
-    DomainProposal,
-    bootstrap_destination,
-)
+from visa_research_agent.discovery.bootstrap import BootstrapReport, DomainProposal
 from visa_research_agent.discovery.corridor_store import FileCorridorStore
 from visa_research_agent.discovery.lexicon import (
     Country,
@@ -41,6 +45,7 @@ from visa_research_agent.discovery.lexicon import (
     get_denylist,
 )
 from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
+from visa_research_agent.discovery.registry import AuthorityRegistry, get_authority_registry
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import SearchProvider
 from visa_research_agent.domain.models import DestinationConfig, StrictModel
@@ -189,6 +194,7 @@ class AutomaticDestinationService:
         *,
         countries: CountryRegistry | None = None,
         denylist: Denylist | None = None,
+        authorities: AuthorityRegistry | None = None,
         maximum_age_hours: float = 24.0 * 21,
         now: Callable[[], datetime] = _utc_now,
     ) -> None:
@@ -199,6 +205,9 @@ class AutomaticDestinationService:
         self.store = store
         self.countries = countries or get_country_registry()
         self.denylist = denylist or get_denylist()
+        # Read once at construction. Which domains belong to a government is not a per-request
+        # question, and making it one is exactly what entry 34 moved out of this path.
+        self.authorities = authorities or get_authority_registry()
         self.maximum_age_hours = maximum_age_hours
         self.now = now
 
@@ -245,23 +254,39 @@ class AutomaticDestinationService:
                 from_cache=True,
             )
 
-        report = await bootstrap_destination(
-            country.name, self.provider, self.denylist, destination_tlds=country.tlds
-        )
-        trusted, withheld = auto_trusted_domains(report)
+        entry = self.authorities.get(country.code)
+        if entry is None:
+            # Not a refusal about the country — a refusal about this deployment. Searching for the
+            # domains here instead would reintroduce the per-request variance entry 34 removed, and
+            # would do it silently, on exactly the countries nobody had reviewed.
+            raise AutomaticDiscoveryError(
+                f"{country.name} is not in the reviewed authority registry, so there is no "
+                "confirmed government domain to research it from. Nothing was fetched. Regenerate "
+                "the registry with `visa-discover registry` and review the entry."
+            )
+
+        trusted = list(entry.trusted)
+        withheld = {
+            domain: (
+                f"under {country.name}'s own top-level domain, but its hostname carries no marker "
+                "this rule recognises as governmental, so it could not be confirmed as an "
+                "authority. It may be a real one: some governments use no such marker, and for "
+                "those the domain has to be named in reviewed data instead"
+            )
+            for domain in entry.unconfirmable
+        }
         if not trusted:
             # Name the candidates the rule could not confirm. Without this the message says no
             # government domain was *identified*, which for Germany or Italy is simply untrue and
             # sends whoever reads it to look at search or ranking rather than at the trust rule.
-            unconfirmable = unconfirmable_authorities(report)
             detail = ""
-            if unconfirmable:
+            if entry.unconfirmable:
                 detail = (
                     f" Candidates under {country.name}'s own top-level domain were found — "
-                    f"{', '.join(unconfirmable)} — but none of their hostnames carries a marker "
-                    "this agent recognises as governmental, so none could be confirmed as an "
-                    "authority. Some governments use no such marker; for those the domain has to "
-                    "be named in reviewed data."
+                    f"{', '.join(entry.unconfirmable)} — but none of their hostnames carries a "
+                    "marker this agent recognises as governmental, so none could be confirmed as "
+                    "an authority. Some governments use no such marker; for those the domain has "
+                    "to be named in reviewed data."
                 )
             raise AutomaticDiscoveryError(
                 f"No domain belonging to {country.name}'s own government could be confirmed, so "

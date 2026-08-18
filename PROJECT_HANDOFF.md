@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 341 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 356 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -353,6 +353,15 @@ its seven entries are now implemented, and nothing is left shipping against the 
   government domain*, and no longer identically to a commercial visa agency. The refusal message names
   the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
   is trusted.
+- **The trusted-domain registry is committed** (entry 38) — `config/authority_domains.yaml`, generated
+  by `visa-discover registry`, read by `AutomaticDestinationService` in place of a live bootstrap. The
+  trust rule is untouched; only *when* it runs moved. **40 of 198 countries built**; the rest refuse with
+  a message naming the command, which is quota rather than work. Verified live: New Zealand resolved
+  fully from committed domains with **0 searches** in the service where 4 went on bootstrap.
+  **Reading it found what running it could not** — five countries refused, **twelve confirmed *and
+  wrong*** (the Netherlands trusts only its business portal; Canada trusts five `gc.ca` domains while
+  IRCC's content is on the unconfirmable `canada.ca`), and the cap spending slots on United States
+  missions for an India corridor. All three are now TODO item 1's concrete work.
 - **`robots.txt` is read and obeyed** (entry 36) — `research/robots.py`, one policy per origin with a
   24-hour expiry, consulted by `discovery/crawl.py` before every page and by `research/live_sources.py`
   before every source and every meta-refresh forward. 32 tests, all offline. A skip is the new
@@ -404,11 +413,10 @@ rules.** `robots.txt` was the last of those (entry 36); what remains all costs s
 198-country registry, search quota, or a decision nobody has argued yet — so pick up
 [TODO.md](TODO.md) item 1 and work down:
 
-1. **The committed domain registry** (entry 34), then **2. the trust-rule amendment** for the 19
-   governments with no hostname marker and for Schengen. Item 2's own next step is a measurement: how
-   many of the 19 are covered by a published government domain list, registry organisation data, or a
-   TLS certificate organisation — which decides whether it is automatable or genuinely needs a human.
-3. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
+1. **The trust-rule amendment**, now that entry 38's registry has measured what needs amending: five
+   countries refused outright, twelve confirmed *and wrong*, and a cap spending slots on the wrong parts
+   of a government. It is a data edit against a committed file rather than a regex change.
+2. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
    thing that decides whether this is a product. Nothing large should be built before it. It now has a
    posture worth measuring: `robots.txt` landed first on purpose.
 
@@ -434,6 +442,7 @@ of three steps in.** Read them in [DECISIONS.md](DECISIONS.md).
 | 34 | "Who to believe" leaves the request path and becomes a committed registry a person skims once. Not the gate entry 19 removed — that was URLs; this is ~3 domains per country, machine-proposed. |
 | 35 | The posture is honest client, not anonymous client: read `robots.txt`, ask for access, and decide the client-side-retrieval question explicitly. Plus the bar that decides whether this is a product, committed before the measurement. |
 | 36 | `robots.txt` is read once per origin and obeyed, by the crawl and by retrieval. A skip is the `disallowed` outcome, never an absence; it is reported but may never resolve a corridor; and an unread policy is never reported as a policy that refused us. |
+| 38 | The trusted-domain registry is generated offline and committed; `bootstrap_destination` leaves the request path. Reviewing it found twelve countries confirmed *and wrong*, and the cap spending slots on the wrong parts of a government. |
 
 ### What changed on 2026-08-17, in one line each
 
@@ -482,21 +491,18 @@ same falsehood entry 33 removed from `withheld_domains`.
 credit is done**, so each remaining item costs something — a crawl policy, a 198-country registry, or
 search quota.
 
-1. **Move "who to believe" into committed data** — generate the country → trusted-domains registry offline
-   for all 198 countries, commit it, skim it once (entry 34). Not the gate entry 19 removed: that was URLs,
-   which stay automated. TODO item 1.
-2. **Amend the trust rule** for the 19 governments with no hostname marker, and for Schengen. **Its own
-   first step is a measurement**, because "a reviewed authority domain" would otherwise mean hand-curating
-   198 countries — the manual work the production goal exists to remove: check how many of the 19 are
-   covered by a published government domain list, by registry organisation data, or by a TLS certificate
-   organisation field. If most are, this stays automatable; if not, the review is 19 countries rather than
-   198. TODO item 2.
-3. **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
+1. **Amend the trust rule** for the governments with no hostname marker, for the twelve confirmed-and-wrong
+   countries entry 38 found, and for Schengen. **The measurement it was waiting on is done** — entry 38's
+   table names the countries and the domains, so this is now a data edit against a committed file rather
+   than a regex change. `gv.at`, `canada.ca`, `esteri.it`, `government.nl`, `sef.pt`, `irishimmigration.ie`
+   are the concrete cases. Fix the cap's alphabetical tie-break at the same time: India spends two of five
+   slots on United States missions. TODO item 1.
+2. **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
    decision and ≥50% yield a checklist. **Blocked on Brave credit**, and the thing that decides the
    project's direction, so nothing large should be built before it. Fold in the France read-through, which
-   needs the same credit and is still the one shipped change never run live. TODO item 3.
-4. **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
-   does not approve it). TODO item 4.
+   needs the same credit and is still the one shipped change never run live. TODO item 2.
+3. **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
+   does not approve it). TODO item 3.
 6. **Then deploy**, precompute popular corridors, and put a key or a rate limit on `POST /visa-plans`.
 7. Standing work: confirm a blocked authority reads usefully (the plumbing turned out to already exist —
    see known problem 7); tell "no checklist exists" apart from "we failed to find it"; decide whether a

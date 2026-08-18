@@ -9,6 +9,66 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 38. The trusted-domain registry is generated offline and committed, and reviewing it found what running it could not
+**2026-08-18 · implemented for 40 countries; the remaining 158 are unbuilt**
+
+Entry 34, built. `bootstrap_destination` no longer runs in a request. `discovery/registry.py` reads
+`config/authority_domains.yaml`; `discovery/registry_build.py` and `visa-discover registry` generate it.
+`auto_trusted_domains` — the whole of the trust rule — is unchanged and still the only thing deciding a
+domain. **What moved is when it runs**, from every cold request to once per country.
+
+Verified live: resolving New Zealand, a destination nobody had configured, spent **0 searches** in the
+service where it previously spent 4, and produced a visa decision, a document checklist, an application
+route and a general-entry page from committed domains alone.
+
+**A missing row refuses rather than falling back to a live bootstrap.** Falling back would reintroduce the
+per-request variance this entry exists to remove, silently, on exactly the countries nobody had reviewed.
+The refusal names the command that fixes it.
+
+**A country whose searches errored is left out of the file entirely**, never written with an empty
+`trusted`. Those two mean different things — "the rule confirmed nothing for Germany" is a finding a
+reviewer must act on, and "we never got to ask" is not — and the build is resumable precisely so the
+second can be retried without repaying for the first.
+
+### What the review found, which is the point of committing it
+
+Forty countries built, 35 confirmed, 5 refused. Entry 34 argued that committing the rule's output makes
+the riskiest automated decision in the system auditable. It does, and reading the file surfaced three
+things no test and no corridor run had:
+
+**The five refusals are entry 33's known failure, and now name their own fix.** `AT`, `BE`, `DE`, `DK`,
+`SE` — with `gv.at`, `ibz.be`, `auswaertiges-amt.de`, `nyidanmark.dk` and `migrationsverket.se` sitting in
+`unconfirmable`. `gv.at` in particular is a marker correction `CLAUDE.md` already blesses.
+
+**Twelve more countries are confirmed *and wrong*, which is worse and was invisible before.** Entry 33
+predicted this second failure and could not measure it; the file shows it plainly:
+
+| Country | Trusted | Actually holds the visa guidance |
+| --- | --- | --- |
+| Netherlands | `business.gov.nl` — the business portal | `government.nl`, and IND, both unconfirmable |
+| Italy | `integrazionemigranti.gov.it`, `mise.gov.it` | `esteri.it`, unconfirmable |
+| Canada | five `gc.ca` domains | `canada.ca`, unconfirmable — IRCC moved there |
+| Portugal | three ministry domains | `sef.pt`, unconfirmable |
+| Ireland | `gov.ie`, `inis.gov.ie` | `irishimmigration.ie`, unconfirmable |
+
+These corridors do not refuse. They resolve, against domains that cannot hold the answer, which is
+exactly the failure mode this project treats as worse than refusing.
+
+**A third finding nobody had predicted: the cap spends its slots on the wrong parts of a government.**
+India's five include `indianembassyusa.gov.in` and `cgichicago.gov.in` — United States missions, occupying
+two of five slots for *every* corridor including India-from-GB. South Korea's include `goesan.go.kr`, a
+county. Spain's put `administracionespublicas.gob.es` and `lamoncloa.gob.es`, the prime minister's office,
+ahead of `exteriores.gob.es`. Entry 22 predicted the cap would bite and assumed the ordering was sound;
+`_trust_priority` falls back to **alphabetical** among domains with no hostname hint, and for a large
+government that is the same as arbitrary. This is now item 2's problem, and it is a data-and-ordering
+problem rather than the regex change entry 33 forbade.
+
+**Forty rather than 198, deliberately.** 198 countries is 792 searches; the top forty by traveller volume
+is 160 and answers the question the file was built to answer. The remaining 158 refuse with the message
+naming `visa-discover registry`, and `--only` builds any subset. Building the rest is quota, not work.
+
+---
+
 ## 37. A per-run allowance may not be counted on an object that outlives the run
 **2026-08-18 · implemented**
 
@@ -227,7 +287,7 @@ entry 18 does not require it.
 ---
 
 ## 34. Who to believe becomes committed data; only which page is decided live
-**2026-08-18 · decided, not implemented**
+**2026-08-18 · decided; implemented as entry 38**
 
 `ARCHITECTURE.md` already states the right division and the code does not implement it:
 
