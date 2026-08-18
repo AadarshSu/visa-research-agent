@@ -33,6 +33,7 @@ from visa_research_agent.discovery.models import (
     ResolvedSource,
     SearchResult,
 )
+from visa_research_agent.domain.models import DestinationConfig
 
 pytestmark = pytest.mark.anyio
 
@@ -386,3 +387,99 @@ async def test_a_stored_corridor_is_keyed_by_the_whole_corridor(tmp_path: Path) 
     await service.destination_for("France", other)
 
     assert len(resolver.trusted_seen) == 2
+
+
+# --- a gap an authority imposed, rather than a gap we could not close ---------------------------
+
+
+BLOCKED_PAGE = "https://france-visas.gouv.fr/en/web/france-visas"
+
+
+def partly_resolved(*, blocked: bool, with_sources: bool = True) -> ResolvedCorridor:
+    """France as it actually resolves: the UK post's route page, and no confirmed decision."""
+
+    sources = (
+        [
+            ResolvedSource(
+                source_id="fr_route",
+                title="Applying for a visa",
+                url="https://uk.diplomatie.gouv.fr/en/applying-for-a-visa",  # type: ignore[arg-type]
+                authority="France in the United Kingdom",
+                kind="embassy_or_high_commission",
+                roles=["application_route"],
+                score=42.8,
+                decided_by="model",
+            )
+        ]
+        if with_sources
+        else []
+    )
+    return ResolvedCorridor(
+        corridor=corridor("france"),
+        resolved_at=NOW,
+        sources=sources,
+        unresolved_roles=["visa_decision", "document_checklist"],
+        inaccessible_domains=["france-visas.gouv.fr"] if blocked else [],
+        inaccessible_urls=[BLOCKED_PAGE] if blocked else [],
+    )
+
+
+def test_a_decision_missing_because_an_authority_refused_us_still_yields_a_plan() -> None:
+    """France states the visa decision only on a portal that refuses this program, and every
+    readable page delegates to it. Silence is not the honest answer there: naming the page and
+    saying we were not permitted to read it is something the traveller can act on."""
+
+    resolved = partly_resolved(blocked=True)
+
+    assert resolved.is_usable
+    assert resolved.decision_is_unverified
+
+
+def test_a_decision_simply_not_found_still_refuses() -> None:
+    """The narrow exception must stay narrow. Without an authority refusing us, an unfilled visa
+    decision means we did not find it — and a plan built on that would be guessing."""
+
+    resolved = partly_resolved(blocked=False)
+
+    assert not resolved.is_usable
+    assert not resolved.decision_is_unverified
+
+
+def test_a_blocked_authority_alone_is_not_a_plan() -> None:
+    """With nothing readable to cite there is no plan, only a link."""
+
+    assert not partly_resolved(blocked=True, with_sources=False).is_usable
+
+
+def test_the_refused_page_reaches_the_destination_it_will_be_planned_from() -> None:
+    """The URL is the point: a plan can hand it over, and a domain alone could not be opened."""
+
+    base = DestinationConfig(
+        slug="france",
+        display_name="France",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["diplomatie.gouv.fr", "france-visas.gouv.fr"],
+    )
+
+    config = partly_resolved(blocked=True).to_destination_config(base)
+
+    assert config.decision_is_unverified
+    assert [str(authority.url) for authority in config.unreadable_authorities] == [BLOCKED_PAGE]
+    assert "france-visas.gouv.fr" in config.unreadable_authorities[0].authority
+    # It is not a source: there is no content behind it, so nothing may cite it as evidence.
+    assert [source.source_id for source in config.sources] == ["fr_route"]
+
+
+def test_an_unverified_decision_cannot_be_claimed_without_naming_the_authority() -> None:
+    """Otherwise "we were not allowed to read it" would quietly cover for "we did not find it"."""
+
+    with pytest.raises(ValueError, match="must name the authority"):
+        DestinationConfig(
+            slug="france",
+            display_name="France",
+            route_type="national",
+            implementation_status="available",
+            trusted_domains=["diplomatie.gouv.fr"],
+            decision_is_unverified=True,
+        )

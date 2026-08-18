@@ -8,6 +8,7 @@ from visa_research_agent.domain.models import (
     AppointedProvider,
     ConfiguredSource,
     DestinationConfig,
+    UnreadableAuthority,
 )
 from visa_research_agent.domain.trust import host_is_within, host_of, is_bare_public_suffix
 
@@ -149,3 +150,26 @@ def test_the_committed_singapore_configuration_satisfies_its_own_trust_rules() -
     ]
     assert not singapore.trusts_host("visa-advice-blog.example")
     assert not singapore.trusts_host(host_of(str(AnyHttpUrl("https://ica.gov.sg.evil.example/x"))))
+
+
+def test_a_page_offered_as_guidance_must_still_be_on_an_approved_domain() -> None:
+    """An unreadable authority is shown to a traveller as this destination's own guidance, so it
+    is held to the same rule as evidence — and it is the case that needs the rule most, because
+    nobody read the page, so the domain is the only thing vouching for it."""
+
+    with pytest.raises(ValidationError, match="not on an approved domain"):
+        DestinationConfig(
+            slug="france",
+            display_name="France",
+            route_type="national",
+            implementation_status="available",
+            trusted_domains=["diplomatie.gouv.fr"],
+            decision_is_unverified=True,
+            unreadable_authorities=[
+                UnreadableAuthority(
+                    url="https://visa-agency.example/france",  # type: ignore[arg-type]
+                    authority="Not France",
+                    detail="refused automated retrieval",
+                )
+            ],
+        )

@@ -292,13 +292,8 @@ class CorridorResolver:
         # difference matters to a reader: one means "we were not allowed to check", not "no
         # guidance exists". Read from the recorded outcome rather than by matching the sentence,
         # so rewording a message cannot silently empty this list.
-        inaccessible = sorted(
-            {
-                host_of(url)
-                for url, outcome in self.crawl_fetcher.outcomes.items()
-                if outcome == "blocked"
-            }
-        )
+        refused = sorted(self.crawl_fetcher.blocked_urls())
+        inaccessible = sorted({host_of(url) for url in refused})
 
         candidates: dict[str, CandidatePage] = dict(search_candidates)
         for candidate in crawled:
@@ -327,6 +322,7 @@ class CorridorResolver:
             unresolved_roles=unresolved,
             notes=notes,
             inaccessible_domains=inaccessible,
+            inaccessible_urls=refused,
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,

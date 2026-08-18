@@ -112,6 +112,22 @@ class AppointedProvider(StrictModel):
     appointed_by: str = Field(pattern=r"^[a-z0-9][a-z0-9_-]*$")
 
 
+class UnreadableAuthority(StrictModel):
+    """One of the destination's own authorities that would not let this program read it.
+
+    Carried so a plan can name it and hand the traveller the URL, which is a next step they can act
+    on: they can open it in their own browser. It is **never evidence**. Nothing here says what the
+    page contains — only that it exists, whose it is, and that we were not permitted to read it from
+    here. That is the one claim a block licenses (DECISIONS entry 18), and it is the whole reason
+    this is a separate type from `ConfiguredSource` rather than a source with empty content.
+    """
+
+    url: AnyHttpUrl
+    authority: str = Field(min_length=1)
+    detail: str = Field(min_length=1)
+    """A safe summary of what happened. Never carries retrieved page text."""
+
+
 class DestinationConfig(StrictModel):
     """Country-specific research configuration."""
 
@@ -125,6 +141,17 @@ class DestinationConfig(StrictModel):
     trusted_domains: list[str] = Field(default_factory=list)
     appointed_providers: list[AppointedProvider] = Field(default_factory=list)
     required_source_ids: list[str] = Field(default_factory=list)
+
+    unreadable_authorities: list[UnreadableAuthority] = Field(default_factory=list)
+    """The destination's own authorities that refused this program, for the plan to point at."""
+
+    decision_is_unverified: bool = False
+    """True when no page could be confirmed as saying whether a visa is needed, *and* the reason is
+    that an authority refused automated retrieval rather than that nothing was found.
+
+    It is what lets a plan be produced at all in that case, so it must never be set without an
+    entry in `unreadable_authorities` — otherwise "we could not read it" would cover for "we did not
+    find it", which are different facts with different remedies."""
 
     @property
     def load_bearing_source_ids(self) -> list[str]:
@@ -168,6 +195,20 @@ class DestinationConfig(StrictModel):
         if unknown_required_ids:
             unknown = ", ".join(sorted(unknown_required_ids))
             raise ValueError(f"required sources contain unknown IDs: {unknown}")
+
+        if self.decision_is_unverified and not self.unreadable_authorities:
+            raise ValueError(
+                "an unverified visa decision must name the authority that could not be read"
+            )
+
+        # These are presented to a traveller as this destination's own guidance, so they are held to
+        # the same rule as evidence: officialness is a property of the domain. A page we could not
+        # read is exactly the case where nothing else could vouch for it.
+        for authority in self.unreadable_authorities:
+            if not self.trusts_host(host_of(str(authority.url))):
+                raise ValueError(
+                    f"unreadable authority {authority.url} is not on an approved domain"
+                )
 
         for domain in self.trusted_domains:
             if is_bare_public_suffix(domain):

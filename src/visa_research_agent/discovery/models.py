@@ -19,6 +19,7 @@ from visa_research_agent.domain.models import (
     StrictModel,
     TravelPurpose,
 )
+from visa_research_agent.domain.trust import host_of
 
 DiscoveryRole = Literal[
     "visa_decision",
@@ -203,6 +204,13 @@ class ResolvedCorridor(StrictModel):
     could not be independently verified here. Nothing may be inferred in their place.
     """
 
+    inaccessible_urls: list[str] = Field(default_factory=list)
+    """The exact pages that refused, so a plan can hand the traveller a link rather than a domain.
+
+    A page, not a host, because that is the scope of what was observed: this URL refused this
+    client. It is still not evidence about what the page says.
+    """
+
     queries: list[str] = Field(default_factory=list)
     model_calls: int = 0
     pages_fetched: int = 0
@@ -218,14 +226,30 @@ class ResolvedCorridor(StrictModel):
 
     @property
     def is_usable(self) -> bool:
-        """True when every load-bearing role was filled.
+        """True when every load-bearing role was filled, or the gap is one an authority imposed.
 
-        A corridor missing its checklist is refused rather than served, because a plan without one
-        cannot be produced and a substitute page would be worse than nothing.
+        A corridor that simply could not find its visa decision is still refused: a substitute page
+        would be worse than nothing.
+
+        The exception is narrow and is not a relaxation of that rule. When an authority under the
+        destination's *own* government refused this program, the honest position is not silence —
+        it is naming the page and saying we were not permitted to read it, which is something the
+        traveller can act on by opening it themselves. That needs a plan to exist to say it in, so
+        the corridor resolves and `decision_is_unverified` carries the reason. Readable sources are
+        still required: with nothing at all to cite there is no plan, only a link.
         """
 
         filled = {role for source in self.sources for role in source.roles}
-        return all(role in filled for role in LOAD_BEARING_ROLES)
+        if all(role in filled for role in LOAD_BEARING_ROLES):
+            return True
+        return bool(self.inaccessible_urls) and bool(self.sources)
+
+    @property
+    def decision_is_unverified(self) -> bool:
+        """True when nothing confirmed the visa decision and an authority is why."""
+
+        filled = {role for source in self.sources for role in source.roles}
+        return "visa_decision" not in filled and bool(self.inaccessible_urls)
 
     def source_ids_for(self, role: DiscoveryRole) -> list[str]:
         return [source.source_id for source in self.sources if role in source.roles]
@@ -261,4 +285,18 @@ class ResolvedCorridor(StrictModel):
             for provider in payload.get("appointed_providers", [])
             if provider.get("appointed_by") in source_ids
         ]
+        # Named so the plan can point at them. Deliberately not sources: there is no content behind
+        # them, and a source with empty content is exactly what must never be citable as evidence.
+        payload["unreadable_authorities"] = [
+            {
+                "url": url,
+                "authority": f"{destination.display_name} authority ({host_of(url)})",
+                "detail": (
+                    "refused automated retrieval, so its guidance could not be independently "
+                    "verified here"
+                ),
+            }
+            for url in self.inaccessible_urls
+        ]
+        payload["decision_is_unverified"] = self.decision_is_unverified
         return DestinationConfig.model_validate(payload)
