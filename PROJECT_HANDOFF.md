@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-17 — update this line when you touch the handoff |
-| **Tests** | 273 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 277 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -39,6 +39,13 @@ the table below is what each one actually did.
 | Live retrieval | works | works | needs rendering | works | **403 bot-blocked** | works | works |
 | Discovery exit code | 0 | 0 | 1 | 0 | **2** | **2** | 1 |
 | Checklist found | yes | yes | none published | yes | no — site unreadable | yes | no — 403 |
+
+France was re-examined on 2026-08-17 because `france/IN/GB/tourism` is a common corridor to refuse —
+entry 26. It refuses **correctly, and now consistently**: France states the visa decision only on
+`france-visas.gouv.fr`, which answers 403, and every readable page delegates to it rather than saying
+it. The re-examination did find two real scoring defects, now fixed — a mission host label being read
+as who a page is for, which put France's India post above its UK post for a UK applicant, and footer
+boilerplate taking three of ten fetch places.
 
 The first six were verified live on 2026-08-16 with `discovery_decider: model`. Brazil was the
 out-of-sample test that broke keyword ranking, so the last step now asks a model — entries 15 and 16.
@@ -180,7 +187,9 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
-7. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
+7. **Bot-blocked official portals are the largest coverage limit, and will stay one.** France is
+   the clearest case and entry 26 quantifies it: every readable French government page delegates the
+   visa decision to the blocked portal, so the corridor cannot resolve however good the ranking is. Three found:
    `france-visas.gouv.fr` and `www.france-visas.gouv.fr` (which make France unservable) and
    Singapore's VFS page. This is **not** a bug to fix — working around a block is forbidden by
    [DECISIONS.md](DECISIONS.md) entry 18 and by the rules in `CLAUDE.md`. They now produce the

@@ -9,6 +9,72 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 26. France refuses because France does not publish the answer anywhere readable
+**2026-08-17**
+
+`france/IN/GB/tourism` — an Indian passport, applying from the UK — refused, and it is a corridor
+common enough that the refusal deserved checking rather than attributing to the known 403.
+
+**It was a coin flip, not a dead end.** Two consecutive runs over an identical shortlist: one
+resolved, one refused. The shortlist was deterministic; the model was not. So the corridor was
+marginal, and the reason was what the shortlist contained.
+
+**Two real scoring defects, both fixed.**
+
+1. **A host label was read as who a page is for.** `in.diplomatie.gouv.fr` is France's mission *in
+   India*, and `_matches_country` matched India's host label `in`, so the nationality bonus of +40
+   went to **everything that post publishes**. That beat the +30 the UK post earns for actually
+   serving this traveller: on the identical page `/en/applying-for-a-visa`, the India post scored
+   65.6 and the UK post 55.6. So the post for the traveller's *home* country outranked the post they
+   must apply at — the same shape of bug as entry 21, a country code matching where it does not mean
+   the country. The bonus now reads only the path and the title, which are the page describing
+   itself; the host stays with the mission machinery, which is keyed on where the traveller applies
+   from. After the fix the UK post leads 55.6 to 25.6.
+
+   `_matches_country` itself is unchanged, because `wrong_country` needs the host label: it is what
+   keeps *other* posts — France in Germany, France in Brazil — out of a corridor entirely.
+
+2. **Site furniture took three of ten fetch places.** `/accessibilite`,
+   `/en/donnees-personnelles` and `/mentions-legales` each scored 69, above the UK post's real
+   pages. The mechanism is worth recording: `extract_links` gives a link the last heading seen above
+   it, and footer links sit below everything, so France's legal notice inherited the heading of a
+   news article about visa requirements and collected the heading bonus twice. A legal notice cannot
+   be visa guidance whatever it scores, so `boilerplate_tokens` vetoes it exactly as `archive_tokens`
+   does — rejecting rather than penalising.
+
+**And with both fixed, France still refuses — correctly, and now consistently (3 runs of 3).** This
+is the part that matters. The shortlist is now the right pages, and reading them shows the answer is
+not there:
+
+| readable page | what it actually says |
+| --- | --- |
+| `uk.diplomatie.gouv.fr/en/applying-for-a-visa` | Sends the reader to the France-Visas "visa wizard" to find out whether they need a visa |
+| `uk.diplomatie.gouv.fr/en/visiting-france` | Tourism marketing — landscapes and monuments |
+| `www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france` | Tourism marketing |
+| `france-visas.gouv.fr` | **HTTP 403** — the wizard, and the only place the decision lives |
+
+France's own government states the visa decision **only** on the portal that refuses automated
+retrieval. Every readable page delegates to it. So there is no page that can be confirmed as the
+visa decision, and refusing is the correct output rather than a ranking failure.
+
+**Which makes the earlier resolving run the wrong one.** It named the India post's
+`/en/applying-for-a-visa` as `visa_decision`, `document_checklist`, `application_route`, `fees` and
+`processing_times` — five roles from a page that is a signpost saying "use the wizard". A checklist
+assembled from that is exactly the output entry 6 was deleted over. The scoring fixes made the
+refusal consistent by removing the noise the model was over-reaching on, but the guard against that
+over-reach is `VisaPlan`'s validators, not the ranking.
+
+**Verified no regression.** The United States is unchanged — same ten pages, same scores, same three
+roles; its India-post pages keep the nationality bonus legitimately, because their *titles* name
+India. Brazil's four role assignments are unchanged. China returned the same checklist and fees.
+
+**What this says about the product, plainly:** France is unservable, and it is unservable because of
+entry 18 rather than in spite of it. The honest thing to add is not a plan but the sentence a
+traveller can act on — that an authority refused us, and here is the URL to check themselves. That
+is already the open todo, and this corridor is now its strongest argument.
+
+---
+
 ## 25. The politeness delay is owed to a host, not to the crawl
 **2026-08-17**
 

@@ -128,6 +128,12 @@ sentence naming what we could not verify. Do not soften it into "unavailable"; d
 fill the gap from another page — `VisaPlan` already forbids inventing a checklist, and the same
 discipline applies here.
 
+**France is the strongest argument for doing this.** Entry 26 established that France refuses
+because every readable page delegates the visa decision to `france-visas.gouv.fr`, which answers 403.
+A traveller currently gets "no verified plan" for one of the most common corridors there is, when the
+useful sentence is available and actionable: France publishes this, we are not permitted to read it
+from here, open `france-visas.gouv.fr` yourself. That turns the refusal into a next step.
+
 **The structural gap to close first, found on the US corridor.** A plan's `unavailable_sources`
 covers only **its own** retrieval, and a discovery-time block never reaches it: `travel.state.gov`
 answers 403 while the corridor is being resolved, so `ResolvedCorridor.inaccessible_domains` holds it
@@ -167,6 +173,12 @@ propose a replacement.
 
 ## Smaller things
 
+- **A footer link inherits the heading of whatever came above it.** `extract_links` assigns each
+  link the last heading it has seen, and footer links sit below everything, so France's legal notice
+  was scored against a news article's heading about visa requirements (entry 26). The boilerplate
+  veto handles the pages this was observed on; the inheritance itself is still wrong, and will
+  quietly inflate any other footer link. Telling a footer from markup is the hard part — there is no
+  reliable signal — so this is recorded rather than fixed.
 - **A plan can leak an internal field name into traveller-facing text.** The US plan's first
   unresolved question reads "no official application-document checklist was published in the
   configured `application_document_source_ids`". That is the model repeating a key from the research
