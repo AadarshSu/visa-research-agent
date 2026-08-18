@@ -106,7 +106,7 @@ on a cold country.
 ---
 
 ## 33. The governmental half of the trust rule fails closed for a fifth of the world
-**2026-08-18 · measured; amendment decided, not implemented**
+**2026-08-18 · measured, and its reporting fixed; the amendment itself is not implemented**
 
 Known problem 2 named the wrong half as the risk. It warns about `belongs_to_destination` — "a country whose
 government publishes outside its own TLD". The half that actually fails first, and far more widely, is
@@ -300,9 +300,9 @@ nationality-specific page compared as a contradiction. It recorded the generalis
 > a feature whose wrong answers are alarming must have a near-zero false-positive rate, or it should not
 > ship.
 
-What ships today is `conflicts` on `VisaPlan`: free text written by the model, shown to travellers, with
-**nothing checking it** — known problem 14 says so. On the axis entry 6 deleted its predecessor for, this is
-strictly worse: the checked version was removed and the unchecked version kept.
+What shipped instead was `conflicts` on `VisaPlan`: free text written by the model, shown to travellers in
+the interface's reliability panel, with **nothing checking it**. On the axis entry 6 deleted its predecessor
+for, that is strictly worse — the checked version was removed and the unchecked version kept.
 
 **Decided: delete the field.** From `VisaPlan` and `VisaPlanDraft` in `domain/models.py`, from the
 extraction prompt's rule 5, from `openai_extraction.py` and `fixtures.py`, and from the Singapore fixture
@@ -337,16 +337,16 @@ verification removed.
 ## 29. LangGraph is not adopted, and the placeholder goes with it
 **2026-08-18**
 
-`domain/state.py` has described a "future LangGraph workflow" since the first week, `langgraph>=1,<2` is a
-declared dependency in `pyproject.toml`, and **neither is imported anywhere** — verified by grep:
-`VisaResearchState` appears only on the line that defines it.
+`domain/state.py` had described a "future LangGraph workflow" since the first week, `langgraph>=1,<2` was a
+declared dependency in `pyproject.toml`, and **neither was imported anywhere** — verified by grep:
+`VisaResearchState` appeared only on the line that defined it.
 
 **Decided: this project does not need LangGraph, and the question is closed.** The reasoning, since a
 graph framework is the obvious thing to reach for in an "agent" project:
 
 - **There is no cycle to express.** The pipeline is linear — search → crawl → score → adjudicate → fetch →
   extract — and deliberately so. LangGraph earns its complexity on loops, conditional multi-actor routing
-  and interrupts. `research/service.py` is six lines because there is nothing to orchestrate.
+  and interrupts. `research/service.py`'s pipeline is two lines because there is nothing to orchestrate.
 - **The control flow is the safety story, and it is Python.** Trust is enforced at three typed checkpoints
   (`validate_route`, after each redirect, after each meta-refresh). Expressing that as graph nodes over a
   `TypedDict` would move those guards from Pydantic validators — which cannot be skipped — into node bodies
@@ -685,6 +685,16 @@ honest shape of this corridor: the canonical B1/B2 checklist is on `travel.state
 is absent but not that an authority refused us — which is the more useful sentence, because they can
 open that page themselves. That is the existing todo *"Tell a traveller what an inaccessible source
 means"*, now with a concrete instance rather than a hypothetical one.
+
+> **Corrected 2026-08-18.** The paragraph above stopped being true when entry 27 shipped, and stayed in
+> the todo list for a day longer than it should have. `to_destination_config` fills
+> `unreadable_authorities` from `inaccessible_urls` **unconditionally** — not only when the decision was
+> blocked — the extractor carries them into `unavailable_sources` regardless, and the interface gives any
+> `blocked` failure with a URL the sentence *"does not permit automated retrieval"* and a link. A
+> retrieval-time block reaches the plan by a second route through `RetrievalReport.failures`. So the
+> mechanism exists twice over, and the remaining question is only whether it *reads* usefully, which
+> needs a live run. Left here rather than rewritten, because the mistake is instructive: this was
+> described from reading the code path that used to exist instead of from a plan.
 
 ---
 

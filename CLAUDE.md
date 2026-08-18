@@ -51,6 +51,12 @@ produces a serious defect.
   countries the own-TLD test is the only other signal. The fix is a reviewed authority domain per
   country in committed data (entry 34). Adding `gv`/`gub` as markers and `canada.ca` beside `gc.ca` are
   corrections *within* the rule and are fine.
+
+  **Every reason in `withheld_domains` must be true.** Reading that list is the only mitigation known
+  problem 2 offers, so a false reason defeats the safeguard rather than merely reading badly. A domain
+  under the destination's own TLD with no recognised marker is *"could not be confirmed as an authority,
+  and may be a real one"* — never *"not a government domain"*, which is false and was word-for-word what
+  a commercial visa agency got (entry 33).
 - **Never work around an authority that blocks automated retrieval.** France's visa portal and
   Singapore's VFS page answer `403` to anything that is not a browser. Do not spoof a user agent,
   do not point the renderer at them, do not retry to get around a rate limit. A block is not
@@ -108,6 +114,16 @@ current state and known problems in `PROJECT_HANDOFF.md`, any decision and its r
 
 Do not record a problem as fixed unless it is fixed, or a result as verified unless it was run.
 These files are read by someone with no other context.
+
+**Check a documented claim against the code before carrying it forward.** These files are self-written,
+and two claims turned out to be wrong when finally tested: the trust rule's coverage gap was blamed on
+the wrong half of the rule for a week, and a known problem asserted that a blocked authority never
+reached the plan when in fact it reached it by two separate routes. Both were described from reading a
+code path rather than from output. Prefer a run, a test, or a printed result over a careful reading.
+
+**Commits:** one lowercase subject line, no body, no attribution trailers, straight to `main`. One
+concern per commit, **with the documentation for that concern in the same commit** — a `docs:` commit is
+for when documentation is the only thing changing.
 
 ## Running it
 

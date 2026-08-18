@@ -40,7 +40,7 @@ Three checkpoints. A change to retrieval must preserve all three.
 
 ### How host matching works
 
-`domain/trust.py`, about 60 lines and worth reading in full.
+`domain/trust.py`, about 80 lines and worth reading in full.
 
 - `host_is_within` matches exactly or on a **dot boundary**, so `london.mfa.gov.sg` is within
   `mfa.gov.sg` but `notmfa.gov.sg` is not, and neither is `mfa.gov.sg.evil.example`.
@@ -74,8 +74,8 @@ VisaPlanExtractor.extract(destination, traveller, report) ──▶ VisaPlan
                                      openai  → one structured model call
 ```
 
-`research/service.py` is the whole orchestration and is six lines. `api/dependencies.py` chooses the
-implementations from `runtime.yaml`.
+`research/service.py` is the whole orchestration, and its pipeline is two lines.
+`api/dependencies.py` chooses the implementations from `runtime.yaml`.
 
 ### Evidence outcomes
 

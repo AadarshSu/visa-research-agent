@@ -285,16 +285,26 @@ product that answers exactly one corridor.
 correctness or currency. That framing is what makes the product safe to publish, so it belongs in the
 interface rather than only in these files.
 
-### Name a blocked authority whenever there is one — `soon`
+### Confirm a blocked authority actually reads usefully — `soon`
 
-**Why:** a blocked authority is named only when it cost the *decision*. The US resolved its decision on
-`dhs.gov`, so its plan says the checklist is absent without ever saying that `travel.state.gov` refused
-us — the same useful sentence, withheld because the corridor happened to succeed elsewhere.
+**Why, and this item changed on 2026-08-18.** It used to say a blocked authority was named *only* when it
+cost the decision, and that the US plan therefore never mentioned `travel.state.gov`. **Checking the code
+showed that is wrong:** `to_destination_config` fills `unreadable_authorities` from `inaccessible_urls`
+unconditionally, the extractor carries them into `unavailable_sources` whatever `decision_is_unverified`
+says, retrieval-time blocks arrive separately through `RetrievalReport.failures`, and the interface already
+gives any `blocked` failure with a URL the sentence *"does not permit automated retrieval"* plus a link.
 
-**Do:** `ResolvedCorridor.inaccessible_urls` already carries them, so this is plumbing rather than a
-decision. Do it while re-running corridors for item 4. Note it interacts with the completed block-handover work: the causality
-requirement governs whether a block may *resolve a corridor*, not whether it may be *reported* — every
-block is still reported.
+So there is **no plumbing left to do**, and writing some would have been work against a problem that did
+not exist. What is unverified is whether it *reads* as useful — which no test can answer.
+
+**Do, during item 4's live runs:** read a real plan for a corridor with a blocked page whose decision
+resolved elsewhere, and check the authority is named, the link works, and the sentence sits where a
+traveller will see it. Also check the narrower question entry 24 left open: the two `travel.state.gov`
+places were never crawled, so confirm the US corridor records that block **somewhere** rather than
+silently dropping it.
+
+**Careful:** the causality requirement from entry 32 governs whether a block may *resolve a corridor*,
+never whether it may be *reported* — every block is still reported, and that must stay true.
 
 ### Try sitemaps before crawling — `later`
 

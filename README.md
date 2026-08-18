@@ -12,29 +12,33 @@ approval, and it never submits anything on anyone's behalf.
 
 ## Current status
 
-Phase 2 now provides the first end-to-end destination with offline sources and switchable
-extraction:
+Working end to end for any traveller and any destination it can reach, with **automatic source
+discovery in the request path** — nobody curates URLs. What it does today:
 
-- strict domain and configuration models;
-- a traveller described by the request — passport, country applied from, purpose;
-- a country-specific destination registry with verified Singapore official-source URLs;
-- saved, paraphrased Singapore source snapshots dated 6 August 2026;
-- deterministic fixture extraction for free, repeatable development;
-- optional one-call OpenAI extraction through LangChain structured output;
-- a unified, source-linked visa-application document checklist;
-- a working Singapore `POST /visa-plans` response;
-- optional live retrieval of the configured official pages, with a hash and TTL cache;
-- per-destination domain trust, enforced when configuration loads and after every redirect;
-- PDF retrieval, including following the forwarding pages authorities hide checklists behind;
-- graceful degradation: a run reports which sources failed instead of collapsing;
-- a small Jinja and vanilla JavaScript research interface;
-- fully offline tests and CI checks.
+- **finds its own sources.** A destination nobody configured is researched when it is asked for: its
+  own government's domains are identified, the corridor is resolved, and the plan is built from what
+  was found. Seven corridors verified live;
+- **trusts a domain, never a page.** Per-destination domain trust, enforced when configuration loads,
+  after every redirect, and after every meta-refresh forward;
+- **takes the traveller from the request** — passport, country applied from, purpose, with residence
+  and permit expiry optional;
+- **reads documents, not just pages:** PDF retrieval, including the forwarding pages authorities hide
+  checklists behind, and optional headless rendering for client-side pages (off by default);
+- **asks a model exactly twice** — once to choose which fetched page fills each role, once to extract
+  the plan — with a deterministic offline path that needs no key and stays the regression baseline;
+- **degrades honestly.** Every source resolves to a typed outcome, a plan is `verified` or `partial`,
+  and a missing load-bearing source refuses the run before the model is called;
+- a small Jinja and vanilla JavaScript research interface, and fully offline tests and CI checks.
 
-A destination nobody has configured is **researched when it is asked for**: its own government's
-domains are identified, the corridor resolved, and the plan built from what was found. A corridor
-that cannot be established says so rather than guessing. France is the standing example: its visa
-portal refuses automated retrieval, so the plan states the visa decision as *unknown*, names the
-portal and links to it, and lists no documents it could not read.
+**Not deployed yet**, and two things are deliberately unresolved: whether bot-blocked authorities make
+the highest-volume corridors unservable, and how to reach the governments whose domains carry no
+recognisable marker. Both are measurements with a plan; see [TODO.md](TODO.md).
+
+**A corridor that cannot be established says so rather than guessing.** France is the standing
+example: its visa portal refuses automated retrieval, so the plan states the visa decision as
+*unknown*, names the portal and links to it, and lists no documents it could not read. The page is
+named, never read — and only a page that plausibly held the answer can put a plan in that state, so a
+rate limit or a refused footer link cannot.
 
 Conflict detection across sources remains intentionally deferred, and the unverified `conflicts` field
 was deleted rather than kept — see [DECISIONS.md](DECISIONS.md) entries 6 and 30. **LangGraph is

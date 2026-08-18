@@ -234,23 +234,29 @@ call silently substituting the heuristic (entry 31).
    used to describe hypothetically. The other half of the hole stands: a country whose TLD hosts a
    convincing government-shaped domain it does not control. Watch `withheld_domains` on resolved
    corridors for domains declined that should not be; it carries everything declined, including what the
-   cap left out and what bootstrap rejected outright — **but see TODO item 2 before trusting it, because
-   that is exactly where it currently lies.** Simulating Italy's bootstrap declines `esteri.it`, its real
-   foreign ministry, with the reason *"not a government domain for this destination"* — false, and
-   character-identical to what a commercial visa agency gets. So the one mitigation this problem
-   recommends is broken for precisely the countries in item 2, and a reviewer following this advice would
-   be misled rather than warned. TODO item 2. **The cap (entry 22) is where a wrong call would
+   cap left out and what bootstrap rejected outright. **Trustworthy as of 2026-08-18, and it was not
+   before:** Italy's real foreign ministry used to be declined as *"not a government domain for this
+   destination"* — false, and character-identical to what a commercial visa agency got, so a reviewer
+   following this very advice was misled rather than warned. It now reads *could not be confirmed as an
+   authority … may be a real one*, and a refusal names such candidates instead of claiming none were
+   found (entry 33). **Still not reported:** whether an accepted set plausibly holds a visa authority at
+   all — the second failure in item 2. **The cap (entry 22) is where a wrong call would
    show first:** at most five of a destination's own domains are used, ordered by the hostname's
    authority hint then corroboration, so a country whose guidance genuinely spans six or more of its own
    domains loses one, and that reason is the only warning. Five is calibrated against corridors run, not
    derived.
-7. **A discovery-time block reaches the plan only when it blocked the *decision*.** Entry 27 carries
-   the blocked authority into the plan when `decision_is_unverified`, which is what France needed.
-   Where the decision *was* confirmed, the block still stops at discovery: the US plan says its
-   checklist is absent without saying that `travel.state.gov` declined us, because the corridor
-   resolved on `dhs.gov` and never set the flag. The traveller still misses the sentence they could
-   act on, so the remaining work is to name blocked authorities whenever there are any, not only when
-   they cost the decision.
+7. **A blocked authority reaches the plan, but nobody has confirmed it reads usefully.** This entry
+   used to claim a discovery-time block reached the plan *only* when it blocked the decision, and that
+   the US plan therefore never said `travel.state.gov` refused us. **Checked on 2026-08-18, and that
+   was wrong:** `to_destination_config` populates `unreadable_authorities` from `inaccessible_urls`
+   unconditionally, the extractor turns those into `unavailable_sources` regardless of
+   `decision_is_unverified`, and retrieval-time blocks arrive by a second route through
+   `RetrievalReport.failures`. The interface then gives any `blocked` failure with a URL the sentence
+   *"does not permit automated retrieval"* and a link. So the mechanism is in place by two paths.
+   **What is genuinely unknown** is whether a traveller reads it that way, which needs the live run in
+   item 4 — and whether the two `travel.state.gov` places entry 24 left unfetched mean the US corridor
+   records the block at all. Do not fix the mechanism before reading a real plan; the previous entry is
+   an example of describing this from the code rather than from output.
 8. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
    Both produce the same empty result, and since a missing checklist no longer refuses the corridor,
    a find-or-read failure now yields a plan with a visibly empty checklist rather than a refusal.
@@ -332,17 +338,25 @@ its seven entries are now implemented, and nothing is left shipping against the 
   the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
   is trusted.
 
-**Two findings came out of doing the work, and both are recorded rather than left in the diff:**
+**Three findings came out of doing the work, all recorded rather than left in the diff. The pattern in
+them is worth carrying: each was a documented claim that turned out to be wrong when finally tested.**
 
 1. **The 19 unreachable countries are two different failures**, and the second is worse (entry 33's
    table). Nine have no marked domain at all and refuse outright with a misleading message. **Ten do have
    one** — `interno.gov.it`, `gov.ie`, `gob.cl`, `cic.gc.ca` — so bootstrap *succeeds* and builds a trusted
-   set that cannot contain the visa guidance, and nothing reports that. Canada is sharpest: `gc.ca` still
-   passes, but immigration content moved to `canada.ca`.
-2. **`withheld_domains` currently states something false**, which matters because known problem 2 names
-   reading it as the only mitigation. Italy's real foreign ministry is declined as *"not a government
-   domain for this destination"* — character-identical to what a commercial visa agency gets. Now TODO
-   item 2, ahead of the registry review it would otherwise corrupt.
+   set that cannot contain the visa guidance, and **nothing measures that**. Canada is sharpest: `gc.ca`
+   still passes, but immigration content moved to `canada.ca`. The reasons now describe it where the
+   ministry was seen at all; measuring it properly is part of TODO item 2.
+2. **The trust rule's coverage gap was blamed on the wrong half of the rule** for a week. Known problem 2
+   warned about a government publishing outside its own TLD; not one of the 19 failures is that. Every one
+   is `looks_governmental`, whose pattern list happened to cover all seven verified countries — so entry
+   19's "22 human decisions reproduced, 0 disagreements" was survivorship, not assurance.
+3. **A known problem asserted something the code does not do.** It said a discovery-time block reached the
+   plan *only* when it blocked the decision. Testing it showed a blocked authority reaches the plan by
+   **two** routes regardless, and the interface already renders it with a link — so the plumbing that
+   TODO item said to write was already there. Corrected in known problem 7 and in entry 23, and the todo
+   became "confirm it reads usefully" instead. Both this and finding 2 were described from reading a code
+   path rather than from output, which is the habit to break.
 
 **Everything that needed no credit is now done, and nothing is shipping against the project's own
 rules.** What remains all costs something — a crawl policy, a 198-country registry, or search quota —
@@ -370,7 +384,7 @@ implemented; 35 and 34 are not.** Read them in [DECISIONS.md](DECISIONS.md).
 
 | Entry | What it changed |
 | --- | --- |
-| 29 | LangGraph is not adopted and the question is closed: no cycle to express, trust checkpoints are typed validators rather than graph nodes, and the only loop the placeholder imagined is one this project rejects. Delete `domain/state.py` and the dependency. |
+| 29 | LangGraph is not adopted and the question is closed: no cycle to express, trust checkpoints are typed validators rather than graph nodes, and the only loop the placeholder imagined is one this project rejects. `domain/state.py` and the dependency are deleted. |
 | 30 | `conflicts` is deleted. Entry 6 removed a *working* conflict detector for being too alarming when wrong; the unverified version is the same feature without the verification. |
 | 31 | A failed adjudication refuses rather than falling back to the heuristic. Entry 16 chose the fallback thinking it conservative; it silently swaps in the decider entry 15 proved gives confident wrong answers. |
 | 32 | A block may hand over a link only when it plausibly held the answer. `429` stops qualifying, and the blocked URL must have been a credible `visa_decision` candidate. Narrows entry 27, which behaves more broadly than it claims. |
@@ -414,24 +428,33 @@ approved* — it is written down so it gets argued rather than drifted into.
 
 ## Next steps
 
-[TODO.md](TODO.md) is the ordered list and the reasoning; this is the shape of it. The three that used to
-head this list — run a country that publishes a checklist, make the traveller profile variable, wire
-discovery into request time — are all done; see *Current state*.
+[TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape. **Everything that needed no
+credit is done**, so each remaining item costs something — a crawl policy, a 198-country registry, or
+search quota.
 
-1. **Three small changes needing nothing external** — the block-handover narrowing, three deletions, and
-   refusing on a failed adjudication. TODO items 1–3. (The trust test that headed this list is done.)
-2. **`robots.txt`**, because it is owed and because item 4 below should measure the posture the project
-   intends to keep. TODO item 4.
-3. **Move "who to believe" into committed data**, then amend the trust rule for the 19 governments with
-   no hostname marker and for Schengen. TODO items 5–6.
-4. **Measure the top 20 corridors against the committed bar.** Needs Brave credit. This decides the
-   direction, so it comes before deployment and before anything large. Fold the France read-through into
-   it. TODO item 7.
-5. **Decide the client-side retrieval question** in writing, either way. TODO item 8.
-6. **Then deploy**, precompute popular corridors, and put a key or rate limit on `POST /visa-plans`.
-7. Standing work, unchanged in substance: name a blocked authority whenever there is one; tell "no
-   checklist exists" apart from "we failed to find it"; decide whether a host that refused everything may
-   be skipped; revisit conflict detection with claim scope recorded.
+1. **Read and honour `robots.txt`** (entry 35). Owed regardless of what it buys, and it should land before
+   step 4 so the measurement describes the posture the project intends to keep. Expect it to **cost**
+   coverage, which is the right direction. TODO item 1.
+2. **Move "who to believe" into committed data** — generate the country → trusted-domains registry offline
+   for all 198 countries, commit it, skim it once (entry 34). Not the gate entry 19 removed: that was URLs,
+   which stay automated. TODO item 2.
+3. **Amend the trust rule** for the 19 governments with no hostname marker, and for Schengen. **Its own
+   first step is a measurement**, because "a reviewed authority domain" would otherwise mean hand-curating
+   198 countries — the manual work the production goal exists to remove: check how many of the 19 are
+   covered by a published government domain list, by registry organisation data, or by a TLS certificate
+   organisation field. If most are, this stays automatable; if not, the review is 19 countries rather than
+   198. TODO item 3.
+4. **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
+   decision and ≥50% yield a checklist. **Blocked on Brave credit**, and the thing that decides the
+   project's direction, so nothing large should be built before it. Fold in the France read-through, which
+   needs the same credit and is still the one shipped change never run live. TODO item 4.
+5. **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
+   does not approve it). TODO item 5.
+6. **Then deploy**, precompute popular corridors, and put a key or a rate limit on `POST /visa-plans`.
+7. Standing work: confirm a blocked authority reads usefully (the plumbing turned out to already exist —
+   see known problem 7); tell "no checklist exists" apart from "we failed to find it"; decide whether a
+   host that refused everything may be skipped; try sitemaps before crawling; revisit conflict detection
+   with claim scope recorded.
 
 ---
 
