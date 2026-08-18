@@ -16,6 +16,7 @@ from visa_research_agent.discovery.lexicon import get_country_registry, get_lexi
 from visa_research_agent.discovery.models import Corridor, PageLink
 from visa_research_agent.discovery.scoring import (
     is_archived,
+    is_boilerplate,
     mission_affinity,
     mission_in_path,
     names_documents,
@@ -295,3 +296,93 @@ def test_every_country_has_the_field_the_trust_rule_depends_on() -> None:
     assert len(countries) > 150, "destinations should not be limited to a curated handful"
     assert all(country.tlds for country in countries)
     assert all(country.code.isupper() and len(country.code) == 2 for country in countries)
+
+
+# --- who a page is about, and which post published it ----------------------------------------
+
+
+def route_link(url: str, text: str = "", heading: str = "") -> float:
+    registry = get_country_registry()
+    scores = score_link(
+        PageLink(url=url, text=text, heading=heading, depth=0, discovered_from="seed"),
+        corridor(),
+        get_lexicon(),
+        registry.require("IN"),
+        registry.require("GB"),
+    )
+    return scores.score_for("application_route")
+
+
+def test_the_post_a_traveller_applies_at_outranks_the_post_of_their_own_country() -> None:
+    """France's India post outranked its UK post for a traveller applying from the UK.
+
+    `in.diplomatie.gouv.fr` is France's mission *in India*, so that label says which post published
+    the page. Reading it as "this page is for Indian nationals" handed the nationality bonus to
+    everything that post publishes — its accessibility statement included — and 40 beat the 30 the
+    UK post earns for actually serving this traveller: 65.6 against 55.6 on the identical page.
+    """
+
+    india_post = route_link(
+        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa", "Applying for a visa"
+    )
+    uk_post = route_link(
+        "https://uk.diplomatie.gouv.fr/en/applying-for-a-visa", "Applying for a visa"
+    )
+
+    assert uk_post > india_post
+
+
+def test_a_page_whose_own_words_name_the_nationality_still_earns_it() -> None:
+    """The narrowing must not cost the real signal. A path or a title naming the country is the
+    page describing itself, which is a different thing from the host it sits on."""
+
+    about_indians = route_link(
+        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa-indian-nationals",
+        "Applying for a visa: Indian nationals",
+    )
+    generic = route_link(
+        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa", "Applying for a visa"
+    )
+
+    assert about_indians > generic
+
+
+def test_site_furniture_is_vetoed_however_well_it_scores() -> None:
+    """These took three of France's ten fetch places. A footer link inherits the last heading above
+    it, so the legal notice collected the heading bonus from a news article about visa
+    requirements — and a legal notice cannot be visa guidance whatever it scores."""
+
+    lexicon = get_lexicon()
+
+    assert is_boilerplate("https://in.diplomatie.gouv.fr/accessibilite", lexicon)
+    assert is_boilerplate("https://in.diplomatie.gouv.fr/en/donnees-personnelles", lexicon)
+    assert is_boilerplate("https://in.diplomatie.gouv.fr/mentions-legales", lexicon)
+    assert is_boilerplate("https://example.gov.uk/privacy", lexicon)
+    # Real guidance is untouched, including a path that merely mentions a document.
+    assert not is_boilerplate("https://uk.diplomatie.gouv.fr/en/applying-for-a-visa", lexicon)
+    assert not is_boilerplate(f"{EDINBURGH}", lexicon)
+
+
+def test_the_heading_a_footer_link_inherits_cannot_carry_it_alone() -> None:
+    """The mechanism behind the last test, recorded so it is not mistaken for a scoring accident:
+    the boilerplate page's score came almost entirely from a heading about someone else's page."""
+
+    registry = get_country_registry()
+    inherited = score_link(
+        PageLink(
+            url="https://in.diplomatie.gouv.fr/mentions-legales",
+            text="Mentions légales",
+            heading="France lifts airport transit visa requirements for Indian nationals",
+            depth=0,
+            discovered_from="seed",
+        ),
+        corridor(),
+        get_lexicon(),
+        registry.require("IN"),
+        registry.require("GB"),
+    ).best()[1]
+
+    # The shortlist ranks on the best role, and this reached 69 in the real run — high enough to
+    # take a fetch place. It still scores; the veto is what stops it, not the score.
+    assert inherited > 20
+    assert is_boilerplate("https://in.diplomatie.gouv.fr/mentions-legales", get_lexicon())

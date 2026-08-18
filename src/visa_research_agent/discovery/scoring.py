@@ -80,6 +80,47 @@ def _matches_country(link: PageLink, country: Country) -> bool:
     return any(label in host_labels for label in country.host_labels)
 
 
+def _describes_country(link: PageLink, country: Country) -> bool:
+    """True when a link's own words say it is *about* a country.
+
+    Deliberately narrower than `_matches_country`, and the whole difference is the host. A host
+    label names which **post** published a page — `in.diplomatie.gouv.fr` is France's mission in
+    India — and that says nothing about who the page is for: the post's accessibility statement,
+    privacy notice and legal notice all sit on that same host. Who a page is *about* comes from its
+    path and its title.
+
+    Keeping the two apart matters because the two bonuses would otherwise fight. Which post serves
+    a traveller is decided by where they are applying from (`mission_affinity`), so letting the
+    nationality bonus also fire on a host label made the post for the applicant's *home* country
+    outrank the post they must actually apply at.
+    """
+
+    segments = path_segments(link.url)
+    text = link.text.lower()
+    for token in country.text_tokens:
+        if _contains_word(text, token):
+            return True
+        if any(token == segment or token in segment.split("-") for segment in segments):
+            return True
+    return False
+
+
+def is_boilerplate(url: str, lexicon: Lexicon) -> bool:
+    """True when a path marks a page as site furniture rather than guidance.
+
+    An accessibility statement, a privacy notice and a legal notice are on every page of a
+    government site, and they cannot be visa guidance whatever they score — so this rejects rather
+    than penalises, exactly as `is_archived` does.
+
+    They scored well for a reason worth knowing: `extract_links` gives a link the last heading seen
+    above it, and footer links sit below everything, so France's legal notice inherited the heading
+    of a news article about visa requirements and collected the heading bonus twice.
+    """
+
+    segments = path_segments(url)
+    return any(token in segments for token in lexicon.boilerplate_tokens)
+
+
 def mission_in_path(url: str, lexicon: Lexicon) -> str | None:
     """The post a URL belongs to, when its path names one.
 
@@ -260,7 +301,7 @@ def score_link(
     shared = 0.0
     shared_reasons: list[str] = []
 
-    if _matches_country(link, nationality):
+    if _describes_country(link, nationality):
         shared += lexicon.nationality_weight
         shared_reasons.append(f"nationality:{nationality.code}+{lexicon.nationality_weight:g}")
 
