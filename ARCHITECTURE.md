@@ -110,8 +110,11 @@ needs a different retriever. They demand different remedies even though they gra
   that lists document requirements without a document source behind them, and rejects one that
   stays silent about the gap. The model is never left to infer a checklist from a page that is not
   one. See [DECISIONS.md](DECISIONS.md) entry 14.
-- Any failure or any stale source → plan status `partial`, and the interface states what is
-  incomplete *above* the guidance.
+- Any failure or any stale source → plan status `partial`. The interface says so *above* the
+  guidance in one line, and sets out the reasons and links at the end: a partial plan must not look
+  complete, and a wall of caveats above the answer buries the answer. A section with nothing in it —
+  a checklist with no source behind it — is not rendered at all, because the absence is already
+  stated under unresolved questions, which such a plan is structurally required to carry.
 - Everything present and current → `verified`.
 
 ### The trust boundary at the model

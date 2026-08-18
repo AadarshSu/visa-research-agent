@@ -9,6 +9,43 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 28. Four fixes from reading the interface as a traveller
+**2026-08-17**
+
+Reviewing a rendered plan rather than a JSON payload found four things, none of which a test was
+going to catch.
+
+**A step heading stopped mid-clause.** *"Create an account and complete the online application if the
+wizard says a visa,"* — 79 characters against an 80-character limit. The model was writing a sentence
+into a field meant for a label and ran out of room. The limit is now 70, the prompt says a title is a
+short label of at most eight words with the substance in `action`, and a trailing comma is trimmed in
+a validator. Trimming is safe here precisely because a heading is derived text rather than a claim.
+
+**A corridor that cannot have an answer now costs nothing.** A national of the destination does not
+apply to visit their own country, so there is no guidance to find — but the request searched, crawled
+and spent two model calls to discover that, then read as a fault. It is refused up front with a plain
+sentence. Deliberately *not* a claim about entry rights: it says only what this agent researches. And
+deliberately narrow — it matches the **passport** only, never the residence, because applying from
+inside the destination is ordinary.
+
+**An empty checklist section is not rendered.** With no checklist source, no documents may be listed,
+so the panel was a heading and a caveat above nothing. Dropping it hides nothing: the absence is
+stated under unresolved questions, which such a plan is structurally required to carry (entry 23).
+
+**The incomplete-evidence detail moved to the end.** It sat above the answer, and with a blocked
+authority's reasons and links it had grown long enough to bury it. This entry does change what entry
+13's era of the interface documented — *"the interface states what is incomplete above the
+guidance"* — so it keeps the half that mattered: a one-line notice above the guidance, and the
+reasons, links and caveats at the end. A partial plan still cannot look complete.
+
+**Verified by driving the real renderer**, with a France-shaped plan injected into the page rather
+than a live run — the search quota was exhausted (entry 27). Four panels, no checklist panel, banner
+in the last one, and the blocked authority rendered as a working link. Reading it that way also caught
+the banner still saying *"Everything below is still drawn only from official sources"* after it had
+been moved to the bottom.
+
+---
+
 ## 27. A block becomes a next step: name the page, hand over the link, decide nothing
 **2026-08-17**
 

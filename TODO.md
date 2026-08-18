@@ -126,7 +126,9 @@ traveller would. Three things to judge, none of which a test can:
 2. Do the application steps stay useful when the first one is "check the authority yourself"? Rule 8b
    asks for that; whether the model obliges is unknown.
 3. Does "Uncertain" read as *we could not check* rather than as *no visa needed*? If it reads as the
-   latter to anyone, the wording is wrong and it matters more than anything else on this list.
+   latter to anyone, the wording is wrong and it matters more than anything else on this list. The
+   layout was checked by injecting a France-shaped plan into the real renderer (entry 28), so what is
+   left to judge is the model's own words, not the page.
 
 **Then re-run the other corridors.** The `is_usable` change affects every discovered destination: any
 corridor with a blocked page and no confirmed decision now resolves where it used to refuse. The US
