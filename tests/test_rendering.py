@@ -5,6 +5,7 @@ fake can be injected, in the same way `httpx.MockTransport` stands in for the ne
 The one test that does drive real Chromium is skipped unless `VISA_RENDER_MANUAL=1` is set.
 """
 
+import asyncio
 import os
 from datetime import UTC, datetime
 from pathlib import Path
@@ -76,6 +77,29 @@ def shell(body: str = '<div id="app"></div>') -> str:
 
 def page(text: str) -> str:
     return f"<html><head><title>Visa</title></head><body><main><p>{text}</p></main></body></html>"
+
+
+def destination_with_sources(count: int) -> DestinationConfig:
+    """The same destination with `count` primary sources, all of them shells needing a render."""
+
+    return DestinationConfig(
+        slug="testland",
+        display_name="Testland",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["immigration.gov.example"],
+        sources=[
+            ConfiguredSource(
+                source_id=f"tl_visa_documents_{index}",
+                title=f"Testland Visa Documents {index}",
+                url=AnyHttpUrl(f"{SOURCE_URL}/{index}"),
+                authority="Testland Immigration Authority",
+                kind="immigration_authority",
+                research_pass="primary",
+            )
+            for index in range(count)
+        ],
+    )
 
 
 def destination() -> DestinationConfig:
@@ -270,16 +294,59 @@ async def test_retrieval_stops_rendering_once_its_own_allowance_is_spent(
 
     A shared count let a crawl spend everything before the shortlist — the pages that actually
     become evidence — was read, so a working renderer produced no evidence at all.
+
+    Spent *within* one run, which is the scope the allowance claims: three shells, two renders.
+    """
+
+    renderer = FakeRenderer(shell("<p>Loading</p>"))
+    fetcher = build_fetcher(tmp_path, shell(), renderer)
+    fetcher.maximum_renders = 2
+
+    await fetcher.fetch(destination_with_sources(3))
+
+    assert len(renderer.calls) == 2, "the third source must not render"
+
+
+async def test_each_fetch_gets_the_whole_render_allowance_again(tmp_path: Path) -> None:
+    """The allowance is per run, and one `LiveSourceFetcher` serves every run the server answers.
+
+    `get_visa_plan_service` is an `lru_cache(maxsize=1)`, so before this the count was spent once
+    and never given back: after the first few requests needing a browser, every client-rendered
+    page came back "too little readable text to trust" for the life of the process — a reason that
+    was not true of what was seen, because the page had not been read. See DECISIONS entry 37.
     """
 
     renderer = FakeRenderer(shell("<p>Loading</p>"))
     fetcher = build_fetcher(tmp_path, shell(), renderer)
     fetcher.maximum_renders = 1
 
-    await fetcher.fetch(destination())
-    await fetcher.fetch(destination())
+    for _ in range(4):
+        await fetcher.fetch(destination())
 
-    assert renderer.calls == [SOURCE_URL], "the second fetch must not render again"
+    assert len(renderer.calls) == 4, "every fetch must start with a fresh allowance"
+
+
+async def test_two_runs_in_flight_together_cannot_spend_each_other_s_allowance(
+    tmp_path: Path,
+) -> None:
+    """Concurrency is why the budget is a value passed down rather than a counter reset on entry.
+
+    Resetting `self.renders` at the top of `fetch` would look equivalent, but two requests
+    overlapping — the normal case for a server — would each clear the other's count, so a run
+    could render well past its limit. Two concurrent runs of two sources each must render exactly
+    four times, never more.
+    """
+
+    renderer = FakeRenderer(shell("<p>Loading</p>"))
+    fetcher = build_fetcher(tmp_path, shell(), renderer)
+    fetcher.maximum_renders = 2
+
+    await asyncio.gather(
+        fetcher.fetch(destination_with_sources(3)),
+        fetcher.fetch(destination_with_sources(3)),
+    )
+
+    assert len(renderer.calls) == 4
 
 
 # --- discovery's crawl ---------------------------------------------------------------------

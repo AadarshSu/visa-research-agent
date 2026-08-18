@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 325 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 341 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -123,6 +123,16 @@ and there are no snapshots for it.
 
 **Client-rendered pages can now be read**, but rendering is off in committed config. Turning it on
 means `render_mode: on_demand` plus the optional extra:
+
+**Before turning it on, note what was fixed on 2026-08-18 (entry 37).** Two of the three render
+allowances were counted on objects that outlive a run — `LiveSourceFetcher`, which is an
+`lru_cache(maxsize=1)` singleton, and the renderer itself, which the API never closes. They were
+process-lifetime budgets: after 5 rendered sources, and 17 rendered pages installation-wide,
+rendering silently stopped and every client-rendered page reported *"too little readable text to
+trust"* — a reason that was not true of what was seen, since the page had never been read. The
+allowance is now a per-call value and the renderer keeps no count. **This was latent, not observed
+in production**, because `render_mode: never` means nothing has rendered yet; the corridor it would
+have hit first is Vietnam, which is exactly the one rendering exists for.
 
 ```bash
 .venv/bin/pip install -e ".[render]" && .venv/bin/playwright install chromium

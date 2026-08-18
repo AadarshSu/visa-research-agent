@@ -9,6 +9,61 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 37. A per-run allowance may not be counted on an object that outlives the run
+**2026-08-18 · implemented**
+
+Three render budgets described themselves as per-run — *"Retrieval's own allowance"*, *"Discovery's own
+allowance"*, *"a last-resort ceiling on one browser's lifetime"* — and two of them were counted on objects
+that outlive every run. Found while implementing entry 36, which hit the same singleton lifetime and solved
+it with a TTL.
+
+**What it actually did.** `LiveSourceFetcher.renders` starts at zero in `__init__` and was never reset,
+and the fetcher is reached through `get_visa_plan_service`, an `lru_cache(maxsize=1)`. So `maximum_source_renders`
+(5) was a budget for the *server process*, not for a request. Confirmed by running it rather than by reading
+it: with the allowance set to 2, requests 3 and 4 never consulted the renderer at all. Past that point every
+client-rendered page — Vietnam's e-visa portal, the pages rendering exists for — came back
+`"the page returned too little readable text to trust"`, for as long as the process stayed up.
+
+**That failure is a false reason, which is why it is a defect and not merely a limit.** The page had not
+been read. Saying it returned too little text states something about what was seen, when what happened was
+that we declined to look. This is the same fault as entry 33's `withheld_domains` wording and entry 36's
+*"does not permit"* — a sentence describing a source nobody consulted.
+
+**The fix is a value, not a reset.** `RenderBudget` is built inside `fetch()` and passed down to `_render`.
+Resetting `self.renders = 0` on entry would look equivalent and is not: a server answers requests
+concurrently, so two overlapping runs would each clear the other's count and both could render past the
+limit. Held as a per-call value, no long-lived object carries a spent count. A test pins the concurrent
+case, because it is the one a reset would silently pass in a single-threaded test and fail in production.
+
+**`PlaywrightPageRenderer`'s own count is deleted rather than fixed.** It was `maximum_source_renders +
+maximum_crawl_renders` = 17, documented as a last-resort ceiling on one browser's lifetime — but `aclose()`
+is only ever called by the CLI, so on the API path that browser's lifetime *is* the server's. It bound
+first and hardest: `dependencies.py` builds one renderer and closes over it in the resolver factory, so it
+survived even the per-corridor fetchers, and after 17 rendered pages the whole installation stopped
+rendering. A guard whose only observable effect is to switch a feature off silently is not a guard. Counting
+belongs to whoever knows where a run begins, and both callers now bound it: retrieval per `fetch()`,
+discovery per corridor. The trust check inside `render()` stays exactly where it is — that one is
+belt-and-braces for *trust*, which is a different question.
+
+**`CrawlFetcher.renders` was reported as having the same defect and does not.** It holds a spent count on
+the instance, but `AutomaticDestinationService` holds a resolver **factory**, not a resolver, and calls it
+per corridor — so an instance never outlives one run, and sharing the allowance across that run's many
+`fetch_html` calls is the intent. Left alone, with the lifetime argument written next to the counter and a
+test pinning that the factory is still called per corridor, since that invariant is now load-bearing for
+this class and nothing had been asserting it.
+
+**The general rule, worth stating because it is not visible at the definition site:** in this codebase a
+counter, cache or accumulator on a service reached through `dependencies.py` is process-lifetime unless
+something makes it otherwise. Entry 36 needed a TTL for it; this needed a per-call value. Check the caller,
+and prefer running it to reading it — reading is what let all three of these stand.
+
+The rest of that path was swept for the same shape while fixing this, and nothing else was found: after
+the change the only zero-initialised counter on any object reachable from `dependencies.py` is
+`RenderBudget.spent`, which is per-call by construction. The other long-lived stores are file-backed with
+an age check (`FileSourceCache`, `FileCorridorStore`) or expire (`RobotsCache`).
+
+---
+
 ## 36. `robots.txt` is read and obeyed, and a page skipped for it is its own outcome
 **2026-08-18 · implemented**
 

@@ -168,6 +168,13 @@ class CrawlFetcher:
         self.minimum_links = minimum_links
         # Discovery's own allowance. It visits far more pages than retrieval, so without a
         # separate count it would spend the whole browser budget before evidence was ever read.
+        #
+        # A spent count may live on the instance here, where retrieval's may not, and the reason is
+        # lifetime rather than style: `AutomaticDestinationService` holds a resolver *factory*, so
+        # one of these is built per corridor and shares its allowance across that corridor's many
+        # `fetch_html` calls — which is the intent. `LiveSourceFetcher` is reached through an
+        # `lru_cache(maxsize=1)` instead and outlives every run, so its allowance is a per-call
+        # `RenderBudget`. If this fetcher ever becomes long-lived, this counter has the same defect.
         self.maximum_renders = maximum_renders
         self.renders = 0
         self.transport = transport

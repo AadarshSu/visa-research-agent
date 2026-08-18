@@ -469,4 +469,7 @@ replacement.
   questions flag this, so it is visible rather than silently wrong.
 - **Rendering has earned zero live corridors.** It is off in committed config, contained behind a protocol,
   and Vietnam still refuses with it on (for non-rendering reasons). Keep it, but build nothing downstream
-  on it until a corridor actually needs it.
+  on it until a corridor actually needs it. **If it is ever measured, do it on code from 2026-08-18 or
+  later:** before then the render allowances were process-lifetime rather than per-run, so a long-running
+  server stopped rendering after 17 pages and reported the pages it skipped as unreadable (entry 37). Any
+  earlier measurement of rendering's value would have been reading that, not reading rendering.

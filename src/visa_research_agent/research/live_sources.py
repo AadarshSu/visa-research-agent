@@ -184,6 +184,31 @@ def _robots_reason(verdict: RobotsVerdict) -> str:
     )
 
 
+class RenderBudget:
+    """How many pages one run may render, spent by that run and nobody else.
+
+    It exists as a value rather than as a counter on the fetcher because the fetcher outlives the
+    run. `get_visa_plan_service` is an `lru_cache(maxsize=1)`, so one `LiveSourceFetcher` serves
+    every request the server ever answers; a spent count held there is a process-lifetime budget
+    however its docstring describes it, and after the first few requests that needed a browser
+    every client-rendered page degrades to "too little readable text" for as long as the server
+    stays up. Held per call, the allowance is what it always claimed to be, and two requests in
+    flight together cannot spend each other's.
+    """
+
+    def __init__(self, maximum: int) -> None:
+        self.maximum = maximum
+        self.spent = 0
+
+    def claim(self) -> bool:
+        """Take one render if the run can still afford it."""
+
+        if self.spent >= self.maximum:
+            return False
+        self.spent += 1
+        return True
+
+
 class _ContentProblem(Exception):
     """Raised when a retrieved document cannot become trustworthy evidence."""
 
@@ -238,8 +263,9 @@ class LiveSourceFetcher:
         self.renderer = renderer
         # Retrieval's own allowance, held separately from discovery's. Sharing one count let the
         # crawl spend it all before the shortlist — the pages that become evidence — was read.
+        # The *limit* lives here because it is configuration; what a run has spent does not, and
+        # a `RenderBudget` is built per `fetch` instead. See that class for why.
         self.maximum_renders = maximum_renders
-        self.renders = 0
         self.transport = transport
         self.now = now
         # Each host's own crawl policy. Built here rather than injected so retrieval cannot be
@@ -258,6 +284,8 @@ class LiveSourceFetcher:
             )
 
         limit = asyncio.Semaphore(self.concurrency)
+        # One allowance per call, spent only by the sources this call reads.
+        budget = RenderBudget(self.maximum_renders)
         async with httpx.AsyncClient(
             transport=self.transport,
             timeout=self.timeout_seconds,
@@ -275,7 +303,7 @@ class LiveSourceFetcher:
                 configured_source: ConfiguredSource,
             ) -> FetchedSource | SourceFailure:
                 async with limit:
-                    return await self._fetch_source(client, destination, configured_source)
+                    return await self._fetch_source(client, destination, configured_source, budget)
 
             results = await asyncio.gather(
                 *(fetch_one(source) for source in configured_sources),
@@ -293,6 +321,7 @@ class LiveSourceFetcher:
         client: httpx.AsyncClient,
         destination: DestinationConfig,
         configured_source: ConfiguredSource,
+        budget: RenderBudget,
     ) -> FetchedSource | SourceFailure:
         url = str(configured_source.url)
         now = self.now()
@@ -371,7 +400,7 @@ class LiveSourceFetcher:
             # exists once its scripts have run. Rendering is tried here and nowhere else, so
             # the pages that already work never meet a browser.
             if self._thin_reason(content) is not None and not looks_like_pdf(document):
-                rendered = await self._render(destination, final_url)
+                rendered = await self._render(destination, final_url, budget)
                 if rendered is not None:
                     content, final_url = rendered
         except _ContentProblem as problem:
@@ -429,16 +458,17 @@ class LiveSourceFetcher:
             return "the page returned translation placeholders rather than readable guidance"
         return None
 
-    async def _render(self, destination: DestinationConfig, url: str) -> tuple[str, str] | None:
+    async def _render(
+        self, destination: DestinationConfig, url: str, budget: RenderBudget
+    ) -> tuple[str, str] | None:
         """Re-read a page through the renderer, returning its text and where it landed.
 
         Raises `_ContentProblem` when the rendered page ends up off the approved domains, which is
         the same answer retrieval gives to a redirect that leaves them.
         """
 
-        if self.renderer is None or self.renders >= self.maximum_renders:
+        if self.renderer is None or not budget.claim():
             return None
-        self.renders += 1
         rendered = await self.renderer.render(url, destination)
         if rendered is None:
             return None

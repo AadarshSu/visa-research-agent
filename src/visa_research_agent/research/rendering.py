@@ -76,7 +76,6 @@ class PlaywrightPageRenderer:
         user_agent: str,
         timeout_seconds: float = 20.0,
         settle_milliseconds: int = 2_500,
-        maximum_renders: int = 40,
     ) -> None:
         try:
             import playwright.async_api  # noqa: F401
@@ -90,11 +89,13 @@ class PlaywrightPageRenderer:
         self.user_agent = user_agent
         self.timeout_seconds = timeout_seconds
         self.settle_milliseconds = settle_milliseconds
-        # A last-resort ceiling on one browser's lifetime, not the working budget. Each caller
-        # holds its own smaller allowance, because a single shared count let the crawl spend
-        # everything before retrieval — the phase that actually produces evidence — got a turn.
-        self.maximum_renders = maximum_renders
-        self.renders = 0
+        # No render count is kept here. There was one, described as a last-resort ceiling on one
+        # browser's lifetime — but this object is built once and never closed on the API path, so
+        # the ceiling was a ceiling on the *server's* lifetime, and it bound before either
+        # caller's budget did. Past it every client-rendered page came back "too little readable
+        # text to trust", which is a false reason: the page was never read. Counting belongs to
+        # whoever knows where a run begins, and both callers now bound it per run — retrieval
+        # through `RenderBudget`, the crawl on its own per-corridor instance.
         self._playwright: Playwright | None = None
         self._browser: Browser | None = None
 
@@ -128,14 +129,11 @@ class PlaywrightPageRenderer:
     async def render(self, url: str, destination: DestinationConfig) -> RenderedPage | None:
         from playwright.async_api import Error as PlaywrightError
 
-        if self.renders >= self.maximum_renders:
-            return None
         if not is_render_request_allowed(url, destination):
             # Belt and braces: callers check first, but a renderer that could be handed an
             # arbitrary URL is one refactor away from being a trust hole.
             return None
 
-        self.renders += 1
         browser = await self._ensure_browser()
         context = await browser.new_context(
             user_agent=self.user_agent,
@@ -191,5 +189,4 @@ def build_page_renderer(policy: RuntimePolicy) -> PageRenderer | None:
         user_agent=settings.source_user_agent,
         timeout_seconds=settings.render_timeout_seconds,
         settle_milliseconds=settings.render_settle_milliseconds,
-        maximum_renders=settings.maximum_source_renders + settings.maximum_crawl_renders,
     )

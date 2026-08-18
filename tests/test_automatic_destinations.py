@@ -449,6 +449,44 @@ async def test_a_corridor_past_its_age_is_resolved_again(tmp_path: Path) -> None
     assert len(resolver.trusted_seen) == 2
 
 
+async def test_every_corridor_is_resolved_through_a_freshly_built_resolver(
+    tmp_path: Path,
+) -> None:
+    """The factory is what keeps the crawl's render allowance and failure records per corridor.
+
+    `CrawlFetcher` holds both as instance state, and that is only safe while an instance never
+    outlives one corridor. If this service ever kept a resolver instead of building one, the second
+    corridor would start with the first's render budget already spent and its failures already
+    recorded — the same defect DECISIONS entry 37 removed from retrieval, where the fetcher really
+    is process-lifetime.
+    """
+
+    provider = StubProvider(["https://france-visas.gouv.fr/en/applying"])
+    built: list[StubResolver] = []
+
+    def build() -> StubResolver:
+        built.append(StubResolver(resolved()))
+        return built[-1]
+
+    service = AutomaticDestinationService(
+        provider,
+        build,  # type: ignore[arg-type]
+        FileCorridorStore(tmp_path / "corridors"),
+        now=lambda: NOW,
+    )
+
+    second = Corridor(
+        destination_slug="france",
+        passport_nationality="IN",
+        applying_from="GB",
+        purpose="study",
+    )
+    await service.destination_for("France", corridor())
+    await service.destination_for("France", second)
+
+    assert len(built) == 2, "a resolver must not be carried from one corridor to the next"
+
+
 async def test_a_stored_corridor_is_keyed_by_the_whole_corridor(tmp_path: Path) -> None:
     """Nationality and purpose change the answer, so they must change the key."""
 
