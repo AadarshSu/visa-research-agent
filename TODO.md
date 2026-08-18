@@ -178,12 +178,70 @@ change.
 
 ### 7. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
-**Why:** the committed `tests/test_trust_coverage.py` measurement. Two separate problems:
+**First, what `looks_governmental` actually is**, because its name misdescribes it and that makes the
+whole rule read as flimsier than it is. Probed against adversarial hostnames 2026-08-18:
 
-- **19 of 51 governments have no governmental marker in their hostname.** The amendment is a reviewed
-  authority domain in the entry 34 registry — **never a wider regex.** Adding `.de`, `.nl`, `.it` as
-  markers would trust every commercial site in those countries, and `belongs_to_destination` cannot
-  narrow it, because for exactly these countries the own-TLD test is the only other signal.
+```
+visa-gov.com  gov-uk.com  govuk.com  mygov.in  e-gov.in  thegov.uk
+gov.sg.evil.example   immigration.gov.in.attacker.net   esteri.it.visa-help.com
+    -> every one rejected
+fakegov.gov   help.gov.co   visa.gov.tk   -> accepted
+```
+
+The regex only matches a marker at a **label boundary anchored to the end**, so it cannot be spoofed by
+putting "gov" in a name — `gov.ica.sg` and `go.mofa.jp` are both rejected. What the three accepted ones
+have in common is that they genuinely sit under `.gov`, `gov.co`, `gov.tk`: **namespaces whose registry
+restricts who may register.** You cannot buy `foo.gov.sg`. So the check is not "reads as official" — it is
+"sits inside a registry-controlled government namespace", which is a real, unforgeable property and
+exactly the kind of thing this project's trust model wants.
+
+**So judge it by the right standard:**
+
+| As a test of | Verdict |
+| --- | --- |
+| *this IS official* (sufficient) | **Sound.** Registry-backed, zero false positives in the probe above. |
+| *only these are official* (necessary) | **Wrong, measured 19 of 51.** Where a country has no government namespace there is no signal to find, so no regex can ever fix it. |
+| *this is a **visa** authority* | **Does not try.** `nasa.gov` and `recreation.gov` pass as US own-government. Bounded by the cap and corroboration bar (entry 22), not by this rule. |
+
+That is why the fix is to **add other sufficient conditions, never to loosen this one** — and why
+renaming `looks_governmental` to something like `in_government_namespace` is worth doing while here.
+
+**The tension this item must resolve, and currently ducks.** "A reviewed authority domain" was written
+without saying *how the reviewer knows*, and hand-reviewing 198 countries is the manual curation the
+production goal exists to remove. Four mechanisms could supply officialness without per-country
+judgement, and the cheap measurement comes first:
+
+1. **The government's own published domain list.** Where a country publishes one, that is the
+   destination's own government asserting which domains are its own — this project's trust model applied
+   recursively, no human taste involved. Strongest where it exists; coverage patchy.
+2. **Registry (RDAP/WHOIS) organisation data.** `esteri.it`'s registrant is Italy's foreign ministry —
+   authoritative registry data, not prose. **Measure coverage before committing:** GDPR redaction is
+   heaviest on European ccTLDs, which is exactly the 19.
+3. **TLS certificate organisation.** OV/EV certificates carry a CA-validated `O=` field, and this project
+   already handles certificates (entry 12). Partial: many authorities now use DV certificates with no
+   organisation. Note it needs a TLS handshake before trust is decided — closer to DNS resolution than to
+   fetching evidence, but say so explicitly rather than sliding past it.
+4. **Cross-vouching from an already-trusted domain.** For the ten countries that *do* have a marked
+   domain, `interno.gov.it` naming `esteri.it` as the foreign ministry is the government vouching for its
+   own domain — the existing `appointed_by` idea generalised. **The hole:** governments link to
+   contractors, partners and news, so "linked from a trusted domain" is far too weak, and
+   `ARCHITECTURE.md` says appointing a provider is human judgement never automated. This is a decision to
+   argue, not a patch to apply.
+
+**Do the measurement first** — for the 19, how many are covered by (1), (2) and (3)? It is offline-ish,
+needs no search credit, and it decides whether this item is automatable or genuinely needs a human. If
+most are covered, the production goal survives; if not, reviewed data is the honest answer and the review
+is 19 countries rather than 198.
+
+**Then the two problems the measurement is for:**
+
+- **19 of 51 governments have no governmental marker in their hostname.** The amendment is an authority
+  domain named in the entry 34 registry, by whichever of the four mechanisms above survives measurement
+  — **never a wider regex.** Adding `.de`, `.nl`, `.it` as markers would trust every commercial site in
+  those countries, and `belongs_to_destination` cannot narrow it, because for exactly these countries the
+  own-TLD test is the only other signal there is. `tests/test_trust_coverage.py` asserts that trap
+  directly: it checks a German visa agency is indistinguishable from the ministry on the only half that
+  would remain.
 - **Schengen is a definition problem, not a bug.** For short-stay visas the decision genuinely lives at
   EU level as much as nationally, and `europa.eu` passes `looks_governmental` but can never pass
   `belongs_to_destination` for any member state. "The destination's own government" is the wrong trust
