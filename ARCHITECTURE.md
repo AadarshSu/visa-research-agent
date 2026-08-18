@@ -198,13 +198,19 @@ this is automated while per-country trust is not.
 
 ### The stages
 
-1. **Search** (`search.py`) — templated queries constrained with `site:` to approved domains.
+1. **Search** (`search.py`) — templated queries constrained with `site:` to approved domains, run
+   four at a time rather than one after another; bounded because a search API is someone else's rate
+   limit.
    Queries are built from the corridor alone: never model-written, never derived from fetched page
    content, so a page cannot influence what is searched next. Results are filtered again by
    `trusts_host`, so the restriction is enforced twice.
 2. **Crawl** (`crawl.py`) — best-first, two hops, inside approved domains. Search lands on a section
    index; the checklist is usually one link further on. Budget is shared between seeded hosts so a
-   large ministry portal cannot starve the mission site.
+   large ministry portal cannot starve the mission site. The frontier is walked in **waves** of at
+   most one page per host, fetched together: the politeness delay is owed to a host, so applying it
+   globally made every site wait behind every other. Results are handled in frontier order rather
+   than completion order, because which page a corridor resolves to must not depend on which site
+   answered first.
 3. **Fetch the shortlist** (`resolver.py`) — by building a throwaway `DestinationConfig` and passing
    it to the ordinary `LiveSourceFetcher`. This inherits redirect trust, PDF reading, forwarding,
    size caps and caching with no duplicated code — and because `validate_route` runs on that config,

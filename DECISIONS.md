@@ -9,6 +9,64 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 25. The politeness delay is owed to a host, not to the crawl
+**2026-08-17**
+
+A cold corridor took **54.5s**, and instrumenting it by phase showed where: the crawl spent 25.9s on
+32 page fetches, of which **about 16s was sleeping**. `CrawlFetcher` awaited its 0.5s delay before
+*every* request whatever host it was for, and `LinkCrawler` walked its frontier one page at a time,
+so each site's spacing was also paid by every other site. Search added another 15s across 16 queries
+run one after another.
+
+**Decided: the delay is per host, and hosts are crawled concurrently.** This is *more* correct about
+politeness rather than less — every host still gets its full 0.5s spacing, and the next slot is
+claimed before sleeping so two requests to one host queue rather than both reading the same
+last-request time. What stops is one site waiting behind another it has nothing to do with.
+
+The frontier now yields a **wave**: the best few links, at most one per host. A second link on a host
+already in the wave goes back to the frontier rather than being dropped, so nothing is lost by being
+second in its queue. Results are handled in frontier order, never completion order, because which
+page a corridor resolves to depends on the order candidates are seen and that must not depend on
+which site answered first.
+
+**Search runs concurrently too, bounded at four.** Measured first rather than assumed: four
+concurrent Brave queries took 1.32s against 1.26s for one, with no rate-limit errors. Bounded rather
+than unbounded because a search API is someone else's rate limit and a burst that trips it turns a
+resolvable corridor into a refusal — `search()` raises on any non-200, and that becomes a 503. A
+failing query still fails the run, exactly as when they ran in sequence; whether a partly-searched
+corridor is safe to serve is a separate decision and has not been made.
+
+**Measured, 2026-08-17, `united-states/IN/IN/tourism` cold with both caches cleared:**
+
+| phase | before | after |
+| --- | --- | --- |
+| bootstrap (4 searches) | 4.5s | **1.1s** |
+| crawl | 25.9s | **7.2s** |
+| shortlist fetch | 1.5s | 0.9s |
+| role adjudication | 11.2s | 8.1s |
+| **corridor** | **54.5s** | **19.4s** |
+| plan extraction | 11.8s | 14.7s |
+| **cold request total** | **66.3s** | **34.1s** |
+
+Brazil went 85.6s to 28.5s, China 161s to 43.1s. The remaining corridor time is now two model calls
+and search latency, not waiting.
+
+**What did not change, which was the condition on doing this at all.** The US corridor produced a
+byte-identical shortlist — same ten pages, same order, same scores — and the same three roles.
+Brazil's four role assignments are unchanged, Edinburgh checklist included. **Coverage bounds were
+not touched:** `maximum_pages` is still 40 and `maximum_pages_per_host` still 20, because those bound
+what can be found and Japan's checklist was two hops deep.
+
+**One corridor did change, and it is worth knowing.** China's `document_checklist` resolved to
+`gb.china-embassy.gov.cn/eng/visa/qzxz/201303/t20130315_3383966.htm` (38.2) where it had been
+`.../eng/xnyfgk/201303/t20130315_3317069.htm` (34.2). Same title, same authority, same `201303`
+publication path: the embassy publishes that document under two sections, and which duplicate is
+discovered first depends on crawl order. The new one scores higher, and the roles are otherwise
+identical. So crawl order *was* mildly load-bearing — for choosing between duplicates of one
+document, which is the harmless end of that risk.
+
+---
+
 ## 24. A fetch place is not spent on a page already proved unreadable
 **2026-08-17**
 

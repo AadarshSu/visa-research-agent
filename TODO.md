@@ -34,56 +34,23 @@ evidence costs a refusal. Whatever is decided, the block must still be **reporte
 **Also still overstated:** `pages_fetched` is the shortlist length, so the US reports ten pages read
 when eight are readable. Worth making it the count that was actually read.
 
-### Make a cold corridor faster than 53 seconds — `next`
-
-**Why:** it is what makes the thing hard to host, and it is mostly one avoidable thing. Measured on
-2026-08-17 for `brazil/IN/GB/tourism`:
-
-| phase | time |
-| --- | --- |
-| bootstrap — 4 searches | 4.5s |
-| **search + crawl** | **41.9s** |
-| shortlist fetch — 10 pages, already concurrent | 7.2s |
-| model adjudication — 1 call | 8.1s |
-| corridor total | **53.4s** |
-
-**The crawl is 73% of it, and it is sequential by accident rather than by design.**
-`CrawlFetcher.fetch_html` awaits `self.sleep(self.host_delay_seconds)` — 0.5s — before *every*
-request, whatever host it is for, and `LinkCrawler.crawl` walks its frontier one page at a time.
-Forty pages therefore cost at least twenty seconds of pure waiting, and a second host waits behind
-the first for no reason. The delay is meant to be politeness *to one host*; applied globally it is
-just latency.
-
-**Do:**
-
-1. Make the delay per host, keyed off `host_of(url)`, and crawl different hosts concurrently. This
-   is **more** correct about politeness, not less — each host still gets its spacing. Expect most
-   of the 42s back, since a corridor typically spans two to four hosts.
-2. Run the four bootstrap searches concurrently. Small, ~4.5s, and trivially safe.
-3. Leave the shortlist fetch alone: 7.2s for 10 pages is already concurrent and reasonable.
-
-**Careful:** do not buy speed by lowering `maximum_pages` or `maximum_pages_per_host`. Those bound
-coverage, and Japan's checklist was found two hops deep — cutting depth would trade a real answer
-for a fast refusal. And keep the delay: hammering a government site is exactly what the user agent
-promises not to do.
-
-**Verify:** re-time the same corridor and re-run the six known corridors. Speed must not change
-which pages are chosen; if it does, the crawl order was load-bearing and that is worth knowing.
-
 ### Put it somewhere others can open it aka deployment — `next`
 
 **Why:** it runs on one laptop with a `.env`. The goal is a URL to share. Keep this simple — a host,
 some environment variables, done. No pipelines, no orchestration; CI already runs the checks and
 that is enough.
 
-**The one thing that makes it non-trivial.** A cold request is **70.7s** (53.4s corridor + 17.3s
-plan), all inside a single `POST`. Typical request timeouts are 30–60s, so the first request for any
-destination would fail even though the work succeeds. And `var/cache/` and `var/corridors/` are
-local directories, so anywhere with a disposable filesystem makes **every** request cold, not just
-the first.
+**What used to make this non-trivial is now much smaller.** A cold request was **70.7s**; after
+DECISIONS entry 25 it is **34.1s** (19.4s corridor + 14.7s plan) for
+`united-states/IN/IN/tourism`, measured with both caches cleared. That fits inside a typical 30–60s
+proxy timeout, though not comfortably — the remaining time is two model calls and search latency, so
+it will vary with someone else's load rather than with anything here. `var/cache/` and
+`var/corridors/` are still local directories, so anywhere with a disposable filesystem makes
+**every** request cold rather than just the first.
 
 **The simple way through:** a warm corridor takes **0.0s**, so resolve the popular ones ahead of
-time rather than on demand.
+time rather than on demand. Less essential than it was, and still worth doing: it turns a 34s first
+request into an instant one, and it costs nothing to ship.
 
 1. **Precompute and ship corridors.** Resolve them locally with `visa-discover`, keep the JSON, and
    point `FileCorridorStore` at that directory. The deployed app then answers instantly for anything

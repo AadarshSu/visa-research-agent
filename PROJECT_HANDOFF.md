@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-17 — update this line when you touch the handoff |
-| **Tests** | 267 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 273 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -143,10 +143,11 @@ why.
 
 Ordered by how much they limit the product. None of these are secretly fixed; they are all live.
 
-1. **A cold request takes 70 seconds, synchronously.** 53.4s to resolve a corridor and 17.3s to
-   extract the plan, inside one `POST`. Warm is instant, and the local `var/` stores are what make
-   it warm — so an ephemeral container would make every request cold. This is the constraint that
-   shapes any deployment, not a tuning problem.
+1. **A cold request takes 34 seconds, synchronously** — 19.4s corridor and 14.7s plan, inside one
+   `POST` (entry 25 brought this down from 70.7s). It now fits a typical 30–60s proxy timeout, but not
+   comfortably, and what remains is two model calls plus search latency, so it varies with someone
+   else's load rather than with anything here. Warm is instant, and the local `var/` stores are what
+   make it warm — an ephemeral container would make every request cold.
 2. **A destination is now trusted on a rule, with no human in the loop.** The rule reproduces all
    22 recorded human decisions, but it has only ever been checked against seven countries. A country
    whose government publishes outside its own TLD would resolve to nothing; one whose TLD hosts a
@@ -241,16 +242,17 @@ canonical checklist is the blocked one. Two places still go to `travel.state.gov
 never crawled, and whether a host that has refused everything may be skipped wholesale is left as a
 measured question rather than assumed.
 
-**A cold corridor takes 53 seconds, and three quarters of that is avoidable** — the crawl applies
-its 0.5s politeness delay globally rather than per host, and walks pages one at a time. Second item
-in the todo, with the phase-by-phase measurements.
+**A cold corridor now takes 19.4s rather than 54.5s** — entry 25. The 0.5s politeness delay was
+applied before every request whatever host it was for, so each site's spacing was paid by every other
+site; it is now per host, hosts are crawled concurrently, and searches run four at a time. Every
+coverage bound was left alone, and the US shortlist came out byte-identical.
 
-**Nothing is deployed, and the current shape will not survive being hosted as-is.** A cold request
-takes **70.7s** end to end — 53.4s to resolve the corridor, 17.3s to extract the plan — all
-synchronously inside one `POST`. Ordinary proxy timeouts are 30–60s, so the first request for any
-new corridor would fail even though the work succeeds. The same corridor warm takes **0.0s**, which
-is what makes resolving ahead of time attractive. `var/cache/` and `var/corridors/` are also local
-directories, so on an ephemeral container every request is cold.
+**Nothing is deployed.** A cold request is **34.1s** end to end — 19.4s to resolve the corridor,
+14.7s to extract the plan — synchronously inside one `POST`. That now fits an ordinary 30–60s proxy
+timeout where 70.7s did not, so hosting is no longer blocked on speed; it is only unstarted. The same
+corridor warm takes **0.0s**, which still makes resolving popular ones ahead of time worth doing.
+`var/cache/` and `var/corridors/` are local directories, so on an ephemeral container every request
+is cold.
 
 ### Otherwise complete end to end Any traveller, any destination: the request
 describes who is travelling, the destination is researched if nobody configured it, and the plan
@@ -281,18 +283,16 @@ In the order that makes sense. Detail and reasoning in [TODO.md](TODO.md). The t
 head this list — run a country that publishes a checklist, make the traveller profile variable, wire
 discovery into request time — are all done; see *Current state*.
 
-1. **Make a cold corridor faster than 53 seconds** — the crawl's politeness delay is applied globally
-   rather than per host, which is most of it.
-2. **Deploy it**, which the 70.7s cold request shapes rather than blocks: resolve popular corridors
-   ahead of time and ship them.
-3. **Tell "no checklist exists" apart from "we failed to find it."** The US now makes this concrete
+1. **Deploy it.** No longer shaped by speed — a cold request is 34.1s and fits an ordinary timeout.
+   Resolving popular corridors ahead of time is still worth shipping.
+2. **Tell "no checklist exists" apart from "we failed to find it."** The US now makes this concrete
    rather than hypothetical: its checklist is unfilled because a page is blocked, and that is a third
    case again.
-4. **Carry `inaccessible_domains` into the plan**, so a traveller learns an authority declined rather
+3. **Carry `inaccessible_domains` into the plan**, so a traveller learns an authority declined rather
    than only that something is missing. Prerequisite for the interface work on blocked sources.
-5. **Decide whether a host that refused every request may be skipped** — two US fetch places turn on
+4. **Decide whether a host that refused every request may be skipped** — two US fetch places turn on
    it, and it is inductive, so measure before adopting.
-6. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
+5. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
 
 ---
 
