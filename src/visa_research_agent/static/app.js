@@ -91,11 +91,19 @@ function appendIfFilled(container, group) {
   if (group.childElementCount) container.append(group);
 }
 
+function hasIncompleteEvidence(plan) {
+  return (
+    plan.status !== "verified"
+    || plan.sources.some((source) => source.is_stale)
+    || (plan.unavailable_sources || []).length > 0
+  );
+}
+
 // A partial plan is still useful, but it must never look as complete as a verified one.
 function renderEvidenceBanner(plan) {
   const staleSources = plan.sources.filter((source) => source.is_stale);
   const missing = plan.unavailable_sources || [];
-  if (plan.status === "verified" && !staleSources.length && !missing.length) return null;
+  if (!hasIncompleteEvidence(plan)) return null;
 
   const banner = element("div", "evidence-banner");
   banner.append(element("p", "evidence-banner-title", "Evidence is incomplete"));
@@ -135,7 +143,7 @@ function renderEvidenceBanner(plan) {
     element(
       "p",
       "evidence-banner-note",
-      "Everything below is still drawn only from official sources, but confirm these points "
+      "Everything in this plan is still drawn only from official sources, but confirm these points "
         + "directly with the responsible authority before you rely on them.",
     ),
   );
@@ -151,8 +159,18 @@ function renderDecision(plan, ctx) {
     element("span", `status-chip status-chip--${plan.status}`, plan.status === "verified" ? "Evidence verified" : "Evidence partial"),
   );
   header.append(chips);
-  const banner = renderEvidenceBanner(plan);
-  if (banner) container.append(banner);
+  // A partial plan must not look complete, so it says so above the guidance — but briefly. The
+  // reasons and links are long enough to bury the answer, so they sit with the other caveats at the
+  // end instead.
+  if (hasIncompleteEvidence(plan)) {
+    container.append(
+      element(
+        "p",
+        "evidence-pointer",
+        "Some evidence is incomplete — see Evidence and caveats below before relying on this.",
+      ),
+    );
+  }
   container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
   return container;
@@ -190,6 +208,11 @@ function renderApplicationLocation(plan, ctx) {
 }
 
 function renderRequirements(plan, ctx) {
+  // No checklist source means no documents may be listed, so the panel would be a heading and a
+  // caveat above nothing. The absence is not hidden by dropping it: it is stated under unresolved
+  // questions, which the plan is structurally required to carry when there is no checklist source.
+  if (!plan.requirements.length) return null;
+
   const { container } = panel("Visa application documents", "Official checklist");
 
   container.append(
@@ -262,6 +285,8 @@ function authoritiesSentence(plan) {
 
 function renderReliability(plan) {
   const { container } = panel("Evidence and caveats", "Reliability");
+  const banner = renderEvidenceBanner(plan);
+  if (banner) container.append(banner);
   container.append(
     element("p", "checked-at", `Evidence last checked ${new Date(plan.last_checked).toLocaleString()}.`),
   );
@@ -323,11 +348,13 @@ function renderPlan(plan) {
     seenUrls: new Set(),
   };
   results.replaceChildren(
-    renderDecision(plan, ctx),
-    renderApplicationLocation(plan, ctx),
-    renderRequirements(plan, ctx),
-    renderSteps(plan, ctx),
-    renderReliability(plan),
+    ...[
+      renderDecision(plan, ctx),
+      renderApplicationLocation(plan, ctx),
+      renderRequirements(plan, ctx),
+      renderSteps(plan, ctx),
+      renderReliability(plan),
+    ].filter(Boolean),
   );
 }
 

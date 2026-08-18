@@ -317,7 +317,20 @@ button:disabled {
   background: var(--amber-soft);
 }
 
-/* Incomplete evidence is stated before the guidance, not buried beneath it. */
+/* Incomplete evidence is named above the guidance in one line, and set out in full at the end.
+   Both halves matter: a partial plan must not look complete, and a wall of caveats above the answer
+   buries the answer. */
+.evidence-pointer {
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-left: 4px solid var(--amber);
+  border-radius: 6px;
+  background: var(--amber-soft);
+  color: #684319;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .evidence-banner {
   margin-bottom: 24px;
   padding: 20px;
