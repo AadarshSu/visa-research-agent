@@ -14,10 +14,12 @@ from visa_research_agent.domain.models import (
     DestinationConfig,
     FetchedSource,
     RetrievalReport,
+    SourceFailure,
     TravellerProfile,
     VisaPlan,
     VisaPlanDraft,
 )
+from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LLMExtractionError, VisaResearchError
 from visa_research_agent.research.interfaces import StructuredPlanGenerator
 from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
@@ -62,6 +64,17 @@ def build_research_packet(
             "display_name": destination.display_name,
             "route_type": destination.route_type,
             "application_document_source_ids": destination.application_document_source_ids,
+            "decision_is_unverified": destination.decision_is_unverified,
+            # Named, never quoted: these are pages this program was not permitted to read, so the
+            # model is being told where the guidance lives, not what it says.
+            "unreadable_authorities": [
+                {
+                    "url": str(authority.url),
+                    "authority": authority.authority,
+                    "detail": authority.detail,
+                }
+                for authority in destination.unreadable_authorities
+            ],
         },
         "traveller_profile": {
             **traveller_profile.model_dump(mode="json"),
@@ -184,6 +197,21 @@ class OpenAIVisaPlanExtractor:
             raise LLMExtractionError("Model output does not match the configured destination")
 
         references = [fetched_source.source for fetched_source in fetched_sources]
+        # Named in the plan so the traveller gets the URL and can open it themselves. Synthetic
+        # because there is no retrieval to report: the block was observed while the corridor was
+        # being resolved, and `unavailable_sources` is where a plan already says what it could not
+        # use. Nothing here claims what the page contains.
+        refused = [
+            SourceFailure(
+                source_id=f"blocked_{index + 1}",
+                title=f"Official guidance at {host_of(str(authority.url))}",
+                authority=authority.authority,
+                outcome="blocked",
+                detail=authority.detail,
+                attempted_url=authority.url,
+            )
+            for index, authority in enumerate(destination.unreadable_authorities)
+        ]
         requirements = [
             requirement
             for requirement in draft.requirements
@@ -204,7 +232,9 @@ class OpenAIVisaPlanExtractor:
             )
             return VisaPlan(
                 destination=draft.destination,
-                visa_required=draft.visa_required,
+                # Not the model's to decide when nothing confirmed it. Asked for in the prompt and
+                # enforced here, because a wrong yes or no is the most damaging thing this can say.
+                visa_required=None if destination.decision_is_unverified else draft.visa_required,
                 visa_type=draft.visa_type,
                 explanation=draft.explanation,
                 decision_source_ids=draft.decision_source_ids,
@@ -217,9 +247,11 @@ class OpenAIVisaPlanExtractor:
                 conflicts=draft.conflicts,
                 last_checked=max(reference.retrieved_at for reference in references),
                 status=resolve_plan_status(
-                    report, has_checklist_source=bool(application_source_ids)
+                    report,
+                    has_checklist_source=bool(application_source_ids),
+                    decision_is_unverified=destination.decision_is_unverified,
                 ),
-                unavailable_sources=report.failures,
+                unavailable_sources=[*report.failures, *refused],
             )
         except ValidationError as exc:
             raise LLMExtractionError("Model output failed source and schema validation") from exc

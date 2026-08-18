@@ -246,3 +246,107 @@ async def test_a_declared_checklist_that_was_not_retrieved_still_refuses() -> No
         )
 
     assert generator.calls == 0
+
+
+def decision_unverified(destination: DestinationConfig) -> DestinationConfig:
+    """A destination whose visa decision is published only where we are not allowed to read it."""
+
+    payload = destination.model_dump(mode="json")
+    payload["application_document_source_ids"] = []
+    payload["required_source_ids"] = []
+    payload["decision_is_unverified"] = True
+    # The readable half of this fixture is Singapore's, because that is what has snapshots; the
+    # blocked half is France's real one. Approving the domain is required — a page offered to a
+    # traveller as official guidance must sit on an approved domain like any other.
+    payload["trusted_domains"] = [*payload["trusted_domains"], "france-visas.gouv.fr"]
+    payload["unreadable_authorities"] = [
+        {
+            "url": "https://france-visas.gouv.fr/en/web/france-visas",
+            "authority": "France authority (france-visas.gouv.fr)",
+            "detail": (
+                "refused automated retrieval, so its guidance could not be independently "
+                "verified here"
+            ),
+        }
+    ]
+    return DestinationConfig.model_validate(payload)
+
+
+@pytest.mark.anyio
+async def test_a_plan_names_the_authority_it_was_not_allowed_to_read() -> None:
+    """The point of producing a plan at all in this case: the traveller gets the URL and can open it
+    themselves, which turns "no verified plan" into a next step."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={
+                "requirements": [],
+                "visa_required": True,
+                "unresolved_questions": ["The visa decision could not be verified."],
+            }
+        )
+    )
+    destination = decision_unverified(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    blocked = [source for source in plan.unavailable_sources if source.outcome == "blocked"]
+    assert [str(source.attempted_url) for source in blocked] == [
+        "https://france-visas.gouv.fr/en/web/france-visas"
+    ]
+    assert "france-visas.gouv.fr" in blocked[0].authority
+
+
+@pytest.mark.anyio
+async def test_an_unverified_decision_is_never_reported_as_a_decision() -> None:
+    """Enforced rather than requested. The model was asked for null and said True here; a wrong yes
+    or no about whether someone needs a visa is the most damaging thing this can say, so the
+    application overrides it instead of trusting the prompt."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={
+                "requirements": [],
+                "visa_required": True,
+                "unresolved_questions": ["The visa decision could not be verified."],
+            }
+        )
+    )
+    destination = decision_unverified(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.visa_required is None
+    # And it can never wear the badge of a checked answer.
+    assert plan.status == "partial"
+
+
+@pytest.mark.anyio
+async def test_the_model_is_told_where_the_guidance_lives_but_never_quoted_it() -> None:
+    """It is named, not read. A page this program could not open cannot be evidence of anything it
+    says, so the packet carries the URL and the authority and no content at all."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={"requirements": [], "unresolved_questions": ["Could not be verified."]}
+        )
+    )
+    destination = decision_unverified(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert generator.research_packet is not None
+    packet = json.loads(generator.research_packet)
+    assert packet["destination"]["decision_is_unverified"] is True
+    named = packet["destination"]["unreadable_authorities"]
+    assert named[0]["url"] == "https://france-visas.gouv.fr/en/web/france-visas"
+    assert "untrusted_content" not in named[0]

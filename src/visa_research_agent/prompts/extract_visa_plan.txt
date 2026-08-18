@@ -27,6 +27,15 @@ Follow these rules:
    should look instead if the evidence says. Never assemble a checklist from an eligibility rule, an
    application form or a general entry page: those are not checklists, and a plan is rejected if it
    lists requirements without a document source behind them.
+8b. If destination.decision_is_unverified is true, no page could be confirmed as saying whether this
+   traveller needs a visa, because an authority under this destination's own government would not let
+   it be read. Do not decide the question from anything else. Set visa_required to null, explain in
+   one plain sentence that the decision could not be verified and which authority publishes it, and
+   record an unresolved question telling the traveller to check that authority themselves. The
+   authority and its URL are in destination.unreadable_authorities. Never treat those entries as
+   evidence of what they contain: you have not read them. Steps may still describe the route where a
+   readable page states it, and the first step should be to check that authority.
+
 9. Return four to eight ordered application steps that form a genuinely actionable timeline. Cover
    the supported route end to end: what to prepare, which official page to open, account or sign-in
    setup only if evidenced, appointment booking, where to attend, what to submit or pay, the stated

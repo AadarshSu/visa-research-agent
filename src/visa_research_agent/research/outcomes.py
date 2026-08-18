@@ -32,6 +32,12 @@ def require_load_bearing_sources(
 
     required = destination.load_bearing_source_ids
     if not required:
+        # Nothing load-bearing is normally a broken configuration. It is not when the reason is on
+        # the record: an authority under this destination's own government refused us, so there was
+        # nothing to confirm the decision *with*. The plan then says that and names the page, which
+        # is a next step the traveller can take, rather than nothing at all.
+        if destination.decision_is_unverified:
+            return
         raise InsufficientEvidenceError(
             f"{destination.display_name} declares no load-bearing sources",
             reasons=["The destination configuration is incomplete."],
@@ -58,6 +64,7 @@ def resolve_plan_status(
     report: RetrievalReport,
     *,
     has_checklist_source: bool = True,
+    decision_is_unverified: bool = False,
 ) -> PlanStatus:
     """Grade a run: verified only when every source was retrieved and is current.
 
@@ -66,9 +73,12 @@ def resolve_plan_status(
     rest on — whether because the authority publishes none or because we were not allowed to read
     it — and "verified" beside an empty document list is the one label that would make that
     invisible. It stays honest without refusing, which is what DECISIONS entry 14 chose.
+
+    A plan whose visa decision could not be confirmed is never verified either, for the same reason
+    and more strongly: it is the one thing a traveller most needs to be right.
     """
 
-    if not has_checklist_source:
+    if not has_checklist_source or decision_is_unverified:
         return "partial"
     if report.failures:
         return "partial"
