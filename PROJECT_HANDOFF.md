@@ -293,10 +293,12 @@ call silently substituting the heuristic (entry 31).
    changed. What entry 35 corrects is the conclusion drawn from it: the loss is permanent *given an
    anonymous, unauthenticated client*, and that posture was never itself decided. Honouring
    `robots.txt` — **now read and obeyed** (entry 36) — asking for access, and the open
-   client-side-retrieval question are all legitimacy rather than circumvention. Until item 3's twenty
-   corridors are run against that posture, the size of this limit is unknown rather than
-   known-and-accepted. Note the new posture can only *widen* this problem before it narrows it: a
-   `Disallow` previously walked past is now a refusal, and nothing has been run live since.
+   client-side-retrieval question are all legitimacy rather than circumvention. **Measured 2026-08-18:
+   `robots.txt` buys nothing here at all.** `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and
+   `travel.state.gov` answer `403` **to their own `robots.txt`**, served as a bot-detection
+   interstitial — there is no stated policy to honour, because it is a WAF rather than a rule. So the
+   first legitimacy step is spent and this limit is exactly where it was. What remains of entry 35 is
+   asking for access and the client-side question; item 3's twenty corridors still size it.
 12. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
@@ -353,13 +355,17 @@ its seven entries are now implemented, and nothing is left shipping against the 
   is trusted.
 - **`robots.txt` is read and obeyed** (entry 36) — `research/robots.py`, one policy per origin with a
   24-hour expiry, consulted by `discovery/crawl.py` before every page and by `research/live_sources.py`
-  before every source and every meta-refresh forward. 19 tests, all offline. A skip is the new `disallowed` outcome
-  and gets its own corridor note, so it can never read as "nothing found"; it is reported and may never
-  resolve a corridor. **Expected to cost coverage and not yet measured** — nothing has been run against
-  a real authority since, which is why TODO item 3's twenty corridors matter more, not less.
+  before every source and every meta-refresh forward. 32 tests, all offline. A skip is the new
+  `disallowed` outcome and gets its own corridor note, so it can never read as "nothing found"; it is
+  reported and may never resolve a corridor. **Matching implements RFC 9309 rather than using
+  `urllib.robotparser`**, which supports neither `*` nor `$` and so would obey none of the rules
+  `www.gov.uk` publishes. **Measured live across six corridors** — the table is in entry 36. It cost
+  almost nothing and nothing of value: France lost one news listing, China lost two portals already
+  answering `502`, and Japan, Singapore, Vietnam and Brazil lost nothing at all.
 
-**Four findings came out of doing the work, all recorded rather than left in the diff. The pattern in
-them is worth carrying: each was a claim that turned out to be wrong when finally tested or run.**
+**Five findings came out of doing the work, all recorded rather than left in the diff. The pattern in
+them is worth carrying: each was a claim that turned out to be wrong when finally tested or run — and
+the last was caught only by probing real authorities, not by any test.**
 
 1. **The 19 unreachable countries are two different failures**, and the second is worse (entry 33's
    table). Nine have no marked domain at all and refuse outright with a misleading message. **Ten do have
@@ -384,6 +390,14 @@ them is worth carrying: each was a claim that turned out to be wrong when finall
    rather than two, and a transport failure that **raises** instead of deciding, so the caller keeps
    diagnosing an unreachable host as unreachable. The lesson repeats: a reason has to be true of what
    was actually observed, not merely of the branch that produced it.
+5. **The stdlib `robots.txt` parser was inert, and only a live probe showed it** (entry 36).
+   `urllib.robotparser` matches with `startswith` and supports neither `*` nor `$`. Every rule
+   `www.gov.uk` publishes is a wildcard, so this shipped, tested and documented as honouring crawl
+   policies while honouring almost none of them. **No unit test could have caught it** — the fake
+   policies in the suite were all literal prefixes, because those are what a person writes from memory.
+   Matching is now RFC 9309 implemented directly. Same lesson as findings 2 and 3, one level deeper: the
+   justification for reaching for stdlib ("its shortfall errs toward fetching less") was written from
+   reading the module and was the exact opposite of true.
 
 **Everything that needed no credit is now done, and nothing is shipping against the project's own
 rules.** `robots.txt` was the last of those (entry 36); what remains all costs something — a

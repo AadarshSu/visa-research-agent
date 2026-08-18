@@ -47,9 +47,11 @@ and so obeys none of the rules `www.gov.uk` publishes. 32 new tests, all offline
   `decision_blocking_urls`. A `403` was observed on the page; a `Disallow` covers a path we chose not to
   request, and letting it stand in would widen entry 32's exception by a route entry 32 never considered.
 
-**Coverage cost is unmeasured.** Nothing has been run against a real authority since. Item 3's twenty-corridor
-measurement should run against this posture rather than the old one, which is the only way the cost gets a
-number.
+**Measured live, six corridors, 2026-08-18 — entry 36 has the table.** The cost was almost nothing:
+France lost one news listing, China lost two portals already answering `502`, and Japan, Singapore,
+Vietnam and Brazil lost nothing. **The negative result matters more:** France and the US answer `403` to
+their own `robots.txt`, so this step buys nothing on the two corridors that motivated entry 35 — it is a
+WAF there, not a stated policy. Item 3's twenty corridors still decide the size of that limit.
 
 ---
 
