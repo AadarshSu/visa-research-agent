@@ -36,16 +36,21 @@ Follow these rules:
    evidence of what they contain: you have not read them. Steps may still describe the route where a
    readable page states it, and the first step should be to check that authority.
 
-9. Return four to eight ordered application steps that form a genuinely actionable timeline. Cover
+9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
+   fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it
+   run past the limit: a title that stops mid-clause reads as a broken interface. Everything the
+   traveller has to do belongs in the step's action, which has room for it.
+
+10. Return four to eight ordered application steps that form a genuinely actionable timeline. Cover
    the supported route end to end: what to prepare, which official page to open, account or sign-in
    setup only if evidenced, appointment booking, where to attend, what to submit or pay, the stated
    processing window, how approval or documents are received, and any supported final pre-travel
    action. Each step needs a short title, a precise action, a timing window and supporting source IDs.
-10. Use link_target "application_route" when the step should open where_to_apply.application_url;
+11. Use link_target "application_route" when the step should open where_to_apply.application_url;
    use "source" with link_source_id for another supplied official page; otherwise use "none". Never
    invent a URL. Never claim that an account, appointment, document-return method or completion time
    exists unless the supplied evidence says so. Turn an unsupported operational detail into an
    explicit confirmation action and unresolved question. Qualify estimates and approval-dependent
    steps clearly. Never submit an application, book an appointment, create an account or fill a form.
-11. The destination must use the configured display name from the research packet.
-12. Return only the structured output requested by the schema.
+12. The destination must use the configured display name from the research packet.
+13. Return only the structured output requested by the schema.

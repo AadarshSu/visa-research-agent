@@ -382,12 +382,26 @@ class ApplicationLocationDraft(StrictModel):
 class ApplicationStep(StrictModel):
     """One evidence-backed action in the traveller's ordered application timeline."""
 
-    title: str = Field(min_length=3, max_length=80)
+    title: str = Field(min_length=3, max_length=70)
+    """A short label. The step's substance belongs in `action`, not here."""
     action: str = Field(min_length=3, max_length=320)
     timing: str = Field(min_length=3, max_length=160)
     source_ids: list[str] = Field(min_length=1)
     link_target: Literal["application_route", "source", "none"]
     link_source_id: str | None
+
+    @field_validator("title")
+    @classmethod
+    def tidy_title(cls, value: str) -> str:
+        """Drop punctuation that means a sentence was still going.
+
+        A model given 80 characters wrote to the limit and stopped mid-clause — "…if the wizard says
+        a visa," — which reads as a truncation bug in the interface. The length is now tighter and
+        the prompt asks for a label, but the trailing comma is trimmed here as well: a heading is
+        derived text rather than a claim, so tidying it invents nothing.
+        """
+
+        return value.strip().rstrip(",;:").strip() or value.strip()
 
     @model_validator(mode="after")
     def validate_link_target(self) -> "ApplicationStep":

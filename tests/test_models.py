@@ -227,3 +227,39 @@ def test_a_plan_with_no_document_source_must_say_what_is_missing() -> None:
     # Silence would read as "this authority requires no documents", which is far worse.
     with pytest.raises(ValidationError, match="must record what could not be answered"):
         VisaPlan.model_validate(checklistless_plan(unresolved_questions=[]))
+
+
+def test_a_step_title_that_stopped_mid_clause_is_tidied() -> None:
+    """A model given eighty characters wrote to the limit and stopped mid-sentence — "…if the wizard
+    says a visa," — which reads as a truncated interface. The title is a label, so trimming the
+    trailing punctuation invents nothing; the substance was always in the action."""
+
+    step = ApplicationStep.model_validate(
+        {
+            "title": "Create an account and complete the online application,",
+            "action": "Create an account on the official portal and complete the form.",
+            "timing": "After confirming a visa is needed",
+            "source_ids": ["a_source"],
+            "link_target": "none",
+            "link_source_id": None,
+        }
+    )
+
+    assert step.title == "Create an account and complete the online application"
+
+
+def test_a_step_title_has_room_for_a_label_and_no_more() -> None:
+    """Seventy characters is a label. A sentence belongs in the action, which has room for one."""
+
+    with pytest.raises(ValidationError):
+        ApplicationStep.model_validate(
+            {
+                "title": "Create an account and complete the online application if the wizard "
+                "says a visa is needed for this trip",
+                "action": "Create an account on the official portal.",
+                "timing": "After confirming a visa is needed",
+                "source_ids": ["a_source"],
+                "link_target": "none",
+                "link_source_id": None,
+            }
+        )
