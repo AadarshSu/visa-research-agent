@@ -276,12 +276,16 @@ countries:
   trusted:
   - business.gov.nl
   reviewed:
+    netherlandsworldwide.nl: 'named by the Dutch government itself as where the visa decision is published:
+      government.nl/faq/which-visa-do-i-need-to-travel-to-the-netherlands says the traveller can see on
+      Netherlands Worldwide whether they need a visa. Checked 2026-08-18. This is the destination''s own
+      government vouching for the domain, which is stronger evidence than the third-party lookup behind
+      the other reviewed domains'
     government.nl: official website of the Government of the Netherlands — Wikidata P856/P17, checked
       2026-08-18. The accepted business.gov.nl is the business portal and does not carry visitor visa
       guidance
   unconfirmable:
   - netherlandsandyou.nl
-  - netherlandsworldwide.nl
 - code: NZ
   name: New Zealand
   trusted:

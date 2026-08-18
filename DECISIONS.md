@@ -58,6 +58,35 @@ and **not one of the three resolves end to end.** The binding constraint has mov
 is no longer "we cannot tell which domain is this government" but "we cannot confirm the visa decision on
 pages we can now read."
 
+### Following one of them all the way down, because "still refuses" is not a diagnosis
+
+The Netherlands did not move, so it was traced page by page. Four distinct causes, and only the first
+was the domain:
+
+1. **The reviewed domain was right and incomplete.** `government.nl` is genuinely the Dutch government,
+   but the Netherlands delegates visa content to `netherlandsworldwide.nl` — which the trust rule had
+   left in `unconfirmable` and which the Wikidata lookup could not confirm either. It is now reviewed on
+   **stronger** evidence than any other row: `government.nl` itself states that the traveller can see on
+   Netherlands Worldwide whether they need a visa. That is the destination's own government vouching for
+   the domain, which beats a third-party lookup.
+2. **The page that ranked first was a signpost.** `check-visa-netherlands` scored 60.4, top of the
+   shortlist, returned `200`, and yielded **250 readable characters against the 400 floor**. Correctly
+   refused — it genuinely contains no guidance, only two links.
+3. **With the delegated domain added, the right pages appear** — including
+   `checklist-schengen-visa-tourism/india` at 123.0 and, separately,
+   `checklist-schengen-visa-tourism/united-kingdom`, both readable and around 7,700 characters. **The
+   scorer ranks the wrong one higher: 113.0 for `/india` against 73.0 for `/united-kingdom`.** For a
+   consular checklist the **post** governs, not the passport: an Indian national applying from Great
+   Britain applies at the Dutch mission in the UK. So the wrong-post page took the slot, and the
+   adjudicator — correctly applying that rule — declined to name it. **The adjudicator was right and the
+   scorer is wrong**, which is the reverse of how it first read.
+4. **The visa decision is not published as a page at all.** `entering-without-visa` redirects to a
+   nine-question JavaScript filter tool. No static Dutch page says an Indian national needs a Schengen
+   visa. Refusing that role is correct and no amount of ranking fixes it.
+
+So the binding constraint is not one thing. It is a scorer that weights nationality above post, and a
+government that publishes its decision only as an interactive tool.
+
 **And entry 38 was wrong about the shape of the failure.** It claimed a wrong trusted set makes a corridor
 *resolve* against domains that cannot hold the answer — the failure this project treats as worse than
 refusing. Run, they **refuse**. The refusal discipline held throughout; what a wrong trusted set costs is

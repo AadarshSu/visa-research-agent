@@ -160,13 +160,25 @@ Sweden went from fetching nothing to reading `migrationsverket.se`, filled `appl
 `general_entry`, and still refuses because the **visa decision** could not be confirmed. Canada now finds
 its document checklist and still cannot confirm the decision. The Netherlands did not move at all.
 
-That is no longer a trust problem — the right authority is being read. It is scoring, crawling or
-adjudication. **Start by reading what those corridors actually fetched**, because nobody has: the pages
-are on disk in `var/cache/` after a run, and which of the ten shortlist places were spent on what is the
-first thing to look at.
+That is no longer a trust problem — the right authority is being read.
 
-**Do not start by tuning the scorer.** The three corridors fail differently and one of them moved not at
-all, so the cause may not be shared.
+**The Netherlands was traced all the way down and gives the first concrete bug (entry 39).** With
+`netherlandsworldwide.nl` added, the corridor finds both
+`checklist-schengen-visa-tourism/india` and `checklist-schengen-visa-tourism/united-kingdom`, each
+readable and about 7,700 characters. **The scorer ranks the wrong one higher — 113.0 for `/india`
+against 73.0 for `/united-kingdom`** — because it weights the passport nationality's demonym in a URL
+above the applying-from country's. For a consular checklist the **post** governs: an Indian national
+applying from Great Britain applies at the Dutch mission in the UK. The adjudicator then correctly
+refuses to name a wrong-post page, so the corridor loses a checklist it had already fetched.
+
+**Do:** make `applying_from` outrank `passport_nationality` when a URL or link text names a post, and
+**measure it across all seven verified corridors before keeping it** — link scoring decides what every
+corridor reads, and Japan and Singapore currently resolve correctly through paths that may depend on the
+present weighting.
+
+**Not everything is this.** The Netherlands' visa *decision* is published only as a nine-question
+JavaScript filter tool, so that role is genuinely unanswerable and refusing it is right. Sweden and
+Canada fail differently again and have not been traced.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
