@@ -273,8 +273,15 @@ Two rules carry most of the weight:
   the correct format is the most dangerous candidate there is, because every other check passes.
 
 Some exclusions are **vetoes rather than penalties**, because no accumulated score should overcome
-them: archived paths, a page about another country, and hard wrong-audience terms such as
-`diplomatic`. A page can fill **several roles** — Singapore's per-nationality page is both the
+them: archived paths, a page about another country, hard wrong-audience terms such as `diplomatic`,
+and **site furniture** — an accessibility statement or a legal notice cannot be visa guidance
+whatever it scores, and France's scored 69 because a footer link inherits the last heading above it.
+
+Country identity is read from a page's **own words** — its path and title — and not from its host,
+because a host label names which *post* published a page. `in.diplomatie.gouv.fr` is France's mission
+in India, and reading that as "written for Indian nationals" put the traveller's home post above the
+post they must actually apply at (entry 26). Which post serves a traveller is decided separately, by
+where they are applying from. A page can fill **several roles** — Singapore's per-nationality page is both the
 decision source and the checklist.
 
 ### Bootstrapping a new country

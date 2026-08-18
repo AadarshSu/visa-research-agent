@@ -19,8 +19,9 @@ Produce visa application plans for a traveller where **every claim is grounded i
 government source**, and the traveller is told plainly when something could not be verified.
 
 The headline production goal — **automatic source discovery**, finding the right official pages for
-a traveller and destination with nobody curating URLs — is **done and running in the request path**.
-What remains is making it fast enough and correct enough to host; see [TODO.md](TODO.md).
+a traveller and destination with nobody curating URLs — is **done and running in the request path**,
+and a cold request now costs 34s rather than 71s. What remains is confirming one shipped change
+against a live run, and hosting it; see [TODO.md](TODO.md).
 
 Deliberately out of scope, permanently: submitting applications, booking appointments, filling
 forms, or claiming an approval is guaranteed.
@@ -36,23 +37,30 @@ the table below is what each one actually did.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Configured sources | 6 | 7 | none | none | none | none | none |
 | Offline snapshots | yes | no | no | no | no | no | no |
-| Live retrieval | works | works | needs rendering | works | **403 bot-blocked** | works | works |
-| Discovery exit code | 0 | 0 | 1 | 0 | **2** | **2** | 1 |
-| Checklist found | yes | yes | none published | yes | no — site unreadable | yes | no — 403 |
+| Live retrieval | works | works | needs rendering | works | **portal 403** | works | works |
+| Visa decision | found | found | found | found | **unverified — blocked** | not confirmed | found |
+| Checklist found | yes | yes | none published | yes | no — blocked | yes | no — blocked |
+| Plan produced | yes | yes | no — rendering | yes | expected, **untested live** | no | yes, `partial` |
+
+Read the France and China columns carefully, because they are not the same failure. China's decision
+was **not confirmed** from readable pages, so that corridor still refuses. France's is unverified
+because an authority refused us, which is the case entry 27 now turns into a plan that says so.
 
 France was re-examined on 2026-08-17 because `france/IN/GB/tourism` is a common corridor to refuse —
 entries 26 and 27. **It no longer refuses**: a corridor whose only missing piece is behind a block now
 resolves, with the visa decision stated as *unknown* rather than guessed, the blocked authority named
-with its URL, and the plan marked `partial`. That is untested live — see known problem 3. The
-underlying fact is unchanged and is why the decision cannot be stated: France states the visa decision only on
-`france-visas.gouv.fr`, which answers 403, and every readable page delegates to it rather than saying
-it. The re-examination did find two real scoring defects, now fixed — a mission host label being read
-as who a page is for, which put France's India post above its UK post for a UK applicant, and footer
-boilerplate taking three of ten fetch places.
+with its URL, and the plan marked `partial`. **That is untested live** — known problem 3.
+
+The underlying fact is unchanged, and it is why the decision cannot be stated: France publishes the
+visa decision only on `france-visas.gouv.fr`, which answers 403, and every readable French government
+page delegates to it rather than saying it. Two real scoring defects turned up on the way and are
+fixed — a mission host label read as who a page is *for*, which put France's India post above its UK
+post for a UK applicant, and footer boilerplate taking three of the ten fetch places.
 
 The first six were verified live on 2026-08-16 with `discovery_decider: model`. Brazil was the
 out-of-sample test that broke keyword ranking, so the last step now asks a model — entries 15 and 16.
-France and China were the confirmation runs, and both **refuse correctly**: entry 17.
+France and China were the confirmation runs, and both refused correctly at the time — entry 17;
+France's outcome has since changed, above.
 
 The United States was added on 2026-08-17 and is the corridor that showed the trust rule needs a
 bound as well as a test — entry 22. It now resolves, and **identically on three consecutive runs**
@@ -196,14 +204,14 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
-8. **Bot-blocked official portals are the largest coverage limit, and will stay one.** France is
-   the clearest case and entry 26 quantifies it: every readable French government page delegates the
-   visa decision to the blocked portal, so the corridor cannot resolve however good the ranking is. Three found:
-   `france-visas.gouv.fr` and `www.france-visas.gouv.fr` (which make France unservable) and
-   Singapore's VFS page. This is **not** a bug to fix — working around a block is forbidden by
-   [DECISIONS.md](DECISIONS.md) entry 18 and by the rules in `CLAUDE.md`. They now produce the
-   `blocked` outcome and appear under `inaccessible_domains`, so a refusal reads as "we were not
-   allowed to check" rather than "nothing found".
+8. **Bot-blocked official portals are the largest coverage limit, and will stay one.** Three found:
+   `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and Singapore's VFS page. France is the clearest
+   case, quantified in entry 26: **every** readable French government page delegates the visa decision
+   to the blocked portal, so no amount of better ranking can confirm it. This is **not** a bug to fix
+   — working around a block is forbidden by [DECISIONS.md](DECISIONS.md) entry 18 and by `CLAUDE.md`.
+   What changed is the output rather than the limit: instead of refusing, such a corridor now produces
+   a plan that states the decision as unknown and hands the traveller the URL (entry 27). The coverage
+   loss is real and permanent — the guidance itself is still unread.
 9. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
@@ -237,63 +245,49 @@ Ordered by how much they limit the product. None of these are secretly fixed; th
 
 ## Current task
 
-**Nothing is deployed**, and that is now the largest thing outstanding — first item in
-[TODO.md](TODO.md) after the two speed and honesty items.
+Nothing is half-finished in the working tree, and every check is clean. Two things are outstanding,
+in this order.
 
-**The United States corridor is fixed** — entry 22, done on 2026-08-17. The own-government rule was
-not wrong, it was calibrated against small governments: because the US's own TLD *is* `gov`, its whole
-federal namespace passed, eight domains against Brazil's one, and the outcome became a coin flip.
-Two changes, neither naming a country: the one-query evidence bar now applies only where "own
-government" is genuinely two independent signals, and no bootstrap may put more than five of a
-destination's domains to use, ordered by the hostname's authority hint. Downstream, the shortlist
-reserves a place per registrable domain, so an authority can no longer be shut out of the fetch
-entirely. The corridor now resolves **identically on three consecutive cleared-cache runs**, on
-twelve corridor queries instead of twenty-four.
+**1. One shipped change has never been run live, and it is the one most worth reading as a
+traveller.** A corridor whose only missing piece is behind a block now resolves rather than refusing:
+the plan states the visa decision as *unknown*, names the authority that refused us, and hands over
+its URL (entry 27). Every link in that chain is covered by tests, and the page layout was checked by
+driving the real renderer. **What has not happened is a live run**, because the Brave search API
+answered `HTTP 402` — out of credit — before `france/IN/GB/tourism` could be re-run. So what a model
+actually writes for France is unverified. First item in [TODO.md](TODO.md), with the three things to
+judge that a test cannot.
 
-**Most of the wasted fetch budget is recovered** — entry 24. Five of the US corridor's ten places had
-been going to pages that cannot be read; a candidate is now dropped when the crawl has already
-established the failure, either a host whose name does not resolve or a URL an authority refused.
-Three places came back and went to real mission pages. Everything else — too large, not HTML, `502` —
-stays a candidate on purpose, because retrieval reads PDFs and renders where the crawler does not.
-**The freed places did not fill `document_checklist`**, which the todo had predicted they might: the
-canonical checklist is the blocked one. Two places still go to `travel.state.gov` URLs that were
-never crawled, and whether a host that has refused everything may be skipped wholesale is left as a
-measured question rather than assumed.
+**2. Nothing is deployed**, and speed no longer shapes that decision. A cold request is **34.1s**
+(19.4s corridor, 14.7s plan) where it was 70.7s, which fits an ordinary 30–60s proxy timeout. The
+same corridor warm is **0.0s**, so resolving popular corridors ahead of time is still worth shipping.
+`var/cache/` and `var/corridors/` are local directories, so an ephemeral container makes every
+request cold rather than just the first.
 
-**A cold corridor now takes 19.4s rather than 54.5s** — entry 25. The 0.5s politeness delay was
-applied before every request whatever host it was for, so each site's spacing was paid by every other
-site; it is now per host, hosts are crawled concurrently, and searches run four at a time. Every
-coverage bound was left alone, and the US shortlist came out byte-identical.
+### What changed on 2026-08-17, in one line each
 
-**Nothing is deployed.** A cold request is **34.1s** end to end — 19.4s to resolve the corridor,
-14.7s to extract the plan — synchronously inside one `POST`. That now fits an ordinary 30–60s proxy
-timeout where 70.7s did not, so hosting is no longer blocked on speed; it is only unstarted. The same
-corridor warm takes **0.0s**, which still makes resolving popular ones ahead of time worth doing.
-`var/cache/` and `var/corridors/` are local directories, so on an ephemeral container every request
-is cold.
+Seven entries were added to [DECISIONS.md](DECISIONS.md) that day; read them there rather than here.
 
-### Otherwise complete end to end Any traveller, any destination: the request
-describes who is travelling, the destination is researched if nobody configured it, and the plan
-cites what it found or says what it could not verify. Verified live on a corridor nobody had run —
-Chinese passport, UAE resident, Brazil — which resolved to Brazil's visa waiver page for China,
-where an Indian passport resolves to a VIVIS checklist.
-
-What is left is hardening rather than building. The known problems below are ordered by how much
-they limit it; the first three are the ones that would change an answer a traveller sees.
+| Entry | What it changed |
+| --- | --- |
+| 22 | A large government's whole namespace passed the trust rule, so how many domains may be used is now bounded at five and the relaxed evidence bar is scoped. Fixed the US coin flip. |
+| 23 | A checklist-less corridor could not produce a plan at all, because the extractor refused before entry 14's validator could run. Vietnam would have hit the same wall. |
+| 24 | Five of the US corridor's ten fetch places went to pages already proved unreadable. Three recovered; DNS-dead and refused URLs are now skipped, nothing else is. |
+| 25 | The politeness delay was owed to a host but applied to the whole crawl. Now per host, hosts crawled concurrently, searches four at a time: 54.5s → 19.4s. |
+| 26 | France's India post outranked its UK post for a UK applicant, and footer boilerplate took three fetch places. Two scoring defects, both fixed. |
+| 27 | A blocked authority can now carry a plan: named, linked, never read, with the decision forced to unknown. **Unverified live.** |
+| 28 | Four things found by reading the rendered page: a truncated step heading, a corridor that cannot have an answer, an empty checklist panel, caveats burying the answer. |
 
 ### Answered, for background
- Seven corridors run live. The model
-decider refuses well under pressure — France gave it ten fetched pages and it still declined both
-load-bearing roles rather than guess — and its judgement is better than the scorer's where it can
-read at all: for China it picked the UK embassy checklist because that page "names the required
-passport, photo, **UK legal-stay evidence for non-British applicants**", noticing the traveller is
-an Indian national resident in the UK, which no lexicon keyword expresses.
 
-**That decision is now settled: never work around a block** (entry 18). No user-agent spoofing, no
-pointing the renderer at a `403`, no retrying past a rate limit. A block is not evidence that the
-guidance is wrong or missing — it means only *we cannot independently retrieve and verify it in
-this execution environment*. The source is marked inaccessible, the role goes unfilled, and nothing
-is inferred in its place. France is unservable as a result, and that is the accepted trade.
+Seven corridors have run live. The model decider refuses well under pressure and its judgement beats
+the scorer's where it can read at all: for China it picked the UK embassy checklist because that page
+names the required passport, photo and UK legal-stay evidence for non-British applicants, noticing the
+traveller is an Indian national resident in the UK, which no lexicon keyword expresses.
+
+**Never work around a block** (entry 18) is settled and unchanged. No user-agent spoofing, no
+pointing the renderer at a `403`, no retrying past a rate limit. What entry 27 added is narrower than
+it may sound: the page may now be **named** with its URL so the traveller can open it themselves. It
+still may not be read, inferred from, or counted as a source.
 
 ## Next steps
 
@@ -301,16 +295,20 @@ In the order that makes sense. Detail and reasoning in [TODO.md](TODO.md). The t
 head this list — run a country that publishes a checklist, make the traveller profile variable, wire
 discovery into request time — are all done; see *Current state*.
 
-1. **Deploy it.** No longer shaped by speed — a cold request is 34.1s and fits an ordinary timeout.
+1. **Run France live and read the plan as a traveller** — the one shipped change with no live run
+   behind it. Needs Brave credit; the layout is already confirmed, so what is left is the model's own
+   words and whether "Uncertain" reads as *we could not check* rather than *no visa needed*.
+2. **Deploy it.** No longer shaped by speed — a cold request is 34.1s and fits an ordinary timeout.
    Resolving popular corridors ahead of time is still worth shipping.
-2. **Tell "no checklist exists" apart from "we failed to find it."** The US now makes this concrete
+3. **Tell "no checklist exists" apart from "we failed to find it."** The US now makes this concrete
    rather than hypothetical: its checklist is unfilled because a page is blocked, and that is a third
    case again.
-3. **Carry `inaccessible_domains` into the plan**, so a traveller learns an authority declined rather
-   than only that something is missing. Prerequisite for the interface work on blocked sources.
-4. **Decide whether a host that refused every request may be skipped** — two US fetch places turn on
+4. **Name a blocked authority whenever there is one**, not only when it cost the decision. Entry 27
+   covers the France shape; the US resolved its decision on `dhs.gov`, so its plan still never
+   mentions that `travel.state.gov` refused us.
+5. **Decide whether a host that refused every request may be skipped** — two US fetch places turn on
    it, and it is inductive, so measure before adopting.
-5. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
+6. **Revisit conflict detection**, with claim scope recorded — the specific reason it failed before.
 
 ---
 
@@ -333,3 +331,27 @@ cp .env.example .env          # then add OPENAI_API_KEY and SEARCH_API_KEY
 
 Secrets live only in `.env`, which is gitignored. Reviewable policy — source mode, extraction mode,
 cache TTL, stale ceiling — lives in `config/runtime.yaml` and is committed on purpose.
+
+### Looking at a corridor, which is not obvious
+
+Most of 2026-08-17's findings came from inspecting a corridor directly, and the way in is worth
+writing down because the CLI does not offer it.
+
+- **`visa-discover bootstrap --destination-name "United States"`** prints the proposed domains with
+  their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
+  the trusted set is checked before blaming ranking for anything.
+- **`visa-discover corridor --destination france …` only works where `destinations.yaml` already
+  lists `trusted_domains`.** For an unconfigured destination it exits 3, so it cannot exercise the
+  automatic path — which is the path a request actually takes. Use
+  `api.dependencies.build_automatic_destinations(get_runtime_policy())` and call
+  `destination_for(country_name, corridor)`; about twenty lines, and it skips the plan call.
+- **To see the ten fetch places** — where the wasted budget, the boilerplate and the wrong post were
+  all found — wrap `CorridorResolver._shortlist`, print each candidate's score, role, link text,
+  inherited heading and `link_scores.signals`, and return the list unchanged. Nothing else exposes it.
+- **To time a cold corridor by phase**, wrap `BraveSearchProvider.search`, `CrawlFetcher.fetch_html`,
+  `LinkCrawler.crawl`, `_fetch_bodies` and `_decide_roles` with a timer. Note that summed fetch time
+  now exceeds wall-clock crawl time, which is what concurrency looks like.
+- **Clear `var/cache/` and `var/corridors/` between cold runs**, or a stored corridor answers
+  instantly and a retrieval fix appears not to work.
+- **A `HTTP 402` from search means the Brave quota is spent**, not that anything is broken. It is what
+  stopped the France run on 2026-08-17.

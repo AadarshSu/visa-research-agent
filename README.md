@@ -32,8 +32,9 @@ extraction:
 
 A destination nobody has configured is **researched when it is asked for**: its own government's
 domains are identified, the corridor resolved, and the plan built from what was found. A corridor
-that cannot be established refuses with a reason rather than guessing — France, whose visa portal
-refuses automated retrieval, is a standing example.
+that cannot be established says so rather than guessing. France is the standing example: its visa
+portal refuses automated retrieval, so the plan states the visa decision as *unknown*, names the
+portal and links to it, and lists no documents it could not read.
 
 Conflict detection across sources and LangGraph routing remain intentionally deferred.
 
@@ -76,7 +77,10 @@ Discovery then crawls two hops from the best results, staying inside approved do
 search lands on a section index while the checklist is usually one link further on. Candidates are
 scored deterministically, with **no model calls**; page selection is free. If no page can
 confidently fill a load-bearing role, the corridor is refused with a diagnosis rather than filled
-with a plausible substitute.
+with a plausible substitute. One exception, and it is not a relaxation: when the reason nothing could
+confirm the visa decision is that an authority *refused* automated retrieval, the plan is produced
+with the decision stated as unknown and that authority named and linked, so the traveller gets the
+one thing they can act on. The page is named, never read.
 
 Two destinations are configured. Singapore works in either source mode. **Japan has no saved
 snapshots and therefore requires `source_mode: live`**, because both its document checklist and its

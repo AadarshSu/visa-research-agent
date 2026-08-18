@@ -36,15 +36,29 @@ produces a serious defect.
   more, but the rule they were applying still runs, and both halves are load-bearing: without the
   first, a commercial insurer under `.fr` gets in; without the second, the US embassy's page about
   Vietnam does. Never relax it to "looks official". If no such domain is found, nothing is fetched
-  and the destination is refused.
+  and the destination is refused. **How many** may be used is also bounded — at most five, and the
+  relaxed one-query evidence bar applies only where "own government" is two independent signals.
+  A country whose own top-level domain *is* `gov` otherwise admits its whole federal namespace, and
+  the cost lands on search count, crawl budget and the ten fetch places (entry 22).
 - **Never work around an authority that blocks automated retrieval.** France's visa portal and
   Singapore's VFS page answer `403` to anything that is not a browser. Do not spoof a user agent,
   do not point the renderer at them, do not retry to get around a rate limit. A block is not
   evidence that the guidance is wrong or missing — it means *we cannot independently retrieve and
   verify it in this execution environment*, which is a narrower claim and the only honest one.
   Mark the source inaccessible, say so, and let the role go unfilled. Never substitute plausibility
-  for evidence. This costs real coverage — France is unservable — and that is the correct trade for
-  a product whose wrong answers send someone to a visa centre without the right papers.
+  for evidence, in a product whose wrong answers send someone to a visa centre without the right
+  papers.
+
+  **What is allowed, and is not a workaround: naming it.** A blocked page may be reported with its
+  URL so the traveller can open it themselves, which is the one thing they can act on. The line is
+  absolute — the page may be *named*, never *read*, inferred from, retried, or counted as a source.
+  So `UnreadableAuthority` is deliberately not a `ConfiguredSource`, the research packet carries its
+  URL and no text, and it is still checked against the approved domains, because nobody read it and
+  the domain is the only thing vouching for it (entry 27).
+- **A visa decision that could not be confirmed must be `null`, and the application enforces that.**
+  Not the prompt: a model asked for null returned `true` in testing. A wrong yes or no about whether
+  someone needs a visa is the most damaging thing this can say, so `decision_is_unverified` overrides
+  the model rather than trusting it, and such a plan can never be `verified` (entry 27).
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Tests must not touch the network or an LLM.** Use the `transport=` and `now=` seams and the fake
@@ -69,4 +83,6 @@ These files are read by someone with no other context.
 Secrets (`OPENAI_API_KEY`, `SEARCH_API_KEY`) live only in `.env`. Reviewable policy — source mode,
 extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.yaml`.
 
-Clear `var/cache/` when testing a retrieval change, or a fix will appear not to work.
+Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
+change — either one will serve a pre-change result and make a fix appear not to work. A stored
+corridor is kept for three weeks.

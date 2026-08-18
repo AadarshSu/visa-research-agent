@@ -9,30 +9,41 @@ Status: `next` · `soon` · `later` · `blocked`
 
 ## Next
 
-### Decide whether a host that has refused every request should be skipped — `soon`
+### Confirm the blocked-source plan reads well to a traveller — `next`
 
-**Why:** DECISIONS entry 24 stopped a fetch place being spent on a page already proved unreadable,
-and recovered three of the US corridor's five wasted places. **Two remain**, both
-`travel.state.gov` — and they remain because neither URL was ever crawled, so nothing was observed
-about them. One is a PDF, which the crawl skips by design; the other only ever appeared as a search
-result. The per-URL rule cannot help, and every other `travel.state.gov` request has been refused.
+**Why:** DECISIONS entry 27 built it — a corridor now resolves when the only gap is behind a block,
+the plan states the decision as unknown, and the interface hands over the URL with a plain sentence.
+The chain is covered by tests. **What has not happened is a live run**, because the Brave search API
+answered HTTP 402, out of credit, before France could be re-run.
 
-**The question, and it is a judgement rather than a lookup:** may a host that has refused *every*
-request and served *none* be treated as blocked for URLs never tried? It would recover two places out
-of ten. It is inductive, which is why it was not simply done.
+**Do:** when the quota resets, run `france/IN/GB/tourism` end to end and read the result as a
+traveller would. Three things to judge, none of which a test can:
 
-**Do:** count requests and refusals per host, and only consider this where the refusal count is high
-and the served count is zero. Then measure whether the two recovered places change what the corridor
-resolves. If they do not, leave the rule out — an inductive skip that buys nothing is not worth its
-risk.
+1. Does the explanation say plainly that the decision could not be verified, and name France-Visas?
+2. Do the application steps stay useful when the first one is "check the authority yourself"? Rule 8b
+   asks for that; whether the model obliges is unknown.
+3. Does "Uncertain" read as *we could not check* rather than as *no visa needed*? If it reads as the
+   latter to anyone, the wording is wrong and it matters more than anything else on this list. The
+   layout was checked by injecting a France-shaped plan into the real renderer (entry 28), so what is
+   left to judge is the model's own words, not the page.
 
-**Careful:** a `403` on one path is genuinely not evidence about another. Real sites put WAF rules on
-some paths and serve the rest, so a host-level skip can silently lose a readable page, and losing
-evidence costs a refusal. Whatever is decided, the block must still be **reported** as `blocked`
-(entry 18), and nothing here may become a retry.
+**Then re-run the other corridors.** The `is_usable` change affects every discovered destination: any
+corridor with a blocked page and no confirmed decision now resolves where it used to refuse. The US
+has a blocked `travel.state.gov` and *does* confirm its decision, so it should be unaffected —
+confirm that rather than assume it.
 
-**Also still overstated:** `pages_fetched` is the shortlist length, so the US reports ten pages read
-when eight are readable. Worth making it the count that was actually read.
+**The half that is still missing.** A blocked authority is named only when it cost the *decision*.
+The US resolved its decision on `dhs.gov`, so its plan says the checklist is absent without ever
+saying that `travel.state.gov` refused us — the same useful sentence, withheld because the corridor
+happened to succeed elsewhere. Name them whenever there are any: `ResolvedCorridor.inaccessible_urls`
+already carries them, so this is plumbing, not a decision. Do it while re-running the corridors above.
+
+**Also worth knowing:** a corridor stored before 2026-08-17 has no `inaccessible_urls` field, so a
+cached France result will refuse as it used to until it expires. Three weeks, or clear
+`var/corridors/`.
+
+**Careful:** if the plan reads as though the guidance were verified, the fix is the wording and the
+banner, never a narrower `visa_required`. And nothing here licenses reading the blocked page.
 
 ### Put it somewhere others can open it aka deployment — `next`
 
@@ -98,6 +109,31 @@ countries that do publish one; that is the signal this decision is failing.
 **Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists"
 look identical from inside the crawler, which is the whole problem.
 
+### Decide whether a host that has refused every request should be skipped — `soon`
+
+**Why:** DECISIONS entry 24 stopped a fetch place being spent on a page already proved unreadable,
+and recovered three of the US corridor's five wasted places. **Two remain**, both
+`travel.state.gov` — and they remain because neither URL was ever crawled, so nothing was observed
+about them. One is a PDF, which the crawl skips by design; the other only ever appeared as a search
+result. The per-URL rule cannot help, and every other `travel.state.gov` request has been refused.
+
+**The question, and it is a judgement rather than a lookup:** may a host that has refused *every*
+request and served *none* be treated as blocked for URLs never tried? It would recover two places out
+of ten. It is inductive, which is why it was not simply done.
+
+**Do:** count requests and refusals per host, and only consider this where the refusal count is high
+and the served count is zero. Then measure whether the two recovered places change what the corridor
+resolves. If they do not, leave the rule out — an inductive skip that buys nothing is not worth its
+risk.
+
+**Careful:** a `403` on one path is genuinely not evidence about another. Real sites put WAF rules on
+some paths and serve the rest, so a host-level skip can silently lose a readable page, and losing
+evidence costs a refusal. Whatever is decided, the block must still be **reported** as `blocked`
+(entry 18), and nothing here may become a retry.
+
+**Also still overstated:** `pages_fetched` is the shortlist length, so the US reports ten pages read
+when eight are readable. Worth making it the count that was actually read.
+
 ### Watch where the two deciders disagree — `next`
 
 **Why:** the last step now asks a model (DECISIONS entry 16) and the heuristic remains as shortlist
@@ -111,32 +147,6 @@ prompting against. Four corridors currently disagree on `general_entry` and `vis
 
 **Careful:** do not tune the lexicon to agree with the model. The heuristic's job is to build a good
 shortlist and to be a safe fallback, not to reproduce the model's judgement.
-
-### Confirm the blocked-source plan reads well to a traveller — `next`
-
-**Why:** DECISIONS entry 27 built it — a corridor now resolves when the only gap is behind a block,
-the plan states the decision as unknown, and the interface hands over the URL with a plain sentence.
-The chain is covered by tests. **What has not happened is a live run**, because the Brave search API
-answered HTTP 402, out of credit, before France could be re-run.
-
-**Do:** when the quota resets, run `france/IN/GB/tourism` end to end and read the result as a
-traveller would. Three things to judge, none of which a test can:
-
-1. Does the explanation say plainly that the decision could not be verified, and name France-Visas?
-2. Do the application steps stay useful when the first one is "check the authority yourself"? Rule 8b
-   asks for that; whether the model obliges is unknown.
-3. Does "Uncertain" read as *we could not check* rather than as *no visa needed*? If it reads as the
-   latter to anyone, the wording is wrong and it matters more than anything else on this list. The
-   layout was checked by injecting a France-shaped plan into the real renderer (entry 28), so what is
-   left to judge is the model's own words, not the page.
-
-**Then re-run the other corridors.** The `is_usable` change affects every discovered destination: any
-corridor with a blocked page and no confirmed decision now resolves where it used to refuse. The US
-has a blocked `travel.state.gov` and *does* confirm its decision, so it should be unaffected —
-confirm that rather than assume it.
-
-**Careful:** if the plan reads as though the guidance were verified, the fix is the wording and the
-banner, never a narrower `visa_required`. And nothing here licenses reading the blocked page.
 
 ---
 
