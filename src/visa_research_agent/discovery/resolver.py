@@ -23,6 +23,7 @@ from pydantic import Field
 
 from visa_research_agent.discovery.adjudication import (
     AdjudicationError,
+    RoleAdjudication,
     RoleAdjudicator,
     build_candidate_packet,
     load_adjudication_prompt,
@@ -85,6 +86,25 @@ DEFAULT_SHORTLIST_DOMAIN_FLOOR = 1
 # Per candidate, not per packet. Ten pages of full government prose would be mostly navigation
 # furniture and would push the call past any sensible input bound.
 DEFAULT_EXCERPT_CHARACTERS = 6_000
+
+# How many times the role adjudication may be asked before the corridor is refused. Two, so a
+# momentary failure — a timeout, a rate limit, one malformed response — does not cost a corridor,
+# while a real outage refuses instead of falling back to the heuristic. Retrying a *model provider*
+# is not what DECISIONS entry 18 forbids; that is about an authority refusing to be read.
+ADJUDICATION_ATTEMPTS = 2
+
+
+class AdjudicationRefusal(AdjudicationError):
+    """Every adjudication attempt failed, so the corridor is refused rather than guessed at.
+
+    Distinct from `AdjudicationError` so the retry loop can catch the ordinary failure without
+    catching its own decision to give up, and so a caller can tell "this call failed" from "this
+    corridor has no answer". Carries the attempt count because those calls were paid for.
+    """
+
+    def __init__(self, attempts: int, reason: str) -> None:
+        super().__init__(f"role adjudication failed on all {attempts} attempts ({reason})")
+        self.attempts = attempts
 
 
 class FetchedShortlist(StrictModel):
@@ -315,9 +335,15 @@ class CorridorResolver:
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
 
         # 4. Assign roles from the combined evidence.
-        sources, unresolved, model_calls = await self._decide_roles(
-            destination, corridor, fetched, notes
-        )
+        try:
+            sources, unresolved, model_calls = await self._decide_roles(
+                destination, corridor, fetched, notes
+            )
+        except AdjudicationRefusal as exc:
+            # Refuse rather than fall back to the heuristic. Degrading to the decider that named
+            # Brazil's Riyadh page as a document checklist is not the conservative option — see
+            # DECISIONS entry 31, which amends entry 16.
+            return self._refused(corridor, queries, notes, str(exc), model_calls=exc.attempts)
         return ResolvedCorridor(
             corridor=corridor,
             resolved_at=self.now(),
@@ -580,9 +606,19 @@ class CorridorResolver:
     ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int]:
         """Choose the page for each role, by judgement when an adjudicator is configured.
 
-        The heuristic is not replaced. It produced the shortlist these candidates come from, it is
-        the answer when no adjudicator is configured, and it is the fallback when a model call
-        fails — a corridor should degrade to a worse answer, never to no answer.
+        The heuristic is not replaced. It produced the shortlist these candidates come from, and it
+        is the answer when no adjudicator is configured — which keeps the deterministic path as the
+        offline regression baseline.
+
+        **What it is no longer is the fallback when a model call fails.** That read as the
+        conservative choice and was the opposite: the heuristic is the decider entry 15 caught
+        giving *confident wrong answers* — Brazil's Riyadh page named as the document checklist, at
+        exit 0, with nothing in the output hinting the checklist came from a mission on another
+        continent. So falling back turned a transient outage into exactly that, in production,
+        visible only to someone who read `decided_by`. The call is retried once and then the
+        corridor is refused, which every other layer of this project would do. Retrying is safe
+        here because a model provider is not an authority refusing us — entry 18 does not apply.
+        See entry 31.
         """
 
         if self.adjudicator is None or not fetched.candidates:
@@ -595,17 +631,38 @@ class CorridorResolver:
             fetched.contents,
             excerpt_characters=self.excerpt_characters,
         )
-        try:
-            adjudication = await self.adjudicator.adjudicate(load_adjudication_prompt(), packet)
-        except AdjudicationError as exc:
-            notes.append(f"role adjudication failed ({exc}), so the heuristic ranking was used")
-            sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
-            return sources, unresolved, 1
+        adjudication, model_calls = await self._adjudicate_with_one_retry(packet, notes)
 
         chosen, discarded = validated_choices(adjudication, fetched.by_id)
         notes.extend(discarded)
         sources, unresolved = self._sources_from_choices(destination, fetched, chosen, notes)
-        return sources, unresolved, 1
+        return sources, unresolved, model_calls
+
+    async def _adjudicate_with_one_retry(
+        self, packet: str, notes: list[str]
+    ) -> tuple[RoleAdjudication, int]:
+        """One retry, then let the failure through so the corridor refuses.
+
+        A single retry, not a policy: the failures worth surviving are momentary ones — a timeout,
+        a rate limit, one malformed response — and if the second attempt fails too, refusing is the
+        honest answer rather than reaching for a decider known to be wrong with confidence. The
+        attempt count is returned either way, because a refusal that cost two calls still cost
+        them.
+        """
+
+        attempts = 0
+        last: AdjudicationError | None = None
+        while attempts < ADJUDICATION_ATTEMPTS:
+            attempts += 1
+            try:
+                return await self.adjudicator.adjudicate(  # type: ignore[union-attr]
+                    load_adjudication_prompt(), packet
+                ), attempts
+            except AdjudicationError as exc:
+                last = exc
+                if attempts < ADJUDICATION_ATTEMPTS:
+                    notes.append(f"role adjudication failed ({exc}); retrying once")
+        raise AdjudicationRefusal(attempts, str(last))
 
     def _sources_from_choices(
         self,
@@ -731,7 +788,15 @@ class CorridorResolver:
         queries: list[str],
         notes: list[str],
         reason: str,
+        *,
+        model_calls: int = 0,
     ) -> ResolvedCorridor:
+        """A corridor that produced no sources, with why, and what it cost getting there.
+
+        `model_calls` is reported even though nothing was resolved: a refusal after two failed calls
+        still spent money, and a cost that only appears on success is a cost nobody notices.
+        """
+
         return ResolvedCorridor(
             corridor=corridor,
             resolved_at=self.now(),
@@ -739,4 +804,5 @@ class CorridorResolver:
             unresolved_roles=list(REPORTED_ROLES),
             notes=[*notes, reason],
             queries=queries,
+            model_calls=model_calls,
         )

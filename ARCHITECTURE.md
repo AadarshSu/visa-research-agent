@@ -298,11 +298,12 @@ What it may do is bounded hard, and the bounds are the safety story:
 - it may return null for a role, and the prompt states that refusing beats guessing. A refusal is
   honoured rather than filled in from the ranking.
 - heuristic scores are withheld from the packet, so the ranking that failed cannot anchor it.
-- a failed call currently falls back to the heuristic. **This is being reversed** ([DECISIONS.md](DECISIONS.md)
-  entry 31): the fallback silently substitutes the decider entry 15 proved gives *confident wrong
-  answers*, so an outage turns the best decider into the worst one with only `decided_by` to show it. A
-  failed call will retry once and then refuse the corridor, which is an outcome this product supports
-  and states honestly.
+- a failed call is retried once and then **refuses the corridor** — it does not fall back to the
+  heuristic ([DECISIONS.md](DECISIONS.md) entry 31, amending entry 16). Falling back read as the
+  conservative choice and was the opposite: it silently substituted the decider entry 15 proved gives
+  *confident wrong answers*, so an outage turned the best decider into the worst one with only
+  `decided_by` to show it. Retrying a model provider is not what entry 18 forbids, which is about an
+  authority refusing to be read. A refusal reports the calls it paid for.
 
 The heuristic is not replaced. It builds the shortlist the model chooses from — which stays
 load-bearing, since a page it ranks outside the ten fetch places is one the model never sees — it

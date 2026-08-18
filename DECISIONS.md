@@ -250,7 +250,7 @@ read `inaccessible_urls` trips `test_a_block_that_could_not_have_held_the_decisi
 ---
 
 ## 31. A failed adjudication refuses rather than falling back to the heuristic
-**2026-08-18 · amends entry 16 · decided, not implemented**
+**2026-08-18 · amends entry 16 · implemented**
 
 Entry 16 chose: *"a failed call falls back to the heuristic, so a corridor degrades to a worse answer, never
 to none."* That reads as conservative and is the opposite.

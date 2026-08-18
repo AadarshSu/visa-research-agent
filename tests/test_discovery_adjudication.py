@@ -20,7 +20,11 @@ from visa_research_agent.discovery.adjudication import (
     validated_choices,
 )
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink
-from visa_research_agent.discovery.resolver import CorridorResolver, FetchedShortlist
+from visa_research_agent.discovery.resolver import (
+    AdjudicationRefusal,
+    CorridorResolver,
+    FetchedShortlist,
+)
 
 pytestmark = pytest.mark.anyio
 
@@ -65,6 +69,22 @@ class FakeAdjudicator:
         self.calls.append(packet)
         if isinstance(self.adjudication, Exception):
             raise self.adjudication
+        return self.adjudication
+
+
+class FlakyAdjudicator:
+    """Fails a set number of times and then answers — the transient failure a retry is for."""
+
+    def __init__(self, *, failures: int, adjudication: RoleAdjudication) -> None:
+        self.remaining_failures = failures
+        self.adjudication = adjudication
+        self.calls: list[str] = []
+
+    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+        self.calls.append(packet)
+        if self.remaining_failures:
+            self.remaining_failures -= 1
+            raise AdjudicationError("the request timed out")
         return self.adjudication
 
 
@@ -183,17 +203,53 @@ async def test_a_chosen_page_is_recorded_as_decided_by_the_model() -> None:
 # --- degrading ------------------------------------------------------------------------------
 
 
-async def test_a_failed_call_falls_back_to_the_heuristic_rather_than_to_nothing() -> None:
-    adjudicator = FakeAdjudicator(AdjudicationError("the request failed"))
+async def test_a_momentary_failure_is_retried_rather_than_costing_the_corridor() -> None:
+    """The failures worth surviving are the transient ones: a timeout, a rate limit, one bad
+    response. Retrying a model provider is not what entry 18 forbids — that is about an authority
+    refusing to be read."""
+
+    adjudicator = FlakyAdjudicator(
+        failures=1,
+        adjudication=RoleAdjudication(
+            choices=[
+                RoleChoice(
+                    role="document_checklist",
+                    source_id="tl_checklist",
+                    reason="It lists the items to bring.",
+                )
+            ]
+        ),
+    )
     notes: list[str] = []
 
     sources, _, calls = await resolver_with(adjudicator)._decide_roles(
         destination(), corridor(), shortlist(), notes
     )
 
-    assert calls == 1
-    assert any("heuristic ranking was used" in note for note in notes)
-    assert all(source.decided_by == "heuristic" for source in sources)
+    assert calls == 2
+    assert any("retrying once" in note for note in notes)
+    assert [source.decided_by for source in sources] == ["model"]
+
+
+async def test_a_call_that_keeps_failing_refuses_instead_of_using_the_heuristic() -> None:
+    """Entry 16 chose to fall back here, calling it "degrade to a worse answer, never to none".
+    Entry 31 reverses it: the heuristic is the decider entry 15 caught naming Brazil's Riyadh page
+    as a document checklist at exit 0, so falling back turns an outage into a confident wrong answer
+    that only `decided_by` would reveal. Every other layer of this project refuses instead."""
+
+    adjudicator = FakeAdjudicator(AdjudicationError("the request failed"))
+    notes: list[str] = []
+
+    with pytest.raises(AdjudicationRefusal) as raised:
+        await resolver_with(adjudicator)._decide_roles(
+            destination(), corridor(), shortlist(), notes
+        )
+
+    # The count is carried so a refusal still reports what it cost.
+    assert raised.value.attempts == 2
+    assert len(adjudicator.calls) == 2
+    assert "failed on all 2 attempts" in str(raised.value)
+    assert not any("heuristic ranking was used" in note for note in notes)
 
 
 async def test_without_an_adjudicator_nothing_changes_and_no_call_is_made() -> None:

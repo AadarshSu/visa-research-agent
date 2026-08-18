@@ -19,6 +19,7 @@ from discovery_site import (
     handler,
 )
 
+from visa_research_agent.discovery.adjudication import AdjudicationError
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.models import (
     CandidatePage,
@@ -519,6 +520,32 @@ async def test_a_settled_refusal_of_the_decision_page_is_what_may_resolve_one(
     assert resolved.decision_blocking_urls == [DETAIL_INDIA], (
         "the per-nationality decision page refused us, so it is why the decision is unverifiable"
     )
+
+
+@pytest.mark.anyio
+async def test_a_corridor_refuses_when_adjudication_cannot_answer(tmp_path: Path) -> None:
+    """End to end, because the unit test only proves the exception is raised, not acted on.
+
+    An OpenAI outage must not quietly hand the corridor to the heuristic — the decider entry 15
+    caught naming a Riyadh page as a UK applicant's checklist at full confidence. It refuses
+    instead, says so, and still reports the two calls it paid for. DECISIONS entry 31.
+    """
+
+    class AlwaysFails:
+        async def adjudicate(self, system_prompt: str, packet: str) -> object:
+            raise AdjudicationError("the request failed")
+
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, MISSION_INDEX])
+    resolver.adjudicator = AlwaysFails()  # type: ignore[assignment]
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert not resolved.is_usable
+    assert resolved.sources == []
+    assert resolved.model_calls == 2, "a refusal still spent what it spent"
+    assert any("failed on all 2 attempts" in note for note in resolved.notes), resolved.notes
+    # And nothing was decided by the ranking that entry 15 caught being confidently wrong.
+    assert not any("heuristic ranking was used" in note for note in resolved.notes)
 
 
 def test_only_a_refusal_of_a_plausible_decision_page_counts(tmp_path: Path) -> None:
