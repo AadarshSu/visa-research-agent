@@ -354,9 +354,22 @@ with far more domains than a small one — the United States with eight, Brazil 
 expensive three times over: three searches are run per trusted domain, the crawl's per-host budget is
 the page budget divided by the hosts seeded, and the shortlist has ten places. So at most five are put
 to use, ordered by the authority hint in the hostname (`emb`, `consul`, `immi`, `mofa`) and then by
-corroboration. Everything left out is reported with its reason, and the reason distinguishes "this
-destination's own government, not among the best evidenced" from "another country's government" —
-they are different problems with different fixes. See entry 22.
+corroboration. Everything left out is reported with its reason, and the reasons are kept apart because
+they are different problems with different fixes — four of them now:
+
+| Reason | The problem it names |
+| --- | --- |
+| this destination's own government, not among the best evidenced | the cap (entry 22) bit |
+| another country's government | it describes its own citizens' rules |
+| under this destination's own TLD, but **no marker this rule recognises** | **the rule's own limit** — it may be a real authority (entry 33) |
+| neither governmental nor under the destination's own TLD | an agency or an unrelated site |
+
+The third is the one that matters most and was wrong until 2026-08-18, when it read "not a government
+domain for this destination" — false for Italy's `esteri.it`, and identical to what a commercial visa
+agency got. Known problem 2 names reading these reasons as its only mitigation, so a false one defeated
+the safeguard. `unconfirmable_authorities` collects that case, and a refusal names them rather than
+claiming no government domain could be *identified*. **None of it trusts anything new:** a domain with no
+marker stays out until reviewed data names it.
 
 The `bootstrap` command still approves nothing: it prints the whole list for a person to read. The
 cap applies where domains are put to use without one, in `automatic.py`.

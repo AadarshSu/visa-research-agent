@@ -144,14 +144,27 @@ domains do say. Canada is the sharpest case: `gc.ca` is special-cased and still 
 content moved to `canada.ca`, so the rule trusts the old namespace and misses the live one. `AT` and `UY`
 are narrower again — `gv.at` and `gub.uy` are conventions simply missing from the marker list.
 
-**And it exposed a reporting defect that makes the second row hard to notice.** `auto_trusted_domains`
-has two reasons for declining a domain, and both are wrong for this case: Italy's `esteri.it` is withheld
-as *"not a government domain for this destination"* — false, and **character-identical to the reason a
-commercial visa agency gets**. Known problem 2's only recommended mitigation is to read
-`withheld_domains`, so it currently misleads rather than warns, and entry 34's registry would hand a human
-198 countries of these labels to skim. A third reason is needed, naming what is actually true: a candidate
-authority under the destination's own TLD that this rule cannot confirm. Recorded as TODO item 4, and it
-is reporting only — nothing may be accepted for lack of a marker.
+**And it exposed a reporting defect that made the second row hard to notice — now fixed.**
+`auto_trusted_domains` had two reasons for declining a domain and both were wrong for this case: Italy's
+`esteri.it` was withheld as *"not a government domain for this destination"* — false, and
+**character-identical to the reason a commercial visa agency got**. Known problem 2's only recommended
+mitigation is to read `withheld_domains`, so the one safeguard misled rather than warned, and entry 34's
+registry would have handed a human 198 countries of these labels to skim.
+
+**Fixed 2026-08-18** by splitting that branch three ways. A domain under the destination's own top-level
+domain with no recognised marker now says what is true — it could not be *confirmed* as an authority, it
+may well be a real one, and for governments with no marker convention the domain has to be named in
+reviewed data. A domain that is neither says so plainly. Measured on Italy's shape, the ministry and the
+agency no longer read alike.
+
+`unconfirmable_authorities` names those candidates, and `destination_for`'s refusal uses it: *"No domain
+belonging to Germany's own government could be **confirmed** … Candidates under Germany's own top-level
+domain were found — auswaertiges-amt.de — but none of their hostnames carries a marker this agent
+recognises as governmental."* The old wording said none could be **identified**, which is false and sends
+a reader to look at search or ranking rather than at the trust rule.
+
+**Reporting only: nothing is accepted for want of a marker**, and a test asserts the accepted set stays
+empty. "Looks like an authority" is exactly what the rule refuses.
 
 **Committed as `tests/test_trust_coverage.py`** — 7 tests, offline, no credit. It freezes the failing set so
 a change is a visible diff, asserts every failure is on the governmental half rather than the TLD half,

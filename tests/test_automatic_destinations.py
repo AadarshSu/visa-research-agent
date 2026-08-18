@@ -20,6 +20,7 @@ from visa_research_agent.discovery.automatic import (
     AutomaticDiscoveryError,
     auto_trusted_domains,
     is_own_government,
+    unconfirmable_authorities,
 )
 from visa_research_agent.discovery.bootstrap import (
     BootstrapReport,
@@ -146,7 +147,53 @@ def test_what_is_withheld_is_reported_with_a_reason() -> None:
 
     assert accepted == ["diplomatie.gouv.fr"]
     assert "another country's rules" in withheld["europa.eu"]
-    assert "not a government domain" in withheld["axa-schengen.com"]
+    assert "neither governmental nor under" in withheld["axa-schengen.com"]
+
+
+def test_a_ministry_with_no_marker_is_not_called_a_non_government_domain() -> None:
+    """The one mitigation known problem 2 offers is reading these reasons, and it used to lie.
+
+    Italy's real foreign ministry has no governmental marker in its hostname — there is no `gov.it`
+    convention for one to be found under — so it fell through to "not a government domain for this
+    destination", which is false, and in wording identical to what a commercial visa agency got. A
+    reviewer doing exactly what they were told would have believed it. Measured for 19 of 51
+    countries; DECISIONS entry 33.
+    """
+
+    report = BootstrapReport(
+        destination_name="Italy",
+        proposals=[
+            proposal("esteri.it", governmental=False, own=True),
+            proposal("italy-visa-help.com", governmental=False, own=False),
+        ],
+    )
+
+    accepted, withheld = auto_trusted_domains(report)
+
+    # Still not trusted: "looks like an authority" is exactly what the rule refuses.
+    assert accepted == []
+    ministry, agency = withheld["esteri.it"], withheld["italy-visa-help.com"]
+    assert ministry != agency, "a real ministry must not read identically to a visa agency"
+    assert "could not be confirmed" in ministry
+    assert "may be a real one" in ministry
+    assert "not a government domain" not in ministry
+    assert "own top-level domain" in ministry
+
+
+def test_the_candidates_the_rule_cannot_confirm_are_named() -> None:
+    """So a refusal can describe the actual gap instead of sending a reader to the wrong place."""
+
+    report = BootstrapReport(
+        destination_name="Germany",
+        proposals=[
+            proposal("auswaertiges-amt.de", governmental=False, own=True),
+            proposal("bamf.de", governmental=False, own=True),
+            proposal("usembassy.gov", governmental=True, own=False),
+            proposal("germany-visa-agency.com", governmental=False, own=False),
+        ],
+    )
+
+    assert unconfirmable_authorities(report) == ["auswaertiges-amt.de", "bamf.de"]
 
 
 def test_what_bootstrap_rejected_outright_is_reported_too() -> None:
@@ -307,6 +354,33 @@ async def test_nothing_is_fetched_when_no_own_government_domain_is_found(
         await build_service(tmp_path, provider, resolver).destination_for("France", corridor())
 
     assert resolver.trusted_seen == [], "nothing may be crawled without an approved domain"
+
+
+async def test_a_refusal_names_the_candidates_the_rule_could_not_confirm(tmp_path: Path) -> None:
+    """The sentence a reader acts on, and it used to point at the wrong thing.
+
+    "No domain belonging to Germany's own government could be identified" is false — two were, and
+    the rule simply cannot confirm either, because no `gov.de` convention exists. A reader believing
+    that message goes looking at search or at ranking, when the gap is the trust rule itself.
+    """
+
+    provider = StubProvider(
+        ["https://www.auswaertiges-amt.de/en/visa", "https://germany-visa-agency.com/apply"]
+    )
+    resolver = StubResolver(resolved())
+
+    with pytest.raises(AutomaticDiscoveryError) as raised:
+        await build_service(tmp_path, provider, resolver).destination_for("Germany", corridor())
+
+    message = str(raised.value)
+    assert "auswaertiges-amt.de" in message, "name what was found rather than implying nothing was"
+    assert "none could be confirmed as an authority" in message
+    assert "named in reviewed data" in message
+    # Not "could not be identified": they were, and saying otherwise is what sent readers astray.
+    assert "could not be identified" not in message
+    # The agency is not offered as a candidate authority: it is not under Germany's own TLD.
+    assert "germany-visa-agency.com" not in message
+    assert resolver.trusted_seen == [], "still nothing crawled — this changes wording, not trust"
 
 
 async def test_an_unknown_country_is_refused_rather_than_searched(tmp_path: Path) -> None:

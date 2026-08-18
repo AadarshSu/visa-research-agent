@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 303 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 306 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -326,6 +326,11 @@ its seven entries are now implemented, and nothing is left shipping against the 
 - **A failed adjudication refuses** (entry 31) — two attempts, then an ordinary refusal, instead of
   silently substituting the heuristic that named Brazil's Riyadh page as a checklist at full confidence.
   A refusal now also reports the model calls it paid for.
+- **`withheld_domains` stopped stating something false** (entry 33) — a ministry under its own country's
+  top-level domain with no governmental marker now reads as *could not be confirmed*, not *not a
+  government domain*, and no longer identically to a commercial visa agency. The refusal message names
+  the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
+  is trusted.
 
 **Two findings came out of doing the work, and both are recorded rather than left in the diff:**
 
@@ -339,18 +344,23 @@ its seven entries are now implemented, and nothing is left shipping against the 
    domain for this destination"* — character-identical to what a commercial visa agency gets. Now TODO
    item 2, ahead of the registry review it would otherwise corrupt.
 
-**Start at [TODO.md](TODO.md) item 1 and work down.** Item 1 — stopping `withheld_domains` telling a
-reviewer something false, per finding 2 above — needs no search credit, no model calls and no network, and
-should land before the registry review it would otherwise corrupt.
+**Everything that needed no credit is now done, and nothing is shipping against the project's own
+rules.** What remains all costs something — a crawl policy, a 198-country registry, or search quota —
+so pick up [TODO.md](TODO.md) item 1 and work down:
 
-Then the direction work: `robots.txt` (2), the committed domain registry (3), the trust-rule amendment
-(4), and the 20-corridor measurement (5) that decides whether this is a product — **blocked on Brave
-credit, and nothing large should be built before it.**
+1. **`robots.txt`** (entry 35), because it is owed and because item 4 should measure the posture the
+   project intends to keep. Expect it to *cost* coverage; that is the right direction.
+2. **The committed domain registry** (entry 34), then **3. the trust-rule amendment** for the 19
+   governments with no hostname marker and for Schengen. Item 3's own next step is a measurement: how
+   many of the 19 are covered by a published government domain list, registry organisation data, or a
+   TLS certificate organisation — which decides whether it is automatable or genuinely needs a human.
+4. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
+   thing that decides whether this is a product. Nothing large should be built before it.
 
 **Deployment has moved down the list deliberately.** It is not blocked on speed — a cold request is
 **34.1s** (19.4s corridor, 14.7s plan) where it was 70.7s, which fits an ordinary 30–60s proxy timeout,
-and warm is **0.0s**. It is blocked on item 5: publishing a URL whose two highest-volume corridors return
-no checklist is publishing the demonstration rather than the product. Item 3 also changes what a cold
+and warm is **0.0s**. It is blocked on item 4: publishing a URL whose two highest-volume corridors return
+no checklist is publishing the demonstration rather than the product. Item 2 also changes what a cold
 request does, so deploying first means deploying twice.
 
 ### What changed on 2026-08-18, in one line each

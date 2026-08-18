@@ -96,10 +96,19 @@ def auto_trusted_domains(
     The withheld list is returned rather than dropped: a corridor that then resolves nothing should
     be able to say which plausible-looking domains it declined to trust, and why. It carries what
     bootstrap rejected outright as well, so everything declined leaves one trace in one place.
+
+    **Each reason has to be true, because this list is the only mitigation there is.** Known problem
+    2 tells a reviewer to read it and look for domains declined that should not have been. Until
+    2026-08-18 a domain under the destination's own top-level domain carrying no governmental
+    marker fell through to "not a government domain for this destination" — which said something
+    false about Italy's `esteri.it`, in wording identical to what a commercial visa agency got, so
+    the one safeguard misled instead of warning. That case now says what is true: this rule cannot
+    confirm it. See DECISIONS entry 33.
     """
 
     accepted: list[str] = []
     withheld: dict[str, str] = dict(report.rejected)
+    destination = report.destination_name
 
     for proposal in sorted(report.proposals, key=_trust_priority):
         if not proposal.is_own_government:
@@ -108,8 +117,20 @@ def auto_trusted_domains(
                     "governmental, but not under this destination's own government, so it "
                     "describes another country's rules"
                 )
+            elif proposal.belongs_to_destination:
+                # Not "not a government domain": nothing here establishes that, and for 19 of 51
+                # countries measured this is where the real immigration authority lands. The honest
+                # statement is about the limit of the rule rather than about the domain.
+                withheld[proposal.domain] = (
+                    f"under {destination}'s own top-level domain, but its hostname carries no "
+                    "marker this rule recognises as governmental, so it could not be confirmed as "
+                    "an authority. It may be a real one: some governments use no such marker, and "
+                    "for those the domain has to be named in reviewed data instead"
+                )
             else:
-                withheld[proposal.domain] = "not a government domain for this destination"
+                withheld[proposal.domain] = (
+                    "neither governmental nor under this destination's own top-level domain"
+                )
         elif len(accepted) < maximum_trusted:
             accepted.append(proposal.domain)
         else:
@@ -121,6 +142,26 @@ def auto_trusted_domains(
                 f"{maximum_trusted} best-evidenced visa authorities found, so it was not read"
             )
     return accepted, withheld
+
+
+def unconfirmable_authorities(report: BootstrapReport) -> list[str]:
+    """Domains under the destination's own top-level domain that carry no governmental marker.
+
+    These are the candidates the trust rule can neither accept nor honestly dismiss, and naming them
+    is what turns *"no domain belonging to Germany's own government could be identified"* — which is
+    false, and the wrong place to go looking — into a description of the actual gap. Measured
+    2026-08-18: 19 of 51 countries have their real immigration or foreign ministry here, because no
+    `gov.de`, `gov.nl` or `gov.se` convention exists for one to be found under.
+
+    Deliberately **not** a route to trusting any of them. The rule refuses "looks like an
+    authority", and this only reports what it refused. See DECISIONS entry 33.
+    """
+
+    return sorted(
+        proposal.domain
+        for proposal in report.proposals
+        if proposal.belongs_to_destination and not proposal.looks_governmental
+    )
 
 
 class DiscoveredDestination(StrictModel):
@@ -209,9 +250,22 @@ class AutomaticDestinationService:
         )
         trusted, withheld = auto_trusted_domains(report)
         if not trusted:
+            # Name the candidates the rule could not confirm. Without this the message says no
+            # government domain was *identified*, which for Germany or Italy is simply untrue and
+            # sends whoever reads it to look at search or ranking rather than at the trust rule.
+            unconfirmable = unconfirmable_authorities(report)
+            detail = ""
+            if unconfirmable:
+                detail = (
+                    f" Candidates under {country.name}'s own top-level domain were found — "
+                    f"{', '.join(unconfirmable)} — but none of their hostnames carries a marker "
+                    "this agent recognises as governmental, so none could be confirmed as an "
+                    "authority. Some governments use no such marker; for those the domain has to "
+                    "be named in reviewed data."
+                )
             raise AutomaticDiscoveryError(
-                f"No domain belonging to {country.name}'s own government could be identified, so "
-                "there was nothing safe to read. Nothing was fetched."
+                f"No domain belonging to {country.name}'s own government could be confirmed, so "
+                f"there was nothing safe to read. Nothing was fetched.{detail}"
             )
 
         base = self._base_config(country, corridor, trusted)
