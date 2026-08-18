@@ -11,6 +11,7 @@ made, and the final host is checked again after redirects.
 import asyncio
 import heapq
 import socket
+import time
 from collections.abc import Awaitable, Callable
 
 import httpx
@@ -142,6 +143,7 @@ class CrawlFetcher:
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         host_delay_seconds: float = 0.5,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self.timeout_seconds = timeout_seconds
         self.maximum_bytes = maximum_bytes
@@ -155,6 +157,11 @@ class CrawlFetcher:
         self.transport = transport
         self.sleep = sleep
         self.host_delay_seconds = host_delay_seconds
+        self.clock = clock
+        # When each host may next be asked for a page. The politeness delay is owed *to a host*;
+        # applied globally it made every site wait behind every other, which is latency rather
+        # than courtesy.
+        self.next_request_at: dict[str, float] = {}
         self.requested: list[str] = []
         # Why a page could not be read. Reporting "nothing scored well enough" when the real
         # cause was an unreachable site would hide the actual problem from the reader.
@@ -192,6 +199,22 @@ class CrawlFetcher:
 
         return {url for url, outcome in self.outcomes.items() if outcome == "blocked"}
 
+    async def _wait_for_host(self, host: str) -> None:
+        """Space this host's requests, without holding up any other host.
+
+        The next slot is claimed before sleeping rather than after, so two requests to the same
+        host queue behind each other instead of both reading the same last-request time and going
+        at once. A host asked for the first time waits not at all.
+        """
+
+        if not self.host_delay_seconds:
+            return
+        now = self.clock()
+        earliest = self.next_request_at.get(host, now)
+        self.next_request_at[host] = max(now, earliest) + self.host_delay_seconds
+        if earliest > now:
+            await self.sleep(earliest - now)
+
     async def fetch_html(
         self,
         client: httpx.AsyncClient,
@@ -205,8 +228,7 @@ class CrawlFetcher:
 
         self.requested.append(url)
         try:
-            if self.host_delay_seconds:
-                await self.sleep(self.host_delay_seconds)
+            await self._wait_for_host(host_of(url))
             response = await client.get(url)
         except httpx.HTTPError as exc:
             reason = str(exc).strip()
@@ -301,6 +323,7 @@ class LinkCrawler:
         maximum_pages: int = 40,
         maximum_pages_per_host: int = 20,
         expansion_threshold: float = 10.0,
+        maximum_concurrent_hosts: int = 4,
     ) -> None:
         self.fetcher = fetcher
         self.score_link = score_link
@@ -312,6 +335,10 @@ class LinkCrawler:
         self.maximum_pages = maximum_pages
         self.maximum_pages_per_host = maximum_pages_per_host
         self.expansion_threshold = expansion_threshold
+        # One request per host at a time, several hosts at once. A corridor usually spans two to
+        # four sites, and walking them one page at a time meant each site's politeness delay was
+        # also paid by every other site.
+        self.maximum_concurrent_hosts = maximum_concurrent_hosts
         self.rejected: dict[str, str] = {}
         # A page's own <title> is only knowable once it is fetched, so it is recorded here
         # rather than guessed from the link that pointed at it.
@@ -347,6 +374,11 @@ class LinkCrawler:
         # Share the budget between the hosts that were seeded. Without this a large portal starves
         # every other site: a ministry index links to hundreds of pages, so it would consume the
         # whole allowance before the mission that actually serves this traveller is ever reached.
+        # A list so the frontier's tie-breaking sequence keeps counting across pages that are now
+        # expanded in a separate method. Without it two equally scored links compare PageLink
+        # objects, which raises.
+        counters = [counter]
+
         seed_hosts = {host_of(link.url) for link in seed_links}
         host_budget = self.maximum_pages_per_host
         if len(seed_hosts) > 1:
@@ -364,52 +396,116 @@ class LinkCrawler:
             },
         ) as client:
             while frontier and len(visited) < self.maximum_pages:
-                _, depth, url, _sequence, link = heapq.heappop(frontier)
-                if url in visited:
-                    continue
-                host = host_of(url)
-                if per_host.get(host, 0) >= host_budget:
-                    continue
-                visited.add(url)
-                per_host[host] = per_host.get(host, 0) + 1
+                wave = self._next_wave(frontier, visited, per_host, host_budget)
+                if not wave:
+                    break
+                for _depth, url, _link in wave:
+                    visited.add(url)
+                    per_host[host_of(url)] = per_host.get(host_of(url), 0) + 1
 
-                html = await self.fetcher.fetch_html(client, url, destination)
-                if html is None:
-                    continue
+                pages = await asyncio.gather(
+                    *(
+                        self.fetcher.fetch_html(client, url, destination)
+                        for _depth, url, _link in wave
+                    )
+                )
 
-                page_title = page_title_of(html)
-                if page_title:
-                    self.titles[url] = page_title
-
-                if depth >= self.maximum_depth:
-                    continue
-
-                # Resolve relative links against where the request landed, not where it was
-                # aimed. They differ after a redirect, and again after a render.
-                base = self.fetcher.final_urls.get(url, url)
-                for found in extract_links(html, base):
-                    if found.url in visited or not is_crawlable(found.url, destination):
+                # Results are handled in the order the frontier gave them, never the order they
+                # came back in. What a corridor resolves to depends on the order candidates are
+                # seen, and that must not depend on which site answered first.
+                for (depth, url, _link), html in zip(wave, pages, strict=True):
+                    if html is None:
                         continue
-                    child = found.model_copy(update={"depth": depth + 1})
-
-                    reason = self.reject(child)
-                    if reason is not None:
-                        self.rejected[child.url] = reason
-                        continue
-
-                    scores = self.score_link(child)
-                    _, best = scores.best()
-
-                    existing = candidates.get(child.url)
-                    if existing is None or best > existing.link_scores.best()[1]:
-                        candidates[child.url] = CandidatePage(
-                            link=child, link_scores=scores, found_by="crawl"
-                        )
-
-                    # Only follow links that look like they lead somewhere relevant, and never
-                    # follow a PDF: it is a destination, not a signpost.
-                    if best >= self.expansion_threshold and not is_pdf_url(child.url):
-                        counter += 1
-                        heapq.heappush(frontier, (-best, depth + 1, child.url, counter, child))
+                    self._expand(
+                        url, html, depth, destination, candidates, visited, frontier, counters
+                    )
 
         return list(candidates.values())
+
+    def _next_wave(
+        self,
+        frontier: list[tuple[float, int, str, int, PageLink]],
+        visited: set[str],
+        per_host: dict[str, int],
+        host_budget: int,
+    ) -> list[tuple[int, str, PageLink]]:
+        """The next few pages to fetch together: the best links, one per host.
+
+        One page per host keeps each site's spacing intact — the delay is what makes this polite,
+        and it is only owed per host. Entries for a host already in the wave go back to the
+        frontier rather than being dropped, so nothing is lost by being second in its queue.
+        """
+
+        remaining = self.maximum_pages - len(visited)
+        wanted = min(self.maximum_concurrent_hosts, max(0, remaining))
+        wave: list[tuple[int, str, PageLink]] = []
+        hosts: set[str] = set()
+        deferred: list[tuple[float, int, str, int, PageLink]] = []
+
+        while frontier and len(wave) < wanted:
+            entry = heapq.heappop(frontier)
+            _, depth, url, _sequence, link = entry
+            if url in visited:
+                continue
+            host = host_of(url)
+            # Over its share of the budget: dropped rather than deferred, exactly as before, or a
+            # large portal would keep its links circulating forever.
+            if per_host.get(host, 0) >= host_budget:
+                continue
+            if host in hosts:
+                deferred.append(entry)
+                continue
+            hosts.add(host)
+            wave.append((depth, url, link))
+
+        for entry in deferred:
+            heapq.heappush(frontier, entry)
+        return wave
+
+    def _expand(
+        self,
+        url: str,
+        html: str,
+        depth: int,
+        destination: DestinationConfig,
+        candidates: dict[str, CandidatePage],
+        visited: set[str],
+        frontier: list[tuple[float, int, str, int, PageLink]],
+        counters: list[int],
+    ) -> None:
+        """Record what a fetched page said, and queue the links worth following."""
+
+        page_title = page_title_of(html)
+        if page_title:
+            self.titles[url] = page_title
+
+        if depth >= self.maximum_depth:
+            return
+
+        # Resolve relative links against where the request landed, not where it was
+        # aimed. They differ after a redirect, and again after a render.
+        base = self.fetcher.final_urls.get(url, url)
+        for found in extract_links(html, base):
+            if found.url in visited or not is_crawlable(found.url, destination):
+                continue
+            child = found.model_copy(update={"depth": depth + 1})
+
+            reason = self.reject(child)
+            if reason is not None:
+                self.rejected[child.url] = reason
+                continue
+
+            scores = self.score_link(child)
+            _, best = scores.best()
+
+            existing = candidates.get(child.url)
+            if existing is None or best > existing.link_scores.best()[1]:
+                candidates[child.url] = CandidatePage(
+                    link=child, link_scores=scores, found_by="crawl"
+                )
+
+            # Only follow links that look like they lead somewhere relevant, and never
+            # follow a PDF: it is a destination, not a signpost.
+            if best >= self.expansion_threshold and not is_pdf_url(child.url):
+                counters[0] += 1
+                heapq.heappush(frontier, (-best, depth + 1, child.url, counters[0], child))

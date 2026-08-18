@@ -1,5 +1,6 @@
 """Crawling within approved domains, and scoring what is found."""
 
+import asyncio
 import socket
 from typing import Any
 
@@ -377,3 +378,103 @@ async def test_a_refusal_is_recorded_as_blocked_rather_than_as_a_broken_page() -
     assert fetcher.outcomes[refused] == "blocked"
     assert fetcher.blocked_urls() == {refused}
     assert not fetcher.unresolvable_hosts
+
+
+@pytest.mark.anyio
+async def test_the_politeness_delay_is_owed_to_a_host_not_to_the_whole_crawl() -> None:
+    """It was applied before every request whatever host it was for, so forty pages cost twenty
+    seconds of waiting and a second site queued behind the first for no reason. Each host still
+    gets its spacing, which is what the delay is actually for."""
+
+    slept: list[float] = []
+    clock = [0.0]
+
+    async def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        clock[0] += seconds
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html><body></body></html>")
+
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(respond),
+        sleep=sleep,
+        clock=lambda: clock[0],
+        host_delay_seconds=0.5,
+    )
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        await fetcher.fetch_html(client, f"https://{AUTHORITY}/a", destination())
+        # A different host owes nothing: it has not been asked for anything yet.
+        await fetcher.fetch_html(client, f"https://{MISSION}/a", destination())
+        assert slept == []
+        # The same host again does wait, and only for its own remaining spacing.
+        await fetcher.fetch_html(client, f"https://{AUTHORITY}/b", destination())
+
+    assert slept == [0.5]
+
+
+@pytest.mark.anyio
+async def test_different_hosts_are_crawled_at_the_same_time() -> None:
+    """The frontier was walked one page at a time, so a corridor spanning several sites paid each
+    site's latency in turn. One request per host at a time, several hosts at once."""
+
+    in_flight = 0
+    highest = 0
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        nonlocal in_flight, highest
+        return httpx.Response(200, text="<html><body></body></html>")
+
+    async def fetch_html(client: Any, url: str, destination: Any) -> str:
+        nonlocal in_flight, highest
+        in_flight += 1
+        highest = max(highest, in_flight)
+        try:
+            await asyncio.sleep(0)
+            return "<html><body></body></html>"
+        finally:
+            in_flight -= 1
+
+    fetcher = CrawlFetcher(transport=httpx.MockTransport(respond), host_delay_seconds=0.0)
+    fetcher.fetch_html = fetch_html  # type: ignore[method-assign]
+    crawler = LinkCrawler(fetcher, lambda link: RoleScores(scores={}))
+
+    await crawler.crawl(
+        destination(),
+        corridor(),
+        [f"https://{AUTHORITY}/a", f"https://{MISSION}/a"],
+    )
+
+    assert highest == 2
+
+
+@pytest.mark.anyio
+async def test_two_pages_on_one_host_are_not_fetched_at_the_same_time() -> None:
+    """Concurrency across hosts must not become concurrency within one. The second page waits for
+    the next wave, which is what keeps each site's spacing honest."""
+
+    in_flight = 0
+    highest = 0
+    read: list[str] = []
+
+    async def fetch_html(client: Any, url: str, destination: Any) -> str:
+        nonlocal in_flight, highest
+        in_flight += 1
+        highest = max(highest, in_flight)
+        read.append(url)
+        try:
+            await asyncio.sleep(0)
+            return "<html><body></body></html>"
+        finally:
+            in_flight -= 1
+
+    fetcher = CrawlFetcher(host_delay_seconds=0.0)
+    fetcher.fetch_html = fetch_html  # type: ignore[method-assign]
+    crawler = LinkCrawler(fetcher, lambda link: RoleScores(scores={}))
+    seeds = [f"https://{AUTHORITY}/a", f"https://{AUTHORITY}/b", f"https://{AUTHORITY}/c"]
+
+    await crawler.crawl(destination(), corridor(), seeds)
+
+    assert highest == 1
+    # Deferring is not dropping: a page that waited for a later wave is still read.
+    assert sorted(read) == sorted(seeds)

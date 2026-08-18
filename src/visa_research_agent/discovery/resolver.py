@@ -58,6 +58,7 @@ from visa_research_agent.discovery.search import (
     SearchProvider,
     corridor_queries,
     resolve_corridor_countries,
+    search_all,
     usable_results,
 )
 from visa_research_agent.discovery.urls import (
@@ -238,10 +239,12 @@ class CorridorResolver:
         queries = corridor_queries(corridor, destination, nationality, residence)
         seeds: list[str] = []
         search_candidates: dict[str, CandidatePage] = {}
+        # Every query at once, but the results walked in the order the queries were asked. Which
+        # page a corridor resolves to depends on the order candidates arrive, so it must not depend
+        # on which query the engine answered first.
+        found = await search_all(self.provider, queries, count=self.results_per_query)
         for query in queries:
-            results = usable_results(
-                await self.provider.search(query, count=self.results_per_query), destination
-            )
+            results = usable_results(found[query], destination)
             for result in results:
                 url = canonicalise_url(result.url)
                 if not is_crawlable(url, destination):
