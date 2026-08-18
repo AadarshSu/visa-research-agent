@@ -16,6 +16,7 @@ from visa_research_agent.discovery.bootstrap import BootstrapReport, DomainPropo
 from visa_research_agent.discovery.lexicon import Country, CountryRegistry, Denylist
 from visa_research_agent.discovery.models import SearchResult
 from visa_research_agent.discovery.registry import (
+    MAXIMUM_AUTO_TRUSTED_DOMAINS,
     AuthorityRegistry,
     CountryAuthorities,
     authorities_from,
@@ -312,3 +313,136 @@ def test_the_order_of_trusted_domains_is_preserved_through_a_write(tmp_path: Pat
 
     loaded = load_authority_registry(str(path))
     assert loaded.get("SG").trusted == ["ica.gov.sg", "mfa.gov.sg", "ask.gov.sg"]  # type: ignore[union-attr]
+
+
+# --- Reviewed domains: the escape hatch, and the ways it could quietly fail ------------------
+
+
+def test_a_reviewed_domain_leads_the_set_because_a_person_confirmed_that_one() -> None:
+    """Canada is the case. The rule established that five `gc.ca` domains belong to the Canadian
+    government; a person established that `canada.ca` is where IRCC's guidance actually is. The
+    second is a stronger claim and has to be searched first."""
+
+    row = CountryAuthorities(
+        code="CA",
+        name="Canada",
+        trusted=["travel.gc.ca", "international.gc.ca"],
+        reviewed={"canada.ca": "official website of the Government of Canada — Wikidata P856/P17"},
+    )
+
+    assert row.domains == ["canada.ca", "travel.gc.ca", "international.gc.ca"]
+
+
+def test_a_reviewed_domain_displaces_rather_than_widens() -> None:
+    """The cap bounds cost — three searches per domain, a divided crawl budget, ten shortlist
+    places. A correction must not buy its way past that; it takes the weakest domain's place."""
+
+    row = CountryAuthorities(
+        code="XX",
+        name="Example",
+        trusted=["a.gov.xx", "b.gov.xx", "c.gov.xx", "d.gov.xx", "e.gov.xx"],
+        reviewed={"real-authority.xx": "confirmed"},
+    )
+
+    assert len(row.domains) == MAXIMUM_AUTO_TRUSTED_DOMAINS
+    assert row.domains[0] == "real-authority.xx"
+    assert "e.gov.xx" not in row.domains
+
+
+def test_a_reviewed_domain_needs_the_evidence_that_justified_it() -> None:
+    """It bypasses the rule that keeps commercial agencies out. Without a reason there is nothing
+    standing behind it, and nobody later can tell a checked domain from a guessed one."""
+
+    with pytest.raises(ValueError, match="need the evidence"):
+        CountryAuthorities(code="IT", name="Italy", reviewed={"esteri.it": "   "})
+
+
+def test_a_domain_cannot_be_reviewed_and_unconfirmed_at_once() -> None:
+    with pytest.raises(ValueError, match="cannot be both"):
+        CountryAuthorities(
+            code="IT",
+            name="Italy",
+            reviewed={"esteri.it": "confirmed"},
+            unconfirmable=["esteri.it"],
+        )
+
+
+async def test_a_rebuild_keeps_the_corrections_a_person_made() -> None:
+    """The one way `visa-discover registry` could do real damage. `trusted` and `unconfirmable` are
+    search output and are meant to be replaced; a reviewed domain is a correction, and regenerating
+    over it would quietly undo every fix in the file — with the plans still resolving, against the
+    wrong domains again."""
+
+    provider = StubProvider({"Italy": ["https://www.mise.gov.it/visa"]})
+    existing = AuthorityRegistry(
+        schema_version=1,
+        generated_at=NOW,
+        countries=[
+            CountryAuthorities(
+                code="IT",
+                name="Italy",
+                trusted=["stale.gov.it"],
+                reviewed={"esteri.it": "official website of the Italian foreign ministry"},
+            )
+        ],
+    )
+
+    registry, _ = await build_authority_registry(
+        countries(country("IT", "Italy", ["it"])),
+        provider,
+        denylist(),
+        existing=existing,
+        rebuild=True,
+        sleep=no_sleep,
+        now=lambda: NOW,
+    )
+
+    row = registry.get("IT")
+    assert row is not None
+    assert "esteri.it" in row.reviewed, "a rebuild must never drop a person's correction"
+    assert row.trusted == ["mise.gov.it"], "search output is replaced, as intended"
+    assert row.domains[0] == "esteri.it"
+
+
+async def test_a_rebuilt_country_does_not_re_list_a_promoted_domain_as_unconfirmed() -> None:
+    """It would fail validation on the next load, so the file would stop loading entirely."""
+
+    provider = StubProvider({"Italy": ["https://www.esteri.it/visa", "https://www.mise.gov.it/v"]})
+    existing = AuthorityRegistry(
+        schema_version=1,
+        generated_at=NOW,
+        countries=[
+            CountryAuthorities(
+                code="IT", name="Italy", reviewed={"esteri.it": "the Italian foreign ministry"}
+            )
+        ],
+    )
+
+    registry, _ = await build_authority_registry(
+        countries(country("IT", "Italy", ["it"])),
+        provider,
+        denylist(),
+        existing=existing,
+        rebuild=True,
+        sleep=no_sleep,
+        now=lambda: NOW,
+    )
+
+    row = registry.get("IT")
+    assert row is not None
+    assert "esteri.it" not in row.unconfirmable
+
+
+def test_the_committed_file_loads_and_every_reviewed_domain_carries_its_evidence() -> None:
+    """The real file, not a fixture. A reviewed domain is the one place a person overrides the
+    trust rule, so the guard that each carries a reason has to hold on what is actually shipped."""
+
+    from visa_research_agent.discovery.registry import load_authority_registry as load_real
+
+    registry = load_real()
+
+    assert registry.countries, "the committed registry must not be empty"
+    for row in registry.countries:
+        for domain, reason in row.reviewed.items():
+            assert len(reason.strip()) > 20, f"{row.code}/{domain} has no usable evidence"
+        assert len(row.domains) <= MAXIMUM_AUTO_TRUSTED_DOMAINS

@@ -153,7 +153,22 @@ ministry was seen at all; it is measured in DECISIONS entry 38's table.
 
 ## Next — the direction change
 
-### 1. Amend the trust rule for governments with no marker, and for Schengen — `next`
+### 1. Find out why a corridor refuses on a domain it can now read — `next`
+
+**Why:** DECISIONS entry 39 measured the domain corrections and the constraint moved rather than lifted.
+Sweden went from fetching nothing to reading `migrationsverket.se`, filled `application_route` and
+`general_entry`, and still refuses because the **visa decision** could not be confirmed. Canada now finds
+its document checklist and still cannot confirm the decision. The Netherlands did not move at all.
+
+That is no longer a trust problem — the right authority is being read. It is scoring, crawling or
+adjudication. **Start by reading what those corridors actually fetched**, because nobody has: the pages
+are on disk in `var/cache/` after a run, and which of the ten shortlist places were spent on what is the
+first thing to look at.
+
+**Do not start by tuning the scorer.** The three corridors fail differently and one of them moved not at
+all, so the cause may not be shared.
+
+### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
 **First, what `looks_governmental` actually is**, because its name misdescribes it and that makes the
 whole rule read as flimsier than it is. Probed against adversarial hostnames 2026-08-18:
@@ -230,7 +245,7 @@ is 19 countries rather than 198.
 of it:** add `gv` and `gub` as markers, and add `canada.ca` beside the `gc.ca` special case — Canada
 fails only because immigration content moved and the pattern did not.
 
-### 2. Measure the top 20 corridors against a bar committed in advance — `blocked`
+### 3. Measure the top 20 corridors against a bar committed in advance — `blocked`
 
 **Why:** DECISIONS entry 35. This is the measurement that decides whether the project is a product or a
 demonstration, so **nothing large should be built before it.** Seven corridors cannot answer whether
@@ -264,7 +279,7 @@ what is left to judge is the model's own words. **Careful:** if it reads as veri
 wording and the banner, never a narrower `visa_required`. A corridor stored before 2026-08-17 has no
 `inaccessible_urls` field, so clear `var/corridors/`.
 
-### 3. Decide the client-side retrieval question — `soon`
+### 4. Decide the client-side retrieval question — `soon`
 
 **Why:** DECISIONS entry 35 raises it and deliberately does **not** approve it. The traveller's own
 browser can open `france-visas.gouv.fr`; a human reading a public page is not this program circumventing

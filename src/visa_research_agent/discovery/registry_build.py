@@ -56,6 +56,7 @@ async def build_authority_registry(
     denylist: Denylist,
     *,
     existing: AuthorityRegistry | None = None,
+    rebuild: bool = False,
     on_progress: Callable[[BuildProgress], None] | None = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     seconds_between_countries: float = DEFAULT_SECONDS_BETWEEN_COUNTRIES,
@@ -74,6 +75,9 @@ async def build_authority_registry(
     )
     failures: dict[str, str] = {}
     pending = [country for country in countries.countries if country.code not in rows]
+    if rebuild:
+        # Everything is rebuilt, but `rows` is kept so each country's reviewed domains survive.
+        pending = list(countries.countries)
 
     for index, country in enumerate(pending):
         if index:
@@ -92,7 +96,13 @@ async def build_authority_registry(
             continue
 
         accepted, _ = auto_trusted_domains(report)
-        row = authorities_from(report, country.code, accepted)
+        # Carried through the rebuild. `trusted` and `unconfirmable` are search output and are
+        # meant to be replaced; `reviewed` is a person's correction, and regenerating over it would
+        # quietly undo every fix in the file — the one way this command could do real damage.
+        previous = rows.get(country.code)
+        row = authorities_from(
+            report, country.code, accepted, reviewed=previous.reviewed if previous else None
+        )
         rows[country.code] = row
         if on_progress is not None:
             on_progress(BuildProgress(country, row, None))
@@ -125,6 +135,11 @@ HEADER = """\
 #
 #   trusted       — confirmed as this country's own government; the only domains ever fetched from.
 #                   Empty means the country is refused, which is a real answer and not a bug.
+#   reviewed      — added by a person, with the evidence that justified it. This is the escape hatch
+#                   entry 33 said the rule would need: a government using no hostname marker cannot
+#                   be confirmed by the rule, so its domain is named here instead. These come first
+#                   and count against the same cap, so one displaces the weakest machine domain
+#                   rather than widening the set. **Preserved when this file is regenerated.**
 #   unconfirmable — under the country's own top-level domain, but the hostname carries no marker
 #                   this rule recognises as governmental. A real immigration authority may well be
 #                   sitting here: 19 of 51 countries measured have theirs here, because no `gov.de`
@@ -154,6 +169,7 @@ def write_registry(registry: AuthorityRegistry, path: Path) -> None:
                 "code": row.code,
                 "name": row.name,
                 "trusted": row.trusted,
+                "reviewed": row.reviewed,
                 "unconfirmable": row.unconfirmable,
             }
             for row in sorted(registry.countries, key=lambda row: row.code)

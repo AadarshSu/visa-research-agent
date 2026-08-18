@@ -38,6 +38,15 @@ from visa_research_agent.domain.models import StrictModel
 
 REGISTRY_FILENAME = "authority_domains.yaml"
 
+# How many of a destination's own domains one country may put into use. A bound on the consequence
+# rather than a test for any cause: three searches run per trusted domain, the crawl's per-host
+# budget is the page budget divided by the hosts seeded, and the shortlist has ten places — so a
+# wide set spends more, reads less of each site, and makes the right page compete with more noise.
+#
+# Five is calibration against the corridors run, not a derived number. It lives here rather than in
+# `automatic.py` because it is now a property of a registry row rather than of a live bootstrap.
+MAXIMUM_AUTO_TRUSTED_DOMAINS = 5
+
 
 class CountryAuthorities(StrictModel):
     """One country's reviewed authority domains, and the gap the rule could not close."""
@@ -47,21 +56,65 @@ class CountryAuthorities(StrictModel):
     trusted: list[str] = Field(default_factory=list)
     """Domains confirmed as this country's own government. Empty means the country is refused."""
 
+    reviewed: dict[str, str] = Field(default_factory=dict)
+    """Domains a person added, each with the evidence that justified it.
+
+    This is the escape hatch DECISIONS entry 33 said the rule would need: a government that uses no
+    hostname marker cannot be confirmed by `looks_governmental`, and for those the domain has to be
+    named in reviewed data instead. Germany, Italy, the Netherlands and Canada are all here.
+
+    **The value is not a comment — it is the evidence, and it is the only thing standing behind the
+    domain.** A row here bypasses the rule that keeps commercial agencies out, so a reason that
+    cannot be checked is a domain nobody has actually verified. Cite something independent of the
+    page: what the entry says about who runs it, and where that came from.
+
+    Preserved across regeneration. `visa-discover registry` rebuilds `trusted` and `unconfirmable`
+    from search; it must never silently drop a reviewed domain, or the next rebuild would quietly
+    undo every correction in this file.
+
+    These come **first** in `domains` and count against the same cap, so a reviewed domain displaces
+    the weakest machine-proposed one rather than widening the set.
+    """
+
     unconfirmable: list[str] = Field(default_factory=list)
     """Candidates under this country's own top-level domain with no governmental marker.
 
     Carried so a reviewer can see what the rule could not confirm, and so a refusal can name it
     rather than claiming nothing was found. **Never a route to trusting any of them** — the rule
-    refuses "looks like an authority", and this only records what it refused. See entry 33.
+    refuses "looks like an authority", and this only records what it refused. Promoting one is a
+    deliberate act that moves it to `reviewed` with its evidence. See entry 33.
     """
 
+    @property
+    def domains(self) -> list[str]:
+        """What may actually be fetched from: reviewed first, then machine-proposed, capped.
+
+        Reviewed first because a person confirmed *that* domain is the authority, where the rule
+        only established that a domain belongs to the government. Canada is the case: `canada.ca`
+        holds the immigration guidance and five `gc.ca` domains do not.
+        """
+
+        ordered = list(self.reviewed) + [d for d in self.trusted if d not in self.reviewed]
+        return ordered[:MAXIMUM_AUTO_TRUSTED_DOMAINS]
+
     @model_validator(mode="after")
-    def validate_no_domain_is_both(self) -> "CountryAuthorities":
-        overlap = set(self.trusted) & set(self.unconfirmable)
-        if overlap:
+    def validate_no_domain_is_in_two_places(self) -> "CountryAuthorities":
+        for first, second, names in (
+            (self.trusted, self.unconfirmable, "trusted and unconfirmable"),
+            (self.reviewed, self.unconfirmable, "reviewed and unconfirmable"),
+            (self.reviewed, self.trusted, "reviewed and trusted"),
+        ):
+            overlap = set(first) & set(second)
+            if overlap:
+                raise ValueError(
+                    f"{self.code}: {', '.join(sorted(overlap))} cannot be both {names}"
+                )
+        blank = [domain for domain, reason in self.reviewed.items() if not reason.strip()]
+        if blank:
+            # A reviewed domain bypasses the trust rule. Without a reason there is nothing standing
+            # behind it, and nobody later can tell a checked domain from a guessed one.
             raise ValueError(
-                f"{self.code}: {', '.join(sorted(overlap))} cannot be both trusted and "
-                "unconfirmable"
+                f"{self.code}: reviewed domains need the evidence for them: {', '.join(blank)}"
             )
         return self
 
@@ -84,7 +137,12 @@ class AuthorityRegistry(StrictModel):
         return next((entry for entry in self.countries if entry.code == code), None)
 
 
-def authorities_from(report: BootstrapReport, code: str, accepted: list[str]) -> CountryAuthorities:
+def authorities_from(
+    report: BootstrapReport,
+    code: str,
+    accepted: list[str],
+    reviewed: dict[str, str] | None = None,
+) -> CountryAuthorities:
     """One registry row from a bootstrap and the domains the trust rule accepted from it.
 
     The accepted list is passed in rather than recomputed, so the file records exactly what
@@ -92,17 +150,22 @@ def authorities_from(report: BootstrapReport, code: str, accepted: list[str]) ->
     same cap. Nothing here re-judges a domain.
     """
 
+    held = dict(reviewed or {})
     unconfirmable = sorted(
         proposal.domain
         for proposal in report.proposals
         if proposal.belongs_to_destination
         and not proposal.looks_governmental
         and proposal.domain not in set(accepted)
+        # A domain already promoted by a person is not still an open question, and listing it in
+        # both places would fail validation on the next load.
+        and proposal.domain not in held
     )
     return CountryAuthorities(
         code=code,
         name=report.destination_name,
-        trusted=accepted,
+        trusted=[domain for domain in accepted if domain not in held],
+        reviewed=held,
         unconfirmable=unconfirmable,
     )
 

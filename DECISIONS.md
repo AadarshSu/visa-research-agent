@@ -9,6 +9,63 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 39. A person may override the trust rule in committed data, and doing it showed the rule was not the only thing wrong
+**2026-08-18 · implemented for 12 countries**
+
+Entry 33 said a government using no hostname marker "has to be named in reviewed data instead" and left
+that hatch unbuilt. `CountryAuthorities.reviewed` is it: a map of domain to **the evidence that justified
+it**, ahead of the machine-proposed list and counting against the same cap, so a correction displaces the
+weakest automatic domain rather than widening the set.
+
+Three properties make it safe enough to bypass the trust rule with:
+
+* **The evidence is required, and validated non-empty.** A reviewed domain skips the rule that keeps
+  commercial agencies out, so a reason nobody can check is a domain nobody has verified. The committed
+  file is asserted against this in the test suite, not just the fixtures.
+* **A regeneration cannot silently undo it.** `visa-discover registry --rebuild` replaces `trusted` and
+  `unconfirmable` — search output, meant to be replaced — and carries `reviewed` through untouched. This
+  was the one way that command could have done real damage: every correction reverted, with plans still
+  refusing, and nothing in the output saying so.
+* **The evidence is a claim about who controls the domain, made by something that is not the page.**
+  Each of the twelve was confirmed by a Wikidata reverse lookup — the domain is the `official website`
+  (P856) of an entity whose `country` (P17) is that country. That is the same question
+  `belongs_to_destination` asks and the one `looks_governmental` cannot answer for these governments.
+  Four domains the lookup could not confirm were **left alone**: `gv.at`, `swiss-visa.ch`, `mvep.hr`,
+  `nyidanmark.dk`. Austria therefore still refuses, and that is the correct output.
+
+**Rejected: a live Wikidata lookup in the trust path.** Wikidata is user-editable, so a claim that a
+domain belongs to a government can be edited by anyone. As input to an offline file that a person reviews
+as a diff, a bad edit is visible before it can reach a traveller; as a request-time authority it would be
+an unreviewed third party deciding what this program trusts. Entry 34 is what makes the first version
+acceptable. **Also rejected: asking a model.** It would likely classify more of these correctly, and it
+produces no entity, no revision history and nothing to diff — in a system whose entire differentiator is
+that every claim traces to something checkable.
+
+### What running it found, and it corrects entry 38 and the reasoning behind this change
+
+The diagnosis going in was that the domain classifier was the binding constraint: bootstrap proposes the
+right domain for every failing country, and only the hostname regex throws it away. That is true, and it
+is **not sufficient**. Measured before and after, three countries:
+
+| | Before | After |
+| --- | --- | --- |
+| Sweden | refused with **nothing fetched** — no domain confirmed at all | reads `migrationsverket.se`; `application_route` and `general_entry` filled |
+| Canada | refused: visa decision **and** checklist unfound | refused: checklist **found**, decision still unfound |
+| Netherlands | refused | refused, unchanged |
+
+So the corrections are real — Sweden went from fetching nothing to reading its actual immigration agency —
+and **not one of the three resolves end to end.** The binding constraint has moved rather than lifted: it
+is no longer "we cannot tell which domain is this government" but "we cannot confirm the visa decision on
+pages we can now read."
+
+**And entry 38 was wrong about the shape of the failure.** It claimed a wrong trusted set makes a corridor
+*resolve* against domains that cannot hold the answer — the failure this project treats as worse than
+refusing. Run, they **refuse**. The refusal discipline held throughout; what a wrong trusted set costs is
+coverage, not correctness. That claim was written from reading the code path, which is now the fifth time
+in two days that habit has produced a false line in these files.
+
+---
+
 ## 38. The trusted-domain registry is generated offline and committed, and reviewing it found what running it could not
 **2026-08-18 · implemented for 40 countries; the remaining 158 are unbuilt**
 
@@ -51,8 +108,11 @@ predicted this second failure and could not measure it; the file shows it plainl
 | Portugal | three ministry domains | `sef.pt`, unconfirmable |
 | Ireland | `gov.ie`, `inis.gov.ie` | `irishimmigration.ie`, unconfirmable |
 
-These corridors do not refuse. They resolve, against domains that cannot hold the answer, which is
-exactly the failure mode this project treats as worse than refusing.
+~~These corridors do not refuse. They resolve, against domains that cannot hold the answer.~~
+**Wrong, and corrected in entry 39 by running it.** Measured on the Netherlands and Canada: a wrong
+trusted set makes a corridor **refuse**, it does not make it answer. The refusal discipline held. The
+cost of this failure is coverage, not wrong guidance — which is a materially smaller problem than the
+sentence above claimed, and the sentence was written from reading the code rather than from output.
 
 **A third finding nobody had predicted: the cap spends its slots on the wrong parts of a government.**
 India's five include `indianembassyusa.gov.in` and `cgichicago.gov.in` — United States missions, occupying

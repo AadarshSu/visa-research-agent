@@ -222,12 +222,17 @@ async def run_registry(args: argparse.Namespace, stream: TextIO) -> int:
 
     destination = Path(args.output)
     existing = None
-    if destination.exists() and not args.rebuild:
+    if destination.exists():
+        # Loaded even when rebuilding: `--rebuild` replaces search output, never a person's
+        # reviewed domains, and those live in the same rows.
         existing = load_authority_registry(str(destination))
-        print(
-            f"resuming: {len(existing.countries)} countries already in {destination}",
-            file=stream,
-        )
+        if args.rebuild:
+            print("rebuilding all countries; reviewed domains kept", file=stream)
+        else:
+            print(
+                f"resuming: {len(existing.countries)} countries already in {destination}",
+                file=stream,
+            )
 
     countries = get_country_registry()
     if args.only:
@@ -244,9 +249,9 @@ async def run_registry(args: argparse.Namespace, stream: TextIO) -> int:
             countries=[c for c in countries.countries if c.code in wanted],
         )
 
-    remaining = len(countries.countries) - sum(
-        1 for c in countries.countries if existing and existing.get(c.code)
-    )
+    remaining = len(countries.countries)
+    if existing and not args.rebuild:
+        remaining -= sum(1 for c in countries.countries if existing.get(c.code))
     print(f"{remaining} countries to build, about {remaining * 4} searches\n", file=stream)
 
     def report(progress: BuildProgress) -> None:
@@ -265,6 +270,7 @@ async def run_registry(args: argparse.Namespace, stream: TextIO) -> int:
         build_search_provider(),
         get_denylist(),
         existing=existing,
+        rebuild=args.rebuild,
         on_progress=report,
         write=lambda current: write_registry(current, destination),
     )

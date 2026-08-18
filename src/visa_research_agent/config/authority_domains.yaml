@@ -11,6 +11,11 @@
 #
 #   trusted       — confirmed as this country's own government; the only domains ever fetched from.
 #                   Empty means the country is refused, which is a real answer and not a bug.
+#   reviewed      — added by a person, with the evidence that justified it. This is the escape hatch
+#                   entry 33 said the rule would need: a government using no hostname marker cannot
+#                   be confirmed by the rule, so its domain is named here instead. These come first
+#                   and count against the same cap, so one displaces the weakest machine domain
+#                   rather than widening the set. **Preserved when this file is regenerated.**
 #   unconfirmable — under the country's own top-level domain, but the hostname carries no marker
 #                   this rule recognises as governmental. A real immigration authority may well be
 #                   sitting here: 19 of 51 countries measured have theirs here, because no `gov.de`
@@ -30,11 +35,13 @@ countries:
   - icp.gov.ae
   - moet.gov.ae
   - uaelegislation.gov.ae
-  unconfirmable:
-  - u.ae
+  reviewed:
+    u.ae: official website of the federal government of the UAE — Wikidata P856/P17, checked 2026-08-18
+  unconfirmable: []
 - code: AT
   name: Austria
   trusted: []
+  reviewed: {}
   unconfirmable:
   - gv.at
 - code: AU
@@ -45,18 +52,22 @@ countries:
   - homeaffairs.gov.au
   - dfat.gov.au
   - abf.gov.au
+  reviewed: {}
   unconfirmable: []
 - code: BE
   name: Belgium
   trusted: []
+  reviewed:
+    ibz.be: official website of Federal Public Service Interior, Belgium — Wikidata P856/P17, checked
+      2026-08-18
+    diplomatie.be: official website of the Belgian foreign ministry — Wikidata P856/P17, checked 2026-08-18
   unconfirmable:
   - belgium.be
-  - diplomatie.be
-  - ibz.be
 - code: BR
   name: Brazil
   trusted:
   - www.gov.br
+  reviewed: {}
   unconfirmable: []
 - code: CA
   name: Canada
@@ -66,12 +77,16 @@ countries:
   - cbsa-asfc.gc.ca
   - cic.gc.ca
   - geds-sage.gc.ca
-  unconfirmable:
-  - canada.ca
+  reviewed:
+    canada.ca: official website of the Government of Canada — Wikidata P856/P17, checked 2026-08-18. First,
+      because IRCC's immigration content lives here while the five accepted gc.ca domains do not hold
+      it
+  unconfirmable: []
 - code: CH
   name: Switzerland
   trusted:
   - admin.ch
+  reviewed: {}
   unconfirmable:
   - swiss-visa.ch
 - code: CN
@@ -82,6 +97,7 @@ countries:
   - mfa.gov.cn
   - nia.gov.cn
   - www.gov.cn
+  reviewed: {}
   unconfirmable: []
 - code: CZ
   name: Czechia
@@ -89,27 +105,33 @@ countries:
   - ipc.gov.cz
   - mzv.gov.cz
   - mv.gov.cz
+  reviewed: {}
   unconfirmable: []
 - code: DE
   name: Germany
   trusted: []
+  reviewed:
+    auswaertiges-amt.de: official website of the Federal Foreign Office, Germany — Wikidata P856/P17,
+      checked 2026-08-18
   unconfirmable:
-  - auswaertiges-amt.de
   - bundesregierung.de
   - diplo.de
 - code: DK
   name: Denmark
   trusted: []
+  reviewed:
+    um.dk: official website of the Ministry of Foreign Affairs of Denmark — Wikidata P856/P17, checked
+      2026-08-18
   unconfirmable:
   - denmark.dk
   - nyidanmark.dk
-  - um.dk
 - code: EG
   name: Egypt
   trusted:
   - emigration.gov.eg
   - moi.gov.eg
   - visa2egypt.gov.eg
+  reviewed: {}
   unconfirmable:
   - presidency.eg
 - code: ES
@@ -120,6 +142,7 @@ countries:
   - inclusion.gob.es
   - interior.gob.es
   - lamoncloa.gob.es
+  reviewed: {}
   unconfirmable: []
 - code: FR
   name: France
@@ -127,6 +150,7 @@ countries:
   - diplomatie.gouv.fr
   - france-visas.gouv.fr
   - service-public.gouv.fr
+  reviewed: {}
   unconfirmable: []
 - code: GB
   name: United Kingdom
@@ -134,19 +158,23 @@ countries:
   - immigrationadviceauthority.gov.uk
   - www.gov.uk
   - homeoffice.gov.uk
+  reviewed: {}
   unconfirmable: []
 - code: GR
   name: Greece
   trusted:
   - immigration.gov.gr
   - migration.gov.gr
-  unconfirmable:
-  - mfa.gr
+  reviewed:
+    mfa.gr: official website of the Ministry of Foreign Affairs of Greece — Wikidata P856/P17, checked
+      2026-08-18
+  unconfirmable: []
 - code: HR
   name: Croatia
   trusted:
   - mvep.gov.hr
   - mup.gov.hr
+  reviewed: {}
   unconfirmable:
   - mvep.hr
 - code: HU
@@ -155,6 +183,7 @@ countries:
   - mfa.gov.hu
   - enterhungary.gov.hu
   - oif.gov.hu
+  reviewed: {}
   unconfirmable: []
 - code: ID
   name: Indonesia
@@ -162,6 +191,7 @@ countries:
   - imigrasi.go.id
   - bps.go.id
   - kemlu.go.id
+  reviewed: {}
   unconfirmable:
   - vfsevisa.id
 - code: IE
@@ -169,9 +199,11 @@ countries:
   trusted:
   - www.gov.ie
   - inis.gov.ie
+  reviewed:
+    irishimmigration.ie: official website of the Irish Naturalisation and Immigration Service — Wikidata
+      P856/P17, checked 2026-08-18
   unconfirmable:
   - ireland.ie
-  - irishimmigration.ie
 - code: IN
   name: India
   trusted:
@@ -180,14 +212,18 @@ countries:
   - indianvisaonline.gov.in
   - india.gov.in
   - mha.gov.in
+  reviewed: {}
   unconfirmable: []
 - code: IT
   name: Italy
   trusted:
   - integrazionemigranti.gov.it
   - mise.gov.it
-  unconfirmable:
-  - esteri.it
+  reviewed:
+    esteri.it: official website of the Ministry of Foreign Affairs and International Cooperation, Italy
+      — Wikidata P856/P17, checked 2026-08-18. It issues Italian visas; the two accepted gov.it domains
+      do not
+  unconfirmable: []
 - code: JP
   name: Japan
   trusted:
@@ -196,6 +232,7 @@ countries:
   - japan.go.jp
   - e-gov.go.jp
   - moj.go.jp
+  reviewed: {}
   unconfirmable: []
 - code: KR
   name: South Korea
@@ -205,21 +242,25 @@ countries:
   - e-arrivalcard.go.kr
   - goesan.go.kr
   - k-eta.go.kr
+  reviewed: {}
   unconfirmable: []
 - code: MA
   name: Morocco
   trusted:
   - mre.gov.ma
+  reviewed:
+    diplomatie.ma: official website of the Ministry of Foreign Affairs, African Cooperation and Moroccan
+      Expatriates — Wikidata P856/P17, checked 2026-08-18
   unconfirmable:
   - acces-maroc.ma
   - consulat.ma
-  - diplomatie.ma
 - code: MX
   name: Mexico
   trusted:
   - inm.gob.mx
   - sre.gob.mx
   - www.gob.mx
+  reviewed: {}
   unconfirmable: []
 - code: MY
   name: Malaysia
@@ -228,13 +269,17 @@ countries:
   - kln.gov.my
   - spab.gov.my
   - malaysia.gov.my
+  reviewed: {}
   unconfirmable: []
 - code: NL
   name: Netherlands
   trusted:
   - business.gov.nl
+  reviewed:
+    government.nl: official website of the Government of the Netherlands — Wikidata P856/P17, checked
+      2026-08-18. The accepted business.gov.nl is the business portal and does not carry visitor visa
+      guidance
   unconfirmable:
-  - government.nl
   - netherlandsandyou.nl
   - netherlandsworldwide.nl
 - code: NZ
@@ -245,6 +290,7 @@ countries:
   - www.govt.nz
   - iaa.govt.nz
   - mbie.govt.nz
+  reviewed: {}
   unconfirmable: []
 - code: PH
   name: Philippines
@@ -254,6 +300,7 @@ countries:
   - foi.gov.ph
   - dfa.gov.ph
   - dmw.gov.ph
+  reviewed: {}
   unconfirmable: []
 - code: PL
   name: Poland
@@ -263,6 +310,7 @@ countries:
   - study.gov.pl
   - cudzoziemcy.gov.pl
   - uw.gov.pl
+  reviewed: {}
   unconfirmable: []
 - code: PT
   name: Portugal
@@ -270,8 +318,10 @@ countries:
   - mne.gov.pt
   - www2.gov.pt
   - portugal.gov.pt
-  unconfirmable:
-  - sef.pt
+  reviewed:
+    sef.pt: official website of the Serviço de Estrangeiros e Fronteiras, Portugal — Wikidata P856/P17,
+      checked 2026-08-18
+  unconfirmable: []
 - code: SA
   name: Saudi Arabia
   trusted:
@@ -279,13 +329,16 @@ countries:
   - my.gov.sa
   - moi.gov.sa
   - sta.gov.sa
+  reviewed: {}
   unconfirmable: []
 - code: SE
   name: Sweden
   trusted: []
+  reviewed:
+    migrationsverket.se: official website of the Swedish Migration Agency — Wikidata P856/P17, checked
+      2026-08-18
+    government.se: official website of the Government of Sweden — Wikidata P856/P17, checked 2026-08-18
   unconfirmable:
-  - government.se
-  - migrationsverket.se
   - swedenabroad.se
 - code: SG
   name: Singapore
@@ -295,6 +348,7 @@ countries:
   - sgdi.gov.sg
   - ask.gov.sg
   - mha.gov.sg
+  reviewed: {}
   unconfirmable: []
 - code: TH
   name: Thailand
@@ -302,6 +356,7 @@ countries:
   - mfa.go.th
   - immigration.go.th
   - thaievisa.go.th
+  reviewed: {}
   unconfirmable: []
 - code: TR
   name: Turkey
@@ -311,6 +366,7 @@ countries:
   - goc.gov.tr
   - konsolosluk.gov.tr
   - turkiye.gov.tr
+  reviewed: {}
   unconfirmable: []
 - code: US
   name: United States
@@ -320,6 +376,7 @@ countries:
   - usa.gov
   - dhs.gov
   - uscis.gov
+  reviewed: {}
   unconfirmable: []
 - code: VN
   name: Vietnam
@@ -328,6 +385,7 @@ countries:
   - mofa.gov.vn
   - evisa.gov.vn
   - xuatnhapcanh.gov.vn
+  reviewed: {}
   unconfirmable: []
 - code: ZA
   name: South Africa
@@ -336,4 +394,5 @@ countries:
   - www.gov.za
   - dirco.gov.za
   - bma.gov.za
+  reviewed: {}
   unconfirmable: []

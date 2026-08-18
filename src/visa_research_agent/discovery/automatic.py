@@ -45,7 +45,11 @@ from visa_research_agent.discovery.lexicon import (
     get_denylist,
 )
 from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
-from visa_research_agent.discovery.registry import AuthorityRegistry, get_authority_registry
+from visa_research_agent.discovery.registry import (
+    MAXIMUM_AUTO_TRUSTED_DOMAINS,
+    AuthorityRegistry,
+    get_authority_registry,
+)
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import SearchProvider
 from visa_research_agent.domain.models import DestinationConfig, StrictModel
@@ -56,16 +60,17 @@ class AutomaticDiscoveryError(VisaResearchError):
     """Raised when a destination cannot be resolved automatically, with a reason to show."""
 
 
-# How many of a destination's own domains one bootstrap may put into use. A bound on the
-# consequence rather than a test for any particular cause: whatever makes a trusted set wide, the
-# cost is the same. Three searches are run per trusted domain, the crawl's per-host budget is the
-# page budget divided by the number of hosts seeded, and the shortlist has ten places — so a wide
-# set spends more, reads less of each site, and makes the right page compete with more noise.
-#
-# Five is calibration against the corridors run so far, not a derived number: the ones that resolve
-# accepted one, two and four domains, and the United States accepted eight. It is deliberately
-# above every accept in the audit behind DECISIONS entry 19, so no recorded decision changes.
-MAXIMUM_AUTO_TRUSTED_DOMAINS = 5
+# Re-exported: the cap now belongs to a registry row rather than to a live bootstrap, so it is
+# defined beside the registry. Imported from here by callers and tests that named it first.
+__all__ = [
+    "MAXIMUM_AUTO_TRUSTED_DOMAINS",
+    "AutomaticDestinationService",
+    "AutomaticDiscoveryError",
+    "DiscoveredDestination",
+    "auto_trusted_domains",
+    "is_own_government",
+    "unconfirmable_authorities",
+]
 
 
 def is_own_government(proposal: DomainProposal) -> bool:
@@ -265,7 +270,7 @@ class AutomaticDestinationService:
                 "the registry with `visa-discover registry` and review the entry."
             )
 
-        trusted = list(entry.trusted)
+        trusted = entry.domains
         withheld = {
             domain: (
                 f"under {country.name}'s own top-level domain, but its hostname carries no marker "

@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 356 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 363 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -353,6 +353,17 @@ its seven entries are now implemented, and nothing is left shipping against the 
   government domain*, and no longer identically to a commercial visa agency. The refusal message names
   the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
   is trusted.
+- **A person may override the trust rule in committed data** (entry 39) — `CountryAuthorities.reviewed`,
+  a domain-to-evidence map that leads the set, counts against the same cap, and **survives
+  regeneration**. Twelve countries corrected, each confirmed by a Wikidata reverse lookup (the domain is
+  the official website of an entity whose country is that country) — Germany, Italy, the Netherlands,
+  Canada, Sweden, Belgium, Denmark, Greece, Ireland, Morocco, Portugal, the UAE. Four domains that could
+  not be confirmed were left alone, so **Austria still refuses**, correctly.
+  **Measured before and after, and it changed the diagnosis:** Sweden went from fetching *nothing* to
+  reading `migrationsverket.se` with two roles filled; Canada gained its document checklist; the
+  Netherlands did not move. **None of the three resolves end to end.** The binding constraint moved
+  rather than lifted — from "we cannot tell which domain is this government" to "we cannot confirm the
+  visa decision on pages we can now read".
 - **The trusted-domain registry is committed** (entry 38) — `config/authority_domains.yaml`, generated
   by `visa-discover registry`, read by `AutomaticDestinationService` in place of a live bootstrap. The
   trust rule is untouched; only *when* it runs moved. **40 of 198 countries built**; the rest refuse with
@@ -361,7 +372,9 @@ its seven entries are now implemented, and nothing is left shipping against the 
   **Reading it found what running it could not** — five countries refused, **twelve confirmed *and
   wrong*** (the Netherlands trusts only its business portal; Canada trusts five `gc.ca` domains while
   IRCC's content is on the unconfirmable `canada.ca`), and the cap spending slots on United States
-  missions for an India corridor. All three are now TODO item 1's concrete work.
+  missions for an India corridor. The first two are **fixed** by entry 39; the cap's alphabetical
+  tie-break is not. **And entry 39 corrected this entry by running it:** a wrong trusted set makes a
+  corridor *refuse*, not answer. The line above said the opposite, from reading the code path.
 - **`robots.txt` is read and obeyed** (entry 36) — `research/robots.py`, one policy per origin with a
   24-hour expiry, consulted by `discovery/crawl.py` before every page and by `research/live_sources.py`
   before every source and every meta-refresh forward. 32 tests, all offline. A skip is the new
@@ -413,9 +426,11 @@ rules.** `robots.txt` was the last of those (entry 36); what remains all costs s
 198-country registry, search quota, or a decision nobody has argued yet — so pick up
 [TODO.md](TODO.md) item 1 and work down:
 
-1. **The trust-rule amendment**, now that entry 38's registry has measured what needs amending: five
-   countries refused outright, twelve confirmed *and wrong*, and a cap spending slots on the wrong parts
-   of a government. It is a data edit against a committed file rather than a regex change.
+1. **Find out why a corridor still refuses on a domain it can now read** — the constraint entry 39's
+   measurement exposed. Sweden reads `migrationsverket.se` and fills two roles but not the visa decision;
+   Canada finds its checklist and not the decision. This is a *scoring and adjudication* problem rather
+   than a trust one. Still outstanding from entry 38: the cap's alphabetical tie-break, which spends two
+   of India's five slots on United States missions.
 2. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
    thing that decides whether this is a product. Nothing large should be built before it. It now has a
    posture worth measuring: `robots.txt` landed first on purpose.
@@ -443,6 +458,7 @@ of three steps in.** Read them in [DECISIONS.md](DECISIONS.md).
 | 35 | The posture is honest client, not anonymous client: read `robots.txt`, ask for access, and decide the client-side-retrieval question explicitly. Plus the bar that decides whether this is a product, committed before the measurement. |
 | 36 | `robots.txt` is read once per origin and obeyed, by the crawl and by retrieval. A skip is the `disallowed` outcome, never an absence; it is reported but may never resolve a corridor; and an unread policy is never reported as a policy that refused us. |
 | 38 | The trusted-domain registry is generated offline and committed; `bootstrap_destination` leaves the request path. Reviewing it found twelve countries confirmed *and wrong*, and the cap spending slots on the wrong parts of a government. |
+| 39 | A person may override the trust rule in committed data, with required evidence, preserved across regeneration. Twelve countries corrected. Measured: they help but do not make a corridor resolve — the binding constraint moved to confirming the visa decision. |
 
 ### What changed on 2026-08-17, in one line each
 
