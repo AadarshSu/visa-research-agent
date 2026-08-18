@@ -244,7 +244,6 @@ class OpenAIVisaPlanExtractor:
                 application_steps=draft.application_steps,
                 sources=references,
                 unresolved_questions=draft.unresolved_questions,
-                conflicts=draft.conflicts,
                 last_checked=max(reference.retrieved_at for reference in references),
                 status=resolve_plan_status(
                     report,

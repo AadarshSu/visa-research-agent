@@ -435,7 +435,6 @@ class VisaPlanDraft(StrictModel):
     requirements: list[VisaRequirement]
     application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
     unresolved_questions: list[str]
-    conflicts: list[str]
 
 
 class VisaPlan(StrictModel):
@@ -453,7 +452,18 @@ class VisaPlan(StrictModel):
     application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
     sources: list[SourceReference]
     unresolved_questions: list[str]
-    conflicts: list[str]
+    """Also where a disagreement between official sources goes.
+
+    There was a `conflicts` field beside this one, and it was deleted rather than improved. Entry 6
+    built a *deterministic* conflict detector, found a real discrepancy with it, and deleted it
+    anyway, because nothing recorded who a claim applied to: a page listing visa-free nationalities
+    and a nationality-specific page requiring a visa compared as a contradiction. The lesson it
+    recorded — a feature whose wrong answers are alarming needs a near-zero false-positive rate or
+    it should not ship — condemns unverified model prose more strongly than the checked version it
+    replaced. So a disagreement is reported here, as something we could not resolve, which is what
+    it honestly is. See DECISIONS entry 30, and entry 6 before rebuilding it.
+    """
+
     last_checked: datetime
     status: PlanStatus
     unavailable_sources: list[SourceFailure] = Field(default_factory=list)

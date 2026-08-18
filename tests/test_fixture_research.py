@@ -61,8 +61,11 @@ async def test_fixture_service_generates_deterministic_validated_plan() -> None:
     assert any("30 days" in step.timing for step in first_plan.application_steps)
     assert any("three working days" in step.action for step in first_plan.application_steps)
     assert all(step.source_ids for step in first_plan.application_steps)
-    assert len(first_plan.unresolved_questions) == 5
-    assert len(first_plan.conflicts) == 1
+    # Six, not five: the real passport-validity discrepancy between Singapore's own pages used to
+    # sit in a separate `conflicts` field that nothing verified, and is now stated here as something
+    # unresolved — which is what it is. See DECISIONS entry 30.
+    assert len(first_plan.unresolved_questions) == 6
+    assert any("entry versus departure" in question for question in first_plan.unresolved_questions)
     assert {
         source_id for requirement in first_plan.requirements for source_id in requirement.source_ids
     } <= {source.source_id for source in first_plan.sources}

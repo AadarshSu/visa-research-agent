@@ -89,7 +89,6 @@ def test_visa_plan_rejects_unknown_requirement_source_ids() -> None:
                 )
             ],
             unresolved_questions=[],
-            conflicts=[],
             last_checked=checked_at,
             status="verified",
         )
@@ -121,7 +120,6 @@ def test_application_steps_are_structured_and_bounded() -> None:
                     }
                 ],
                 "unresolved_questions": [],
-                "conflicts": [],
                 "last_checked": datetime(2026, 8, 5, tzinfo=UTC),
             }
         )
@@ -153,7 +151,6 @@ def test_source_step_link_must_be_cited_by_the_step() -> None:
                     }
                 ],
                 "unresolved_questions": [],
-                "conflicts": [],
                 "last_checked": datetime(2026, 8, 5, tzinfo=UTC),
             }
         )
@@ -183,7 +180,6 @@ def checklistless_plan(**overrides: object) -> dict[str, object]:
             }
         ],
         "unresolved_questions": ["No official document checklist is published for this route."],
-        "conflicts": [],
         "last_checked": checked_at,
         "status": "verified",
     }

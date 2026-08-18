@@ -575,12 +575,6 @@ button:disabled {
   text-transform: uppercase;
 }
 
-.reliability-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-}
-
 .reliability-block {
   padding: 22px;
   border-radius: 16px;
@@ -630,10 +624,6 @@ footer p {
 
   .research-form,
   .detail-grid,
-  .reliability-grid {
-    grid-template-columns: 1fr;
-  }
-
   .research-form {
     padding: 12px;
   }

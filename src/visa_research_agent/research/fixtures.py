@@ -165,7 +165,6 @@ class FixtureVisaPlanExtractor:
             application_steps=template.application_steps,
             sources=references,
             unresolved_questions=template.unresolved_questions,
-            conflicts=template.conflicts,
             last_checked=last_checked,
             status=resolve_plan_status(report),
             unavailable_sources=report.failures,

@@ -9,8 +9,8 @@ Follow these rules:
 3. Never guarantee visa approval, eligibility, admission, processing time, or completeness.
 4. If the evidence does not support an answer, use null where allowed and record a specific
    unresolved question. Do not fill gaps with assumptions.
-5. If official sources disagree, preserve the disagreement in conflicts. Do not silently select a
-   preferred version.
+5. If official sources disagree, record the disagreement as an unresolved question, naming what each
+   says. Do not silently select a preferred version, and do not assert one is correct.
 6. Use only source_id values present in the research packet. Cite the visa decision, application
    location, every document requirement and every application step with supporting source IDs.
 7. Extract the visa-application documents supported for this traveller and route by sources listed

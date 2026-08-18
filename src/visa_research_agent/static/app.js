@@ -291,12 +291,11 @@ function renderReliability(plan) {
     element("p", "checked-at", `Evidence last checked ${new Date(plan.last_checked).toLocaleString()}.`),
   );
 
-  const grid = element("div", "reliability-grid");
-  grid.append(
-    issueBlock("Unresolved questions", plan.unresolved_questions),
-    issueBlock("Source conflicts", plan.conflicts),
-  );
-  container.append(grid);
+  // One block now, so no grid: "Source conflicts" was unverified model prose under a heading that
+  // made it read as a finding, and nothing checked it — see DECISIONS entry 30. A disagreement
+  // between official pages is stated as something unresolved instead, which is what it honestly is.
+  // The two-column grid went with it rather than being left to render one block in half the width.
+  container.append(issueBlock("Unresolved questions", plan.unresolved_questions));
   container.append(
     element(
       "p",
