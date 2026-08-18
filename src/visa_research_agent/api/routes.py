@@ -116,6 +116,54 @@ def corridor_for(destination_slug: str, traveller: TravellerProfile) -> Corridor
     )
 
 
+def destination_country_code(requested: str) -> str | None:
+    """The ISO code of the country a request names, however the caller wrote it."""
+
+    registry = get_country_registry()
+    wanted = requested.strip().lower()
+    configured = get_destination_registry().get(wanted)
+    if configured is not None:
+        wanted = configured.display_name.lower()
+    country = registry.by_slug(wanted) or next(
+        (
+            item
+            for item in registry.countries
+            if item.name.lower() == wanted
+            or wanted in {synonym.lower() for synonym in item.synonyms}
+        ),
+        None,
+    )
+    return country.code if country else None
+
+
+def refuse_impossible_corridors(requested: str, traveller: TravellerProfile) -> None:
+    """Turn away a corridor that cannot have an answer, before anything is spent on it.
+
+    A national of the destination does not apply to visit their own country, so there is no official
+    visa guidance to find. Left alone it would search, crawl and spend two model calls to arrive at
+    a refusal, which is slow, costs money, and reads as a fault rather than as the question being
+    the wrong one.
+
+    This is deliberately not a claim about entry rights — it says only that this agent researches
+    visas for travellers who need one, which is a fact about the product.
+    """
+
+    code = destination_country_code(requested)
+    if code is not None and code == traveller.passport_nationality:
+        named = requested.replace("-", " ").title()
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={
+                "message": (
+                    f"This passport is issued by {named}, so there is no visa to research: a "
+                    "country's own nationals do not apply for a visa to visit it. Choose a "
+                    "different destination, or a different passport."
+                ),
+                "status": "not_applicable",
+            },
+        )
+
+
 async def resolve_destination(
     requested: str,
     traveller: TravellerProfile,
@@ -192,6 +240,7 @@ async def create_visa_plan(
         if request.traveller is not None
         else DEFAULT_TRAVELLER_PROFILE
     )
+    refuse_impossible_corridors(request.destination, traveller)
     destination = await resolve_destination(request.destination, traveller, automatic)
 
     try:

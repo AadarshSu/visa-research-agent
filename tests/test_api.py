@@ -235,3 +235,57 @@ async def test_every_known_country_can_be_asked_for_when_destinations_are_automa
         item["status"] == "available"
         for item in (await client.get("/destinations")).json()["destinations"]
     )
+
+
+@pytest.mark.anyio
+async def test_a_passport_of_the_destination_is_turned_away_before_anything_is_spent(
+    client: httpx.AsyncClient,
+) -> None:
+    """A national of the destination has no visa to research, so there is no guidance to find.
+
+    Left alone this searched, crawled and spent two model calls to arrive at a refusal — slow, paid
+    for, and reading as a fault rather than as the question being the wrong one. It is not a claim
+    about entry rights: it says only what this agent researches.
+    """
+
+    response = await client.post(
+        "/visa-plans",
+        json={
+            "destination": "singapore",
+            "traveller": {
+                "passport_nationality": "SG",
+                "country_of_residence": "GB",
+                "travel_purpose": "tourism",
+            },
+        },
+    )
+
+    assert response.status_code == 422
+    detail = response.json()["detail"]
+    assert detail["status"] == "not_applicable"
+    assert "own nationals do not apply" in detail["message"]
+
+
+@pytest.mark.anyio
+async def test_the_same_corridor_for_another_passport_is_still_researched(
+    client: httpx.AsyncClient,
+) -> None:
+    """The guard must be narrow: only the passport matches the destination, never the residence.
+
+    Applying from inside the destination is ordinary — in-country applications exist — so a resident
+    of the destination holding another passport must still get a plan.
+    """
+
+    response = await client.post(
+        "/visa-plans",
+        json={
+            "destination": "singapore",
+            "traveller": {
+                "passport_nationality": "IN",
+                "country_of_residence": "SG",
+                "travel_purpose": "tourism",
+            },
+        },
+    )
+
+    assert response.status_code != 422
