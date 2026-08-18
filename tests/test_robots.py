@@ -217,7 +217,11 @@ async def test_an_unreadable_policy_stops_the_crawl_but_says_so_honestly() -> No
         assert await fetcher.fetch_html(client, INDEX, destination()) is None
 
     assert fetcher.outcomes[INDEX] == "disallowed"
-    assert "could not be read" in fetcher.failures[INDEX]
+    # It names what actually came back. "Could not be read" alone points a reader at a crawl policy
+    # when the fact in front of them may be a host serving 500 to every path — which is exactly
+    # what `avas.mfa.gov.cn` and `cova.mfa.gov.cn` were doing when this was measured.
+    assert "answered HTTP 500" in fetcher.failures[INDEX]
+    assert "is unknown" in fetcher.failures[INDEX]
     assert "does not permit" not in fetcher.failures[INDEX]
 
 
@@ -329,7 +333,13 @@ async def test_a_corridor_says_out_loud_that_a_policy_kept_it_out(tmp_path: Path
 
     resolved = await resolver.resolve(destination(), corridor())
 
-    assert any("robots.txt" in note for note in resolved.notes), resolved.notes
+    skip_notes = [note for note in resolved.notes if "robots.txt" in note]
+    assert skip_notes, resolved.notes
+    # The note repeats the reason recorded for the page, rather than asserting one. Written as a
+    # fixed sentence it claimed a published refusal for hosts that had merely answered `502` to
+    # their own policy — see the China corridor in DECISIONS entry 36.
+    assert "does not permit this client to fetch it" in skip_notes[0]
+    assert AUTHORITY in skip_notes[0]
     assert not any(request.url.host == AUTHORITY for request in requests)
     # Reported, and nothing more. A page nobody asked for cannot be the page that held the answer.
     assert resolved.inaccessible_urls == []

@@ -316,11 +316,16 @@ class CorridorResolver:
             unreadable.setdefault(host_of(url), reason)
         for host, reason in sorted(unreadable.items()):
             notes.append(f"{host} could not be read because {reason}")
-        for host in sorted({host_of(url) for url in disallowed}):
-            notes.append(
-                f"{host} publishes a robots.txt that does not permit this client to read the "
-                "pages discovery reached, so they were not fetched"
-            )
+        # Worded from the reason recorded per URL, never asserted. Written as "publishes a
+        # robots.txt that does not permit this client", it claimed a policy nobody had read: China's
+        # `avas.mfa.gov.cn` and `cova.mfa.gov.cn` answer `502` to every path including their own
+        # policy, and the note called that a refusal. One note per host and distinct reason, so a
+        # host with both kinds reports both rather than whichever came first.
+        skipped: set[tuple[str, str]] = {
+            (host_of(url), self.crawl_fetcher.failures[url]) for url in disallowed
+        }
+        for host, reason in sorted(skipped):
+            notes.append(f"{host}: pages discovery reached were not fetched because {reason}")
         # An authority refusing this client is a different fact from a site being broken, and the
         # difference matters to a reader: one means "we were not allowed to check", not "no
         # guidance exists". Read from the recorded outcome rather than by matching the sentence,

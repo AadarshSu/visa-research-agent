@@ -69,17 +69,21 @@ def host_does_not_resolve(error: httpx.HTTPError) -> bool:
     return False
 
 
-def _robots_reason(verdict: RobotsVerdict) -> str:
+def _robots_reason(verdict: RobotsVerdict, detail: str) -> str:
     """Why a crawl policy stopped a page, in words that are true of *that* verdict.
 
     Two sentences rather than one because a host that said no and a host whose policy could not be
     read are different facts, and only the first is a statement about what the authority permits.
     Every reason this project reports has to be true of what was actually observed.
+
+    The unreadable case names what came back, because "could not be read" alone points a reader at
+    a crawl policy when the fact in front of them may be a host serving `502` to everything —
+    measured on `avas.mfa.gov.cn` and `cova.mfa.gov.cn`, 2026-08-18.
     """
 
     if verdict is RobotsVerdict.DISALLOWED:
         return "its robots.txt does not permit this client to fetch it"
-    return "its robots.txt could not be read, so whether this client may fetch it is unknown"
+    return f"its robots.txt {detail}, so whether this client may fetch it is unknown"
 
 
 def page_title_of(html: str) -> str:
@@ -303,7 +307,8 @@ class CrawlFetcher:
             # correctly — including telling a name that does not resolve from a request that failed.
             verdict = await self.robots.verdict(client, url)
             if verdict is not RobotsVerdict.ALLOWED:
-                self._record_failure(url, "disallowed", _robots_reason(verdict))
+                detail = self.robots.unreadable_detail(url)
+                self._record_failure(url, "disallowed", _robots_reason(verdict, detail))
                 return None
             await self._wait_for_host(host_of(url))
             response = await client.get(url)
@@ -335,7 +340,10 @@ class CrawlFetcher:
                 landing = RobotsVerdict.UNREADABLE
             if landing is not RobotsVerdict.ALLOWED:
                 self._record_failure(
-                    url, "disallowed", f"it redirected to a page {_robots_reason(landing)}"
+                    url,
+                    "disallowed",
+                    "it redirected to a page "
+                    + _robots_reason(landing, self.robots.unreadable_detail(final_url)),
                 )
                 return None
         if response.status_code in BLOCKING_STATUS_CODES:

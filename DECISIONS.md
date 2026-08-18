@@ -134,9 +134,41 @@ suite were all literal prefixes, because those are the ones a person writes from
 real authorities. That is the third time in two days a documented claim here turned out to be written
 from a code path rather than from output.
 
-**Expected to cost coverage, and that is the direction.** A path previously walked past is now a refusal.
-Nothing was measured yet: the seven-corridor sample predates this, and entry 35's twenty-corridor
-measurement — still blocked on credit — should run against this posture rather than the old one.
+**Measured live on 2026-08-18, six corridors, all Indian nationals applying from GB.** Expected to cost
+coverage; it cost almost none, and what it did cost was worth nothing.
+
+| Corridor | Policies read | Pages skipped | What was actually lost |
+| --- | --- | --- | --- |
+| Japan | 6 | 0 | nothing |
+| Singapore | 16 | 0 | nothing |
+| Vietnam | 6 | 0 | nothing |
+| Brazil | 16 | 0 | nothing |
+| France | 6 | 1 | a news listing with a filter query, matched by `*/actualites?` |
+| China | 6 | 5 | two application portals answering `502` to every path, policy included |
+
+**The most important negative result is France and the United States.** Both were expected to be where
+legitimacy might buy something, and `robots.txt` buys **nothing** there: `france-visas.gouv.fr`,
+`www.france-visas.gouv.fr` and `travel.state.gov` all answer `403` **to their own `robots.txt`**, served
+as a bot-detection interstitial. There is no policy to honour — it is a WAF, not a stated rule. So entry
+35's "owed regardless of what it buys" was the correct justification, and it is the only one available:
+the two corridors that motivated the review are untouched by this step. Their ten `403`s are still
+reported as `blocked`, unchanged.
+
+**Two live findings changed the code, and both were the same failure as before — a reason that was true
+of the branch rather than of what was seen.**
+
+- The unreadable case said only "its robots.txt could not be read". For China that pointed a reader at a
+  crawl policy when the fact in front of them was a host serving `502` to everything. It now names what
+  came back: *"its robots.txt answered HTTP 502, so whether this client may fetch it is unknown"*.
+- The corridor-level note was a fixed sentence — *"publishes a robots.txt that does not permit this
+  client"* — and for those same two Chinese hosts it **asserted a published refusal that nobody had
+  read**. It now repeats the reason recorded against the page instead of composing its own.
+
+That is the third and fourth time in this entry that a sentence describing a branch turned out not to
+describe the observation. The rule generalises: **a reported reason must be built from what was
+recorded, never written alongside it.**
+
+Entry 35's twenty-corridor measurement — still blocked on credit — should now run against this posture.
 
 ---
 

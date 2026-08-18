@@ -248,12 +248,25 @@ class RobotsCache:
         self.clock = clock
         # Origin to the policy and the moment it was read.
         self._policies: dict[str, tuple[float, RobotsRules | _Policy]] = {}
+        # Why an origin's policy could not be read, in the words of what was observed. Carried so a
+        # caller can say "its robots.txt answered HTTP 502" rather than the true but unhelpful
+        # "its robots.txt could not be read" — which sends a reader to look at a crawl policy when
+        # the fact in front of them is a dead gateway serving 502 to every path on the host.
+        self.unreadable: dict[str, str] = {}
         # One fetch per origin even when a wave of pages on that host is checked at once. The lock
         # is held across the fetch, so the second caller waits for the first's answer rather than
         # asking again for the same file.
         self._locks: dict[str, asyncio.Lock] = {}
         # Which policies were actually read, for tests and for anyone reading a run.
         self.fetched: list[str] = []
+
+    def unreadable_detail(self, url: str) -> str:
+        """What was actually seen when this origin's policy could not be read.
+
+        A phrase rather than a sentence, so each caller can word the consequence in its own terms.
+        """
+
+        return self.unreadable.get(origin_of(url), "could not be read")
 
     async def verdict(self, client: httpx.AsyncClient, url: str) -> RobotsVerdict:
         """Whether this host's published policy permits this client to fetch this URL.
@@ -300,12 +313,14 @@ class RobotsCache:
         )
 
         if response.is_server_error:
+            self.unreadable[origin] = f"answered HTTP {response.status_code}"
             return _Policy.CLOSED
         if not response.is_success:
             # Any other non-2xx means no policy is being served here. Redirects are followed by the
             # caller's client, so one reaching this branch has already exhausted its hops.
             return _Policy.OPEN
         if len(response.content) > self.maximum_bytes:
+            self.unreadable[origin] = "is larger than the size limit for a crawl policy"
             return _Policy.CLOSED
 
         return parse_rules(response.text, self.agent_token)

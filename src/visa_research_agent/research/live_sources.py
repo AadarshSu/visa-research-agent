@@ -164,7 +164,7 @@ def looks_like_pdf(response: httpx.Response) -> bool:
     return response.url.path.lower().endswith(".pdf")
 
 
-def _robots_reason(verdict: RobotsVerdict) -> str:
+def _robots_reason(verdict: RobotsVerdict, detail: str) -> str:
     """Why a crawl policy stopped a source, in words that are true of *that* verdict.
 
     A host that said no and a host whose policy could not be read are different facts, and only the
@@ -179,8 +179,8 @@ def _robots_reason(verdict: RobotsVerdict) -> str:
             "guidance could not be independently verified here"
         )
     return (
-        "the authority's robots.txt could not be read, so whether this client may retrieve the "
-        "page is unknown and it was not requested"
+        f"the authority's robots.txt {detail}, so whether this client may retrieve the page is "
+        "unknown and it was not requested"
     )
 
 
@@ -339,7 +339,11 @@ class LiveSourceFetcher:
             verdict = await self.robots.verdict(client, url)
             if verdict is not RobotsVerdict.ALLOWED:
                 return self._serve_stale(
-                    configured_source, cached, now, _robots_reason(verdict), "disallowed"
+                    configured_source,
+                    cached,
+                    now,
+                    _robots_reason(verdict, self.robots.unreadable_detail(url)),
+                    "disallowed",
                 )
             response = await self._request(client, url, cached)
         except httpx.HTTPError as exc:
@@ -538,7 +542,8 @@ class LiveSourceFetcher:
         if forward_verdict is not RobotsVerdict.ALLOWED:
             raise _ContentProblem(
                 "disallowed",
-                f"the page forwards to a document, and {_robots_reason(forward_verdict)}",
+                "the page forwards to a document, and "
+                + _robots_reason(forward_verdict, self.robots.unreadable_detail(target)),
             )
 
         forwarded = await client.get(target)
