@@ -478,3 +478,33 @@ async def test_two_pages_on_one_host_are_not_fetched_at_the_same_time() -> None:
     assert highest == 1
     # Deferring is not dropping: a page that waited for a later wave is still read.
     assert sorted(read) == sorted(seeds)
+
+
+def test_a_link_with_an_invisible_character_in_its_host_still_resolves() -> None:
+    """Found live: Thailand's immigration site links `tdac.immigration.go.th` with a zero-width
+    space inside the hostname. It is an editor artefact, invisible, and meaningless in a URL, so
+    removing it recovers a real government page. Trust is unaffected — the approved-domain check
+    runs on the result."""
+
+    html = '<a href="https://tdac.immigration.go.th​/arrival-card">Arrival card</a>'
+
+    links = extract_links(html, "https://immigration.go.th/")
+
+    assert [link.url for link in links] == ["https://tdac.immigration.go.th/arrival-card"]
+
+
+def test_a_link_that_cannot_be_parsed_is_skipped_rather_than_fatal() -> None:
+    """One malformed `href` used to end the whole corridor with a traceback. This runs over every
+    anchor on every page of a live government site, so it has to tolerate what it finds — and a
+    link that cannot be parsed is not a link."""
+
+    html = (
+        '<a href="https://good.gov.example/visa">Visa</a>'
+        '<a href="https://exa​mp le broken^host/x">Broken</a>'
+        '<a href="https://other.gov.example/apply">Apply</a>'
+    )
+
+    links = extract_links(html, "https://good.gov.example/")
+
+    assert "https://good.gov.example/visa" in [link.url for link in links]
+    assert "https://other.gov.example/apply" in [link.url for link in links]

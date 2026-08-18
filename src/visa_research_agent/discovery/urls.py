@@ -5,6 +5,7 @@ and, more importantly, is never contacted.
 """
 
 import re
+import unicodedata
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from visa_research_agent.domain.models import DestinationConfig
@@ -53,10 +54,26 @@ SKIPPED_PATH_PATTERN = re.compile(
 )
 
 
+def strip_invisible(url: str) -> str:
+    """Remove Unicode formatting characters a CMS pasted into a link.
+
+    Found live on 2026-08-18: `tdac.immigration.go.th\u200b` — Thailand's arrival-card site, with a
+    zero-width space inside the hostname. These characters are invisible, carry no meaning in a URL
+    and are editor artefacts, so removing them recovers a real government page rather than guessing
+    at one.
+
+    Safe with respect to trust, which is the only reason it is allowed to change a hostname at all:
+    every URL is checked against the approved domains **after** this, so normalising can only decide
+    whether a host is recognised, never whether it is trusted.
+    """
+
+    return "".join(character for character in url if unicodedata.category(character) != "Cf")
+
+
 def canonicalise_url(url: str) -> str:
     """Reduce a URL to one comparable form, so the same page is not considered twice."""
 
-    parts = urlsplit(url.strip())
+    parts = urlsplit(strip_invisible(url.strip()))
     scheme = parts.scheme.lower()
     netloc = parts.netloc.lower()
     if netloc.endswith(":80") and scheme == "http":

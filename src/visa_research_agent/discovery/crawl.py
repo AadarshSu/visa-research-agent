@@ -19,7 +19,12 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink, RoleScores
-from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
+from visa_research_agent.discovery.urls import (
+    canonicalise_url,
+    is_crawlable,
+    is_pdf_url,
+    strip_invisible,
+)
 from visa_research_agent.domain.models import (
     BLOCKING_STATUS_CODES,
     PERSISTENT_REFUSAL_STATUS_CODES,
@@ -121,11 +126,20 @@ def extract_links(html: str, base_url: str, *, maximum_links: int = 400) -> list
         href = element.get("href")
         if not isinstance(href, str) or not href.strip():
             continue
-        target = href.strip()
+        # Stripped before the join, not after: `httpx.URL.join` parses the target itself and
+        # raises on an invisible character in the hostname, so normalising downstream is too late.
+        target = strip_invisible(href.strip())
         if target.startswith(("mailto:", "tel:", "javascript:", "#")):
             continue
 
-        absolute = canonicalise_url(httpx.URL(base_url).join(target).__str__())
+        try:
+            absolute = canonicalise_url(httpx.URL(base_url).join(target).__str__())
+        except (httpx.InvalidURL, UnicodeError, ValueError):
+            # A link that cannot be parsed is not a link. It must never be fatal: this runs over
+            # every anchor on every page of a live government site, and one malformed `href` used
+            # to end the whole corridor with a traceback — observed on Thailand's immigration site,
+            # which links a hostname containing a zero-width space.
+            continue
         if absolute in seen:
             continue
         seen.add(absolute)
