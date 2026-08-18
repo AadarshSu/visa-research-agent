@@ -28,18 +28,27 @@ failed. Swallowing it here would have made every dead host report as *"its robot
 permit this client"*, which is a **false reason**, and a false reason is the failure mode this
 project treats as worse than no answer at all.
 
-Parsing is `urllib.robotparser` rather than a hand-written matcher: it is stdlib, it is far better
-tested than anything that would be written here, and a bug in it costs coverage rather than
-inventing permission. Its one known shortfall — `Allow` and `Disallow` are matched in file order
-rather than by longest match — also errs toward fetching less.
+**Matching is written here, and `urllib.robotparser` is deliberately not used.** Reaching for stdlib
+was the first instinct and it was wrong, found by running it against real authorities rather than by
+reading it: `urllib`'s matcher is `filename.startswith(rule.path)`, with **no support for `*` or `$`
+at all**. Every rule `www.gov.uk` publishes is a wildcard, so a stdlib client obeys none of them,
+and `www.canada.ca` has fourteen more it would silently walk past. A parser shortfall that quietly
+makes this fetch **more** is the one kind this file cannot tolerate — the point is to fetch less.
+
+So the matching below implements RFC 9309 §2.2.2–2.2.3 directly: `*` matches any run of characters,
+a trailing `$` anchors to the end of the path, the **longest** matching pattern wins, and `Allow`
+beats `Disallow` at equal length. Group selection is an exact product-token match, falling back to
+`*` — deliberately not `urllib`'s substring test, under which a record aimed at `Visa-Bot` would
+capture `VisaResearchAgent`.
 """
 
 import asyncio
+import re
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import Enum
 from urllib.parse import urlsplit, urlunsplit
-from urllib.robotparser import RobotFileParser
 
 import httpx
 
@@ -55,6 +64,111 @@ ROBOTS_TIMEOUT_SECONDS = 10.0
 # `lru_cache(maxsize=1)`, so the fetcher holding this cache lives as long as the server does, and
 # without an expiry a policy read once at boot would be obeyed forever.
 ROBOTS_TTL_SECONDS = 24 * 60 * 60
+
+
+@dataclass(frozen=True)
+class _Rule:
+    """One `Allow:` or `Disallow:` line, compiled to something that can be matched."""
+
+    allow: bool
+    pattern: str
+    expression: re.Pattern[str]
+
+    def matches(self, path: str) -> bool:
+        return self.expression.match(path) is not None
+
+
+def _compile(pattern: str) -> re.Pattern[str]:
+    """Turn a robots path pattern into a regular expression.
+
+    RFC 9309 §2.2.3 gives the pattern language exactly two special characters: `*` for any run of
+    characters and a trailing `$` anchoring the end of the path. Everything else is literal, so it
+    is escaped — `.` and `?` appear in real rules (`imm0143e.pdf`, query strings) and must not be
+    read as regex syntax.
+    """
+
+    anchored = pattern.endswith("$")
+    body = pattern[:-1] if anchored else pattern
+    expression = ".*".join(re.escape(part) for part in body.split("*"))
+    return re.compile(expression + ("$" if anchored else ""))
+
+
+def _path_of(url: str) -> str:
+    """What a rule is matched against: the path, with its query when it has one.
+
+    A `?` and what follows it are part of the path a rule may name — `Disallow: /search/all*`
+    exists to catch `/search/all?keywords=…`, and dropping the query would let exactly that
+    through.
+    """
+
+    parts = urlsplit(url)
+    path = parts.path or "/"
+    return f"{path}?{parts.query}" if parts.query else path
+
+
+class RobotsRules:
+    """The rules from one `robots.txt` that apply to one product token.
+
+    Holds only the selected group. Which group that is depends on our own name, and is decided once
+    at parse time rather than on every URL.
+    """
+
+    def __init__(self, rules: list[_Rule]) -> None:
+        # Longest pattern first, and `Allow` ahead of `Disallow` where the lengths tie. That is
+        # RFC 9309 §2.2.2's precedence, so the first match in this order is the one that governs
+        # and the search can stop there.
+        self.rules = sorted(rules, key=lambda rule: (-len(rule.pattern), not rule.allow))
+
+    def allows(self, url: str) -> bool:
+        path = _path_of(url)
+        for rule in self.rules:
+            if rule.matches(path):
+                return rule.allow
+        # Nothing addressed this path, so nothing forbids it.
+        return True
+
+
+def parse_rules(text: str, agent_token: str) -> RobotsRules:
+    """Read a `robots.txt` and keep only the group that speaks to us.
+
+    Group selection is an **exact** token match, case-insensitively, falling back to `*`. It is
+    deliberately not a substring test: `urllib` uses one, and under it a record naming `Visa-Bot`
+    or `Research` would silently capture this client and impose rules written for someone else.
+    """
+
+    wanted = agent_token.lower()
+    groups: dict[str, list[_Rule]] = {}
+    current: list[str] = []
+    # A `User-agent:` line following a rule begins a new group rather than extending the last one.
+    # Without this, `UA: a` / `Disallow: /x` / `UA: b` / `Disallow: /y` gives `a` both rules.
+    accepting_agents = True
+
+    for raw_line in text.splitlines():
+        line = raw_line.split("#", 1)[0].strip()
+        if not line or ":" not in line:
+            continue
+        field, _, value = line.partition(":")
+        field = field.strip().lower()
+        value = value.strip()
+
+        if field == "user-agent":
+            if not accepting_agents:
+                current = []
+                accepting_agents = True
+            current.append(value.lower())
+            groups.setdefault(value.lower(), [])
+        elif field in ("allow", "disallow") and current:
+            accepting_agents = False
+            # An empty `Disallow:` is the long-standing way to say "nothing is forbidden". Read as
+            # a pattern it would be an empty prefix, which matches every path and forbids the whole
+            # site — the opposite of what was written.
+            if not value:
+                continue
+            rule = _Rule(allow=field == "allow", pattern=value, expression=_compile(value))
+            for agent in current:
+                groups[agent].append(rule)
+
+    return RobotsRules(groups.get(wanted, groups.get("*", [])))
 
 
 class RobotsVerdict(Enum):
@@ -133,7 +247,7 @@ class RobotsCache:
         self.ttl_seconds = ttl_seconds
         self.clock = clock
         # Origin to the policy and the moment it was read.
-        self._policies: dict[str, tuple[float, RobotFileParser | _Policy]] = {}
+        self._policies: dict[str, tuple[float, RobotsRules | _Policy]] = {}
         # One fetch per origin even when a wave of pages on that host is checked at once. The lock
         # is held across the fetch, so the second caller waits for the first's answer rather than
         # asking again for the same file.
@@ -170,11 +284,11 @@ class RobotsCache:
             return RobotsVerdict.ALLOWED
         if policy is _Policy.CLOSED:
             return RobotsVerdict.UNREADABLE
-        if policy.can_fetch(self.agent_token, url):
+        if policy.allows(url):
             return RobotsVerdict.ALLOWED
         return RobotsVerdict.DISALLOWED
 
-    async def _load(self, client: httpx.AsyncClient, origin: str) -> RobotFileParser | _Policy:
+    async def _load(self, client: httpx.AsyncClient, origin: str) -> RobotsRules | _Policy:
         """Fetch and parse one origin's `robots.txt`, or decide what its absence means."""
 
         url = f"{origin}/robots.txt"
@@ -194,6 +308,4 @@ class RobotsCache:
         if len(response.content) > self.maximum_bytes:
             return _Policy.CLOSED
 
-        parser = RobotFileParser()
-        parser.parse(response.text.splitlines())
-        return parser
+        return parse_rules(response.text, self.agent_token)

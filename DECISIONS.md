@@ -62,6 +62,14 @@ retrieval the check sits *after* the fresh-cache return, because `robots.txt` go
 already held and still inside its TTL is re-read without a request, so a policy published since does not
 retrospectively forbid reading what we have. Past the TTL a request is needed and the policy decides.
 
+**A fourth thing, found by running it rather than reading it**, and the reason the paragraph above exists.
+The stdlib parser was the first choice and it was inert: it obeys no wildcard rule, which is every rule
+`www.gov.uk` publishes. This module had been shipped, tested and documented as honouring crawl policies
+while honouring almost none of them, and no unit test could have caught it — the fake policies in the
+suite were all literal prefixes, because those are the ones a person writes from memory. It took probing
+real authorities. That is the third time in two days a documented claim here turned out to be written
+from a code path rather than from output.
+
 **Expected to cost coverage, and that is the direction.** A path previously walked past is now a refusal.
 Nothing was measured yet: the seven-corridor sample predates this, and entry 35's twenty-corridor
 measurement — still blocked on credit — should run against this posture rather than the old one.

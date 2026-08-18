@@ -26,8 +26,10 @@ from test_live_sources import destination as live_destination
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.research.robots import (
     RobotsCache,
+    RobotsRules,
     RobotsVerdict,
     origin_of,
+    parse_rules,
     user_agent_token,
 )
 
@@ -360,3 +362,150 @@ async def test_a_policy_is_read_again_once_it_expires() -> None:
         assert await cache.verdict(client, INDEX) is RobotsVerdict.ALLOWED
 
     assert len(reads) == 2
+
+
+# --- Pattern matching (RFC 9309 §2.2.2-2.2.3) -------------------------------------------------
+#
+# These are the tests that made the stdlib parser untenable. `urllib.robotparser` matches with
+# `startswith` and supports neither `*` nor `$`, so every one of the wildcard cases below silently
+# passed as "allowed" — a parser bug that makes this client fetch *more* than the site permits,
+# which is the one direction this module must never fail in.
+
+
+def rules(text: str, agent: str = "VisaResearchAgent") -> RobotsRules:
+    return parse_rules(text, agent)
+
+
+def test_a_wildcard_matches_any_run_of_characters() -> None:
+    """`www.gov.uk` publishes nothing but wildcard rules, so without this it publishes nothing."""
+
+    policy = rules("User-agent: *\nDisallow: /en/*/search.html\n")
+
+    assert not policy.allows("https://a.example/en/anything/search.html")
+    assert not policy.allows("https://a.example/en/a/b/c/search.html")
+    assert policy.allows("https://a.example/en/anything/visa.html")
+
+
+def test_a_trailing_dollar_anchors_the_end_of_the_path() -> None:
+    policy = rules("User-agent: *\nDisallow: /*/print$\n")
+
+    assert not policy.allows("https://a.example/standard-visitor/print")
+    assert policy.allows("https://a.example/standard-visitor/printable-guide")
+
+
+def test_the_query_string_is_part_of_what_a_rule_matches() -> None:
+    """`Disallow: /search/all*` exists to catch `/search/all?keywords=…`; dropping the query
+    would let through exactly the URL the rule was written for."""
+
+    policy = rules("User-agent: *\nDisallow: /search/all*\n")
+
+    assert not policy.allows("https://a.example/search/all?keywords=visa")
+
+
+def test_a_dot_in_a_path_is_literal_and_not_a_regex_wildcard() -> None:
+    """Real rules name real files — `imm0143e.pdf`. Reading `.` as "any character" would forbid
+    neighbouring paths the site never mentioned."""
+
+    policy = rules("User-agent: *\nDisallow: /forms/imm0143e.pdf\n")
+
+    assert not policy.allows("https://a.example/forms/imm0143e.pdf")
+    assert policy.allows("https://a.example/forms/imm0143expdf")
+
+
+def test_the_longest_matching_pattern_governs() -> None:
+    """Otherwise file order decides, and a broad `Disallow` at the top of a file would bury the
+    narrow `Allow` beneath it that the site wrote to carve out an exception."""
+
+    policy = rules("User-agent: *\nDisallow: /guidance/\nAllow: /guidance/visas/\n")
+
+    assert not policy.allows("https://a.example/guidance/tax.html")
+    assert policy.allows("https://a.example/guidance/visas/visitor.html")
+
+
+def test_allow_wins_a_tie_against_disallow() -> None:
+    policy = rules("User-agent: *\nDisallow: /visa\nAllow: /visa\n")
+
+    assert policy.allows("https://a.example/visa")
+
+
+def test_an_empty_disallow_forbids_nothing() -> None:
+    """The long-standing way to write "no restrictions". Read as a pattern it is the empty prefix,
+    which matches every path and would close the whole site."""
+
+    policy = rules("User-agent: *\nDisallow:\n")
+
+    assert policy.allows("https://a.example/anything")
+
+
+def test_a_rule_line_ends_the_group_so_the_next_agent_starts_a_new_one() -> None:
+    """Without this, rules written for one client leak onto every client named before it."""
+
+    policy = rules(
+        "User-agent: SomeOtherBot\nDisallow: /\n\nUser-agent: VisaResearchAgent\nDisallow: /admin\n"
+    )
+
+    assert policy.allows("https://a.example/visa")
+    assert not policy.allows("https://a.example/admin")
+
+
+def test_a_group_is_selected_by_an_exact_token_never_a_substring() -> None:
+    """`urllib` uses a substring test, under which a record aimed at another crawler whose name
+    happens to sit inside ours would silently impose rules written for someone else."""
+
+    policy = rules("User-agent: Visa\nDisallow: /\nUser-agent: *\nAllow: /\n")
+
+    assert policy.allows("https://a.example/visa"), "the `Visa` record is not about this client"
+
+
+def test_a_named_group_is_preferred_over_the_wildcard_one() -> None:
+    policy = rules(
+        "User-agent: *\nDisallow: /\nUser-agent: VisaResearchAgent\nAllow: /\nDisallow: /admin\n"
+    )
+
+    assert policy.allows("https://a.example/visa")
+    assert not policy.allows("https://a.example/admin")
+
+
+def test_comments_and_blank_lines_are_ignored() -> None:
+    policy = rules("# a note\nUser-agent: *   # trailing\n\nDisallow: /admin # why\n")
+
+    assert not policy.allows("https://a.example/admin")
+    assert policy.allows("https://a.example/visa")
+
+
+def test_the_real_gov_uk_policy_is_obeyed() -> None:
+    """Captured from `www.gov.uk/robots.txt` on 2026-08-18. Every rule in it is a wildcard, so
+    under the stdlib parser this whole policy was inert."""
+
+    policy = rules(
+        "User-agent: *\n"
+        "Disallow: /*/print$\n"
+        "Disallow: /search/all*\n"
+        "Sitemap: https://www.gov.uk/sitemap.xml\n"
+        "User-agent: deepcrawl\n"
+        "Disallow: /\n"
+    )
+
+    assert policy.allows("https://www.gov.uk/standard-visitor")
+    assert not policy.allows("https://www.gov.uk/standard-visitor/print")
+    assert not policy.allows("https://www.gov.uk/search/all?keywords=visa")
+
+
+def test_the_real_canada_policy_keeps_the_guidance_and_withholds_the_forms() -> None:
+    """Captured from `www.canada.ca/robots.txt` on 2026-08-18, and the clearest measured cost of
+    this change: the visitor-visa guidance stays readable, the IRCC application forms do not."""
+
+    policy = rules(
+        "User-agent: *\n"
+        "Disallow: /en/*/search.html\n"
+        "Disallow: /en/service-canada/\n"
+        "Disallow: /en/immigration-refugees-citizenship/services/reference-include/\n"
+        "Disallow: /content/dam/ircc/documents/pdf/english/kits/forms/imm0143e.pdf\n"
+    )
+
+    canada = "https://www.canada.ca"
+    assert policy.allows(f"{canada}/en/immigration-refugees-citizenship/services/visit-canada.html")
+    assert not policy.allows(
+        f"{canada}/content/dam/ircc/documents/pdf/english/kits/forms/imm0143e.pdf"
+    )
+    assert not policy.allows(f"{canada}/en/service-canada/some-page.html")
