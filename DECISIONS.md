@@ -144,6 +144,15 @@ domains do say. Canada is the sharpest case: `gc.ca` is special-cased and still 
 content moved to `canada.ca`, so the rule trusts the old namespace and misses the live one. `AT` and `UY`
 are narrower again — `gv.at` and `gub.uy` are conventions simply missing from the marker list.
 
+**And it exposed a reporting defect that makes the second row hard to notice.** `auto_trusted_domains`
+has two reasons for declining a domain, and both are wrong for this case: Italy's `esteri.it` is withheld
+as *"not a government domain for this destination"* — false, and **character-identical to the reason a
+commercial visa agency gets**. Known problem 2's only recommended mitigation is to read
+`withheld_domains`, so it currently misleads rather than warns, and entry 34's registry would hand a human
+198 countries of these labels to skim. A third reason is needed, naming what is actually true: a candidate
+authority under the destination's own TLD that this rule cannot confirm. Recorded as TODO item 4, and it
+is reporting only — nothing may be accepted for lack of a marker.
+
 **Committed as `tests/test_trust_coverage.py`** — 7 tests, offline, no credit. It freezes the failing set so
 a change is a visible diff, asserts every failure is on the governmental half rather than the TLD half,
 holds the two rows above apart, and guards `countries.yaml` against another country acquiring a governmental

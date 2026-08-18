@@ -242,7 +242,12 @@ first six below are all decided and unimplemented.
    used to describe hypothetically. The other half of the hole stands: a country whose TLD hosts a
    convincing government-shaped domain it does not control. Watch `withheld_domains` on resolved
    corridors for domains declined that should not be; it carries everything declined, including what the
-   cap left out and what bootstrap rejected outright. **The cap (entry 22) is where a wrong call would
+   cap left out and what bootstrap rejected outright — **but see item 4 below before trusting it, because
+   that is exactly where it currently lies.** Simulating Italy's bootstrap declines `esteri.it`, its real
+   foreign ministry, with the reason *"not a government domain for this destination"* — false, and
+   character-identical to what a commercial visa agency gets. So the one mitigation this problem
+   recommends is broken for precisely the countries in item 2, and a reviewer following this advice would
+   be misled rather than warned. TODO item 4. **The cap (entry 22) is where a wrong call would
    show first:** at most five of a destination's own domains are used, ordered by the hostname's
    authority hint then corroboration, so a country whose guidance genuinely spans six or more of its own
    domains loses one, and that reason is the only warning. Five is calibrated against corridors run, not
@@ -330,7 +335,7 @@ but immigration content moved to `canada.ca`, so the rule trusts the old namespa
 one. This makes TODO item 5 (the committed registry) more valuable than it looked, because a clean
 refusal was never the only failure mode.
 
-**Start at [TODO.md](TODO.md) item 1 and work down.** The first three need no search credit, no model
+**Start at [TODO.md](TODO.md) item 1 and work down.** The first four need no search credit, no model
 calls and no network, and each is small:
 
 1. **Narrow what a block may hand over** — drop `429`, and require the blocked URL to have been a
@@ -340,15 +345,17 @@ calls and no network, and each is small:
    (entries 30 and 29).
 3. **Make a failed adjudication refuse** instead of falling back to the decider that produced Brazil's
    wrong checklist at full confidence (entry 31).
+4. **Stop `withheld_domains` telling a reviewer something false** — found while committing the
+   trust-coverage test, and it breaks the only mitigation known problem 2 offers. See below.
 
-Then the direction work: `robots.txt` (4), the committed domain registry (5), the trust-rule amendment
-(6), and the 20-corridor measurement (7) that decides whether this is a product — **blocked on Brave
+Then the direction work: `robots.txt` (5), the committed domain registry (6), the trust-rule amendment
+(7), and the 20-corridor measurement (8) that decides whether this is a product — **blocked on Brave
 credit, and nothing large should be built before it.**
 
 **Deployment has moved down the list deliberately.** It is not blocked on speed — a cold request is
 **34.1s** (19.4s corridor, 14.7s plan) where it was 70.7s, which fits an ordinary 30–60s proxy timeout,
-and warm is **0.0s**. It is blocked on item 7: publishing a URL whose two highest-volume corridors return
-no checklist is publishing the demonstration rather than the product. Item 5 also changes what a cold
+and warm is **0.0s**. It is blocked on item 8: publishing a URL whose two highest-volume corridors return
+no checklist is publishing the demonstration rather than the product. Item 6 also changes what a cold
 request does, so deploying first means deploying twice.
 
 ### What changed on 2026-08-18, in one line each
