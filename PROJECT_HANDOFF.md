@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 306 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 325 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -23,15 +23,17 @@ a traveller and destination with nobody curating URLs — is **done and running 
 and a cold request now costs 34s rather than 71s.
 
 **The direction changed on 2026-08-18**, after an outside review that was agreed with in full and is
-recorded as [DECISIONS.md](DECISIONS.md) entries 29–35. Nothing in it weakens the grounding principle.
-What it changes is the diagnosis of why coverage is poor, and it found three things shipping that this
-project's own rules argue against. **Five of its seven entries are now implemented — 33, 32, 31, 30 and 29;
-entries 35 and 34 are not** — and [TODO.md](TODO.md) is the rest in order. The three sentences worth
-carrying:
+recorded as [DECISIONS.md](DECISIONS.md) entries 29–35, plus entry 36 which came out of implementing one
+of them. Nothing in it weakens the grounding principle. What it changes is the diagnosis of why coverage is
+poor, and it found three things shipping that this project's own rules argue against. **Implemented: 36,
+33, 32, 31, 30 and 29. Not: 34, and two of entry 35's three steps** — and [TODO.md](TODO.md) is the rest in
+order. The three sentences worth carrying:
 
 - **The blocker is the posture, not the principle.** "Grounded in an official page" and "grounded only in
   what an anonymous Python client can fetch" were treated as one commitment. Entry 18 forbids
-  *deception*, not *legitimacy* — and this codebase has never read a `robots.txt` (entry 35).
+  *deception*, not *legitimacy* (entry 35). The first step is shipped: `robots.txt` is now read once per
+  origin and obeyed, by the crawl and by retrieval (entry 36). It is expected to *cost* coverage, and
+  nothing has been run live since, so it has not been measured.
 - **The trust rule's governmental half fails closed for a fifth of the world**, measured: 19 of 51
   countries, including Germany, Italy, the Netherlands, Sweden and Canada (entry 33). Known problem 2 had
   been warning about the other half.
@@ -230,7 +232,7 @@ call silently substituting the heuristic (entry 31).
    make it warm — an ephemeral container would make every request cold.
 6. **A destination is trusted on a rule, with no human in the loop, and the audit behind it was
    survivorship.** The rule reproduces all 22 recorded human decisions, but every country in that audit
-   was one `looks_governmental` already handled — see item 2, which is the concrete failure this warning
+   was one `looks_governmental` already handled — see item 1, which is the concrete failure this warning
    used to describe hypothetically. The other half of the hole stands: a country whose TLD hosts a
    convincing government-shaped domain it does not control. Watch `withheld_domains` on resolved
    corridors for domains declined that should not be; it carries everything declined, including what the
@@ -240,7 +242,7 @@ call silently substituting the heuristic (entry 31).
    following this very advice was misled rather than warned. It now reads *could not be confirmed as an
    authority … may be a real one*, and a refusal names such candidates instead of claiming none were
    found (entry 33). **Still not reported:** whether an accepted set plausibly holds a visa authority at
-   all — the second failure in item 2. **The cap (entry 22) is where a wrong call would
+   all — the second failure in item 1. **The cap (entry 22) is where a wrong call would
    show first:** at most five of a destination's own domains are used, ordered by the hostname's
    authority hint then corroboration, so a country whose guidance genuinely spans six or more of its own
    domains loses one, and that reason is the only warning. Five is calibrated against corridors run, not
@@ -254,7 +256,7 @@ call silently substituting the heuristic (entry 31).
    `RetrievalReport.failures`. The interface then gives any `blocked` failure with a URL the sentence
    *"does not permit automated retrieval"* and a link. So the mechanism is in place by two paths.
    **What is genuinely unknown** is whether a traveller reads it that way, which needs the live run in
-   item 4 — and whether the two `travel.state.gov` places entry 24 left unfetched mean the US corridor
+   item 3 — and whether the two `travel.state.gov` places entry 24 left unfetched mean the US corridor
    records the block at all. Do not fix the mechanism before reading a real plan; the previous entry is
    an example of describing this from the code rather than from output.
 8. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
@@ -280,9 +282,11 @@ call silently substituting the heuristic (entry 31).
    Working around a block stays forbidden by entry 18 and by `CLAUDE.md`, and nothing about that has
    changed. What entry 35 corrects is the conclusion drawn from it: the loss is permanent *given an
    anonymous, unauthenticated client*, and that posture was never itself decided. Honouring
-   `robots.txt`, asking for access, and the open client-side-retrieval question are all legitimacy
-   rather than circumvention. Until item 1 is measured, the size of this limit is unknown rather than
-   known-and-accepted.
+   `robots.txt` — **now read and obeyed** (entry 36) — asking for access, and the open
+   client-side-retrieval question are all legitimacy rather than circumvention. Until item 3's twenty
+   corridors are run against that posture, the size of this limit is unknown rather than
+   known-and-accepted. Note the new posture can only *widen* this problem before it narrows it: a
+   `Disallow` previously walked past is now a refusal, and nothing has been run live since.
 12. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
@@ -337,16 +341,22 @@ its seven entries are now implemented, and nothing is left shipping against the 
   government domain*, and no longer identically to a commercial visa agency. The refusal message names
   the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
   is trusted.
+- **`robots.txt` is read and obeyed** (entry 36) — `research/robots.py`, one policy per origin with a
+  24-hour expiry, consulted by `discovery/crawl.py` before every page and by `research/live_sources.py`
+  before every source and every meta-refresh forward. 19 tests, all offline. A skip is the new `disallowed` outcome
+  and gets its own corridor note, so it can never read as "nothing found"; it is reported and may never
+  resolve a corridor. **Expected to cost coverage and not yet measured** — nothing has been run against
+  a real authority since, which is why TODO item 3's twenty corridors matter more, not less.
 
-**Three findings came out of doing the work, all recorded rather than left in the diff. The pattern in
-them is worth carrying: each was a documented claim that turned out to be wrong when finally tested.**
+**Four findings came out of doing the work, all recorded rather than left in the diff. The pattern in
+them is worth carrying: each was a claim that turned out to be wrong when finally tested or run.**
 
 1. **The 19 unreachable countries are two different failures**, and the second is worse (entry 33's
    table). Nine have no marked domain at all and refuse outright with a misleading message. **Ten do have
    one** — `interno.gov.it`, `gov.ie`, `gob.cl`, `cic.gc.ca` — so bootstrap *succeeds* and builds a trusted
    set that cannot contain the visa guidance, and **nothing measures that**. Canada is sharpest: `gc.ca`
    still passes, but immigration content moved to `canada.ca`. The reasons now describe it where the
-   ministry was seen at all; measuring it properly is part of TODO item 2.
+   ministry was seen at all; measuring it properly is part of TODO item 1.
 2. **The trust rule's coverage gap was blamed on the wrong half of the rule** for a week. Known problem 2
    warned about a government publishing outside its own TLD; not one of the 19 failures is that. Every one
    is `looks_governmental`, whose pattern list happened to cover all seven verified countries — so entry
@@ -357,30 +367,38 @@ them is worth carrying: each was a documented claim that turned out to be wrong 
    TODO item said to write was already there. Corrected in known problem 7 and in entry 23, and the todo
    became "confirm it reads usefully" instead. Both this and finding 2 were described from reading a code
    path rather than from output, which is the habit to break.
+4. **A boolean `robots.txt` verdict produced a false reason, and the test suite caught it** (entry 36).
+   Collapsing every non-answer into "disallowed" made the crawl describe **every unreachable host** as
+   *"its robots.txt does not permit this client"* — a sentence about a policy nobody had read, and the
+   same class of falsehood finding 1 had just removed from `withheld_domains`. The fix is three verdicts
+   rather than two, and a transport failure that **raises** instead of deciding, so the caller keeps
+   diagnosing an unreachable host as unreachable. The lesson repeats: a reason has to be true of what
+   was actually observed, not merely of the branch that produced it.
 
 **Everything that needed no credit is now done, and nothing is shipping against the project's own
-rules.** What remains all costs something — a crawl policy, a 198-country registry, or search quota —
-so pick up [TODO.md](TODO.md) item 1 and work down:
+rules.** `robots.txt` was the last of those (entry 36); what remains all costs something — a
+198-country registry, search quota, or a decision nobody has argued yet — so pick up
+[TODO.md](TODO.md) item 1 and work down:
 
-1. **`robots.txt`** (entry 35), because it is owed and because item 4 should measure the posture the
-   project intends to keep. Expect it to *cost* coverage; that is the right direction.
-2. **The committed domain registry** (entry 34), then **3. the trust-rule amendment** for the 19
-   governments with no hostname marker and for Schengen. Item 3's own next step is a measurement: how
+1. **The committed domain registry** (entry 34), then **2. the trust-rule amendment** for the 19
+   governments with no hostname marker and for Schengen. Item 2's own next step is a measurement: how
    many of the 19 are covered by a published government domain list, registry organisation data, or a
    TLS certificate organisation — which decides whether it is automatable or genuinely needs a human.
-4. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
-   thing that decides whether this is a product. Nothing large should be built before it.
+3. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
+   thing that decides whether this is a product. Nothing large should be built before it. It now has a
+   posture worth measuring: `robots.txt` landed first on purpose.
 
 **Deployment has moved down the list deliberately.** It is not blocked on speed — a cold request is
 **34.1s** (19.4s corridor, 14.7s plan) where it was 70.7s, which fits an ordinary 30–60s proxy timeout,
-and warm is **0.0s**. It is blocked on item 4: publishing a URL whose two highest-volume corridors return
-no checklist is publishing the demonstration rather than the product. Item 2 also changes what a cold
+and warm is **0.0s**. It is blocked on item 3: publishing a URL whose two highest-volume corridors return
+no checklist is publishing the demonstration rather than the product. Item 1 also changes what a cold
 request does, so deploying first means deploying twice.
 
 ### What changed on 2026-08-18, in one line each
 
-Seven entries, from one outside review, agreed with in full. **Entries 33, 32, 31, 30 and 29 are
-implemented; 35 and 34 are not.** Read them in [DECISIONS.md](DECISIONS.md).
+Seven entries, from one outside review, agreed with in full, plus entry 36 which came out of
+implementing one of them. **Entries 36, 33, 32, 31, 30 and 29 are implemented; 34 is not, and 35 is one
+of three steps in.** Read them in [DECISIONS.md](DECISIONS.md).
 
 | Entry | What it changed |
 | --- | --- |
@@ -391,6 +409,7 @@ implemented; 35 and 34 are not.** Read them in [DECISIONS.md](DECISIONS.md).
 | 33 | Measured: `is_own_government` fails for 19 of 51 countries, all on `looks_governmental`, not the TLD half. Amend through reviewed data, never a wider regex. Schengen is additionally a definition problem. |
 | 34 | "Who to believe" leaves the request path and becomes a committed registry a person skims once. Not the gate entry 19 removed — that was URLs; this is ~3 domains per country, machine-proposed. |
 | 35 | The posture is honest client, not anonymous client: read `robots.txt`, ask for access, and decide the client-side-retrieval question explicitly. Plus the bar that decides whether this is a product, committed before the measurement. |
+| 36 | `robots.txt` is read once per origin and obeyed, by the crawl and by retrieval. A skip is the `disallowed` outcome, never an absence; it is reported but may never resolve a corridor; and an unread policy is never reported as a policy that refused us. |
 
 ### What changed on 2026-08-17, in one line each
 
@@ -426,30 +445,34 @@ around it; asking for access is asking. **Anything that involves this program pr
 something it is not remains out of the question**, and the client-side-retrieval idea is explicitly *not
 approved* — it is written down so it gets argued rather than drifted into.
 
+**The first step is now shipped (entry 36), and it added a rule of its own.** A `Disallow` is obeyed and
+*reported*, and it may **never** resolve a corridor: `disallowed_urls()` sits outside `blocked_urls()` and
+`persistent_refusals()`, so it reaches neither `inaccessible_urls` nor `decision_blocking_urls`. A `403`
+was observed on the page; a `Disallow` covers a path we chose not to request. And the reason reported must
+be true of what was seen — a policy that could not be read is not a policy that refused us, which is the
+same falsehood entry 33 removed from `withheld_domains`.
+
 ## Next steps
 
 [TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape. **Everything that needed no
 credit is done**, so each remaining item costs something — a crawl policy, a 198-country registry, or
 search quota.
 
-1. **Read and honour `robots.txt`** (entry 35). Owed regardless of what it buys, and it should land before
-   step 4 so the measurement describes the posture the project intends to keep. Expect it to **cost**
-   coverage, which is the right direction. TODO item 1.
-2. **Move "who to believe" into committed data** — generate the country → trusted-domains registry offline
+1. **Move "who to believe" into committed data** — generate the country → trusted-domains registry offline
    for all 198 countries, commit it, skim it once (entry 34). Not the gate entry 19 removed: that was URLs,
-   which stay automated. TODO item 2.
-3. **Amend the trust rule** for the 19 governments with no hostname marker, and for Schengen. **Its own
+   which stay automated. TODO item 1.
+2. **Amend the trust rule** for the 19 governments with no hostname marker, and for Schengen. **Its own
    first step is a measurement**, because "a reviewed authority domain" would otherwise mean hand-curating
    198 countries — the manual work the production goal exists to remove: check how many of the 19 are
    covered by a published government domain list, by registry organisation data, or by a TLS certificate
    organisation field. If most are, this stays automatable; if not, the review is 19 countries rather than
-   198. TODO item 3.
-4. **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
+   198. TODO item 2.
+3. **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
    decision and ≥50% yield a checklist. **Blocked on Brave credit**, and the thing that decides the
    project's direction, so nothing large should be built before it. Fold in the France read-through, which
-   needs the same credit and is still the one shipped change never run live. TODO item 4.
-5. **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
-   does not approve it). TODO item 5.
+   needs the same credit and is still the one shipped change never run live. TODO item 3.
+4. **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
+   does not approve it). TODO item 4.
 6. **Then deploy**, precompute popular corridors, and put a key or a rate limit on `POST /visa-plans`.
 7. Standing work: confirm a blocked authority reads usefully (the plumbing turned out to already exist —
    see known problem 7); tell "no checklist exists" apart from "we failed to find it"; decide whether a

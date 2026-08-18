@@ -303,11 +303,24 @@ class CorridorResolver:
         # Name the domains that could not be read at all. Without this a refusal reads as "nothing
         # scored well enough" when the real cause was an unreachable or client-rendered site, which
         # tells the reader to look in a completely different place.
+        # A host's own crawl policy is reported separately, and always. Only the first failure per
+        # host survives the loop below, so a `Disallow` folded into it could be masked by an
+        # unrelated 404 elsewhere on the same site — and "we chose not to ask" is precisely the
+        # fact that must never go missing, because it is the one a reader cannot infer from an
+        # empty result. See DECISIONS entry 36.
+        disallowed = self.crawl_fetcher.disallowed_urls()
         unreadable: dict[str, str] = {}
         for url, reason in self.crawl_fetcher.failures.items():
+            if url in disallowed:
+                continue
             unreadable.setdefault(host_of(url), reason)
         for host, reason in sorted(unreadable.items()):
             notes.append(f"{host} could not be read because {reason}")
+        for host in sorted({host_of(url) for url in disallowed}):
+            notes.append(
+                f"{host} publishes a robots.txt that does not permit this client to read the "
+                "pages discovery reached, so they were not fetched"
+            )
         # An authority refusing this client is a different fact from a site being broken, and the
         # difference matters to a reader: one means "we were not allowed to check", not "no
         # guidance exists". Read from the recorded outcome rather than by matching the sentence,

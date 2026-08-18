@@ -9,8 +9,67 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 36. `robots.txt` is read and obeyed, and a page skipped for it is its own outcome
+**2026-08-18 · implemented**
+
+The first of entry 35's three legitimacy steps, and the one owed regardless of what it buys. Until now
+nothing here fetched `robots.txt` while the same code computed a per-host politeness delay for the same
+hosts — a guess at what a site tolerates, running alongside a refusal to read the site saying it.
+
+`RobotsCache` (`research/robots.py`) fetches one policy per **origin**, re-read after 24 hours, and both
+fetchers consult it before every request: `discovery/crawl.py` before each crawled page, `research/live_sources.py` before each
+source and before each meta-refresh forward. Parsing is `urllib.robotparser` — stdlib, far better tested
+than anything written here, and its one known shortfall (first-match rather than longest-match for `Allow`
+against `Disallow`) errs toward fetching less.
+
+**Three things were decided while implementing it, and each is the reason a later "simplification" would
+be a defect.**
+
+**A skip is an outcome, never an absence.** `FailureOutcome` gains `disallowed`. Without it a page nobody
+asked for is indistinguishable from a page that did not exist, which is the failure entry 18 named: a
+refusal must never read as "nothing found". The corridor reports it in its own sentence rather than folding
+it into the generic "could not be read" note, because only the first failure per host survives that note and
+a `Disallow` could be masked by an unrelated `404` elsewhere on the same site.
+
+**Three verdicts, not a boolean, because the reasons differ and the reason is what gets reported.** A first
+attempt collapsed every non-answer into "disallowed", and the crawl then described **every unreachable
+host** as *"its robots.txt does not permit this client"* — a sentence about a policy nobody had read, and
+word-for-word the class of false reason entry 33 had just finished removing from `withheld_domains`. So:
+a `5xx` or an oversized file is `UNREADABLE` (*"could not be read, so whether this client may fetch it is
+unknown"*), a parsed rule that excludes us is `DISALLOWED` (*"does not permit"*), and a **transport failure
+raises** rather than deciding anything — an unreachable host is not a crawl policy, and the callers already
+describe one correctly, including telling a name that does not resolve from a request that merely failed.
+`4xx` on the file itself, `401` and `403` included, means no policy is published: those say the file is
+protected, not that the site is closed (RFC 9309 §2.3.1.3).
+
+**A `Disallow` may be reported; it may never resolve a corridor.** `disallowed_urls()` is deliberately not
+part of `blocked_urls()` or `persistent_refusals()`, so nothing here reaches `inaccessible_urls` or
+`decision_blocking_urls`. A `403` was observed **on the page itself**; a `Disallow` covers a path we chose
+not to request. Treating the second as evidence that the answer sat behind that page would be guessing about
+a page nobody read, and it would widen entry 32's deliberately narrow exception by a mechanism entry 32
+never considered.
+
+**The expiry is not tuning.** `get_visa_plan_service` is an `lru_cache(maxsize=1)`, so the fetcher holding
+the cache lives as long as the server process. Without a TTL a policy read at boot would be obeyed until
+someone restarted the thing — a withdrawn `Disallow` honoured forever, and a newly published one ignored
+just as long. This was found by checking the caller rather than by reading the class, which is the habit
+`CLAUDE.md` asks for.
+
+**Two smaller calls.** The policy fetch sits outside the crawl's politeness delay: that delay only ever
+bites on the *second* request to a host, and a `robots.txt` fetch is always the first, so routing it through
+the delay would space nothing and merely make first contact with every host cost the delay. And in
+retrieval the check sits *after* the fresh-cache return, because `robots.txt` governs fetching — text
+already held and still inside its TTL is re-read without a request, so a policy published since does not
+retrospectively forbid reading what we have. Past the TTL a request is needed and the policy decides.
+
+**Expected to cost coverage, and that is the direction.** A path previously walked past is now a refusal.
+Nothing was measured yet: the seven-corridor sample predates this, and entry 35's twenty-corridor
+measurement — still blocked on credit — should run against this posture rather than the old one.
+
+---
+
 ## 35. The posture is honest client, not anonymous client — and the bar that decides whether this is a product
-**2026-08-18 · decided, not implemented**
+**2026-08-18 · decided; first of its three steps implemented as entry 36**
 
 An outside review asked the question this project had been answering implicitly: two of the highest-volume
 corridors there are — India→US and India→France — now yield a plan with **no document checklist**, because
@@ -31,11 +90,11 @@ been costing coverage under the banner of a rule that does not demand it.
 
 **Decided: pursue legitimacy, never circumvention.** Three things follow, in increasing order of scope:
 
-- **Read and honour `robots.txt`.** Nothing in this codebase has ever fetched it — verified by grep, there
-  is no reference to robots anywhere in `src/`. A project that computes a per-host politeness delay
-  (entry 25) while ignoring the file that states a host's own crawl policy is inconsistent on its own terms.
-  This is owed regardless of what it buys. It may cost coverage — a `Disallow` we currently walk past
-  becomes a refusal — and that is the correct direction for this product.
+- **Read and honour `robots.txt`.** ~~Nothing in this codebase has ever fetched it.~~ **Done — entry 36.**
+  A project that computes a per-host politeness delay (entry 25) while ignoring the file that states a
+  host's own crawl policy was inconsistent on its own terms. This was owed regardless of what it buys, and
+  it may cost coverage — a `Disallow` previously walked past is now a refusal — which is the correct
+  direction for this product.
 - **Ask.** An identified research client requesting access from an immigration authority is an ordinary
   thing to do, and the current user agent already invites contact.
 - **Client-side retrieval, as an open question and not yet a decision.** The traveller's own browser can

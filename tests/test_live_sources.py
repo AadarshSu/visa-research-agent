@@ -90,8 +90,23 @@ def build_fetcher(
     ttl_hours: float = 24.0,
     maximum_stale_hours: float = 168.0,
     minimum_characters: int = 400,
+    robots: str | None = None,
 ) -> LiveSourceFetcher:
+    """A fetcher whose `robots.txt` is answered here rather than by the test's own handler.
+
+    Every host is asked for its crawl policy before it is asked for a page, and almost none of
+    these tests are about that. Answering it here — with a `404`, which means no policy is
+    published — keeps each test's handler seeing only the requests it was written for, and keeps
+    `requests` a count of pages rather than of pages plus one file per host. Pass `robots=` to make
+    a test about the policy itself; the page requests it does or does not provoke are then exactly
+    what `requests` holds.
+    """
+
     def recording_handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            if robots is None:
+                return httpx.Response(404, text="not found")
+            return httpx.Response(200, text=robots, headers={"Content-Type": "text/plain"})
         requests.append(request)
         return handler(request)
 

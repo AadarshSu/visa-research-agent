@@ -77,8 +77,10 @@ def build_resolver(
     tmp_path: Path,
     requests: list[httpx.Request],
     search_urls: list[str],
+    *,
+    robots: dict[str, str] | None = None,
 ) -> tuple[CorridorResolver, StubSearchProvider]:
-    transport = httpx.MockTransport(handler(requests))  # type: ignore[arg-type]
+    transport = httpx.MockTransport(handler(requests, robots=robots))  # type: ignore[arg-type]
     provider = StubSearchProvider(search_urls)
     crawl_fetcher = CrawlFetcher(transport=transport, sleep=sleep_none, host_delay_seconds=0.0)
     live_fetcher = LiveSourceFetcher(

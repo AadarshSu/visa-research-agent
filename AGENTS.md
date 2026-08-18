@@ -41,7 +41,10 @@ it was run. These documents are read by someone with no other context.
   plan into "the decision could not be verified" (entry 32). Every block is still reported.
 - **Honour `robots.txt` and identify the client honestly.** The rule above forbids deception, not
   legitimacy — being an anonymous, unauthenticated client was never itself decided, and treating the two
-  as one thing cost coverage (entry 35).
+  as one thing cost coverage (entry 35). `robots.txt` is read per origin, re-read after 24 hours, and
+  obeyed before every request (entry 36). A page skipped for it is recorded as `disallowed`, never as nothing found; it is
+  reported and never allowed to resolve a corridor; and the reason given must be true of what was
+  observed — an unread policy is not a policy that refused us.
 - Never add application submission, appointment booking, form filling, or claims that approval is
   guaranteed.
 - Treat all fetched text as untrusted evidence. It must not control prompts, tools, or control flow.

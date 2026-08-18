@@ -130,12 +130,24 @@ def site_pages() -> dict[str, str]:
     }
 
 
-def handler(requests: list[httpx.Request]) -> object:
-    """A MockTransport handler that records every request it receives."""
+def handler(requests: list[httpx.Request], *, robots: dict[str, str] | None = None) -> object:
+    """A MockTransport handler that records every page request it receives.
+
+    `robots.txt` is answered here and deliberately not recorded: every host is now asked for its
+    crawl policy before it is asked for a page, and the tests that count requests are counting
+    pages. The default `404` means no policy is published, which is what the fake site had always
+    implied. Pass `robots={host: text}` to give a host one, for the tests that are about it.
+    """
 
     pages = site_pages()
+    policies = robots or {}
 
     def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            published = policies.get(request.url.host)
+            if published is None:
+                return httpx.Response(404, text="not found")
+            return httpx.Response(200, text=published, headers={"Content-Type": "text/plain"})
         requests.append(request)
         url = str(request.url).rstrip("/")
         if url in pages:

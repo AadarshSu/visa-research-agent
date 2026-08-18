@@ -79,7 +79,7 @@ VisaPlanExtractor.extract(destination, traveller, report) ──▶ VisaPlan
 
 ### Evidence outcomes
 
-Every configured source resolves to exactly one outcome. Two carry content; three do not.
+Every configured source resolves to exactly one outcome. Two carry content; four do not.
 
 | Outcome | Usable | Meaning |
 | --- | --- | --- |
@@ -89,6 +89,7 @@ Every configured source resolves to exactly one outcome. Two carry content; thre
 | `unreachable` | no | Timeout, connection error, or error status |
 | `unusable` | no | Retrieved but not evidence — client-rendered shell, unreadable PDF, JSON API, too little text |
 | `blocked` | no | The authority refused automated retrieval (`401`, `403`, `429`) |
+| `disallowed` | no | The host's `robots.txt` excluded this client, or could not be read at all |
 
 `blocked` is the subtle one and is kept apart on purpose. A site refusing automated clients is not
 saying its guidance is wrong or missing — it is saying this program may not read it. The only claim
@@ -109,6 +110,15 @@ Two things bound `blocked` further, because a block can resolve a corridor rathe
   decision was merely *not found* — which must refuse — would drift into presenting as authority-blocked,
   which resolves. `inaccessible_domains` still carries every refusal, because reporting must lose none.
   See entry 32.
+
+`disallowed` is `blocked`'s quieter twin and is bounded harder (entry 36). It means the same thing to a
+reader — this program was not permitted — but it is **never** grounds to resolve a corridor:
+`disallowed_urls()` sits outside `blocked_urls()` and `persistent_refusals()`, so it reaches neither
+`inaccessible_urls` nor `decision_blocking_urls`. A `403` was observed *on the page*; a `Disallow` covers
+a path we chose not to request, so treating it as evidence that the answer sat behind that page would be
+guessing about a page nobody read. It also covers a policy that could not be read — a `5xx` or an
+oversized file — and the reason reported says which, because *"could not be read"* and *"does not permit"*
+are different claims and only one is about what the authority allows.
 
 `unreachable` and `unusable` are kept apart deliberately: one is a transient site problem, the other
 needs a different retriever. They demand different remedies even though they grade the same.
@@ -244,12 +254,16 @@ this is automated while per-country trust is not.
 
 ### The stages
 
-0. **Politeness** — *not implemented, and owed.* Nothing in this codebase reads `robots.txt`. A crawl
-   that computes a per-host delay while ignoring the file stating that host's own policy is inconsistent
-   on its own terms, and the posture this project wants is *honest client* rather than *anonymous
-   client*. Expect it to **cost** coverage: a path currently walked past becomes a refusal, which is the
-   right direction. A `Disallow` is a stated policy, not a block to route around.
-   See [DECISIONS.md](DECISIONS.md) entry 35.
+0. **Politeness** (`research/robots.py`) — each origin's `robots.txt` is fetched once, re-read after 24
+   hours, and consulted before every request, by the crawl and by retrieval alike. A `Disallow` is a stated policy,
+   not a block to route around, so it is obeyed even where walking past it would have found the answer;
+   expect it to **cost** coverage, which is the right direction. The fetch sits outside the per-host
+   delay, because that delay only bites on a host's second request and this is always its first.
+   A skipped page is recorded as the `disallowed` outcome — never as an absence — and is reported
+   without ever being allowed to resolve a corridor, which stays reserved for a refusal observed on the
+   page itself. `5xx` or an oversized file means the policy could not be read, which is reported as
+   exactly that and not as a refusal; a transport failure is left to the caller, so an unreachable host
+   is still diagnosed as unreachable. See [DECISIONS.md](DECISIONS.md) entries 35 and 36.
 1. **Search** (`search.py`) — templated queries constrained with `site:` to approved domains, run
    four at a time rather than one after another; bounded because a search API is someone else's rate
    limit.

@@ -28,6 +28,7 @@ from visa_research_agent.domain.models import (
 )
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.rendering import PageRenderer
+from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
 from visa_research_agent.research.tls import build_ssl_context
 
 HEADING_TAGS = ("h1", "h2", "h3")
@@ -66,6 +67,19 @@ def host_does_not_resolve(error: httpx.HTTPError) -> bool:
         cause = cause.__cause__ or cause.__context__
         seen += 1
     return False
+
+
+def _robots_reason(verdict: RobotsVerdict) -> str:
+    """Why a crawl policy stopped a page, in words that are true of *that* verdict.
+
+    Two sentences rather than one because a host that said no and a host whose policy could not be
+    read are different facts, and only the first is a statement about what the authority permits.
+    Every reason this project reports has to be true of what was actually observed.
+    """
+
+    if verdict is RobotsVerdict.DISALLOWED:
+        return "its robots.txt does not permit this client to fetch it"
+    return "its robots.txt could not be read, so whether this client may fetch it is unknown"
 
 
 def page_title_of(html: str) -> str:
@@ -145,6 +159,7 @@ class CrawlFetcher:
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         host_delay_seconds: float = 0.5,
         clock: Callable[[], float] = time.monotonic,
+        robots: RobotsCache | None = None,
     ) -> None:
         self.timeout_seconds = timeout_seconds
         self.maximum_bytes = maximum_bytes
@@ -159,6 +174,10 @@ class CrawlFetcher:
         self.sleep = sleep
         self.host_delay_seconds = host_delay_seconds
         self.clock = clock
+        # Each host's own crawl policy, read once and obeyed. Built here rather than injected so
+        # there is no configuration in which the crawl runs without it; the parameter exists so a
+        # test can seed one, not so it can be switched off.
+        self.robots = robots or RobotsCache(user_agent=user_agent)
         # When each host may next be asked for a page. The politeness delay is owed *to a host*;
         # applied globally it made every site wait behind every other, which is latency rather
         # than courtesy.
@@ -208,6 +227,18 @@ class CrawlFetcher:
 
         return {url for url, outcome in self.outcomes.items() if outcome == "blocked"}
 
+    def disallowed_urls(self) -> set[str]:
+        """URLs a host's own `robots.txt` told this client not to fetch.
+
+        Held apart from `blocked_urls` on purpose. Both mean "we were not permitted", but only a
+        refusal *observed on the page itself* may resolve a corridor (DECISIONS entries 32 and 36).
+        A `Disallow` covers a path nobody asked for, so it is reported and nothing more — treating
+        it as evidence that the answer was behind that page would be guessing about a page we chose
+        not to request.
+        """
+
+        return {url for url, outcome in self.outcomes.items() if outcome == "disallowed"}
+
     def persistent_refusals(self) -> set[str]:
         """Refusals that waiting would not change, so the only ones a plan may be built around.
 
@@ -255,6 +286,18 @@ class CrawlFetcher:
 
         self.requested.append(url)
         try:
+            # The host's own crawl policy, read before anything is asked of it. A `Disallow` is not
+            # a block to route around: it is the authority stating what it permits, and obeying it
+            # is the posture DECISIONS entry 35 settled on. Recorded rather than silently skipped,
+            # so a page left unread can never present as a page that did not exist.
+            #
+            # Inside the try because a host that cannot be reached for its policy cannot be reached
+            # for its pages either, and the handler below is where that is already described
+            # correctly — including telling a name that does not resolve from a request that failed.
+            verdict = await self.robots.verdict(client, url)
+            if verdict is not RobotsVerdict.ALLOWED:
+                self._record_failure(url, "disallowed", _robots_reason(verdict))
+                return None
             await self._wait_for_host(host_of(url))
             response = await client.get(url)
         except httpx.HTTPError as exc:
@@ -270,9 +313,24 @@ class CrawlFetcher:
             return None
 
         # Redirects are followed, so the landing host must be re-checked exactly as retrieval does.
-        if not destination.trusts_host(host_of(str(response.url))):
+        final_url = str(response.url)
+        if not destination.trusts_host(host_of(final_url)):
             self._record_failure(url, "untrusted", "it redirected off the approved domains")
             return None
+        # And re-checked against the landing host's policy, for the same reason: the request that
+        # was permitted is not the one that was answered. The fetch cannot be taken back, but its
+        # result can be refused, which is the honest half that is still available here.
+        if final_url != url:
+            try:
+                landing = await self.robots.verdict(client, final_url)
+            except httpx.HTTPError:
+                # The landing host would not serve its policy, so we cannot say we were permitted.
+                landing = RobotsVerdict.UNREADABLE
+            if landing is not RobotsVerdict.ALLOWED:
+                self._record_failure(
+                    url, "disallowed", f"it redirected to a page {_robots_reason(landing)}"
+                )
+                return None
         if response.status_code in BLOCKING_STATUS_CODES:
             # The authority is refusing this client, which says nothing about whether its guidance
             # is correct. Recorded in its own words so a refusal cannot read as "nothing found".
@@ -296,7 +354,7 @@ class CrawlFetcher:
         # An empty body is not a separate failure from a shell that renders to nothing: it is the
         # same page, one step further along. So it goes to the renderer too, and only becomes a
         # failure once rendering has had its turn.
-        self.final_urls[url] = str(response.url)
+        self.final_urls[url] = final_url
         html = await self._render_if_empty(response.text, url, destination)
         if html is not None and not html.strip():
             self._record_failure(url, "unusable", "it returned no content")

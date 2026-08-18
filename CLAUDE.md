@@ -83,10 +83,20 @@ produces a serious defect.
   **The posture is honest client, not anonymous client (entry 35).** This rule forbids *deception* —
   spoofing, retrying, rendering past a refusal — and none of that has changed or will. It does not
   require being an anonymous, unauthenticated client, and treating those as the same thing was costing
-  coverage under the banner of a rule that never demanded it. So: read and honour `robots.txt` (nothing
-  here ever has), and asking an authority for access is ordinary. Client-side retrieval through the
+  coverage under the banner of a rule that never demanded it. So: `robots.txt` **is now read and obeyed**
+  (entry 36), and asking an authority for access is ordinary. Client-side retrieval through the
   traveller's own browser is an **open question, explicitly not approved** — argue it in a decision
   entry before writing any code for it.
+
+  **A `Disallow` is reported, and it may never resolve a corridor (entry 36).** `disallowed` is its own
+  `FailureOutcome` so a page nobody asked for can never read as a page that did not exist — but it is
+  deliberately outside `blocked_urls()` and `persistent_refusals()`, so it reaches neither
+  `inaccessible_urls` nor `decision_blocking_urls`. A `403` was observed *on the page*; a `Disallow`
+  covers a path we chose not to request, and treating it as evidence the answer sat behind that page
+  would widen entry 32's narrow exception by a route entry 32 never considered. **And the reason
+  reported must be true of what was seen**: a policy that could not be read is *"could not be read, so
+  whether this client may fetch it is unknown"*, never *"does not permit"*, and an unreachable host is
+  still reported as unreachable rather than as a policy nobody read.
 - **A visa decision that could not be confirmed must be `null`, and the application enforces that.**
   Not the prompt: a model asked for null returned `true` in testing. A wrong yes or no about whether
   someone needs a visa is the most damaging thing this can say, so `decision_is_unverified` overrides

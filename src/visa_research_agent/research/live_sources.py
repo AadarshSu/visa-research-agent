@@ -32,6 +32,7 @@ from visa_research_agent.domain.models import (
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LiveSourceError
 from visa_research_agent.research.rendering import PageRenderer
+from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
 from visa_research_agent.research.source_cache import CachedSource, FileSourceCache
 from visa_research_agent.research.tls import build_ssl_context
 
@@ -163,6 +164,26 @@ def looks_like_pdf(response: httpx.Response) -> bool:
     return response.url.path.lower().endswith(".pdf")
 
 
+def _robots_reason(verdict: RobotsVerdict) -> str:
+    """Why a crawl policy stopped a source, in words that are true of *that* verdict.
+
+    A host that said no and a host whose policy could not be read are different facts, and only the
+    first is a statement about what the authority permits. Both end the same way — the source is
+    missing and the plan says so — but a reason this project reports has to be true of what was
+    actually observed.
+    """
+
+    if verdict is RobotsVerdict.DISALLOWED:
+        return (
+            "the authority's robots.txt does not permit this client to retrieve it, so its "
+            "guidance could not be independently verified here"
+        )
+    return (
+        "the authority's robots.txt could not be read, so whether this client may retrieve the "
+        "page is unknown and it was not requested"
+    )
+
+
 class _ContentProblem(Exception):
     """Raised when a retrieved document cannot become trustworthy evidence."""
 
@@ -196,6 +217,7 @@ class LiveSourceFetcher:
         maximum_renders: int = 5,
         transport: httpx.AsyncBaseTransport | None = None,
         now: Callable[[], datetime] = _utc_now,
+        robots: RobotsCache | None = None,
     ) -> None:
         if concurrency < 1:
             raise LiveSourceError("Live retrieval requires a concurrency of at least one")
@@ -220,6 +242,9 @@ class LiveSourceFetcher:
         self.renders = 0
         self.transport = transport
         self.now = now
+        # Each host's own crawl policy. Built here rather than injected so retrieval cannot be
+        # configured to run without it; the parameter is a seam for tests, not a switch.
+        self.robots = robots or RobotsCache(user_agent=user_agent)
 
     async def fetch(self, destination: DestinationConfig) -> RetrievalReport:
         """Retrieve every configured primary source, reporting any that could not be used."""
@@ -277,6 +302,16 @@ class LiveSourceFetcher:
             return self._build(configured_source, cached, from_cache=True, is_stale=False)
 
         try:
+            # Checked here rather than above the cache, because `robots.txt` governs *fetching*.
+            # Text already held and still current was fetched under whatever policy applied then,
+            # and re-reading it makes no request. Past the TTL a request is needed, so the policy
+            # decides. Inside the try because a host that will not serve its policy is a host this
+            # already knows how to report, and it is not a claim about what that host permits.
+            verdict = await self.robots.verdict(client, url)
+            if verdict is not RobotsVerdict.ALLOWED:
+                return self._serve_stale(
+                    configured_source, cached, now, _robots_reason(verdict), "disallowed"
+                )
             response = await self._request(client, url, cached)
         except httpx.HTTPError as exc:
             return self._serve_stale(
@@ -466,6 +501,14 @@ class LiveSourceFetcher:
                 f"the page forwards to {target_host}, which is not an approved authority domain "
                 f"for {destination.display_name}",
                 target,
+            )
+
+        # The forward is a request of its own, so it answers to the target's policy of its own.
+        forward_verdict = await self.robots.verdict(client, target)
+        if forward_verdict is not RobotsVerdict.ALLOWED:
+            raise _ContentProblem(
+                "disallowed",
+                f"the page forwards to a document, and {_robots_reason(forward_verdict)}",
             )
 
         forwarded = await client.get(target)

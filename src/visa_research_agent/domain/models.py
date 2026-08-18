@@ -29,7 +29,13 @@ DestinationMode = Literal["configured", "automatic"]
 # wrong or missing — it is saying this program may not read it. The only honest claim is then
 # "we could not independently retrieve and verify this here", which is a much narrower statement
 # than "unreachable" and must never be softened into an inference from some other page.
-FailureOutcome = Literal["untrusted", "unreachable", "unusable", "blocked"]
+#
+# `disallowed` is the same fact arrived at without a request: the host published a crawl policy
+# that excludes this client, and it was obeyed (DECISIONS entry 36). Kept apart from `blocked`
+# because the two license different things. A `403` was observed on the page itself; a `Disallow`
+# is a rule about a path we never asked for, so it may be reported but must never resolve a
+# corridor the way a settled refusal can.
+FailureOutcome = Literal["untrusted", "unreachable", "unusable", "blocked", "disallowed"]
 
 # Statuses an authority returns to refuse an automated client rather than to report a fault.
 BLOCKING_STATUS_CODES = frozenset({401, 403, 429})
