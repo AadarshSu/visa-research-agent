@@ -36,7 +36,15 @@ that cannot be established says so rather than guessing. France is the standing 
 portal refuses automated retrieval, so the plan states the visa decision as *unknown*, names the
 portal and links to it, and lists no documents it could not read.
 
-Conflict detection across sources and LangGraph routing remain intentionally deferred.
+Conflict detection across sources remains intentionally deferred, and the unverified `conflicts` field
+is being removed rather than kept — see [DECISIONS.md](DECISIONS.md) entries 6 and 30. **LangGraph is
+not deferred but declined:** the pipeline is linear, and the trust checks are typed validators that
+cannot be skipped rather than graph nodes that could be reordered (entry 29).
+
+**A known coverage limit, measured 2026-08-18:** a destination is researchable only when its government
+publishes under a hostname this agent recognises as governmental (`gov`, `go.xx`, `gouv.xx`, and a few
+more). **19 of 51 countries checked do not** — Germany, Italy, the Netherlands, Sweden and Canada among
+them — so they refuse rather than answer. Being fixed through reviewed per-country data; see entry 33.
 
 ### Source discovery
 

@@ -9,6 +9,289 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 35. The posture is honest client, not anonymous client — and the bar that decides whether this is a product
+**2026-08-18 · decided, not implemented**
+
+An outside review asked the question this project had been answering implicitly: two of the highest-volume
+corridors there are — India→US and India→France — now yield a plan with **no document checklist**, because
+the pages holding the answer are bot-blocked. If that is the normal case rather than the exception, this is
+a careful demonstration of why the approach cannot work rather than a product.
+
+**The finding that reframes it: two commitments had been treated as one.**
+
+1. *Every claim is grounded in an official government page, and refusing beats guessing.* This is the
+   product's identity, it is correct, and nothing here weakens it.
+2. *Grounded only in what an anonymous, unauthenticated Python client can fetch at request time.* This is
+   an **implementation posture**, never decided on its merits, and it is what actually fails on France and
+   the United States.
+
+Entry 18 forbids **deception** — spoofing a user agent, pointing the renderer at a refusal, retrying past a
+rate limit. It says nothing about becoming a client authorities are willing to serve. Conflating the two has
+been costing coverage under the banner of a rule that does not demand it.
+
+**Decided: pursue legitimacy, never circumvention.** Three things follow, in increasing order of scope:
+
+- **Read and honour `robots.txt`.** Nothing in this codebase has ever fetched it — verified by grep, there
+  is no reference to robots anywhere in `src/`. A project that computes a per-host politeness delay
+  (entry 25) while ignoring the file that states a host's own crawl policy is inconsistent on its own terms.
+  This is owed regardless of what it buys. It may cost coverage — a `Disallow` we currently walk past
+  becomes a refusal — and that is the correct direction for this product.
+- **Ask.** An identified research client requesting access from an immigration authority is an ordinary
+  thing to do, and the current user agent already invites contact.
+- **Client-side retrieval, as an open question and not yet a decision.** The traveller's own browser can
+  open `france-visas.gouv.fr`; a human reading a public page is not this program circumventing a refusal.
+  Whether the agent may then *read what their session received* is genuinely near entry 18's boundary and
+  needs its own entry either way. Recorded now so it is argued rather than drifted into. **Not approved.**
+
+**And the bar, committed before the measurement rather than after it.** The seven-corridor sample cannot
+answer whether blocks are the rule, and choosing a threshold after seeing results is how a demonstration
+talks itself into being a product. So: run the **top 20 corridors by real traveller volume** cold, and count
+per corridor whether the visa decision was confirmed, whether a checklist was found, and whether a checklist
+was blocked.
+
+> **Product if ≥70% confirm the decision and ≥50% yield a document checklist. Below that, the
+> anonymous-crawl posture is dead** and the choice is licensed data (Timatic/Sherpa — which every airline
+> uses and which would forfeit the verifiability that is the whole differentiator) or client-side retrieval.
+
+Today's seven are 5/7 on the decision and 4/7 on a checklist, which would pass — on a sample chosen partly
+because it was easy. Blocked on Brave credit; it is the measurement that decides the project's direction, so
+nothing large should be built before it.
+
+**Rejected: treating France as an acceptable permanent loss.** Entry 26 established the coverage loss is
+real and permanent *given the posture*. What was never established is that the posture is required, and
+entry 18 does not require it.
+
+---
+
+## 34. Who to believe becomes committed data; only which page is decided live
+**2026-08-18 · decided, not implemented**
+
+`ARCHITECTURE.md` already states the right division and the code does not implement it:
+
+| | Who to believe (domains) | Which page to read (URLs) |
+| --- | --- | --- |
+| Corridor-dependent? | No — `mofa.go.jp` serves everyone | Yes |
+| How many | ~3 per country | Tens of thousands |
+| Decided by | **A rule, once per country** | **The machine, every corridor** |
+
+But `bootstrap_destination` runs *inside every cold request*, and its result is cached **per corridor**. So
+a country's trusted set is re-derived from that day's search rankings for every new nationality, and the
+answer to "who is Germany's government" varies with Brave's mood. Entry 22's US coin flip was this
+mechanism, treated as a ranking problem.
+
+**Decided: generate the country → trusted-domains registry offline for all 198 countries, commit it beside
+`countries.yaml`, and have a person skim it once.** Request-time discovery then begins at the corridor step.
+
+What this is **not**: a return to the gate entry 19 removed. Nobody curates URLs — that stays automated and
+is the production goal. This is *domains*, about three per country, proposed by the same `bootstrap.py` code
+that runs today, with a human reading 198 rows once rather than approving anything per request.
+
+Entry 19's own argument is why this is cheaper than what it replaced: the human was found not to be
+exercising taste but applying one mechanical rule. **Committing that rule's output is strictly easier to
+audit than re-running it live** — the riskiest automated decision in the system becomes a reviewable diff.
+
+Four things it buys, and the fourth is the one that matters most:
+
+- four searches leave the cold request path (entry 25's remaining time is search latency and two model
+  calls);
+- the trusted set stops varying between runs, removing the coin-flip class of bug at its source;
+- `withheld_domains` becomes a thing a person actually reads, which known problem 2 asks for and nobody does;
+- **entry 33's gap becomes fixable by editing a data row** rather than by widening a regex that guards
+  everything.
+
+**Rejected: keeping bootstrap in the request and caching it per country instead of per corridor.** It fixes
+the variance but leaves the highest-risk decision unreviewed and unreviewable, and still spends the searches
+on a cold country.
+
+---
+
+## 33. The governmental half of the trust rule fails closed for a fifth of the world
+**2026-08-18 · measured; amendment decided, not implemented**
+
+Known problem 2 named the wrong half as the risk. It warns about `belongs_to_destination` — "a country whose
+government publishes outside its own TLD". The half that actually fails first, and far more widely, is
+`looks_governmental`.
+
+`GOVERNMENT_PATTERNS` in `bootstrap.py` recognises `gov`, `go.xx`, `gouv.xx`, `gob.xx`, `govt.xx`, `gc.ca`,
+`admin.ch` and `europa.eu`. All seven verified countries happen to sit inside that list — `.gov.sg`,
+`.go.jp`, `.gouv.fr`, `.gov.cn`, `.gov.br`, `.gov.vn`, `.gov`. The 22/22 agreement with recorded human
+decisions behind entry 19 is therefore **survivorship**: every country audited was one the pattern list
+already handled.
+
+**Measured offline, 2026-08-18, no network and no search credit** — `is_own_government` run against a
+hand-written table of 51 countries' real immigration or foreign-ministry domains: **32 pass, 19 fail.**
+
+| | |
+| --- | --- |
+| Fail | AT, BE, **CA**, CL, CZ, **DE**, DK, FI, GR, HU, IE, **IT**, **NL**, NO, PT, RO, RU, **SE**, UY |
+| Cause | uniformly *no governmental marker in the hostname* — never the TLD half |
+
+Every failure returns `is_own_government == False` for the country's entire government, so
+`auto_trusted_domains` accepts nothing and `AutomaticDestinationService.destination_for` raises *"No domain
+belonging to Germany's own government could be identified, so there was nothing safe to read."* The failure
+is **safe** — nothing is fetched, nothing is guessed — but the sentence is a **wrong diagnosis**, and it
+takes most of Schengen with it.
+
+**The mechanism is robust even where the table is not.** The domain list was written from knowledge rather
+than fetched, so individual rows may be wrong. It does not matter for the finding: Germany, the Netherlands,
+Italy and Sweden have no `gov.de`/`gov.nl` convention at all, so **no** choice of domain rescues them. Two
+failures are narrower and worth separating: `gv.at` and `gub.uy` are simply markers missing from the list,
+and **Canada** fails only because immigration content moved to `canada.ca` while the special case still
+names `gc.ca`.
+
+**Decided: amend through reviewed data, never by widening the regex.** Adding `.de`, `.nl`, `.it` and the
+rest as governmental markers would trust every commercial site in those countries — `belongs_to_destination`
+cannot narrow it, because these are the countries whose own TLD is the *only* other signal. The registry in
+entry 34 is where a named authority domain is written down and reviewed, which is exactly the
+"looks official" judgement the rule refuses to automate, made once by a person in git.
+
+`gv` and `gub` may be added to `SUFFIX_MARKER_LABELS`/`GOVERNMENT_PATTERNS` as ordinary marker fixes, and
+`gc.ca` should gain `canada.ca` — those are corrections within the existing rule, not relaxations of it.
+
+**And a second break the same measurement exposes, which is not a bug but a definition problem.** For
+Schengen short-stay visas the decision genuinely lives at EU level as much as nationally. `europa.eu` passes
+`looks_governmental` but can **never** pass `belongs_to_destination` for any member state, so "the
+destination's own government" is the wrong trust unit for a supranational visa regime. The fix is data — a
+reviewed supranational-domain list per member — but it amends the rule stated in entry 19 and in `CLAUDE.md`,
+so it needs deciding rather than patching.
+
+**Do first, because it costs nothing:** commit the 51-country check as a test. It needs no network, no
+model and no search credit, and it is the cheapest evidence this project can buy.
+
+---
+
+## 32. A block hands over a link only when it plausibly held the answer
+**2026-08-18 · defect found by review; narrowing decided, not implemented**
+
+Entry 27 is the one shipped change never run live, and reading it against the code found the prose and the
+behaviour disagree in two ways. Both widen the exception beyond what entry 27 argued for.
+
+**1. Entry 27 says only `401`/`403` qualify. The code also accepts `429`.**
+`BLOCKING_STATUS_CODES` is `{401, 403, 429}` in `domain/models.py`, `CrawlFetcher` records all three as
+`blocked`, and `ResolvedCorridor.inaccessible_urls` is built from `blocked_urls()` with no filter. So a
+transient rate limit can resolve a corridor, force the visa decision to unknown, and be handed to a
+traveller as *"this authority refused us"*. Entry 27's own reasoning about `502` applies exactly: a `429` is
+a transient fault where "try again later" is the honest advice.
+
+**2. `decision_is_unverified` never checks that the blocked page could have held the decision.**
+
+```python
+return "visa_decision" not in filled and bool(self.inaccessible_urls)
+```
+
+Any blocked URL anywhere in the crawl, plus any readable source, is enough. The blocked page need not be a
+plausible decision source — a `403` on a footer link qualifies. **This is the refusal discipline leaking**,
+and it leaks in the worst available direction: WAF `403`s on incidental pages are common at scale, so
+corridors whose decision was simply *not found* — the case that must refuse — will increasingly present as
+*authority-blocked*, the case that resolves. Entry 27's narrowness was the whole reason it was safe to ship.
+
+**Decided:** drop `429` from what may be handed over (it stays `blocked` for reporting — entry 18 requires
+that — but stops qualifying a corridor), and require the blocked URL to have been a **credible
+`visa_decision` candidate**: shortlisted for that role, or scoring above a floor for it. A block that cost
+us nothing we were looking for is a fact worth reporting and not a reason to resolve.
+
+**Evidence that settles it:** a resolver test with an unrelated blocked footer URL and an unfound decision,
+asserting the corridor still refuses. Offline, no credit needed.
+
+This narrows entry 27; it does not reverse it. France is unaffected — `france-visas.gouv.fr` is precisely a
+credible decision candidate, which is the case the exception was built for.
+
+---
+
+## 31. A failed adjudication refuses rather than falling back to the heuristic
+**2026-08-18 · amends entry 16 · decided, not implemented**
+
+Entry 16 chose: *"a failed call falls back to the heuristic, so a corridor degrades to a worse answer, never
+to none."* That reads as conservative and is the opposite.
+
+The heuristic is the decider **entry 15 proved gives confident wrong answers**: Brazil's Riyadh page as the
+document checklist, at exit 0, full confidence, nothing in the output suggesting the checklist belonged to a
+mission on another continent. Entry 15 called that "the outcome entries 5 and 6 exist to prevent." So the
+fallback converts a transient OpenAI outage into precisely that outcome, in production, distinguishable only
+by a reviewer noticing `decided_by`.
+
+Every other layer of this product prefers refusing to guessing. This one line prefers guessing.
+
+**Decided:** a failed adjudication call refuses the corridor. Retrying the call once is acceptable — a model
+call is not an authority refusing us, so entry 18 does not apply — and if it still fails, the corridor is
+refused with the reason, which is an outcome the product already supports and states honestly.
+
+**What the heuristic keeps**, because neither job is affected: it builds the shortlist the model chooses
+from, and it answers when `discovery_decider: heuristic` is configured, which stays tested and stays the
+offline regression baseline.
+
+**The cost, stated plainly:** an OpenAI outage takes discovery down instead of degrading it. That is the
+correct trade for a product whose wrong answers send someone to a visa centre without the right papers, and
+it is the same trade entry 18 makes about blocks.
+
+---
+
+## 30. `conflicts` is deleted, by entry 6's own rule
+**2026-08-18 · decided, not implemented**
+
+Entry 6 built a deterministic conflict detector, found a real discrepancy with it, and **deleted it anyway**
+because nothing recorded who a claim applied to, so a general visa-free-nationalities page and a
+nationality-specific page compared as a contradiction. It recorded the generalised lesson:
+
+> a feature whose wrong answers are alarming must have a near-zero false-positive rate, or it should not
+> ship.
+
+What ships today is `conflicts` on `VisaPlan`: free text written by the model, shown to travellers, with
+**nothing checking it** — known problem 14 says so. On the axis entry 6 deleted its predecessor for, this is
+strictly worse: the checked version was removed and the unchecked version kept.
+
+**Decided: delete the field.** From `VisaPlan` and `VisaPlanDraft` in `domain/models.py`, from the
+extraction prompt's rule 5, from `openai_extraction.py` and `fixtures.py`, and from the Singapore fixture
+plan. A genuine disagreement between official sources still reaches the traveller through
+`unresolved_questions`, which is where an unverified model observation honestly belongs.
+
+Revisit it as the scoped redesign already specified in entry 6 and in `TODO.md` — claim scope recorded,
+visa decision excluded, quantitative rules only — and not before.
+
+**Rejected: keeping it because it is the only conflict signal there is.** An alarming signal nobody
+validates is not better than none; that is the entry 6 finding, and this field is the same mistake with the
+verification removed.
+
+---
+
+## 29. LangGraph is not adopted, and the placeholder goes with it
+**2026-08-18**
+
+`domain/state.py` has described a "future LangGraph workflow" since the first week, `langgraph>=1,<2` is a
+declared dependency in `pyproject.toml`, and **neither is imported anywhere** — verified by grep:
+`VisaResearchState` appears only on the line that defines it.
+
+**Decided: this project does not need LangGraph, and the question is closed.** The reasoning, since a
+graph framework is the obvious thing to reach for in an "agent" project:
+
+- **There is no cycle to express.** The pipeline is linear — search → crawl → score → adjudicate → fetch →
+  extract — and deliberately so. LangGraph earns its complexity on loops, conditional multi-actor routing
+  and interrupts. `research/service.py` is six lines because there is nothing to orchestrate.
+- **The control flow is the safety story, and it is Python.** Trust is enforced at three typed checkpoints
+  (`validate_route`, after each redirect, after each meta-refresh). Expressing that as graph nodes over a
+  `TypedDict` would move those guards from Pydantic validators — which cannot be skipped — into node bodies
+  that can be reordered or bypassed. That is a real loss for no gain.
+- **The one loop the placeholder imagines is one this project rejects.** `research_attempts` and
+  `missing_fields` describe a re-research retry loop. Refusing beats retrying here (entries 5, 18, and 31),
+  so the state shape encodes an architecture the decisions have since ruled out.
+- **Durability already exists and is simpler.** `FileCorridorStore` and the source cache are the
+  checkpoints a graph runner would offer, keyed to the two things whose lifetimes genuinely differ (weeks
+  for corridors, hours for evidence). LangGraph checkpointing would not know that distinction.
+- **LangChain stays**, and is a separate question: it is used only for structured output against a schema in
+  `adjudication.py` and `openai_extraction.py`. That is a thin, working use and nothing here argues against
+  it.
+
+**Do:** delete `domain/state.py` and drop `langgraph` from `pyproject.toml`. An unused dependency in a
+project whose safety argument rests on a small audited surface is not free — it is one more thing a reader
+must check is not load-bearing. `TODO.md` had this as "either update it or delete it"; this is the decision
+to delete.
+
+**If it is ever revisited**, the trigger to look for is a genuine cycle with human interrupts — plausibly
+the client-side retrieval flow in entry 35, where a plan waits on the traveller fetching a blocked page.
+Even then, one `await` in FastAPI is the cheaper first answer.
+
+---
+
 ## 28. Four fixes from reading the interface as a traveller
 **2026-08-17**
 

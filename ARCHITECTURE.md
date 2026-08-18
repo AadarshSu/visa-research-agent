@@ -16,6 +16,18 @@ government**, not because it looks authoritative.
 Convincing prose earns nothing. This makes an unofficial page *unreachable* rather than merely
 low-scoring, which is a much stronger property than filtering.
 
+> **Measured limit, 2026-08-18.** "Own government" is implemented as *governmental* **and** *under the
+> country's own TLD*, and the first half is a list of hostname patterns (`gov`, `go.xx`, `gouv.xx`,
+> `gob.xx`, `govt.xx`, `gc.ca`, `admin.ch`, `europa.eu`). **19 of 51 countries checked have no such
+> marker** — Germany's `auswaertiges-amt.de`, Italy's `esteri.it`, the Netherlands' `ind.nl`, Canada's
+> `canada.ca` — so their entire government fails the rule and the destination refuses. The rule fails
+> *closed*, which is correct, but the diagnosis it reports is wrong. The amendment is a reviewed
+> authority domain per country, **never a wider pattern list**: adding `.de` or `.nl` as governmental
+> markers would trust every commercial site in those countries, and for exactly these countries the
+> own-TLD test is the only other signal there is. **Schengen is a further problem of definition** — for
+> short-stay visas the decision lives at EU level as much as nationally, and `europa.eu` can never
+> belong to a member state. See [DECISIONS.md](DECISIONS.md) entry 33 and entry 34.
+
 ### Where it is enforced
 
 Three checkpoints. A change to retrieval must preserve all three.
@@ -83,6 +95,18 @@ saying its guidance is wrong or missing — it is saying this program may not re
 that supports is *"we could not independently retrieve and verify this here"*, which is narrower
 than "unreachable" and must never be softened into an inference from another page. Working around
 such a block is forbidden; see [DECISIONS.md](DECISIONS.md) entry 18 and the rules in `CLAUDE.md`.
+
+Two things about `blocked` are **decided and not yet implemented**, and both matter because a block can
+now resolve a corridor rather than only annotate one:
+
+- **`BLOCKING_STATUS_CODES` is `{401, 403, 429}`, but only `401`/`403` may qualify a corridor.** A `429`
+  is a transient rate limit, where "try again later" is the honest advice — the same reasoning entry 27
+  applies to a `502`. It stays reported as `blocked`; it stops being grounds to resolve.
+- **A block must have cost us the thing we were looking for.** `decision_is_unverified` currently fires
+  on *any* blocked URL plus *any* readable source, so a `403` on a footer link can force the visa
+  decision to unknown and hand a traveller an irrelevant URL. The blocked page must have been a credible
+  `visa_decision` candidate. Without this, corridors whose decision was merely *not found* — which must
+  refuse — drift into presenting as authority-blocked, which resolves. See entry 32.
 
 `unreachable` and `unusable` are kept apart deliberately: one is a transient site problem, the other
 needs a different retriever. They demand different remedies even though they grade the same.
@@ -207,8 +231,23 @@ this is automated while per-country trust is not.
 | How many | ~3 per country | Tens of thousands |
 | Decided by | **A rule, once per country** | **The machine, every corridor** |
 
+> **The code does not yet implement the left column, and that is a live problem.**
+> `bootstrap_destination` runs *inside every cold request*, and its result is cached **per corridor** —
+> so a country's trusted set is re-derived from that day's search rankings for every new nationality,
+> and the answer to "who is Germany's government" varies between runs. Entry 22's US coin flip was this
+> mechanism, diagnosed at the time as a ranking problem. [DECISIONS.md](DECISIONS.md) entry 34 moves it
+> to a registry generated offline for all 198 countries, committed beside `countries.yaml`, and skimmed
+> once by a person. That is not a return to the gate entry 19 removed: that gate was over *URLs*, which
+> stay fully automated: this is ~3 domains per country, machine-proposed, frozen in review.
+
 ### The stages
 
+0. **Politeness** — *not implemented, and owed.* Nothing in this codebase reads `robots.txt`. A crawl
+   that computes a per-host delay while ignoring the file stating that host's own policy is inconsistent
+   on its own terms, and the posture this project wants is *honest client* rather than *anonymous
+   client*. Expect it to **cost** coverage: a path currently walked past becomes a refusal, which is the
+   right direction. A `Disallow` is a stated policy, not a block to route around.
+   See [DECISIONS.md](DECISIONS.md) entry 35.
 1. **Search** (`search.py`) — templated queries constrained with `site:` to approved domains, run
    four at a time rather than one after another; bounded because a search API is someone else's rate
    limit.
@@ -257,11 +296,16 @@ What it may do is bounded hard, and the bounds are the safety story:
 - it may return null for a role, and the prompt states that refusing beats guessing. A refusal is
   honoured rather than filled in from the ranking.
 - heuristic scores are withheld from the packet, so the ranking that failed cannot anchor it.
-- a failed call falls back to the heuristic: a corridor degrades to a worse answer, never to none.
+- a failed call currently falls back to the heuristic. **This is being reversed** ([DECISIONS.md](DECISIONS.md)
+  entry 31): the fallback silently substitutes the decider entry 15 proved gives *confident wrong
+  answers*, so an outage turns the best decider into the worst one with only `decided_by` to show it. A
+  failed call will retry once and then refuse the corridor, which is an outcome this product supports
+  and states honestly.
 
-The heuristic is not replaced. It builds the shortlist the model chooses from, it answers when no
-adjudicator is configured, and its score is still recorded beside the model's choice so a reviewer
-can see where the two disagreed.
+The heuristic is not replaced. It builds the shortlist the model chooses from — which stays
+load-bearing, since a page it ranks outside the ten fetch places is one the model never sees — it
+answers when no adjudicator is configured, and its score is recorded beside the model's choice so a
+reviewer can see where the two disagreed.
 
 ### Scoring, in brief
 
