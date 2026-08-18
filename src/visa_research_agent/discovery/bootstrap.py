@@ -20,7 +20,11 @@ from pydantic import Field
 
 from visa_research_agent.discovery.lexicon import Denylist
 from visa_research_agent.discovery.models import SearchResult
-from visa_research_agent.discovery.search import SearchProvider, bootstrap_queries
+from visa_research_agent.discovery.search import (
+    SearchProvider,
+    bootstrap_queries,
+    search_all,
+)
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.domain.trust import (
     host_of,
@@ -265,9 +269,9 @@ async def bootstrap_destination(
 ) -> BootstrapReport:
     """Search for a country's official authorities and return candidates for human approval."""
 
-    results_by_query: dict[str, list[SearchResult]] = {}
-    for query in bootstrap_queries(destination_name):
-        results_by_query[query] = await provider.search(query, count=results_per_query)
+    results_by_query = await search_all(
+        provider, bootstrap_queries(destination_name), count=results_per_query
+    )
     return propose_domains(destination_name, results_by_query, denylist, destination_tlds)
 
 

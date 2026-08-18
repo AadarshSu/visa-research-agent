@@ -1,5 +1,7 @@
 """Search as a candidate generator, and the safeguards on proposing a new authority domain."""
 
+import asyncio
+
 import httpx
 import pytest
 
@@ -19,6 +21,7 @@ from visa_research_agent.discovery.search import (
     bootstrap_queries,
     corridor_queries,
     resolve_corridor_countries,
+    search_all,
     usable_results,
 )
 from visa_research_agent.domain.models import DestinationConfig
@@ -370,3 +373,59 @@ def test_registrable_domain_is_still_importable_from_bootstrap() -> None:
 
     assert registrable_domain("in.usembassy.gov") == "usembassy.gov"
     assert registrable_domain("www.ica.gov.sg") == "ica.gov.sg"
+
+
+@pytest.mark.anyio
+async def test_queries_run_together_but_are_read_in_the_order_they_were_asked() -> None:
+    """Which page a corridor resolves to depends on the order candidates are considered, so it must
+    not depend on which query the engine happened to answer first. The slowest query here is the
+    first one asked, so a dict built from completion order would come out reversed."""
+
+    class SlowFirst:
+        async def search(self, query: str, *, count: int) -> list[SearchResult]:
+            await asyncio.sleep(0.02 if query == "first" else 0.0)
+            return [result(f"https://example.gov/{query}", query)]
+
+    found = await search_all(SlowFirst(), ["first", "second", "third"], count=5)
+
+    assert list(found) == ["first", "second", "third"]
+    assert found["first"][0].url == "https://example.gov/first"
+
+
+@pytest.mark.anyio
+async def test_a_failing_query_still_fails_the_run() -> None:
+    """Unchanged from when these ran one at a time. Whether a partly-searched corridor is safe to
+    serve is a separate decision, and it has not been made."""
+
+    class OneBadQuery:
+        async def search(self, query: str, *, count: int) -> list[SearchResult]:
+            if query == "bad":
+                raise SearchError("the search provider answered HTTP 429")
+            return []
+
+    with pytest.raises(SearchError):
+        await search_all(OneBadQuery(), ["good", "bad"], count=5)
+
+
+@pytest.mark.anyio
+async def test_no_more_queries_are_in_flight_than_the_limit_allows() -> None:
+    """A search API is someone else's rate limit, and a burst that trips it turns a resolvable
+    corridor into a refusal."""
+
+    in_flight = 0
+    highest = 0
+
+    class Counting:
+        async def search(self, query: str, *, count: int) -> list[SearchResult]:
+            nonlocal in_flight, highest
+            in_flight += 1
+            highest = max(highest, in_flight)
+            try:
+                await asyncio.sleep(0.01)
+                return []
+            finally:
+                in_flight -= 1
+
+    await search_all(Counting(), [f"q{index}" for index in range(12)], count=5, concurrency=4)
+
+    assert highest == 4

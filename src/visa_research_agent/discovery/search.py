@@ -7,6 +7,7 @@ Queries are built from templates and the corridor alone. They are never written 
 never derived from fetched page content, so a page cannot influence what is searched for next.
 """
 
+import asyncio
 from typing import Protocol
 
 import httpx
@@ -26,6 +27,39 @@ class SearchProvider(Protocol):
     async def search(self, query: str, *, count: int) -> list[SearchResult]:
         """Return ranked results for one query."""
         ...
+
+
+# How many search queries may be in flight at once. Queries are independent, so running them one
+# after another spent a second of latency per query for no reason — twelve of them was eleven
+# seconds of a corridor. Kept modest rather than unbounded: a search API is someone else's rate
+# limit, and a burst that trips it turns a resolvable corridor into a refusal.
+DEFAULT_SEARCH_CONCURRENCY = 4
+
+
+async def search_all(
+    provider: SearchProvider,
+    queries: list[str],
+    *,
+    count: int,
+    concurrency: int = DEFAULT_SEARCH_CONCURRENCY,
+) -> dict[str, list[SearchResult]]:
+    """Run several queries at once, returning their results keyed by query in the order asked.
+
+    The ordering matters beyond tidiness: what a corridor resolves to depends on the order results
+    are considered, so it must not depend on which query happened to answer first.
+
+    A failing query still raises, exactly as it did when these ran one at a time. Tolerating one
+    would be a separate decision about whether a partly-searched corridor is safe to serve.
+    """
+
+    limit = asyncio.Semaphore(max(1, concurrency))
+
+    async def run(query: str) -> list[SearchResult]:
+        async with limit:
+            return await provider.search(query, count=count)
+
+    completed = await asyncio.gather(*(run(query) for query in queries))
+    return dict(zip(queries, completed, strict=True))
 
 
 def bootstrap_queries(destination_name: str) -> list[str]:
