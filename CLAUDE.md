@@ -44,6 +44,12 @@ produces a serious defect.
   A country whose own top-level domain *is* `gov` otherwise admits its whole federal namespace, and
   the cost lands on search count, crawl budget and the ten fetch places (entry 22).
 
+  **Which domains are trusted is now committed data, not a live search (entry 38).**
+  `config/authority_domains.yaml` is generated offline by `visa-discover registry` and read at
+  construction; a country missing from it is **refused**, never bootstrapped live, because falling back
+  would silently reintroduce the per-request variance the file exists to remove. The rule itself is
+  unchanged — `auto_trusted_domains` still decides — so everything below still applies.
+
   **Measured 2026-08-18: the governmental half fails for 19 of 51 countries** — Germany, Italy, the
   Netherlands, Sweden, Canada and most of Schengen have no governmental marker in their hostnames, so
   the whole government is refused (entry 33). **Do not fix this by widening `GOVERNMENT_PATTERNS`.**

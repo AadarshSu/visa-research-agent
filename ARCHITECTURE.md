@@ -247,10 +247,12 @@ this is automated while per-country trust is not.
 > `bootstrap_destination` runs *inside every cold request*, and its result is cached **per corridor** —
 > so a country's trusted set is re-derived from that day's search rankings for every new nationality,
 > and the answer to "who is Germany's government" varies between runs. Entry 22's US coin flip was this
-> mechanism, diagnosed at the time as a ranking problem. [DECISIONS.md](DECISIONS.md) entry 34 moves it
-> to a registry generated offline for all 198 countries, committed beside `countries.yaml`, and skimmed
-> once by a person. That is not a return to the gate entry 19 removed: that gate was over *URLs*, which
-> stay fully automated: this is ~3 domains per country, machine-proposed, frozen in review.
+> mechanism, diagnosed at the time as a ranking problem. **Fixed on 2026-08-18** — entries 34 and 38.
+> `config/authority_domains.yaml` is generated offline by `visa-discover registry`, read once at
+> construction, and consulted in place of a live bootstrap; `auto_trusted_domains` still decides every
+> domain, so only *when* the rule runs changed. Not a return to the gate entry 19 removed: that gate was
+> over *URLs*, which stay fully automated; this is ~3 domains per country, machine-proposed, frozen in
+> review. **40 of 198 countries are built**; the rest refuse with a message naming the command.
 
 ### The stages
 
