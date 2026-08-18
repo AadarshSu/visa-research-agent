@@ -292,8 +292,11 @@ class CorridorResolver:
         # difference matters to a reader: one means "we were not allowed to check", not "no
         # guidance exists". Read from the recorded outcome rather than by matching the sentence,
         # so rewording a message cannot silently empty this list.
-        refused = sorted(self.crawl_fetcher.blocked_urls())
-        inaccessible = sorted({host_of(url) for url in refused})
+        # Domains cover every refusal including a rate limit, because reporting must not lose one.
+        # The URL list is narrower: only a settled refusal may be handed to a traveller as a page
+        # nobody was permitted to read, since a 429 might serve fine next week (entry 32).
+        inaccessible = sorted({host_of(url) for url in self.crawl_fetcher.blocked_urls()})
+        refused = sorted(self.crawl_fetcher.persistent_refusals())
 
         candidates: dict[str, CandidatePage] = dict(search_candidates)
         for candidate in crawled:
@@ -323,10 +326,43 @@ class CorridorResolver:
             notes=notes,
             inaccessible_domains=inaccessible,
             inaccessible_urls=refused,
+            decision_blocking_urls=self._decision_blocking(refused, candidates),
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
         )
+
+    def _decision_blocking(
+        self, refused: list[str], candidates: dict[str, CandidatePage]
+    ) -> list[str]:
+        """Which refusals plausibly cost us the visa decision, rather than merely happening.
+
+        A block only licenses saying the decision could not be verified if the page that refused
+        could have answered the question. Otherwise the exception in `ResolvedCorridor.is_usable`
+        stops being narrow: a `403` on a legal notice would resolve a corridor whose decision was
+        simply never found, and WAF refusals on incidental pages are ordinary at scale.
+
+        Credibility is read from the score the page already earned for `visa_decision` as a link.
+        Anything above zero counts, and that is deliberately a low bar rather than a tuned one: the
+        scorer has already **vetoed** site furniture, archived paths and wrong-audience pages
+        outright, so a positive score means real visa-decision signal was seen rather than that a
+        threshold was cleared. Nothing here is a judgement about what the page *says* — nobody read
+        it, and nobody may.
+
+        **Known limit, and it fails toward refusing.** Only pages the pipeline scored can be judged,
+        and the crawl discards a page it could not fetch, so a refusal met for the first time at
+        crawl depth is not in `candidates` and cannot qualify. In practice an authority's own visa
+        portal is what search returns first — `france-visas.gouv.fr` is exactly that — so the case
+        this exists for is covered. A corridor losing its answer this way refuses, which is the safe
+        direction and the one this project prefers.
+        """
+
+        blocking: list[str] = []
+        for url in refused:
+            candidate = candidates.get(url)
+            if candidate is not None and candidate.link_scores.score_for("visa_decision") > 0:
+                blocking.append(url)
+        return blocking
 
     def _mission_domains(self, destination: DestinationConfig, residence: object) -> list[str]:
         """Hosts that look like the post serving the traveller's residence.

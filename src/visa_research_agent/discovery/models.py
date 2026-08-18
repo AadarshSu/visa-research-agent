@@ -205,10 +205,29 @@ class ResolvedCorridor(StrictModel):
     """
 
     inaccessible_urls: list[str] = Field(default_factory=list)
-    """The exact pages that refused, so a plan can hand the traveller a link rather than a domain.
+    """The exact pages whose refusal was settled, so a plan can hand over a link, not a domain.
 
     A page, not a host, because that is the scope of what was observed: this URL refused this
     client. It is still not evidence about what the page says.
+
+    **Only persistent refusals** — `401` and `403` — reach this list. A `429` is a rate limit, and
+    telling a traveller an authority would not permit us to read a page is not something a momentary
+    limit supports. Such a refusal is still reported, in `inaccessible_domains` and in the notes;
+    it is simply not handed over as guidance nobody was allowed to read. See DECISIONS entry 32.
+    """
+
+    decision_blocking_urls: list[str] = Field(default_factory=list)
+    """The refusals that plausibly held the visa decision, and the only ones that may resolve this.
+
+    Carried apart from `inaccessible_urls` because the two answer different questions. Every
+    refusal is worth *reporting*; only a refusal of a page that could have answered the question
+    licenses saying the decision is unverifiable rather than unfound.
+
+    Without this the exception swallows the rule. A `403` on a footer link would qualify, and WAF
+    refusals on incidental pages are ordinary at scale — so corridors whose decision was simply
+    **not found**, which must refuse, would drift into presenting as authority-blocked, which
+    resolves. That is the refusal discipline leaking, and it is the failure this field exists to
+    prevent. See DECISIONS entry 32.
     """
 
     queries: list[str] = Field(default_factory=list)
@@ -237,19 +256,28 @@ class ResolvedCorridor(StrictModel):
         traveller can act on by opening it themselves. That needs a plan to exist to say it in, so
         the corridor resolves and `decision_is_unverified` carries the reason. Readable sources are
         still required: with nothing at all to cite there is no plan, only a link.
+
+        Three things have to hold, and each one keeps the exception from swallowing the rule: the
+        refusal must be **settled** rather than a rate limit, it must be of a page that could
+        plausibly have **held the decision**, and something readable must remain to cite.
         """
 
         filled = {role for source in self.sources for role in source.roles}
         if all(role in filled for role in LOAD_BEARING_ROLES):
             return True
-        return bool(self.inaccessible_urls) and bool(self.sources)
+        return bool(self.decision_blocking_urls) and bool(self.sources)
 
     @property
     def decision_is_unverified(self) -> bool:
-        """True when nothing confirmed the visa decision and an authority is why."""
+        """True when nothing confirmed the visa decision and a refusal of *that page* is why.
+
+        Deliberately not "and something somewhere was blocked". A decision that was merely not
+        found must still refuse, so the blocked page has to be one that could have answered the
+        question — which is what `decision_blocking_urls` records.
+        """
 
         filled = {role for source in self.sources for role in source.roles}
-        return "visa_decision" not in filled and bool(self.inaccessible_urls)
+        return "visa_decision" not in filled and bool(self.decision_blocking_urls)
 
     def source_ids_for(self, role: DiscoveryRole) -> list[str]:
         return [source.source_id for source in self.sources if role in source.roles]

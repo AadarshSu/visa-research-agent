@@ -33,6 +33,14 @@ FailureOutcome = Literal["untrusted", "unreachable", "unusable", "blocked"]
 
 # Statuses an authority returns to refuse an automated client rather than to report a fault.
 BLOCKING_STATUS_CODES = frozenset({401, 403, 429})
+
+# The subset whose refusal is **settled** rather than momentary, and so the only ones a page may be
+# handed to a traveller on. `401` and `403` say "you may not read this", and waiting changes
+# nothing. `429` says "not right now" — it is a rate limit, and the honest advice there is to try
+# again later, exactly as DECISIONS entry 27 reasons about a `502`. Both are still reported as
+# `blocked`, because entry 18 requires a refusal never to read as "nothing found"; the distinction
+# governs only what may resolve a corridor or be named as guidance nobody was allowed to read.
+PERSISTENT_REFUSAL_STATUS_CODES = frozenset({401, 403})
 PlanStatus = Literal["verified", "partial"]
 SourceKind = Literal[
     "immigration_authority",

@@ -24,6 +24,7 @@ from visa_research_agent.discovery.models import (
     CandidatePage,
     Corridor,
     PageLink,
+    ResolvedCorridor,
     RoleScores,
     SearchResult,
 )
@@ -457,3 +458,85 @@ async def test_a_url_an_authority_refused_is_not_asked_for_a_second_time(tmp_pat
     assert host_of(MISSION_CHECKLIST) in resolved.inaccessible_domains
     # Once, by the crawl. The shortlist must not spend a place asking a second time.
     assert [str(request.url) for request in requests].count(MISSION_CHECKLIST) == 1
+
+
+async def resolve_with_status(tmp_path: Path, refused_url: str, status: int) -> ResolvedCorridor:
+    """Resolve the corridor with one URL answering `status`, reached as a search result.
+
+    Via search deliberately: the crawl discards a page it could not fetch, so a refusal only has a
+    score to be judged on when something else scored it first.
+    """
+
+    requests: list[httpx.Request] = []
+    site = handler(requests)
+
+    def refusing(request: httpx.Request) -> httpx.Response:
+        if str(request.url).rstrip("/") == refused_url:
+            return httpx.Response(status, text="no")
+        served: httpx.Response = site(request)  # type: ignore[operator]
+        return served
+
+    transport = httpx.MockTransport(refusing)
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, DETAIL_INDIA])
+    resolver.crawl_fetcher.transport = transport
+    resolver.live_fetcher.transport = transport
+    return await resolver.resolve(destination(), corridor())
+
+
+@pytest.mark.anyio
+async def test_a_rate_limit_is_reported_but_can_never_resolve_a_corridor(tmp_path: Path) -> None:
+    """A `429` says "not right now", which is a different fact from "you may not read this".
+
+    Entry 27 already reasoned this way about a `502` — "try again later" is the honest advice — but
+    `BLOCKING_STATUS_CODES` lumped all three together, so a momentary rate limit could force a visa
+    decision to *unknown* and hand a traveller a page as one an authority refused them. It stays
+    reported, because entry 18 requires a refusal never to read as "nothing found". DECISIONS 32.
+    """
+
+    resolved = await resolve_with_status(tmp_path, DETAIL_INDIA, 429)
+
+    assert host_of(DETAIL_INDIA) in resolved.inaccessible_domains
+    assert any("429" in note for note in resolved.notes), resolved.notes
+    # Reported, and nothing more: not handed over, and not grounds to resolve.
+    assert resolved.inaccessible_urls == []
+    assert resolved.decision_blocking_urls == []
+    assert not resolved.decision_is_unverified
+
+
+@pytest.mark.anyio
+async def test_a_settled_refusal_of_the_decision_page_is_what_may_resolve_one(
+    tmp_path: Path,
+) -> None:
+    """The France shape, which entry 27 exists for and this must not break.
+
+    `france-visas.gouv.fr` answers `403` and is the only place the decision lives, so naming it and
+    handing over the URL is the one useful thing left to say.
+    """
+
+    resolved = await resolve_with_status(tmp_path, DETAIL_INDIA, 403)
+
+    assert resolved.inaccessible_urls == [DETAIL_INDIA]
+    assert resolved.decision_blocking_urls == [DETAIL_INDIA], (
+        "the per-nationality decision page refused us, so it is why the decision is unverifiable"
+    )
+
+
+def test_only_a_refusal_of_a_plausible_decision_page_counts(tmp_path: Path) -> None:
+    """The credibility half, which is what keeps the exception from swallowing the rule.
+
+    A page carrying no visa-decision signal cannot have cost us the decision, so its refusal is
+    reported and nothing more. Scored above zero is a deliberately low bar rather than a tuned one:
+    the scorer already vetoes site furniture and wrong-audience pages outright, so any positive
+    score means real signal was seen.
+    """
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    decision_page = page(DETAIL_INDIA, 31.0, role="visa_decision")
+    footer = page(EXEMPTIONS, 0.0, role="visa_decision")
+    candidates = {DETAIL_INDIA: decision_page, EXEMPTIONS: footer}
+
+    blocking = resolver._decision_blocking([DETAIL_INDIA, EXEMPTIONS], candidates)
+
+    assert blocking == [DETAIL_INDIA]
+    # A refusal nothing ever scored cannot qualify either, which fails toward refusing.
+    assert resolver._decision_blocking(["https://immigration.gov.example/never-seen"], {}) == []

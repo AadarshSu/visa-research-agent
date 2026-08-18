@@ -395,8 +395,15 @@ async def test_a_stored_corridor_is_keyed_by_the_whole_corridor(tmp_path: Path) 
 BLOCKED_PAGE = "https://france-visas.gouv.fr/en/web/france-visas"
 
 
-def partly_resolved(*, blocked: bool, with_sources: bool = True) -> ResolvedCorridor:
-    """France as it actually resolves: the UK post's route page, and no confirmed decision."""
+def partly_resolved(
+    *, blocked: bool, with_sources: bool = True, held_the_decision: bool = True
+) -> ResolvedCorridor:
+    """France as it actually resolves: the UK post's route page, and no confirmed decision.
+
+    `held_the_decision` is what separates France from an incidental refusal. France-Visas is the
+    page the decision actually lives on, so its `403` is why the decision is unverifiable. A `403`
+    on a legal notice is not, and must not resolve anything.
+    """
 
     sources = (
         [
@@ -421,6 +428,7 @@ def partly_resolved(*, blocked: bool, with_sources: bool = True) -> ResolvedCorr
         unresolved_roles=["visa_decision", "document_checklist"],
         inaccessible_domains=["france-visas.gouv.fr"] if blocked else [],
         inaccessible_urls=[BLOCKED_PAGE] if blocked else [],
+        decision_blocking_urls=[BLOCKED_PAGE] if blocked and held_the_decision else [],
     )
 
 
@@ -449,6 +457,24 @@ def test_a_blocked_authority_alone_is_not_a_plan() -> None:
     """With nothing readable to cite there is no plan, only a link."""
 
     assert not partly_resolved(blocked=True, with_sources=False).is_usable
+
+
+def test_a_block_that_could_not_have_held_the_decision_resolves_nothing() -> None:
+    """The exception has to be narrow or it swallows the rule it is an exception to.
+
+    A WAF refusing an incidental page is ordinary at scale, so if any block anywhere qualified,
+    every corridor whose decision was merely *not found* would come to present as one an authority
+    refused us — and that resolves where the truth must refuse. The refusal is still reported; it
+    simply cannot license a claim about a question it never touched. DECISIONS entry 32.
+    """
+
+    resolved = partly_resolved(blocked=True, held_the_decision=False)
+
+    assert not resolved.is_usable
+    assert not resolved.decision_is_unverified
+    # Reported, though: entry 18 requires that a refusal never read as "nothing was found".
+    assert resolved.inaccessible_urls == [BLOCKED_PAGE]
+    assert resolved.inaccessible_domains == ["france-visas.gouv.fr"]
 
 
 def test_the_refused_page_reaches_the_destination_it_will_be_planned_from() -> None:

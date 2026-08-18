@@ -22,6 +22,7 @@ from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLi
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
 from visa_research_agent.domain.models import (
     BLOCKING_STATUS_CODES,
+    PERSISTENT_REFUSAL_STATUS_CODES,
     DestinationConfig,
     FailureOutcome,
 )
@@ -176,9 +177,15 @@ class CrawlFetcher:
         # Where each request actually landed. Relative links must resolve against that, not
         # against the URL that was asked for, or a redirected page's links all point nowhere.
         self.final_urls: dict[str, str] = {}
+        # Which status a refusal came back with. `outcomes` says a page was refused, which is what
+        # reporting needs; this says whether waiting could change that, which is what deciding
+        # needs. A rate limit and "you may not read this" are not the same fact.
+        self.refusal_statuses: dict[str, int] = {}
 
-    def _record_failure(self, url: str, outcome: FailureOutcome, reason: str) -> None:
-        """Record why a page could not be read, once, in both forms.
+    def _record_failure(
+        self, url: str, outcome: FailureOutcome, reason: str, *, status: int | None = None
+    ) -> None:
+        """Record why a page could not be read, once, in every form something needs it.
 
         The sentence is for whoever reads the run; the outcome is for whatever has to act on it.
         Kept together so the two can never describe different things.
@@ -186,6 +193,8 @@ class CrawlFetcher:
 
         self.failures[url] = reason
         self.outcomes[url] = outcome
+        if status is not None:
+            self.refusal_statuses[url] = status
 
     def blocked_urls(self) -> set[str]:
         """URLs an authority refused this client.
@@ -198,6 +207,24 @@ class CrawlFetcher:
         """
 
         return {url for url, outcome in self.outcomes.items() if outcome == "blocked"}
+
+    def persistent_refusals(self) -> set[str]:
+        """Refusals that waiting would not change, so the only ones a plan may be built around.
+
+        A `429` is a rate limit: it is still a refusal, still reported, and still not retried — but
+        it does not support telling a traveller that an authority would not let this program read a
+        page, because next week it might. Only `401` and `403` do. See DECISIONS entry 32; the
+        distinction is the same one entry 27 drew when it excluded a `502`.
+
+        A refusal recorded without a status is excluded, which fails toward refusing rather than
+        toward claiming an authority blocked us.
+        """
+
+        return {
+            url
+            for url in self.blocked_urls()
+            if self.refusal_statuses.get(url, 0) in PERSISTENT_REFUSAL_STATUS_CODES
+        }
 
     async def _wait_for_host(self, host: str) -> None:
         """Space this host's requests, without holding up any other host.
@@ -254,6 +281,7 @@ class CrawlFetcher:
                 "blocked",
                 f"it refused automated retrieval (HTTP {response.status_code}), so its guidance "
                 "could not be independently verified here",
+                status=response.status_code,
             )
             return None
         if response.status_code != httpx.codes.OK:
