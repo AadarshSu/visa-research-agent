@@ -37,7 +37,7 @@ portal refuses automated retrieval, so the plan states the visa decision as *unk
 portal and links to it, and lists no documents it could not read.
 
 Conflict detection across sources remains intentionally deferred, and the unverified `conflicts` field
-is being removed rather than kept — see [DECISIONS.md](DECISIONS.md) entries 6 and 30. **LangGraph is
+was deleted rather than kept — see [DECISIONS.md](DECISIONS.md) entries 6 and 30. **LangGraph is
 not deferred but declined:** the pipeline is linear, and the trust checks are typed validators that
 cannot be skipped rather than graph nodes that could be reordered (entry 29).
 
@@ -94,9 +94,11 @@ Two destinations are configured. Singapore works in either source mode. **Japan 
 snapshots and therefore requires `source_mode: live`**, because both its document checklist and its
 eVisa terms are published only as PDFs, which the offline fixture path was never built for.
 
-Today the model reports disagreements between sources as free text in `conflicts`. That is
-unverified by design: nothing checks the claim, names which pages differ, or decides which one
-governs.
+A disagreement between sources is reported as an unresolved question, which is what it honestly is:
+nothing checks which pages differ or decides which one governs. There was a separate `conflicts` field
+carrying the same prose under a heading that made it read as a finding; it was deleted (entry 30) by the
+rule entry 6 recorded when it deleted the *checked* version — a feature whose wrong answers are alarming
+needs a near-zero false-positive rate, or it should not ship.
 
 ### Deferred: structured conflict detection
 

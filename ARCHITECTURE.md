@@ -96,17 +96,19 @@ that supports is *"we could not independently retrieve and verify this here"*, w
 than "unreachable" and must never be softened into an inference from another page. Working around
 such a block is forbidden; see [DECISIONS.md](DECISIONS.md) entry 18 and the rules in `CLAUDE.md`.
 
-Two things about `blocked` are **decided and not yet implemented**, and both matter because a block can
-now resolve a corridor rather than only annotate one:
+Two things bound `blocked` further, because a block can resolve a corridor rather than only annotate one:
 
-- **`BLOCKING_STATUS_CODES` is `{401, 403, 429}`, but only `401`/`403` may qualify a corridor.** A `429`
-  is a transient rate limit, where "try again later" is the honest advice — the same reasoning entry 27
-  applies to a `502`. It stays reported as `blocked`; it stops being grounds to resolve.
-- **A block must have cost us the thing we were looking for.** `decision_is_unverified` currently fires
-  on *any* blocked URL plus *any* readable source, so a `403` on a footer link can force the visa
-  decision to unknown and hand a traveller an irrelevant URL. The blocked page must have been a credible
-  `visa_decision` candidate. Without this, corridors whose decision was merely *not found* — which must
-  refuse — drift into presenting as authority-blocked, which resolves. See entry 32.
+- **`BLOCKING_STATUS_CODES` is `{401, 403, 429}`, but only `PERSISTENT_REFUSAL_STATUS_CODES` —
+  `{401, 403}` — may qualify a corridor.** A `429` is a rate limit, where "try again later" is the honest
+  advice, exactly as entry 27 reasons about a `502`. It stays reported as `blocked`; it is not grounds to
+  resolve, and it is not handed to a traveller as a page nobody was permitted to read.
+- **A block must have cost us the thing we were looking for.** `ResolvedCorridor.decision_blocking_urls`
+  holds the refusals that plausibly held the visa decision — judged by the `visa_decision` link score the
+  page already earned — and `is_usable` and `decision_is_unverified` read that rather than "was anything
+  blocked". Without it a `403` on a footer link would force the decision to unknown, and corridors whose
+  decision was merely *not found* — which must refuse — would drift into presenting as authority-blocked,
+  which resolves. `inaccessible_domains` still carries every refusal, because reporting must lose none.
+  See entry 32.
 
 `unreachable` and `unusable` are kept apart deliberately: one is a transient site problem, the other
 needs a different retriever. They demand different remedies even though they grade the same.

@@ -89,9 +89,10 @@ produces a serious defect.
   approval is guaranteed.
 - **Never show a traveller an unverified claim that would alarm them if wrong.** The rule from entry 6,
   which deleted a *working* conflict detector: a feature whose wrong answers are alarming needs a
-  near-zero false-positive rate or it should not ship. The `conflicts` field violated it and is being
-  removed (entry 30). If conflict detection returns, it records the population each claim applies to,
-  compares only same-scope claims, and leaves the visa decision out.
+  near-zero false-positive rate or it should not ship. The `conflicts` field violated it and was deleted
+  (entry 30); a disagreement between official pages is now an unresolved question. **Do not add it back.**
+  If conflict detection returns, it records the population each claim applies to, compares only same-scope
+  claims, and leaves the visa decision out.
 - **LangGraph is declined, not deferred (entry 29).** The pipeline is linear, so there is no cycle to
   express, and the trust checks are Pydantic validators that cannot be skipped rather than graph nodes
   that could be reordered or bypassed. Do not reintroduce it or a `state.py`-style placeholder. LangChain

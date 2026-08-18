@@ -191,7 +191,7 @@ the registry in entry 34, then reviewed authority domains for the 19, then the s
 ---
 
 ## 32. A block hands over a link only when it plausibly held the answer
-**2026-08-18 · defect found by review; narrowing decided, not implemented**
+**2026-08-18 · defect found by review; narrowed and implemented**
 
 Entry 27 is the one shipped change never run live, and reading it against the code found the prose and the
 behaviour disagree in two ways. Both widen the exception beyond what entry 27 argued for.
@@ -220,11 +220,32 @@ that — but stops qualifying a corridor), and require the blocked URL to have b
 `visa_decision` candidate**: shortlisted for that role, or scoring above a floor for it. A block that cost
 us nothing we were looking for is a fact worth reporting and not a reason to resolve.
 
-**Evidence that settles it:** a resolver test with an unrelated blocked footer URL and an unfound decision,
-asserting the corridor still refuses. Offline, no credit needed.
-
 This narrows entry 27; it does not reverse it. France is unaffected — `france-visas.gouv.fr` is precisely a
 credible decision candidate, which is the case the exception was built for.
+
+**Implemented 2026-08-18.** `PERSISTENT_REFUSAL_STATUS_CODES = {401, 403}` sits beside
+`BLOCKING_STATUS_CODES`, `CrawlFetcher` records which status a refusal came back with, and
+`ResolvedCorridor` gained `decision_blocking_urls` — carried *apart* from `inaccessible_urls`, because
+every refusal is worth reporting while only the refusal of a page that could have answered the question
+licenses resolving one. `is_usable` and `decision_is_unverified` read the new field. Three things must now
+hold: the refusal is settled, the page plausibly held the decision, and something readable remains to cite.
+
+**Credibility is the score the page already earned for `visa_decision` as a link, above zero.** A low bar
+deliberately, rather than a tuned one: the scorer already **vetoes** site furniture, archived paths and
+wrong-audience pages outright, so any positive score means real signal was seen. Nothing here judges what
+the page *says* — nobody read it, and nobody may.
+
+**A limit worth recording, because it fails toward refusing.** Only pages the pipeline scored can be
+judged, and the crawl discards a page it could not fetch, so a refusal first met at crawl depth is not a
+candidate and cannot qualify. An authority's own visa portal is what search returns first — France-Visas is
+exactly that — so the case this exists for is covered, and a corridor that loses its answer this way
+refuses.
+
+**Verified by mutation rather than by the tests merely passing.** Reintroducing each defect fails exactly
+the intended test: letting `429` qualify again trips
+`test_a_rate_limit_is_reported_but_can_never_resolve_a_corridor`, and reverting `decision_is_unverified` to
+read `inaccessible_urls` trips `test_a_block_that_could_not_have_held_the_decision_resolves_nothing`.
+301 tests pass.
 
 ---
 
@@ -257,7 +278,7 @@ it is the same trade entry 18 makes about blocks.
 ---
 
 ## 30. `conflicts` is deleted, by entry 6's own rule
-**2026-08-18 · decided, not implemented**
+**2026-08-18 · implemented**
 
 Entry 6 built a deterministic conflict detector, found a real discrepancy with it, and **deleted it anyway**
 because nothing recorded who a claim applied to, so a general visa-free-nationalities page and a
@@ -277,6 +298,22 @@ plan. A genuine disagreement between official sources still reaches the travelle
 
 Revisit it as the scoped redesign already specified in entry 6 and in `TODO.md` — claim scope recorded,
 visa decision excluded, quantitative rules only — and not before.
+
+**Done 2026-08-18**, from `VisaPlanDraft` and `VisaPlan`, the extraction prompt's rule 5, both extractors,
+the Singapore fixture and the interface. Two details worth knowing:
+
+- **The one real conflict this project ever found was preserved, not dropped.** Singapore's own pages
+  measure passport validity from entry and from departure, which is the discrepancy entry 6's detector
+  correctly caught. It is now a sentence in `unresolved_questions`, where an unverified observation
+  honestly belongs, and a test asserts it is still there. Rule 5 was rewritten rather than deleted —
+  disagreements must still be recorded, and never silently resolved in favour of one page — and it kept
+  its number, because other documents cite rules 8a and 8b.
+- **The interface lost a two-column grid, not just a block.** `.reliability-grid` was
+  `grid-template-columns: 1fr 1fr`, so removing one of its two children would have left the remaining
+  block rendering in half the width beside an empty column. Both the wrapper and its now-dead CSS went
+  with it. Checked by injecting a plan into the real page rather than trusting the diff — the technique
+  from entry 28 — confirming one heading, the block at 91% of the container, both questions rendered, no
+  console error, and no horizontal overflow at 375px.
 
 **Rejected: keeping it because it is the only conflict signal there is.** An alarming signal nobody
 validates is not better than none; that is the entry 6 finding, and this field is the same mistake with the
@@ -311,10 +348,10 @@ graph framework is the obvious thing to reach for in an "agent" project:
   `adjudication.py` and `openai_extraction.py`. That is a thin, working use and nothing here argues against
   it.
 
-**Do:** delete `domain/state.py` and drop `langgraph` from `pyproject.toml`. An unused dependency in a
-project whose safety argument rests on a small audited surface is not free — it is one more thing a reader
-must check is not load-bearing. `TODO.md` had this as "either update it or delete it"; this is the decision
-to delete.
+**Done 2026-08-18:** `domain/state.py` is deleted and `langgraph` is dropped from `pyproject.toml`. An
+unused dependency in a project whose safety argument rests on a small audited surface is not free — it is
+one more thing a reader must check is not load-bearing. `TODO.md` had this as "either update it or delete
+it"; this was the decision to delete.
 
 **If it is ever revisited**, the trigger to look for is a genuine cycle with human interrupts — plausibly
 the client-side retrieval flow in entry 35, where a plan waits on the traveller fetching a blocked page.
