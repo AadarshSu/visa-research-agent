@@ -18,9 +18,18 @@ hosts — a guess at what a site tolerates, running alongside a refusal to read 
 
 `RobotsCache` (`research/robots.py`) fetches one policy per **origin**, re-read after 24 hours, and both
 fetchers consult it before every request: `discovery/crawl.py` before each crawled page, `research/live_sources.py` before each
-source and before each meta-refresh forward. Parsing is `urllib.robotparser` — stdlib, far better tested
-than anything written here, and its one known shortfall (first-match rather than longest-match for `Allow`
-against `Disallow`) errs toward fetching less.
+source and before each meta-refresh forward.
+
+**Matching is written here, and `urllib.robotparser` was tried first and rejected.** The original
+reasoning — stdlib, better tested, and its shortfall "errs toward fetching less" — was wrong, and was
+written from reading the module rather than running it. `urllib` matches with `filename.startswith(path)`
+and supports **neither `*` nor `$`**. Measured against real authorities on 2026-08-18: every rule
+`www.gov.uk` publishes is a wildcard, so a stdlib client obeys **none** of them, and `www.canada.ca` has
+fourteen more it walks straight past. A parser that silently makes this fetch *more* than a site permits
+is the one failure this module cannot have. The matcher now implements RFC 9309 §2.2.2–2.2.3 directly:
+`*` matches any run, a trailing `$` anchors the path end, the longest pattern wins, `Allow` beats
+`Disallow` at equal length, and a group is chosen by exact product token falling back to `*` — not by
+`urllib`'s substring test, under which a record aimed at `Visa-Bot` would capture this client.
 
 **Three things were decided while implementing it, and each is the reason a later "simplification" would
 be a defect.**

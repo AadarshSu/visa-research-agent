@@ -27,8 +27,9 @@ argued yet.
 
 `research/robots.py` fetches one policy per **origin** and re-reads it after 24 hours;
 `discovery/crawl.py` consults it before every crawled page and after every redirect, and
-`research/live_sources.py` before every source and every meta-refresh forward. Parsing is
-`urllib.robotparser`. 19 new tests, all offline. DECISIONS entry 36.
+`research/live_sources.py` before every source and every meta-refresh forward. Matching implements
+RFC 9309 directly — `urllib.robotparser` was tried and rejected, because it supports neither `*` nor `$`
+and so obeys none of the rules `www.gov.uk` publishes. 32 new tests, all offline. DECISIONS entry 36.
 
 **Three things came out of building it that the entry above did not anticipate:**
 

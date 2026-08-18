@@ -263,7 +263,9 @@ this is automated while per-country trust is not.
    without ever being allowed to resolve a corridor, which stays reserved for a refusal observed on the
    page itself. `5xx` or an oversized file means the policy could not be read, which is reported as
    exactly that and not as a refusal; a transport failure is left to the caller, so an unreachable host
-   is still diagnosed as unreachable. See [DECISIONS.md](DECISIONS.md) entries 35 and 36.
+   is still diagnosed as unreachable. Matching implements RFC 9309 §2.2.2–2.2.3 rather than using
+   `urllib.robotparser`, which supports neither `*` nor `$` and would therefore obey none of the rules
+   `www.gov.uk` publishes. See [DECISIONS.md](DECISIONS.md) entries 35 and 36.
 1. **Search** (`search.py`) — templated queries constrained with `site:` to approved domains, run
    four at a time rather than one after another; bounded because a search API is someone else's rate
    limit.
