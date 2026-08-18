@@ -171,10 +171,31 @@ above the applying-from country's. For a consular checklist the **post** governs
 applying from Great Britain applies at the Dutch mission in the UK. The adjudicator then correctly
 refuses to name a wrong-post page, so the corridor loses a checklist it had already fetched.
 
-**Do:** make `applying_from` outrank `passport_nationality` when a URL or link text names a post, and
-**measure it across all seven verified corridors before keeping it** — link scoring decides what every
-corridor reads, and Japan and Singapore currently resolve correctly through paths that may depend on the
-present weighting.
+**But measure the window before touching a scoring rule.** `DEFAULT_SHORTLIST_SIZE` is **10**, each page
+excerpted to 6,000 characters — about 15k tokens to the adjudicator, which is a very conservative budget
+for a model call. The scorer's job is therefore **recall into ten places**, not ranking: a page it drops
+is one the model never sees, and the model is the reliable component. Measured 2026-08-18, changing only
+that number from 10 to 25:
+
+| Corridor | shortlist 10 | shortlist 25 |
+| --- | --- | --- |
+| Canada | refuses — no visa decision | **every role filled** |
+| Japan | no visa decision | **every role filled**, same checklist |
+| Netherlands | no checklist | checklist found (decision genuinely unpublishable) |
+| Sweden | two roles unfilled | unchanged — fails for another reason |
+
+**One number outperformed every scoring rule in the file.** Two corridors that refused now resolve
+completely, and nothing regressed. The `/india`-over-`/united-kingdom` bug is real and still worth
+fixing, but it is not what was binding.
+
+**Not yet measured, and it is what decides this:** the latency and cost of fetching 25 pages instead of
+10. A cold request is 34.1s today and deployment is already tight against a 30–60s proxy timeout, so this
+trades the thing blocking deployment against the thing blocking coverage. Measure both before changing
+the default.
+
+**Then** consider making `applying_from` outrank `passport_nationality` where a URL names a post — and
+measure that across all seven verified corridors separately, because link scoring decides what every
+corridor reads.
 
 **Not everything is this.** The Netherlands' visa *decision* is published only as a nine-question
 JavaScript filter tool, so that role is genuinely unanswerable and refusing it is right. Sweden and
