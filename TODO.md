@@ -112,37 +112,29 @@ prompting against. Four corridors currently disagree on `general_entry` and `vis
 **Careful:** do not tune the lexicon to agree with the model. The heuristic's job is to build a good
 shortlist and to be a safe fallback, not to reproduce the model's judgement.
 
-### Tell a traveller what an inaccessible source means — `next`
+### Confirm the blocked-source plan reads well to a traveller — `next`
 
-**Why:** discovery now distinguishes a blocked authority from a broken one, and says so
-(`blocked`, `inaccessible_domains`, DECISIONS entry 18). The *plan* side does not yet. A traveller
-seeing a partial plan is told a source "could not be used"; they are not told the difference between
-"this site is down", "this page said nothing usable", and "this authority does not permit automated
-retrieval, so we could not verify its guidance here — check it yourself at this URL".
+**Why:** DECISIONS entry 27 built it — a corridor now resolves when the only gap is behind a block,
+the plan states the decision as unknown, and the interface hands over the URL with a plain sentence.
+The chain is covered by tests. **What has not happened is a live run**, because the Brave search API
+answered HTTP 402, out of credit, before France could be re-run.
 
-The third is the one worth saying out loud, because the traveller *can* act on it: they can open the
-page in their own browser. That turns a gap into a next step.
+**Do:** when the quota resets, run `france/IN/GB/tourism` end to end and read the result as a
+traveller would. Three things to judge, none of which a test can:
 
-**Do:** surface the `blocked` outcome distinctly in the plan interface, with the URL and a plain
-sentence naming what we could not verify. Do not soften it into "unavailable"; do not let the model
-fill the gap from another page — `VisaPlan` already forbids inventing a checklist, and the same
-discipline applies here.
+1. Does the explanation say plainly that the decision could not be verified, and name France-Visas?
+2. Do the application steps stay useful when the first one is "check the authority yourself"? Rule 8b
+   asks for that; whether the model obliges is unknown.
+3. Does "Uncertain" read as *we could not check* rather than as *no visa needed*? If it reads as the
+   latter to anyone, the wording is wrong and it matters more than anything else on this list.
 
-**France is the strongest argument for doing this.** Entry 26 established that France refuses
-because every readable page delegates the visa decision to `france-visas.gouv.fr`, which answers 403.
-A traveller currently gets "no verified plan" for one of the most common corridors there is, when the
-useful sentence is available and actionable: France publishes this, we are not permitted to read it
-from here, open `france-visas.gouv.fr` yourself. That turns the refusal into a next step.
+**Then re-run the other corridors.** The `is_usable` change affects every discovered destination: any
+corridor with a blocked page and no confirmed decision now resolves where it used to refuse. The US
+has a blocked `travel.state.gov` and *does* confirm its decision, so it should be unaffected —
+confirm that rather than assume it.
 
-**The structural gap to close first, found on the US corridor.** A plan's `unavailable_sources`
-covers only **its own** retrieval, and a discovery-time block never reaches it: `travel.state.gov`
-answers 403 while the corridor is being resolved, so `ResolvedCorridor.inaccessible_domains` holds it
-and the plan knows nothing. The US plan therefore tells a traveller the checklist is absent without
-telling them an authority refused us — the one sentence they could act on. Carry
-`inaccessible_domains` from the resolved corridor into the plan before writing any interface for it,
-or the interface has nothing to render.
-
-**Do not:** work around the block. See `CLAUDE.md`; that decision is closed.
+**Careful:** if the plan reads as though the guidance were verified, the fix is the wording and the
+banner, never a narrower `visa_required`. And nothing here licenses reading the blocked page.
 
 ---
 

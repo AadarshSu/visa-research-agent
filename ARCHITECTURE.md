@@ -96,6 +96,14 @@ needs a different retriever. They demand different remedies even though they gra
   between them: naming a required source must not quietly discard the checklist requirement.
 - A required source missing → **refuse before the model is called**, so a doomed run costs nothing.
   The API answers `503` naming the missing evidence.
+- **A blocked authority is named rather than worked around, and can now carry a plan.** When the
+  only page that could confirm the visa decision refused this program, the corridor resolves with
+  `decision_is_unverified` and the plan states the decision as **unknown** — enforced in the
+  extractor, not asked of the prompt — while naming the page and its URL under
+  `unavailable_sources`. `UnreadableAuthority` is deliberately not a source: nothing read it, so
+  nothing may cite it, and it is still validated against the approved domains because the domain is
+  the only thing vouching for it. A decision that was simply *not found* still refuses. See
+  [DECISIONS.md](DECISIONS.md) entry 27.
 - **A destination may legitimately have no checklist at all.** Some authorities publish none —
   Vietnam states its e-visa requirements as upload fields inside the application form. That is not
   a refusal, but the absence must be carried rather than smoothed over: `VisaPlan` rejects any plan

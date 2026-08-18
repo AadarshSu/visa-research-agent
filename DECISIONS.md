@@ -9,6 +9,54 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 27. A block becomes a next step: name the page, hand over the link, decide nothing
+**2026-08-17**
+
+Entry 26 established that France refuses because every readable page delegates the visa decision to
+a portal that answers 403. Refusing is honest but not useful: the traveller gets "no verified plan"
+for one of the commonest corridors there is, when the sentence they could act on was available all
+along — *France publishes this at france-visas.gouv.fr; we were not permitted to read it; open it
+yourself*.
+
+**Decided: a corridor resolves when the only thing missing is behind a block, and the plan says so.**
+Three properties hold it in place, and none of them is a relaxation of entry 18:
+
+- **Nothing is inferred.** `visa_required` is set to `null` — not guessed — and that is *enforced in
+  the application*, not asked of the prompt: the model returned `true` in the test and the extractor
+  overrode it. A wrong yes or no about whether someone needs a visa is the most damaging thing this
+  product can say.
+- **The page is named, never read.** `UnreadableAuthority` is deliberately not a `ConfiguredSource`:
+  there is no content behind it, and a source with empty content is exactly what must never be
+  citable. The research packet carries its URL and authority and no text, so the model is told where
+  the guidance lives, not what it says.
+- **It is still held to the domain rule.** A page shown to a traveller as this destination's own
+  guidance must sit on an approved domain, validated in `validate_route`. This is the case that needs
+  that rule most: nobody read the page, so the domain is the only thing vouching for it. The guard
+  caught a test fixture of mine pairing Singapore's config with a French URL.
+
+**The exception stays narrow.** A visa decision that was simply *not found* still refuses — the gap
+must be one an authority imposed, which means a recorded `blocked` outcome, and only `401`/`403`
+qualify. A `502` is a transient fault where "try again later" is the honest advice, and a host whose
+DNS does not resolve must never be handed over as a link at all. Readable sources are still required:
+with nothing to cite there is no plan, only a link, and
+`ResolvedCorridor.is_usable` requires both.
+
+Such a plan can never be `verified`, for the same reason a checklist-less one cannot (entry 23) and
+more strongly. The interface renders the blocked authority with its URL and the plain sentence, so the
+refusal becomes a next step rather than a dead end.
+
+**Verified offline, end to end, and NOT verified live.** The chain is covered by tests from
+`ResolvedCorridor.is_usable` through `to_destination_config` to the extracted plan: the decision is
+forced to unknown, the authority is named with its URL in `unavailable_sources`, the status is
+`partial`, and the packet carries no content for it. 286 tests pass.
+
+**The live run could not be done: the Brave search API returned HTTP 402, out of credit.** So what a
+model actually writes for France given the UK post's page plus a named blocked portal is *unverified*.
+Re-run `france/IN/GB/tourism` when the quota resets, and read the plan as a traveller would before
+trusting this. That is the one thing outstanding on this entry.
+
+---
+
 ## 26. France refuses because France does not publish the answer anywhere readable
 **2026-08-17**
 
