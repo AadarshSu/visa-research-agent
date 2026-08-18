@@ -102,6 +102,20 @@ function renderEvidenceBanner(plan) {
 
   const list = element("ul");
   missing.forEach((failure) => {
+    // An authority refusing this program is the one gap a traveller can close themselves, so it
+    // gets the sentence that says so and a link they can open. Everything else stays a statement.
+    if (failure.outcome === "blocked" && failure.attempted_url) {
+      const item = element(
+        "li",
+        "",
+        `${failure.authority} does not permit automated retrieval, so its guidance could not be `
+          + "verified here. It is published at ",
+      );
+      item.append(externalLink(failure.attempted_url, failure.attempted_url));
+      item.append(document.createTextNode(" — open it yourself to check."));
+      list.append(item);
+      return;
+    }
     list.append(
       element("li", "", `${failure.title} (${failure.authority}) — ${failure.detail}`),
     );
