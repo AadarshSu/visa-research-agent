@@ -9,33 +9,33 @@ Status: `next` · `soon` · `later` · `blocked`
 with in full and changed the direction: the posture, not the principle, is what has been costing
 coverage (entry 35); "who to believe" moves out of the request path into committed data (entry 34);
 the trust rule's governmental half was measured and fails closed for a fifth of the world (entry 33);
-and three things ship today that the project's own rules argue against (entries 30, 31, 32). None of
-it is implemented. The list below is that work in the order to do it.
+and three things ship today that the project's own rules argue against (entries 30, 31, 32). The list
+below is that work in the order to do it. **The first item — the trust-coverage measurement — is done;
+everything else is not.**
+
+---
+
+## Done
+
+### ~~Commit the 51-country trust-rule test~~ — **done 2026-08-18**
+
+`tests/test_trust_coverage.py`, 7 tests, offline. Freezes the 19 failures so a change is a visible diff,
+asserts every one fails on the governmental half rather than the TLD half, and guards `countries.yaml`
+against another country acquiring a governmental marker in its `tlds` unreviewed. Verified the tripwire
+fires by simulating the forbidden fix.
+
+**It also refined the finding, and the refinement matters** — see DECISIONS entry 33's table. The 19 are
+two different failures. Nine (AT, BE, DE, DK, FI, NL, NO, SE, UY) have no marked domain at all and refuse
+outright. Ten (CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU) **do** have one, so bootstrap *succeeds* and builds
+a trusted set that cannot contain the visa guidance — quieter and worse, because nothing reports it. Canada
+is the sharpest: `gc.ca` still passes, but the content moved to `canada.ca`. Item 5 below is what fixes
+both, and item 6's marker corrections (`gv`, `gub`, `canada.ca`) shrink the first group.
 
 ---
 
 ## Now — cheap, certain, and nothing depends on credit
 
-### 1. Commit the 51-country trust-rule test — `next`
-
-**Why:** it is the cheapest evidence this project can buy, and it has already been run once. DECISIONS
-entry 33: `is_own_government` was checked offline against 51 countries' real immigration or
-foreign-ministry domains and **19 fail** — Austria, Belgium, Canada, Chile, Czechia, Germany, Denmark,
-Finland, Greece, Hungary, Ireland, Italy, Netherlands, Norway, Portugal, Romania, Russia, Sweden,
-Uruguay. Every one fails on `looks_governmental`, never on the TLD half that known problem 2 warns
-about. Bootstrap then refuses the whole country with a **wrong diagnosis** — "no domain belonging to
-Germany's own government could be identified" — and takes most of Schengen with it.
-
-**Do:** add the table and the assertion to `tests/test_trust.py` (or a new
-`tests/test_trust_coverage.py`). No network, no model, no search credit. Assert the current pass/fail
-split explicitly, so the number moving is a visible diff rather than a silent regression, and so items
-6 and 7 below have a measurement to work against.
-
-**Careful:** the domain table is hand-written from knowledge, not fetched, so individual rows may be
-wrong. Say so in the test's docstring. The finding does not depend on them — Germany, the Netherlands,
-Italy and Sweden have no `gov.de`/`gov.nl` convention at all, so no choice of domain rescues them.
-
-### 2. Narrow what a block may hand over — `next`
+### 1. Narrow what a block may hand over — `next`
 
 **Why:** DECISIONS entry 32. The one shipped change never run live behaves more broadly than the entry
 that shipped it argued for, in two ways, and the second matters:
@@ -59,7 +59,7 @@ the corridor still refuses. Offline.
 `france-visas.gouv.fr` is exactly a credible decision candidate, which is the case the exception exists
 for. Confirm that with the France fixture before and after.
 
-### 3. Delete three things — `next`
+### 2. Delete three things — `next`
 
 **Why:** DECISIONS entries 30 and 29. Each is more complexity than it earns, and one contradicts the
 project's own recorded reasoning.
@@ -78,7 +78,7 @@ project's own recorded reasoning.
   rests on a small audited surface, an unused dependency is one more thing a reader must prove is not
   load-bearing. LangChain stays; it is doing real work in `adjudication.py` and `openai_extraction.py`.
 
-### 4. Make a failed adjudication refuse — `next`
+### 3. Make a failed adjudication refuse — `next`
 
 **Why:** DECISIONS entry 31, which amends entry 16. A failed model call currently falls back to the
 heuristic — the decider entry 15 proved gives **confident wrong answers** (Brazil's Riyadh page as the
@@ -98,7 +98,7 @@ heuristic` is configured — which stays tested and stays the offline regression
 
 ## Next — the direction change
 
-### 5. Read and honour `robots.txt` — `next`
+### 4. Read and honour `robots.txt` — `next`
 
 **Why:** DECISIONS entry 35. Nothing in this codebase has ever fetched it — grep finds no reference to
 robots anywhere in `src/`. A project that computes a per-host politeness delay (entry 25) while ignoring
@@ -112,7 +112,7 @@ honour `Disallow` for the declared user agent, and record a skip as its own outc
 **Expect it to cost coverage.** A path we currently walk past becomes a refusal. That is the correct
 direction, and a `Disallow` is an authority's stated policy rather than a block to route around.
 
-### 6. Move "who to believe" out of the request path — `soon`
+### 5. Move "who to believe" out of the request path — `soon`
 
 **Why:** DECISIONS entry 34. `ARCHITECTURE.md` already says domains are decided by a rule once per
 country and pages by the machine every corridor — but `bootstrap_destination` runs inside every cold
@@ -129,12 +129,12 @@ finding is the argument: the human was applying one mechanical rule, so committi
 strictly easier to audit than re-running it live.
 
 **Buys:** four searches leave the cold path; the trusted set stops varying between runs; withheld
-domains become something a person actually reads; and item 7 becomes a data edit rather than a regex
+domains become something a person actually reads; and item 6 becomes a data edit rather than a regex
 change.
 
-### 7. Amend the trust rule for governments with no marker, and for Schengen — `soon`
+### 6. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
-**Why:** item 1's measurement. Two separate problems:
+**Why:** the committed `tests/test_trust_coverage.py` measurement. Two separate problems:
 
 - **19 of 51 governments have no governmental marker in their hostname.** The amendment is a reviewed
   authority domain in the entry 34 registry — **never a wider regex.** Adding `.de`, `.nl`, `.it` as
@@ -151,7 +151,7 @@ change.
 of it:** add `gv` and `gub` as markers, and add `canada.ca` beside the `gc.ca` special case — Canada
 fails only because immigration content moved and the pattern did not.
 
-### 8. Measure the top 20 corridors against a bar committed in advance — `blocked`
+### 7. Measure the top 20 corridors against a bar committed in advance — `blocked`
 
 **Why:** DECISIONS entry 35. This is the measurement that decides whether the project is a product or a
 demonstration, so **nothing large should be built before it.** Seven corridors cannot answer whether
@@ -168,7 +168,7 @@ blocked.
 
 Today's seven are 5/7 and 4/7 — which would pass, on a sample chosen partly because it was easy.
 
-**Blocked on:** Brave credit (`HTTP 402`). Run item 5 first so the numbers describe the posture the
+**Blocked on:** Brave credit (`HTTP 402`). Run item 4 first so the numbers describe the posture the
 project intends to keep.
 
 **Fold in the France read-through**, which was the previous head of this list and needs the same credit:
@@ -185,7 +185,7 @@ what is left to judge is the model's own words. **Careful:** if it reads as veri
 wording and the banner, never a narrower `visa_required`. A corridor stored before 2026-08-17 has no
 `inaccessible_urls` field, so clear `var/corridors/`.
 
-### 9. Decide the client-side retrieval question — `soon`
+### 8. Decide the client-side retrieval question — `soon`
 
 **Why:** DECISIONS entry 35 raises it and deliberately does **not** approve it. The traveller's own
 browser can open `france-visas.gouv.fr`; a human reading a public page is not this program circumventing
@@ -209,8 +209,8 @@ Entry 18 is unchanged.
 **Why:** it runs on one laptop with a `.env`. The goal is a URL to share. Keep this simple — a host,
 some environment variables, done. No pipelines, no orchestration; CI already runs the checks.
 
-**Reordered after the direction work**, because deploying before item 8 ships a product whose two
-highest-volume corridors return no checklist, and item 6 changes what a cold request does.
+**Reordered after the direction work**, because deploying before item 7 ships a product whose two
+highest-volume corridors return no checklist, and item 5 changes what a cold request does.
 
 A cold request is **34.1s** (19.4s corridor + 14.7s plan) for `united-states/IN/IN/tourism` with both
 caches cleared, which fits a typical 30–60s proxy timeout but not comfortably. `var/cache/` and
@@ -242,7 +242,7 @@ interface rather than only in these files.
 us — the same useful sentence, withheld because the corridor happened to succeed elsewhere.
 
 **Do:** `ResolvedCorridor.inaccessible_urls` already carries them, so this is plumbing rather than a
-decision. Do it while re-running corridors for item 8. Note it interacts with item 2: the causality
+decision. Do it while re-running corridors for item 7. Note it interacts with item 1: the causality
 requirement governs whether a block may *resolve a corridor*, not whether it may be *reported* — every
 block is still reported.
 
@@ -310,7 +310,7 @@ A pattern is either a lexicon gap worth closing or a model error worth prompting
 currently disagree on `general_entry` and `visa_decision` most.
 
 **Careful:** do not tune the lexicon to agree with the model. The heuristic's job is to build a good
-shortlist, not to reproduce the model's judgement. Note that after item 4 it is no longer a fallback, so
+shortlist, not to reproduce the model's judgement. Note that after item 3 it is no longer a fallback, so
 its remaining jobs are the shortlist and the offline baseline.
 
 ---
@@ -379,7 +379,7 @@ replacement.
   `var/cache/` was cleared. Consider keying entries by a rules version.
 - **`is_bare_public_suffix` is a heuristic**, not a real public suffix list. It correctly rejects `gov.sg`,
   `gov.uk`, `go.jp`, `gouv.fr` and `co.uk` while allowing `usa.gov` and `service.gov.uk`, but review it as
-  countries are added — and note it will need `gv` and `gub` per item 7.
+  countries are added — and note it will need `gv` and `gub` per item 6.
 - **Singapore's VFS page is a 403, not a JavaScript problem.** It was recorded as client-rendered; it is
   bot-blocked at the HTTP layer, so rendering never applies (the render only runs after a `200` whose text
   was thin).

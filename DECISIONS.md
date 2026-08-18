@@ -126,11 +126,31 @@ hand-written table of 51 countries' real immigration or foreign-ministry domains
 | Fail | AT, BE, **CA**, CL, CZ, **DE**, DK, FI, GR, HU, IE, **IT**, **NL**, NO, PT, RO, RU, **SE**, UY |
 | Cause | uniformly *no governmental marker in the hostname* — never the TLD half |
 
-Every failure returns `is_own_government == False` for the country's entire government, so
-`auto_trusted_domains` accepts nothing and `AutomaticDestinationService.destination_for` raises *"No domain
-belonging to Germany's own government could be identified, so there was nothing safe to read."* The failure
-is **safe** — nothing is fetched, nothing is guessed — but the sentence is a **wrong diagnosis**, and it
-takes most of Schengen with it.
+Every failure returns `is_own_government == False` for the domain a traveller would actually need read.
+The failure is **safe** — nothing is fetched, nothing is guessed — but it takes most of Schengen with it.
+
+**Refined while committing the test, 2026-08-18: this is two failures, not one, and the quieter one is
+worse.** The claim above was originally written as "the country's entire government is refused", which is
+true only where the government has *no* marked domain anywhere:
+
+| | Countries | What actually happens |
+| --- | --- | --- |
+| **Refused outright** | AT, BE, DE, DK, FI, NL, NO, SE, UY | Nothing passes, so `AutomaticDestinationService.destination_for` raises *"No domain belonging to Germany's own government could be identified"*. Honest refusal, **wrong diagnosis**. |
+| **Reachable, but not where the answer is** | CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU | Some marked domain exists (`interno.gov.it`, `gov.ie`, `gob.cl`, `cic.gc.ca`), so bootstrap **succeeds** — and builds a trusted set that cannot contain the page holding the visa guidance. |
+
+The second row is the dangerous one, because **nothing reports it.** The corridor resolves against real
+government domains and then refuses for looking like a ranking failure, or worse resolves to whatever those
+domains do say. Canada is the sharpest case: `gc.ca` is special-cased and still passes, but immigration
+content moved to `canada.ca`, so the rule trusts the old namespace and misses the live one. `AT` and `UY`
+are narrower again — `gv.at` and `gub.uy` are conventions simply missing from the marker list.
+
+**Committed as `tests/test_trust_coverage.py`** — 7 tests, offline, no credit. It freezes the failing set so
+a change is a visible diff, asserts every failure is on the governmental half rather than the TLD half,
+holds the two rows above apart, and guards `countries.yaml` against another country acquiring a governmental
+marker in its `tlds` unreviewed. **Verified the tripwire actually fires** by simulating the forbidden fix:
+adding `.de`/`.nl` to `GOVERNMENT_PATTERNS` trips three of the seven, including the one asserting that a
+German commercial visa agency is indistinguishable from the ministry on the only half that would remain.
+France was added to the table afterwards and passes — it fails at HTTP, which is a different limit.
 
 **The mechanism is robust even where the table is not.** The domain list was written from knowledge rather
 than fetched, so individual rows may be wrong. It does not matter for the finding: Germany, the Netherlands,
@@ -155,8 +175,9 @@ destination's own government" is the wrong trust unit for a supranational visa r
 reviewed supranational-domain list per member — but it amends the rule stated in entry 19 and in `CLAUDE.md`,
 so it needs deciding rather than patching.
 
-**Do first, because it costs nothing:** commit the 51-country check as a test. It needs no network, no
-model and no search credit, and it is the cheapest evidence this project can buy.
+**Done: the check is committed** as `tests/test_trust_coverage.py`, which was the cheapest evidence this
+project could buy and needed no network, model or search credit. What remains is the amendment itself —
+the registry in entry 34, then reviewed authority domains for the 19, then the supranational list.
 
 ---
 

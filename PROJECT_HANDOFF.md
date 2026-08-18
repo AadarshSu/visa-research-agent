@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 290 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 297 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -197,10 +197,17 @@ first six below are all decided and unimplemented.
    Czechia, Germany, Denmark, Finland, Greece, Hungary, Ireland, Italy, Netherlands, Norway, Portugal,
    Romania, Russia, Sweden, Uruguay. Every one fails on `looks_governmental`, whose pattern list happens
    to cover all seven verified countries — so entry 19's 22/22 agreement with human decisions is
-   survivorship. The failure is safe (nothing is fetched) but the message is false: *"no domain belonging
-   to Germany's own government could be identified"*. Most of Schengen is unreachable, and **Schengen is
-   additionally a definition problem** — `europa.eu` can never pass `belongs_to_destination` for a member
-   state. Entry 33; fix is reviewed data, never a wider regex.
+   survivorship. Most of Schengen is unreachable, and **Schengen is additionally a definition problem** —
+   `europa.eu` can never pass `belongs_to_destination` for a member state. Entry 33; fix is reviewed data,
+   never a wider regex. Frozen in `tests/test_trust_coverage.py`, so the number moving is a visible diff.
+
+   **These are two failures, and the second is the one to worry about.** Nine countries (AT, BE, DE, DK,
+   FI, NL, NO, SE, UY) have no marked domain at all: they refuse, safely, with a message that misdescribes
+   why. **Ten (CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU) do have one** — `interno.gov.it`, `gov.ie`,
+   `gob.cl`, `cic.gc.ca` — so bootstrap **succeeds** and resolves the corridor against a trusted set that
+   cannot contain the page holding the guidance. Nothing reports that, so it will read as a ranking
+   failure. Canada is the sharpest: `gc.ca` is special-cased and passes, but the content moved to
+   `canada.ca`.
 3. **A block may resolve a corridor it had nothing to do with.** `decision_is_unverified` is
    `"visa_decision" not in filled and bool(self.inaccessible_urls)` — any blocked URL anywhere plus any
    readable source, with no check that the blocked page could have held the decision. A `403` on a footer
@@ -304,39 +311,50 @@ first six below are all decided and unimplemented.
 
 ## Current task
 
-Nothing is half-finished in the working tree, every check is clean, and **nothing from the 2026-08-18
-review is implemented.** The whole of that review was agreed with, recorded as entries 29–35, and turned
-into an ordered list in [TODO.md](TODO.md). The working tree is exactly as it was on 2026-08-17; what
-changed is the plan.
+Nothing is half-finished in the working tree and every check is clean. The 2026-08-18 review was agreed
+with in full, recorded as entries 29–35, and turned into an ordered list in [TODO.md](TODO.md). **One
+item of it is now implemented; the rest is not.**
 
-**Start at [TODO.md](TODO.md) item 1 and work down.** The first four items need no search credit, no
-model calls and no network, and each is small:
+**Done: the trust-coverage measurement** — `tests/test_trust_coverage.py`, 7 tests, offline, no credit.
+It freezes the 19 unreachable countries so a change is a visible diff, asserts every failure is on the
+governmental half rather than the TLD half, and guards `countries.yaml` against another country
+acquiring a governmental marker in its `tlds` unreviewed. The tripwire was verified to actually fire by
+simulating the forbidden fix.
 
-1. **Commit the 51-country trust test** — already run once (entry 33), so this is writing down a result:
-   19 of 51 governments fail `is_own_government`. It is the cheapest evidence here and it shapes items 6
-   and 7.
-2. **Narrow what a block may hand over** — drop `429`, and require the blocked URL to have been a
-   credible `visa_decision` candidate. This is a live defect in the one change never run live, and it is
-   the refusal discipline leaking (entry 32).
-3. **Delete three things** — `conflicts`, `domain/state.py`, and the unused `langgraph` dependency
+**It also refined the finding, which is the part worth reading** (entry 33's table): the 19 are **two
+different failures**, and the second is worse. Nine countries have no marked domain at all and refuse
+outright with a misleading message. **Ten do have one** — `interno.gov.it`, `gov.ie`, `gob.cl`,
+`cic.gc.ca` — so bootstrap *succeeds* and builds a trusted set that cannot contain the visa guidance,
+and **nothing reports that**. Canada is the sharpest case: `gc.ca` is special-cased and still passes,
+but immigration content moved to `canada.ca`, so the rule trusts the old namespace and misses the live
+one. This makes TODO item 5 (the committed registry) more valuable than it looked, because a clean
+refusal was never the only failure mode.
+
+**Start at [TODO.md](TODO.md) item 1 and work down.** The first three need no search credit, no model
+calls and no network, and each is small:
+
+1. **Narrow what a block may hand over** — drop `429`, and require the blocked URL to have been a
+   credible `visa_decision` candidate. A live defect in the one change never run live, and it is the
+   refusal discipline leaking (entry 32).
+2. **Delete three things** — `conflicts`, `domain/state.py`, and the unused `langgraph` dependency
    (entries 30 and 29).
-4. **Make a failed adjudication refuse** instead of falling back to the decider that produced Brazil's
+3. **Make a failed adjudication refuse** instead of falling back to the decider that produced Brazil's
    wrong checklist at full confidence (entry 31).
 
-Then the direction work: `robots.txt` (5), the committed domain registry (6), the trust-rule amendment
-(7), and the 20-corridor measurement (8) that decides whether this is a product — **blocked on Brave
+Then the direction work: `robots.txt` (4), the committed domain registry (5), the trust-rule amendment
+(6), and the 20-corridor measurement (7) that decides whether this is a product — **blocked on Brave
 credit, and nothing large should be built before it.**
 
 **Deployment has moved down the list deliberately.** It is not blocked on speed — a cold request is
 **34.1s** (19.4s corridor, 14.7s plan) where it was 70.7s, which fits an ordinary 30–60s proxy timeout,
-and warm is **0.0s**. It is blocked on item 8: publishing a URL whose two highest-volume corridors return
-no checklist is publishing the demonstration rather than the product. Item 6 also changes what a cold
+and warm is **0.0s**. It is blocked on item 7: publishing a URL whose two highest-volume corridors return
+no checklist is publishing the demonstration rather than the product. Item 5 also changes what a cold
 request does, so deploying first means deploying twice.
 
 ### What changed on 2026-08-18, in one line each
 
-Seven entries, from one outside review, agreed with in full. **None implemented.** Read them in
-[DECISIONS.md](DECISIONS.md).
+Seven entries, from one outside review, agreed with in full. **Only entry 33's measurement is
+implemented.** Read them in [DECISIONS.md](DECISIONS.md).
 
 | Entry | What it changed |
 | --- | --- |
@@ -388,16 +406,16 @@ approved* — it is written down so it gets argued rather than drifted into.
 head this list — run a country that publishes a checklist, make the traveller profile variable, wire
 discovery into request time — are all done; see *Current state*.
 
-1. **Four small changes needing nothing external** — the trust test, the block-handover narrowing, three
-   deletions, and refusing on a failed adjudication. TODO items 1–4.
+1. **Three small changes needing nothing external** — the block-handover narrowing, three deletions, and
+   refusing on a failed adjudication. TODO items 1–3. (The trust test that headed this list is done.)
 2. **`robots.txt`**, because it is owed and because item 4 below should measure the posture the project
-   intends to keep. TODO item 5.
+   intends to keep. TODO item 4.
 3. **Move "who to believe" into committed data**, then amend the trust rule for the 19 governments with
-   no hostname marker and for Schengen. TODO items 6–7.
+   no hostname marker and for Schengen. TODO items 5–6.
 4. **Measure the top 20 corridors against the committed bar.** Needs Brave credit. This decides the
    direction, so it comes before deployment and before anything large. Fold the France read-through into
-   it. TODO item 8.
-5. **Decide the client-side retrieval question** in writing, either way. TODO item 9.
+   it. TODO item 7.
+5. **Decide the client-side retrieval question** in writing, either way. TODO item 8.
 6. **Then deploy**, precompute popular corridors, and put a key or rate limit on `POST /visa-plans`.
 7. Standing work, unchanged in substance: name a blocked authority whenever there is one; tell "no
    checklist exists" apart from "we failed to find it"; decide whether a host that refused everything may
