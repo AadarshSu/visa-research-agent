@@ -48,6 +48,7 @@ from visa_research_agent.discovery.models import (
 )
 from visa_research_agent.discovery.scoring import (
     is_archived,
+    is_boilerplate,
     rank_for_role,
     score_body,
     score_link,
@@ -227,6 +228,8 @@ class CorridorResolver:
         def reject(link: PageLink) -> str | None:
             if is_archived(link.url, self.lexicon):
                 return "the path marks it as archived or superseded"
+            if is_boilerplate(link.url, self.lexicon):
+                return "the path marks it as site furniture rather than guidance"
             audience = wrong_audience(link, corridor, self.lexicon)
             if audience is not None:
                 return f"the page is for {audience} holders, not this traveller"

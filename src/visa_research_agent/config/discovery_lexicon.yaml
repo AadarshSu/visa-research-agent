@@ -154,6 +154,29 @@ hard_off_scope:
 # penalty: an archived checklist that still reads plausibly is precisely what must never be used.
 archive_tokens: [archive, archived, old, backup, legacy, superseded]
 
+# Site furniture, in the languages the corridors run so far have produced. These pages sit in the
+# footer of every page on a government site, and a footer link inherits the last heading above it —
+# so France's legal notice collected the heading bonus from a news article about visa requirements
+# and took three of ten fetch places from the post that actually serves the traveller. A legal
+# notice cannot be visa guidance, so it is rejected rather than merely scored down.
+boilerplate_tokens:
+  - accessibilite
+  - accessibility
+  - mentions-legales
+  - legal-notice
+  - legal-notices
+  - donnees-personnelles
+  - personal-data
+  - privacy
+  - privacy-policy
+  - cookies
+  - cookie-policy
+  - sitemap
+  - plan-du-site
+  - disclaimer
+  - copyright
+  - credits
+
 # A blank form is not a list of what to bring. Both say "application" and "documents", and the
 # forms are usually PDFs, so without this they outrank the real checklist. Observed on Japan's
 # ministry site, where the application form PDFs beat the embassy's actual checklist.
