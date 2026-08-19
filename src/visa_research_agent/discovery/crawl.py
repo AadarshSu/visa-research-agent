@@ -363,6 +363,11 @@ class CrawlFetcher:
         if response.status_code in BLOCKING_STATUS_CODES:
             # The authority is refusing this client, which says nothing about whether its guidance
             # is correct. Recorded in its own words so a refusal cannot read as "nothing found".
+            #
+            # Same gap as the retrieval path (entry 41): a `403` carrying `cf-mitigated: challenge`
+            # is a browser check rather than a refusal, and this branch returns before
+            # `_render_if_empty` below, so the renderer never sees it. Behind France's challenge at
+            # least one "blocked" URL turned out to be a plain 404. TODO item 5.
             self._record_failure(
                 url,
                 "blocked",

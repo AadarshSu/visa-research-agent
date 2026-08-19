@@ -107,6 +107,15 @@ DEFAULT_SHORTLIST_SIZE = 25
 DEFAULT_SHORTLIST_DOMAIN_FLOOR = 1
 # Per candidate, not per packet. Ten pages of full government prose would be mostly navigation
 # furniture and would push the call past any sensible input bound.
+# How much of each candidate the adjudicator is shown. This is a **second recall gate** behind the
+# shortlist, and entry 40's asymmetry applies to it unchanged: text the model never sees is text
+# nothing downstream can recover. Measured 2026-08-19, it is currently strict enough to decide
+# corridors — `canada/GB/GB/tourism` ranks the right page first, fetches it, and refuses, because
+# the sentence naming a "British citizen" as eTA-required sits at offset 8,947 of 16,465. The
+# page lists visa-required countries alphabetically and the eTA list only from 8,517, so which
+# travellers get an answer depends on where their nationality falls in a list: India at 5,325 is
+# answered, every visa-exempt nationality is not. Replaying the same pages at 20,000 resolves the
+# corridor. Raise or anchor it — TODO item 6 and known problem 18.
 DEFAULT_EXCERPT_CHARACTERS = 6_000
 
 # How many times the role adjudication may be asked before the corridor is refused. Two, so a

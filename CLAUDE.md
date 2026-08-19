@@ -64,14 +64,27 @@ produces a serious defect.
   under the destination's own TLD with no recognised marker is *"could not be confirmed as an authority,
   and may be a real one"* — never *"not a government domain"*, which is false and was word-for-word what
   a commercial visa agency got (entry 33).
-- **Never work around an authority that blocks automated retrieval.** France's visa portal and
-  Singapore's VFS page answer `403` to anything that is not a browser. Do not spoof a user agent,
-  do not point the renderer at them, do not retry to get around a rate limit. A block is not
-  evidence that the guidance is wrong or missing — it means *we cannot independently retrieve and
-  verify it in this execution environment*, which is a narrower claim and the only honest one.
-  Mark the source inaccessible, say so, and let the role go unfilled. Never substitute plausibility
-  for evidence, in a product whose wrong answers send someone to a visa centre without the right
-  papers.
+- **Never work around an authority that blocks automated retrieval.** Do not spoof a user agent, do
+  not retry to get around a rate limit, do not point the renderer at a page an authority refused. A
+  block is not evidence that the guidance is wrong or missing — it means *we cannot independently
+  retrieve and verify it in this execution environment*, which is a narrower claim and the only honest
+  one. Mark the source inaccessible, say so, and let the role go unfilled. Never substitute
+  plausibility for evidence, in a product whose wrong answers send someone to a visa centre without
+  the right papers.
+
+  **First establish that it *is* a block, because for France it was not (entry 41, 2026-08-19).** This
+  rule used to open by naming France's portal as a site that "answers `403` to anything that is not a
+  browser". Measured, `france-visas.gouv.fr` answers a Cloudflare **challenge** — `cf-mitigated:
+  challenge`, *"enable JavaScript and cookies to continue"* — and answers it for `robots.txt` as well,
+  so the authority never stated anything. A challenge is a capability test, and answering it by running
+  the page's own JavaScript in a real browser **under our own user agent** misrepresents nothing to
+  anybody: the project's own renderer, announcing `VisaResearchAgent/0.1`, reads the page. So a
+  challenge is its own outcome, may be answered by the renderer, and — like a `Disallow` — **may never
+  resolve a corridor**. **The line is "did the authority state anything", not "which status came
+  back".** A `401`, a bare `403` with no challenge markers, and a `429` are refusals and this rule
+  governs them in full. Not yet implemented: see [TODO.md](TODO.md) item 5, and note the interface
+  still tells travellers a challenged authority *"does not permit automated retrieval"*, which is
+  false.
 
   **What is allowed, and is not a workaround: naming it.** A blocked page may be reported with its
   URL so the traveller can open it themselves, which is the one thing they can act on. The line is
@@ -81,14 +94,19 @@ produces a serious defect.
   the domain is the only thing vouching for it (entry 27).
 
   **And naming it must stay narrow (entry 32).** Only `401`/`403` may qualify a corridor — a `429` is a
-  transient rate limit, and "try again later" is the honest advice. The blocked URL must also have been
+  transient rate limit, and "try again later" is the honest advice. **A challenged `403` may not qualify
+  one either (entry 41):** a refusal is at least a page an authority withheld, while a challenge is a
+  page nobody asked the authority about. France is the live example — it resolves today on an incidental
+  challenge that happened to score for `visa_decision`, and it flips between runs. The blocked URL must also have been
   a credible `visa_decision` candidate: a `403` on a footer link is not grounds to declare the decision
   unverifiable. Without both bounds, corridors whose decision was merely *not found* — which must refuse
   — drift into presenting as authority-blocked, which resolves. Every block is still *reported*
   regardless; the bounds govern what may *resolve a corridor*.
 
   **The posture is honest client, not anonymous client (entry 35).** This rule forbids *deception* —
-  spoofing, retrying, rendering past a refusal — and none of that has changed or will. It does not
+  spoofing, retrying, rendering past a **refusal** — and none of that has changed or will. Rendering
+  past a *challenge* is a different act and is now allowed (entry 41); the word doing the work in that
+  sentence is "refusal". It does not
   require being an anonymous, unauthenticated client, and treating those as the same thing was costing
   coverage under the banner of a rule that never demanded it. So: `robots.txt` **is now read and obeyed**
   (entry 36), and asking an authority for access is ordinary. Client-side retrieval through the

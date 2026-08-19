@@ -170,6 +170,7 @@ Every source resolves to one outcome, and the plan is graded from them:
 | `unreachable` | no | Timeout, connection error, or an error status |
 | `unusable` | no | Retrieved but not evidence — a client-rendered shell or too little text |
 | `blocked` | no | The authority refused this client (`401`, `403`, `429`); its guidance could not be verified here |
+| | | *Over-claims today: a `403` that is really a Cloudflare bot challenge is reported as a refusal, which is untrue of what was seen. Decided as [DECISIONS.md](DECISIONS.md) entry 41, unimplemented.* |
 | `disallowed` | no | The host's `robots.txt` excluded this client, or could not be read, so the page was not requested |
 
 Each destination declares `required_source_ids` — the sources a plan cannot stand without,

@@ -6,7 +6,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-18 — update this line when you touch the handoff |
+| **Last updated** | 2026-08-19 — update this line when you touch the handoff |
 | **Tests** | 365 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
@@ -70,6 +70,12 @@ are now wrong.** Japan and Canada both fill every role at a 25-place shortlist w
 the visa decision unfound. Treat it as the record of a 2026-08-16/17 run, not as current behaviour, until
 the twenty-corridor measurement re-runs it.
 
+**And "Canada fills every role" does not generalise — measured 2026-08-19.** `canada/GB/GB/tourism`
+refuses. Entry 40's row is consistent with an *Indian* passport, whose answer happens to fall inside the
+adjudicator's 6,000-character excerpt at offset 5,325, while a British citizen's sits at 8,858 and is cut
+off. A corridor's fate depends on where the nationality falls in an alphabetical list. Known problem 18.
+**Nationality is part of a corridor; a country row in this table is not a result.**
+
 | | Singapore | Japan | Vietnam | Brazil | France | China | United States |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Configured sources | 6 | 7 | none | none | none | none | none |
@@ -86,11 +92,29 @@ because an authority refused us, which is the case entry 27 now turns into a pla
 France was re-examined on 2026-08-17 because `france/IN/GB/tourism` is a common corridor to refuse —
 entries 26 and 27. **It no longer refuses**: a corridor whose only missing piece is behind a block now
 resolves, with the visa decision stated as *unknown* rather than guessed, the blocked authority named
-with its URL, and the plan marked `partial`. **That is untested live** — known problem 4.
+with its URL, and the plan marked `partial`.
 
-The underlying fact is unchanged, and it is why the decision cannot be stated: France publishes the
-visa decision only on `france-visas.gouv.fr`, which answers 403, and every readable French government
-page delegates to it rather than saying it. Two real scoring defects turned up on the way and are
+**Run live on 2026-08-19, and both halves of that came out wrong — see entry 41 and known problem 11.**
+Whether France resolves at all is **not reproducible**: it resolved at 13:30 and refused on a fresh run
+an hour later. `is_usable` needs a refused URL that also scored for `visa_decision`, and none of the eight
+`france-visas.gouv.fr` URLs that were refused does — every one scores `application_route` only,
+including `/en/assistant-visa`, which is literally the visa-decision tool. (Two France-Visas URLs do
+score for `visa_decision`, both 14.0, and neither was among the refusals.) The 13:30 run qualified on
+`www.diplomatie.gouv.fr/spip.php?page=recherche&recherche=Demande+de+visa`, a **site-search results
+page** scored on the words in its own query string. So the corridor resolves on an incidental WAF hit,
+which is the opposite of entry 32's intent, and known problem 4's assumption that "France should be
+unaffected" is false.
+
+**And the 403 is not a refusal at all.** `france-visas.gouv.fr` answers `cf-mitigated: challenge` — a
+Cloudflare interstitial reading *"enable JavaScript and cookies to continue"* — and answers it for
+`/robots.txt` as well, so the authority never stated anything. The project's own renderer, under our own
+user agent with nothing spoofed, reads the page. That is decided (entry 41) and unimplemented
+([TODO.md](TODO.md) item 5).
+
+The underlying coverage fact survives, with a narrower reason: France publishes the visa decision only on
+`france-visas.gouv.fr`, and behind the challenge it sits inside a **four-step wizard** rather than on a
+page, so no amount of reading reaches it. Every readable French government page delegates there rather
+than saying it. Two real scoring defects turned up on the way and are
 fixed — a mission host label read as who a page is *for*, which put France's India post above its UK
 post for a UK applicant, and footer boilerplate taking three of the ten fetch places.
 
@@ -116,6 +140,12 @@ requirements**, and unresolved questions naming the gap. A plan with no checklis
 **The limit has moved from ranking to access.** Of seven corridors, none now fails because a page was
 mis-ranked. They fail because a page could not be read at all — bot-blocked portals, client-rendered
 shells, dead endpoints.
+
+**Amended 2026-08-19: there is a third thing, and it is neither.** `canada/GB/GB/tourism` fetched and read
+the page that answers it, and refused anyway, because the adjudicator's 6,000-character excerpt ends 2,947
+characters before the sentence naming a British citizen as eTA-required. Not ranking, not access —
+**truncation**. See known problem 18 and [TODO.md](TODO.md) item 6, and treat "access" as an incomplete
+diagnosis until the twenty-corridor run tests it.
 
 `countries.yaml` covers ISO 3166-1. Fourteen entries are curated from corridors actually run; the
 rest carry the name and ccTLD, which is all the own-government trust rule needs. A country only
@@ -206,7 +236,9 @@ why.
 
 ## Known problems
 
-Ordered by how much they limit the product. **None of these are secretly fixed; they are all live.**
+Ordered by how much they limit the product, **except that numbering is append-only** — item 18 was added
+on 2026-08-19 and would sit near the top, because references to these numbers exist in `CLAUDE.md`,
+`ARCHITECTURE.md` and `TODO.md`. **None of these are secretly fixed; they are all live.**
 Several carry a *decision* (entries 29–35), and a decision is not a fix — items 3 and 4 below are decided
 and still unimplemented. Three were **removed** on 2026-08-18 because they are genuinely fixed: a block resolving a corridor
 it had nothing to do with (entry 32), the unverified `conflicts` field (entry 30), and a failed model
@@ -247,6 +279,16 @@ call silently substituting the heuristic (entry 31).
    narrowing (entry 32) landed first, so what needs re-running is the narrowed behaviour rather than what
    entry 27 originally shipped. France should be unaffected — `france-visas.gouv.fr` is exactly the
    credible decision candidate the narrowing keeps — but that is the assumption the live run tests.
+
+   **Run 2026-08-19, and the assumption is false.** None of the eight `france-visas.gouv.fr` URLs that
+   were actually refused scores for `visa_decision` — every one scores `application_route` only,
+   including `/en/assistant-visa`, the visa-decision tool itself — so none of them can qualify a
+   corridor. France resolved once on
+   `www.diplomatie.gouv.fr/spip.php?page=recherche&recherche=Demande+de+visa`, a **site-search results
+   page** scored on the words in its own query string, then refused outright on a fresh run an hour
+   later. So this is now two problems: the plan is *still* unread by a traveller, and what reaches it is
+   decided by an incidental WAF hit. `boilerplate_tokens` vetoes legal notices and sitemaps but not
+   search pages. Entry 41 and [TODO.md](TODO.md) item 5.
 5. **A cold request is slower than the 34.1s these files used to quote, and the current figure is
    unmeasured.** That number was 19.4s corridor + 14.7s plan, measured before the registry on
    hand-configured destinations. **Measured 2026-08-18 on the registry path, the corridor phase alone is
@@ -312,6 +354,11 @@ call silently substituting the heuristic (entry 31).
    on new countries and languages. **It is no longer the fallback** (entry 31), but it still matters,
    because it builds the shortlist the model chooses from: a page it ranks outside the window is one the
    model never sees. It also remains the offline regression baseline.
+
+   **There is a second recall gate behind this one, and on 2026-08-19 it was the binding one.** Getting a
+   page into the shortlist is not enough — the adjudicator sees only its first 6,000 characters. Canada
+   ranked its answer *first* for `visa_decision`, fetched it, and refused anyway. Widening the shortlist
+   without widening the excerpt moves the bottleneck rather than removing it. Known problem 18.
 10. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
@@ -330,6 +377,17 @@ call silently substituting the heuristic (entry 31).
    interstitial — there is no stated policy to honour, because it is a WAF rather than a rule. So the
    first legitimacy step is spent and this limit is exactly where it was. What remains of entry 35 is
    asking for access and the client-side question; item 3's twenty corridors still size it.
+
+   **Reopened 2026-08-19: this item had the right observation and the wrong conclusion.** It noticed the
+   `403`-on-`robots.txt` and concluded the limit was unchanged. The response headers say what it actually
+   is: `cf-mitigated: challenge`, *"enable JavaScript and cookies to continue"* — a Cloudflare
+   **challenge** rather than a refusal, and Cloudflare's act rather than the Ministry's. Nothing was ever
+   stated to disobey. The project's own renderer, announcing `VisaResearchAgent/0.1` with nothing
+   spoofed, reads the page: 221,476 bytes, `blocked_hosts: []`, ~7s. **So "largest permanent coverage
+   limit" is wrong twice over** — not permanent, and never a policy. Decided as entry 41, unimplemented
+   as item 5. **What survives:** France's answers sit inside a four-step wizard rather than on a page, so
+   reading the host honestly is necessary and not sufficient — and "asking for access" is largely moot
+   here, because there is nobody to ask about a rule that was never made.
 12. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
    path and reported — to the adjudicator, which can weigh it against the page's text, and in the
    proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
@@ -356,15 +414,38 @@ call silently substituting the heuristic (entry 31).
 17. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
    usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
    when testing a retrieval change, or a fix will appear not to work.
+18. **The adjudicator's 6,000-character excerpt silently decides corridors, and which travellers get an
+   answer depends on the alphabet.** Added 2026-08-19; it belongs near the top of this list.
+   `DEFAULT_EXCERPT_CHARACTERS` truncates every candidate at `resolver.py:110`. `canada/GB/GB/tourism`
+   ranked the right page **first** for `visa_decision`, fetched it, and refused: the sentence naming a
+   "British citizen" as eTA-required sits at offset 8,947 of 16,465, and the window ends at 6,000 —
+   mid-alphabet in the *visa-required* list, at "Morocco". Replaying the same cached pages at 20,000
+   fills the role and resolves the corridor, so this is measured rather than argued.
+   **Why it is worse than one corridor:** the page lists visa-required countries alphabetically and the
+   eTA list only at offset 8,517, so Brazil (4,720), China (4,909) and India (5,325) are answered while
+   Vietnam (7,787), Australia (8,815), a British citizen (8,858), Japan (9,647) and Singapore (9,856) are
+   not — **every visa-exempt nationality is past the cut**. Nothing in the output distinguishes "the page
+   did not say" from "we stopped reading", and the adjudicator's refusal reason is accurate about what it
+   was shown, which is what makes this invisible. It is also why entry 40's "Canada fills every role" did
+   not generalise. [TODO.md](TODO.md) item 6.
 
 ---
 
 ## Current task
 
-Nothing is half-finished in the working tree and every check is clean. The 2026-08-18 review was agreed
-with in full, recorded as entries 29–35, and turned into an ordered list in [TODO.md](TODO.md). **All of
-it is implemented bar two of entry 35's three legitimacy steps, and nothing is left shipping against the
-project's own rules.** Five further entries (36–40) came out of the building.
+**Updated 2026-08-19. Two corridors were investigated and neither cause was where these files said it
+was; both fixes are decided and unimplemented, so there is work outstanding for the first time since the
+review.** `france/IN/GB/tourism` resolves without a checklist because `france-visas.gouv.fr` serves a
+Cloudflare *challenge* rather than a refusal — entry 41, [TODO.md](TODO.md) item 5 — and
+`canada/GB/GB/tourism` refuses because the adjudicator's 6,000-character excerpt cuts off the page that
+answers it — known problem 18, item 6. **Two things are now shipping against the project's own rules:**
+the interface tells travellers a challenged authority *"does not permit automated retrieval"*, which is
+untrue of what was seen, and France resolves on an incidental WAF hit that flips between runs. Neither is
+a new defect; both were invisible because they were described from code rather than from output.
+
+The 2026-08-18 review was agreed with in full, recorded as entries 29–35, and turned into an ordered list
+in [TODO.md](TODO.md). **All of it is implemented bar two of entry 35's three legitimacy steps.** Five
+further entries (36–40) came out of the building, and entry 41 out of the investigation above.
 
 **The pattern across all five is the one to carry forward.** Each time, the constraint was not where the
 documentation said it was, and only running the thing showed it: the domain classifier was discarding
@@ -468,10 +549,18 @@ the last was caught only by probing real authorities, not by any test.**
    justification for reaching for stdlib ("its shortfall errs toward fetching less") was written from
    reading the module and was the exact opposite of true.
 
-**Everything that needed no credit is now done, and nothing is shipping against the project's own
-rules.** `robots.txt` was the last of those (entry 36); what remains all costs something — a
-198-country registry, search quota, or a decision nobody has argued yet — so pick up
-[TODO.md](TODO.md) item 1 and work down:
+**Amended 2026-08-19: that is no longer true, and the two new items need no credit.** Pick up
+**[TODO.md](TODO.md) items 5 and 6 first** — both are measured and reproducible, and item 6 is a single
+constant with the fix already verified by replay:
+
+1. **Item 6 — widen or anchor the adjudicator's excerpt.** Cheapest change in the file; `canada/GB/GB/
+   tourism` refuses today with the answer already fetched. Known problem 18.
+2. **Item 5 — treat a challenge as a challenge.** France's `403` is Cloudflare asking whether we are a
+   browser, not an authority refusing us; our own renderer answers it under our own name. It also fixes a
+   sentence shown to travellers that is untrue of what was seen. Entry 41.
+
+Then the pre-existing list, which all costs something — a 198-country registry, search quota, or a
+decision nobody has argued yet:
 
 1. **Fix the post-over-nationality weighting** — precise and reproducible: the scorer gives
    `checklist-schengen-visa-tourism/india` 113.0 against 73.0 for `/united-kingdom`, for a traveller
@@ -490,7 +579,18 @@ the registry gives up to five where a hand-configured destination had two (known
 request has not been re-timed, so the total is unknown rather than known-and-bad. Warm is still **0.0s**.
 It is also blocked on item 3 — publishing a URL whose two highest-volume corridors return no checklist is
 publishing the demonstration rather than the product — and item 1 changes what a cold request does, so
-deploying first means deploying twice.
+deploying first means deploying twice. **Item 5 adds a reason of its own:** answering challenges needs
+Chromium on the host (~150MB plus system libraries) and costs ~7s per rendered page, which the deployment
+notes currently assume away with `render_mode: never`.
+
+### What changed on 2026-08-19, in one line each
+
+| Entry | What it changed |
+| --- | --- |
+| 41 | A Cloudflare challenge is not a refusal. France's `403` carries `cf-mitigated: challenge` and is served for `robots.txt` too, so no policy was ever stated; the project's own renderer reads the page under our own user agent. A challenge becomes its own outcome, may be answered by the renderer, and may never resolve a corridor. `robots.txt` stays obeyed everywhere and outranks it. Spoofing and retrying stay forbidden. **Decided, not implemented.** |
+
+Not an entry, but the same day and the same lesson: known problem 18, the 6,000-character excerpt that
+decides corridors by where a nationality falls in an alphabetical list.
 
 ### What changed on 2026-08-18, in one line each
 

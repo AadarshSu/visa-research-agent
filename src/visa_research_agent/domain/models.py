@@ -35,6 +35,14 @@ DestinationMode = Literal["configured", "automatic"]
 # because the two license different things. A `403` was observed on the page itself; a `Disallow`
 # is a rule about a path we never asked for, so it may be reported but must never resolve a
 # corridor the way a settled refusal can.
+#
+# MISSING, decided as DECISIONS entry 41 and not yet built: `challenged`. `blocked` currently claims
+# every `403` is an authority refusing us, and for `france-visas.gouv.fr` that is false — it answers
+# `cf-mitigated: challenge`, a Cloudflare interstitial saying "enable JavaScript and cookies to
+# continue", and answers it for `/robots.txt` too, so the authority stated nothing at all. That is a
+# capability test rather than a refusal, a real browser under our own user agent answers it, and it
+# must sit outside `blocked_urls()` and `persistent_refusals()` exactly as `disallowed` does. Until
+# then France's failures are reported in words that are not true of what was seen. See TODO item 5.
 FailureOutcome = Literal["untrusted", "unreachable", "unusable", "blocked", "disallowed"]
 
 # Statuses an authority returns to refuse an automated client rather than to report a fault.

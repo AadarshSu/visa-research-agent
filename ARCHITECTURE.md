@@ -91,6 +91,15 @@ Every configured source resolves to exactly one outcome. Two carry content; four
 | `blocked` | no | The authority refused automated retrieval (`401`, `403`, `429`) |
 | `disallowed` | no | The host's `robots.txt` excluded this client, or could not be read at all |
 
+> **`blocked` currently over-claims, and the fix is decided but unimplemented (entry 41,
+> [TODO.md](TODO.md) item 5).** It reads every `403` as *the authority refused us*. Measured
+> 2026-08-19, `france-visas.gouv.fr` returns `cf-mitigated: challenge` — a Cloudflare interstitial
+> saying *"enable JavaScript and cookies to continue"*, served for `/robots.txt` too, so the authority
+> stated nothing. That is a capability test, not a refusal, and a real browser under our own user agent
+> answers it. A challenge becomes its own outcome, may be answered by the renderer, and may never
+> resolve a corridor. Until then, France's `blocked` failures are described to travellers in words that
+> are not true of what was seen.
+
 `blocked` is the subtle one and is kept apart on purpose. A site refusing automated clients is not
 saying its guidance is wrong or missing — it is saying this program may not read it. The only claim
 that supports is *"we could not independently retrieve and verify this here"*, which is narrower
@@ -190,6 +199,10 @@ It is deliberately narrow:
 - **On demand only.** Rendering is attempted at exactly one point — after a fetch produced text
   below the readable floor, or text that is translation placeholders rather than sentences. Pages
   that already work never meet a browser, and never pay for one.
+  **A `403` therefore never reaches it:** both paths return at the blocking branch first
+  (`live_sources.py:377` before the render at 407; `crawl.py:363` before 387), so turning
+  `render_mode: on_demand` on today does nothing for a challenged page. Entry 41 adds a challenge as a
+  second trigger; that is unimplemented.
 - **It widens no trust.** Every request the page makes, document *and* subresource, is aborted
   unless its host is already approved for that destination. A third-party script is not evidence,
   but it decides what the evidence says. Where the render lands is re-checked exactly as a redirect
@@ -321,7 +334,16 @@ What it may do is bounded hard, and the bounds are the safety story:
   and the role left unfilled** — it cannot introduce a page that never passed domain trust.
 - it never widens trust. Officialness is settled by who controls the domain, before this runs.
 - candidate text reaches it under `untrusted_content`, and the prompt says it is evidence rather
-  than instructions.
+  than instructions. **Each candidate is truncated to `DEFAULT_EXCERPT_CHARACTERS` — 6,000 — and that
+  truncation is a second recall gate behind the shortlist, currently strict enough to decide corridors.**
+  Measured 2026-08-19: `canada/GB/GB/tourism` refuses because the sentence naming a "British citizen" as
+  eTA-required sits at offset 8,947 of a 16,465-character page, so the adjudicator never sees it and
+  correctly declines to state a decision it was not shown. Replaying the same cached pages at 20,000
+  fills the role and resolves the corridor. Worse than one corridor: the page lists visa-required
+  countries alphabetically and the eTA list after them, so **whether a corridor resolves depends on where
+  the traveller's nationality falls in a list** — India sits at 5,325 and is answered, every visa-exempt
+  nationality sits past 8,517 and is not. See [TODO.md](TODO.md) item 6; entry 40's asymmetry argument
+  applies here unchanged.
 - it may return null for a role, and the prompt states that refusing beats guessing. A refusal is
   honoured rather than filled in from the ranking.
 - heuristic scores are withheld from the packet, so the ranking that failed cannot anchor it.

@@ -17,6 +17,10 @@ to an HTTP refusal:
 * **2xx** — a policy was published, so parse it and obey it.
 * **4xx** — no policy was published, so nothing restricts this client. This includes `401` and
   `403`: those say the *file* is protected, which is not the site declaring itself closed.
+  Measured 2026-08-19 and worth keeping: `france-visas.gouv.fr` answers its own `robots.txt` with a
+  Cloudflare challenge, so there is genuinely no policy there to honour — which is what entry 41
+  concludes about the `403` on its pages too. Absence of a rule is not permission to deceive; it is
+  the absence of a rule.
 * **5xx or an oversized file** — the server is answering, and the policy it holds could not be
   read, so whether we are permitted is **unknown**. The standard says to assume we are not, which
   is the direction every other unknown in this project fails in.

@@ -18,6 +18,14 @@ registry (38), the reviewed override (39) and the shortlist width (40). **Left f
 the rest of entry 35 — asking authorities for access, and the client-side retrieval question nobody has
 argued yet.
 
+**Added 2026-08-19: items 5 and 6, and they are the two to do first.** Both came out of investigating
+why France resolves without a checklist and why `canada/GB/GB/tourism` refuses, and neither cause was
+where these files said it was. France's portal is not refusing us at all — it serves a Cloudflare
+challenge, and serves it for `robots.txt` too, so no policy was ever stated (entry 41). Canada refuses
+because the adjudicator's 6,000-character excerpt cuts off the page that answers it. **Numbering here is
+append-only** so that the cross-references in [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) stay valid; read
+the `next` labels rather than the numbers for order.
+
 **What the building found matters more than the list it came from.** Three separate times, a constraint
 turned out not to be where the documentation said: the domain classifier was failing on countries the
 search had already found; a wrong trusted set made corridors *refuse* rather than answer; and the
@@ -311,8 +319,127 @@ page content through the client, which needs a trust argument of its own — the
 hold, and content arriving via a browser has not passed the checkpoints that content arriving via
 `LiveSourceFetcher` has.
 
-**Careful:** nothing here licenses spoofing, retrying, or pointing this program's renderer at a refusal.
-Entry 18 is unchanged.
+**Careful:** nothing here licenses spoofing or retrying. **Amended 2026-08-19:** it no longer reads
+"or pointing this program's renderer at a refusal, entry 18 is unchanged" — entry 41 measured France's
+`403` as a Cloudflare *challenge* rather than a refusal and allows the renderer to answer it under our
+own user agent, which is item 5. That narrows this item rather than settling it: the client-side
+question is about content arriving through *someone else's* session, and none of entry 41 speaks to
+that.
+
+---
+
+### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
+
+**Why:** DECISIONS entry 41. `france-visas.gouv.fr` was never refusing this program — it serves a
+Cloudflare challenge (`cf-mitigated: challenge`, *"enable JavaScript and cookies to continue"*), and it
+serves the same challenge for `/robots.txt`, so no policy was ever stated. The project's own renderer,
+under our own user agent with nothing spoofed, reads the page: 221,476 bytes, 2,277 visible characters,
+`blocked_hosts: []`, ~7s. Three corridors' worth of coverage sits behind this, and one sentence
+currently shipping to travellers is false because of it.
+
+**A `403` reaches neither renderer today, so turning `render_mode: on_demand` on changes nothing.**
+Both paths return at the blocking branch before the render branch: `live_sources.py:377` precedes the
+render at line 407, and `crawl.py:363` precedes line 387. Rendering is only ever attempted on a thin
+`200`. This is the first thing to fix and the easiest to get subtly wrong.
+
+**Do, in this order:**
+
+1. **Separate a challenge from a refusal at the point of detection.** A `403` carrying
+   `cf-mitigated: challenge`, or a body carrying `cf_chl_opt` / `/cdn-cgi/challenge-platform/`, is a
+   challenge. A `401`, a bare `403`, and a `429` are refusals and keep every rule entry 18 gives them.
+   Detect it from the response, not from the host, so it cannot become "France gets special treatment".
+2. **Add `challenged` as its own `FailureOutcome`**, beside `blocked` and `disallowed`. It must sit
+   **outside** `blocked_urls()` and `persistent_refusals()` for the same reason `disallowed` does
+   (entry 36): it may never reach `inaccessible_urls` or `decision_blocking_urls`, and it may never
+   resolve a corridor. France's present resolution is exactly this bug and flips between runs.
+3. **Let a challenge trigger the renderer**, in both `live_sources.py` and `crawl.py`, under the
+   existing per-run render budget (entry 37) and the existing trust gate — which needs no widening,
+   because the challenge scripts are same-origin. A render that comes back still challenged stays
+   `challenged`; it is not retried.
+4. **Fix the false sentence.** `static/app.js` gives every `blocked` failure with a URL
+   *"does not permit automated retrieval"*. That is untrue of a challenge, and every reason reported
+   has to be true of what was seen (entries 33 and 36). A challenge reads as *an automated-access
+   check stood in front of this page and we could not answer it* — and once step 3 lands, the pages we
+   *did* read this way are ordinary evidence and say nothing at all.
+5. **Then measure what it actually buys**, per corridor, before believing any of it: France, Singapore's
+   VFS page, and `travel.state.gov`.
+
+**The checklist is not on the page, and this is the part to read before promising one.** Measured after
+rendering: `/en/demande-de-visa` carries three generic items (passport, "photocopies according to your
+situation", 2 ICAO photos); `/en/assistant-visa` is a four-step wizard with a nationality dropdown;
+`/en/visa-de-court-sejour` defines the visa without saying who needs one; and
+`www.france-visas.gouv.fr/en/web/france-visas/india` — the top-scoring France-Visas candidate at 74.4 —
+is a **404** the challenge had been hiding. So steps 1–4 make France *honest and readable*; they do not
+by themselves produce a corridor checklist.
+
+**Getting the checklist needs the wizard, and that needs its own decision entry first.** The France-Visas
+assistant is a read-only questionnaire that returns published guidance, not an application — but
+`CLAUDE.md` puts *form filling* on the permanent out-of-scope list, and the distinction between
+"answering four questions to be shown the published rules" and "filling in an application" is exactly
+the kind of thing that must be argued in writing rather than assumed by whoever is holding the
+keyboard. **Do not write wizard-driving code before that entry exists.** Note it interacts with item 6:
+a wizard result is per-corridor by construction, so it would arrive as text nobody else can re-derive.
+
+**Careful:** the two prohibitions are unchanged and are what keep this from being circumvention — no
+user-agent spoofing, and no retrying past a rate limit. And `robots.txt` outranks all of it: a
+`Disallow`ed path is still not fetched, a policy that could not be read is still reported as unread
+rather than as permission, and a `Disallow` still may not resolve a corridor.
+
+### 6. Stop the adjudicator's excerpt cutting the answer off — `next`
+
+**Why:** it makes Canada refuse a corridor whose answer it had already fetched, and it is the cheapest
+fix in this file. `DEFAULT_EXCERPT_CHARACTERS` is **6,000** (`resolver.py:110`), applied per candidate
+at `adjudication.py:108`. For `canada/GB/GB/tourism`, `entry-requirements-country.html` is 16,465
+characters and the sentence that answers the corridor sits at offset **8,947**:
+
+> "You need an eTA and a valid passport to board your flight to Canada if you're a citizen of any of the
+> countries or territories listed below. You **don't** need a visitor visa. … **British citizen** …"
+
+The excerpt ends at 6,000 — mid-alphabet in the *visa-required* list, at "Morocco" — so the adjudicator
+never sees the eTA list. It then refused `visa_decision` for a reason that was accurate about what it
+had been given: *"No candidate shows the result for a GB passport holder."* The corridor refuses.
+
+**Verified, not theorised.** Replaying the same 23 cached pages through the same prompt with the excerpt
+raised to 20,000 and nothing else changed, the adjudicator names the page and gets it right: *"It
+specifically lists a 'British citizen' among eTA-required nationalities: by air they need an eTA and
+valid passport, not a visitor visa; by land or sea, they need only a valid passport."* `visa_decision`
+filled means `is_usable`, so the corridor resolves.
+
+**The defect is worse than "Canada refuses", and this is the sentence to keep.** The page lists
+visa-required countries alphabetically, then the eTA list after them, so **whether a corridor resolves
+depends on where the traveller's nationality falls in a list**. Measured offsets on the same page:
+
+| Nationality | Offset | Inside the 6,000 window |
+| --- | --- | --- |
+| Brazil 4,720 · China 4,909 · India 5,325 | before 6,000 | **yes** |
+| Vietnam 7,787 · Australia 8,815 · British citizen 8,858 · Japan 9,647 · Singapore 9,856 | after 6,000 | **no** |
+
+The eTA list itself does not begin until offset 8,517, so **every visa-exempt nationality is beyond the
+window** while visa-required ones early in the alphabet are inside it. That also explains why entry 40
+recorded Canada as "every role filled" at 25 places: that measurement is consistent with an Indian
+passport, where the answer sits at 5,325. It does not generalise, and nothing in the output said so.
+
+**This is entry 40 again, one layer down.** The shortlist was the recall gate and 10 places made the
+scorer the real decider; the excerpt is a *second* recall gate behind it, and 6,000 characters made
+**truncation** the decider for any page whose answer is a long list. Both errors are asymmetric in the
+same way: what the model never sees, nothing downstream can recover.
+
+**Do:**
+
+1. **Raise it, and measure the cost honestly.** For Canada, 6,000→20,000 takes the page text in the
+   packet from 65,314 to 114,730 characters (~+12k tokens); only 5 of 23 pages exceed 6,000 at all. Two
+   of those five are at the 50,000-character source cap, which is where a flat raise gets expensive.
+2. **Then consider anchoring rather than only widening**, because a flat number scales badly across 25
+   candidates: keep the head of the page plus the window around mentions of the traveller's nationality
+   and residence. A country-list page needs exactly that; the head alone is nav and preamble.
+3. **Re-run the verified corridors afterwards.** This changes what every adjudication sees, so it is a
+   decider change, not a tuning knob — read `decided_by` and the recorded heuristic scores for
+   disagreements that appear or vanish.
+
+**Careful:** raising this cannot fix a page that never contained the answer.
+`ircc.canada.ca/english/visit/visas.asp` — the natural decision page, and what search returns first —
+yields 1,144 characters saying the client needs JavaScript, and the answer is behind its wizard, which
+is item 5's problem. Canada resolves because a *different* page happens to publish the list statically.
 
 ---
 
@@ -362,6 +489,11 @@ showed that is wrong:** `to_destination_config` fills `unreadable_authorities` f
 unconditionally, the extractor carries them into `unavailable_sources` whatever `decision_is_unverified`
 says, retrieval-time blocks arrive separately through `RetrievalReport.failures`, and the interface already
 gives any `blocked` failure with a URL the sentence *"does not permit automated retrieval"* plus a link.
+
+**And that sentence is false for France — 2026-08-19, entry 41.** `france-visas.gouv.fr` serves a
+Cloudflare challenge, not a refusal, so nothing there "does not permit" anything. Item 5 owns the fix.
+Read a real plan for a genuine refusal — `travel.state.gov` is one — rather than for France, or this
+item will measure the wrong sentence.
 
 So there is **no plumbing left to do**, and writing some would have been work against a problem that did
 not exist. What is unverified is whether it *reads* as useful — which no test can answer.
@@ -425,6 +557,12 @@ rule out — an inductive skip that buys nothing is not worth its risk. Item 5 m
 some paths and serve the rest. A host-level skip can silently lose a readable page, and losing evidence
 costs a refusal. The block must still be reported as `blocked` (entry 18), and nothing here may become a
 retry.
+
+**And do item 5 before this — 2026-08-19.** France looked like the strongest case for a host-level skip:
+eight `france-visas.gouv.fr` paths refused in one run while eight more took shortlist places and refused
+too, so 15 of 25 places were read. Measured, the right answer was not to skip the host but to answer its
+challenge — and behind the challenge at least one of those "blocked" URLs was a plain **404**, which a
+host-level skip would have permanently hidden rather than revealed. A skip is inductive; reading is not.
 
 **Also still overstated:** `pages_fetched` is the shortlist length rather than the number of pages that
 were readable, so it now reports up to 25 read when fewer are usable.

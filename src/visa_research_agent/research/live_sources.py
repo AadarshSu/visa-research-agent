@@ -377,6 +377,13 @@ class LiveSourceFetcher:
         if response.status_code in BLOCKING_STATUS_CODES:
             # Not a fault, and not evidence that the guidance is wrong or absent: the authority is
             # refusing this client. Say exactly that, and let the source be missing.
+            #
+            # But first establish that it *is* a refusal, which this does not yet do (entry 41).
+            # A `403` carrying `cf-mitigated: challenge` is Cloudflare asking whether we are a
+            # browser; `france-visas.gouv.fr` answers that for every path including `/robots.txt`.
+            # Note this branch returns **before** the render branch below, so a challenged page
+            # never reaches the renderer that would answer it — `render_mode: on_demand` today
+            # changes nothing for France. TODO item 5.
             return self._serve_stale(
                 configured_source,
                 cached,

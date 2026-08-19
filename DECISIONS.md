@@ -9,6 +9,102 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 41. A challenge is not a refusal: answer it as an honest browser, and honour every `robots.txt`
+**2026-08-19 · decided; not implemented**
+
+Entry 18 opens by predicting that "a headless Chromium would very likely pass that check" and then
+forbids trying. **Measured on 2026-08-19, the prediction is right and the premise underneath it was
+wrong.** `france-visas.gouv.fr` is not refusing this program. It is challenging it, and the two are
+different acts by different parties.
+
+**What the `403` actually is.** Requesting `/en/demande-de-visa` with the client the app really uses
+returns:
+
+```
+server: cloudflare
+cf-mitigated: challenge
+server-timing: chlray;desc="a2dabaff0fda5548"
+set-cookie: __cf_bm=...
+accept-ch / critical-ch: Sec-CH-UA-Bitness, Sec-CH-UA-Arch, Sec-CH-UA-Platform-Version, ...
+```
+
+with `cf_chl_opt` and the `/cdn-cgi/challenge-platform/` loader in the body, whose visible text reads
+*"One moment please … Checking if the site connection is secure … Enable JavaScript and cookies to
+continue"*, wrapped in a French page that calls itself *"Erreur 503 — le serveur que vous essayez
+d'atteindre semble injoignable"* and advises trying again in a few minutes. `cf-mitigated: challenge`
+is Cloudflare's own label for *prove you are a browser*. The `403` is the transport for a challenge,
+not an authorisation decision, and the page contradicts itself about which status it even is.
+
+**And `/robots.txt` is behind the same challenge**, which settles the question of whose decision this
+is. There is no stated policy, because nothing published a policy — a WAF default sits in front of the
+whole host. Entry 36's `robots.txt` work already measured this and known problem 11 already said it;
+what neither did was draw the conclusion about the `403` itself.
+
+**The distinction that decides it: entry 18's test is deception, not status codes.** A response that
+says *"enable JavaScript and cookies to continue"* is a **capability test**. Answering it by running
+the page's own JavaScript, in a real browser, under our own name, misrepresents nothing to anybody.
+Measured: the project's own `PlaywrightPageRenderer`, announcing
+`VisaResearchAgent/0.1 (personal visa research; contact repository owner)` — our identity, unchanged,
+nothing spoofed — reads the page.
+
+| | Result |
+| --- | --- |
+| `final_url` | `https://france-visas.gouv.fr/en/demande-de-visa`, unchanged |
+| HTML | 221,476 bytes; 2,277 visible characters |
+| Challenge markers in the result | none |
+| `blocked_hosts` | `[]` — the render trust gate had to allow nothing new |
+| Cost | ~7s per page |
+
+That last row matters more than it looks: Cloudflare's challenge scripts are served **same-origin**
+under `/cdn-cgi/challenge-platform/`, so the rule that aborts every request to an unapproved host
+(entry 13) neither has to bend nor accidentally breaks the challenge.
+
+**Decided, and it amends entry 18 rather than repealing it.**
+
+- A challenge is **its own outcome**, not `blocked`. `blocked` means an authority refused us; that is
+  a claim about the authority, and it is false here.
+- A challenge **may be answered by the renderer**, under our own user agent. This is the one thing
+  entry 18 named and forbade, and it is now allowed *because* it was measured to require no
+  deception — not because the coverage was tempting.
+- A challenge **may never resolve a corridor.** Entry 32's causality bound applies with more force
+  here, not less: a page nobody was allowed to read is at least a page an authority withheld, whereas
+  a challenge is a page nobody asked the authority about. This is also why France's current
+  resolution is wrong — it resolves on an incidental challenge that happened to score for
+  `visa_decision`, which flips between runs.
+- **`robots.txt` is read and obeyed for every host, unchanged (entry 36), and it outranks all of the
+  above.** A `Disallow`ed path is not fetched, challenge or no challenge; a policy that cannot be read
+  is still reported as unread rather than as permission; a `Disallow` still may not resolve a corridor.
+  Answering a challenge where no policy exists and ignoring a policy where one does would be the same
+  mistake twice.
+
+**What stays forbidden, in full.** No user-agent spoofing. No retrying past a `429`. No answering a
+`401`, or a bare `403` carrying no challenge markers — those are refusals, and entry 18 governs them
+completely. **The line moves from "which status came back" to "did the authority state anything".**
+
+**Entry 18's cost statement is amended.** *"France is unservable"* was true of an anonymous HTTP
+client. It was never a property of the principle, which is what entry 35 said and this measures.
+
+**What it does not buy, measured, so that nobody expects it.** Answering the challenge yields the
+pages; the answers are not on them.
+
+| Page | What is actually there |
+| --- | --- |
+| `/en/demande-de-visa` | Three generic items — passport, "photocopies according to your situation", 2 ICAO photos — and a button into the wizard |
+| `/en/assistant-visa` | "Step 1 of 4" with a nationality dropdown: the decision is behind form input |
+| `/en/visa-de-court-sejour` | Defines what a short-stay visa is; never says who needs one |
+| `www.france-visas.gouv.fr/en/web/france-visas/india` | **404** — and it was the top-scoring France-Visas candidate at 74.4 |
+
+So the challenge had also been masking dead URLs, and the corridor was spending fetch places on them.
+Getting a *corridor* checklist out of France needs the wizard, which is form input and collides with
+the permanent scope rule on form filling. **That is a separate decision and is not taken here.**
+
+**One thing shipping today is now known to be false.** The interface tells a traveller
+*"<authority> does not permit automated retrieval"* for any `blocked` failure with a URL. For a
+challenge that sentence is untrue of what was seen. Correcting it is part of the implementation, not a
+separate nicety — see [TODO.md](TODO.md) item 5.
+
+---
+
 ## 40. The shortlist is a recall budget, and ten places made the heuristic the real decider
 **2026-08-18 · implemented**
 
@@ -817,7 +913,13 @@ trusting this. That is the one thing outstanding on this entry.
 ---
 
 ## 26. France refuses because France does not publish the answer anywhere readable
-**2026-08-17**
+**2026-08-17 · qualified by entry 41 on 2026-08-19**
+
+> **The title overstates what was measured.** France does not publish the answer anywhere *this client
+> could read*, which is a narrower claim — the pages on `france-visas.gouv.fr` were never read, only
+> challenged. Rendering them (entry 41) shows the decision and the corridor checklist sit behind a
+> four-step wizard rather than on a page, so the conclusion below survives; the reason for it has
+> changed from "nowhere readable" to "behind form input".
 
 `france/IN/GB/tourism` — an Indian passport, applying from the UK — refused, and it is a corridor
 common enough that the refusal deserved checking rather than attributing to the known 403.
@@ -1262,7 +1364,14 @@ than hard-coded, so making it variable changes one function instead of the reque
 ---
 
 ## 18. A block is not a fact about the guidance; never work around one
-**2026-08-16**
+**2026-08-16 · amended by entry 41 on 2026-08-19**
+
+> **Read entry 41 with this.** The prediction below — that a headless Chromium would pass France's
+> check — was measured and is correct, and the premise was wrong: `france-visas.gouv.fr` serves a
+> Cloudflare *challenge* (`cf-mitigated: challenge`), not a refusal, and serves it for `robots.txt`
+> too, so no policy was ever stated. A challenge may now be answered by the renderer under our own
+> user agent. Everything below still governs an actual refusal — a `401`, a bare `403`, a `429` — and
+> the prohibitions on spoofing and retrying are untouched.
 
 France's portal answers `403` to anything that is not a browser. A headless Chromium would very
 likely pass that check, and the renderer is already built and already trusted. The tempting fix is

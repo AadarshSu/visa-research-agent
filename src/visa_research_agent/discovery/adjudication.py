@@ -105,6 +105,11 @@ def build_candidate_packet(
                 # publication date is not staleness, and only something holding the page's text
                 # can tell the difference — which is exactly what this call is.
                 "published_in_path": published_date_in_path(candidate.link.url),
+                # A flat head-of-page slice, and the only thing standing between a fetched answer
+                # and the decider. At the current 6,000 it decides corridors on its own — see
+                # `DEFAULT_EXCERPT_CHARACTERS` in resolver.py and TODO item 6. Anchoring the window
+                # on the traveller's own country would beat widening it, because a country-list page
+                # keeps the answer wherever the alphabet puts it.
                 "untrusted_content": contents.get(source_id, "")[:excerpt_characters],
             }
             for source_id, candidate in candidates.items()
