@@ -30,6 +30,7 @@ from visa_research_agent.discovery.models import (
     SearchResult,
 )
 from visa_research_agent.discovery.resolver import (
+    DEFAULT_SHORTLIST_SIZE,
     CorridorResolver,
     build_source_id,
     clean_title,
@@ -260,6 +261,9 @@ def test_the_shortlist_budget_is_filled_rather_than_left_part_used(tmp_path: Pat
     """
 
     resolver, _ = build_resolver(tmp_path, [], [])
+    # Pinned: this is about *filling* the budget, whatever the budget is. Asserting against the
+    # production default made it a test of that number instead, and it broke when the number moved.
+    resolver.shortlist_size = 10
     candidates = [
         CandidatePage(
             link=PageLink(
@@ -313,6 +317,9 @@ def test_one_authority_cannot_take_every_place_in_the_shortlist(tmp_path: Path) 
     """
 
     resolver, _ = build_resolver(tmp_path, [], [])
+    # Pinned, so the quiet page stays genuinely outside the window. With a wider one it would be
+    # admitted on score alone and the reservation this tests would never be exercised.
+    resolver.shortlist_size = 10
     loud = [page(f"https://interior.gov.example/p{index}", 50.0 - index) for index in range(12)]
     quiet = page("https://in.mission.gov.example/visas/", 5.0)
 
@@ -329,6 +336,8 @@ def test_a_mission_network_does_not_reserve_a_place_for_every_post(tmp_path: Pat
     """
 
     resolver, _ = build_resolver(tmp_path, [], [])
+    # Pinned: twelve posts must exceed the window for the crowding to exist at all.
+    resolver.shortlist_size = 10
     posts = [
         page(f"https://{label}.mission.gov.example/visas/", 80.0)
         for label in ("in", "de", "uk", "fr", "jp", "br", "cn", "sg", "za", "mx", "ke", "pe")
@@ -569,3 +578,45 @@ def test_only_a_refusal_of_a_plausible_decision_page_counts(tmp_path: Path) -> N
     assert blocking == [DETAIL_INDIA]
     # A refusal nothing ever scored cannot qualify either, which fails toward refusing.
     assert resolver._decision_blocking(["https://immigration.gov.example/never-seen"], {}) == []
+
+
+def test_the_shortlist_is_a_recall_budget_and_is_wide_enough_to_be_one() -> None:
+    """The scorer decides what the model is *allowed to see*, not what is chosen.
+
+    So the two errors it can make are not symmetric: a page ranked out of this window is one
+    nothing downstream can recover, while a page ranked in wrongly costs an excerpt. Ten places
+    made the heuristic the effective decider for every corridor whose right page sat eleventh —
+    measured live on 2026-08-18, Canada and Japan both refused at ten and filled every role at
+    twenty-five, having changed nothing else.
+
+    Pinned because the cost of narrowing it again is invisible: corridors do not fail loudly, they
+    quietly refuse, and the page that would have answered is never fetched to be missed.
+    """
+
+    assert DEFAULT_SHORTLIST_SIZE >= 25
+
+
+def test_a_wider_window_still_refuses_a_page_no_role_wants(tmp_path: Path) -> None:
+    """Widening must buy recall, never admit noise. A page nothing scored is still not fetched,
+    however much room there is — otherwise the extra places fill with whatever the crawl saw."""
+
+    resolver, _ = build_resolver(tmp_path, [], [])
+    wanted = [page(f"https://immigration.gov.example/p{index}", 40.0) for index in range(3)]
+    unwanted = [
+        CandidatePage(
+            link=PageLink(
+                url=f"https://immigration.gov.example/noise{index}",
+                text="",
+                heading="",
+                depth=1,
+                discovered_from="seed",
+            ),
+            link_scores=RoleScores(scores={}),
+            found_by="crawl",
+        )
+        for index in range(30)
+    ]
+
+    shortlist = resolver._shortlist([*wanted, *unwanted])
+
+    assert len(shortlist) == 3, "spare places are left empty rather than filled with noise"

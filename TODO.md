@@ -153,53 +153,35 @@ ministry was seen at all; it is measured in DECISIONS entry 38's table.
 
 ## Next — the direction change
 
-### 1. Find out why a corridor refuses on a domain it can now read — `next`
+### ~~Find out why a corridor refuses on a domain it can now read~~ — **done 2026-08-18**
 
-**Why:** DECISIONS entry 39 measured the domain corrections and the constraint moved rather than lifted.
-Sweden went from fetching nothing to reading `migrationsverket.se`, filled `application_route` and
-`general_entry`, and still refuses because the **visa decision** could not be confirmed. Canada now finds
-its document checklist and still cannot confirm the decision. The Netherlands did not move at all.
+Traced, and the answer was not in the scorer's rules. `DEFAULT_SHORTLIST_SIZE` was **10** — the number
+of pages the model is allowed to see — which made the heuristic the effective decider for every corridor
+whose right page sat eleventh. Changing only that number to 25: **Canada and Japan went from refusing to
+filling every role**, the Netherlands gained its checklist, Sweden did not move. No latency penalty
+(fetching is concurrent; 44.5s→39.3s and 45.2s→41.7s, both within noise) and adjudication input roughly
+doubles to ~19k tokens. DECISIONS entry 40; a test pins the width.
 
-That is no longer a trust problem — the right authority is being read.
+**Three things it did not fix, each now its own item below:** Sweden, the `/india`-over-
+`/united-kingdom` weighting (entry 39), and English-only scoring.
 
-**The Netherlands was traced all the way down and gives the first concrete bug (entry 39).** With
-`netherlandsworldwide.nl` added, the corridor finds both
-`checklist-schengen-visa-tourism/india` and `checklist-schengen-visa-tourism/united-kingdom`, each
-readable and about 7,700 characters. **The scorer ranks the wrong one higher — 113.0 for `/india`
-against 73.0 for `/united-kingdom`** — because it weights the passport nationality's demonym in a URL
-above the applying-from country's. For a consular checklist the **post** governs: an Indian national
-applying from Great Britain applies at the Dutch mission in the UK. The adjudicator then correctly
-refuses to name a wrong-post page, so the corridor loses a checklist it had already fetched.
+---
 
-**But measure the window before touching a scoring rule.** `DEFAULT_SHORTLIST_SIZE` is **10**, each page
-excerpted to 6,000 characters — about 15k tokens to the adjudicator, which is a very conservative budget
-for a model call. The scorer's job is therefore **recall into ten places**, not ranking: a page it drops
-is one the model never sees, and the model is the reliable component. Measured 2026-08-18, changing only
-that number from 10 to 25:
+### 1. Fix the post-over-nationality weighting, and find out why Sweden does not move — `next`
 
-| Corridor | shortlist 10 | shortlist 25 |
-| --- | --- | --- |
-| Canada | refuses — no visa decision | **every role filled** |
-| Japan | no visa decision | **every role filled**, same checklist |
-| Netherlands | no checklist | checklist found (decision genuinely unpublishable) |
-| Sweden | two roles unfilled | unchanged — fails for another reason |
+**Why:** DECISIONS entries 39 and 40. Widening the shortlist fixed two corridors and left two problems
+standing, and they are now separable.
 
-**One number outperformed every scoring rule in the file.** Two corridors that refused now resolve
-completely, and nothing regressed. The `/india`-over-`/united-kingdom` bug is real and still worth
-fixing, but it is not what was binding.
+**The weighting bug is precise and reproducible.** For an Indian national applying from Great Britain the
+scorer gives `checklist-schengen-visa-tourism/india` **113.0** and `.../united-kingdom` **73.0**. For a
+consular checklist the **post** governs, not the passport: they apply at the Dutch mission in the UK. The
+adjudicator correctly refuses a wrong-post page, so the corridor discards a checklist it already fetched.
+Make `applying_from` outrank `passport_nationality` where a URL or link text names a post — and measure
+across the verified corridors, because link scoring decides what every corridor reads.
 
-**Not yet measured, and it is what decides this:** the latency and cost of fetching 25 pages instead of
-10. A cold request is 34.1s today and deployment is already tight against a 30–60s proxy timeout, so this
-trades the thing blocking deployment against the thing blocking coverage. Measure both before changing
-the default.
-
-**Then** consider making `applying_from` outrank `passport_nationality` where a URL names a post — and
-measure that across all seven verified corridors separately, because link scoring decides what every
-corridor reads.
-
-**Not everything is this.** The Netherlands' visa *decision* is published only as a nine-question
-JavaScript filter tool, so that role is genuinely unanswerable and refusing it is right. Sweden and
-Canada fail differently again and have not been traced.
+**Sweden is unexplained.** It reads `migrationsverket.se`, fills `general_entry`, and neither widening
+the window nor correcting its domain moved the visa decision or the checklist. It has not been traced the
+way the Netherlands was, and it should be before anything else is changed on its account.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 

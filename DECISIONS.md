@@ -9,6 +9,53 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 40. The shortlist is a recall budget, and ten places made the heuristic the real decider
+**2026-08-18 · implemented**
+
+`DEFAULT_SHORTLIST_SIZE` moves from 10 to 25. That is the whole change, and it bought more than every
+scoring rule in `scoring.py`.
+
+**The reasoning that kept it at ten was a category error.** The pipeline is: a heuristic scorer picks the
+shortlist, and a model adjudicates roles from it. The scorer was being tuned as though it decided
+something. It does not — it decides **what the model is allowed to see**. So its two errors are not
+symmetric. A page ranked *in* wrongly costs one excerpt. A page ranked *out* is one nothing downstream
+can recover: not the adjudicator, not the retry, not the traveller. At ten places, the heuristic was the
+effective decider for every corridor whose right page sat eleventh — and known problem 9 had said exactly
+this ("a page it ranks out of the ten fetch places is one the model never sees") without the conclusion
+being drawn.
+
+**Measured live, changing only this number:**
+
+| Corridor | 10 places | 25 places |
+| --- | --- | --- |
+| Canada | refuses — no visa decision | **every role filled** |
+| Japan | no visa decision | **every role filled**, same checklist |
+| Netherlands | no checklist | checklist found (its decision is a JavaScript tool; see entry 39) |
+| Sweden | two roles unfilled | unchanged — it fails for another reason |
+
+Two corridors that refused now resolve completely. Nothing regressed.
+
+**And it is close to free**, which is the part that was assumed rather than checked. Fetching is
+concurrent, so cost scales with batches rather than pages: Japan's corridor took 44.5s at ten and 39.3s
+at twenty-five, Canada's 45.2s and 41.7s — within noise both times, with no systematic penalty in either
+direction. Adjudication input roughly doubles to about 19k tokens, which is small for one call.
+
+**What this does not fix, and must not be read as fixing.** Sweden did not move. The `/india`-over-
+`/united-kingdom` weighting from entry 39 is still wrong. Scoring is still English-only (known problem
+13). The argument here is narrower: **the scorer did not need to be more accurate, it needed to stop
+being a bottleneck**, and that was true before any of its rules were examined.
+
+**Rejected for now: replacing the scorer** with an embedding or model-based ranker. It is the component
+that does *not* need to be reliable — its failures cost recall, which fails safe into a refusal, because
+the trust rules and the adjudicator sit downstream. Spending a rewrite on the safe component while a
+constant was the binding constraint would have been the wrong order. If it returns, the case should be
+the multilingual gap rather than the ranking.
+
+**A test pins the width**, because narrowing it again would be invisible: corridors do not fail loudly,
+they quietly refuse, and the page that would have answered is never fetched to be missed.
+
+---
+
 ## 39. A person may override the trust rule in committed data, and doing it showed the rule was not the only thing wrong
 **2026-08-18 · implemented for 12 countries**
 

@@ -78,7 +78,29 @@ from visa_research_agent.domain.trust import host_is_within, host_of, registrabl
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 
 MINIMUM_ROLE_SCORE = 20.0
-DEFAULT_SHORTLIST_SIZE = 10
+# How many pages the adjudicator gets to choose from. **This is a recall budget, not a precision
+# one**, and reading it the other way is what kept it at ten for so long.
+#
+# The heuristic scorer does not decide anything: it decides what the model is allowed to see. So a
+# page it ranks out of this window is one nothing downstream can recover, while a page it ranks in
+# wrongly costs only an excerpt. The two errors are not symmetric, and the budget should reflect
+# that.
+#
+# Measured 2026-08-18, changing only this number, live, on registry domains:
+#
+#   Canada       10 → refuses, no visa decision.  25 → every role filled.
+#   Japan        10 → no visa decision.           25 → every role filled, same checklist.
+#   Netherlands  10 → no checklist.               25 → checklist found.
+#   Sweden       10 → two roles unfilled.         25 → unchanged; it fails for another reason.
+#
+# Two corridors that refused now resolve completely, and nothing regressed. **It bought more than
+# any scoring rule in `scoring.py` does**, which is the finding, not the number.
+#
+# It is close to free. Fetching is concurrent, so the cost scales with batches rather than pages:
+# Japan's corridor took 44.5s at ten and 39.3s at twenty-five, Canada's 45.2s and 41.7s — within
+# noise both times, with no systematic penalty either way. Adjudication input roughly doubles, to
+# about 19k tokens, which is small for one call.
+DEFAULT_SHORTLIST_SIZE = 25
 # Places held for each trusted domain before the rest are filled best-first. One is enough for what
 # this protects against — an authority being shut out of the fetch entirely — and cheap: with the
 # trusted set capped, the reserved places cannot crowd out the fill they exist to balance.

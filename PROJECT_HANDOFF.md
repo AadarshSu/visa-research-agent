@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-18 — update this line when you touch the handoff |
-| **Tests** | 363 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 365 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -353,6 +353,13 @@ its seven entries are now implemented, and nothing is left shipping against the 
   government domain*, and no longer identically to a commercial visa agency. The refusal message names
   the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
   is trusted.
+- **The shortlist widened from 10 to 25** (entry 40) — one constant, and it bought more than every
+  scoring rule in the file. The scorer decides *what the model may see*, not what is chosen, so a page
+  ranked out of the window is unrecoverable while a page ranked in wrongly costs an excerpt. At ten
+  places the heuristic was the effective decider. **Canada and Japan went from refusing to filling every
+  role**; the Netherlands gained its checklist. No latency penalty — fetching is concurrent, and both
+  corridors were marginally *faster* at 25 — and adjudication input roughly doubles to ~19k tokens.
+  A test pins the width, because narrowing it again fails silently.
 - **A person may override the trust rule in committed data** (entry 39) — `CountryAuthorities.reviewed`,
   a domain-to-evidence map that leads the set, counts against the same cap, and **survives
   regeneration**. Twelve countries corrected, each confirmed by a Wikidata reverse lookup (the domain is
@@ -426,11 +433,12 @@ rules.** `robots.txt` was the last of those (entry 36); what remains all costs s
 198-country registry, search quota, or a decision nobody has argued yet — so pick up
 [TODO.md](TODO.md) item 1 and work down:
 
-1. **Find out why a corridor still refuses on a domain it can now read** — the constraint entry 39's
-   measurement exposed. Sweden reads `migrationsverket.se` and fills two roles but not the visa decision;
-   Canada finds its checklist and not the decision. This is a *scoring and adjudication* problem rather
-   than a trust one. Still outstanding from entry 38: the cap's alphabetical tie-break, which spends two
-   of India's five slots on United States missions.
+1. **Fix the post-over-nationality weighting** — precise and reproducible: the scorer gives
+   `checklist-schengen-visa-tourism/india` 113.0 against 73.0 for `/united-kingdom`, for a traveller
+   applying *from* the UK. The adjudicator then correctly discards a checklist the corridor had already
+   fetched. **And trace Sweden**, which neither the domain fix nor the wider window moved. Still
+   outstanding from entry 38: the cap's alphabetical tie-break, which spends two of India's five slots on
+   United States missions.
 2. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
    thing that decides whether this is a product. Nothing large should be built before it. It now has a
    posture worth measuring: `robots.txt` landed first on purpose.
@@ -459,6 +467,7 @@ of three steps in.** Read them in [DECISIONS.md](DECISIONS.md).
 | 36 | `robots.txt` is read once per origin and obeyed, by the crawl and by retrieval. A skip is the `disallowed` outcome, never an absence; it is reported but may never resolve a corridor; and an unread policy is never reported as a policy that refused us. |
 | 38 | The trusted-domain registry is generated offline and committed; `bootstrap_destination` leaves the request path. Reviewing it found twelve countries confirmed *and wrong*, and the cap spending slots on the wrong parts of a government. |
 | 39 | A person may override the trust rule in committed data, with required evidence, preserved across regeneration. Twelve countries corrected. Measured: they help but do not make a corridor resolve — the binding constraint moved to confirming the visa decision. |
+| 40 | The shortlist is a recall budget, not a precision one. Ten places made the heuristic the effective decider; at 25, Canada and Japan resolve completely. One constant outperformed every scoring rule, at no measurable latency cost. |
 
 ### What changed on 2026-08-17, in one line each
 
