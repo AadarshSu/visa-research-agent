@@ -42,7 +42,8 @@ produces a serious defect.
   and the destination is refused. **How many** may be used is also bounded — at most five, and the
   relaxed one-query evidence bar applies only where "own government" is two independent signals.
   A country whose own top-level domain *is* `gov` otherwise admits its whole federal namespace, and
-  the cost lands on search count, crawl budget and the ten fetch places (entry 22).
+  the cost lands on search count and crawl budget — three searches per trusted domain, so five domains
+  is fifteen queries on the cold path (entry 22).
 
   **Which domains are trusted is now committed data, not a live search (entry 38).**
   `config/authority_domains.yaml` is generated offline by `visa-discover registry` and read at

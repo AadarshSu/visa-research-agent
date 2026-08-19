@@ -19,15 +19,22 @@ Produce visa application plans for a traveller where **every claim is grounded i
 government source**, and the traveller is told plainly when something could not be verified.
 
 The headline production goal — **automatic source discovery**, finding the right official pages for
-a traveller and destination with nobody curating URLs — is **done and running in the request path**,
-and a cold request now costs 34s rather than 71s.
+a traveller and destination with nobody curating URLs — is **done and running in the request path**.
+**Whose** domains a country may be researched from is no longer decided per request either: it is
+generated offline, reviewed, and committed (entries 34 and 38).
+
+**The cold-request timing in these files is stale — do not quote 34.1s.** It was measured before the
+registry, on hand-configured destinations. Measured 2026-08-18 on the registry path, the *corridor phase
+alone* is 39–45s for Japan and Canada. The cause is arithmetic rather than a regression in any component:
+three searches run per trusted domain, and the registry gives a country up to five where `japan` in
+`destinations.yaml` had two — six queries became fifteen. See known problem 5.
 
 **The direction changed on 2026-08-18**, after an outside review that was agreed with in full and is
-recorded as [DECISIONS.md](DECISIONS.md) entries 29–35, plus entry 36 which came out of implementing one
-of them. Nothing in it weakens the grounding principle. What it changes is the diagnosis of why coverage is
-poor, and it found three things shipping that this project's own rules argue against. **Implemented: 36,
-33, 32, 31, 30 and 29. Not: 34, and two of entry 35's three steps** — and [TODO.md](TODO.md) is the rest in
-order. The three sentences worth carrying:
+recorded as [DECISIONS.md](DECISIONS.md) entries 29–35, plus entries 36–40 which came out of building
+them. Nothing in it weakens the grounding principle. What it changes is the diagnosis of why coverage is
+poor, and it found three things shipping that this project's own rules argue against. **All of it is
+implemented except two of entry 35's three legitimacy steps** — asking authorities for access, and the
+client-side retrieval question — and [TODO.md](TODO.md) is what remains. The sentences worth carrying:
 
 - **The blocker is the posture, not the principle.** "Grounded in an official page" and "grounded only in
   what an anonymous Python client can fetch" were treated as one commitment. Entry 18 forbids
@@ -57,6 +64,11 @@ checked cannot be researched at all**, because no domain of their government pas
 refuse safely, with a message that misdescribes why.
 
 Seven corridors verified live; the table below is what each one actually did.
+
+**This table predates the registry (entry 38) and the wider shortlist (entry 40), and at least two rows
+are now wrong.** Japan and Canada both fill every role at a 25-place shortlist where they previously left
+the visa decision unfound. Treat it as the record of a 2026-08-16/17 run, not as current behaviour, until
+the twenty-corridor measurement re-runs it.
 
 | | Singapore | Japan | Vietnam | Brazil | France | China | United States |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -235,13 +247,24 @@ call silently substituting the heuristic (entry 31).
    narrowing (entry 32) landed first, so what needs re-running is the narrowed behaviour rather than what
    entry 27 originally shipped. France should be unaffected — `france-visas.gouv.fr` is exactly the
    credible decision candidate the narrowing keeps — but that is the assumption the live run tests.
-5. **A cold request takes 34 seconds, synchronously** — 19.4s corridor and 14.7s plan, inside one
-   `POST` (entry 25 brought this down from 70.7s). It now fits a typical 30–60s proxy timeout, but not
-   comfortably, and what remains is two model calls plus search latency, so it varies with someone
-   else's load rather than with anything here. Warm is instant, and the local `var/` stores are what
-   make it warm — an ephemeral container would make every request cold.
-6. **A destination is trusted on a rule, with no human in the loop, and the audit behind it was
-   survivorship.** The rule reproduces all 22 recorded human decisions, but every country in that audit
+5. **A cold request is slower than the 34.1s these files used to quote, and the current figure is
+   unmeasured.** That number was 19.4s corridor + 14.7s plan, measured before the registry on
+   hand-configured destinations. **Measured 2026-08-18 on the registry path, the corridor phase alone is
+   39–45s** (Japan 44.5s, Canada 45.2s at the old 10-place shortlist). The cause is arithmetic:
+   `corridor_queries` runs **three searches per trusted domain**, and the registry gives a country up to
+   five where `japan` in `destinations.yaml` had two — so six queries became fifteen. **This is a
+   consequence of entry 38, not of entry 40**: the wider shortlist was measured separately and had no
+   latency cost, because fetching is concurrent.
+   **Nobody has timed a full cold request end to end since**, so the total is genuinely unknown rather
+   than known-and-bad — but it plainly no longer fits a 30–60s proxy timeout comfortably, and deployment
+   should not be planned against 34.1s. The obvious lever is the per-domain query count, not the
+   shortlist. Warm is instant, and the local `var/` stores are what make it warm.
+6. **A destination is trusted on a rule whose output a person now reviews once, and the audit behind
+   the rule was survivorship.** **Changed on 2026-08-18 (entries 38 and 39):** the rule no longer runs
+   per request — its output is committed in `config/authority_domains.yaml`, so a wrong call is a
+   reviewable diff rather than a search ranking, and a person may override it in `reviewed` with the
+   evidence. Twelve countries needed that override. **40 of 198 countries are built**; the rest refuse
+   naming the command. The rule reproduces all 22 recorded human decisions, but every country in that audit
    was one `looks_governmental` already handled — see item 1, which is the concrete failure this warning
    used to describe hypothetically. The other half of the hole stands: a country whose TLD hosts a
    convincing government-shaped domain it does not control. Watch `withheld_domains` on resolved
@@ -275,12 +298,20 @@ call silently substituting the heuristic (entry 31).
    The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
    start shipping empty checklists for countries that do publish one, this is the cause; a
    per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
-9. **The heuristic decider still mis-ranks.** With `discovery_decider: model` the failing case is
-   fixed. Two fixes landed — a checklist is known by the documents it names, and the traveller's post
+9. **The heuristic scorer still mis-ranks — but it is a recall gate, not a decider, and that changes
+   what to do about it (entry 40).** This entry used to say "a page it ranks out of the ten fetch places
+   is one the model never sees" and then reason about improving the ranking. The conclusion to draw was
+   the other one: **widen the gate.** At 25 places Canada and Japan went from refusing to filling every
+   role, with no scoring rule touched and no latency cost. What remains is genuinely a ranking fault and
+   is now sharply defined: for an Indian national applying from Great Britain the scorer gives
+   `checklist-schengen-visa-tourism/india` **113.0** against **73.0** for `/united-kingdom`, when for a
+   consular checklist the **post** governs. The adjudicator correctly discards the wrong-post page, so
+   the corridor throws away a checklist it already fetched.
+   Two older fixes landed — a checklist is known by the documents it names, and the traveller's post
    governs — but both rest on English vocabulary and per-country city labels, so it will keep degrading
    on new countries and languages. **It is no longer the fallback** (entry 31), but it still matters,
-   because it builds the shortlist the model chooses from: a page it ranks out of the ten fetch places
-   is one the model never sees. It also remains the offline regression baseline.
+   because it builds the shortlist the model chooses from: a page it ranks outside the window is one the
+   model never sees. It also remains the offline regression baseline.
 10. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
@@ -331,8 +362,17 @@ call silently substituting the heuristic (entry 31).
 ## Current task
 
 Nothing is half-finished in the working tree and every check is clean. The 2026-08-18 review was agreed
-with in full, recorded as entries 29–35, and turned into an ordered list in [TODO.md](TODO.md). **Five of
-its seven entries are now implemented, and nothing is left shipping against the project's own rules.**
+with in full, recorded as entries 29–35, and turned into an ordered list in [TODO.md](TODO.md). **All of
+it is implemented bar two of entry 35's three legitimacy steps, and nothing is left shipping against the
+project's own rules.** Five further entries (36–40) came out of the building.
+
+**The pattern across all five is the one to carry forward.** Each time, the constraint was not where the
+documentation said it was, and only running the thing showed it: the domain classifier was discarding
+domains the search had already found; a wrong trusted set made corridors *refuse* rather than answer,
+where these files claimed the opposite; the `robots.txt` parser was inert against every wildcard rule; and
+the scorer's ranking was never binding — the ten-place window in front of it was. Four false lines in
+these files in two days, every one of them written from reading a code path. **Prefer a corridor run to a
+careful reading.**
 
 **Done, all offline and all with tests:**
 
@@ -443,17 +483,21 @@ rules.** `robots.txt` was the last of those (entry 36); what remains all costs s
    thing that decides whether this is a product. Nothing large should be built before it. It now has a
    posture worth measuring: `robots.txt` landed first on purpose.
 
-**Deployment has moved down the list deliberately.** It is not blocked on speed — a cold request is
-**34.1s** (19.4s corridor, 14.7s plan) where it was 70.7s, which fits an ordinary 30–60s proxy timeout,
-and warm is **0.0s**. It is blocked on item 3: publishing a URL whose two highest-volume corridors return
-no checklist is publishing the demonstration rather than the product. Item 1 also changes what a cold
-request does, so deploying first means deploying twice.
+**Deployment has moved down the list deliberately, and speed is now part of why.** It used to be
+"not blocked on speed — 34.1s, which fits a 30–60s proxy timeout". That number predates the registry and
+is stale: the corridor phase alone measures 39–45s now, because three searches run per trusted domain and
+the registry gives up to five where a hand-configured destination had two (known problem 5). A full cold
+request has not been re-timed, so the total is unknown rather than known-and-bad. Warm is still **0.0s**.
+It is also blocked on item 3 — publishing a URL whose two highest-volume corridors return no checklist is
+publishing the demonstration rather than the product — and item 1 changes what a cold request does, so
+deploying first means deploying twice.
 
 ### What changed on 2026-08-18, in one line each
 
-Seven entries, from one outside review, agreed with in full, plus entry 36 which came out of
-implementing one of them. **Entries 36, 33, 32, 31, 30 and 29 are implemented; 34 is not, and 35 is one
-of three steps in.** Read them in [DECISIONS.md](DECISIONS.md).
+Seven entries from one outside review, agreed with in full, plus five more (36–40) that came out of
+building them. **Everything is implemented except two of entry 35's three legitimacy steps** — asking
+authorities for access, and the client-side retrieval question, which is deliberately unargued. Read them
+in [DECISIONS.md](DECISIONS.md).
 
 | Entry | What it changed |
 | --- | --- |
@@ -465,6 +509,7 @@ of three steps in.** Read them in [DECISIONS.md](DECISIONS.md).
 | 34 | "Who to believe" leaves the request path and becomes a committed registry a person skims once. Not the gate entry 19 removed — that was URLs; this is ~3 domains per country, machine-proposed. |
 | 35 | The posture is honest client, not anonymous client: read `robots.txt`, ask for access, and decide the client-side-retrieval question explicitly. Plus the bar that decides whether this is a product, committed before the measurement. |
 | 36 | `robots.txt` is read once per origin and obeyed, by the crawl and by retrieval. A skip is the `disallowed` outcome, never an absence; it is reported but may never resolve a corridor; and an unread policy is never reported as a policy that refused us. |
+| 37 | A per-run allowance may not be counted on an object that outlives the run. The render budget was process-lifetime, so rendering switched itself off after a handful of pages and never came back. |
 | 38 | The trusted-domain registry is generated offline and committed; `bootstrap_destination` leaves the request path. Reviewing it found twelve countries confirmed *and wrong*, and the cap spending slots on the wrong parts of a government. |
 | 39 | A person may override the trust rule in committed data, with required evidence, preserved across regeneration. Twelve countries corrected. Measured: they help but do not make a corridor resolve — the binding constraint moved to confirming the visa decision. |
 | 40 | The shortlist is a recall budget, not a precision one. Ten places made the heuristic the effective decider; at 25, Canada and Japan resolve completely. One constant outperformed every scoring rule, at no measurable latency cost. |
@@ -569,9 +614,11 @@ writing down because the CLI does not offer it.
   automatic path — which is the path a request actually takes. Use
   `api.dependencies.build_automatic_destinations(get_runtime_policy())` and call
   `destination_for(country_name, corridor)`; about twenty lines, and it skips the plan call.
-- **To see the ten fetch places** — where the wasted budget, the boilerplate and the wrong post were
-  all found — wrap `CorridorResolver._shortlist`, print each candidate's score, role, link text,
-  inherited heading and `link_scores.signals`, and return the list unchanged. Nothing else exposes it.
+- **To see the shortlist** — 25 places since entry 40, and where the wasted budget, the boilerplate and
+  the wrong post were all found — wrap `CorridorResolver._shortlist`, print each candidate's score, role,
+  link text, inherited heading and `link_scores.signals`, and return the list unchanged. Nothing else
+  exposes it. Wrapping `_fetch_bodies` instead also shows which of them were *readable*, which is how
+  the Netherlands' 250-character signpost was found (entry 39).
 - **To time a cold corridor by phase**, wrap `BraveSearchProvider.search`, `CrawlFetcher.fetch_html`,
   `LinkCrawler.crawl`, `_fetch_bodies` and `_decide_roles` with a timer. Note that summed fetch time
   now exceeds wall-clock crawl time, which is what concurrency looks like.

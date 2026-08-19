@@ -1,9 +1,14 @@
 # Visa Research Agent
 
-Generates bounded, source-backed visa application plans for any traveller and any of 198
-destinations. It reports what official government sources say, cites every claim, and states
-plainly what it could not verify. It does not guarantee eligibility, completeness, or visa
-approval, and it never submits anything on anyone's behalf.
+Generates bounded, source-backed visa application plans for any traveller and any destination whose
+government domains have been confirmed. It reports what official government sources say, cites every
+claim, and states plainly what it could not verify. It does not guarantee eligibility, completeness, or
+visa approval, and it never submits anything on anyone's behalf.
+
+**40 of 198 countries are currently researchable.** Which domains a country may be researched from is
+generated offline, reviewed once, and committed in `config/authority_domains.yaml`; a country absent from
+it is refused rather than guessed at. Building the rest is search quota rather than work — see
+`visa-discover registry`.
 
 > **Picking the project up?** Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) — current state,
 > open problems and what is next. Then [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built,
@@ -16,8 +21,11 @@ Working end to end for any traveller and any destination it can reach, with **au
 discovery in the request path** — nobody curates URLs. What it does today:
 
 - **finds its own sources.** A destination nobody configured is researched when it is asked for: its
-  own government's domains are identified, the corridor is resolved, and the plan is built from what
-  was found. Seven corridors verified live;
+  government's domains are read from the committed registry, the corridor is resolved, and the plan is
+  built from what was found. Seven corridors verified live;
+- **obeys each host's stated crawl policy.** `robots.txt` is read once per origin and honoured, matching
+  RFC 9309 rather than `urllib`, which supports no wildcards. A page skipped for it is recorded as
+  skipped, never as nothing found;
 - **trusts a domain, never a page.** Per-destination domain trust, enforced when configuration loads,
   after every redirect, and after every meta-refresh forward;
 - **takes the traveller from the request** — passport, country applied from, purpose, with residence
@@ -30,9 +38,15 @@ discovery in the request path** — nobody curates URLs. What it does today:
   and a missing load-bearing source refuses the run before the model is called;
 - a small Jinja and vanilla JavaScript research interface, and fully offline tests and CI checks.
 
-**Not deployed yet**, and two things are deliberately unresolved: whether bot-blocked authorities make
-the highest-volume corridors unservable, and how to reach the governments whose domains carry no
-recognisable marker. Both are measurements with a plan; see [TODO.md](TODO.md).
+**Not deployed yet**, and three things are deliberately unresolved: whether bot-blocked authorities make
+the highest-volume corridors unservable; how to reach the governments whose domains carry no recognisable
+marker; and why some corridors still refuse on authorities they can now read. All three are measurements
+with a plan; see [TODO.md](TODO.md).
+
+**A caveat on timing**, because it is the one number a deployment plan would want: the cold-request
+figure these files used to quote (34.1s) predates the domain registry and is stale. Three searches run
+per trusted domain, and the registry gives a country up to five where a hand-configured one had two, so
+the corridor phase alone now measures 39–45s. A full cold request has not been re-timed.
 
 **A corridor that cannot be established says so rather than guessing.** France is the standing
 example: its visa portal refuses automated retrieval, so the plan states the visa decision as
@@ -48,7 +62,9 @@ cannot be skipped rather than graph nodes that could be reordered (entry 29).
 **A known coverage limit, measured 2026-08-18:** a destination is researchable only when its government
 publishes under a hostname this agent recognises as governmental (`gov`, `go.xx`, `gouv.xx`, and a few
 more). **19 of 51 countries checked do not** — Germany, Italy, the Netherlands, Sweden and Canada among
-them — so they refuse rather than answer. Being fixed through reviewed per-country data; see entry 33.
+them — so the rule alone refuses them. **A person may name the domain instead**, in the registry's
+`reviewed` field with the evidence for it; twelve countries have been corrected that way and Austria has
+not, because nothing independent confirmed it. See entries 33 and 39.
 
 ### Source discovery
 
@@ -56,7 +72,9 @@ Adding a country used to mean hand-searching for its official pages. `visa-disco
 instead, for a specific traveller:
 
 ```bash
-visa-discover bootstrap --destination-name Brazil        # propose official domains to approve
+visa-discover registry                                   # generate the committed domain registry
+visa-discover registry --only FR,DE                      # rebuild just these, keeping the rest
+visa-discover bootstrap --destination-name Brazil        # propose one country's domains, to read
 visa-discover corridor --destination japan --nationality IN --from GB --purpose tourism
 ```
 

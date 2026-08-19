@@ -243,16 +243,25 @@ this is automated while per-country trust is not.
 | How many | ~3 per country | Tens of thousands |
 | Decided by | **A rule, once per country** | **The machine, every corridor** |
 
-> **The code does not yet implement the left column, and that is a live problem.**
-> `bootstrap_destination` runs *inside every cold request*, and its result is cached **per corridor** —
-> so a country's trusted set is re-derived from that day's search rankings for every new nationality,
-> and the answer to "who is Germany's government" varies between runs. Entry 22's US coin flip was this
-> mechanism, diagnosed at the time as a ranking problem. **Fixed on 2026-08-18** — entries 34 and 38.
-> `config/authority_domains.yaml` is generated offline by `visa-discover registry`, read once at
-> construction, and consulted in place of a live bootstrap; `auto_trusted_domains` still decides every
-> domain, so only *when* the rule runs changed. Not a return to the gate entry 19 removed: that gate was
-> over *URLs*, which stay fully automated; this is ~3 domains per country, machine-proposed, frozen in
-> review. **40 of 198 countries are built**; the rest refuse with a message naming the command.
+> **The left column is committed data (entries 34 and 38).** `config/authority_domains.yaml` is
+> generated offline by `visa-discover registry`, read once at construction, and consulted in place of a
+> live bootstrap. `auto_trusted_domains` still decides every domain — only *when* the rule runs changed.
+>
+> It was worth moving because of what it replaced: `bootstrap_destination` used to run *inside every cold
+> request*, cached **per corridor**, so a country's trusted set was re-derived from that day's search
+> rankings for every new nationality and the answer to "who is Germany's government" varied between runs.
+> Entry 22's US coin flip was this mechanism, diagnosed at the time as a ranking problem.
+>
+> Not a return to the gate entry 19 removed: that gate was over *URLs*, which stay fully automated; this
+> is ~3 domains per country, machine-proposed, frozen in review. A country missing from the file is
+> **refused**, never bootstrapped live — falling back would silently reintroduce the variance the file
+> exists to remove, on exactly the countries nobody had reviewed.
+>
+> **A person may override the rule per country** in `reviewed`, which carries the evidence for each
+> domain and survives regeneration (entry 39). That is the hatch entry 33 said would be needed for the
+> governments that use no hostname marker; twelve countries required it.
+>
+> **40 of 198 countries are built.** The rest refuse with a message naming the command.
 
 ### The stages
 
@@ -323,10 +332,16 @@ What it may do is bounded hard, and the bounds are the safety story:
   `decided_by` to show it. Retrying a model provider is not what entry 18 forbids, which is about an
   authority refusing to be read. A refusal reports the calls it paid for.
 
-The heuristic is not replaced. It builds the shortlist the model chooses from — which stays
-load-bearing, since a page it ranks outside the ten fetch places is one the model never sees — it
-answers when no adjudicator is configured, and its score is recorded beside the model's choice so a
-reviewer can see where the two disagreed.
+The heuristic is not replaced. It builds the shortlist the model chooses from, it answers when no
+adjudicator is configured, and its score is recorded beside the model's choice so a reviewer can see
+where the two disagreed.
+
+**What it is, precisely, is a recall gate — and reading it as a decider is what kept the gate too
+narrow** (entry 40). A page it ranks *in* wrongly costs one excerpt; a page it ranks *out* is one
+nothing downstream can recover. At ten places the heuristic was the effective decider for every corridor
+whose right page sat eleventh. The window is now **25**, which took Canada and Japan from refusing to
+filling every role with no scoring rule touched and no measurable latency cost. Its ranking faults are
+real and still worth fixing; they were not what was binding.
 
 ### Scoring, in brief
 
@@ -369,10 +384,12 @@ bounded by an approved domain:
 
 **The rule says which domains may be used, and a bound says how many.** A large government passes it
 with far more domains than a small one — the United States with eight, Brazil with one — and width is
-expensive three times over: three searches are run per trusted domain, the crawl's per-host budget is
-the page budget divided by the hosts seeded, and the shortlist has ten places. So at most five are put
-to use, ordered by the authority hint in the hostname (`emb`, `consul`, `immi`, `mofa`) and then by
-corroboration. Everything left out is reported with its reason, and the reasons are kept apart because
+expensive: **three searches are run per trusted domain**, and the crawl's per-host budget is the page
+budget divided by the hosts seeded. So at most five are put to use, ordered by the authority hint in the
+hostname (`emb`, `consul`, `immi`, `mofa`) and then by corroboration, with a person's `reviewed` domains
+ahead of both. That cap is now the main cost lever on a cold request: five domains means fifteen
+searches where a hand-configured two meant six, which is why the corridor phase is slower than the
+figure these files used to quote. Everything left out is reported with its reason, and the reasons are kept apart because
 they are different problems with different fixes — four of them now:
 
 | Reason | The problem it names |

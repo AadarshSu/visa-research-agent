@@ -5,19 +5,24 @@ picked up cold.
 
 Status: `next` · `soon` · `later` · `blocked`
 
-**Read [DECISIONS.md](DECISIONS.md) entries 29–35 first.** An outside review on 2026-08-18 was agreed
-with in full and changed the direction: the posture, not the principle, is what has been costing
-coverage (entry 35); "who to believe" moves out of the request path into committed data (entry 34);
-the trust rule's governmental half was measured and fails closed for a fifth of the world (entry 33);
-and three things shipped that the project's own rules argue against (entries 30, 31, 32). The list below
-is that work in the order to do it.
+**Read [DECISIONS.md](DECISIONS.md) entries 29–35 first**, then 36–40, which are what came out of
+building them. The outside review on 2026-08-18 was agreed with in full and changed the direction: the
+posture, not the principle, is what has been costing coverage (entry 35); "who to believe" moves out of
+the request path into committed data (entry 34); the trust rule's governmental half was measured and
+fails closed for a fifth of the world (entry 33); and three things shipped that the project's own rules
+argue against (entries 30, 31, 32).
 
-**Done so far:** the trust-coverage measurement (33), the block-handover narrowing (32), the deletions
-(30, 29), the adjudication refusal (31), the withheld-reason fix, and now `robots.txt` (36 — the first of
-entry 35's three legitimacy steps). **Left:** the rest of entry 35 (asking for access; the client-side
-retrieval question) and entry 34's registry. **Nothing is shipping against the project's own rules any
-more.** What remains all costs something: a 198-country registry, search quota, or a decision nobody has
+**All seven review entries are now implemented or explicitly answered**, along with five more that came
+out of doing the work: `robots.txt` (36), the per-run render allowance (37), the committed domain
+registry (38), the reviewed override (39) and the shortlist width (40). **Left from the review itself:**
+the rest of entry 35 — asking authorities for access, and the client-side retrieval question nobody has
 argued yet.
+
+**What the building found matters more than the list it came from.** Three separate times, a constraint
+turned out not to be where the documentation said: the domain classifier was failing on countries the
+search had already found; a wrong trusted set made corridors *refuse* rather than answer; and the
+scorer's ranking was never binding — the ten-place window in front of it was. Prefer running a corridor
+to reading a code path. Every item below assumes that.
 
 ---
 
@@ -321,10 +326,15 @@ some environment variables, done. No pipelines, no orchestration; CI already run
 **Reordered after the direction work**, because deploying before item 2 ships a product whose two
 highest-volume corridors return no checklist.
 
-A cold request is **34.1s** (19.4s corridor + 14.7s plan) for `united-states/IN/IN/tourism` with both
-caches cleared, which fits a typical 30–60s proxy timeout but not comfortably. `var/cache/` and
-`var/corridors/` are local directories, so a disposable filesystem makes **every** request cold. Item 6
-removes four searches from that path.
+**The timing needs re-measuring before this is planned.** The **34.1s** figure (19.4s corridor + 14.7s
+plan, `united-states/IN/IN/tourism`, both caches cleared) was taken before the domain registry and no
+longer holds: the corridor phase alone measures **39–45s** now, because `corridor_queries` runs three
+searches per trusted domain and the registry gives a country up to five where `destinations.yaml` gave
+two. A full cold request has not been re-timed. The lever is the per-domain query count or the domain
+cap, **not** the shortlist — that was measured separately and costs nothing (entry 40).
+
+`var/cache/` and `var/corridors/` are local directories, so a disposable filesystem makes **every**
+request cold.
 
 1. **Precompute and ship corridors.** A warm corridor is 0.0s. Resolve popular ones locally with
    `visa-discover`, keep the JSON, point `FileCorridorStore` at it. The deployed app answers instantly
@@ -416,8 +426,8 @@ some paths and serve the rest. A host-level skip can silently lose a readable pa
 costs a refusal. The block must still be reported as `blocked` (entry 18), and nothing here may become a
 retry.
 
-**Also still overstated:** `pages_fetched` is the shortlist length, so the US reports ten pages read when
-eight are readable.
+**Also still overstated:** `pages_fetched` is the shortlist length rather than the number of pages that
+were readable, so it now reports up to 25 read when fewer are usable.
 
 ### Watch where the two deciders disagree — `later`
 
