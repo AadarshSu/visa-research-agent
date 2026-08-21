@@ -693,6 +693,13 @@ which are item 1, and English-only scoring, which is known problem 13 in
 
 ## Smaller things
 
+- **`visa-discover corridor` cannot run a registry destination, which is most of them.** It reads
+  `get_destination_registry()`, so `--destination canada` answers *"Unknown destination: canada"* while
+  the API resolves that corridor perfectly well through `AutomaticDestinationService`. Every live check
+  of a registry corridor — Canada twice on 2026-08-21 — has therefore been done from a throwaway script,
+  which is why nobody had the candidate list until entry 43. Items 15 and 17 both need to run these
+  corridors repeatedly, so the command should fall back to the automatic service when a slug is not
+  configured.
 - **A footer link inherits the heading of whatever came above it.** `extract_links` assigns each link the
   last heading it has seen, and footer links sit below everything, so France's legal notice was scored
   against a news article's heading about visa requirements (entry 26). The boilerplate veto handles the
