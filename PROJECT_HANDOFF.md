@@ -45,8 +45,8 @@ client-side retrieval question — and [TODO.md](TODO.md) is what remains. The s
   countries, including Germany, Italy, the Netherlands, Sweden and Canada (entry 33). Known problem 2 had
   been warning about the other half.
 - **Whether this is a product is now a measurement with a bar committed in advance** — top 20 corridors
-  by volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). Blocked on
-  search credit, and nothing large should be built before it.
+  by volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). **Brave credit
+  arrived on 2026-08-21, so it can run**, and nothing large should be built before it does.
 
 Deliberately out of scope, permanently: submitting applications, booking appointments, filling
 forms, or claiming an approval is guaranteed. **Also settled: LangGraph is not adopted** — the pipeline
@@ -249,8 +249,8 @@ call silently substituting the heuristic (entry 31).
    answer are bot-blocked. Seven corridors cannot say whether that is the rule or the exception, and the
    sample was chosen partly for being easy. Entry 35 commits a bar in advance — top 20 corridors by
    volume, product if ≥70% confirm the decision and ≥50% yield a checklist — precisely so the answer
-   cannot be rationalised after the fact. Blocked on Brave credit. **Nothing large should be built before
-   this runs.**
+   cannot be rationalised after the fact. **Brave credit arrived on 2026-08-21, so it can run.** Nothing
+   large should be built before it does.
 2. **The trust rule refuses a fifth of the world, with a wrong diagnosis.** Measured offline on
    2026-08-18: `is_own_government` fails for **19 of 51** countries — Austria, Belgium, Canada, Chile,
    Czechia, Germany, Denmark, Finland, Greece, Hungary, Ireland, Italy, Netherlands, Norway, Portugal,
@@ -522,7 +522,7 @@ the last was caught only by probing real authorities, not by any test.**
    one** — `interno.gov.it`, `gov.ie`, `gob.cl`, `cic.gc.ca` — so bootstrap *succeeds* and builds a trusted
    set that cannot contain the visa guidance, and **nothing measures that**. Canada is sharpest: `gc.ca`
    still passes, but immigration content moved to `canada.ca`. The reasons now describe it where the
-   ministry was seen at all; measuring it properly is part of TODO item 1.
+   ministry was seen at all; measuring it properly is part of TODO item 2.
 2. **The trust rule's coverage gap was blamed on the wrong half of the rule** for a week. Known problem 2
    warned about a government publishing outside its own TLD; not one of the 19 failures is that. Every one
    is `looks_governmental`, whose pattern list happened to cover all seven verified countries — so entry
@@ -553,24 +553,24 @@ the last was caught only by probing real authorities, not by any test.**
 **[TODO.md](TODO.md) items 5 and 6 first** — both are measured and reproducible, and item 6 is a single
 constant with the fix already verified by replay:
 
-1. **Item 6 — widen or anchor the adjudicator's excerpt.** Cheapest change in the file; `canada/GB/GB/
-   tourism` refuses today with the answer already fetched. Known problem 18.
-2. **Item 5 — treat a challenge as a challenge.** France's `403` is Cloudflare asking whether we are a
-   browser, not an authority refusing us; our own renderer answers it under our own name. It also fixes a
-   sentence shown to travellers that is untrue of what was seen. Entry 41.
+- **Item 6 — widen or anchor the adjudicator's excerpt.** Cheapest change in the file; `canada/GB/GB/
+  tourism` refuses today with the answer already fetched. Known problem 18.
+- **Item 5 — treat a challenge as a challenge.** France's `403` is Cloudflare asking whether we are a
+  browser, not an authority refusing us; our own renderer answers it under our own name. It also fixes a
+  sentence shown to travellers that is untrue of what was seen. Entry 41.
 
 Then the pre-existing list, which all costs something — a 198-country registry, search quota, or a
 decision nobody has argued yet:
 
-1. **Fix the post-over-nationality weighting** — precise and reproducible: the scorer gives
-   `checklist-schengen-visa-tourism/india` 113.0 against 73.0 for `/united-kingdom`, for a traveller
-   applying *from* the UK. The adjudicator then correctly discards a checklist the corridor had already
-   fetched. **And trace Sweden**, which neither the domain fix nor the wider window moved. Still
-   outstanding from entry 38: the cap's alphabetical tie-break, which spends two of India's five slots on
-   United States missions.
-2. **The 20-corridor measurement against the committed bar** — **blocked on Brave credit**, and the
-   thing that decides whether this is a product. Nothing large should be built before it. It now has a
-   posture worth measuring: `robots.txt` landed first on purpose.
+- **Item 1 — fix the post-over-nationality weighting** — precise and reproducible: the scorer gives
+  `checklist-schengen-visa-tourism/india` 113.0 against 73.0 for `/united-kingdom`, for a traveller
+  applying *from* the UK. The adjudicator then correctly discards a checklist the corridor had already
+  fetched. **And trace Sweden**, which neither the domain fix nor the wider window moved. Still
+  outstanding from entry 38: the cap's alphabetical tie-break, which spends two of India's five slots on
+  United States missions.
+- **Item 3 — the 20-corridor measurement against the committed bar.** **No longer blocked: Brave credit
+  arrived on 2026-08-21.** It decides whether this is a product, so nothing large should be built before
+  it, and it now has a posture worth measuring: `robots.txt` landed first on purpose.
 
 **Deployment has moved down the list deliberately, and speed is now part of why.** It used to be
 "not blocked on speed — 34.1s, which fits a 30–60s proxy timeout". That number predates the registry and
@@ -657,27 +657,37 @@ same falsehood entry 33 removed from `withheld_domains`.
 
 ## Next steps
 
-[TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape. **Everything that needed no
-credit is done**, so each remaining item costs something — a crawl policy, a 198-country registry, or
-search quota.
+[TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape.
 
-1. **Amend the trust rule** for the governments with no hostname marker, for the twelve confirmed-and-wrong
-   countries entry 38 found, and for Schengen. **The measurement it was waiting on is done** — entry 38's
-   table names the countries and the domains, so this is now a data edit against a committed file rather
-   than a regex change. `gv.at`, `canada.ca`, `esteri.it`, `government.nl`, `sef.pt`, `irishimmigration.ie`
-   are the concrete cases. Fix the cap's alphabetical tie-break at the same time: India spends two of five
-   slots on United States missions. TODO item 1.
-2. **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
-   decision and ≥50% yield a checklist. **Blocked on Brave credit**, and the thing that decides the
-   project's direction, so nothing large should be built before it. Fold in the France read-through, which
-   needs the same credit and is still the one shipped change never run live. TODO item 2.
-3. **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
-   does not approve it). TODO item 3.
-6. **Then deploy**, precompute popular corridors, and put a key or a rate limit on `POST /visa-plans`.
-7. Standing work: confirm a blocked authority reads usefully (the plumbing turned out to already exist —
-   see known problem 7); tell "no checklist exists" apart from "we failed to find it"; decide whether a
-   host that refused everything may be skipped; try sitemaps before crawling; revisit conflict detection
-   with claim scope recorded.
+**First, and needing no credit: [TODO.md](TODO.md) items 6 and 5** — the adjudicator's excerpt, then the
+Cloudflare challenge. Both are measured and reproducible; see *Current task* above for why they lead.
+
+**Then the pre-existing list, in this order.** Each of these costs something — a crawl policy, a
+198-country registry, or search quota. Bulleted rather than numbered, because the numbers that matter
+are the TODO item numbers on each line.
+
+- **Fix the post-over-nationality weighting**, and trace why Sweden does not move. Reproducible, written
+  up under *Current task*, and it decides what every corridor reads. Entries 39 and 40. TODO item 1.
+- **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
+  decision and ≥50% yield a checklist. **No longer blocked: Brave credit arrived on 2026-08-21.** It
+  decides the project's direction, so nothing large should be built before it. Fold in the France
+  read-through, which needs the same credit and is still the one shipped change never run live.
+  TODO item 3.
+- **Amend the trust rule** for the governments with no hostname marker, for the twelve confirmed-and-wrong
+  countries entry 38 found, and for Schengen. **The measurement it was waiting on is done** — entry 38's
+  table names the countries and the domains, so this is now a data edit against a committed file rather
+  than a regex change. `gv.at`, `canada.ca`, `esteri.it`, `government.nl`, `sef.pt`, `irishimmigration.ie`
+  are the concrete cases. Fix the cap's alphabetical tie-break at the same time: India spends two of five
+  slots on United States missions. TODO item 2.
+- **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
+  does not approve it). TODO item 4.
+- **Then deploy**, precompute popular corridors, and put a key or a rate limit on `POST /visa-plans`.
+  TODO item 7.
+- Standing work: confirm a blocked authority reads usefully (item 8 — the plumbing turned out to already
+  exist, see known problem 7); tell "no checklist exists" apart from "we failed to find it" (item 9); try
+  sitemaps before crawling (item 10); decide whether a host that refused everything may be skipped
+  (item 11); watch where the two deciders disagree (item 12); revisit conflict detection with claim scope
+  recorded (item 13); detect drift in configured sources (item 14).
 
 ---
 
