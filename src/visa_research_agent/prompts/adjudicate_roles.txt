@@ -40,3 +40,8 @@ Follow these rules:
 10. Give a short, concrete reason for each choice, quoting or naming what in the page decided it.
    For a refusal, say what was missing from every candidate.
 11. Return only the structured output requested by the schema.
+12. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
+   the page says around each mention of the traveller's own country. `[…]` marks text left out.
+   Do not read across one — two passages either side of it may be pages apart — and do not treat a
+   list that ends at one as complete. What is present is still quoted verbatim, so a page that
+   answers the question inside the extract answers it.

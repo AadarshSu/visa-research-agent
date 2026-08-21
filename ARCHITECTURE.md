@@ -334,16 +334,20 @@ What it may do is bounded hard, and the bounds are the safety story:
   and the role left unfilled** — it cannot introduce a page that never passed domain trust.
 - it never widens trust. Officialness is settled by who controls the domain, before this runs.
 - candidate text reaches it under `untrusted_content`, and the prompt says it is evidence rather
-  than instructions. **Each candidate is truncated to `DEFAULT_EXCERPT_CHARACTERS` — 6,000 — and that
-  truncation is a second recall gate behind the shortlist, currently strict enough to decide corridors.**
-  Measured 2026-08-19: `canada/GB/GB/tourism` refuses because the sentence naming a "British citizen" as
-  eTA-required sits at offset 8,947 of a 16,465-character page, so the adjudicator never sees it and
-  correctly declines to state a decision it was not shown. Replaying the same cached pages at 20,000
-  fills the role and resolves the corridor. Worse than one corridor: the page lists visa-required
-  countries alphabetically and the eTA list after them, so **whether a corridor resolves depends on where
-  the traveller's nationality falls in a list** — India sits at 5,325 and is answered, every visa-exempt
-  nationality sits past 8,517 and is not. See [TODO.md](TODO.md) item 6; entry 40's asymmetry argument
-  applies here unchanged.
+  than instructions. **What each candidate contributes is `anchored_excerpt`: the head of the page, plus
+  a window centred on every later mention of the traveller's own nationality or residence, to a budget
+  of `DEFAULT_EXCERPT_CHARACTERS` — 20,000 — with what was left out marked `[…]`.** This is a second
+  recall gate behind the shortlist, and entry 40's asymmetry applies to it unchanged.
+  It was a flat 6,000-character head slice until 2026-08-21, and that was strict enough to decide
+  corridors on its own: `canada/GB/GB/tourism` refused because the sentence naming a "British citizen"
+  as eTA-required sits at offset 8,597 of a 16,465-character page, so the adjudicator never saw it and
+  correctly declined to state a decision it was not shown. Worse than one corridor — the page lists
+  visa-required countries alphabetically and the eTA list only from 8,517, so **whether a corridor
+  resolved depended on where the traveller's nationality fell in a list**: India at 5,325 was answered
+  and every visa-exempt nationality was not. The window now follows the traveller instead of the page,
+  and it is centred on the mention because Canada's answering sentence sits 261 characters *before* the
+  "British citizen" that anchors it. See [DECISIONS.md](DECISIONS.md) entry 42; **it has not yet been
+  run live** ([TODO.md](TODO.md) item 15).
 - it may return null for a role, and the prompt states that refusing beats guessing. A refusal is
   honoured rather than filled in from the ranking.
 - heuristic scores are withheld from the packet, so the ranking that failed cannot anchor it.

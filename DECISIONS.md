@@ -9,6 +9,78 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 42. The excerpt is the second recall gate, and a flat 6,000 made truncation the decider
+**2026-08-21 · implemented**
+
+`DEFAULT_EXCERPT_CHARACTERS` moves from 6,000 to 20,000, and stops being a flat head-of-page slice: the
+adjudicator now sees the head of each candidate **plus a 3,000-character window centred on every later
+mention of the traveller's own nationality or residence**, with what was left out marked `[…]`.
+
+**This is entry 40 one layer down.** The shortlist decided which pages the model may see; the excerpt
+decides which *part* of them it may see, and the same asymmetry governs both — text the model never sees
+is text nothing downstream can recover. Entry 40 was applied to the shortlist and the comment on the
+constant below it was left saying, correctly, that ten pages of prose "would push the call past any
+sensible input bound". Nobody asked whether 6,000 characters was where the answers were.
+
+**What it cost, measured on `canada/GB/GB/tourism`.** The corridor ranked the right page first, fetched
+it, and refused. `entry-requirements-country.html` is 16,465 characters; it lists visa-required countries
+alphabetically, starts the eTA list only at offset 8,517, and answers a British traveller at 8,597:
+*"You need an eTA and a valid passport to board your flight to Canada … you **don't** need a visitor
+visa"*, with "British citizen" naming them at 8,858. The excerpt ended at 6,000, mid-alphabet at
+"Morocco". The adjudicator then refused `visa_decision` for a reason that was accurate about what it had
+been given — *"No candidate shows the result for a GB passport holder"* — and the corridor refused.
+
+**The defect is worse than "Canada refuses", and this is the sentence to keep: whether a corridor
+resolved depended on where the traveller's nationality fell in an alphabet.** On that one page, India at
+5,325 was inside the window and every visa-exempt nationality — Australia 8,815, a British citizen 8,858,
+Japan 9,647, Singapore 9,856 — was outside it. That also explains entry 40's "Canada: every role filled"
+at 25 places: that measurement is consistent with an Indian passport and does not generalise. Nothing in
+the output said so, which is the part that should be uncomfortable.
+
+**Why anchoring and not only widening.** A flat number is still a fixed offset, and a country-list page
+puts the answer wherever the alphabet puts it. So the window follows the traveller: the head first,
+because it carries the title and what the page is, then each later mention of their own country words.
+The window is **centred** on the mention rather than started at it — Canada's answering sentence sits 261
+characters *before* "British citizen", so a forward-only window would have cut exactly the sentence being
+looked for. Budget the anchors do not spend is read straight on from the head, so a page that never names
+the traveller is read *further into*, never less of, than the flat slice this replaces.
+
+**Honest accounting of what each half buys.** Measured over the 27 cached `canada.ca`/`gc.ca` pages in
+`var/cache`, packet text goes from 84,704 characters to 153,862 — about +17k tokens on one call. Almost
+all of that is the raise: a flat 20,000 costs 153,852 on the same pages, because 19 of the 27 are shorter
+than the head and only 2 exceed the budget at all. **Anchoring is not what makes this affordable.** It
+changes nothing for a page under the budget and everything for one over it: on the 50,000-character
+visitor-visa PDF, a US traveller's windows land at 19,452 and 24,449, and the second is text a flat
+20,000 cuts. The two 50,000-character pages are the whole population where the two rules differ today,
+and they are also where a further raise would get expensive.
+
+**Two details that are not cosmetic.**
+
+*The omission is marked.* `[…]` is written wherever text was dropped, including at the end, and rule 12
+of the prompt tells the model what it means. Without it, a cut list reads as a finished list — which is
+precisely how Canada's visa-required list, stopping at "Morocco", could be read as complete. Marking it
+is the same principle as every other reason this project reports: what is shown has to be true of what
+was seen.
+
+*Short country words are matched in upper case only.* "us" is how the United States is written on a
+government page and also an ordinary English pronoun; matched case-insensitively it anchored 34 windows
+in one 50,000-character Canadian guide, none of them about an American traveller. "US", "UK" and "UAE"
+in upper case are the country; longer words are matched either way. Word boundaries do the rest — an
+unbounded "uk" matches inside "Ukraine".
+
+**What this does not fix.** Raising the excerpt cannot help a page that never contained the answer.
+`ircc.canada.ca/english/visit/visas.asp` — the natural decision page, and what search returns first —
+yields 1,144 characters saying the client needs JavaScript, and its answer is behind a wizard; that is
+item 5's problem, not this one. Canada resolves because a *different* page happens to publish the list
+statically.
+
+**Not yet re-run live.** The Canada finding above was verified by replay before this change; the
+mechanism after it is verified by the cached pages and by tests. What has not been done is re-running
+the verified corridors against the model, and it should be, because this changes what every adjudication
+sees — a decider change, not a tuning knob. See TODO item 15.
+
+---
+
 ## 41. A challenge is not a refusal: answer it as an honest browser, and honour every `robots.txt`
 **2026-08-19 · decided; not implemented**
 

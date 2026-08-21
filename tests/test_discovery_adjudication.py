@@ -8,13 +8,17 @@ built, and anything else it says is discarded rather than believed. It cannot in
 cannot reach a domain nobody approved, and its refusal is honoured rather than filled in.
 """
 
+from typing import TypedDict
+
 import pytest
 from discovery_site import DETAIL_INDIA, MISSION_CHECKLIST, destination, handler
 
 from visa_research_agent.discovery.adjudication import (
+    EXCERPT_GAP_MARKER,
     AdjudicationError,
     RoleAdjudication,
     RoleChoice,
+    anchored_excerpt,
     build_candidate_packet,
     load_adjudication_prompt,
     validated_choices,
@@ -55,6 +59,34 @@ def shortlist() -> FetchedShortlist:
         candidates=list(by_id.values()),
         by_id=by_id,
         contents={"tl_india": "You will need a visa.", "tl_checklist": "Bring a passport."},
+    )
+
+
+class PacketBudget(TypedDict):
+    excerpt_characters: int
+    excerpt_head_characters: int
+    excerpt_window_characters: int
+    anchor_terms: tuple[str, ...]
+
+
+def packet_budget(
+    *,
+    excerpt_characters: int = 6_000,
+    head_characters: int | None = None,
+    anchor_terms: tuple[str, ...] = (),
+) -> PacketBudget:
+    """The excerpt arguments, so a test that is not about excerpting need not restate them.
+
+    The head defaults to the whole budget, which is the flat head-of-page slice this replaced.
+    """
+
+    return PacketBudget(
+        excerpt_characters=excerpt_characters,
+        excerpt_head_characters=(
+            excerpt_characters if head_characters is None else head_characters
+        ),
+        excerpt_window_characters=3_000,
+        anchor_terms=anchor_terms,
     )
 
 
@@ -266,7 +298,7 @@ async def test_without_an_adjudicator_nothing_changes_and_no_call_is_made() -> N
 
 def test_page_text_reaches_the_model_behind_a_named_untrusted_boundary() -> None:
     packet = build_candidate_packet(
-        corridor(), shortlist().by_id, shortlist().contents, excerpt_characters=6_000
+        corridor(), shortlist().by_id, shortlist().contents, **packet_budget()
     )
 
     assert '"untrusted_content"' in packet
@@ -278,7 +310,7 @@ def test_each_candidate_is_truncated_to_the_excerpt_budget() -> None:
     fetched.contents["tl_india"] = "x" * 50_000
 
     packet = build_candidate_packet(
-        corridor(), fetched.by_id, fetched.contents, excerpt_characters=100
+        corridor(), fetched.by_id, fetched.contents, **packet_budget(excerpt_characters=100)
     )
 
     assert "x" * 100 in packet
@@ -289,7 +321,7 @@ def test_the_heuristic_ranking_is_withheld_so_it_cannot_anchor_the_answer() -> N
     """Passing scores would re-import the ranking that got Brazil wrong."""
 
     packet = build_candidate_packet(
-        corridor(), shortlist().by_id, shortlist().contents, excerpt_characters=6_000
+        corridor(), shortlist().by_id, shortlist().contents, **packet_budget()
     )
 
     for leaked in ("score", "link_scores", "body_scores", "combined"):
@@ -304,13 +336,161 @@ def test_the_prompt_tells_the_model_that_refusing_is_correct() -> None:
     assert "untrusted_content" in prompt
 
 
+def test_the_prompt_explains_the_mark_that_stands_for_omitted_text() -> None:
+    """The marker is only honest if the model is told what it means, so the two are tied here."""
+
+    assert EXCERPT_GAP_MARKER.strip() in load_adjudication_prompt()
+
+
 def test_the_fake_site_handler_is_never_contacted_during_adjudication() -> None:
     # Adjudication reads only what was already fetched; it must make no request of its own.
     requests: list[object] = []
     handler(requests)  # type: ignore[arg-type]
 
-    build_candidate_packet(
-        corridor(), shortlist().by_id, shortlist().contents, excerpt_characters=6_000
-    )
+    build_candidate_packet(corridor(), shortlist().by_id, shortlist().contents, **packet_budget())
 
     assert requests == []
+
+
+# --- the excerpt ----------------------------------------------------------------------------
+#
+# The excerpt is a recall gate, not a formatting detail: a page whose answer falls outside it is a
+# page nothing downstream can recover. These tests are written from the corridor that proved it —
+# `canada/GB/GB/tourism`, where the sentence answering a British traveller sat at offset 8,947 of a
+# 16,465-character page and a flat 6,000-character slice refused the corridor.
+
+
+COUNTRY_LIST_PAGE = (
+    "What you need to enter Canada\n"
+    + "Preamble about citizenship and how you are travelling.\n" * 40
+    + "Travellers who need a visa\n"
+    # Long enough that the mention falls past the default budget as well as past the head: the
+    # resolver test below would otherwise pass on a page a flat slice would also have caught.
+    + "".join(f"Country number {number}\n" for number in range(1_400))
+    + "If you are travelling by air\n"
+    + "You need an eTA and a valid passport to board your flight. You do not need a visitor visa.\n"
+    + "eTA-required countries or territories\nAndorra\nAustralia\nBritish citizen\nBrunei\n"
+    # Long enough after the mention that the whole page cannot fit the default budget: the test
+    # below would otherwise pass by the page being short, not by the excerpt being anchored.
+    + "".join(f"Later country {number}\n" for number in range(1_200))
+)
+ANSWER = "You need an eTA and a valid passport"
+
+
+def excerpt(
+    text: str,
+    anchors: tuple[str, ...] = (),
+    *,
+    budget: int = 20_000,
+    head_characters: int = 6_000,
+    window_characters: int = 3_000,
+) -> str:
+    """The production numbers unless a test is about one of them."""
+
+    return anchored_excerpt(
+        text,
+        anchors,
+        budget=budget,
+        head_characters=head_characters,
+        window_characters=window_characters,
+    )
+
+
+def test_a_page_that_fits_the_budget_is_shown_whole_and_unmarked() -> None:
+    assert excerpt("Short page.") == "Short page."
+    assert EXCERPT_GAP_MARKER not in excerpt("Short page.")
+
+
+def test_the_traveller_is_found_where_the_alphabet_put_them() -> None:
+    """The defect itself: at 6,000 flat this page answers Indians and refuses British citizens."""
+
+    assert ANSWER not in COUNTRY_LIST_PAGE[:6_000]
+
+    kept = excerpt(COUNTRY_LIST_PAGE, ("british", "united kingdom"), budget=9_000)
+
+    assert "British citizen" in kept
+    assert ANSWER in kept
+
+
+def test_the_window_is_centred_so_the_sentence_before_the_mention_survives() -> None:
+    """Canada answers the question just before naming the traveller, not just after it."""
+
+    forward_only = COUNTRY_LIST_PAGE.index("British citizen")
+
+    kept = excerpt(COUNTRY_LIST_PAGE, ("british",), budget=9_000, window_characters=600)
+
+    assert ANSWER in kept
+    assert COUNTRY_LIST_PAGE.index(ANSWER) < forward_only
+
+
+def test_what_was_left_out_is_marked_so_a_cut_page_cannot_read_as_a_finished_one() -> None:
+    kept = excerpt(COUNTRY_LIST_PAGE, ("british",), budget=9_000)
+
+    assert kept.startswith("What you need to enter Canada")
+    assert kept.count(EXCERPT_GAP_MARKER) >= 1
+    assert kept.endswith(EXCERPT_GAP_MARKER)
+
+
+def test_a_page_that_never_names_the_traveller_is_read_further_into_not_less_of() -> None:
+    """Leftover budget continues from the head, so this is never worse than a flat slice."""
+
+    kept = excerpt(COUNTRY_LIST_PAGE, ("nowhere-in-this-page",), budget=9_000)
+
+    assert COUNTRY_LIST_PAGE[:9_000] in kept
+    assert EXCERPT_GAP_MARKER not in kept[:9_000]
+
+
+def test_no_candidate_exceeds_its_budget_however_often_it_names_the_traveller() -> None:
+    page = "".join(f"British citizen {number}\n" for number in range(5_000))
+
+    kept = excerpt(page, ("british",), budget=9_000)
+
+    assert len(kept.replace(EXCERPT_GAP_MARKER, "")) == 9_000
+
+
+def test_a_two_letter_country_anchors_only_where_it_is_the_country() -> None:
+    """ "us" is a pronoun. Case-insensitively it anchored 34 windows in one Canadian guide."""
+
+    page = "Head.\n" + "Tell us about your trip. " * 500 + "US citizens need no visa.\n"
+
+    kept = excerpt(page, ("us", "usa", "united states"), budget=600, head_characters=100)
+
+    assert "US citizens need no visa." in kept
+
+
+def test_a_country_word_does_not_anchor_inside_a_longer_word() -> None:
+    page = "Head.\n" + "Ukraine. " * 500 + "UK passport holders need an eTA.\n"
+
+    kept = excerpt(page, ("uk", "british"), budget=600, head_characters=100)
+
+    assert "UK passport holders need an eTA." in kept
+
+
+def test_the_packet_anchors_on_the_words_it_is_given() -> None:
+    fetched = shortlist()
+    fetched.contents["tl_india"] = COUNTRY_LIST_PAGE
+
+    anchored = build_candidate_packet(
+        corridor(),
+        fetched.by_id,
+        fetched.contents,
+        **packet_budget(excerpt_characters=9_000, head_characters=6_000, anchor_terms=("british",)),
+    )
+    flat = build_candidate_packet(
+        corridor(), fetched.by_id, fetched.contents, **packet_budget(excerpt_characters=9_000)
+    )
+
+    assert "British citizen" in anchored
+    assert "British citizen" not in flat
+
+
+async def test_the_resolver_anchors_on_the_travellers_own_countries() -> None:
+    """IN/GB: the packet must follow the passport and the post, not a fixed offset."""
+
+    fetched = shortlist()
+    fetched.contents["tl_india"] = COUNTRY_LIST_PAGE
+    adjudicator = FakeAdjudicator(RoleAdjudication(choices=[]))
+
+    await resolver_with(adjudicator)._decide_roles(destination(), corridor(), fetched, [])
+
+    assert "British citizen" in adjudicator.calls[0]

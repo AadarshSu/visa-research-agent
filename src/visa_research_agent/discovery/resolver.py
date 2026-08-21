@@ -105,18 +105,37 @@ DEFAULT_SHORTLIST_SIZE = 25
 # this protects against — an authority being shut out of the fetch entirely — and cheap: with the
 # trusted set capped, the reserved places cannot crowd out the fill they exist to balance.
 DEFAULT_SHORTLIST_DOMAIN_FLOOR = 1
-# Per candidate, not per packet. Ten pages of full government prose would be mostly navigation
-# furniture and would push the call past any sensible input bound.
-# How much of each candidate the adjudicator is shown. This is a **second recall gate** behind the
-# shortlist, and entry 40's asymmetry applies to it unchanged: text the model never sees is text
-# nothing downstream can recover. Measured 2026-08-19, it is currently strict enough to decide
-# corridors — `canada/GB/GB/tourism` ranks the right page first, fetches it, and refuses, because
-# the sentence naming a "British citizen" as eTA-required sits at offset 8,947 of 16,465. The
-# page lists visa-required countries alphabetically and the eTA list only from 8,517, so which
-# travellers get an answer depends on where their nationality falls in a list: India at 5,325 is
-# answered, every visa-exempt nationality is not. Replaying the same pages at 20,000 resolves the
-# corridor. Raise or anchor it — TODO item 6 and known problem 18.
-DEFAULT_EXCERPT_CHARACTERS = 6_000
+# How much of each candidate the adjudicator is shown, per candidate rather than per packet. This
+# is a **second recall gate** behind the shortlist, and entry 40's asymmetry applies to it
+# unchanged: text the model never sees is text nothing downstream can recover.
+#
+# At 6,000, a flat head-of-page slice, it decided corridors on its own. `canada/GB/GB/tourism`
+# ranked the right page first, fetched it, and refused: the sentence naming a "British citizen" as
+# eTA-required sits at offset 8,947 of 16,465, because the page lists visa-required countries
+# alphabetically and starts the eTA list only at 8,517. India at 5,325 was answered and every
+# visa-exempt nationality was not, so whether a corridor resolved depended on where the traveller's
+# nationality fell in an alphabet — and nothing in the output said so. See entry 42.
+#
+# Three numbers now, because widening alone scales badly across 25 candidates: the budget is the
+# head plus a window centred on each later mention of the traveller's own country, and leftover
+# budget reads straight on from the head.
+#
+# Measured 2026-08-21 over the 27 cached canada.ca/gc.ca pages in `var/cache`, page text across the
+# packet goes from 84,704 characters to 153,862 (~+17k tokens for one call). **Almost all of that
+# is the raise, not the anchoring**: a flat 20,000 costs 153,852 on the same pages, because 19 of
+# the 27 are shorter than the head and only 2 exceed the budget at all. Anchoring is not what makes
+# this affordable — it is what stops the raise from being another fixed offset. It changes nothing
+# for a page under the budget and everything for one over it: on the 50,000-character visitor-visa
+# PDF a US traveller's windows land at 19,452 and 24,449, and the second is text a flat 20,000
+# cuts.
+DEFAULT_EXCERPT_CHARACTERS = 20_000
+# The head is kept whole because it carries the title, the "on this page" list and what the page is
+# for. It is the old flat budget, so no page is now shown less of its head than before.
+DEFAULT_EXCERPT_HEAD_CHARACTERS = 6_000
+# Centred on the mention, not started at it: Canada's answering sentence — "You need an eTA … you
+# don't need a visitor visa" — sits about 250 characters *before* the "British citizen" that
+# anchors it, and a forward-only window would have cut exactly the sentence being looked for.
+DEFAULT_EXCERPT_WINDOW_CHARACTERS = 3_000
 
 # How many times the role adjudication may be asked before the corridor is refused. Two, so a
 # momentary failure — a timeout, a rate limit, one malformed response — does not cost a corridor,
@@ -243,6 +262,8 @@ class CorridorResolver:
         results_per_query: int = 8,
         adjudicator: RoleAdjudicator | None = None,
         excerpt_characters: int = DEFAULT_EXCERPT_CHARACTERS,
+        excerpt_head_characters: int = DEFAULT_EXCERPT_HEAD_CHARACTERS,
+        excerpt_window_characters: int = DEFAULT_EXCERPT_WINDOW_CHARACTERS,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self.provider = provider
@@ -258,6 +279,8 @@ class CorridorResolver:
         # adjudication existed, which keeps the deterministic path as a regression baseline.
         self.adjudicator = adjudicator
         self.excerpt_characters = excerpt_characters
+        self.excerpt_head_characters = excerpt_head_characters
+        self.excerpt_window_characters = excerpt_window_characters
         self.now = now
 
     async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
@@ -674,11 +697,18 @@ class CorridorResolver:
             sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
             return sources, unresolved, 0
 
+        # The traveller's own country words, so a long page is cut around them rather than at a
+        # fixed offset. Nationality and residence only: the destination is named on every page it
+        # publishes, so anchoring on it would anchor on nothing.
+        nationality, residence = resolve_corridor_countries(corridor, self.countries)
         packet = build_candidate_packet(
             corridor,
             fetched.by_id,
             fetched.contents,
             excerpt_characters=self.excerpt_characters,
+            excerpt_head_characters=self.excerpt_head_characters,
+            excerpt_window_characters=self.excerpt_window_characters,
+            anchor_terms=sorted({*nationality.text_tokens, *residence.text_tokens}),
         )
         adjudication, model_calls = await self._adjudicate_with_one_retry(packet, notes)
 

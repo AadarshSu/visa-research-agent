@@ -3,8 +3,8 @@
 Ordered by what unblocks the most. Each item says why it matters, not just what to do, so it can be
 picked up cold.
 
-**How to read this file.** **Now** is what to pick up, in the order written — item 6 leads because it
-is the cheapest change in the file and its fix is already verified by replay. **Next up** is what
+**How to read this file.** **Now** is what to pick up, in the order written — item 15 leads because a
+change already on `main` changed what every adjudication sees and nothing has confirmed it live. **Next up** is what
 follows it, item 3 first because its own reasoning is that nothing large should be built before it.
 **Later** is real but not urgent. **Done** is finished work, kept because what building it found is
 usually why the item after it exists. **Smaller things** are one-paragraph defects with no owner yet.
@@ -22,7 +22,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 6. Stop the adjudicator's excerpt cutting the answer off | `next` |
+| **Now** | 15. Re-run the verified corridors against the widened excerpt | `next` |
 | | 5. Answer the challenge, and get a checklist out of France | `next` |
 | | 1. Fix the post-over-nationality weighting, and trace Sweden | `next` |
 | **Next up** | 3. Measure the top 20 corridors against a bar committed in advance | `soon` |
@@ -41,7 +41,7 @@ one-paragraph defects rather than items.
 
 ## Background
 
-**Read [DECISIONS.md](DECISIONS.md) entries 29–35 first**, then 36–41, which are what came out of
+**Read [DECISIONS.md](DECISIONS.md) entries 29–35 first**, then 36–42, which are what came out of
 building them. The outside review on 2026-08-18 was agreed with in full and changed the direction: the
 posture, not the principle, is what has been costing coverage (entry 35); "who to believe" moves out of
 the request path into committed data (entry 34); the trust rule's governmental half was measured and
@@ -70,61 +70,32 @@ to reading a code path. Every item here assumes that.
 
 ## Now — pick these up in this order
 
-### 6. Stop the adjudicator's excerpt cutting the answer off — `next`
+### 15. Re-run the verified corridors against the widened excerpt — `next`
 
-**Why:** it makes Canada refuse a corridor whose answer it had already fetched, and it is the cheapest
-fix in this file. `DEFAULT_EXCERPT_CHARACTERS` is **6,000** (`resolver.py:110`), applied per candidate
-at `adjudication.py:108`. For `canada/GB/GB/tourism`, `entry-requirements-country.html` is 16,465
-characters and the sentence that answers the corridor sits at offset **8,947**:
+**Why:** DECISIONS entry 42 changed what every adjudication is shown — the head of each candidate plus a
+window around the traveller's own country, at 20,000 characters instead of a flat 6,000 — and **that is a
+decider change, not a tuning knob.** It is on `main` and it has never been run against the model. The
+mechanism is verified offline (cached pages, 11 tests) and the underlying Canada finding was verified by
+replay before the change, but which corridors now resolve, and what the model does with a longer and
+occasionally discontinuous excerpt, is unmeasured.
 
-> "You need an eTA and a valid passport to board your flight to Canada if you're a citizen of any of the
-> countries or territories listed below. You **don't** need a visitor visa. … **British citizen** …"
+**Do:** clear `var/cache/` and `var/corridors/`, then run the seven corridors that were verified before
+this — Canada, Japan, the Netherlands, Sweden, the US, France, Singapore — and read, per corridor:
 
-The excerpt ends at 6,000 — mid-alphabet in the *visa-required* list, at "Morocco" — so the adjudicator
-never sees the eTA list. It then refused `visa_decision` for a reason that was accurate about what it
-had been given: *"No candidate shows the result for a GB passport holder."* The corridor refuses.
+1. **`canada/GB/GB/tourism` must now resolve.** It is the corridor the change exists for. If it still
+   refuses, the excerpt was not the only thing in its way and entry 42 needs a correction, not a retry.
+2. **`decided_by` and the recorded heuristic scores**, for disagreements that appear or vanish. A model
+   seeing three times as much text may pick differently on corridors that were already right, and a
+   *changed* answer on a corridor that used to be correct is the failure mode worth catching.
+3. **Whether a `[…]` gap ever misleads a reason.** The marker and prompt rule 12 exist so a cut list
+   cannot read as a complete one; if a reason quotes across a gap, the marker is not doing its job.
+4. **Input tokens per adjudication**, against the ~+17k characters measured on Canada's cached pages, so
+   the cost is a number rather than an estimate.
 
-**Verified, not theorised.** Replaying the same 23 cached pages through the same prompt with the excerpt
-raised to 20,000 and nothing else changed, the adjudicator names the page and gets it right: *"It
-specifically lists a 'British citizen' among eTA-required nationalities: by air they need an eTA and
-valid passport, not a visitor visa; by land or sea, they need only a valid passport."* `visa_decision`
-filled means `is_usable`, so the corridor resolves.
-
-**The defect is worse than "Canada refuses", and this is the sentence to keep.** The page lists
-visa-required countries alphabetically, then the eTA list after them, so **whether a corridor resolves
-depends on where the traveller's nationality falls in a list**. Measured offsets on the same page:
-
-| Nationality | Offset | Inside the 6,000 window |
-| --- | --- | --- |
-| Brazil 4,720 · China 4,909 · India 5,325 | before 6,000 | **yes** |
-| Vietnam 7,787 · Australia 8,815 · British citizen 8,858 · Japan 9,647 · Singapore 9,856 | after 6,000 | **no** |
-
-The eTA list itself does not begin until offset 8,517, so **every visa-exempt nationality is beyond the
-window** while visa-required ones early in the alphabet are inside it. That also explains why entry 40
-recorded Canada as "every role filled" at 25 places: that measurement is consistent with an Indian
-passport, where the answer sits at 5,325. It does not generalise, and nothing in the output said so.
-
-**This is entry 40 again, one layer down.** The shortlist was the recall gate and 10 places made the
-scorer the real decider; the excerpt is a *second* recall gate behind it, and 6,000 characters made
-**truncation** the decider for any page whose answer is a long list. Both errors are asymmetric in the
-same way: what the model never sees, nothing downstream can recover.
-
-**Do:**
-
-1. **Raise it, and measure the cost honestly.** For Canada, 6,000→20,000 takes the page text in the
-   packet from 65,314 to 114,730 characters (~+12k tokens); only 5 of 23 pages exceed 6,000 at all. Two
-   of those five are at the 50,000-character source cap, which is where a flat raise gets expensive.
-2. **Then consider anchoring rather than only widening**, because a flat number scales badly across 25
-   candidates: keep the head of the page plus the window around mentions of the traveller's nationality
-   and residence. A country-list page needs exactly that; the head alone is nav and preamble.
-3. **Re-run the verified corridors afterwards.** This changes what every adjudication sees, so it is a
-   decider change, not a tuning knob — read `decided_by` and the recorded heuristic scores for
-   disagreements that appear or vanish.
-
-**Careful:** raising this cannot fix a page that never contained the answer.
-`ircc.canada.ca/english/visit/visas.asp` — the natural decision page, and what search returns first —
-yields 1,144 characters saying the client needs JavaScript, and the answer is behind its wizard, which
-is item 5's problem. Canada resolves because a *different* page happens to publish the list statically.
+**Careful:** the excerpt cannot fix a page that never contained the answer, and one of Canada's does not
+— `ircc.canada.ca/english/visit/visas.asp` yields 1,144 characters saying the client needs JavaScript.
+That is item 5's problem. Do not read a still-missing role as evidence this change failed without first
+checking whether the page holds the answer at all.
 
 ### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
 
@@ -175,8 +146,10 @@ assistant is a read-only questionnaire that returns published guidance, not an a
 `CLAUDE.md` puts *form filling* on the permanent out-of-scope list, and the distinction between
 "answering four questions to be shown the published rules" and "filling in an application" is exactly
 the kind of thing that must be argued in writing rather than assumed by whoever is holding the
-keyboard. **Do not write wizard-driving code before that entry exists.** Note it interacts with item 6:
-a wizard result is per-corridor by construction, so it would arrive as text nobody else can re-derive.
+keyboard. **Do not write wizard-driving code before that entry exists.** Note it interacts with the
+excerpt (entry 42): a wizard result is per-corridor by construction, so it would arrive as text nobody
+else can re-derive, and it would be short enough to sit inside the head of the excerpt whatever else the
+page holds.
 
 **Careful:** the two prohibitions are unchanged and are what keep this from being circumvention — no
 user-agent spoofing, and no retrying past a rate limit. And `robots.txt` outranks all of it: a
@@ -497,6 +470,27 @@ replacement.
 ---
 
 ## Done
+
+### ~~Stop the adjudicator's excerpt cutting the answer off~~ — **done 2026-08-21**
+
+`DEFAULT_EXCERPT_CHARACTERS` is 20,000 and no longer a flat head-of-page slice: `anchored_excerpt` shows
+the head of each candidate plus a 3,000-character window centred on every later mention of the
+traveller's own nationality or residence, marks what it left out with `[…]`, and prompt rule 12 tells the
+model what the mark means. 11 new tests, all offline. DECISIONS entry 42.
+
+**What it was costing.** `canada/GB/GB/tourism` ranked the right page first, fetched it, and refused: the
+sentence answering a British traveller sits at offset 8,597 of 16,465 and the excerpt ended at 6,000,
+mid-alphabet at "Morocco". So **whether a corridor resolved depended on where the traveller's nationality
+fell in a list** — India at 5,325 answered, every visa-exempt nationality not — and entry 40's "Canada:
+every role filled" turns out to have been an Indian-passport result that did not generalise.
+
+**Anchoring is not what makes it affordable, and the file should not pretend otherwise.** Over the 27
+cached `canada.ca`/`gc.ca` pages, packet text goes 84,704 → 153,862 characters; a flat 20,000 costs
+153,852, because only 2 of the 27 exceed the budget. Anchoring is what stops the new number from being
+another fixed offset: on the 50,000-character visitor-visa PDF a US traveller's second window sits at
+24,449, which a flat 20,000 cuts.
+
+**Not run live** — that is item 15, and it is the first thing in **Now** for that reason.
 
 ### ~~Move "who to believe" out of the request path~~ — **done 2026-08-18, for 40 of 198 countries**
 

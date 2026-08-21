@@ -20,6 +20,9 @@ configured, and its disagreements with the model are worth reading.
 """
 
 import json
+import re
+from collections.abc import Sequence
+from functools import lru_cache
 from importlib.resources import files
 from typing import Any, Protocol
 
@@ -75,17 +78,147 @@ def load_adjudication_prompt() -> str:
     return prompt
 
 
+# What is written into the excerpt where page text was left out. It exists so a page that was cut
+# cannot read as a page that ended: without it the adjudicator saw Canada's visa-required list stop
+# at "Morocco" with no sign that an eTA list followed. It is deliberately not a sentence, because
+# it sits inside `untrusted_content` and must not read as something addressed to the model.
+EXCERPT_GAP_MARKER = "\n[…]\n"
+
+
+# Below this length an anchor word is matched in upper case only. "us" is the reason: it is how the
+# United States is written on a government page *and* an ordinary English pronoun, and matched
+# case-insensitively it anchored 34 windows in one 50,000-character Canadian guide, none of them
+# about an American traveller. "US", "UK" and "UAE" in upper case are the country. Longer words —
+# "india", "british" — are matched either way, because a page may capitalise them anywhere.
+ANCHOR_CASE_SENSITIVE_LENGTH = 3
+
+
+@lru_cache(maxsize=64)
+def _anchor_pattern(anchor_terms: tuple[str, ...]) -> re.Pattern[str] | None:
+    """Match any of the traveller's own country words, as whole words.
+
+    Word boundaries matter more than they look: an unbounded "uk" matches inside "Ukraine", and the
+    window would then be anchored on a country the traveller has nothing to do with.
+    """
+
+    terms = {term.strip() for term in anchor_terms if term.strip()}
+    insensitive = sorted({t.lower() for t in terms if len(t) > ANCHOR_CASE_SENSITIVE_LENGTH})
+    sensitive = sorted({t.upper() for t in terms if len(t) <= ANCHOR_CASE_SENSITIVE_LENGTH})
+    if not insensitive and not sensitive:
+        return None
+
+    alternatives: list[str] = []
+    if insensitive:
+        alternatives.append("(?i:" + "|".join(re.escape(term) for term in insensitive) + ")")
+    alternatives.extend(re.escape(term) for term in sensitive)
+    return re.compile(r"\b(?:" + "|".join(alternatives) + r")\b")
+
+
+def anchored_excerpt(
+    text: str,
+    anchor_terms: Sequence[str],
+    *,
+    budget: int,
+    head_characters: int,
+    window_characters: int,
+) -> str:
+    """Show the head of the page, plus what it says around the traveller's own country.
+
+    A flat head-of-page slice makes **truncation the decider** for any page whose answer is a long
+    list, and it decides asymmetrically: text the model never sees is text nothing downstream can
+    recover. Canada is the measured case — `entry-requirements-country.html` lists visa-required
+    countries alphabetically and only then the eTA list, so at 6,000 characters an Indian passport
+    was answered at offset 5,325 while every visa-exempt nationality sat past the cut. Whether a
+    corridor resolved depended on where the traveller's nationality fell in an alphabet.
+
+    So the window follows the traveller instead of the page: the head, which carries the title and
+    what the page is, and then `window_characters` centred on each later mention of their
+    nationality or residence. The mention is the anchor, not the answer — Canada's answering
+    sentence sits *before* "British citizen" — which is why the window extends both ways.
+
+    Budget left over when the anchors are used up is read straight on from the head, so a page that
+    never names the traveller is read further into rather than less of, and a page longer than the
+    budget always spends all of it. What changes against the flat slice is not how much is shown
+    but where it is taken from: the same head, and then the traveller rather than the next 14,000
+    characters of whatever the page happened to put there.
+    """
+
+    if budget <= 0:
+        return ""
+    if len(text) <= budget:
+        return text
+
+    head_end = max(min(head_characters, budget, len(text)), 0)
+    spans: list[tuple[int, int]] = [(0, head_end)]
+
+    pattern = _anchor_pattern(tuple(anchor_terms))
+    if pattern is not None:
+        # Never wider than the budget the head has not already spent. Without this a window that
+        # reaches back into the head merges with it, and trimming the merged span to the budget
+        # would drop the mention the window was opened for — the excerpt would end up shorter of
+        # the answer than a flat slice, which is the one outcome this must not have.
+        half = max(min(window_characters, budget - head_end) // 2, 0)
+        for match in pattern.finditer(text, head_end):
+            start = max(match.start() - half, 0)
+            end = min(match.end() + half, len(text))
+            if start <= spans[-1][1]:
+                spans[-1] = (spans[-1][0], max(spans[-1][1], end))
+            else:
+                spans.append((start, end))
+            if sum(right - left for left, right in spans) >= budget:
+                break
+
+    kept: list[tuple[int, int]] = []
+    used = 0
+    for start, end in spans:
+        if used >= budget:
+            break
+        end = min(end, start + budget - used)
+        kept.append((start, end))
+        used += end - start
+
+    # Anything the anchors did not spend is read straight on from the head, and then on from each
+    # window in turn, each stopping where the next kept span begins. So the budget is always spent
+    # in full on a page longer than it, and a page that never names the traveller is simply read
+    # further into — never less of than the flat slice this replaced.
+    leftover = budget - used
+    for index, (start, end) in enumerate(kept):
+        if leftover <= 0:
+            break
+        limit = kept[index + 1][0] if index + 1 < len(kept) else len(text)
+        grown = min(end + leftover, limit)
+        leftover -= grown - end
+        kept[index] = (start, grown)
+
+    pieces: list[str] = []
+    previous_end = 0
+    for start, end in kept:
+        if start > previous_end:
+            pieces.append(EXCERPT_GAP_MARKER)
+        pieces.append(text[start:end])
+        previous_end = end
+    if previous_end < len(text):
+        pieces.append(EXCERPT_GAP_MARKER)
+    return "".join(pieces)
+
+
 def build_candidate_packet(
     corridor: Corridor,
     candidates: dict[str, CandidatePage],
     contents: dict[str, str],
     *,
     excerpt_characters: int,
+    excerpt_head_characters: int,
+    excerpt_window_characters: int,
+    anchor_terms: Sequence[str],
 ) -> str:
     """Serialize the corridor and the candidates, with the trust boundary named explicitly.
 
     Heuristic scores are deliberately withheld. Passing them would anchor the model to the very
     ranking that got Brazil wrong, and the point of asking is to get an independent judgement.
+
+    `anchor_terms` are the words that mean the traveller's own nationality and residence, and they
+    are the only thing that steers which part of a long page is shown; see `anchored_excerpt`.
     """
 
     packet = {
@@ -105,12 +238,17 @@ def build_candidate_packet(
                 # publication date is not staleness, and only something holding the page's text
                 # can tell the difference — which is exactly what this call is.
                 "published_in_path": published_date_in_path(candidate.link.url),
-                # A flat head-of-page slice, and the only thing standing between a fetched answer
-                # and the decider. At the current 6,000 it decides corridors on its own — see
-                # `DEFAULT_EXCERPT_CHARACTERS` in resolver.py and TODO item 6. Anchoring the window
-                # on the traveller's own country would beat widening it, because a country-list page
-                # keeps the answer wherever the alphabet puts it.
-                "untrusted_content": contents.get(source_id, "")[:excerpt_characters],
+                # The head of the page plus what it says around the traveller's own country, and
+                # the only thing standing between a fetched answer and the decider. It is a recall
+                # gate, so it is bounded generously and what it leaves out is marked — see
+                # `anchored_excerpt` and `DEFAULT_EXCERPT_CHARACTERS` in resolver.py.
+                "untrusted_content": anchored_excerpt(
+                    contents.get(source_id, ""),
+                    anchor_terms,
+                    budget=excerpt_characters,
+                    head_characters=excerpt_head_characters,
+                    window_characters=excerpt_window_characters,
+                ),
             }
             for source_id, candidate in candidates.items()
         ],
