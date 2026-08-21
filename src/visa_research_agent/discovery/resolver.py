@@ -16,6 +16,7 @@ happen is a checklist appearing without a source behind it, which `VisaPlan` ref
 
 import re
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
 
@@ -46,6 +47,11 @@ from visa_research_agent.discovery.models import (
     ResolvedCorridor,
     ResolvedSource,
     RoleScores,
+)
+from visa_research_agent.discovery.recall_log import (
+    RecallLog,
+    RecallRecord,
+    considered,
 )
 from visa_research_agent.discovery.scoring import (
     is_archived,
@@ -170,6 +176,23 @@ class FetchedShortlist(StrictModel):
     contents: dict[str, str] = Field(default_factory=dict)
 
 
+@dataclass
+class ResolutionTrace:
+    """What one run considered, filled in as it goes.
+
+    A mutable scratch object rather than a return value, because the runs worth reading are the
+    ones that end early: a corridor that refuses at "no candidate pages were found" still has
+    queries and seeds worth seeing, and it never reaches a return that could carry them.
+    """
+
+    queries: list[str] = field(default_factory=list)
+    seeds: list[str] = field(default_factory=list)
+    candidates: dict[str, CandidatePage] = field(default_factory=dict)
+    shortlisted: set[str] = field(default_factory=set)
+    fetched: set[str] = field(default_factory=set)
+    crawl_failures: dict[str, str] = field(default_factory=dict)
+
+
 def _slugify(value: str, *, maximum: int = 24) -> str:
     cleaned = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
     return cleaned[:maximum].strip("_")
@@ -264,6 +287,7 @@ class CorridorResolver:
         excerpt_characters: int = DEFAULT_EXCERPT_CHARACTERS,
         excerpt_head_characters: int = DEFAULT_EXCERPT_HEAD_CHARACTERS,
         excerpt_window_characters: int = DEFAULT_EXCERPT_WINDOW_CHARACTERS,
+        recall_log: RecallLog | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self.provider = provider
@@ -281,9 +305,29 @@ class CorridorResolver:
         self.excerpt_characters = excerpt_characters
         self.excerpt_head_characters = excerpt_head_characters
         self.excerpt_window_characters = excerpt_window_characters
+        # Optional, and nothing reads it back. A corridor behaves identically without one; what is
+        # lost is the ability to answer "was that page ranked out, or never found" afterwards.
+        self.recall_log = recall_log
         self.now = now
 
     async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
+        """Resolve the corridor, and write down what it considered on the way.
+
+        The trace is filled as the run proceeds rather than rebuilt at the end, so a corridor that
+        refuses early still records how far it got — which is the run most worth reading.
+        """
+
+        trace = ResolutionTrace()
+        resolved: ResolvedCorridor | None = None
+        try:
+            resolved = await self._resolve(destination, corridor, trace)
+            return resolved
+        finally:
+            self._write_recall_log(corridor, trace, resolved)
+
+    async def _resolve(
+        self, destination: DestinationConfig, corridor: Corridor, trace: "ResolutionTrace"
+    ) -> ResolvedCorridor:
         nationality, residence = resolve_corridor_countries(corridor, self.countries)
         destination_code = self._destination_code(destination)
         notes: list[str] = []
@@ -314,6 +358,7 @@ class CorridorResolver:
 
         # 1. Search to arrive.
         queries = corridor_queries(corridor, destination, nationality, residence)
+        trace.queries = queries
         seeds: list[str] = []
         search_candidates: dict[str, CandidatePage] = {}
         # Every query at once, but the results walked in the order the queries were asked. Which
@@ -346,6 +391,7 @@ class CorridorResolver:
                 if url not in seeds:
                     seeds.append(url)
 
+        trace.seeds = seeds
         if not seeds:
             notes.append("search returned nothing on an approved domain for this corridor")
 
@@ -399,12 +445,16 @@ class CorridorResolver:
             if not candidate.title:
                 candidate.title = page_titles.get(url) or candidate.link.text or None
 
+        trace.candidates = candidates
+        trace.crawl_failures = dict(self.crawl_fetcher.failures)
         if not candidates:
             return self._refused(corridor, queries, notes, "no candidate pages were found")
 
         # 3. Fetch the shortlist through the ordinary retrieval path.
         shortlist = self._shortlist(list(candidates.values()))
+        trace.shortlisted = {candidate.link.url for candidate in shortlist}
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
+        trace.fetched = {candidate.link.url for candidate in fetched.candidates}
 
         # 4. Assign roles from the combined evidence.
         try:
@@ -860,6 +910,49 @@ class CorridorResolver:
                 )
             )
         return sources, unresolved
+
+    def _write_recall_log(
+        self,
+        corridor: Corridor,
+        trace: "ResolutionTrace",
+        resolved: ResolvedCorridor | None,
+    ) -> None:
+        """Write the run down, and never let doing so cost the corridor an answer.
+
+        An `OSError` here is swallowed deliberately: this is a diagnostic nothing reads back, so
+        failing a resolution because a log file could not be written would trade an answer for a
+        note about an answer. The failure is not silent in practice — the file is simply not there
+        when someone goes looking, which is exactly what happened.
+        """
+
+        if self.recall_log is None:
+            return
+        outcome = "resolved"
+        if resolved is None:
+            outcome = "the run raised before it finished"
+        elif not resolved.sources:
+            outcome = resolved.notes[-1] if resolved.notes else "refused"
+        elif resolved.unresolved_roles:
+            unfilled = ", ".join(resolved.unresolved_roles)
+            outcome = f"resolved, with no {unfilled}"
+        try:
+            self.recall_log.write(
+                RecallRecord(
+                    corridor_key=corridor.key,
+                    recorded_at=self.now(),
+                    outcome=outcome,
+                    queries=trace.queries,
+                    seeds=trace.seeds,
+                    candidates=considered(
+                        trace.candidates,
+                        shortlisted=trace.shortlisted,
+                        fetched=trace.fetched,
+                    ),
+                    unreadable=trace.crawl_failures,
+                )
+            )
+        except OSError:
+            return
 
     def _refused(
         self,

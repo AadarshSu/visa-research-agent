@@ -362,6 +362,13 @@ The heuristic is not replaced. It builds the shortlist the model chooses from, i
 adjudicator is configured, and its score is recorded beside the model's choice so a reviewer can see
 where the two disagreed.
 
+**Every run also writes down what it considered** (`discovery/recall_log.py`, entry 43): all candidates
+with their scores, whether each was shortlisted and fetched, the queries, the seeds, and each unreadable
+URL, to `var/recall/<corridor>.json`, on refusals too. It exists because a refusal cannot otherwise be
+told apart from a mis-ranking — Canada considered **470** candidates and the page that answers it was
+fifteenth, which no other output said. It is a diagnostic: nothing reads it back, no decision depends on
+it, and a write failure is swallowed rather than costing the corridor an answer.
+
 **What it is, precisely, is a recall gate — and reading it as a decider is what kept the gate too
 narrow** (entry 40). A page it ranks *in* wrongly costs one excerpt; a page it ranks *out* is one
 nothing downstream can recover. At ten places the heuristic was the effective decider for every corridor

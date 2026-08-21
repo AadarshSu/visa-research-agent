@@ -9,6 +9,64 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 43. Write down what a corridor considered, because "ranked out" and "never found" had looked identical
+**2026-08-21 · implemented**
+
+`discovery/recall_log.py` writes one JSON record per corridor, on every run including a refusal,
+holding every candidate the corridor considered with its score, whether it was shortlisted, and whether
+it was fetched — plus the queries, the seeds, and each unreadable URL with its reason. It is on by
+default in `build_resolver`, so the command and the API both produce it. Nothing reads it back.
+
+**Why it earned a place in the request path.** Twice now a corridor has refused for a reason that was
+accurate about what the decider was shown, and twice the next question — *was the page that would have
+answered it ranked out, or never found?* — could not be answered from anything the run left behind. The
+two have different fixes: one is scoring, one is search or crawl. On 2026-08-21 `canada/GB/GB/tourism`
+refused with the answering page absent from its 24 candidates, and the only reason anybody knew the page
+existed was a cache file from two days earlier.
+
+**It answered the question on the first run, which is the argument for it.** Immediately after it landed,
+the same corridor, cold:
+
+| | |
+| --- | --- |
+| Candidates considered | **470** |
+| Shortlisted / fetched | 25 / 24 |
+| `entry-requirements-country.html` | rank **15**, score 53.4 for `visa_decision`, shortlisted, fetched |
+| How it arrived | a `site:canada.ca` search seed, and again by crawl at depth 1 from `check-visa-eta.html` |
+| Outcome | **resolved** — `visa_decision` and `general_entry` filled by that page, `decided_by=model` |
+
+So the page is not a marginal candidate: it is fifteenth of 470 and comfortably inside 25 places. It was
+simply **not returned at all** on the previous run an hour earlier, from the same fifteen queries against
+the same five domains. Known problem 19 is now a measurement rather than an inference.
+
+**And it is the first live confirmation of entry 42.** The model's reason quotes the page: *"the page
+lists 'British citizen' among eTA-required nationalities and says that, when travelling by air, they need
+an eTA"*. That sentence sits at offset 8,597 of 16,465. **A flat 6,000-character excerpt could not have
+shown it**, which is arithmetic rather than a claim about the model. The same corridor, the same page, the
+same shortlist, and the excerpt is the difference between a filled role and a refusal.
+
+**Design notes, each of which is the thing that would otherwise be got wrong.**
+
+- **A refusal must be logged.** Refusals are the runs worth reading, and they are precisely the ones that
+  return early — before candidates exist, or before a shortlist does. So the record is filled by a
+  mutable trace as the run proceeds and written in a `finally`, not assembled from a return value.
+- **A diagnostic may never cost an answer.** An `OSError` writing the log is swallowed. Failing a corridor
+  because a log file could not be written would trade an answer for a note about an answer, and the
+  failure is not silent in practice: the file is not there when someone looks.
+- **Shortlisted and fetched are recorded apart.** "Shortlisted but unreadable" is a third answer to *why
+  was this page not used*, and merging the two flags hides it.
+- **Overwritten per corridor, never accumulated.** The question is almost always about the run that just
+  happened. Comparing two runs — which is how the Canada variance was found — means deliberately keeping
+  a copy, rather than a directory that grows for every request forever.
+- **It is not evidence and nothing depends on it.** Deleting `var/recall/` costs a question, never an
+  answer. That is what makes it safe to have in the request path at all.
+
+**What it does not do.** It does not record *why* search returned what it did, so it cannot explain the
+variance it exposes — only prove it happened and to which page. And a record exists only for runs made
+after this landed, so the 2026-08-21 refusal stays diagnosed by inference.
+
+---
+
 ## 42. The excerpt is the second recall gate, and a flat 6,000 made truncation the decider
 **2026-08-21 · implemented**
 
@@ -95,8 +153,14 @@ What the run does establish:
   discovered was not instrumented. Recall upstream of the excerpt is now the binding constraint on this
   corridor, and entry 40's asymmetry argument points at it as squarely as it pointed here.
 
-So this entry is right about what it fixed and must not be read as fixing Canada. The remaining six
-verified corridors have still not been re-run; that is TODO item 15.
+**Then it was run once more, after entry 43 landed, and Canada resolved.** Same corridor, same day, same
+five domains: this time search returned `entry-requirements-country.html` and the model filled
+`visa_decision` from it, quoting the sentence at offset 8,597 — **which a flat 6,000-character excerpt
+could not have shown**. That is this entry confirmed live, and it took a corridor that flips between runs
+to show it. Both results stand: the excerpt was a real gate and is now open; whether the page arrives at
+all is a separate gate that is still shaking. See entry 43 and known problem 19.
+
+The remaining six verified corridors have still not been re-run; that is TODO item 15.
 
 ---
 

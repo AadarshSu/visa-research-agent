@@ -41,6 +41,7 @@ from visa_research_agent.discovery.lexicon import (
 )
 from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
 from visa_research_agent.discovery.proposal import render_corridor_yaml
+from visa_research_agent.discovery.recall_log import FileRecallLog
 from visa_research_agent.discovery.registry import REGISTRY_FILENAME, load_authority_registry
 from visa_research_agent.discovery.registry_build import (
     BuildProgress,
@@ -114,7 +115,13 @@ def build_resolver(
         maximum_renders=settings.maximum_source_renders,
     )
     return CorridorResolver(
-        build_search_provider(), crawl_fetcher, live_fetcher, adjudicator=adjudicator
+        build_search_provider(),
+        crawl_fetcher,
+        live_fetcher,
+        adjudicator=adjudicator,
+        # On by default in both the command and the API. A recall failure is diagnosable only from
+        # the run that had it, and the run that had it is over by the time anyone asks.
+        recall_log=FileRecallLog(settings.recall_log_directory),
     )
 
 

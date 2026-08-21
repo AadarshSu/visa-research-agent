@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-21 — update this line when you touch the handoff |
-| **Tests** | 376 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Tests** | 384 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -75,8 +75,10 @@ refused. Entry 40's row is consistent with an *Indian* passport, whose answer ha
 adjudicator's then 6,000-character excerpt at offset 5,325, while a British citizen's sits at 8,858 and
 was cut off. A corridor's fate depended on where the nationality fell in an alphabetical list.
 **Nationality is part of a corridor; a country row in this table is not a result.**
-The excerpt was widened and anchored on 2026-08-21 (entry 42), and re-running the corridor cold that day
-**did not resolve it**: the answering page was not retrieved at all. Known problem 19.
+The excerpt was widened and anchored on 2026-08-21 (entry 42). Re-run cold that day, the corridor refused
+once (the answering page was not retrieved at all) and resolved on the next run (it was, and the model
+used it). Known problem 19: one run per corridor cannot tell a corridor that works from one that works
+half the time.
 
 | | Singapore | Japan | Vietnam | Brazil | France | China | United States |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -146,10 +148,10 @@ shells, dead endpoints.
 **Amended 2026-08-19: there is a third thing, and it is neither.** `canada/GB/GB/tourism` fetched and read
 the page that answers it, and refused anyway, because the adjudicator's 6,000-character excerpt ended
 2,597 characters before the sentence naming a British citizen as eTA-required. Not ranking, not access —
-**truncation**. The excerpt now follows the traveller rather than the page (entry 42), which removed
-that cause — and the cold re-run on 2026-08-21 refused anyway, because the answering page was not
-retrieved that day at all. So there is a fourth thing, **recall variance between runs** (known problem
-19), and "access" remains an incomplete diagnosis.
+**truncation**. The excerpt now follows the traveller rather than the page (entry 42), and on 2026-08-21
+that corridor resolved from exactly the sentence the old excerpt cut. But the run before it refused, on
+the same code, because the page was never retrieved — so there is a fourth thing, **recall variance
+between runs** (known problem 19), and "access" remains an incomplete diagnosis.
 
 `countries.yaml` covers ISO 3166-1. Fourteen entries are curated from corridors actually run; the
 rest carry the name and ccTLD, which is all the own-government trust rule needs. A country only
@@ -436,21 +438,28 @@ call silently substituting the heuristic (entry 31).
    **What changed:** `anchored_excerpt` shows the head plus a 3,000-character window centred on every
    later mention of the traveller's own nationality or residence, to a 20,000-character budget, marking
    omissions with `[…]` (entry 42).
-   **Run live 2026-08-21, cold: Canada refuses again, for a different reason.** Of 24 candidates fetched,
-   `entry-requirements-country.html` was not one — the answering page was never retrieved, so the excerpt
-   had nothing to widen. It did put 16,209 more characters in front of the model across three
-   over-6,000 pages, and the adjudicator's refusal now reads *"the visa/eTA checker extracts only show
-   'Your result is loading'"*, which is item 5. **This item stays open** until the other six corridors
-   have been re-run ([TODO.md](TODO.md) item 15), and see known problem 19, which this run found.
-19. **The candidate set for one corridor varies between runs, and on 2026-08-21 the variance cost Canada
-   its answer.** Same corridor, same five trusted domains, same code: `canada/GB/GB/tourism` retrieved
-   `entry-requirements-country.html` on 2026-08-19 and did not on 2026-08-21. That page is the only one
-   found so far that states Canada's requirement for a British citizen in static text; without it the
-   corridor cannot resolve however wide the excerpt is. **Not instrumented: whether it was discovered and
-   ranked out of the 25 shortlist places, or never discovered at all.** The two have different fixes —
-   the first is scoring, the second is search or crawl — and nothing in the output tells them apart,
-   which is itself the defect to fix first. Entry 40's asymmetry now points here: this is recall gate
-   one, upstream of the excerpt, and it is the binding constraint on this corridor.
+   **Run live 2026-08-21, twice, and the two runs disagreed.** The first refused: of 24 candidates
+   fetched, `entry-requirements-country.html` was not one, so the excerpt had nothing to widen. The
+   second **resolved**, with `visa_decision` filled from that page by the model, quoting the sentence at
+   offset 8,597 — which a flat 6,000-character excerpt could not have shown. So this defect is confirmed
+   fixed on the corridor that found it. What the two runs also showed is known problem 19.
+   **This item stays open** only until the other six corridors have been re-run
+   ([TODO.md](TODO.md) item 15); nothing about the excerpt itself is outstanding.
+19. **The candidate set for one corridor varies between runs, and the answer varies with it.** Measured
+   2026-08-21: `canada/GB/GB/tourism` run cold twice within the hour, same five trusted domains, same
+   fifteen queries, same code. The first run refused — `entry-requirements-country.html` was not among
+   its candidates at all. The second **resolved**, with that page ranked **15th of 470** candidates at
+   53.4, arriving both as a `site:canada.ca` search seed and by crawl at depth 1 from
+   `check-visa-eta.html`. So it is not a marginal candidate that scoring pushed out; on the failing run
+   search simply did not return it. That page is still the only one found that states Canada's
+   requirement for a British citizen in static text.
+   **What this means for every other corridor:** a resolved corridor is not evidence the pipeline is
+   reliable, only that this run of it was. The corridor store then keeps the lucky result for three
+   weeks, which hides the variance until re-resolution. TODO item 17 is what to do about it, and the
+   20-corridor measurement (item 3) should be read with it in mind — one run per corridor cannot
+   distinguish a corridor that works from a corridor that works half the time.
+   **Now diagnosable, which it was not:** every run writes `var/recall/<corridor>.json` with all 470
+   candidates, their scores, and the shortlist and fetch flags (entry 43).
 
 ---
 
@@ -461,13 +470,19 @@ not.** `canada/GB/GB/tourism` refused because the adjudicator's 6,000-character 
 that answers it; the excerpt now follows the traveller — head plus a window around every later mention of
 their own country, at 20,000 characters, with omissions marked (entry 42, known problem 18).
 
-**It was re-run cold the same day and Canada still refuses — and that result is the most useful thing on
-this page.** The answering page was not among the 24 candidates fetched at all, so the excerpt had
-nothing to widen; the adjudicator refused because the pages it *did* get are the JavaScript wizard, which
-it described as showing *"Your result is loading"*. Two things follow. **The binding constraint on this
-corridor is now recall upstream of the excerpt** — known problem 19, and nothing distinguishes "ranked
-out" from "never found". And **item 5 is the same wizard**, named independently by the model. The other
-six verified corridors have not been re-run; that is the rest of item 15.
+**It was re-run cold twice the same day, and the two runs disagreed — which is the most useful thing on
+this page.** The first refused: the answering page was not among the 24 candidates at all, and the
+adjudicator refused because what it *did* get is the JavaScript wizard, which it described as showing
+*"Your result is loading"* (item 5, named independently by the model). The second **resolved**, filling
+`visa_decision` from that page with the sentence at offset 8,597 — which the old flat 6,000-character
+excerpt could not have shown. **So entry 42 is confirmed, and a second gate upstream of it is now
+visible:** whether the page arrives at all varies between runs (known problem 19).
+
+**That variance is why `discovery/recall_log.py` now exists** (entry 43). Every run writes
+`var/recall/<corridor>.json` — all 470 candidates Canada considered, their scores, and whether each was
+shortlisted and fetched — so the next refusal can be diagnosed instead of inferred. It answered the
+question on its first run. The other six verified corridors have not been re-run; that is the rest of
+item 15.
 
 `france/IN/GB/tourism` is untouched. It resolves without a checklist because `france-visas.gouv.fr`
 serves a Cloudflare *challenge* rather than a refusal — entry 41, item 5 — and **two things are still
@@ -585,9 +600,11 @@ the last was caught only by probing real authorities, not by any test.**
 **Amended 2026-08-21: the excerpt item is done and the two that lead now are a run and a fix.** Pick up
 **[TODO.md](TODO.md) items 15 and 5 first**:
 
-- **Item 15 — re-run the verified corridors against the widened excerpt.** Canada was run on 2026-08-21
-  and refused for a new reason (known problems 18 and 19); six corridors are left. Needs search and model
-  credit. Entry 42.
+- **Item 15 — re-run the verified corridors against the widened excerpt.** Canada was run twice on
+  2026-08-21 — one refusal, one resolution, same code (known problems 18 and 19); six corridors are
+  left, and each should be run more than once. Needs search and model credit. Entries 42 and 43.
+- **Item 17 — decide what to do about a corridor whose answer depends on one search result.** New, and
+  the reason item 3's numbers need reading carefully. Costs nothing to think about first.
 - **Item 5 — treat a challenge as a challenge.** France's `403` is Cloudflare asking whether we are a
   browser, not an authority refusing us; our own renderer answers it under our own name. It also fixes a
   sentence shown to travellers that is untrue of what was seen. Entry 41.
@@ -629,7 +646,8 @@ corridors by where a nationality falls in an alphabetical list — and became en
 
 | Entry | What it changed |
 | --- | --- |
-| 42 | The adjudicator's excerpt stops being a flat head slice. It is the head plus a 3,000-character window centred on every later mention of the traveller's own nationality or residence, to 20,000 characters, with omissions marked `[…]` and prompt rule 12 explaining the mark. Short country words ("US", "UK") match in upper case only. **Implemented, tested offline, and run live on Canada, which refused for a different reason** — the answering page was not retrieved at all that day. Six corridors left to re-run (item 15) and a new known problem 19. |
+| 42 | The adjudicator's excerpt stops being a flat head slice. It is the head plus a 3,000-character window centred on every later mention of the traveller's own nationality or residence, to 20,000 characters, with omissions marked `[…]` and prompt rule 12 explaining the mark. Short country words ("US", "UK") match in upper case only. **Confirmed live**: Canada now fills `visa_decision` from a sentence at offset 8,597, which the old 6,000 could not show. Six corridors left to re-run (item 15). |
+| 43 | Every run writes down what it considered — all candidates with their scores, the shortlist and fetch flags, the queries, the seeds, and each unreadable URL — to `var/recall/`, on refusals too. It exists because "ranked out" and "never found" had looked identical twice, and it answered that question about Canada on its first run: rank 15 of **470**, and simply absent from the run before. A diagnostic nothing reads back; deleting it costs a question, never an answer. |
 
 ### What changed on 2026-08-18, in one line each
 
@@ -698,9 +716,9 @@ same falsehood entry 33 removed from `withheld_domains`.
 
 [TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape.
 
-**First: [TODO.md](TODO.md) items 15 and 5** — finish re-running the corridors (Canada is done and told
-us something new), then treat France's challenge as a challenge. Item 15 needs credit; item 5 does not,
-and Canada's own refusal reason now names it. See *Current task* above.
+**First: [TODO.md](TODO.md) items 17, 15 and 5** — decide what a corridor that flips between runs should
+do, finish re-running the corridors, then treat France's challenge as a challenge. Item 15 needs credit;
+17 and 5 do not, and Canada's own refusal reason named 5. See *Current task* above.
 
 **Then the pre-existing list, in this order.** Each of these costs something — a crawl policy, a
 198-country registry, or search quota. Bulleted rather than numbered, because the numbers that matter

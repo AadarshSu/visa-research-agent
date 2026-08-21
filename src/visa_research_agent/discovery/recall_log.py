@@ -1,0 +1,146 @@
+"""Recording what a corridor considered, so a miss can be told apart from a mis-ranking.
+
+Every recall failure this project has found was invisible in the same way. A corridor refuses; the
+refusal is accurate about what the decider was shown; and nothing in the output says whether the
+page that would have answered it was **ranked out** or **never found**. Those have different fixes —
+one is scoring, one is search or crawl — and on 2026-08-21 `canada/GB/GB/tourism` refused without
+anybody being able to say which it was, on a page the same corridor had retrieved two days earlier.
+
+So this writes the run down. One record per corridor, overwritten by the newest run, holding every
+candidate the corridor considered with its score and whether it was shortlisted and fetched. It is
+a diagnostic, not evidence: nothing reads it back, no decision depends on it, and losing it costs a
+question rather than an answer.
+
+Deliberately separate from `corridor_store.py`, which keeps *resolved* corridors for three weeks and
+never sees a refusal. A refusal is exactly the run worth reading here.
+"""
+
+import json
+from datetime import datetime
+from hashlib import sha256
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from typing import Literal, Protocol
+
+from pydantic import Field, field_validator
+
+from visa_research_agent.discovery.models import CandidatePage, Corridor
+from visa_research_agent.domain.models import StrictModel
+
+
+class ConsideredCandidate(StrictModel):
+    """One page the corridor knew about, and how far it got."""
+
+    url: str = Field(min_length=1)
+    title: str = ""
+    found_by: Literal["search", "crawl"] = "crawl"
+    depth: int = Field(ge=0)
+    discovered_from: str = ""
+    best_role: str = "irrelevant"
+    best_score: float = 0.0
+    scores: dict[str, float] = Field(default_factory=dict)
+    shortlisted: bool = False
+    fetched: bool = False
+    """Shortlisted *and* readable. A shortlisted page that could not be read is the third answer to
+    "why was this page not used", and it is invisible unless the two are recorded apart."""
+
+
+class RecallRecord(StrictModel):
+    """Everything one resolution considered, in the order a reader asks about it."""
+
+    schema_version: Literal[1] = 1
+    corridor_key: str = Field(min_length=1)
+    recorded_at: datetime
+    outcome: str = Field(min_length=1)
+    """"resolved", or the reason it refused. So a reader knows which run they are looking at."""
+
+    queries: list[str] = Field(default_factory=list)
+    seeds: list[str] = Field(default_factory=list)
+    candidates: list[ConsideredCandidate] = Field(default_factory=list)
+    unreadable: dict[str, str] = Field(default_factory=dict)
+    """Per URL, not per host. The notes on a resolved corridor collapse these to one line per host,
+    which answers "was this site readable" but not "was this page"."""
+
+    @field_validator("recorded_at")
+    @classmethod
+    def validate_recorded_at(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("recorded_at must include a timezone")
+        return value
+
+    @property
+    def shortlisted(self) -> list[ConsideredCandidate]:
+        return [candidate for candidate in self.candidates if candidate.shortlisted]
+
+    def find(self, fragment: str) -> list[ConsideredCandidate]:
+        """Every candidate whose URL contains `fragment` — the question this file exists to answer.
+
+        An empty list means the corridor never saw the page, which is a different problem from a
+        page it saw and ranked out.
+        """
+
+        return [candidate for candidate in self.candidates if fragment in candidate.url]
+
+
+def considered(
+    candidates: dict[str, CandidatePage],
+    *,
+    shortlisted: set[str],
+    fetched: set[str],
+) -> list[ConsideredCandidate]:
+    """Flatten the candidate set, best-scoring first, which is the order it was cut in."""
+
+    rows = [
+        ConsideredCandidate(
+            url=url,
+            title=candidate.title or candidate.link.text or "",
+            found_by=candidate.found_by,
+            depth=candidate.link.depth,
+            discovered_from=candidate.link.discovered_from,
+            best_role=candidate.link_scores.best()[0],
+            best_score=candidate.link_scores.best()[1],
+            scores={role: score for role, score in candidate.link_scores.scores.items() if score},
+            shortlisted=url in shortlisted,
+            fetched=url in fetched,
+        )
+        for url, candidate in candidates.items()
+    ]
+    return sorted(rows, key=lambda row: (-row.best_score, row.url))
+
+
+class RecallLog(Protocol):
+    def write(self, record: RecallRecord) -> None:
+        """Keep this run's record, replacing any earlier one for the same corridor."""
+        ...
+
+
+class FileRecallLog:
+    """One JSON document per corridor, written atomically, overwritten by the newest run.
+
+    Overwritten rather than accumulated because the question is almost always about the run that
+    just happened. Comparing two runs — which is how the Canada variance was found — means keeping
+    a copy of the file, and that is a deliberate act rather than a directory that grows forever.
+    """
+
+    def __init__(self, directory: Path) -> None:
+        self.directory = directory
+
+    def path_for(self, corridor: Corridor) -> Path:
+        return self.directory / f"{sha256(corridor.key.encode()).hexdigest()}.json"
+
+    def write(self, record: RecallRecord) -> None:
+        path = self.directory / f"{sha256(record.corridor_key.encode()).hexdigest()}.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, delete=False) as handle:
+            json.dump(record.model_dump(mode="json"), handle, ensure_ascii=False, indent=2)
+            temporary = Path(handle.name)
+        temporary.replace(path)
+
+    def read(self, corridor: Corridor) -> RecallRecord | None:
+        """Read a record back, for a person or a script asking about the last run."""
+
+        try:
+            raw = self.path_for(corridor).read_text(encoding="utf-8")
+        except FileNotFoundError:
+            return None
+        return RecallRecord.model_validate_json(raw)
