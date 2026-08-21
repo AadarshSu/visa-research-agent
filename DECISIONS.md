@@ -74,10 +74,29 @@ yields 1,144 characters saying the client needs JavaScript, and its answer is be
 item 5's problem, not this one. Canada resolves because a *different* page happens to publish the list
 statically.
 
-**Not yet re-run live.** The Canada finding above was verified by replay before this change; the
-mechanism after it is verified by the cached pages and by tests. What has not been done is re-running
-the verified corridors against the model, and it should be, because this changes what every adjudication
-sees — a decider change, not a tuning knob. See TODO item 15.
+**Run live the same day, on the corridor it was built for, and it did not resolve.** Cold, with
+`var/cache/` and `var/corridors/` cleared: `canada/GB/GB/tourism` refuses again, in 69s, and **the reason
+is not the excerpt**. Of 24 candidates fetched, `entry-requirements-country.html` — the page holding the
+answer, and the page the 2026-08-19 replay was performed on — **is not among them**. It was not fetched
+at all. The excerpt cannot widen a page nobody retrieved.
+
+What the run does establish:
+
+- **The change shipped and is doing what it says.** Three candidates exceed the old 6,000 — 14,765,
+  11,258 and 8,186 characters — so 16,209 more characters of page text (~+4k tokens) reached the model
+  than a flat slice would have allowed, on a packet of 84,648. No candidate needed a `[…]`, because every
+  one of them fits inside 20,000; the anchoring changed nothing here, exactly as the cost note predicts.
+- **The adjudicator's refusal is now about a wizard, not a truncation.** Its reason: *"No candidate gives
+  a result for a GB passport holder. The visa/eTA checker extracts only show 'Your result is loading'"* —
+  which is item 5's problem, named by the model itself.
+- **The candidate set for one corridor varies between runs**, and that is the finding worth carrying:
+  the same corridor, from the same five trusted domains, retrieved the answering page on 2026-08-19 and
+  did not on 2026-08-21. Whether it was discovered and ranked out of the 25 shortlist places or never
+  discovered was not instrumented. Recall upstream of the excerpt is now the binding constraint on this
+  corridor, and entry 40's asymmetry argument points at it as squarely as it pointed here.
+
+So this entry is right about what it fixed and must not be read as fixing Canada. The remaining six
+verified corridors have still not been re-run; that is TODO item 15.
 
 ---
 

@@ -3,8 +3,9 @@
 Ordered by what unblocks the most. Each item says why it matters, not just what to do, so it can be
 picked up cold.
 
-**How to read this file.** **Now** is what to pick up, in the order written — item 15 leads because a
-change already on `main` changed what every adjudication sees and nothing has confirmed it live. **Next up** is what
+**How to read this file.** **Now** is what to pick up, in the order written — item 16 leads because a
+cold run on 2026-08-21 showed it is what actually stands between Canada and an answer, and item 15
+follows because the change that run was testing is still unmeasured on six other corridors. **Next up** is what
 follows it, item 3 first because its own reasoning is that nothing large should be built before it.
 **Later** is real but not urgent. **Done** is finished work, kept because what building it found is
 usually why the item after it exists. **Smaller things** are one-paragraph defects with no owner yet.
@@ -22,7 +23,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 15. Re-run the verified corridors against the widened excerpt | `next` |
+| **Now** | 16. Find out whether Canada's answering page was ranked out or never found | `next` |
+| | 15. Re-run the remaining six verified corridors against the widened excerpt | `next` |
 | | 5. Answer the challenge, and get a checklist out of France | `next` |
 | | 1. Fix the post-over-nationality weighting, and trace Sweden | `next` |
 | **Next up** | 3. Measure the top 20 corridors against a bar committed in advance | `soon` |
@@ -70,32 +72,66 @@ to reading a code path. Every item here assumes that.
 
 ## Now — pick these up in this order
 
-### 15. Re-run the verified corridors against the widened excerpt — `next`
+### 16. Find out whether Canada's answering page was ranked out or never found — `next`
+
+**Why:** measured 2026-08-21, and it now leads because it is the binding constraint on a corridor the
+project has been chasing for three days. Run cold, `canada/GB/GB/tourism` fetched 24 candidates and
+`entry-requirements-country.html` **was not one of them** — the same page the same corridor retrieved on
+2026-08-19, from the same five trusted domains, with nothing about the retrieval path changed in between.
+It is the only page found so far that states Canada's requirement for a British citizen in static text,
+so without it the corridor cannot resolve however wide the excerpt is (entry 42, known problem 19).
+
+**The thing to fix is not the miss, it is that nothing in the output tells you which miss it was.** A page
+discovered and ranked out of the 25 shortlist places is a scoring problem; a page never discovered is a
+search or crawl problem. They have different fixes and the run does not distinguish them. Entry 40's
+asymmetry applies one gate further up than entry 42 did: what is never fetched, nothing downstream can
+recover.
+
+**Do:**
+
+1. **Record the full candidate set, not just the shortlist**, in the resolved corridor or a run log:
+   how many links the crawl produced, which 25 were shortlisted, and each one's score. This is the
+   instrumentation that makes every later recall question answerable, and it costs no credit to keep.
+2. **Then re-run Canada and look for the page by URL.** In the shortlist and ranked out → item 1's
+   scoring. Not in the crawl at all → which seed should have reached it, and did the crawl budget or a
+   `Disallow` stop it. Present but unfetchable → a retrieval failure that should already be reported.
+3. **Only then decide whether anything needs changing.** Search results vary between runs by nature;
+   what must not vary silently is whether the corridor saw the page.
+
+**Careful:** do not "fix" this by widening the shortlist again. 25 places bought two corridors (entry 40)
+and this page was not competing for place 26 as far as anybody knows — that is precisely the thing being
+measured.
+
+### 15. Re-run the remaining six verified corridors against the widened excerpt — `next`
 
 **Why:** DECISIONS entry 42 changed what every adjudication is shown — the head of each candidate plus a
 window around the traveller's own country, at 20,000 characters instead of a flat 6,000 — and **that is a
-decider change, not a tuning knob.** It is on `main` and it has never been run against the model. The
-mechanism is verified offline (cached pages, 11 tests) and the underlying Canada finding was verified by
-replay before the change, but which corridors now resolve, and what the model does with a longer and
-occasionally discontinuous excerpt, is unmeasured.
+decider change, not a tuning knob.** Which corridors now resolve, and what the model does with a longer
+and occasionally discontinuous excerpt, is still mostly unmeasured.
 
-**Do:** clear `var/cache/` and `var/corridors/`, then run the seven corridors that were verified before
-this — Canada, Japan, the Netherlands, Sweden, the US, France, Singapore — and read, per corridor:
+**Canada is done, and it did not go as this file predicted.** Run cold on 2026-08-21 it refuses again,
+and not because of the excerpt: the answering page was never retrieved (item 16). What the run *did*
+establish is that the change is live and behaving — three candidates over the old 6,000 put 16,209 more
+characters of page text in front of the model, on a packet of 84,648, and no candidate needed a `[…]`
+because all 24 fit inside 20,000. The adjudicator's refusal now reads *"the visa/eTA checker extracts
+only show 'Your result is loading'"*, which is item 5, named by the model itself.
 
-1. **`canada/GB/GB/tourism` must now resolve.** It is the corridor the change exists for. If it still
-   refuses, the excerpt was not the only thing in its way and entry 42 needs a correction, not a retry.
-2. **`decided_by` and the recorded heuristic scores**, for disagreements that appear or vanish. A model
-   seeing three times as much text may pick differently on corridors that were already right, and a
-   *changed* answer on a corridor that used to be correct is the failure mode worth catching.
-3. **Whether a `[…]` gap ever misleads a reason.** The marker and prompt rule 12 exist so a cut list
+**Do:** clear `var/cache/` and `var/corridors/`, then run the remaining six — Japan, the Netherlands,
+Sweden, the US, France, Singapore — and read, per corridor:
+
+1. **`decided_by` and the recorded heuristic scores**, for disagreements that appear or vanish. A model
+   seeing more text may pick differently on corridors that were already right, and a *changed* answer on
+   a corridor that used to be correct is the failure mode worth catching.
+2. **Whether a `[…]` gap ever misleads a reason.** The marker and prompt rule 12 exist so a cut list
    cannot read as a complete one; if a reason quotes across a gap, the marker is not doing its job.
-4. **Input tokens per adjudication**, against the ~+17k characters measured on Canada's cached pages, so
-   the cost is a number rather than an estimate.
+   Canada produced no gap at all, so this is still entirely untested against a model.
+3. **Input tokens per adjudication.** Canada's was +16,209 characters over a flat slice; the cached-page
+   estimate was ~+17k. One more corridor's number would turn that into a range rather than a point.
 
 **Careful:** the excerpt cannot fix a page that never contained the answer, and one of Canada's does not
 — `ircc.canada.ca/english/visit/visas.asp` yields 1,144 characters saying the client needs JavaScript.
-That is item 5's problem. Do not read a still-missing role as evidence this change failed without first
-checking whether the page holds the answer at all.
+Do not read a still-missing role as evidence this change failed without first checking whether the page
+holds the answer at all — that is the mistake Canada's own re-run nearly invited.
 
 ### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
 
@@ -490,7 +526,9 @@ cached `canada.ca`/`gc.ca` pages, packet text goes 84,704 → 153,862 characters
 another fixed offset: on the 50,000-character visitor-visa PDF a US traveller's second window sits at
 24,449, which a flat 20,000 cuts.
 
-**Not run live** — that is item 15, and it is the first thing in **Now** for that reason.
+**Run live on Canada, which refused anyway** — the answering page was not retrieved at all that day, so
+the excerpt had nothing to widen. That is item 16, now the first thing in **Now**; the six other
+corridors are item 15.
 
 ### ~~Move "who to believe" out of the request path~~ — **done 2026-08-18, for 40 of 198 countries**
 
