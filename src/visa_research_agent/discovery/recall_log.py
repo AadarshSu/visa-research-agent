@@ -16,6 +16,7 @@ never sees a refusal. A refusal is exactly the run worth reading here.
 """
 
 import json
+from collections.abc import Sequence
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
@@ -144,3 +145,124 @@ class FileRecallLog:
         except FileNotFoundError:
             return None
         return RecallRecord.model_validate_json(raw)
+
+
+class CandidateVariance(StrictModel):
+    """One page that some runs of a corridor saw and others did not."""
+
+    url: str
+    title: str = ""
+    runs_seen: list[int] = Field(default_factory=list)
+    runs_shortlisted: list[int] = Field(default_factory=list)
+    runs_fetched: list[int] = Field(default_factory=list)
+    best_score: float = 0.0
+
+    @property
+    def reached_the_model(self) -> bool:
+        """True when at least one run got this page as far as being readable evidence.
+
+        The line that matters. A page that flickers in and out of the *candidate* set but never
+        reaches a shortlist place changes nothing; a page that was fetched in one run and absent in
+        another is a page that could have changed the answer.
+        """
+
+        return bool(self.runs_fetched)
+
+
+class VarianceReport(StrictModel):
+    """What several runs of one corridor did and did not agree about.
+
+    The point of counting is in `unstable`: TODO item 17 asks for the flip *rate* rather than the
+    anecdote, and a rate over outcomes alone would not say which page moved. Two runs that both
+    resolve are not necessarily agreeing — they can resolve on different pages — so outcomes and
+    candidates are both reported.
+    """
+
+    runs: int
+    """Runs actually performed — **not** the number of records read.
+
+    Kept apart from `records_read` because the two came out different the first time this was
+    written: the count was taken from the recall records, so a run whose record could not be read
+    simply vanished from the report and two runs described themselves as one. A diagnostic that
+    quietly understates how much evidence it had is the failure mode this whole file exists to
+    prevent.
+    """
+
+    records_read: int = 0
+    """How many runs left a readable recall record. Below `runs`, the candidate comparison is
+    incomplete and the report says so rather than presenting a partial comparison as a whole one."""
+
+    outcomes: list[str] = Field(default_factory=list)
+    stable: int = 0
+    """Candidates every run *that left a record* saw."""
+
+    unstable: list[CandidateVariance] = Field(default_factory=list)
+    """Candidates only some runs saw, worst first. Ordered by how far they got, because a page one
+    run *fetched* and another never saw is the case that decides corridors."""
+
+    @property
+    def resolved_runs(self) -> int:
+        return sum(1 for outcome in self.outcomes if outcome == "resolved")
+
+    @property
+    def comparison_is_complete(self) -> bool:
+        """True when every run left a record, so an absence really means the run did not see it."""
+
+        return self.records_read == self.runs
+
+    @property
+    def flipped(self) -> bool:
+        """True when the runs did not all reach the same outcome."""
+
+        return len(set(self.outcomes)) > 1
+
+
+def compare_runs(outcomes: Sequence[str], records: Sequence[RecallRecord]) -> VarianceReport:
+    """Summarise several runs of the same corridor, in the order they were run.
+
+    **Outcomes and records are passed separately, and that is the point.** An outcome is known from
+    the resolution itself and always exists; a record is a file that may be missing, stale, or
+    unwritable — entry 43 deliberately lets a recall-log write fail silently rather than cost a
+    corridor its answer. Deriving the run count from the records would therefore make a failed
+    *write* look like a run that never happened.
+
+    Runs are numbered from 1. A candidate is keyed by URL, because that is what a later run would
+    have to find again.
+    """
+
+    by_url: dict[str, CandidateVariance] = {}
+    for index, record in enumerate(records, start=1):
+        for candidate in record.candidates:
+            entry = by_url.get(candidate.url)
+            if entry is None:
+                entry = CandidateVariance(url=candidate.url, title=candidate.title)
+                by_url[candidate.url] = entry
+            entry.runs_seen.append(index)
+            if candidate.shortlisted:
+                entry.runs_shortlisted.append(index)
+            if candidate.fetched:
+                entry.runs_fetched.append(index)
+            entry.best_score = max(entry.best_score, candidate.best_score)
+            if not entry.title and candidate.title:
+                entry.title = candidate.title
+
+    total = len(records)
+    stable = [item for item in by_url.values() if len(item.runs_seen) == total]
+    unstable = [item for item in by_url.values() if len(item.runs_seen) != total]
+    # Fetched-somewhere first, then shortlisted, then by score: the ordering is the reading order a
+    # person wants, which is "what could this have cost me" rather than alphabetical.
+    unstable.sort(
+        key=lambda item: (
+            not item.runs_fetched,
+            not item.runs_shortlisted,
+            -item.best_score,
+            item.url,
+        )
+    )
+    return VarianceReport(
+        runs=len(outcomes),
+        records_read=total,
+        outcomes=list(outcomes),
+        stable=len(stable),
+        unstable=unstable,
+    )

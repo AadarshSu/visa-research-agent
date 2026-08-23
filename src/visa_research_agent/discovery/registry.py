@@ -40,8 +40,10 @@ REGISTRY_FILENAME = "authority_domains.yaml"
 
 # How many of a destination's own domains one country may put into use. A bound on the consequence
 # rather than a test for any cause: three searches run per trusted domain, the crawl's per-host
-# budget is the page budget divided by the hosts seeded, and the shortlist has ten places — so a
-# wide set spends more, reads less of each site, and makes the right page compete with more noise.
+# budget is the page budget divided by the hosts seeded, and the shortlist is finite (twenty-five
+# since entry 40, ten when this cap was set) — so a wide set spends more, reads less of each site,
+# and makes the right page compete with more noise. The searches are now the dominant cost of the
+# three: five domains means fifteen queries on a cold corridor (known problem 5).
 #
 # Five is calibration against the corridors run, not a derived number. It lives here rather than in
 # `automatic.py` because it is now a property of a registry row rather than of a live bootstrap.

@@ -22,8 +22,10 @@ from discovery_site import (
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.models import Corridor
 from visa_research_agent.discovery.recall_log import (
+    ConsideredCandidate,
     FileRecallLog,
     RecallRecord,
+    compare_runs,
 )
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.research.live_sources import LiveSourceFetcher
@@ -211,3 +213,76 @@ def test_a_record_read_back_from_disk_is_the_one_written(tmp_path: Path) -> None
         log.read(Corridor(destination_slug="canada", passport_nationality="GB", applying_from="GB"))
         == record
     )
+
+
+def record(outcome: str, candidates: list[tuple[str, bool, bool]]) -> RecallRecord:
+    """One run's record, written as (url, shortlisted, fetched) so a case reads in one line."""
+
+    return RecallRecord(
+        corridor_key="canada/GB/GB/tourism",
+        recorded_at=datetime(2026, 8, 22, 9, 0, tzinfo=UTC),
+        outcome=outcome,
+        candidates=[
+            ConsideredCandidate(
+                url=url,
+                depth=0,
+                best_score=50.0,
+                shortlisted=shortlisted,
+                fetched=fetched,
+            )
+            for url, shortlisted, fetched in candidates
+        ],
+    )
+
+
+def test_a_page_one_run_read_and_another_never_saw_is_reported_first() -> None:
+    """The Canada case: same corridor, same code, and one run simply never got the page.
+
+    Ordering is the assertion, not a nicety. A person reading this is asking "what could that have
+    cost me", so a candidate that reached the decider in one run and was absent in another has to
+    come above the noise of pages that flickered without ever being read.
+    """
+
+    answering = "https://www.canada.ca/entry-requirements-country.html"
+    noise = "https://www.canada.ca/newsroom.html"
+    report = compare_runs(
+        ["resolved", "refused"],
+        [
+            record("resolved", [(answering, True, True), (noise, False, False)]),
+            record("refused", []),
+        ],
+    )
+
+    assert report.flipped
+    assert report.resolved_runs == 1
+    assert [item.url for item in report.unstable][0] == answering
+    assert report.unstable[0].reached_the_model
+    assert report.unstable[0].runs_fetched == [1]
+
+
+def test_runs_that_agree_are_not_reported_as_variance() -> None:
+    same = [("https://www.canada.ca/a.html", True, True)]
+    report = compare_runs(["resolved", "resolved"], [record("resolved", same)] * 2)
+
+    assert not report.flipped
+    assert report.stable == 1
+    assert report.unstable == []
+
+
+def test_the_run_count_comes_from_the_runs_not_from_the_records() -> None:
+    """A recall-log write may fail silently (entry 43), and that must not erase a run.
+
+    Written because the first version of this counted `len(records)`, so two runs where one failed
+    to leave a record described themselves as one run — a diagnostic quietly understating how much
+    evidence it had, which is the exact failure this file exists to prevent.
+    """
+
+    report = compare_runs(
+        ["resolved", "refused"],
+        [record("resolved", [("https://www.canada.ca/a.html", True, True)])],
+    )
+
+    assert report.runs == 2
+    assert report.records_read == 1
+    assert not report.comparison_is_complete
+    assert report.flipped, "the outcomes still differ even though only one record survived"

@@ -1,6 +1,8 @@
 """Keeping a resolved corridor on disk so a request does not re-search the web.
 
-Resolving a corridor costs a bootstrap, a crawl, ten fetches and a model call. That is fine as a
+Resolving a corridor costs a crawl, twenty-five fetches and a model call, plus up to fifteen
+searches — three per trusted domain. (It cost a bootstrap too until entry 38 moved that to a
+committed registry, and ten fetches until entry 40 widened the shortlist.) That is fine as a
 deliberate command and far too much for every request, so the result is cached.
 
 A resolved corridor is **not** evidence and has a different lifetime from it. The evidence cache in

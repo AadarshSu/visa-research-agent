@@ -128,7 +128,7 @@ def build_service(
 ) -> AutomaticDestinationService:
     return AutomaticDestinationService(
         provider,
-        lambda: resolver,  # type: ignore[arg-type,return-value]
+        lambda **_: resolver,  # type: ignore[arg-type]
         FileCorridorStore(tmp_path / "corridors"),
         authorities=authorities if authorities is not None else registry(france()),
         now=lambda: now,
@@ -513,7 +513,7 @@ async def test_every_corridor_is_resolved_through_a_freshly_built_resolver(
     provider = StubProvider(["https://france-visas.gouv.fr/en/applying"])
     built: list[StubResolver] = []
 
-    def build() -> StubResolver:
+    def build(**_: object) -> StubResolver:
         built.append(StubResolver(resolved()))
         return built[-1]
 
