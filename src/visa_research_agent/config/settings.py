@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     app_name: str = "Visa Research Agent"
     cache_directory: Path = Path("var/cache")
     corridor_directory: Path = Path("var/corridors")
+    # The page corpus (DECISIONS entry 44). Kept beside the other stores, but note the contract is
+    # different: this one is depended on, so losing it costs coverage rather than a question.
+    corpus_directory: Path = Path("var/corpus")
     # What each corridor considered, for diagnosing a refusal afterwards. One file per corridor,
     # overwritten by the newest run, read by nobody: deleting the directory costs a question, never
     # an answer.

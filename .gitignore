@@ -21,6 +21,8 @@ var/corridors/*
 !var/corridors/.gitkeep
 var/recall/*
 !var/recall/.gitkeep
+var/corpus/*
+!var/corpus/.gitkeep
 
 # Machine-local tool settings. The shared launch configuration is tracked.
 .claude/settings.local.json
