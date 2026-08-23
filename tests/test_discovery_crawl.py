@@ -201,7 +201,7 @@ async def test_the_crawl_never_requests_a_host_outside_the_approved_domains() ->
     requests: list[httpx.Request] = []
     crawler = build_crawler(requests)
 
-    candidates = await crawler.crawl(destination(), corridor(), [INDEX])
+    candidates = await crawler.crawl(destination(), [INDEX])
 
     assert requests, "the crawl should have fetched something"
     for request in requests:
@@ -216,7 +216,7 @@ async def test_the_crawl_reaches_a_page_two_hops_from_the_entry_point() -> None:
     requests: list[httpx.Request] = []
     crawler = build_crawler(requests)
 
-    candidates = await crawler.crawl(destination(), corridor(), [INDEX])
+    candidates = await crawler.crawl(destination(), [INDEX])
     found = {candidate.link.url for candidate in candidates}
 
     assert DETAIL_INDIA in found, "the per-nationality page is two hops from the index"
@@ -227,7 +227,7 @@ async def test_the_crawl_honours_its_page_budget() -> None:
     requests: list[httpx.Request] = []
     crawler = build_crawler(requests, maximum_pages=2)
 
-    await crawler.crawl(destination(), corridor(), [INDEX])
+    await crawler.crawl(destination(), [INDEX])
 
     assert len(requests) <= 2
 
@@ -237,8 +237,8 @@ async def test_the_crawl_is_deterministic_across_runs() -> None:
     first_requests: list[httpx.Request] = []
     second_requests: list[httpx.Request] = []
 
-    first = await build_crawler(first_requests).crawl(destination(), corridor(), [INDEX])
-    second = await build_crawler(second_requests).crawl(destination(), corridor(), [INDEX])
+    first = await build_crawler(first_requests).crawl(destination(), [INDEX])
+    second = await build_crawler(second_requests).crawl(destination(), [INDEX])
 
     assert sorted(c.link.url for c in first) == sorted(c.link.url for c in second)
     assert [str(r.url) for r in first_requests] == [str(r.url) for r in second_requests]
@@ -255,12 +255,12 @@ async def test_an_archived_page_never_becomes_a_candidate() -> None:
         return "archived" if is_archived(link.url, lexicon) else None
 
     crawler = build_crawler(requests, reject=reject)
-    candidates = await crawler.crawl(destination(), corridor(), [INDEX])
+    candidates = await crawler.crawl(destination(), [INDEX])
 
     assert all(candidate.link.url != ARCHIVED for candidate in candidates)
     assert ARCHIVED in crawler.rejected
     # And the archived page would otherwise have ranked top for the checklist role.
-    unfiltered = await build_crawler([]).crawl(destination(), corridor(), [INDEX])
+    unfiltered = await build_crawler([]).crawl(destination(), [INDEX])
     assert rank_for_role(unfiltered, "document_checklist")[0][0].link.url == ARCHIVED
 
 
@@ -269,7 +269,7 @@ async def test_a_wrong_audience_sibling_is_ranked_below_the_right_page() -> None
     requests: list[httpx.Request] = []
     crawler = build_crawler(requests)
 
-    candidates = await crawler.crawl(destination(), corridor(), [MISSION_INDEX])
+    candidates = await crawler.crawl(destination(), [MISSION_INDEX])
     by_url = {candidate.link.url: candidate for candidate in candidates}
 
     assert MISSION_SPOUSE in by_url and MISSION_OPAQUE in by_url
@@ -441,7 +441,6 @@ async def test_different_hosts_are_crawled_at_the_same_time() -> None:
 
     await crawler.crawl(
         destination(),
-        corridor(),
         [f"https://{AUTHORITY}/a", f"https://{MISSION}/a"],
     )
 
@@ -473,7 +472,7 @@ async def test_two_pages_on_one_host_are_not_fetched_at_the_same_time() -> None:
     crawler = LinkCrawler(fetcher, lambda link: RoleScores(scores={}))
     seeds = [f"https://{AUTHORITY}/a", f"https://{AUTHORITY}/b", f"https://{AUTHORITY}/c"]
 
-    await crawler.crawl(destination(), corridor(), seeds)
+    await crawler.crawl(destination(), seeds)
 
     assert highest == 1
     # Deferring is not dropping: a page that waited for a later wave is still read.

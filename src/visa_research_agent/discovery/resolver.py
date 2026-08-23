@@ -30,6 +30,7 @@ from visa_research_agent.discovery.adjudication import (
     load_adjudication_prompt,
     validated_choices,
 )
+from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
 from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
 from visa_research_agent.discovery.lexicon import (
     CountryRegistry,
@@ -288,6 +289,8 @@ class CorridorResolver:
         excerpt_head_characters: int = DEFAULT_EXCERPT_HEAD_CHARACTERS,
         excerpt_window_characters: int = DEFAULT_EXCERPT_WINDOW_CHARACTERS,
         recall_log: RecallLog | None = None,
+        corpus: CountryCorpus | None = None,
+        pinned: list[str] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
         self.provider = provider
@@ -308,6 +311,17 @@ class CorridorResolver:
         # Optional, and nothing reads it back. A corridor behaves identically without one; what is
         # lost is the ability to answer "was that page ranked out, or never found" afterwards.
         self.recall_log = recall_log
+        # The country's known pages, seeded alongside search rather than instead of it. Optional, so
+        # a resolver built without one behaves exactly as it did before the corpus existed.
+        self.corpus = corpus
+        # URLs that already filled a role for this corridor. They keep their shortlist places
+        # whatever the ranking says; see `_shortlist`.
+        self.pinned = list(pinned or [])
+        # What this run considered, kept so the caller can fold it back into the corpus. A resolver
+        # is built per corridor, so this is per-run state rather than something outliving a run —
+        # the mistake entry 37 records about render budgets.
+        self.discovered: list[PageLink] = []
+        self.trace = ResolutionTrace()
         self.now = now
 
     async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
@@ -318,6 +332,11 @@ class CorridorResolver:
         """
 
         trace = ResolutionTrace()
+        # Kept on the resolver so a caller can read what this run considered without re-reading the
+        # recall log, which is overwritten per corridor and deliberately depended on by nothing.
+        # Safe as per-run state because a resolver is built per corridor; the mistake entry 37
+        # records is counting a *budget* on an object that outlives the run, not recording one.
+        self.trace = trace
         resolved: ResolvedCorridor | None = None
         try:
             resolved = await self._resolve(destination, corridor, trace)
@@ -397,7 +416,7 @@ class CorridorResolver:
 
         # 2. Crawl to pinpoint.
         crawler = LinkCrawler(self.crawl_fetcher, score, reject=reject)
-        crawled = await crawler.crawl(destination, corridor, seeds)
+        crawled = await crawler.crawl(destination, seeds)
         page_titles = crawler.titles
 
         # Name the domains that could not be read at all. Without this a refusal reads as "nothing
@@ -437,6 +456,22 @@ class CorridorResolver:
         refused = sorted(self.crawl_fetcher.persistent_refusals())
 
         candidates: dict[str, CandidatePage] = dict(search_candidates)
+        # Everything the country is already known to publish, offered to this corridor's scorer as
+        # ordinary candidates. Union rather than replacement: search still runs, because the corpus
+        # is not a superset of what a live run finds — measured 2026-08-22, five of twenty-four
+        # pages a Canada run fetched were absent from a 3,130-entry corpus, and one of them was
+        # missing even though the exact query that had surfaced it was re-run. Search is
+        # nondeterministic at the source, so no offline sweep can guarantee the superset; the union
+        # is what closes the gap in both directions.
+        #
+        # Trust is applied here, at read time, against the domains in force now rather than those
+        # in force when the corpus was built.
+        for entry in self._corpus_links(destination):
+            if reject(entry) is not None:
+                continue
+            candidates.setdefault(
+                entry.url, CandidatePage(link=entry, link_scores=score(entry), found_by="crawl")
+            )
         for candidate in crawled:
             existing = candidates.get(candidate.link.url)
             if existing is None or candidate.link_scores.best()[1] > existing.link_scores.best()[1]:
@@ -447,6 +482,14 @@ class CorridorResolver:
 
         trace.candidates = candidates
         trace.crawl_failures = dict(self.crawl_fetcher.failures)
+        # Only what *this run* found, never what the corpus already held: the caller folds this back
+        # in, and a page arriving from the corpus has nothing to add to it.
+        held = {canonical_key(link.url) for link in self._corpus_links(destination)}
+        self.discovered = [
+            candidate.link
+            for url, candidate in candidates.items()
+            if canonical_key(url) not in held
+        ]
         if not candidates:
             return self._refused(corridor, queries, notes, "no candidate pages were found")
 
@@ -479,6 +522,20 @@ class CorridorResolver:
             pages_fetched=len(shortlist),
             model_calls=model_calls,
         )
+
+    def _corpus_links(self, destination: DestinationConfig) -> list[PageLink]:
+        """The country's known pages, filtered by the domains trusted *now*.
+
+        Read-time filtering is the point: a corpus outlives the registry row that produced it, so a
+        domain a person later removes stops being offered without anyone rebuilding every corpus,
+        and without deleting what was found.
+        """
+
+        if self.corpus is None:
+            return []
+        return [
+            entry.to_link() for entry in self.corpus.entries_within(destination.trusted_domains)
+        ]
 
     def _decision_blocking(
         self, refused: list[str], candidates: dict[str, CandidatePage]
@@ -558,10 +615,22 @@ class CorridorResolver:
 
         Pages the crawl already proved unreadable are dropped before any of that. A place spent on
         one buys nothing, and the United States was spending half of them that way.
+
+        **Pinned pages take their places first, before any of the ranking runs.** A page that has
+        already filled a role for *this* corridor should never have to win the ranking again — and
+        it would increasingly have to, because seeding from the corpus grows the pool a great deal
+        (Canada: 471 crawled candidates against roughly 3,000 held). Entry 40's asymmetry says a
+        page ranked out is unrecoverable, so a larger pool means more pages lost to it. Pinning
+        keeps the corpus from making the scorer *more* load-bearing rather than less.
         """
 
         candidates = self._readable_only(candidates)
         chosen: dict[str, CandidatePage] = {}
+        if self.pinned:
+            wanted = {canonical_key(url) for url in self.pinned}
+            for candidate in candidates:
+                if canonical_key(candidate.link.url) in wanted:
+                    chosen.setdefault(candidate.link.url, candidate)
         for role in ROLE_ORDER:
             for candidate, _ in rank_for_role(candidates, role)[:3]:
                 chosen.setdefault(candidate.link.url, candidate)

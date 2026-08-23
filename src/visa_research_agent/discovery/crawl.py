@@ -18,7 +18,7 @@ import httpx
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
-from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink, RoleScores
+from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
     is_crawlable,
@@ -467,10 +467,16 @@ class LinkCrawler:
     async def crawl(
         self,
         destination: DestinationConfig,
-        corridor: Corridor,
         seeds: list[str],
     ) -> list[CandidatePage]:
-        """Return every candidate reached, scored on its link evidence alone."""
+        """Return every candidate reached, scored on its link evidence alone.
+
+        Takes no corridor, and used to. It was never read here — everything corridor-specific
+        reaches this class through the injected `score_link`, which closes over the traveller. The
+        parameter was dropped on 2026-08-22 when the corpus crawl (entry 44) needed to walk a
+        country's sites with no traveller at all, and passing a fabricated corridor to satisfy an
+        argument nothing used would have made a corridor-independent job look corridor-shaped.
+        """
 
         candidates: dict[str, CandidatePage] = {}
         visited: set[str] = set()

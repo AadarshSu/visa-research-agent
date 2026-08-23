@@ -227,22 +227,23 @@ def wrong_country(
     return None
 
 
-def score_link(
-    link: PageLink,
-    corridor: Corridor,
-    lexicon: Lexicon,
-    nationality: Country,
-    residence: Country,
-    *,
-    host_kind: SourceKind | None = None,
-    mission_domains: list[str] | None = None,
-) -> RoleScores:
-    """Score a link for every role, from its URL, anchor text and heading."""
+def score_role_vocabulary(link: PageLink, lexicon: Lexicon) -> RoleScores:
+    """How much this link looks like visa guidance **for anybody** — no traveller involved.
+
+    The corridor-independent half of `score_link`, which is the whole of what a page's own words can
+    say before you know who is asking. Everything the corridor decides — whether the page names this
+    traveller's nationality, whether it is the post serving where they live, whether their purpose
+    matches — is layered on top by `score_link` and stays there.
+
+    Extracted rather than copied on 2026-08-22, for the corpus crawl (DECISIONS entry 44). That job
+    walks a country's sites with no traveller at all, so it needs exactly this and must not have the
+    rest: a corpus guided by one nationality's vocabulary would be a corpus quietly built for that
+    nationality, which is the corridor-dependence entry 44 takes out of the store.
+    """
 
     url_text = searchable_url(link.url)
     label = link.text.strip().lower()
     heading = link.heading.strip().lower()
-    # Kept together only for the cheap "does this mention X at all" checks below.
     anchor = f"{label} {heading}".strip()
     scores: dict[str, float] = {}
     signals: dict[str, list[str]] = {}
@@ -278,6 +279,32 @@ def score_link(
     elif mentions_visa and "visa_decision" in scores:
         scores["visa_decision"] += lexicon.base_visa_weight
         signals["visa_decision"].append(f"mentions-visa+{lexicon.base_visa_weight:g}")
+
+    return RoleScores(scores=scores, signals=signals)
+
+
+def score_link(
+    link: PageLink,
+    corridor: Corridor,
+    lexicon: Lexicon,
+    nationality: Country,
+    residence: Country,
+    *,
+    host_kind: SourceKind | None = None,
+    mission_domains: list[str] | None = None,
+) -> RoleScores:
+    """Score a link for every role, from its URL, anchor text and heading."""
+
+    url_text = searchable_url(link.url)
+    label = link.text.strip().lower()
+    heading = link.heading.strip().lower()
+    # Kept together only for the cheap "does this mention X at all" checks below.
+    anchor = f"{label} {heading}".strip()
+    vocabulary = score_role_vocabulary(link, lexicon)
+    scores: dict[str, float] = dict(vocabulary.scores)
+    signals: dict[str, list[str]] = {
+        role: list(reasons) for role, reasons in vocabulary.signals.items()
+    }
 
     # A link labelled only with the traveller's purpose is still worth reading. Japan's tourism
     # checklist is reached by a link saying just "Tourism", whose URL never mentions visas, so
