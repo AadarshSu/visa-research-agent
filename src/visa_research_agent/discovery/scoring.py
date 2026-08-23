@@ -31,6 +31,8 @@ from visa_research_agent.discovery.urls import is_pdf_url, path_segments
 from visa_research_agent.domain.models import SourceKind
 from visa_research_agent.domain.trust import host_is_within, host_of
 
+_WORDS = re.compile(r"\w+")
+
 
 def _contains_phrase(haystack: str, phrase: str) -> bool:
     return phrase.lower() in haystack.lower()
@@ -59,6 +61,22 @@ def searchable_url(url: str) -> str:
     for separator in ("-", "_", "/", ".", "+"):
         lowered = lowered.replace(separator, " ")
     return lowered
+
+
+def link_words(link: PageLink) -> set[str]:
+    """Every word a link's own text, path and host contain, for the country prefilter.
+
+    Computed once per link. `_matches_country` derives the same three things — the path segments,
+    the lowered text, the host labels — and `wrong_country` used to call it once per country, so
+    each was rebuilt 198 times for every candidate. That is most of what made it the corridor's
+    hottest function once the corpus grew. See `CountryRegistry.possible_for`.
+    """
+
+    words = set(_WORDS.findall(link.text.lower()))
+    for segment in path_segments(link.url):
+        words.update(_WORDS.findall(segment))
+    words.update(host_of(link.url).split("."))
+    return words
 
 
 def _matches_country(link: PageLink, country: Country) -> bool:
@@ -219,7 +237,11 @@ def wrong_country(
     allowed = {corridor.passport_nationality, corridor.applying_from}
     if destination_code:
         allowed.add(destination_code)
-    for country in registry.countries:
+    # Prefiltered, then checked exactly. `possible_for` returns a superset in registry order, so
+    # the country named is the same one the full scan would have named — only the number of exact
+    # checks changes. Measured on Canada's 3,216-entry corpus: 3,277ms to 98ms, identical output on
+    # every entry. DECISIONS entry 50.
+    for country in registry.possible_for(link_words(link)):
         if country.code in allowed:
             continue
         if _matches_country(link, country):

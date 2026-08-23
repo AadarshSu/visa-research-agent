@@ -15,6 +15,7 @@ out of sample, and failed it. Both cases below are taken from the real pages:
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, PageLink
 from visa_research_agent.discovery.scoring import (
+    _matches_country,
     is_archived,
     is_boilerplate,
     mission_affinity,
@@ -282,6 +283,53 @@ def test_a_country_named_in_full_is_still_vetoed() -> None:
     # The fix must not blunt the veto: a page genuinely about another country still goes.
     assert wrong_country_for("Visa for United States nationals") == "United States"
     assert wrong_country_for("Visa requirements for China") == "China"
+
+
+def test_the_country_prefilter_names_exactly_what_a_full_scan_names() -> None:
+    """`possible_for` is an optimisation, so it has to be invisible in the output.
+
+    It replaced a scan of all 198 countries per candidate — 3.3s of a 54s corridor once a
+    3,216-entry corpus was being scored (DECISIONS entry 50). It is a *superset* prefilter followed
+    by the same exact check in the same registry order, so any divergence here is a bug in the
+    index rather than a tuning question.
+
+    The cases are the ones where an index could plausibly disagree: overlapping names, a country
+    inside another country's name, a two-letter code that is also an English word, a name in a URL
+    path rather than in text, and a host label.
+    """
+
+    registry = get_country_registry()
+    corridor = Corridor(
+        destination_slug="japan", passport_nationality="IN", applying_from="GB", purpose="tourism"
+    )
+
+    def full_scan(link: PageLink) -> str | None:
+        allowed = {"IN", "GB", "JP"}
+        for country in registry.countries:
+            if country.code in allowed:
+                continue
+            if _matches_country(link, country):
+                return country.name
+        return None
+
+    links = [
+        PageLink(url=url, text=text, heading="", depth=0, discovered_from="seed")
+        for url, text in (
+            ("https://www.mofa.go.jp/visa", "Guinea-Bissau"),
+            ("https://www.mofa.go.jp/visa", "Papua New Guinea"),
+            ("https://www.mofa.go.jp/visa", "Democratic Republic of the Congo"),
+            ("https://www.mofa.go.jp/visa", "South Africa"),
+            ("https://www.mofa.go.jp/visa", "Business visa"),
+            ("https://www.mofa.go.jp/visa", "Chadwick House"),
+            ("https://www.mofa.go.jp/visa/detail/china.html", ""),
+            ("https://www.mofa.go.jp/visa/united-states-of-america", ""),
+            ("https://uk.emb-japan.go.jp/visa", "Visa"),
+            ("https://www.mofa.go.jp/information/index.html", "Information"),
+        )
+    ]
+
+    for link in links:
+        assert wrong_country(link, corridor, registry, "JP") == full_scan(link), link
 
 
 def test_every_country_has_the_field_the_trust_rule_depends_on() -> None:

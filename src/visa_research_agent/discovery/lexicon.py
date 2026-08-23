@@ -4,7 +4,7 @@ All three are version-controlled YAML so they can be reviewed and tuned without 
 """
 
 import re
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from typing import Any, Literal
 
 import yaml
@@ -13,6 +13,8 @@ from pydantic import Field, model_validator
 from visa_research_agent.config.loader import config_path
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.domain.trust import host_is_within
+
+_WORDS = re.compile(r"\w+")
 
 
 class Country(StrictModel):
@@ -87,6 +89,43 @@ class CountryRegistry(StrictModel):
         if country is None:
             raise ValueError(f"country {code} is not in countries.yaml; add it before using it")
         return country
+
+    @cached_property
+    def _by_word(self) -> dict[str, tuple[int, ...]]:
+        """Which countries a single word could belong to, by position in `countries`.
+
+        Built once and only ever read as a **prefilter**: it says which countries are worth the
+        exact check, never which country a page is about. Over-inclusion is harmless and
+        under-inclusion would be a silent behaviour change, so a country whose tokens contain no
+        word characters at all is placed under the empty key and always considered.
+        """
+
+        index: dict[str, set[int]] = {}
+        for position, country in enumerate(self.countries):
+            words = {
+                word for token in country.text_tokens for word in _WORDS.findall(token.lower())
+            }
+            words.update(label.lower() for label in country.host_labels)
+            for word in words or {""}:
+                index.setdefault(word, set()).add(position)
+        return {word: tuple(sorted(positions)) for word, positions in index.items()}
+
+    def possible_for(self, words: set[str]) -> list[Country]:
+        """The countries any of these words could name, **in registry order**.
+
+        A superset of what an exact match would find, which is the whole contract: the caller still
+        runs the real check on every country this returns, so the order and the answer are
+        unchanged and only the number of exact checks falls.
+
+        It exists because the corpus made an old cost visible. `wrong_country` scanned all 198
+        countries for every candidate, and a corridor scored 471 of them; against a 3,216-entry
+        corpus the same scan cost **3.3 seconds** of a 54-second corridor. See DECISIONS entry 50.
+        """
+
+        positions: set[int] = set(self._by_word.get("", ()))
+        for word in words:
+            positions.update(self._by_word.get(word, ()))
+        return [self.countries[position] for position in sorted(positions)]
 
 
 class LexiconTerm(StrictModel):

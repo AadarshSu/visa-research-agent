@@ -9,6 +9,69 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 50. The routing index removes the wrong cost: it is `wrong_country`, not scoring
+**2026-08-23 · measured; implemented; amends entry 48**
+
+Entry 48 measured that consuming Canada's whole 3,216-entry corpus for one corridor costs ~3.6s,
+concluded that *scoring* is what scales badly, and designed a stored-score top-400 pre-filter around
+that conclusion. **The total is reproducible. The attribution is wrong**, and with it the design.
+
+### Where the seconds actually are
+
+Measured on `var/corpus/CA.json`, 3,216 entries, `canada/GB/GB/tourism`:
+
+| step | before | after |
+| --- | --- | --- |
+| load + `entries_within` + `to_link` | 50ms | 46ms |
+| **`reject()`** | **4,362ms** | **134ms** |
+| — of which `wrong_country` | **3,330ms** | — |
+| `score_link` + `CandidatePage` | 345ms | 166ms |
+| **total corpus → candidates** | **4,757ms** | **346ms** |
+
+`wrong_country` scans all 198 countries for every candidate, and `_matches_country` rebuilds the
+link's path segments, lowered text and host labels **once per country** — 198 times per candidate —
+then compiles a fresh `\b…\b` regex per token, against roughly 600 distinct tokens and a 512-entry
+`re` cache that therefore thrashes.
+
+The fix is an index, but not over the corpus: `CountryRegistry.possible_for` maps a word to the
+countries that could use it, so a candidate's own words select the handful worth checking, and the
+**existing exact check then runs on those, in registry order**. Superset in, same answer out:
+**3,277ms → 98ms, byte-identical on all 3,216 entries**, frozen by
+`test_the_country_prefilter_names_exactly_what_a_full_scan_names`.
+
+### So the index is not built
+
+Scoring the **whole** corpus now costs 346ms, against the 575ms entry 48 proposed to pay for a
+top-400. The pre-filter would remove ~145ms of a 54-second corridor and add a permanent recall cut.
+
+**And the cut is not hypothetical.** `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` is
+`status="proven"` in Canada's corpus — it filled a role in a resolved corridor — and scores **0.0**
+on role vocabulary, ranking **2,871 of 3,216**. Every top-N below ~2,900 drops it. Worse, a pin
+cannot rescue it: `_shortlist` looks for pinned URLs *inside* `candidates`, so a page removed
+upstream is gone before pinning runs. Entry 48's optimisation would have silently undone entry 47's
+ratchet, and the fact that entry 48's own check found "3/3 role pages kept" is why — it counted the
+pages that corridor happened to use, not the pages the country is known to have answered from.
+
+**The flat ranking is also lopsided by role**, which is worth recording for whoever revisits this.
+Flat top-400 on Canada spends **238 of 400 slots on `application_route` and 20 on `visa_decision`**;
+flat top-100 keeps 2 of the 4 proven pages. A per-role top-25 covers every role in **150** entries —
+so if a bound is ever needed, per-role beats flat, and `proven` and pinned pages must be carved out
+of it unconditionally rather than left to win a ranking.
+
+### When to revisit
+
+Not on corpus size alone. The bound is now ~110µs per entry end to end, so 30,000 entries is ~3.5s —
+still under a third of the 10.8s adjudication call, but no longer negligible. Revisit when a
+destination's corpus passes roughly ten thousand entries **and** a measured phase split says this
+step is the largest one left. Then build the per-role variant above, not the flat one.
+
+`CorpusEntry.vocabulary_score` is deliberately **not** added. A stored score is a derived value that
+goes stale the moment `role_vocabulary.yaml` changes, with nothing to say it has — the same class of
+defect as a row recording when it was written rather than when its evidence was retrieved (entry 4).
+If it is ever stored, it needs a lexicon fingerprint beside it and a recompute on mismatch.
+
+---
+
 ## 49. A refusal met while reading the shortlist was never reported at all
 **2026-08-23 · measured; implemented**
 
