@@ -79,17 +79,22 @@ moves every score by up to 2× and needs its own measurement. What the test guar
 
 **Offline: completely.** The replay is faithful and the tests fail on the previous lexicon.
 
-**Live: up to the model call, and no further.** Run 2026-08-24, Sweden's page scores 82.4, is ranked
-`visa_decision` first, is shortlisted, and `government.se` still answers `403` to it. The corridor
-then refused because **the OpenAI account is out of credit** (`credit_balance_exhausted`), so
-adjudication failed twice and entry 31 correctly refused rather than falling back to the heuristic.
-**What remains unverified is the last step**: that Sweden now resolves `partial` with the decision
-stated unknown and the blocked URL handed over. That needs credit, and it is the same credit
-[TODO.md](TODO.md) item 3 is waiting on.
+**Live: confirmed end to end, 2026-08-24.** Two runs of `sweden/IN/GB/tourism`, both identical:
 
-*Note for whoever verifies it:* a corridor that refuses populates only `notes`, not
-`inaccessible_domains`/`inaccessible_urls` — `_refused` does not carry them — so a refusing run cannot
-be used to check block reporting. Read the notes, or the recall log.
+```
+usable: True   decision_is_unverified: True
+decision_blocking: government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden
+```
+
+So the corridor now resolves `partial`, states the visa decision **unknown**, and hands the traveller
+the URL of the page the authority refused. **That is entry 27's exception firing on a real corridor
+for the first time**, and it closes known problem 25. France still refuses with `decision_blocking`
+empty — correct, since its old qualification was a blank CERFA form — and Canada still resolves.
+
+*Note for whoever verifies something like this:* a corridor that **refuses** populates only `notes`,
+not `inaccessible_domains`/`inaccessible_urls`, because `_refused` does not carry them. A refusing run
+therefore cannot be used to check block reporting; read the notes or the recall log. This cost a
+verification step when adjudication was failing on exhausted credit.
 
 ---
 

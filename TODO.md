@@ -9,8 +9,8 @@ on**, even though it sits in **Next up** rather than here; nothing large should 
 after item 22 nothing large is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
 (17) and the corpus that answers it (18, 19, entry 44). Item 23 is **done** — the vocabulary could not
 recognise a page that *states* the visa answer, so entry 27's exception had stopped firing; entry 56.
-**Everything now waits on credit**: the OpenAI account is exhausted, which blocks item 3 and the last
-step of item 23.
+Credit was restored on 2026-08-24 and item 23 is confirmed live, so **item 3 is now the only thing
+left in front of everything else.**
 **Next up** is what follows. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
 and worth stating**: item 18 is built once and run first on only the ~8 destinations item 3 needs, so
 the measurement describes the architecture the project means to keep, and scaling it to 198 countries
@@ -754,10 +754,10 @@ anywhere**; France still correctly refuses.
 a Caribbean page displaced the Netherlands' own UK application page. Seven such overlapping pairs
 already exist and are now frozen by a test rather than fixed.
 
-**Live verification stopped one step short**: the page scores 82.4 and `government.se` still `403`s
-it, but the corridor could not be re-resolved because **the OpenAI account ran out of credit**. That
-last step — Sweden resolving `partial` with the decision unknown and the URL handed over — is
-outstanding, and it needs the same credit as item 3.
+**Confirmed live 2026-08-24**, two runs, identical: `usable: True`, `decision_is_unverified: True`,
+and `decision_blocking` naming the exact page `government.se` refused. Sweden resolves `partial` with
+the visa decision stated unknown and the blocked URL handed over — **entry 27's exception firing on a
+real corridor for the first time**. France still refuses with nothing qualifying; Canada unaffected.
 
 ### ~~Re-run the remaining six verified corridors~~ — **done 2026-08-23** (was item 15)
 
@@ -1026,6 +1026,31 @@ which are item 1, and English-only scoring, which is known problem 13 in
 ---
 
 ## Smaller things
+
+**Open question: is the heuristic's *ranking* earning its place, now that a model reads the pages?**
+Raised 2026-08-24, not yet a decision, and it should be settled before anyone tunes the scorer again.
+Measured across the six corridors: of the **18** distinct pages the model chose, **5 ranked outside the
+25 places** by heuristic score — 27th, 31st, 35th, 57th and **101st** — and **every one was admitted by
+the top-3-per-role reservation**, not by its rank. So the ranking is not what finds the answers; the
+structural reservations and the generous window are (which is also what entry 40 measured when 10 → 25
+places bought more than every scoring rule in the file).
+
+What that does **not** license is deleting the heuristic. It is a *recall gate*, and something has to
+cut 2,455 candidates down to what a model can read — reading them all is thousands of fetches and
+~1.9M tokens per corridor. The honest framing is that it has two jobs and does them very differently:
+
+| job | how it does | note |
+| --- | --- | --- |
+| reject obvious non-guidance | well | archived paths, site furniture, wrong audience, wrong country — cheap and deterministic |
+| **rank what survives** | **poorly** | 5 of 18 answers outside the window; reservations rescue them |
+| **judge what a page means** | **badly, and it should not be doing this** | `_decision_blocking` asks "could this page have held the decision?" by keyword, on a page **nobody read** — and that is what item 23 had to patch |
+
+The third row is where a model plausibly belongs, and where the cost objection is weakest: a blocked
+page has a URL and an anchor text and nothing else, so asking a model about *that* is a small call over
+metadata, not a page read. Against it: entry 31 makes every model call a way for a corridor to refuse,
+and entries 44–53 spent four sessions making the candidate set *deterministic* — putting a model in
+front of it would re-introduce variance exactly where it was removed. Argue it in a decision entry
+before writing code.
 
 **The corpus crawl's page budget is tuned to Canada and does not generalise.** `DEFAULT_CORPUS_PAGES`
 is 1,200, chosen because Canada produced 203 seeds and a 200-page budget meant the crawl never left

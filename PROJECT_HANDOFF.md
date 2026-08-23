@@ -571,14 +571,14 @@ call silently substituting the heuristic (entry 31).
    cost and **nothing counts how often the corpus was the only source and came up short.** The
    `found_by="corpus"` field added with entry 51 is what would make that countable from the recall log;
    nobody has counted it.
-25. **Entry 27's blocked-authority exception stopped firing. Fixed 2026-08-24, unconfirmed live.**
-   The cause was a vocabulary gap, not the `not scores` guard item 23 blamed: Sweden's decision page
-   now scores `visa_decision` **82.4** where it scored **0.0**, and qualifies its own refusal (entry
-   56). Verified by replaying every corridor's real candidate set, and live as far as scoring and the
-   `403`. **The last step is unverified** — that Sweden resolves `partial` with the decision unknown
-   and the URL handed over — because the OpenAI account ran out of credit mid-verification. It stays
-   on this list until a run shows it. France still refuses, correctly: its old qualification was a
-   blank CERFA form.
+25. **~~Entry 27's blocked-authority exception stopped firing.~~ FIXED and confirmed live 2026-08-24.**
+   The cause was a vocabulary gap, not the `not scores` guard item 23 blamed — the `visa_decision`
+   terms were all ways of *asking* the question, with no way to recognise a page that states the
+   answer (entry 56). Sweden's decision page went `visa_decision` **0.0 → 82.4**, and two live runs
+   now give `usable: True`, `decision_is_unverified: True`, and `decision_blocking` naming the exact
+   page `government.se` refused. **Entry 27's exception has now fired on a real corridor for the first
+   time.** France still refuses with nothing qualifying, correctly — its old qualification was a blank
+   CERFA form. Kept here for one cycle as a record; delete it after the next handoff edit.
    The original description follows.
 
    **Entry 27's blocked-authority exception has stopped firing, and it is a scoring bug, not a block
@@ -601,37 +601,25 @@ call silently substituting the heuristic (entry 31).
 
 ## Current task
 
-> **Blocked on credit, and this is now the first thing to know.** The **OpenAI account is exhausted**
-> — `credit_balance_exhausted`, hit on 2026-08-24 mid-verification. Every corridor refuses, because a
-> failed adjudication refuses rather than falling back to the heuristic (entry 31, working as
-> designed). Brave credit is still fine. **Nothing that needs a model can be measured until this is
-> topped up**, which includes item 3 and the last step of item 23.
+**[TODO.md](TODO.md) item 3 — the twenty-corridor measurement.** Credit was restored on 2026-08-24 and
+nothing else is queued ahead of it. It is still what decides whether this is a product, and the bar was
+committed in advance (entry 35): product if **≥70% confirm the decision and ≥50% yield a checklist**.
 
-**When credit is back, do these two, in this order — they are the same runs.**
+Read it with two things in mind. Seven destinations have corpora and the rest will crawl, so expect
+**two populations** in the results and say which is which. And run each corridor **twice** — one run
+cannot tell a corridor that works from one that works half the time (known problem 19).
 
-1. **Confirm Sweden resolves.** Item 23 is implemented and verified offline and as far as the `403`
-   live (entry 56), but not through adjudication. Expect `sweden/IN/GB/tourism` to resolve `partial`
-   with the visa decision stated **unknown** and `government.se`'s blocked page handed over as a URL.
-   If it does, entry 27's exception is confirmed end to end for the first time and known problem 25
-   closes. If it does not, read the recall log before touching the scorer.
-2. **[TODO.md](TODO.md) item 3** — the twenty-corridor measurement, which is still what decides
-   whether this is a product. Seven destinations already have corpora; the rest will crawl, so expect
-   two populations in the results and say which is which.
+**Everything ahead of it is done and confirmed live.** Item 22 (entries 49–53), the six-corridor
+re-run (entry 55), and item 23 (entry 56, confirmed 2026-08-24: Sweden resolves `partial` with the
+decision unknown and the blocked URL handed over — entry 27's exception firing on a real corridor for
+the first time).
 
-**Everything else is done and measured.** Item 22 (entries 49–53), the six-corridor re-run
-(entry 55), and item 23 (entry 56). The corridor table above is measured rather than remembered.
-
-**The pattern worth carrying, because it has now repeated three sessions running.** Each time, the
-written-down diagnosis named the wrong cause, and only running the thing showed it:
-
-- item 22 blamed *scoring* for a cost that was `wrong_country`;
-- entry 51's crawl removal was expected to risk *reporting*, and what it actually broke was
-  *qualification*;
-- item 23 blamed the `not scores` guard, and the defect was that the vocabulary had no way to
-  recognise a page that states the answer.
-
-All three were written from reading a code path. `CLAUDE.md` already says to prefer a run to a careful
-reading; these are what it is talking about.
+**Open question worth settling before the scorer is touched again** — raised 2026-08-24 and not yet a
+decision: *should the heuristic be ranking pages at all, when a model is already reading them?*
+Measured on the six corridors, **5 of the 18 pages the model chose ranked outside the 25 places** by
+heuristic score — at 27th, 31st, 35th, 57th and **101st** — and every one of them was admitted by the
+**top-3-per-role reservation** rather than by its score. So the ranking is not what is finding the
+answers; the structural reservations are. See the "smaller things" note in [TODO.md](TODO.md).
 
 ### Where the previous work got to
 
