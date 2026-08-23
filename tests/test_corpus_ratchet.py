@@ -235,3 +235,50 @@ async def test_a_pin_survives_the_shortlist_truncation(tmp_path: Path) -> None:
     assert pinned in {candidate.link.url for candidate in shortlist}, (
         "a page that already answered this corridor must not have to win the ranking again"
     )
+
+
+@pytest.mark.anyio
+async def test_the_corpus_displaces_a_thinner_search_candidate_for_the_same_page(
+    tmp_path: Path,
+) -> None:
+    """The defect a live run found on 2026-08-23, and the reason it stayed hidden until then.
+
+    Search and the corpus describe the same URL from different evidence. Search knows the engine's
+    title; the corpus knows the anchor text and section heading an offline crawl harvested from the
+    page that links to it — and `link_text_weight` makes that worth far more. Seeding search first
+    and folding the corpus in with `setdefault` meant the *thinner* description always won.
+
+    It was invisible while the crawl ran, because the crawl re-found such pages with their real
+    anchor text and its own merge compares scores. Live on `canada/GB/GB/tourism` with no crawl,
+    `entry-requirements-country.html` entered at **32.0** from search instead of **63.4** from the
+    corpus, missed the shortlist, and the corridor refused with `visa_decision` unfilled.
+    """
+
+    corpus = CountryCorpus(
+        country_code="TL",
+        country_name="Testland",
+        trusted_domains=destination().trusted_domains,
+        built_at=RESOLVED_AT,
+        entries=[
+            CorpusEntry(
+                url=DETAIL_INDIA,
+                title="Visa Requirements for Indian Travel Documents",
+                # What a crawl harvests and a search result cannot carry.
+                link_text="Visa requirements by country",
+                heading="Check if you need a visa",
+                first_seen=RESOLVED_AT,
+                last_seen=RESOLVED_AT,
+            )
+        ],
+    )
+    resolver = build(tmp_path, [DETAIL_INDIA], corpus=corpus)
+    # What a search engine returns for that page: a bare title, and nothing about the link.
+    resolver.provider.title = "Travel documents"  # type: ignore[attr-defined]
+
+    await resolver.resolve(destination(), corridor())
+
+    candidate = resolver.trace.candidates[DETAIL_INDIA]
+    assert candidate.found_by == "corpus", (
+        "the richer description of a page must win, whichever stage produced it"
+    )
+    assert candidate.link.text == "Visa requirements by country"

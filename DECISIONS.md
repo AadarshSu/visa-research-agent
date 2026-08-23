@@ -9,6 +9,77 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 53. Measured live: the crawl's 33.6s is gone, and removing it exposed a defect only a run could find
+**2026-08-23 · measured live; implemented**
+
+[TODO.md](TODO.md) item 22's step 4, run on `canada/GB/GB/tourism` — entry 48's own corridor —
+instrumented at the same four boundaries. **The first run refused, and finding out why is the point
+of this entry.**
+
+### The defect: the corpus lost to search on the same page
+
+`entry-requirements-country.html` is the only page found that states Canada's requirement for a
+British citizen in static text (known problem 19). It entered the run at **32.0**, missed the
+shortlist, and was never fetched. Its **corpus** entry scores **63.4**.
+
+The two describe the same URL from different evidence. Search knows the engine's title — *"What you
+need to enter Canada - Canada.ca"*. The corpus knows the anchor text and section heading an offline
+crawl harvested from the page linking to it — *"Entry requirements by country or territory"* under
+*"Check if you need a visa or eTA to travel to Canada"* — and `link_text_weight` is why that is worth
+twice as much. `_resolve` seeded `candidates` from search **first** and folded the corpus in with
+`setdefault`, so the thinner description could never be displaced.
+
+**It was latent until entry 51, and the crawl was what hid it.** The crawl re-found such pages with
+their real anchor text, and *its* merge compares scores and replaces the weaker candidate. So the
+crawl had been quietly repairing this line on every run — which is also why entry 48's corpus-only
+experiment, done without a crawl but also without search, never met it.
+
+The fix is one rule applied consistently: **the best evidence about a page wins, whichever stage
+produced it**, exactly as the crawl loop already did.
+
+### The measurement, after the fix
+
+Four runs, minutes apart, evidence cache warm from run 1 onward:
+
+| run | total | search | **crawl** | fetch | adjudicate | candidates | shortlist | roles filled |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 (defect) | 21.75s | 4.12s | **0.00s** | 6.34s | 10.16s | 2,455 | 25 / 24 | **refused** |
+| 2 | 12.73s | 2.77s | **0.00s** | 1.16s | 7.69s | 2,455 | 25 / 24 | decision, fees, times |
+| 3 | 13.24s | 3.45s | **0.00s** | 1.24s | 7.70s | 2,455 | 25 / 24 | decision, fees |
+| 4 | 12.82s | 2.86s | **0.00s** | 1.06s | 8.05s | 2,455 | 25 / 24 | decision, fees |
+
+Against entry 48's **54.2s**, of which the crawl was 33.6s. The projection was ~21s and the measured
+figure is better than that, but **not because the design beat its estimate** — search came back in
+2.8–3.5s where entry 48 saw 9.1s, and adjudication in 7.7–8.1s where it saw 10.8s. Both are
+someone else's latency on a different day. **The claim this run supports is the narrow one: the
+crawl's 33.6s is gone, and nothing else in the corridor grew to replace it.** 97% of candidates
+(2,387 of 2,455) now come from a file rather than the network.
+
+**Adjudication is now the corridor**, at ~60%. Whatever is optimised next, that is where it is.
+
+### What three identical runs do and do not show
+
+The candidate count, the shortlist size and the fetched count were **identical across all four runs**,
+and `visa_decision` was filled from the same page in all three that resolved. That is the closest
+this project has come to a stable candidate set, and it follows from where the candidates come from
+rather than from luck.
+
+**It is not proof that recall is stable**, and known problem 19 stays open. These runs were minutes
+apart, on one corridor and one destination, and 68 candidates still came from search, which is
+nondeterministic at the source (entry 47).
+
+**What it does isolate is the model.** Run 2 filled `processing_times` and runs 3 and 4 did not, on
+the same code with the same candidate count — so that variance is adjudication, not recall. Holding
+recall fixed enough to say that is new; known problem 10 has never before been separable from
+known problem 19.
+
+`document_checklist` went unfilled in all three. That is **not** a recall failure: eleven candidates
+scoring for the role were fetched, including `supporting-documents.html` at 64.0, and the model chose
+none of them. The gate did its job and the decider declined — which is the honest refusal this
+project prefers, and it is why the corridor is `is_usable` with a role unfilled rather than pretending.
+
+---
+
 ## 52. Entry 47's pin only half existed: the truncation dropped it
 **2026-08-23 · measured; implemented; fixes entry 47**
 

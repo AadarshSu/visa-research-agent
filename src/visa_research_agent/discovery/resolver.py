@@ -448,18 +448,35 @@ class CorridorResolver:
             if reject(entry) is not None:
                 continue
             from_corpus += 1
-            candidates.setdefault(
-                entry.url,
-                CandidatePage(
-                    link=entry,
-                    link_scores=score(entry),
-                    # The corpus crawl recorded the page's own <title>; without this it would be
-                    # re-derived from the link text, which is what a crawl has to fall back on and
-                    # a store does not.
-                    title=title or None,
-                    found_by="corpus",
-                ),
+            stored = CandidatePage(
+                link=entry,
+                link_scores=score(entry),
+                # The corpus crawl recorded the page's own <title>; without this it would be
+                # re-derived from the link text, which is what a crawl has to fall back on and
+                # a store does not.
+                title=title or None,
+                found_by="corpus",
             )
+            # **Best evidence about a page wins, exactly as it does for the crawl below** — this was
+            # a `setdefault`, and it cost a live corridor its answer on 2026-08-23.
+            #
+            # Search and the corpus describe the same URL from different evidence. Search knows only
+            # the engine's title; the corpus knows the anchor text and section heading an offline
+            # crawl harvested from the page that links to it, and `link_text_weight` is why that is
+            # worth far more. Measured on `canada/GB/GB/tourism`:
+            # `entry-requirements-country.html` scores **63.4** from the corpus — "Entry
+            # requirements by country or territory" under "Check if you need a visa or eTA" — and
+            # **32.0** from
+            # search's "What you need to enter Canada - Canada.ca". Seeded first, the search
+            # candidate could not be displaced, and 32.0 missed the shortlist while 63.4 would have
+            # been the second-best `visa_decision` candidate in it. The corridor refused.
+            #
+            # It was latent until entry 51 because the crawl re-found such pages with their real
+            # anchor text and the loop below *does* compare scores, so the crawl was quietly
+            # repairing what this line broke.
+            existing = candidates.get(entry.url)
+            if existing is None or stored.link_scores.best()[1] > existing.link_scores.best()[1]:
+                candidates[entry.url] = stored
 
         # 3. Crawl to pinpoint — only when the corpus has not already out-covered it.
         crawled: list[CandidatePage] = []
