@@ -9,6 +9,110 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 55. Six corridors through the corpus: 2–5× faster, and it breaks the blocked-authority exception
+**2026-08-23 · measured live; NOT fixed**
+
+Item 15's six corridors, each run twice on the crawl path, then their corpora built offline
+(TODO item 18, first time for any country but Canada), then each run twice again corpus-routed.
+Twenty-four live runs. Registry path throughout, so these describe what the API does.
+
+### Speed: unambiguous
+
+| corridor | before | after | crawl | candidates |
+| --- | --- | --- | --- | --- |
+| japan | 37.5s | **14.9s** | 17.4s → 0.0s | 558 → 920 |
+| netherlands | 30.9s | **12.9s** | 16.6s → 0.0s | 290 → 903 |
+| sweden | 39.9s | **18.0s** | 23.3s → 0.0s | 83 → 396 |
+| united-states | 31.4s | **14.9s** | 17.6s → 0.0s | 799 → 1,651 |
+| france | 23.6s | **11.2s** | 9.9s → 0.0s | 413 → 1,181 |
+| singapore | 56.1s | **10.8s** | 29.8s → 0.0s | 376 → 863 |
+
+2.1× to 5.2×, and the candidate pool grew every time. Both runs of every corridor saw an identical
+candidate count, before and after.
+
+### Roles genuinely found: neutral to better
+
+Japan and Singapore fill all five roles, unchanged. **The United States gained `fees`** (0/2 → 2/2)
+and **the Netherlands gained `processing_times`** (0/2 → 2/2) and a second checklist run. Only France
+lost one (`processing_times`).
+
+**Japan is worth reading closely, because the prediction was wrong.** Its corpus holds **1 of 6**
+baseline role pages: five came from `uk.emb-japan.go.jp`, and the corpus has 29 mission hosts —
+Auckland, Boston, San Francisco, even `edinburgh.uk.emb-japan.go.jp` — and **not the London embassy**.
+The offline build is traveller-free, so which posts it sweeps up is whatever search returned. It
+resolved all six roles anyway, because **search still runs** and supplied them. That is entry 47's
+union doing exactly the job it was built for, and it is the strongest argument yet for entry 48's
+refusal to drop search.
+
+### But two corridors went from resolving to refusing
+
+**Sweden and France both flipped**, and both for one reason: `decision_blocking_urls` went empty, so
+entry 27's exception — name the blocked page, state the decision unknown, produce a partial plan —
+could not fire.
+
+**The reporting did not break.** `inaccessible_domains` and `inaccessible_urls` still name the
+refusing hosts and pages in both corridors; entry 49 works, and that was the constraint entry 48
+named. What broke is **qualification**, which entry 48 did not consider: `_decision_blocking` needs a
+refusal *observed on a page that scored for `visa_decision`*, and the crawl was observing far more
+refusals than a 25-page shortlist fetch does. France's crawl met **18** `france-visas.gouv.fr` URLs;
+the fetch meets **6**.
+
+**The two are not the same case, and the difference matters.**
+
+*France is a correction.* Its baseline qualified on
+`france-visas.gouv.fr/documents/d/france-visas/cerfa_14076-04_court_-sejour_en` — a **blank CERFA
+application form**. That is precisely the incidental hit entry 41 calls "the opposite of entry 32's
+intent". Refusing is the better answer.
+
+*Sweden is a real loss.* Its baseline qualified on `.../migration-and-asylum/information-on-visas`,
+which scores 14.0 for `visa_decision` and is a credible decision page. On the corpus path that URL was
+not shortlisted at all, while the page that **was** asked —
+`.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden`, whose path could not state the
+role more plainly — entered from **search** with the title *"List of third countries whose nationals
+must be in possession of visas…"* and scored **`general_entry` 22.4, with no `visa_decision` score at
+all**. So a blocked page that is unmistakably the visa decision cannot qualify the corridor.
+
+### The scoring rule underneath both, which is the thing to fix
+
+`score_role_vocabulary` grants the "this page mentions visas" base score to `visa_decision` **only
+when the page scored for nothing else**:
+
+```python
+if not scores and mentions_visa:
+    scores["visa_decision"] = base
+elif mentions_visa and "visa_decision" in scores:
+    scores["visa_decision"] += base
+```
+
+So any page that picks up *another* role's vocabulary loses its `visa_decision` floor entirely. Entry
+41 recorded this for France — "every one of the eight `france-visas.gouv.fr` URLs scores
+`application_route` only, including `/en/assistant-visa`, the visa-decision tool itself" — and treated
+it as a French quirk. It is not: it is a general rule, and Sweden shows it on a URL that says
+*who requires a visa* in English.
+
+**Deliberately not fixed here.** Removing the `not scores` guard is a one-line change to the scorer
+that decides what every corridor may see, and entry 40's asymmetry cuts both ways. It needs its own
+measurement, not a same-session edit at the end of a long run. TODO item 23.
+
+### Also found
+
+**The corpus stores one `link_text`/`heading` per URL, and a page is linked from many places.**
+Sweden's decision page is held with the heading *"I will be studying in Sweden for less than three
+months"* — the section that happened to link to it — which is off-scope vocabulary for a tourism
+corridor. So the corpus can attach one traveller's context to a page every traveller needs. Related
+to entry 53's finding that richer link text is usually an advantage; here it is a liability.
+
+**Three of six corpus builds fired `depth_is_exercised`** — Japan 9%, France 6%, Singapore 3% beyond
+depth 1 — so they fetched their seeds and effectively stopped, exactly what that flag exists to say.
+Canada's 1,200-page budget was tuned against Canada's seed count; a country with 272 seeds needs more.
+
+**One failed search query loses a whole country's build.** `search_all` raises if any query fails,
+which is right for a corridor — its docstring says tolerating a failure is a separate decision about
+serving partly-searched evidence — but a corpus is additive and never claims completeness, so losing
+70 queries of work to one DNS blip is the wrong trade. It happened once during this run.
+
+---
+
 ## 54. One encrypted PDF took a whole corridor down, and no narrower `except` could have caught it
 **2026-08-23 · found live; implemented**
 

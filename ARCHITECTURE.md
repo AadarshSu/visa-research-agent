@@ -509,11 +509,17 @@ smaller, which is what lost Canada its answer.
 > existing check took the whole corpus → candidates path to 346ms — cheaper than the pre-filter, with no
 > recall cut. Entry 50 records the numbers and when to revisit.
 >
-> **Measured live 2026-08-23** (entry 53), `canada/GB/GB/tourism`, four runs: **crawl 33.6s → 0.00s,
-> total 54.2s → 12.7–13.2s**, 2,387 of 2,455 candidates from a file, the same 25-page shortlist every
-> run. **Adjudication is now ~60% of the corridor** and is where the next optimisation is. Read the
-> total carefully: search and the model both answered faster than on entry 48's day, so the supported
-> claim is that the crawl's 33.6s is gone and nothing grew to replace it. One destination only.
+> **Measured live on seven destinations, 2026-08-23** (entries 53 and 55): **crawl 0.0s everywhere,
+> corridors 2.1×–5.2× faster** — Singapore 56.1s → 10.8s, Japan 37.5s → 14.9s, Canada 54.2s → 12.7s.
+> Roles genuinely found are neutral to better. **Adjudication is now ~60% of a corridor** and is where
+> the next optimisation is.
+>
+> **One thing broke, and it is not the reporting.** `inaccessible_domains` and `inaccessible_urls`
+> still name every refusing host and page (entry 49). But `_decision_blocking` needs a refusal
+> *observed on a page scoring for `visa_decision`*, and a 25-page fetch observes far fewer refusals
+> than a crawl did — France 6 against 18 — so entry 27's blocked-authority exception stopped firing
+> for Sweden and France. The root cause is a scoring rule rather than anything about blocks; known
+> problem 25 and [TODO.md](TODO.md) item 23.
 
 **The lifetimes differ because the things do.** A government page can be edited any day, so evidence is
 measured in hours. Which *pages* answer a corridor changes when a site is redesigned, so a resolution is

@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-23 — update this line when you touch the handoff |
-| **Tests** | 434 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
+| **Tests** | 435 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -87,35 +87,37 @@ for. Fixing the second is quota and review time (item 2); fixing the first needs
 > with `status="available"` under `destination_mode: automatic`, so a traveller is offered 159
 > destinations that cannot be researched and gets a `503` on choosing one. Recorded as known problem 23.
 
-Seven corridors verified live; the table below is what each one actually did.
+**Eight corridors have now been run live, and seven of them on 2026-08-23 through both paths.** The
+table below replaces the 2026-08-16/17 one that this file carried — and warned about — for a week.
+Each cell is two runs on the crawl path and two corpus-routed, `visa-discover` registry domains
+throughout, so it describes what the API does. DECISIONS entry 55.
 
-**This table predates the registry (entry 38) and the wider shortlist (entry 40), and at least two rows
-are now wrong.** Japan and Canada both fill every role at a 25-place shortlist where they previously left
-the visa decision unfound. Treat it as the record of a 2026-08-16/17 run, not as current behaviour, until
-the twenty-corridor measurement re-runs it.
-
-**And "Canada fills every role" does not generalise — measured 2026-08-19.** `canada/GB/GB/tourism`
-refused. Entry 40's row is consistent with an *Indian* passport, whose answer happened to fall inside the
-adjudicator's then 6,000-character excerpt at offset 5,325, while a British citizen's sits at 8,858 and
-was cut off. A corridor's fate depended on where the nationality fell in an alphabetical list.
-**Nationality is part of a corridor; a country row in this table is not a result.**
-The excerpt was widened and anchored on 2026-08-21 (entry 42). Re-run cold that day, the corridor refused
-once (the answering page was not retrieved at all) and resolved on the next run (it was, and the model
-used it). Known problem 19: one run per corridor cannot tell a corridor that works from one that works
-half the time.
-
-| | Singapore | Japan | Vietnam | Brazil | France | China | United States |
+| | Japan | Netherlands | Sweden | United States | France | Singapore | Canada |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Configured sources | 6 | 7 | none | none | none | none | none |
-| Offline snapshots | yes | no | no | no | no | no | no |
-| Live retrieval | works | works | needs rendering | works | **portal 403** | works | works |
-| Visa decision | found | found | found | found | **unverified — blocked** | not confirmed | found |
-| Checklist found | yes | yes | none published | yes | no — blocked | yes | no — blocked |
-| Plan produced | yes | yes | no — rendering | yes | expected, **untested live** | no | yes, `partial` |
+| Corridor | IN/GB | IN/GB | IN/GB | IN/IN | IN/GB | IN/GB | GB/GB |
+| Corpus entries | 1,558 | 2,698 | 521 | 1,840 | 1,590 | 928 | 3,216 |
+| Crawl path | 37.5s | 30.9s | 39.9s | 31.4s | 23.6s | 56.1s | 54.2s |
+| **Corpus path** | **14.9s** | **12.9s** | **18.0s** | **14.9s** | **11.2s** | **10.8s** | **12.7s** |
+| Visa decision | found | **not found** | blocked | found | blocked | found | found |
+| Checklist | found | found | found | **blocked** | **blocked** | found | **not found** |
+| Resolves (corpus path) | 2/2 | **0/2** | **0/2** | 2/2 | **0/2** | 2/2 | 3/3 |
 
-Read the France and China columns carefully, because they are not the same failure. China's decision
-was **not confirmed** from readable pages, so that corridor still refuses. France's is unverified
-because an authority refused us, which is the case entry 27 now turns into a plan that says so.
+**Read the "resolves" row against the row above it, not on its own.** The Netherlands has never
+resolved — its visa decision is not found, which is an honest refusal. Sweden and France resolved on
+the crawl path and stopped: both were resolving *only* through entry 27's blocked-authority
+exception, and that exception stopped firing when the crawl went. That is TODO item 23, and it is the
+most important open defect on this page.
+
+**Two rows that used to be here are gone deliberately.** Vietnam and China were last run on
+2026-08-16 against hand-configured sources and have not been re-run; quoting them beside measured
+numbers is what made the old table misleading. Vietnam needs rendering (known problem 14) and China
+refused on a not-found decision.
+
+**France and Sweden are not the same failure as the Netherlands, and the difference is the one this
+project cares about.** The Netherlands cannot find its decision, so it refuses — correct. France and
+Sweden *were* refused by an authority, which entry 27 turns into a plan that says so and hands over
+the URL. They no longer do, and the reason is a scoring rule rather than anything about the block:
+item 23.
 
 France was re-examined on 2026-08-17 because `france/IN/GB/tourism` is a common corridor to refuse —
 entries 26 and 27. **It no longer refuses**: a corridor whose only missing piece is behind a block now
@@ -312,6 +314,14 @@ call silently substituting the heuristic (entry 31).
    narrowing (entry 32) landed first, so what needs re-running is the narrowed behaviour rather than what
    entry 27 originally shipped. France should be unaffected — `france-visas.gouv.fr` is exactly the
    credible decision candidate the narrowing keeps — but that is the assumption the live run tests.
+
+   **Run again 2026-08-23 across six corridors, and the picture is now much clearer — see entry 55.**
+   The chain *does* work end to end and Sweden proved it on the crawl path: `government.se` refuses five
+   URLs including its visa list, `decision_blocking_urls` narrowed correctly to a credible decision page,
+   `decision_is_unverified` was true, and the corridor resolved `partial` naming the blocked pages. **So
+   this item's mechanism is confirmed live for the first time.** What is *not* confirmed is the last
+   step — nobody has read the plan a traveller receives. And on the **corpus path** the exception stops
+   firing entirely for both Sweden and France, which is known problem 25.
 
    **Run 2026-08-19, and the assumption is false.** None of the eight `france-visas.gouv.fr` URLs that
    were actually refused scores for `visa_decision` — every one scores `application_route` only,
@@ -543,12 +553,17 @@ call silently substituting the heuristic (entry 31).
    four out of five choices. The refusal itself is honest and names the command; the *offer* is not.
    Counted 2026-08-22. The fix is either to mark unbuilt countries in the list or to build the registry
    out (item 2); do not fix it by loosening the refusal.
-24. **A thin corpus now has no crawl behind it, and only one destination has been run.**
-   **The first half of this item is closed — the path was run live on 2026-08-23** (entry 53), four
-   times: crawl 33.6s → 0.00s, total 54.2s → 12.7–13.2s, the same 25-page shortlist every run, and
-   `visa_decision` filled from the same page on all three runs that resolved. What that does **not**
-   cover is any destination but Canada, any corridor but `GB/GB/tourism`, or any gap longer than a few
-   minutes — item 3 is still what generalises it.
+24. **A thin corpus now has no crawl behind it, and coverage varies enormously between countries.**
+   **The first half of this item is closed** — the path has been run live on **seven** destinations
+   (entries 53 and 55), 2.1×–5.2× faster with the crawl at 0.0s, and roles genuinely found are neutral
+   to better.
+   **What the six-corridor run added is how uneven corpus coverage is.** Measured against the pages
+   that actually filled roles on the crawl path: Singapore 6/6, United States 3/3, Sweden 3/4, France
+   2/3, Netherlands 1/2, **Japan 1/6**. Japan's corpus holds 29 mission hosts — Auckland, Boston, San
+   Francisco, Edinburgh — and **not the London embassy**, where five of its six roles came from,
+   because the offline build is traveller-free and takes whatever missions search returns. It resolved
+   all six roles anyway **because search still runs**, which is the strongest evidence yet for entry
+   48's refusal to drop search, and the clearest warning against doing so later.
    Second, **the safety net is thinner than it was.** For a country whose corpus passes
    `DEFAULT_CRAWL_PAGES` but whose corpus *recall* is poor, the crawl used to compensate — badly and
    nondeterministically, but it compensated. Now it does not. Entry 51 argues the trade, and entry 47's
@@ -556,47 +571,57 @@ call silently substituting the heuristic (entry 31).
    cost and **nothing counts how often the corpus was the only source and came up short.** The
    `found_by="corpus"` field added with entry 51 is what would make that countable from the recall log;
    nobody has counted it.
+25. **Entry 27's blocked-authority exception has stopped firing, and it is a scoring bug, not a block
+   bug.** Measured 2026-08-23 (entry 55): `sweden/IN/GB/tourism` and `france/IN/GB/tourism` both went
+   from resolving to **refusing** on the corpus path. Reporting is intact — `inaccessible_domains` and
+   `inaccessible_urls` still name the refusing hosts and pages, so entry 49 works. What broke is
+   *qualification*: `_decision_blocking` requires a refusal observed on a page that scored for
+   `visa_decision`, a 25-page fetch observes far fewer refusals than a crawl did (France: 6 against 18),
+   and the pages it does observe score for the wrong role.
+   **The root cause is one line in `score_role_vocabulary`**, which grants the "mentions visas" base
+   score to `visa_decision` only when the page scored for *nothing else*. So
+   `government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scores
+   `general_entry` 22.4 and **no `visa_decision` at all**. Entry 41 saw this on France and recorded it
+   as a French quirk; it is general.
+   **Not all of it is a regression.** France's crawl-path qualification was on a **blank CERFA
+   application form**, which is the incidental hit entry 41 warns about — refusing is better. Sweden is
+   a genuine loss. [TODO.md](TODO.md) item 23; do not fix it by loosening `_decision_blocking`.
 
 ---
 
 ## Current task
 
-**Pick up [TODO.md](TODO.md) item 3: the twenty-corridor measurement.** It is what decides whether this
-is a product, it is the thing most of the recent work has been waiting on, and Brave credit has been
-available since 2026-08-21. Nothing large should be built before it — and after item 22, nothing large
-is queued.
+**Pick up [TODO.md](TODO.md) item 23: give `visa_decision` its floor back.** It is the most damaging
+open defect, it is one line plus a measurement, and it was found by running the thing rather than
+reading it.
 
-**Item 22 is done, including its live measurement (entry 53).** `canada/GB/GB/tourism` was run four
-times on 2026-08-23: **crawl 33.6s → 0.00s, total 54.2s → 12.7–13.2s**, 2,455 candidates of which 2,387
-come from a file, and the same 25-page shortlist every run. **Adjudication is now ~60% of the corridor**
-— that is where the next optimisation is, not in retrieval.
+`score_role_vocabulary` grants the "this page mentions visas" base score to `visa_decision` **only
+when the page scored for nothing else**, so any page that picks up another role's vocabulary loses its
+`visa_decision` floor entirely. The cost is not ranking, it is entry 27:
+`government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` — a URL that says
+who needs a visa, in English — scores `general_entry` 22.4 and **no `visa_decision`**, so when the
+authority refuses that exact page the corridor cannot qualify and **refuses instead of handing the
+traveller the URL**. Sweden and France both do this now. Known problem 25, entry 55.
 
-**The first of those four runs refused, and that is the most useful thing on this page.** Removing the
-crawl exposed a defect it had been quietly repairing: the corpus's harvested anchor text lost to a
-search result's title for the same URL, so Canada's answering page entered at 32.0 instead of 63.4 and
-was never read. Entry 53. **Two of the three defects found in this work were invisible to the test
-suite and to careful reading, and both surfaced within one live run.**
+**Fix the score, never `_decision_blocking`.** Entry 32 made that bar narrow deliberately, and France
+is why: its crawl-path qualification was a **blank CERFA application form**. Then measure — this is
+the scorer that decides what every corridor may see, so re-run the six corridors both ways before
+keeping it.
 
-**What item 22 turned into, because it was read as a proposal and two parts of it were wrong.**
-Entries 49, 50 and 51; the details are in the 2026-08-23 table below. The three sentences worth carrying:
+**Item 22 is finished and measured, on seven destinations** (entries 49–55). Crawl 0.0s, corridors
+2.1×–5.2× faster, roles neutral to better. Three defects surfaced, two now fixed:
 
-- **The ~3.6s the routing index existed to remove was `wrong_country`, not scoring.** 198 countries
-  scanned per candidate, with the link's segments and text rebuilt once per country. A word-index
-  prefilter took the whole corpus → candidates path from **4,757ms to 346ms**, byte-identical output —
-  cheaper than the top-400 pre-filter, so the index is not built.
-- **The top-400 would have cut recall.** A `proven` Canada page scores **0.0** on role vocabulary and
-  ranks **2,871 of 3,216**, and a pin could not have rescued it. If a bound is ever needed it should be
-  per-role, with `proven` and pinned carved out; entry 50 says when to revisit.
-- **The live run found a third** (entry 53), and it is the one worth remembering: a `setdefault`
-  meant the corpus could never displace a search candidate for the same page, so the *worse*
-  description of a URL always won. The crawl had been masking it since entry 47 landed.
-- **Checking the top-400 claim found a second defect** (entry 52). With *no* pre-filter at all the pin
-  still failed: `_shortlist` protected the per-domain reservation through its truncation and not the
-  pins, so entry 47's ratchet had been half-implemented since it landed. Fixed and frozen by a test
-  that fails on the old code.
-- **The reporting hole was already open.** `_fetch_bodies` discarded `report.failures` entirely, so
-  every refusal a corridor has ever reported came from the crawl. Fixed first, on its own commit, before
-  the crawl could go.
+- **A corpus entry could not displace a thinner search candidate for the same page** (entry 53), so
+  Canada's answering page entered at 32.0 instead of 63.4 and was never read. The crawl had been
+  repairing that silently since entry 47.
+- **One AES-encrypted PDF aborted an entire corridor** (entry 54) — `pypdf`'s `DependencyError`
+  extends `Exception` directly, so no narrower `except` could have caught it. `extract_pdf_text` is
+  now total.
+- **Entry 27's exception stopped firing** (entry 55) — the one above, still open as item 23.
+
+**Then [TODO.md](TODO.md) item 3**, the twenty-corridor measurement. It is still what decides whether
+this is a product, and item 23 should land first so that the corridors which are genuinely
+authority-blocked are counted as such rather than as refusals.
 
 ### Where the previous work got to
 
@@ -815,6 +840,8 @@ things built on them did not.
 
 | Entry | What it changed |
 | --- | --- |
+| 55 | **Six corridors through the corpus path, 24 live runs — 2.1×–5.2× faster, and two of them stopped resolving.** Crawl 0.0s everywhere; roles genuinely found are neutral to better (US gained `fees`, the Netherlands `processing_times`). **Sweden and France flipped resolve → refuse**: reporting survived (entry 49 works — the blocked hosts and URLs are still named) but *qualification* did not, because `_decision_blocking` needs a refusal observed on a page scoring for `visa_decision` and a 25-page fetch observes far fewer refusals than a crawl. France is a **correction** (its baseline qualified on a blank CERFA form); **Sweden is a real loss**. Root cause is a scoring rule — TODO item 23, deliberately not fixed here. Also: Japan's corpus holds **1 of its 6** role pages and no London embassy, and it resolved anyway **because search still runs**. |
+| 54 | **One encrypted PDF aborted a whole corridor.** `pypdf`'s `DependencyError` extends `Exception` directly — not `PdfReadError`, not `PyPdfError` — so no narrowing of the old `except` tuple could have caught it. `extract_pdf_text` is now total: every input yields text or "could not be read". Latent all along; a corpus-built shortlist is what reached it. |
 | 53 | **Run live, four times, and the first run refused.** `entry-requirements-country.html` — the only page that states Canada's rule for a British citizen in static text — entered at **32.0** from search's title instead of **63.4** from the corpus's harvested anchor text, missed the shortlist, and was never read. `_resolve` seeded search first and folded the corpus in with `setdefault`, so the *thinner* description of a page always won; **the crawl had been repairing that on every run**, which is why removing it was what exposed it. Fixed, then three consecutive runs resolved. **Crawl 33.6s → 0.00s; total 54.2s → 12.7–13.2s**, with adjudication now ~60% of the corridor. |
 | 52 | **Entry 47's pin only half existed.** A page that already filled a role "keeps its shortlist place regardless of ranking" — it kept it as far as `chosen`, and `_shortlist` then cut the tail by score protecting only the per-domain reservation, so a **low-scoring pin was dropped**, which is the only pin that matters. Found while verifying entry 50's own claim on the real Canada corpus. Pins and reservations are both honoured at the truncation now, pins first. The existing pin tests missed it because they pin a page that scores well. |
 | 51 | **The crawl leaves the request path** for a country whose corpus offers more pages than a crawl could visit — a *derived* bound (`DEFAULT_CRAWL_PAGES`, 40), not another tuned constant, and the skip is recorded in the notes. A country nobody has built, or one with a thin corpus, behaves exactly as before. Also closed: `visa-discover corridor` now reads the corpus, so a measurement taken through the command finally describes the product; pins are still withheld, because they would let run one decide run two's shortlist. `_readable_only` does **not** fall back to corpus status — item 22 proposed it, and it would have stopped a France-shaped corridor resolving. |

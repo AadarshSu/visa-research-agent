@@ -7,8 +7,9 @@ picked up cold.
 done and measured live on 2026-08-23, entries 49–53. **Item 3 is now the thing most of this list waits
 on**, even though it sits in **Next up** rather than here; nothing large should be built before it, and
 after item 22 nothing large is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
-(17) and the corpus that answers it (18, 19, entry 44) — and item 15 follows because the excerpt change
-is still unmeasured on six corridors.
+(17) and the corpus that answers it (18, 19, entry 44). **Item 23 is new and leads them**: running
+item 15's six corridors through the corpus path on 2026-08-23 found that a blocked page which plainly
+*is* the visa decision cannot qualify a corridor, so entry 27's exception silently stopped firing.
 **Next up** is what follows. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
 and worth stating**: item 18 is built once and run first on only the ~8 destinations item 3 needs, so
 the measurement describes the architecture the project means to keep, and scaling it to 198 countries
@@ -270,40 +271,40 @@ queue**, which is observability the current system has none of.
 and still fetched through `LiveSourceFetcher`, so `validate_route` still runs and a corpus entry cannot
 survive a later narrowing of the domain registry.
 
-### 15. Re-run the remaining six verified corridors against the widened excerpt — `next`
+### 23. Give `visa_decision` its floor back, so a blocked decision page can qualify — `next`
 
-**Why:** DECISIONS entry 42 changed what every adjudication is shown — the head of each candidate plus a
-window around the traveller's own country, at 20,000 characters instead of a flat 6,000 — and **that is a
-decider change, not a tuning knob.** Which corridors now resolve, and what the model does with a longer
-and occasionally discontinuous excerpt, is still mostly unmeasured.
+**Why:** [DECISIONS.md](DECISIONS.md) entry 55, measured live 2026-08-23. `score_role_vocabulary`
+grants the "this page mentions visas" base score to `visa_decision` **only when the page scored for
+nothing else**:
 
-**Canada is done, and it took two runs to be worth anything.** The first refused without ever retrieving
-the answering page; the second **resolved**, filling `visa_decision` from the sentence at offset 8,597 —
-which the old 6,000-character slice could not have shown. Entry 42 is confirmed on the corridor that
-found it. The refusing run also showed the change behaving: three candidates over the old 6,000 put
-16,209 more characters in front of the model on a packet of 84,648, with no `[…]` needed because all 24
-fitted inside 20,000. **And the disagreement between the two runs is item 17**, which is why each of the
-six below should be run more than once.
+```python
+if not scores and mentions_visa:
+    scores["visa_decision"] = base
+elif mentions_visa and "visa_decision" in scores:
+    scores["visa_decision"] += base
+```
 
-**Do:** clear `var/cache/` and `var/corridors/`, then run the remaining six — Japan, the Netherlands,
-Sweden, the US, France, Singapore — reading `var/recall/<corridor>.json` alongside each, and per
-corridor:
+Any page that picks up another role's vocabulary therefore loses its `visa_decision` floor entirely.
+Entry 41 saw this on France and called it a French quirk. It is general. **Sweden proves it:**
+`government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` — a URL that says
+who requires a visa, in English — scored **`general_entry` 22.4 and no `visa_decision` at all**,
+because its search title matched `general_entry` vocabulary first.
 
-1. **`decided_by` and the recorded heuristic scores**, for disagreements that appear or vanish. A model
-   seeing more text may pick differently on corridors that were already right, and a *changed* answer on
-   a corridor that used to be correct is the failure mode worth catching.
-2. **Whether a `[…]` gap ever misleads a reason.** The marker and prompt rule 12 exist so a cut list
-   cannot read as a complete one; if a reason quotes across a gap, the marker is not doing its job.
-   Canada produced no gap at all, so this is still entirely untested against a model.
-3. **Input tokens per adjudication.** Canada's refusing run was +16,209 characters over a flat slice on
-   an 84,648-character packet, and its resolving run reached 117,790. The cached-page estimate was ~+17k.
-   One more corridor's number would turn that into a range rather than a point.
+**What it costs, concretely.** `_decision_blocking` only qualifies a refusal on a page that scored for
+`visa_decision`, so **entry 27's whole blocked-authority exception cannot fire for Sweden**: the
+authority refuses the decision page, we correctly report the block, and the corridor refuses anyway
+instead of handing the traveller the URL. That exception exists for exactly this case.
 
-**Careful:** the excerpt cannot fix a page that never contained the answer, and one of Canada's does not
-— `ircc.canada.ca/english/visit/visas.asp` yields 1,144 characters saying the client needs JavaScript.
-Do not read a still-missing role as evidence this change failed without first checking whether the page
-holds the answer at all, and whether it was fetched — that is the mistake Canada's first re-run invited,
-and the recall log now answers the second half of it in one line.
+**Do:** remove the `not scores` guard so `mentions_visa` always contributes a `visa_decision` floor,
+then **measure it before keeping it**. This is the scorer that decides what every corridor may see,
+and entry 40's asymmetry cuts both ways — a floor on every visa-mentioning page also promotes noise
+into a 25-place shortlist. Re-run at least the six corridors of item 15 both ways and compare role
+fills, not just Sweden.
+
+**Careful:** do not fix this inside `_decision_blocking` instead by loosening what counts as a
+credible decision candidate. Entry 32 made that bar narrow on purpose, and France is the reason —
+its baseline qualified on a **blank CERFA application form**. Widening the qualification test would
+bring that back; fixing the score is what makes the narrow test work.
 
 ### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
 
@@ -762,6 +763,35 @@ replacement.
 
 ## Done
 
+### ~~Re-run the remaining six verified corridors~~ — **done 2026-08-23** (was item 15)
+
+Japan, the Netherlands, Sweden, the United States, France and Singapore, each twice on the crawl path,
+then again corpus-routed after building their corpora. 24 live runs. DECISIONS entry 55.
+
+**Speed: 2.1×–5.2× faster, crawl 0.0s everywhere** — Singapore 56.1s → 10.8s, Japan 37.5s → 14.9s,
+US 31.4s → 14.9s, Netherlands 30.9s → 12.9s, Sweden 39.9s → 18.0s, France 23.6s → 11.2s. The candidate
+pool grew every time, and both runs of every corridor saw an identical candidate count.
+
+**Roles genuinely found: neutral to better.** Japan and Singapore fill all five, unchanged. The US
+gained `fees`, the Netherlands gained `processing_times`. France lost `processing_times`.
+
+**The excerpt question this item was originally about is answered by default**: no corridor refused
+for want of text, and the two that refuse do so for a reason that has nothing to do with the excerpt.
+
+**Two corridors flipped resolve → refuse — Sweden and France — and that is now item 23.** Both lost
+`decision_blocking_urls`. Reporting is intact (entry 49 works; the blocked hosts and URLs are still
+named); what broke is *qualification*. France is a **correction** — its baseline qualified on a blank
+CERFA form. Sweden is a **real loss** — a blocked page that plainly is the visa decision cannot
+qualify, because of the scoring rule in item 23.
+
+**Japan's corpus holds 1 of its 6 baseline role pages** and no London embassy at all — 29 mission
+hosts including Edinburgh, not London — and it resolved all six roles anyway, because search still
+runs. The strongest evidence yet for keeping search (entry 48).
+
+**Three of six corpus builds fired `depth_is_exercised`** (Japan 9%, France 6%, Singapore 3% beyond
+depth 1): the 1,200-page budget was tuned against Canada's seed count and does not generalise. See
+the smaller things below.
+
 ### ~~Route the request path through the corpus and drop the crawl~~ — **done 2026-08-23, measured live**
 
 Item 22 asked for a view on the design before building it, and the view disagreed with it in two places.
@@ -859,7 +889,8 @@ another fixed offset: on the 50,000-character visitor-visa PDF a US traveller's 
 
 **Run live on Canada twice: one refusal, then one resolution** — the refusing run never retrieved the
 answering page, and the resolving one filled `visa_decision` from exactly the sentence the old excerpt
-cut. Confirmed. The flip between the two runs is item 17; the six other corridors are item 15.
+cut. Confirmed. The flip between the two runs is item 17; the six other corridors were re-run on
+2026-08-23 and are in **Done**.
 
 ### ~~Move "who to believe" out of the request path~~ — **done 2026-08-18, for 40 of 198 countries**
 
@@ -999,6 +1030,26 @@ which are item 1, and English-only scoring, which is known problem 13 in
 ---
 
 ## Smaller things
+
+**The corpus crawl's page budget is tuned to Canada and does not generalise.** `DEFAULT_CORPUS_PAGES`
+is 1,200, chosen because Canada produced 203 seeds and a 200-page budget meant the crawl never left
+them. Measured 2026-08-23 across six countries, three still fired `depth_is_exercised`: Japan 272
+seeds → 9% beyond depth 1, France 176 → 6%, Singapore 295 → 3%. The budget should be derived from the
+seed count rather than fixed — the flag already reports the failure, so the data to calibrate it is
+being printed and ignored.
+
+**A corpus build loses everything to one failed search query.** `search_all` raises if any query
+fails, and a corpus build runs up to 70. One DNS blip on 2026-08-23 lost Japan's whole build. That
+contract is right for a *corridor* — its docstring says tolerating a failure is a separate decision
+about serving partly-searched evidence — but a corpus is additive and never claims completeness, so
+the same rule costs far more than it protects. Decide it for the corpus path only.
+
+**`CorpusEntry` holds one `link_text`/`heading` per URL, and pages are linked from many sections.**
+Sweden's visa-decision page is stored under the heading *"I will be studying in Sweden for less than
+three months"*, which is off-scope vocabulary for a tourism corridor, because that is the section the
+offline crawl happened to follow. So the store can attach one traveller's context to a page every
+traveller needs. Keeping the best-scoring anchor, or several, would fix it; entry 55.
+
 
 - **A footer link inherits the heading of whatever came above it.** `extract_links` assigns each link the
   last heading it has seen, and footer links sit below everything, so France's legal notice was scored
