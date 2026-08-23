@@ -749,11 +749,13 @@ class CorridorResolver:
 
         candidates = self._readable_only(candidates)
         chosen: dict[str, CandidatePage] = {}
+        pinned_urls: set[str] = set()
         if self.pinned:
             wanted = {canonical_key(url) for url in self.pinned}
             for candidate in candidates:
                 if canonical_key(candidate.link.url) in wanted:
                     chosen.setdefault(candidate.link.url, candidate)
+                    pinned_urls.add(candidate.link.url)
         for role in ROLE_ORDER:
             for candidate, _ in rank_for_role(candidates, role)[:3]:
                 chosen.setdefault(candidate.link.url, candidate)
@@ -776,15 +778,34 @@ class CorridorResolver:
         if len(ordered) <= self.shortlist_size:
             return ordered
 
-        # The truncation is where crowding out happens, so this is where the reservation has to be
+        # The truncation is where crowding out happens, so this is where both protections have to be
         # honoured. Anything held back earlier would simply be cut here instead.
+        #
+        # **Pins go first, and until 2026-08-23 they were not honoured here at all.** Entry 47 says
+        # a page that already filled a role for this corridor "keeps its shortlist place regardless
+        # of ranking", and it kept it only as far as `chosen`: `ordered` sorts by score and the tail
+        # was cut without consulting `pinned_urls`, so a low-scoring pin was dropped — exactly
+        # the pin that matters, since a high-scoring one never needed pinning. Measured on Canada,
+        # `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` is `proven`, scores **0.0** on role
+        # vocabulary, and was cut here with the pin naming it.
         reserved_urls = {candidate.link.url for candidate in reserved}
-        kept = [candidate for candidate in ordered if candidate.link.url in reserved_urls]
+        # Pinned before reserved, and score order preserved inside each group because the sort is
+        # stable: if the two protections together overflow the budget, a page that has answered this
+        # corridor outranks a domain that merely has not been read yet.
+        kept = sorted(
+            (
+                candidate
+                for candidate in ordered
+                if candidate.link.url in pinned_urls or candidate.link.url in reserved_urls
+            ),
+            key=lambda c: c.link.url not in pinned_urls,
+        )
         del kept[self.shortlist_size :]
+        held = {candidate.link.url for candidate in kept}
         for candidate in ordered:
             if len(kept) >= self.shortlist_size:
                 break
-            if candidate.link.url not in reserved_urls:
+            if candidate.link.url not in held:
                 kept.append(candidate)
         return sorted(kept, key=lambda c: (-c.link_scores.best()[1], c.link.url))
 

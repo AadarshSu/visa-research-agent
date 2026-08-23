@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-23 — update this line when you touch the handoff |
-| **Tests** | 432 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
+| **Tests** | 433 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -565,9 +565,12 @@ Entries 49, 50 and 51; the details are in the 2026-08-23 table below. The three 
   prefilter took the whole corpus → candidates path from **4,757ms to 346ms**, byte-identical output —
   cheaper than the top-400 pre-filter, so the index is not built.
 - **The top-400 would have cut recall.** A `proven` Canada page scores **0.0** on role vocabulary and
-  ranks **2,871 of 3,216**, and a pin could not have rescued it, because `_shortlist` looks for pinned
-  URLs inside `candidates`. If a bound is ever needed it should be per-role, with `proven` and pinned
-  carved out; entry 50 says when to revisit.
+  ranks **2,871 of 3,216**, and a pin could not have rescued it. If a bound is ever needed it should be
+  per-role, with `proven` and pinned carved out; entry 50 says when to revisit.
+- **Checking that last claim found a second defect** (entry 52). With *no* pre-filter at all the pin
+  still failed: `_shortlist` protected the per-domain reservation through its truncation and not the
+  pins, so entry 47's ratchet had been half-implemented since it landed. Fixed and frozen by a test
+  that fails on the old code.
 - **The reporting hole was already open.** `_fetch_bodies` discarded `report.failures` entirely, so
   every refusal a corridor has ever reported came from the crawl. Fixed first, on its own commit, before
   the crawl could go.
@@ -789,6 +792,7 @@ things built on them did not.
 
 | Entry | What it changed |
 | --- | --- |
+| 52 | **Entry 47's pin only half existed.** A page that already filled a role "keeps its shortlist place regardless of ranking" — it kept it as far as `chosen`, and `_shortlist` then cut the tail by score protecting only the per-domain reservation, so a **low-scoring pin was dropped**, which is the only pin that matters. Found while verifying entry 50's own claim on the real Canada corpus. Pins and reservations are both honoured at the truncation now, pins first. The existing pin tests missed it because they pin a page that scores well. |
 | 51 | **The crawl leaves the request path** for a country whose corpus offers more pages than a crawl could visit — a *derived* bound (`DEFAULT_CRAWL_PAGES`, 40), not another tuned constant, and the skip is recorded in the notes. A country nobody has built, or one with a thin corpus, behaves exactly as before. Also closed: `visa-discover corridor` now reads the corpus, so a measurement taken through the command finally describes the product; pins are still withheld, because they would let run one decide run two's shortlist. `_readable_only` does **not** fall back to corpus status — item 22 proposed it, and it would have stopped a France-shaped corridor resolving. |
 | 50 | **The routing index is not built, because it removes the wrong cost.** Entry 48's ~3.6s is `wrong_country`, not scoring: 198 countries scanned per candidate, the link's segments and text rebuilt once per country, a fresh regex per token. A word-index prefilter in front of the existing exact check made it **3,277ms → 98ms, byte-identical on all 3,216 entries**, and the whole corpus → candidates path **4,757ms → 346ms** — under the 575ms the top-400 was meant to cost. And the top-400 would have dropped a `proven` page ranked 2,871 of 3,216, which a pin could not have rescued. |
 | 49 | **A refusal met while reading the shortlist was never reported at all.** `_fetch_bodies` discarded `report.failures`, so every refusal a corridor has ever reported came from the crawl. Fixed before the crawl could go, with `SourceFailure.http_status` so a `429` can be told from a `403` without parsing prose (entry 36's rule). Two tests refuse only to the retrieval user agent, so the crawl never sees it; both fail on the old code. |

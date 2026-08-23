@@ -790,6 +790,12 @@ most `DEFAULT_CRAWL_PAGES` (40), so a corpus offering more than that on currentl
 be out-covered by one. Below it, and with no corpus at all, behaviour is exactly as before, and the skip
 is recorded in the notes.
 
+**A third defect turned up while verifying the second claim above** (entry 52). With no pre-filter at
+all the pin *still* fails: `_shortlist` honoured the per-domain reservation through its truncation and
+not the pins, so entry 47's "keeps its place regardless of ranking" had been half-true since it landed —
+and only for pages that did not need it. Fixed; `test_a_pin_survives_the_shortlist_truncation` fails on
+the old code.
+
 **Two things in item 22's "careful part" were wrong, and one was worse than described.** `_fetch_bodies`
 did not merely need its refusals rerouted — it **discarded `report.failures` entirely**, so every refusal
 a corridor has ever reported came from the crawl (entry 49). And the corpus's `status` cannot stand in

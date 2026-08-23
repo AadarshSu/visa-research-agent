@@ -9,6 +9,38 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 52. Entry 47's pin only half existed: the truncation dropped it
+**2026-08-23 · measured; implemented; fixes entry 47**
+
+Entry 47 states that a page which already filled a role for a corridor "keeps its shortlist place
+regardless of ranking". **It kept it as far as `chosen` and no further.** `_shortlist` then sorted by
+score and cut the tail, protecting only the per-domain reservation, so a pinned page below the cut
+was dropped — and that is the **only** pin that matters, because a page that wins the ranking never
+needed pinning in the first place.
+
+Found while checking entry 50's own claim, which is the useful part of how it turned up. Entry 50
+argues a top-400 pre-filter would drop `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` — `proven`,
+scoring **0.0** on role vocabulary, ranked 2,871 of 3,216 — and that a pin could not rescue it,
+because `_shortlist` looks for pinned URLs *inside* `candidates`. Verifying that on the real corpus
+showed something worse: with **no** pre-filter at all, the page is in `candidates`, is pinned into
+`chosen`, and is still cut. So the pin was never load-bearing for the case it exists for.
+
+**The fix**, and the ordering in it: pinned pages and per-domain reservations are both honoured at
+the truncation, **pins first**. If the two together overflow the budget, a page that has answered
+*this* corridor outranks a domain that merely has not been read yet — the first is evidence, the
+second is a hedge.
+
+Frozen by `test_a_pin_survives_the_shortlist_truncation`, which fails on the previous code. The
+existing pin tests did not catch it because they pin a page that scores well, so the truncation was
+never reached.
+
+**The general lesson is the one these files keep re-learning.** Entry 47's claim was written from the
+code path that adds pins, not from a run where a pin was needed, and it read as true for two days.
+`CLAUDE.md` says to prefer a run, a test, or a printed result over a careful reading; this one was
+caught only because a *different* entry's argument depended on it and got checked.
+
+---
+
 ## 51. The crawl leaves the request path for a country whose corpus already out-covers it
 **2026-08-23 · implemented**
 
@@ -120,7 +152,8 @@ top-400. The pre-filter would remove ~145ms of a 54-second corridor and add a pe
 `status="proven"` in Canada's corpus — it filled a role in a resolved corridor — and scores **0.0**
 on role vocabulary, ranking **2,871 of 3,216**. Every top-N below ~2,900 drops it. Worse, a pin
 cannot rescue it: `_shortlist` looks for pinned URLs *inside* `candidates`, so a page removed
-upstream is gone before pinning runs. Entry 48's optimisation would have silently undone entry 47's
+upstream is gone before pinning runs. (Checking that claim on the real corpus turned up entry 52 —
+the pin did not rescue it even with no pre-filter at all, for a second and separate reason.) Entry 48's optimisation would have silently undone entry 47's
 ratchet, and the fact that entry 48's own check found "3/3 role pages kept" is why — it counted the
 pages that corridor happened to use, not the pages the country is known to have answered from.
 

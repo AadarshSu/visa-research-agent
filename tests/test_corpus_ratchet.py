@@ -19,8 +19,14 @@ from discovery_site import DETAIL_INDIA, INDEX, MISSION_CHECKLIST, destination, 
 
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.crawl import CrawlFetcher
-from visa_research_agent.discovery.models import Corridor, SearchResult
-from visa_research_agent.discovery.resolver import CorridorResolver
+from visa_research_agent.discovery.models import (
+    CandidatePage,
+    Corridor,
+    PageLink,
+    RoleScores,
+    SearchResult,
+)
+from visa_research_agent.discovery.resolver import DEFAULT_SHORTLIST_SIZE, CorridorResolver
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.source_cache import FileSourceCache
 
@@ -189,3 +195,43 @@ async def test_a_corpus_page_on_a_de_trusted_domain_is_never_offered(tmp_path: P
     await resolver.resolve(destination(), corridor())
 
     assert all("cheap-visas" not in url for url in resolver.trace.shortlisted)
+
+
+def scored_page(url: str, score: float) -> CandidatePage:
+    return CandidatePage(
+        link=PageLink(url=url, text="", heading="", depth=0, discovered_from="seed"),
+        link_scores=RoleScores(
+            scores={"document_checklist": score}, signals={"document_checklist": ["test"]}
+        )
+        if score
+        else RoleScores(),
+    )
+
+
+@pytest.mark.anyio
+async def test_a_pin_survives_the_shortlist_truncation(tmp_path: Path) -> None:
+    """The half of entry 47's pin that was never actually implemented.
+
+    `_shortlist` put pinned pages into `chosen` and then cut the tail by score without consulting
+    them, so **a low-scoring pin was dropped** — which is the only pin that matters, since a page
+    that wins the ranking never needed pinning. Measured on Canada's real corpus:
+    `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` is `status="proven"`, scores **0.0** on role
+    vocabulary, and was cut here with a pin naming it.
+
+    The candidates below are spread one per domain so the per-domain floor alone fills the budget,
+    which is what the truncation then has to arbitrate between.
+    """
+
+    pinned = "https://pinned.gov.example/answered-once.html"
+    resolver = build(tmp_path, [], pinned=[pinned])
+    candidates = [
+        scored_page(pinned, 0.0),
+        *(scored_page(f"https://d{n}.gov.example/page.html", 100.0 - n) for n in range(40)),
+    ]
+
+    shortlist = resolver._shortlist(candidates)
+
+    assert len(shortlist) == DEFAULT_SHORTLIST_SIZE
+    assert pinned in {candidate.link.url for candidate in shortlist}, (
+        "a page that already answered this corridor must not have to win the ranking again"
+    )
