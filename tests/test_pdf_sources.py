@@ -1,9 +1,11 @@
 """Reading guidance that authorities publish as a PDF, often behind a forwarding page."""
 
 from pathlib import Path
+from unittest.mock import patch
 
 import httpx
 import pytest
+from pypdf.errors import DependencyError
 from test_live_sources import Clock, build_fetcher, destination
 
 from visa_research_agent.research.live_sources import (
@@ -244,3 +246,26 @@ async def test_a_json_api_response_is_not_treated_as_guidance(tmp_path: Path) ->
     assert not report.fetched
     assert report.failures[0].outcome == "unusable"
     assert "data for a program" in report.failures[0].detail
+
+
+def test_a_pdf_that_needs_a_missing_dependency_is_unreadable_not_fatal() -> None:
+    """An encrypted PDF must cost one source, never the whole corridor.
+
+    `pypdf.errors.DependencyError` — raised for an AES-encrypted PDF when the `cryptography` extra
+    is absent — extends `Exception` **directly**, not `PdfReadError` and not even `PyPdfError`, so
+    the original narrow `except` tuple could not catch it however carefully it was written. Sweden's
+    corpus-routed shortlist held one, and `sweden/IN/GB/tourism` raised out of `_fetch_bodies` and
+    resolved nothing at all (DECISIONS entry 54).
+
+    The fake stands in for the encrypted file because reproducing one needs the very dependency
+    whose absence causes the failure; what is being frozen is the *contract* — this function turns
+    every input into text or into "could not be read", and never into an exception.
+    """
+
+    class Unparseable:
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            raise DependencyError("cryptography>=3.1 is required for AES algorithm")
+
+    with patch("visa_research_agent.research.live_sources.PdfReader", Unparseable):
+        with pytest.raises(ValueError, match="the PDF could not be read"):
+            extract_pdf_text(b"%PDF-1.7 encrypted", maximum_characters=1000)

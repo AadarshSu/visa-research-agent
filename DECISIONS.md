@@ -9,6 +9,41 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 54. One encrypted PDF took a whole corridor down, and no narrower `except` could have caught it
+**2026-08-23 · found live; implemented**
+
+`sweden/IN/GB/tourism`, run through the corpus-routed path, **raised** out of `_fetch_bodies` and
+produced nothing at all:
+
+```
+DependencyError('cryptography>=3.1 is required for AES algorithm')
+```
+
+An AES-encrypted PDF sat in Sweden's shortlist. `extract_pdf_text` caught
+`(PdfReadError, ValueError, OSError, KeyError)` — and `pypdf.errors.DependencyError` extends
+**`Exception` directly**, not `PdfReadError` and not even `PyPdfError`, so no tightening of that
+tuple would have caught it. The corridor did not degrade; it aborted.
+
+**Why it appeared now, and why that is the interesting part.** Nothing about PDFs changed. The
+*shortlist* changed: entry 51 removed the crawl for a built country, so the twenty-five pages fetched
+are drawn from a different pool, and this one drew in a PDF the crawl-built shortlist had never
+ranked. The bug was always reachable — any corridor whose shortlist happened to include an encrypted
+PDF would have hit it — and it took a shortlist built a different way to reach it.
+
+**The fix makes the function total.** `extract_pdf_text` now catches `Exception` and reports "the PDF
+could not be read". The breadth is deliberate and is the opposite of the usual advice: this parses
+arbitrary bytes served by an arbitrary authority, so its contract is that every input either yields
+text or is reported as unreadable. Losing one source to a bad PDF is ordinary and already
+well-handled — it becomes a `SourceFailure` with outcome `unusable`. Losing a traveller's entire
+answer to one is not, and no enumerated tuple can be trusted to have covered every way a third-party
+parser fails on hostile input.
+
+Frozen by `test_a_pdf_that_needs_a_missing_dependency_is_unreadable_not_fatal`, which fails on the
+previous code. The test fakes the error rather than shipping an encrypted PDF, because reproducing
+one requires the very dependency whose absence causes the failure; what it freezes is the contract.
+
+---
+
 ## 53. Measured live: the crawl's 33.6s is gone, and removing it exposed a defect only a run could find
 **2026-08-23 · measured live; implemented**
 

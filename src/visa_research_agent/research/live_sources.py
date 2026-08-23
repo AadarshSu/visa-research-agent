@@ -17,7 +17,6 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 from pydantic import AnyHttpUrl
 from pypdf import PdfReader
-from pypdf.errors import PdfReadError
 
 from visa_research_agent.domain.models import (
     BLOCKING_STATUS_CODES,
@@ -122,7 +121,15 @@ def extract_pdf_text(data: bytes, *, maximum_characters: int) -> str:
             length += len(page_text)
             if length >= maximum_characters:
                 break
-    except (PdfReadError, ValueError, OSError, KeyError) as exc:
+    # Deliberately broad, and the breadth is the point: this parses arbitrary bytes served by an
+    # arbitrary authority, and its contract is **total** — every input either yields text or is
+    # reported as unreadable. A narrow tuple is what it was, and a real PDF walked through the gap:
+    # Sweden's corpus-routed shortlist held an AES-encrypted PDF, whose `DependencyError` extends
+    # `Exception` directly rather than `PdfReadError` or even `PyPdfError`, so it escaped and
+    # **took the whole corridor down** (2026-08-23, entry 54). Losing one source to an unreadable
+    # PDF is ordinary; losing a traveller's answer to one is not, and no narrower tuple can be
+    # trusted to have enumerated every way a third-party parser fails on hostile input.
+    except Exception as exc:
         raise ValueError("the PDF could not be read") from exc
 
     return _collapse_whitespace("\n".join(collected))[:maximum_characters].strip()
