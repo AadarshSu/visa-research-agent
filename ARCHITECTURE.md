@@ -235,16 +235,22 @@ that expired, self-signed, hostname-mismatched and unknown-CA certificates are s
   researched when a plan is asked for. No human approves a domain; the rule below does. See
   `discovery/automatic.py` and [DECISIONS.md](DECISIONS.md) entry 19.
 
-Resolving a corridor cold is the expensive part of a request — a crawl, twenty-five fetches and a model
-call — so results go in `discovery/corridor_store.py`, one JSON file per corridor, keyed by the
-whole corridor and expiring in **weeks**.
+Resolving a corridor cold is the expensive part of a request — search, twenty-five fetches, a model call,
+and a crawl for a country with no corpus — so results go in `discovery/corridor_store.py`, one JSON file
+per corridor, keyed by the whole corridor and expiring in **weeks**.
 
 > **Two numbers that used to sit in this sentence were stale and are deliberately not replaced with a
 > guess.** It read "about 53 seconds — a bootstrap, a crawl, ten fetches and a model call". The bootstrap
 > left the request path in entry 38; the shortlist went from ten places to twenty-five in entry 40; and
 > the 53s predates both. What is measured is the **corridor phase alone at 39–45s** (2026-08-18, on the
 > registry path), and **no full cold request has been timed since** — see known problem 5, which also
-> names the cause: three searches run per trusted domain and the registry gives a country up to five. That is deliberately a much longer life than the evidence
+> names the cause: three searches run per trusted domain and the registry gives a country up to five.
+>
+> **Entry 51 removes the largest single component of that** — the crawl, 33.6s of a measured 54.2s — for
+> a country whose corpus out-covers it. The projection is ~21s and it has **not been measured live**, so
+> it does not go in this sentence either.
+
+Weeks is deliberately a much longer life than the evidence
 cache's hours: which *pages* answer a corridor changes when a site is redesigned, not when its
 guidance is edited, and the pages themselves are re-fetched under their own short TTL every time a
 plan is produced. It is a file store rather than an `lru_cache` because a process-lifetime memo
@@ -268,8 +274,9 @@ this is automated while per-country trust is not.
 > chooses from. The conflation is why discovery pays search cost, at request latency, for a question that
 > does not change between travellers, and why recall is re-rolled on every request: entry 43 measured
 > `canada/GB/GB/tourism` finding its answering page fifteenth of 470 on one run and not at all an hour
-> later. **Decided as entry 44 and not implemented** — [TODO.md](TODO.md) items 18 and 19. Until then the
-> middle column is produced live, per corridor, by the search and crawl described below.
+> later. **Built as entries 46, 47 and 51** — `var/corpus/`, read in the request path, and as of
+> 2026-08-23 a country whose corpus out-covers a crawl no longer crawls at all. **Search still runs**
+> ([TODO.md](TODO.md) item 19), so the middle column is `corpus ∪ search` rather than the corpus alone.
 
 > **The left column is committed data (entries 34 and 38).** `config/authority_domains.yaml` is
 > generated offline by `visa-discover registry`, read once at construction, and consulted in place of a
@@ -313,7 +320,9 @@ this is automated while per-country trust is not.
    Queries are built from the corridor alone: never model-written, never derived from fetched page
    content, so a page cannot influence what is searched next. Results are filtered again by
    `trusts_host`, so the restriction is enforced twice.
-2. **Crawl** (`crawl.py`) — best-first, two hops, inside approved domains. Search lands on a section
+2. **Crawl** (`crawl.py`) — best-first, two hops, inside approved domains, and **skipped entirely when
+   the country's corpus already offers more pages than a crawl could visit** (entry 51). For a country
+   nobody has built it is still how the map is made: search lands on a section
    index; the checklist is usually one link further on. Budget is shared between seeded hosts so a
    large ministry portal cannot starve the mission site. The frontier is walked in **waves** of at
    most one page per host, fetched together: the politeness delay is owed to a host, so applying it
@@ -327,6 +336,11 @@ this is automated while per-country trust is not.
    dropped first — a host whose name does not resolve, or a URL an authority refused, both facts
    already established rather than predicted. A page that was merely too large, not HTML, or `502`
    stays: retrieval reads PDFs and renders where the crawler does not, so it may still be evidence.
+   With no crawl there is nothing to drop, and the corpus's stored `status` deliberately does **not**
+   stand in for it: skipping a page on a stored refusal means never observing that refusal live, and a
+   live observation is what entry 32 requires before a block may resolve a corridor.
+   **This is also where refusals are seen when no crawl ran** — `report.failures` is carried out of the
+   fetch and reported exactly as the crawl's are (entry 49), which it was not before 2026-08-23.
    **Twenty-five places** (entry 40): the best three per role, then the
    next best overall, then **one place reserved for each registrable domain's best page**. The
    reservation matters because these places decide what is *read*, and only a read page can fill a
@@ -481,12 +495,21 @@ run discovers is folded back in additively. The property this buys is that a cor
 **monotonically non-decreasing** across runs — never identical, which would freeze recall, but never
 smaller, which is what lost Canada its answer.
 
-> **Decided and not yet built (entry 48, [TODO.md](TODO.md) item 22).** The crawl is 62% of a cold
-> corridor and contributed **zero** unique shortlisted pages on the run that was measured — every page
-> it found that mattered was already in the corpus. So the corpus becomes a **routing index** rather
-> than a candidate list: a corridor-independent score stored at build time, pre-filtered to the top few
-> hundred, and no crawl at all for a destination that has one. Expected 54.2s → ~21s. Search stays,
-> because the nationality dimension has never been measured.
+> **And a country whose corpus out-covers a crawl no longer crawls** (entry 51, 2026-08-23). The crawl
+> was 62% of a cold corridor and contributed **zero** unique shortlisted pages on the run that was
+> measured — every page it found that mattered was already in the corpus. The bound is derived rather
+> than tuned: a crawl visits at most `DEFAULT_CRAWL_PAGES` pages, so a corpus already offering more than
+> that on currently trusted domains cannot be out-covered by one. Below it, and for a country nobody has
+> built, the crawl runs exactly as before, and the skip is recorded in the corridor's notes.
+>
+> **Search stays**, because the nationality dimension has never been measured (entry 48). And the
+> *routing index* entry 48 proposed was **not** built: the ~3.6s it existed to remove turned out to be
+> `wrong_country` scanning 198 countries per candidate, not scoring, and a word index in front of the
+> existing check took the whole corpus → candidates path to 346ms — cheaper than the pre-filter, with no
+> recall cut. Entry 50 records the numbers and when to revisit.
+>
+> **54.2s → ~21s is still a projection.** No live corridor has resolved through this path yet; the
+> re-measurement rides along with [TODO.md](TODO.md) item 3.
 
 **The lifetimes differ because the things do.** A government page can be edited any day, so evidence is
 measured in hours. Which *pages* answer a corridor changes when a site is redesigned, so a resolution is

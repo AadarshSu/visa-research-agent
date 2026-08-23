@@ -3,15 +3,15 @@
 Ordered by what unblocks the most. Each item says why it matters, not just what to do, so it can be
 picked up cold.
 
-**How to read this file.** **Now** is what to pick up, in the order written — **item 22 leads**, because
-it is measured, decided and unimplemented, and it makes every other live run cheaper: the crawl is 62%
-of a cold corridor and was shown to contribute nothing the corpus did not already hold. Items 17, 18 and
-19 are the work it grew out of — the corridor variance that started it (17) and the corpus that answers
-it (18, 19, entry 44) — and item 15 follows because the excerpt change is still unmeasured on six
-corridors. **Item 22 is deliberately written as a proposal rather than a specification**: form a view on
-it before building it.
-**Next up** is what follows it, item 3 first because its own reasoning is that nothing large should be
-built before it. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
+**How to read this file.** **Now** is what to pick up, in the order written. **Item 22 has left it** —
+built offline on 2026-08-23, entries 49–51 — and it left one thing behind: its live re-measurement is
+deliberately unpaid, because [item 3](#3-measure-the-top-20-corridors-against-a-bar-committed-in-advance--soon)
+buys the same runs. **So item 3 is now the thing most of this list waits on**, even though it sits in
+**Next up** rather than here; nothing large should be built before it, and after item 22 nothing large
+is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
+(17) and the corpus that answers it (18, 19, entry 44) — and item 15 follows because the excerpt change
+is still unmeasured on six corridors.
+**Next up** is what follows. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
 and worth stating**: item 18 is built once and run first on only the ~8 destinations item 3 needs, so
 the measurement describes the architecture the project means to keep, and scaling it to 198 countries
 afterwards needs no rework. Building the corpus for all 198 *before* measuring would be the thing entry
@@ -240,6 +240,12 @@ a proven, fresh corridor whose corpus holds no better-scoring unseen candidate n
 all, which is where the cost goes to zero and determinism becomes total. Gate it on the superset bar
 holding for more than one destination; Canada alone is not evidence.
 
+**Narrowed again 2026-08-23 by entry 51: the crawl half is done.** A country whose corpus offers more
+than `DEFAULT_CRAWL_PAGES` pages on trusted domains no longer crawls in the request path at all, so
+what remains here is **search** — the other 9.1s — and search stays until nationality has been measured
+(entry 48). Note the two halves failed differently and only one of them ever refused a corridor: the
+crawl was pure redundancy, while search is the dimension the corpus is not yet known to cover.
+
 **Two things entry 47 leaves for this item.** Eviction is designed and unbuilt, so the corpus only
 grows — 723 of Canada's original 1,071 entries scored zero on role vocabulary, which is the Noise tier
 that should age out. And a **dead pin must never silently degrade**: if a pinned page 404s and the role
@@ -265,84 +271,6 @@ queue**, which is observability the current system has none of.
 **Careful:** trust is unchanged and must stay so. A seeded URL is still checked against `trusted_domains`
 and still fetched through `LiveSourceFetcher`, so `validate_route` still runs and a corpus entry cannot
 survive a later narrowing of the domain registry.
-
-### 22. Route the request path through the corpus and drop the crawl — `next`
-
-**Why:** [DECISIONS.md](DECISIONS.md) entry 48, measured 2026-08-22/23. A cold corridor spends **54.2s**,
-of which the crawl is **33.6s (62%)** — and of the 25 pages that reached the shortlist, **14 came from
-the crawl and all 14 were already in the corpus.** The crawl contributed *zero* unique shortlisted
-pages. It spent 62% of the corridor re-deriving a link graph the offline job had already mapped.
-
-Corpus-only resolved the same corridor with all three role-filling pages kept, and **not circularly**:
-those pages came from the offline job, not from write-back. So this needs the *destination* built, never
-the *corridor* proven — it works for a nationality nobody has asked about.
-
-**Target: 54.2s → ~21s.** Keep search, drop the crawl.
-
-> **Read this as a proposal, not a specification.** The numbers below are measurements and should be
-> trusted; the *design* built on them is one session's answer, reached quickly, and it has not been
-> argued against by anyone. **Form your own view first and say where you disagree** — a decision entry
-> saying "the top-N index is the wrong shape, here is why" is a better outcome than a faithful
-> implementation of something half-right. Three places it may well be wrong:
->
-> - **Is a top-N pre-filter the right index at all?** It is a flat ranking. A per-role index, a
->   per-host quota, or simply keeping every entry above a score floor might behave better on a country
->   whose pages are distributed differently from Canada's — and Canada is the only destination anyone
->   has measured.
-> - **Should the corpus feed the shortlist, or replace it?** The shortlist exists to bound what a model
->   sees (entry 40). If the corpus is already a curated set, some of the shortlist's machinery — the
->   per-role picks, the per-domain floor — may be solving a problem the corpus has removed.
-> - **Is "drop the crawl" even the right lever?** 33.6s for 40 pages is roughly 0.8s each, and the crawl
->   is concurrent across hosts. Some of that is per-host politeness that a targeted fetch would still
->   pay. It may be that a *much smaller* crawl seeded from the corpus beats no crawl at all, because it
->   catches pages published since the last build.
->
-> What is **not** open: the reporting discipline below, and keeping search until nationality has been
-> measured. Those are constraints, not preferences, and the reasoning is in entry 48.
-
-**The shape currently proposed, if you agree with it.**
-
-1. **Store the corridor-independent score at build time.** `CorpusEntry` gains `vocabulary_score`, set
-   from `score_role_vocabulary` (already extracted, `scoring.py`) during `corpus_build`. 95ms for 3,216
-   entries, paid offline, free per request. This is what makes step 2 possible.
-2. **Route, do not consume.** The request path pre-filters the corpus to the **top 400** by that stored
-   score, then corridor-scores only those. Measured: 575ms and 24/25 of the real shortlist with all
-   role pages, against 3,633ms to score everything. **Bounded** — 575ms whether the corpus holds 3,000
-   pages or 30,000, which is what stops the corpus becoming the new bottleneck.
-   **400 is calibration, not derivation** (like the shortlist's 25, entry 40). Re-check per destination.
-   **100 is measurably too low** — it drops a role page.
-3. **Skip the crawl when the destination has a corpus.** Conditional, never blanket: a country nobody
-   has built must behave exactly as it does today.
-4. **Then re-measure the phase split** the same way entry 48 did, and confirm the corridor still
-   resolves to the same three roles.
-
-**Three things that break quietly if step 3 is done carelessly — this is the careful part.**
-
-- **`crawl_failures`, `blocked_urls()` and `disallowed_urls()` come from the crawl**, and they feed
-  `inaccessible_domains`, `decision_blocking_urls` and the notes a refusal is built from (entries 27, 32,
-  36). With no crawl they must come from the shortlist fetch instead, or **a corridor silently stops
-  reporting that an authority refused it** — the reporting discipline of entry 18, lost as a side effect
-  of a speed change. Test this explicitly.
-- **`_readable_only` reads crawl state** to drop pages already proved unreadable. With no crawl there is
-  no state; the corpus's own `status` field should stand in.
-- **`_mission_domains` and the seed ordering** are the other places that assume a crawl ran. Check them.
-
-**Do not** drop search as well, however tempting the extra 9.1s is. `corridor_queries` interpolates
-purpose *and* nationality; purpose is swept offline (four values) and nationality is **198-valued and
-never measured**. That trade is a known 9.1s against an unmeasured recall risk on the one dimension not
-yet examined. It becomes correct after item 3's measurement covers nationality-varied corridors, and
-entry 48 says so.
-
-**Worth an opinion, and nobody has one yet.** The corpus is now three overlapping things at once — a
-durable page inventory, a routing index, and (through `status="proven"`) a record of what answered a
-corridor. That may be one artifact doing three jobs well, or it may be three artifacts that should be
-told apart. Entry 44 argued the store should hold pages and never answers; `proven` is arguably the
-thin end of holding answers. If you think that boundary has already been crossed, say so in an entry.
-
-**Also close, while here:** `visa-discover corridor` does not pass the corpus to the resolver — only the
-API path does (`cli.py`'s `resolve_once` calls `build_resolver(renderer, adjudicator)` with neither
-`corpus=` nor `pinned=`). So the command still behaves as it did before entry 47, and any measurement
-taken through it describes something the product no longer does.
 
 ### 15. Re-run the remaining six verified corridors against the widened excerpt — `next`
 
@@ -488,6 +416,12 @@ stretch to twenty corridors twice, halve the sample rather than the repeats, and
 write-up which it was. Note the ordering question this raises: measuring **before** items 18 and 19 sizes
 the problem the corpus is meant to fix, and measuring **after** describes the architecture the project
 intends to keep. Doing it before and repeating the outliers after is the cheap version of both.
+
+**Take the phase split while you are there — it is item 22's unpaid last step.** The crawl left the
+request path on 2026-08-23 (entry 51) and the projected **54.2s → ~21s** has never been measured: no
+live corridor has resolved through the new path at all. Instrument one of these runs exactly as entry 48
+did — search, crawl, fetch, adjudicate — and confirm the same three roles still fill. Doing it here costs
+nothing extra; doing it separately pays Brave and OpenAI twice for the same corridor.
 
 **No longer blocked — 2026-08-21:** Brave credit is available again, so this can run. `robots.txt`
 landed first (entry 36), so the numbers describe the posture the project intends to keep.
@@ -831,6 +765,41 @@ replacement.
 ---
 
 ## Done
+
+### ~~Route the request path through the corpus and drop the crawl~~ — **done offline 2026-08-23; not yet re-measured live**
+
+Item 22 asked for a view on the design before building it, and the view disagreed with it in two places.
+DECISIONS entries 49, 50 and 51. 7 new tests, all offline; 432 passing.
+
+**The routing index is not built, because it removes the wrong cost.** Entry 48's ~3.6s for consuming
+Canada's whole corpus is reproducible, but it is not scoring — it is `wrong_country`, at **3,330ms** of a
+measured 4,757ms, scanning 198 countries per candidate and rebuilding the link's segments, text and host
+labels once per country. A word index in front of the existing exact check made it **98ms, byte-identical
+on all 3,216 entries**, and the whole corpus → candidates path **4,757ms → 346ms** — cheaper than the
+575ms the top-400 was meant to cost.
+
+**And the top-400 would have cut recall.** `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` is
+`status="proven"` and scores **0.0** on role vocabulary, ranking **2,871 of 3,216**: every top-N below
+~2,900 drops it, and a pin cannot rescue it because `_shortlist` looks for pinned URLs *inside*
+`candidates`. Flat ranking is lopsided too — top-400 spends 238 slots on `application_route` and 20 on
+`visa_decision`, where a per-role top-25 covers every role in 150 entries. If a bound is ever needed it
+should be per-role, with `proven` and pinned carved out; entry 50 says when to revisit.
+
+**The crawl is gone for a built country**, on a derived bound rather than a tuned one: a crawl visits at
+most `DEFAULT_CRAWL_PAGES` (40), so a corpus offering more than that on currently trusted domains cannot
+be out-covered by one. Below it, and with no corpus at all, behaviour is exactly as before, and the skip
+is recorded in the notes.
+
+**Two things in item 22's "careful part" were wrong, and one was worse than described.** `_fetch_bodies`
+did not merely need its refusals rerouted — it **discarded `report.failures` entirely**, so every refusal
+a corridor has ever reported came from the crawl (entry 49). And the corpus's `status` cannot stand in
+for `_readable_only`: `corpus_build` never writes `readable`, and skipping a page on a stored refusal
+would mean never observing it live, which is what a France-shaped corridor needs to resolve at all.
+
+**Not done: step 4, the live re-measurement.** The phase split has not been re-run, so **~21s is still a
+projection, not a measurement**, and no live corridor has been resolved through the new path. It spends
+Brave and OpenAI credit, and item 3 is what that credit is for — so the re-measure should ride along with
+item 3 rather than be paid for twice. Until it does, this item is done offline only.
 
 ### ~~Find out whether Canada's answering page was ranked out or never found~~ — **done 2026-08-21**
 
