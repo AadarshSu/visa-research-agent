@@ -145,7 +145,13 @@ class CandidatePage(StrictModel):
     body_scores: RoleScores | None = None
     title: str | None = None
     content_hash: str | None = None
-    found_by: Literal["search", "crawl"] = "crawl"
+    found_by: Literal["search", "crawl", "corpus"] = "crawl"
+    """Which stage produced this candidate.
+
+    `corpus` is not cosmetic: measuring whether the crawl still earns its place meant reading 25
+    shortlisted URLs against a 3,216-entry store by hand (DECISIONS entry 48). Recorded here, the
+    recall log answers it for free the next time the question comes up.
+    """
 
     def combined(self, role: DiscoveryRole) -> float:
         """Blend link and body evidence, weighting the page's own text more heavily."""

@@ -34,7 +34,7 @@ class ConsideredCandidate(StrictModel):
 
     url: str = Field(min_length=1)
     title: str = ""
-    found_by: Literal["search", "crawl"] = "crawl"
+    found_by: Literal["search", "crawl", "corpus"] = "crawl"
     depth: int = Field(ge=0)
     discovered_from: str = ""
     best_role: str = "irrelevant"

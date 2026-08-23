@@ -31,7 +31,11 @@ from visa_research_agent.discovery.adjudication import (
     validated_choices,
 )
 from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
-from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
+from visa_research_agent.discovery.crawl import (
+    DEFAULT_CRAWL_PAGES,
+    CrawlFetcher,
+    LinkCrawler,
+)
 from visa_research_agent.discovery.lexicon import (
     CountryRegistry,
     Lexicon,
@@ -426,10 +430,50 @@ class CorridorResolver:
         if not seeds:
             notes.append("search returned nothing on an approved domain for this corridor")
 
-        # 2. Crawl to pinpoint.
-        crawler = LinkCrawler(self.crawl_fetcher, score, reject=reject)
-        crawled = await crawler.crawl(destination, seeds)
-        page_titles = crawler.titles
+        # 2. The country's known pages, which is what decides whether a crawl is worth running.
+        #
+        # Union with search rather than replacement: the corpus is not a superset of what a live run
+        # finds — measured 2026-08-22, five of twenty-four pages a Canada run fetched were absent
+        # from a 3,130-entry corpus, and one stayed absent when the exact query that had surfaced it
+        # was re-run. Search is nondeterministic at the source, so no offline sweep can guarantee
+        # the superset; the union is what closes the gap in both directions.
+        #
+        # Trust is applied here, at read time, against the domains in force now rather than those
+        # in force when the corpus was built.
+        corpus_links = self._corpus_links(destination)
+        held = {canonical_key(link.url) for link, _ in corpus_links}
+        candidates: dict[str, CandidatePage] = dict(search_candidates)
+        from_corpus = 0
+        for entry, title in corpus_links:
+            if reject(entry) is not None:
+                continue
+            from_corpus += 1
+            candidates.setdefault(
+                entry.url,
+                CandidatePage(
+                    link=entry,
+                    link_scores=score(entry),
+                    # The corpus crawl recorded the page's own <title>; without this it would be
+                    # re-derived from the link text, which is what a crawl has to fall back on and
+                    # a store does not.
+                    title=title or None,
+                    found_by="corpus",
+                ),
+            )
+
+        # 3. Crawl to pinpoint — only when the corpus has not already out-covered it.
+        crawled: list[CandidatePage] = []
+        page_titles: dict[str, str] = {}
+        if self._crawl_is_worth_running(from_corpus):
+            crawler = LinkCrawler(self.crawl_fetcher, score, reject=reject)
+            crawled = await crawler.crawl(destination, seeds)
+            page_titles = crawler.titles
+        else:
+            notes.append(
+                f"the crawl was skipped: {destination.display_name}'s stored page corpus already "
+                f"offers {from_corpus} pages on currently trusted domains, more than a crawl could "
+                "visit"
+            )
 
         # Name the domains that could not be read at all. Without this a refusal reads as "nothing
         # scored well enough" when the real cause was an unreachable or client-rendered site, which
@@ -464,26 +508,11 @@ class CorridorResolver:
         # Domains cover every refusal including a rate limit, because reporting must not lose one.
         # The URL list is narrower: only a settled refusal may be handed to a traveller as a page
         # nobody was permitted to read, since a 429 might serve fine next week (entry 32).
+        # **With no crawl these are empty, and the shortlist fetch is where refusals are seen** —
+        # `_report_retrieval_refusals`, entry 49. Both are merged after the fetch.
         crawl_inaccessible = {host_of(url) for url in self.crawl_fetcher.blocked_urls()}
         crawl_refused = set(self.crawl_fetcher.persistent_refusals())
 
-        candidates: dict[str, CandidatePage] = dict(search_candidates)
-        # Everything the country is already known to publish, offered to this corridor's scorer as
-        # ordinary candidates. Union rather than replacement: search still runs, because the corpus
-        # is not a superset of what a live run finds — measured 2026-08-22, five of twenty-four
-        # pages a Canada run fetched were absent from a 3,130-entry corpus, and one of them was
-        # missing even though the exact query that had surfaced it was re-run. Search is
-        # nondeterministic at the source, so no offline sweep can guarantee the superset; the union
-        # is what closes the gap in both directions.
-        #
-        # Trust is applied here, at read time, against the domains in force now rather than those
-        # in force when the corpus was built.
-        for entry in self._corpus_links(destination):
-            if reject(entry) is not None:
-                continue
-            candidates.setdefault(
-                entry.url, CandidatePage(link=entry, link_scores=score(entry), found_by="crawl")
-            )
         for candidate in crawled:
             existing = candidates.get(candidate.link.url)
             if existing is None or candidate.link_scores.best()[1] > existing.link_scores.best()[1]:
@@ -496,7 +525,6 @@ class CorridorResolver:
         trace.crawl_failures = dict(self.crawl_fetcher.failures)
         # Only what *this run* found, never what the corpus already held: the caller folds this back
         # in, and a page arriving from the corpus has nothing to add to it.
-        held = {canonical_key(link.url) for link in self._corpus_links(destination)}
         self.discovered = [
             candidate.link
             for url, candidate in candidates.items()
@@ -505,7 +533,7 @@ class CorridorResolver:
         if not candidates:
             return self._refused(corridor, queries, notes, "no candidate pages were found")
 
-        # 3. Fetch the shortlist through the ordinary retrieval path.
+        # 4. Fetch the shortlist through the ordinary retrieval path.
         shortlist = self._shortlist(list(candidates.values()))
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
@@ -517,7 +545,7 @@ class CorridorResolver:
         inaccessible = sorted(crawl_inaccessible | fetch_inaccessible)
         refused = sorted(crawl_refused | fetch_refused)
 
-        # 4. Assign roles from the combined evidence.
+        # 5. Assign roles from the combined evidence.
         try:
             sources, unresolved, model_calls = await self._decide_roles(
                 destination, corridor, fetched, notes
@@ -541,19 +569,46 @@ class CorridorResolver:
             model_calls=model_calls,
         )
 
-    def _corpus_links(self, destination: DestinationConfig) -> list[PageLink]:
-        """The country's known pages, filtered by the domains trusted *now*.
+    def _corpus_links(self, destination: DestinationConfig) -> list[tuple[PageLink, str]]:
+        """The country's known pages and their titles, filtered by the domains trusted *now*.
 
         Read-time filtering is the point: a corpus outlives the registry row that produced it, so a
         domain a person later removes stops being offered without anyone rebuilding every corpus,
         and without deleting what was found.
+
+        The title comes along because it is a thing the store knows and a crawl has to fetch a page
+        to learn. Without it a corpus-sourced candidate falls back to its link text, which is the
+        crawl's fallback rather than the store's.
         """
 
         if self.corpus is None:
             return []
         return [
-            entry.to_link() for entry in self.corpus.entries_within(destination.trusted_domains)
+            (entry.to_link(), entry.title)
+            for entry in self.corpus.entries_within(destination.trusted_domains)
         ]
+
+    def _crawl_is_worth_running(self, from_corpus: int) -> bool:
+        """Whether walking the site adds anything the corpus has not already got.
+
+        **Measured, and the answer for a built country is no** (DECISIONS entry 48): of the 25 pages
+        that reached one Canada corridor's shortlist, 14 came from the crawl and **all 14 were
+        already in the corpus**. The crawl contributed no unique shortlisted page while spending 62%
+        of a 54-second corridor re-deriving a link graph the offline job had already mapped.
+
+        The bound is derived rather than calibrated, which is why it is this and not a tuned number.
+        A crawl visits at most `LinkCrawler.maximum_pages` pages — 40 — so a corpus already offering
+        more candidate pages than that, on domains trusted right now, cannot be out-covered by one.
+        Below it the corpus is not a map and the crawl is still the best thing available, which is
+        the conditional entry 48 requires: **a country nobody has built must behave exactly as it
+        does today.**
+
+        What this deliberately does *not* claim is that the corpus is a superset. It is not
+        (entry 47), which is why search still runs and why the write-back still folds what a live
+        run found back in.
+        """
+
+        return from_corpus <= DEFAULT_CRAWL_PAGES
 
     def _report_retrieval_refusals(
         self, failures: list[SourceFailure], notes: list[str]
@@ -747,6 +802,17 @@ class CorridorResolver:
         on purpose: retrieval is not the crawler. It reads PDFs, renders, and carries different
         limits, so a page the crawl could not use may still be readable evidence — and dropping
         those would trade a real answer for a tidier count.
+
+        **With no crawl this does nothing, and the corpus's own `status` deliberately does not stand
+        in for it** — which is what [TODO.md](TODO.md) item 22 proposed. Two reasons, and the second
+        is the one that matters. First, there is nothing to stand in with: `corpus_build` writes
+        `unreadable` or `unknown` and never `readable`, so Canada's 3,216 entries hold five
+        unreadable and no readable ones. Second, this is a *fetch-budget* optimisation whose input
+        today is an observation from **this run**. A stored refusal is an observation from another
+        day, and skipping a page on one means the refusal is never seen live — so it can never reach
+        `decision_blocking_urls`, and a France-shaped corridor, whose only settled `403` is on the
+        page holding the decision, would stop resolving altogether (entries 27 and 32). The cost of
+        not skipping is at most a few of twenty-five fetch places, on a step measured at 1.1s.
         """
 
         blocked = self.crawl_fetcher.blocked_urls()

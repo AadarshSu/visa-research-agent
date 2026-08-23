@@ -9,6 +9,78 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 51. The crawl leaves the request path for a country whose corpus already out-covers it
+**2026-08-23 · implemented**
+
+Entry 48's central measurement stands and is what this acts on: the crawl is **33.6s of a 54.2s**
+corridor, and of the 25 pages that reached the shortlist **14 came from the crawl and all 14 were
+already in the corpus**. It contributed no unique shortlisted page.
+
+**The better reason to drop it is determinism, not the 62%.** The request-path crawl is one of the
+two places recall is re-rolled per run — known problem 19, the whole reason the corpus exists. Item
+22 asks whether a *smaller* crawl seeded from the corpus would beat none at all, and the answer is
+no: a smaller crawl keeps the lottery for a fraction of the saving. Pages published since the last
+build are the offline job's problem, and entry 47's write-back already folds back whatever a live
+run turns up.
+
+### The condition is derived, not calibrated
+
+`LinkCrawler` visits at most **40** pages. A corpus already offering more than 40 candidate pages,
+on domains trusted right now, cannot be out-covered by one — so that is the bound, and
+`DEFAULT_CRAWL_PAGES` is now named so the resolver can read it rather than repeat a number.
+
+This is deliberately not another tuned constant like the shortlist's 25 or the domain cap's 5. It
+also keeps entry 48's requirement exactly: **a country nobody has built behaves as it does today**,
+and so does one whose corpus is a handful of pages. The skip is recorded in the notes, because a
+corridor whose timing and candidate set changed with nothing visible saying why is the kind of thing
+these files keep having to correct later.
+
+### What was checked before the crawl could go
+
+- **Reporting.** Entry 49 — refusals now come out of the shortlist fetch, and
+  `test_a_corridor_that_does_not_crawl_still_reports_a_refusal` runs the whole corridor with the
+  crawl skipped and asserts a `403` still reaches `inaccessible_domains`, `inaccessible_urls` and
+  `decision_blocking_urls`.
+- **`_readable_only`.** Item 22 proposed the corpus's `status` stand in for it. **It does not**, and
+  the reasoning is in the method. `corpus_build` writes `unreadable` or `unknown` and never
+  `readable`, so there is nothing to stand in with — Canada's 3,216 entries hold five unreadable and
+  no readable ones. More importantly it is a fetch-budget optimisation reading an observation from
+  *this* run; skipping a page on a stored refusal means the refusal is never seen live, so it can
+  never reach `decision_blocking_urls`, and a France-shaped corridor would stop resolving
+  altogether. The cost of not skipping is a few of twenty-five places on a 1.1s step.
+- **`_mission_domains`.** Unaffected: it reads `destination.sources`, which the automatic path
+  leaves empty, so it returns `[]` with or without a crawl (known problem 16).
+- **Titles.** A crawl learns a page's `<title>` by fetching it; the corpus already stores one. It is
+  now carried through, or a corpus-sourced candidate would fall back to its link text — the crawl's
+  fallback, not a store's.
+- **`found_by="corpus"`.** Entry 48's key measurement — how many shortlisted pages the crawl
+  contributed that the corpus lacked — was taken by hand against a 3,216-entry store. Recorded on
+  the candidate, the recall log answers it for free next time.
+
+### Also closed
+
+`visa-discover corridor` now reads the corpus. It did not, so every measurement taken through the
+command described a pipeline the product had already stopped being. **Pins are still not passed**,
+and that is not an oversight: a corpus is corridor-independent, while a pin comes from the stored
+resolution of *this* corridor, so passing it would let run one decide part of run two's shortlist —
+which is the variance `--runs` exists to measure.
+
+### On the corpus doing three jobs, which item 22 asked for a view on
+
+`status="proven"` does **not** cross entry 44's line. That line is against storing a *conclusion* —
+"a British citizen needs an eTA" — which would be served weeks later with a citation. `proven`
+records that a page **was used**, never what it said, and the page is still re-fetched and
+re-adjudicated on every run; it can only ever change recall.
+
+There is one thing worth naming rather than fixing. `proven` is corridor-*derived* and stored
+per-country without which corridor proved it, so a page that answered `canada/IN/IN/tourism` is
+marked proven for `canada/GB/GB/business` too. That is safe — it is a retention tier and a hint —
+but it is the one place the store is not strictly corridor-independent, and the per-corridor version
+of the same idea already exists as the pin. If `proven` ever starts carrying *which* corridor, it
+has become a per-corridor store and entry 44's arithmetic applies to it.
+
+---
+
 ## 50. The routing index removes the wrong cost: it is `wrong_country`, not scoring
 **2026-08-23 · measured; implemented; amends entry 48**
 

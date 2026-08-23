@@ -430,6 +430,12 @@ class CrawlFetcher:
         return rendered.html
 
 
+# How many pages one corridor's crawl may visit. Named rather than inline because the resolver
+# reads it to decide whether crawling is worth doing at all: a corpus already offering more pages
+# than this cannot be out-covered by a crawl. See `CorridorResolver._crawl_is_worth_running`.
+DEFAULT_CRAWL_PAGES = 40
+
+
 class LinkCrawler:
     """Walk outward from seed pages, best-first, staying inside the approved domains."""
 
@@ -440,7 +446,7 @@ class LinkCrawler:
         *,
         reject: Callable[[PageLink], str | None] | None = None,
         maximum_depth: int = 2,
-        maximum_pages: int = 40,
+        maximum_pages: int = DEFAULT_CRAWL_PAGES,
         maximum_pages_per_host: int = 20,
         expansion_threshold: float = 10.0,
         maximum_concurrent_hosts: int = 4,

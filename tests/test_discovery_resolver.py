@@ -7,6 +7,7 @@ import httpx
 import pytest
 from discovery_site import (
     ARCHIVED,
+    AUTHORITY,
     DETAIL_CHINA,
     DETAIL_INDIA,
     EXEMPTIONS,
@@ -17,10 +18,12 @@ from discovery_site import (
     OFF_DOMAIN,
     destination,
     handler,
+    site_pages,
 )
 
 from visa_research_agent.discovery.adjudication import AdjudicationError
-from visa_research_agent.discovery.crawl import CrawlFetcher
+from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
+from visa_research_agent.discovery.crawl import DEFAULT_CRAWL_PAGES, CrawlFetcher
 from visa_research_agent.discovery.models import (
     CandidatePage,
     Corridor,
@@ -687,3 +690,105 @@ async def test_a_rate_limit_while_reading_the_shortlist_is_reported_and_nothing_
     assert resolved.inaccessible_urls == []
     assert resolved.decision_blocking_urls == []
     assert not resolved.decision_is_unverified
+
+
+def corpus_of(*, padding: int) -> CountryCorpus:
+    """A corpus holding the whole fake site, plus filler pages that score for no role.
+
+    The filler is what makes the corpus *large*, which is the only thing the crawl decision reads.
+    It scores zero, so it can never be shortlisted — a corpus is a page inventory, not a shortlist,
+    and most of a real one is noise: measured 2026-08-22, 723 of Canada's first 1,071 entries scored
+    nothing at all.
+    """
+
+    seen = datetime(2026, 8, 22, 12, 0, tzinfo=UTC)
+    urls = [*site_pages(), *(f"https://{AUTHORITY}/about/page-{n}.html" for n in range(padding))]
+    return CountryCorpus(
+        country_code="TL",
+        country_name="Testland",
+        trusted_domains=[AUTHORITY, "embassy.gov.example"],
+        built_at=seen,
+        entries=[CorpusEntry(url=url, first_seen=seen, last_seen=seen) for url in urls],
+    )
+
+
+@pytest.mark.anyio
+async def test_a_corpus_that_out_covers_a_crawl_replaces_it(tmp_path: Path) -> None:
+    """The crawl is 62% of a cold corridor and contributed no unique shortlisted page (entry 48).
+
+    The bound is derived, not tuned: a crawl visits at most `DEFAULT_CRAWL_PAGES`, so a corpus
+    already offering more pages than that on trusted domains cannot be out-covered by one.
+    """
+
+    requests: list[httpx.Request] = []
+    resolver, _ = build_resolver(tmp_path, requests, [INDEX])
+    resolver.corpus = corpus_of(padding=DEFAULT_CRAWL_PAGES + 1)
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert resolver.crawl_fetcher.requested == [], "no page may be walked for its links"
+    assert any("the crawl was skipped" in note for note in resolved.notes), resolved.notes
+    assert resolved.is_usable, f"unresolved: {resolved.unresolved_roles} notes={resolved.notes}"
+    by_role = {role: source for source in resolved.sources for role in source.roles}
+    assert "visa_decision" in by_role
+    assert "document_checklist" in by_role
+
+
+@pytest.mark.anyio
+async def test_a_destination_nobody_has_built_still_crawls(tmp_path: Path) -> None:
+    """The conditional entry 48 requires. Removing the crawl is conditional on having a map."""
+
+    requests: list[httpx.Request] = []
+    resolver, _ = build_resolver(tmp_path, requests, [INDEX])
+    resolver.corpus = None
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert resolver.crawl_fetcher.requested, "with no corpus there is nothing else to go on"
+    assert not any("the crawl was skipped" in note for note in resolved.notes), resolved.notes
+    assert resolved.is_usable, f"unresolved: {resolved.unresolved_roles}"
+
+
+@pytest.mark.anyio
+async def test_a_thin_corpus_does_not_stop_the_crawl(tmp_path: Path) -> None:
+    """A handful of pages is not a map, so the crawl is still the best thing available."""
+
+    requests: list[httpx.Request] = []
+    resolver, _ = build_resolver(tmp_path, requests, [INDEX])
+    resolver.corpus = corpus_of(padding=0)
+
+    await resolver.resolve(destination(), corridor())
+
+    assert resolver.crawl_fetcher.requested
+
+
+@pytest.mark.anyio
+async def test_a_corridor_that_does_not_crawl_still_reports_a_refusal(tmp_path: Path) -> None:
+    """The thing entry 48 says must not be lost as a side effect of a speed change.
+
+    With no crawl, `CrawlFetcher` sees nothing, so every refusal a corridor reports has to come from
+    reading the shortlist. Before entry 49 that path reported none at all, and this corridor would
+    have gone quiet about an authority refusing it while still answering the traveller.
+    """
+
+    requests: list[httpx.Request] = []
+    site = handler(requests)
+
+    def refusing(request: httpx.Request) -> httpx.Response:
+        if str(request.url).rstrip("/") == DETAIL_INDIA:
+            return httpx.Response(403, text="no")
+        served: httpx.Response = site(request)  # type: ignore[operator]
+        return served
+
+    transport = httpx.MockTransport(refusing)
+    resolver, _ = build_resolver(tmp_path, [], [INDEX])
+    resolver.crawl_fetcher.transport = transport
+    resolver.live_fetcher.transport = transport
+    resolver.corpus = corpus_of(padding=DEFAULT_CRAWL_PAGES + 1)
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert resolver.crawl_fetcher.requested == []
+    assert host_of(DETAIL_INDIA) in resolved.inaccessible_domains
+    assert resolved.inaccessible_urls == [DETAIL_INDIA]
+    assert resolved.decision_blocking_urls == [DETAIL_INDIA]

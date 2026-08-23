@@ -413,15 +413,40 @@ def print_variance(report: VarianceReport, stream: TextIO) -> None:
 Resolve = Callable[[DestinationConfig, Corridor, RuntimePolicy], Awaitable[ResolvedCorridor]]
 
 
+def corpus_for(destination: DestinationConfig) -> CountryCorpus | None:
+    """The stored page corpus for whatever country this destination is, or none.
+
+    The command did not read one until 2026-08-23, so every measurement taken through it described
+    a pipeline the product had already stopped being — no corpus meant no corpus candidates and,
+    now, an unconditional crawl. [TODO.md](TODO.md) item 22.
+
+    A corpus that cannot be read **raises**, exactly as it does in the request path: it is the
+    candidate source, and treating an unreadable file as "this country has no pages" would turn a
+    corrupt corpus into a quietly worse run.
+    """
+
+    country = get_country_registry().by_slug(destination.slug)
+    if country is None:
+        return None
+    return FileCorpusStore(settings.corpus_directory).load(country.code)
+
+
 async def resolve_once(
     destination: DestinationConfig, corridor: Corridor, policy: RuntimePolicy
 ) -> ResolvedCorridor:
-    """One cold resolution, with the browser closed afterwards whatever happened."""
+    """One cold resolution, with the browser closed afterwards whatever happened.
+
+    The corpus is passed and the **pins are not**, and the difference is what each one depends on.
+    A corpus is corridor-independent, so reading it makes this command behave as the product does.
+    Pins come from the stored resolution of *this* corridor, so passing them would let run one
+    decide part of run two's shortlist — which is the variance `--runs` exists to measure.
+    """
 
     renderer = build_page_renderer(policy)
     adjudicator = build_role_adjudicator(policy)
     try:
-        return await build_resolver(renderer, adjudicator).resolve(destination, corridor)
+        resolver = build_resolver(renderer, adjudicator, corpus=corpus_for(destination))
+        return await resolver.resolve(destination, corridor)
     finally:
         # The browser outlives the resolver, so closing it is this function's job.
         if isinstance(renderer, PlaywrightPageRenderer):
