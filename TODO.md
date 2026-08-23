@@ -3,12 +3,19 @@
 Ordered by what unblocks the most. Each item says why it matters, not just what to do, so it can be
 picked up cold.
 
-**How to read this file.** **Now** is what to pick up, in the order written — item 17 leads because two
-cold runs of the same corridor on 2026-08-21 disagreed, which decides how every measurement in this file
-should be read, and item 15 follows because the change those runs were testing is still unmeasured on six
-other corridors. **Next up** is what
-follows it, item 3 first because its own reasoning is that nothing large should be built before it.
-**Later** is real but not urgent. **Done** is finished work, kept because what building it found is
+**How to read this file.** **Now** is what to pick up, in the order written — **item 22 leads**, because
+it is measured, decided and unimplemented, and it makes every other live run cheaper: the crawl is 62%
+of a cold corridor and was shown to contribute nothing the corpus did not already hold. Items 17, 18 and
+19 are the work it grew out of — the corridor variance that started it (17) and the corpus that answers
+it (18, 19, entry 44) — and item 15 follows because the excerpt change is still unmeasured on six
+corridors. **Item 22 is deliberately written as a proposal rather than a specification**: form a view on
+it before building it.
+**Next up** is what follows it, item 3 first because its own reasoning is that nothing large should be
+built before it. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
+and worth stating**: item 18 is built once and run first on only the ~8 destinations item 3 needs, so
+the measurement describes the architecture the project means to keep, and scaling it to 198 countries
+afterwards needs no rework. Building the corpus for all 198 *before* measuring would be the thing entry
+35 forbids. **Later** is real but not urgent. **Done** is finished work, kept because what building it found is
 usually why the item after it exists. **Smaller things** are one-paragraph defects with no owner yet.
 
 Status: `next` · `soon` · `later` — the label on each heading matches the section it sits in, so the two
@@ -25,6 +32,9 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 17. Decide what a corridor that flips between runs should do | `next` |
+| | 18. Build the offline corpus job, and run it on item 3's destinations | `next` |
+| | 22. Route the request path through the corpus and drop the crawl | `next` |
+| | 19. Read the corpus in the request path, and refuse on a miss | `next` |
 | | 15. Re-run the remaining six verified corridors against the widened excerpt | `next` |
 | | 5. Answer the challenge, and get a checklist out of France | `next` |
 | | 1. Fix the post-over-nationality weighting, and trace Sweden | `next` |
@@ -34,6 +44,8 @@ one-paragraph defects rather than items.
 | | 7. Put it somewhere others can open it aka deployment | `soon` |
 | | 8. Confirm a blocked authority actually reads usefully | `soon` |
 | | 9. Tell "no checklist exists" apart from "we failed to find it" | `soon` |
+| | 20. Make the stores substrate-swappable and durable | `soon` |
+| | 21. Fill the three provenance gaps | `soon` |
 | **Later** | 10. Try sitemaps before crawling | `later` |
 | | 11. Decide whether a host that has refused everything should be skipped | `later` |
 | | 12. Watch where the two deciders disagree | `later` |
@@ -105,6 +117,233 @@ recall log makes this cheap to read now. Then write the decision entry. **Note i
 run per corridor cannot distinguish a corridor that works from one that works half the time, so the
 20-corridor measurement should either run each corridor twice or say plainly that it did not.
 
+**Answered 2026-08-21 as [DECISIONS.md](DECISIONS.md) entry 44 — option 3, widened from per corridor to
+per country.** The candidate set persists as a **corpus of official pages per country**, populated by an
+offline job, and search leaves the request path for a populated country. A page found for
+`canada/GB/GB/tourism` then also serves `canada/IN/IN/business`, which per-corridor persistence would
+not. Options 1, 2 and 4 are rejected there in the terms above. **What is left of this item is the
+counting**, which the entry does not replace and which sizes everything after it: run one corridor three
+times, count the flips, and write the rate down. Items 18 and 19 are the implementation.
+
+**The tooling for the counting landed 2026-08-22 (entry 45), so this is now one command and some
+credit:**
+
+```bash
+.venv/bin/visa-discover corridor --destination canada --nationality GB --from GB --runs 3
+```
+
+It resolves the corridor three times and reports which candidates only some runs saw, ordered by how
+far each got — a page one run actually *read* and another never saw is the case that decides
+corridors, so it sorts to the top. It does **not** go through `AutomaticDestinationService`, because
+that reads the corridor store and a stored corridor would answer runs two and three from run one.
+Registry destinations now work from the command at all, which they did not before; that is what had
+forced every previous live check into a throwaway script.
+
+**Clear `var/cache/` first** if the point is to measure cold recall, and note the honest limit: this
+measures *search and crawl* variance. The adjudication is still a model call, so two runs with an
+identical candidate set can still disagree (known problem 10), and the report does not separate
+those.
+
+**Run 2026-08-22, and the flip did not reproduce.** `canada/GB/GB/tourism`, three runs, source cache
+cleared beforehand, ~43s each:
+
+| | |
+| --- | --- |
+| Outcome | **resolved, all three** — `visa_decision` and `general_entry` |
+| Candidates | **471, and every run saw all 471.** Nothing varied at all |
+| `entry-requirements-country.html` | found every run — **both** as a `site:canada.ca` search seed *and* by crawl at depth 1 from `check-visa-eta.html`; 53.4, shortlisted, fetched |
+| `document_checklist` | unfilled all three times |
+
+**So the flip rate is not 0 — it is "0 of 3 back-to-back", which is a weaker claim and must not be
+written up as the stronger one.** The runs were ~2 minutes apart; the flip entry 43 measured was an
+hour apart, and the 08-19/08-21 difference was two days. A search API can serve a stable result set
+within a short window, so this cannot distinguish *"recall is stable"* from *"recall is stable over
+two minutes"*.
+
+**What is left of this item:** re-run the same corridor after a gap of hours or a day and compare
+against `var/recall/` — that is the measurement that would actually establish a rate. Until then the
+one observed flip stands as a single observation, and **entry 44 should be read with that in mind**;
+its case now rests mainly on crawl depth and latency rather than on a measured frequency.
+
+**One finding that is not about variance at all:** `document_checklist` went unfilled on every run
+even though `.../visit-canada/supporting-documents` scored **64.0** for exactly that role and was
+fetched. The adjudicator declined it three times running. That is item 9's question — "no checklist
+exists" versus "we failed to find it" — with a third answer visible: *we found and read a plausible
+one and the decider said no*. Worth reading its reason before item 18 assumes recall is the problem.
+
+### 18. Build the offline corpus job, and run it on item 3's destinations — `next`
+
+**Why:** [DECISIONS.md](DECISIONS.md) entry 44. Recall is currently re-rolled from search on every
+request, and entry 43 measured what that costs: the page that answers Canada was fifteenth of 470 on one
+run and absent on the next. A corpus makes a good run durable — **but only a good run.** The job's own
+recall therefore becomes the whole ballgame, which is the argument for it being an offline job rather
+than a cached request: with no latency budget it can go deeper than a 60-second request ever will.
+
+**Do:** a `visa-discover` command that crawls one country thoroughly — deeper hops, many more queries,
+sitemaps (item 10) — and writes the country's page corpus. Then run it for the roughly eight
+destinations [item 3](#3-measure-the-top-20-corridors-against-a-bar-committed-in-advance--soon) needs, so
+the measurement describes the architecture the project intends to keep. The same command scales to 198
+countries afterwards with no rework, which is why the count is not the hard part.
+
+**Reuse `recall_log.ConsideredCandidate` for the row shape** — URL, title, `found_by`, depth,
+`discovered_from`, per-role scores, `shortlisted`, `fetched` — it is already exactly right.
+
+**Do not collapse the two stores.** Entry 43's recall log is overwritten per corridor, depends on
+nothing, and swallows its own write errors, and every one of those is correct *for a diagnostic*. The
+corpus is keyed by country, additive, and depended on. Same rows, opposite contract; inheriting the code
+must not inherit the sentence "nothing depends on it".
+
+**Additive, and never pruned by a bad run.** A URL that answered once stays in the corpus even when a
+later crawl misses it. That is the entire point, and it is also what makes the refresh job's `404` check
+(item 20) the only thing standing between the corpus and rot.
+
+**Built 2026-08-22 (entry 46). The store, the job and `visa-discover corpus` exist; what is left is
+running it for the other destinations and closing the recall gap below.**
+
+```bash
+.venv/bin/visa-discover corpus --country CA
+```
+
+| Run | Queries | Seeds | Crawled | New | Held |
+| --- | --- | --- | --- | --- | --- |
+| `--pages 60`, 36s | 30 | 203 | 355 | 355 | 355 |
+| `--pages 200`, 97s | 30 | 203 | 1071 | 716 | **1071** |
+
+The merge behaved: all 355 from the first build survived the second with `times_seen` at 2, and nothing
+was dropped. **`entry-requirements-country.html` is in the corpus at depth 1** — the page whose absence
+refused the corridor on 2026-08-21 is now durable, which is the thing this was built to do.
+
+> **And the corpus is not yet a superset of what a corridor finds, which is the finding that matters.**
+> `.../visit-canada/supporting-documents` — scored **64.0** for `document_checklist` and **fetched** by
+> the corridor run the same day — is **absent from the corpus at 1,071 entries**. The cause is the
+> traveller-free query set: `corridor_queries` asks `site:canada.ca Canada visa requirements United
+> Kingdom`, and `corpus_queries` deliberately cannot. So the very thing that keeps the corpus
+> corridor-independent also costs it recall that corridor-specific search has.
+>
+> **Both fixes are built — entry 47, 2026-08-22 — and the second is the one that worked.** The purpose
+> sweep landed (30 queries → 70, 1,071 entries → 3,130, depth genuinely exercised) and **still did not
+> find the page**: the exact query that had once surfaced it was re-run and search did not return it.
+> **Search is nondeterministic at the source, so no offline sweep can guarantee a superset.** What
+> closed it was write-back — after one corridor run through the new path, **24 of 24** pages that run
+> fetched are held. The candidate set is now `corpus ∪ live`, pinned by what already filled a role.
+
+### 19. Read the corpus in the request path, and refuse on a miss — `next`
+
+**Why:** item 18 buys nothing until the request path reads it. Together they are what removes search from
+a populated country's cold path — up to fifteen Brave queries and a two-hop crawl — and what makes two
+runs of the same corridor consider the same candidates.
+
+**Narrowed 2026-08-22 by entry 47.** The gap that blocked this is closed for Canada — the union plus
+write-back holds 24 of 24 pages the live run fetched — so what is left here is no longer "make the
+corpus a superset" but **stop paying for live discovery once it is one**. Decay rather than switch:
+a proven, fresh corridor whose corpus holds no better-scoring unseen candidate needs no searches at
+all, which is where the cost goes to zero and determinism becomes total. Gate it on the superset bar
+holding for more than one destination; Canada alone is not evidence.
+
+**Two things entry 47 leaves for this item.** Eviction is designed and unbuilt, so the corpus only
+grows — 723 of Canada's original 1,071 entries scored zero on role vocabulary, which is the Noise tier
+that should age out. And a **dead pin must never silently degrade**: if a pinned page 404s and the role
+cannot be refilled, the corridor refuses, exactly as it would have without a pin.
+
+**Do:** seed `CorridorResolver` from the country's corpus instead of from `corridor_queries` + crawl,
+score and shortlist as now, and adjudicate as now. **The corridor-dependent step does not move** — which
+page answers this traveller is still decided live, per entry 44's three-column table.
+
+**Refuse on a miss, and flag the country.** Entry 38's rule applied to pages: falling back to live search
+would silently restore the lottery for exactly the corridors that need it not to be one. The refusal must
+tell three cases apart, because their fixes differ:
+
+| What happened | What it means | Fix |
+| --- | --- | --- |
+| No corpus for this country | the job has not run here | run item 18 |
+| A corpus exists, no page fills `visa_decision` | the job's recall missed, or the country publishes it behind a wizard | deepen the job, or item 5 |
+| Stored URLs no longer resolve | **the corpus has rotted** | repopulate |
+
+Only the third is corpus rot, and only the third should be alarming. **Refusals become the repopulation
+queue**, which is observability the current system has none of.
+
+**Careful:** trust is unchanged and must stay so. A seeded URL is still checked against `trusted_domains`
+and still fetched through `LiveSourceFetcher`, so `validate_route` still runs and a corpus entry cannot
+survive a later narrowing of the domain registry.
+
+### 22. Route the request path through the corpus and drop the crawl — `next`
+
+**Why:** [DECISIONS.md](DECISIONS.md) entry 48, measured 2026-08-22/23. A cold corridor spends **54.2s**,
+of which the crawl is **33.6s (62%)** — and of the 25 pages that reached the shortlist, **14 came from
+the crawl and all 14 were already in the corpus.** The crawl contributed *zero* unique shortlisted
+pages. It spent 62% of the corridor re-deriving a link graph the offline job had already mapped.
+
+Corpus-only resolved the same corridor with all three role-filling pages kept, and **not circularly**:
+those pages came from the offline job, not from write-back. So this needs the *destination* built, never
+the *corridor* proven — it works for a nationality nobody has asked about.
+
+**Target: 54.2s → ~21s.** Keep search, drop the crawl.
+
+> **Read this as a proposal, not a specification.** The numbers below are measurements and should be
+> trusted; the *design* built on them is one session's answer, reached quickly, and it has not been
+> argued against by anyone. **Form your own view first and say where you disagree** — a decision entry
+> saying "the top-N index is the wrong shape, here is why" is a better outcome than a faithful
+> implementation of something half-right. Three places it may well be wrong:
+>
+> - **Is a top-N pre-filter the right index at all?** It is a flat ranking. A per-role index, a
+>   per-host quota, or simply keeping every entry above a score floor might behave better on a country
+>   whose pages are distributed differently from Canada's — and Canada is the only destination anyone
+>   has measured.
+> - **Should the corpus feed the shortlist, or replace it?** The shortlist exists to bound what a model
+>   sees (entry 40). If the corpus is already a curated set, some of the shortlist's machinery — the
+>   per-role picks, the per-domain floor — may be solving a problem the corpus has removed.
+> - **Is "drop the crawl" even the right lever?** 33.6s for 40 pages is roughly 0.8s each, and the crawl
+>   is concurrent across hosts. Some of that is per-host politeness that a targeted fetch would still
+>   pay. It may be that a *much smaller* crawl seeded from the corpus beats no crawl at all, because it
+>   catches pages published since the last build.
+>
+> What is **not** open: the reporting discipline below, and keeping search until nationality has been
+> measured. Those are constraints, not preferences, and the reasoning is in entry 48.
+
+**The shape currently proposed, if you agree with it.**
+
+1. **Store the corridor-independent score at build time.** `CorpusEntry` gains `vocabulary_score`, set
+   from `score_role_vocabulary` (already extracted, `scoring.py`) during `corpus_build`. 95ms for 3,216
+   entries, paid offline, free per request. This is what makes step 2 possible.
+2. **Route, do not consume.** The request path pre-filters the corpus to the **top 400** by that stored
+   score, then corridor-scores only those. Measured: 575ms and 24/25 of the real shortlist with all
+   role pages, against 3,633ms to score everything. **Bounded** — 575ms whether the corpus holds 3,000
+   pages or 30,000, which is what stops the corpus becoming the new bottleneck.
+   **400 is calibration, not derivation** (like the shortlist's 25, entry 40). Re-check per destination.
+   **100 is measurably too low** — it drops a role page.
+3. **Skip the crawl when the destination has a corpus.** Conditional, never blanket: a country nobody
+   has built must behave exactly as it does today.
+4. **Then re-measure the phase split** the same way entry 48 did, and confirm the corridor still
+   resolves to the same three roles.
+
+**Three things that break quietly if step 3 is done carelessly — this is the careful part.**
+
+- **`crawl_failures`, `blocked_urls()` and `disallowed_urls()` come from the crawl**, and they feed
+  `inaccessible_domains`, `decision_blocking_urls` and the notes a refusal is built from (entries 27, 32,
+  36). With no crawl they must come from the shortlist fetch instead, or **a corridor silently stops
+  reporting that an authority refused it** — the reporting discipline of entry 18, lost as a side effect
+  of a speed change. Test this explicitly.
+- **`_readable_only` reads crawl state** to drop pages already proved unreadable. With no crawl there is
+  no state; the corpus's own `status` field should stand in.
+- **`_mission_domains` and the seed ordering** are the other places that assume a crawl ran. Check them.
+
+**Do not** drop search as well, however tempting the extra 9.1s is. `corridor_queries` interpolates
+purpose *and* nationality; purpose is swept offline (four values) and nationality is **198-valued and
+never measured**. That trade is a known 9.1s against an unmeasured recall risk on the one dimension not
+yet examined. It becomes correct after item 3's measurement covers nationality-varied corridors, and
+entry 48 says so.
+
+**Worth an opinion, and nobody has one yet.** The corpus is now three overlapping things at once — a
+durable page inventory, a routing index, and (through `status="proven"`) a record of what answered a
+corridor. That may be one artifact doing three jobs well, or it may be three artifacts that should be
+told apart. Entry 44 argued the store should hold pages and never answers; `proven` is arguably the
+thin end of holding answers. If you think that boundary has already been crossed, say so in an entry.
+
+**Also close, while here:** `visa-discover corridor` does not pass the corpus to the resolver — only the
+API path does (`cli.py`'s `resolve_once` calls `build_resolver(renderer, adjudicator)` with neither
+`corpus=` nor `pinned=`). So the command still behaves as it did before entry 47, and any measurement
+taken through it describes something the product no longer does.
+
 ### 15. Re-run the remaining six verified corridors against the widened excerpt — `next`
 
 **Why:** DECISIONS entry 42 changed what every adjudication is shown — the head of each candidate plus a
@@ -150,9 +389,11 @@ under our own user agent with nothing spoofed, reads the page: 221,476 bytes, 2,
 currently shipping to travellers is false because of it.
 
 **A `403` reaches neither renderer today, so turning `render_mode: on_demand` on changes nothing.**
-Both paths return at the blocking branch before the render branch: `live_sources.py:377` precedes the
-render at line 407, and `crawl.py:363` precedes line 387. Rendering is only ever attempted on a thin
-`200`. This is the first thing to fix and the easiest to get subtly wrong.
+Both paths return at the blocking branch before the render branch: in `live_sources.py` the
+`BLOCKING_STATUS_CODES` check precedes the `self._render(...)` call, and in `crawl.py` it precedes
+`_render_if_empty`. Rendering is only ever attempted on a thin `200`. **Named by symbol rather than by
+line, deliberately** — the line numbers written here on 2026-08-19 had drifted by seven within three
+days, and a stale pointer reads as a claim about code that has moved. This is the first thing to fix and the easiest to get subtly wrong.
 
 **Do, in this order:**
 
@@ -235,6 +476,18 @@ blocked.
 > verifiability that is the whole differentiator) or client-side retrieval.
 
 Today's seven are 5/7 and 4/7 — which would pass, on a sample chosen partly because it was easy.
+**Treat those two fractions as a stale floor, not a baseline.** They come from the corridor table in
+[PROJECT_HANDOFF.md](PROJECT_HANDOFF.md), which that file itself marks as predating the registry and the
+wider shortlist, with at least two rows now wrong — Japan and Canada both fill every role at 25 places.
+Re-derive them from this measurement rather than comparing against them.
+
+**Run each corridor at least twice — item 17.** `canada/GB/GB/tourism` refused once and resolved once
+within an hour on identical code, so **one run cannot tell a corridor that works from one that works half
+the time**, and a single-run measurement would report the flip rate as the pass rate. If credit does not
+stretch to twenty corridors twice, halve the sample rather than the repeats, and say plainly in the
+write-up which it was. Note the ordering question this raises: measuring **before** items 18 and 19 sizes
+the problem the corpus is meant to fix, and measuring **after** describes the architecture the project
+intends to keep. Doing it before and repeating the outliers after is the cheap version of both.
 
 **No longer blocked — 2026-08-21:** Brave credit is available again, so this can run. `robots.txt`
 landed first (entry 36), so the numbers describe the posture the project intends to keep.
@@ -365,14 +618,19 @@ searches per trusted domain and the registry gives a country up to five where `d
 two. A full cold request has not been re-timed. The lever is the per-domain query count or the domain
 cap, **not** the shortlist — that was measured separately and costs nothing (entry 40).
 
-`var/cache/` and `var/corridors/` are local directories, so a disposable filesystem makes **every**
-request cold.
+`var/cache/`, `var/corridors/` **and `var/recall/`** are local directories, so a disposable filesystem
+makes **every** request cold. That is item 20, which this item should be planned with rather than after.
 
-1. **Precompute and ship corridors.** A warm corridor is 0.0s. Resolve popular ones locally with
-   `visa-discover`, keep the JSON, point `FileCorridorStore` at it. The deployed app answers instantly
-   for anything precomputed and refuses politely for the rest.
+1. **Precompute and ship corridors.** A warm corridor is 0.0s. Resolve popular ones locally, keep the
+   JSON, point `FileCorridorStore` at it. The deployed app answers instantly for anything precomputed
+   and refuses politely for the rest.
+   **This cannot be done with `visa-discover corridor` today** — see *Smaller things*: the command reads
+   `get_destination_registry()`, so it cannot reach a registry destination, which is most of them. Fix
+   that first or precompute from a script, as every live check so far has had to.
 2. **Prefer a host that keeps a disk and a long-running process.** The stores persist and warm requests
-   stay warm. If a disposable host is preferred, both stores are small classes with `load`/`store`.
+   stay warm. If a disposable host is preferred, all three are small classes behind a `load`/`store`
+   pair — except `FileRecallLog`, which is `write`/`read` and, being a diagnostic nothing depends on,
+   need not survive at all.
 3. **Set three secrets:** `OPENAI_API_KEY`, `OPENAI_MODEL`, `SEARCH_API_KEY`.
 4. **Keep `render_mode: never`** unless the host can carry Chromium (~150MB plus system libraries).
    Vietnam will refuse without it, which is correct rather than broken.
@@ -424,12 +682,64 @@ which case they are looking at.
 again — not "none exists", not "we failed to find it", but "we were not allowed to read it".
 
 **Do:** the design already considered is a reviewed per-country declaration — `no_official_checklist:
-true` in `destinations.yaml`, with a required note saying where the requirements actually live. A human
-decides once, in git, exactly as `trusted_domains` works. Undeclared countries go back to refusing. This
-sits naturally beside the entry 34 registry, which is the same shape of artifact.
+true`, with a required note saying where the requirements actually live. A human decides once, in git,
+exactly as `trusted_domains` works. Undeclared countries go back to refusing.
+
+**Put it in `authority_domains.yaml`, not `destinations.yaml`** — corrected 2026-08-22. This item used to
+name the latter, and a flag there would reach only the seven configured destinations:
+`resolve_destination` falls through to `AutomaticDestinationService` for everything else, and that path
+never reads `destinations.yaml` at all. The entry 34 registry is the per-country artifact of the right
+shape, it is already reviewed row by row, and `CountryAuthorities` is where a country-level human
+judgement belongs.
 
 **Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists" look
 identical from inside the crawler, which is the whole problem.
+
+### 20. Make the stores substrate-swappable and durable — `soon`
+
+**Why:** `var/cache/`, `var/corridors/` and `var/recall/` are local directories, so **a disposable host
+makes every request cold** — up to fifteen searches, twenty-five fetches, two model calls, on an
+unauthenticated endpoint. Item 7 already notes this; entry 44 makes it structural, because a corpus that
+does not survive a restart is not a corpus. Both existing stores are small classes with `load`/`store`,
+so the seam is already there.
+
+**Do:** put the corpus, the source snapshots and the corridor resolutions behind their existing
+protocols and add a networked implementation. Add the refresh job at the same time — a weekly conditional
+`GET` over every stored URL, which is cheap because most answer `304`, and which is where a `404` or an
+off-domain redirect is caught and the country flagged.
+
+**Three things that are right today and are easy to lose in a migration:**
+
+1. **A row records when the evidence was retrieved, never when the row was written.** `_serve_stale`
+   keeps the original `fetched_at`; a `304` moves it, because a validator match proves currency. A schema
+   that collapses `retrieved_at` and `row_written_at` starts lying about how current its guidance is
+   (entry 4).
+2. **The stale ceiling still refuses.** Past `source_maximum_stale_hours` a stored page is refused rather
+   than served, whatever the store.
+3. **A hash change marks a source and never auto-swaps a role-bearing one** — item 14.
+
+**Careful:** `content_hash` is already computed over the *cleaned* text, so drift detection is less noisy
+than item 14 assumes. Do not add a second hash over raw bytes; it would fire on every nav timestamp.
+
+### 21. Fill the three provenance gaps — `soon`
+
+**Why:** the system cannot answer *"why did you say an Indian passport holder needs this visa?"* with
+more than a URL and a timestamp. Found while tracing entry 44, and **explicitly not an argument for the
+store** — all three are schema and plumbing, worth fixing either way, and folding them into the corpus
+work would let a large change borrow justification from a small one. Known problems 20, 21 and 22.
+
+1. **`SourceReference.supporting_excerpt` is never populated on the live path.** Written only by
+   `FixtureSourceFetcher` from the Singapore manifest; `LiveSourceFetcher._build` does not set it and
+   `OpenAIVisaPlanExtractor` passes references through unchanged. Every live plan cites a URL with **no
+   supporting quote**. The excerpt has to come from the model naming the sentence it read, and it must
+   then be **checked against the retrieved text** rather than trusted — an unverified quote attributed to
+   a government page is worse than none.
+2. **`content_hash` never reaches `VisaPlan`.** It is on `FetchedSource`; `SourceReference` has no hash
+   field, so a plan cannot be tied to the exact text it was read from.
+3. **`decided_by`, `score` and `signals` never leave `ResolvedCorridor`.** Why a page was chosen for a
+   role is on disk and invisible in the response.
+
+---
 
 ---
 
@@ -454,8 +764,9 @@ skips by design. The per-URL rule cannot help, and every other `travel.state.gov
 refused.
 
 **The question, a judgement rather than a lookup:** may a host that has refused *every* request and
-served *none* be treated as blocked for URLs never tried? It recovers two places out of ten, and it is
-inductive, which is why it was not simply done.
+served *none* be treated as blocked for URLs never tried? It recovers two places out of **twenty-five**
+(entry 40 — this line said "ten" until 2026-08-22, which overstated the gain by more than double), and it
+is inductive, which is why it was not simply done.
 
 **Do:** count requests and refusals per host; consider it only where refusals are high and served is
 zero. Then measure whether the two recovered places change what the corridor resolves. If not, leave the
@@ -504,6 +815,13 @@ before starting.
 
 **Why:** every source already stores a content hash, so a changed government page is detectable and
 currently ignored.
+
+**Corrected 2026-08-21:** the premise below — that government pages change whitespace constantly — is
+weaker than it reads. `content_hash` is `sha256` over the **cleaned** text
+(`live_sources.py:451`), taken after `clean_source_html` has stripped `script`, `nav`, `header`, `footer`
+and `aside`, so most incidental churn is already gone before the hash is taken. What survives is dated
+"last reviewed" lines and rotating banners. Do not add a second hash over raw bytes; it would fire on
+every nav timestamp. See entry 44 and item 20, which makes this the corpus-rot check.
 
 **Do:** on a hash change, mark the source rather than refusing — government pages change whitespace
 constantly. **Never** auto-rediscover and swap a role-bearing source: that is the wrong-checklist failure
@@ -693,13 +1011,6 @@ which are item 1, and English-only scoring, which is known problem 13 in
 
 ## Smaller things
 
-- **`visa-discover corridor` cannot run a registry destination, which is most of them.** It reads
-  `get_destination_registry()`, so `--destination canada` answers *"Unknown destination: canada"* while
-  the API resolves that corridor perfectly well through `AutomaticDestinationService`. Every live check
-  of a registry corridor — Canada twice on 2026-08-21 — has therefore been done from a throwaway script,
-  which is why nobody had the candidate list until entry 43. Items 15 and 17 both need to run these
-  corridors repeatedly, so the command should fall back to the automatic service when a slug is not
-  configured.
 - **A footer link inherits the heading of whatever came above it.** `extract_links` assigns each link the
   last heading it has seen, and footer links sit below everything, so France's legal notice was scored
   against a news article's heading about visa requirements (entry 26). The boilerplate veto handles the
@@ -725,6 +1036,10 @@ which are item 1, and English-only scoring, which is known problem 13 in
   fetched, so the loss is depth-2 discovery — which is where Japan's checklist was found. A per-domain
   **seed** cap would restore it without lowering `maximum_pages`, which must not be lowered. See also item 10,
   the sitemaps one, which may be the better answer.
+  **And item 18 (entry 44) makes this moot for a populated country**, because an offline job has no
+  latency budget to spend — Canada's answering page was reachable at depth 1, and the ones still lost are
+  deeper. Fix the seed cap anyway and fix it *separately*: it still governs every country the corpus has
+  not reached, and doing both as one change would hide which of them bought the recall.
 - **Nothing validates `countries.yaml` against a `tlds` entry that widens trust.** Adding `gov` to a
   country's `tlds` would change what is trusted with no review of the rule itself. Bounded now by the cap
   and the corroboration bar (entry 22), but the data is still where a mistake would not be caught. `tests/test_trust_coverage.py`

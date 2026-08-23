@@ -9,6 +9,548 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 48. The crawl was rediscovering a map the corpus already had; the corpus becomes a routing index
+**2026-08-23 · measured; decided; NOT implemented**
+
+Entry 47 made recall monotonic and said plainly that it bought no speed. This is the measurement of
+where the time actually goes, and it changes what the request path should do.
+
+### Where a cold corridor spends 54 seconds
+
+Instrumented live, `canada/GB/GB/tourism`, 2026-08-22:
+
+| Phase | Time | Share |
+| --- | --- | --- |
+| search — 15 queries | 9.1s | 17% |
+| **crawl — 40 pages, per-host politeness** | **33.6s** | **62%** |
+| fetch shortlist — 25 pages | 1.1s | 2% |
+| adjudicate — one model call | 10.8s | 20% |
+
+Fetching is small only because the evidence cache was warm; adjudication is irreducible.
+
+### The crawl contributed nothing
+
+Of the 25 shortlisted pages, 14 were found by the crawl — and **all 14 were already in the corpus**.
+Zero shortlisted pages came from the crawl and not the corpus. **The crawl spent 62% of the corridor
+re-deriving a link graph the offline job had already mapped.**
+
+That is not a defect in the crawl. It is what a crawl is *for*, and before a corpus existed it was the
+only way to get the map. It is now redundant for any destination that has one.
+
+### Corpus-only resolves the same corridor, and needs no prior proof
+
+Scoring the corpus and shortlisting from it, with **no search and no crawl at all**: 19 of the same 25
+pages, and **all three role-filling pages kept** — `entry-requirements-country`, `fees.asp`,
+`check-processing-times`.
+
+**And it is not circular.** All three have `first_seen` at 14:30–14:31, from the **offline job**, not
+from entry 47's write-back. So this does not need the *corridor* to have been proven, only the
+*destination* to have been built — which is the property that makes it apply to a nationality nobody
+has ever asked about.
+
+### But consuming the whole corpus scales the wrong way
+
+Scoring all 3,216 entries for one corridor costs **3.6s**, and grows with the corpus. Left alone it
+would eventually cost more than the crawl it replaced — the corpus would become the new bottleneck.
+
+So the corpus is used as a **routing index**, not as a candidate list. `score_role_vocabulary` is
+corridor-independent, so it can be computed **once at build time**, stored on the entry, and used to
+pre-filter before anything corridor-specific runs:
+
+| top-N by stored vocabulary score | corridor scoring | overlap with the real shortlist | role pages |
+| --- | --- | --- | --- |
+| 100 | 149ms | 20/25 | **2/3 — loses one** |
+| 200 | 289ms | 22/25 | 3/3 |
+| **400** | **575ms** | **24/25** | **3/3** |
+| 3,216 (all) | 3,633ms | 25/25 | 3/3 |
+
+**400 is the chosen bound**: 6× cheaper than scoring everything, keeps every role page with margin, and
+is *bounded* — it stays 575ms whether the corpus holds three thousand pages or thirty thousand.
+Computing the vocabulary score for all 3,216 costs 95ms and is paid offline.
+
+**400 is calibration, not derivation**, exactly like the shortlist's 25 (entry 40) and the domain cap's
+5 (entry 22). One corridor, one destination. It should be re-checked per destination, and 100 is
+demonstrably too low, which is the useful half of the table.
+
+### Decided: drop the crawl from the request path, keep search
+
+| | Path | Corridor phase |
+| --- | --- | --- |
+| Today | search + crawl + fetch + adjudicate | 54.2s |
+| **Chosen** | corpus-routed, **no crawl**, search kept | **~21s** |
+| Rejected for now | corpus-routed, no crawl, no search | ~13–17s |
+
+**Search is kept, and the reason is a gap that has been measured on one dimension and not the other.**
+`corridor_queries` interpolates purpose, nationality and residence. Purpose is now swept offline (four
+values, entry 47) and that is why the corpus contains what it does. **Nationality is 198-valued and has
+never been checked**: nothing shows whether a nationality-specific query surfaces pages the offline
+sweep misses. Dropping search would trade a known 9.1s for an unmeasured recall risk on exactly the
+dimension not yet examined — and recall is the thing this whole line of work exists to protect.
+
+Dropping search becomes correct once the superset bar holds across several destinations with
+nationality-varied corridors. Then the crawl and search both leave the request path for good.
+
+### How settled this is
+
+**The measurements are solid; the design on top of them is one session's answer and has not been argued
+against.** The phase split, the fourteen-of-fourteen redundancy, the top-N table and the non-circularity
+check are all reproducible and should be trusted. That the right response is *a flat top-N index plus
+dropping the crawl* is a judgement made quickly, on one destination, by whoever also took the
+measurements — which is the weakest position from which to design. [TODO.md](TODO.md) item 22 lists
+where it is most likely wrong and asks the next session for its own view before building.
+
+What is not open for revision is below, and in the search decision above.
+
+### What must not be lost when the crawl goes
+
+- **A destination with no corpus still crawls.** Removing the crawl is conditional on having a map, not
+  a blanket removal; a country nobody has built must behave exactly as it does today.
+- **The crawl is where `crawl_failures`, `blocked_urls` and `disallowed_urls` come from**, and those
+  feed `inaccessible_domains`, `decision_blocking_urls` and the notes a refusal is made of (entries 27,
+  32, 36). Without a crawl those have to come from the shortlist fetch instead, or a corridor will
+  quietly stop reporting that an authority refused it — which is the reporting discipline entry 18
+  exists to protect, lost as a side effect of an optimisation.
+- **`_readable_only` reads crawl state** to drop pages already proved unreadable. With no crawl it has
+  no state to read, so the corpus's own `status` is what should stand in.
+
+---
+
+## 47. The candidate set ratchets: corpus ∪ live, pinned by what already worked, fed by write-back
+**2026-08-22 · implemented**
+
+Entry 46 left the corpus not a superset of what a corridor finds. The fix is not to make the offline
+job exhaustive — **measurement says it cannot be** — but to make the candidate set *monotonic*.
+
+**The property, stated exactly.** For a given corridor the candidate set is **non-decreasing** across
+runs. Not identical, which would freeze recall; never smaller, which is what lost Canada its answer on
+2026-08-21. Run two sees everything run one saw, plus whatever else turned up.
+
+### Why an offline sweep cannot close the gap, which is the measurement that decided this
+
+Entry 46's gap was blamed on traveller-free queries, and the specific term turned out to be the
+**purpose**, not the nationality — four values, not 198. So the obvious fix was to sweep purposes
+offline, and that was done: `corpus_queries` gained `corridor_queries`' purpose templates, and a Canada
+rebuild went from 30 queries to 70 and from 1,071 entries to 3,130, now with depth genuinely exercised
+(1,977 at depth 1, 972 at depth 2, 154 at depth 3).
+
+**It still did not contain the page.** And the reason is the one that settles the architecture: the
+exact query that had surfaced `supporting-documents` — `site:canada.ca tourism visa documents required` —
+**was re-run, and search did not return it this time.** Search is nondeterministic *at the source*, so
+no amount of offline query engineering can guarantee a superset. Only keeping what a live run actually
+found can.
+
+Measured against the live run's 24 fetched pages: 18 held, 6 apparently missing, of which **one was an
+alias** — `cic.gc.ca/english/visit/visas.asp` sitting in the corpus as `www.cic.gc.ca/...`. Canada's
+3,130 stored URLs are 2,996 distinct pages. So `canonical_key` folds scheme, case and a leading `www.`
+for *comparison only*; the stored URL is untouched, because that is what gets fetched.
+
+### The three mechanisms
+
+- **Union.** `corpus ∪ live discovery`, seeded where candidates are assembled. Search still runs; the
+  corpus supplies what search forgot, and search supplies what the corpus lacks. Trust is applied when
+  the corpus is *read*, so a domain later removed from the registry stops being offered without anyone
+  rebuilding a corpus and without deleting what was found.
+- **Pins.** A page that already filled a role for this corridor keeps its shortlist place regardless of
+  ranking. **No new store**: `StoredCorridor.resolved.sources` was already the proven set, used only as
+  a whole-answer cache. This is what stops the corpus making the scorer *more* load-bearing — the pool
+  grows from ~471 to ~3,000, and entry 40 says a page ranked out is unrecoverable. The age check
+  deliberately does not apply: a corridor too old to serve as an answer is still a good hint about which
+  pages matter.
+- **Write-back.** What a run discovered folds into the corpus, additively. **This is not the fallback
+  entry 44 rejects, and the direction is the difference.** That was *deciding a corridor* from a live
+  search after a corpus miss, so the answer depended on that day's search. This keeps what a run already
+  found, so later runs start from more. It cannot change the current answer — the resolution is made
+  before it runs — and widens no trust.
+
+### Measured, end to end
+
+| | |
+| --- | --- |
+| Before | 18 of 24 fetched pages held; 5 genuine gaps |
+| After one corridor run through the new path | **24 of 24 held** |
+| Proven entries marked | 3 — the pages that filled roles |
+| Offline: a total search failure | **loses zero candidates** (`test_the_candidate_set_never_shrinks_between_runs`) |
+
+### One bug worth keeping, because it made the strongest tier unreachable
+
+`status="proven"` was set only for pages in `resolver.discovered`, which correctly excludes anything the
+corpus already held — a page from the corpus is not a discovery. But the common case is that the
+*answering* page came from the corpus. A live Canada run wrote 86 entries and **zero** proven ones, so
+the one tier that is never evicted could never be entered. Role-filling pages are now written back
+whether or not this run discovered them, because proven is about answering, not about finding.
+
+Status is also strictly monotonic now (`_STATUS_RANK`): a single `502` on a later crawl must not demote
+a page that has answered a corridor, or its retention tier would drop with it.
+
+### Still open
+
+- **Live discovery has not yet been decayed away.** The corridor still spends its searches every cold
+  run. Turning that off for a proven, fresh corridor is where the cost goes to zero and determinism
+  becomes total; it is gated on the superset bar holding across more than one destination.
+- **Eviction is designed and not built.** 723 of Canada's original 1,071 entries scored zero on role
+  vocabulary, so the Noise tier is most of the store. Nothing evicts yet, so the corpus grows.
+
+---
+
+## 46. The corpus is built, and it is not yet a superset of what a corridor finds
+**2026-08-22 · implemented, with a measured gap that gates item 19**
+
+Entry 44's store exists: `discovery/corpus.py` holds a country's pages, `discovery/corpus_build.py`
+gathers them, and `visa-discover corpus --country CA` runs it. Canada, twice:
+
+| Run | Queries | Seeds | Crawled | New | Held |
+| --- | --- | --- | --- | --- | --- |
+| `--pages 60`, 36s | 30 | 203 | 355 | 355 | 355 |
+| `--pages 200`, 97s | 30 | 203 | 1071 | 716 | **1071** |
+
+The additive merge behaved: all 355 entries from the first build survived the second with `times_seen`
+at 2, and nothing was dropped. **`entry-requirements-country.html` sits in the corpus at depth 1** —
+the page whose absence refused `canada/GB/GB/tourism` on 2026-08-21 is now durable, which is what this
+was built to do.
+
+### What the corpus does differently from a corridor, and why each is deliberate
+
+- **No traveller.** Queries name the destination only, and links are scored with
+  `score_role_vocabulary` — extracted from `score_link` rather than copied, so the corridor-independent
+  half has one implementation. A corpus guided by one nationality's vocabulary would be a corpus
+  quietly built for that nationality.
+- **Pages about other countries are kept.** `resolver.py` vetoes them, correctly, because for one
+  traveller a page about Brazil is noise. The corpus serves every corridor, so Canada's per-nationality
+  pages are exactly what a later India corridor needs. Archived paths and site furniture are still
+  rejected: those are not guidance for anybody.
+- **It never deletes.** A crawl finding less than last time is ordinary — search moves, a host times
+  out — and treating that as a withdrawal would rebuild the failure the corpus exists to prevent.
+- **Trust is applied when it is read, not when it is written.** A corpus outlives the registry row that
+  built it, so narrowing `authority_domains.yaml` takes effect without anyone rebuilding every corpus,
+  and without deleting what was found.
+- **A corrupt corpus raises rather than reading as an empty country** — unlike `corridor_store.py`,
+  because a corridor that will not parse is safely re-resolved while a corpus is the *candidate
+  source*, and treating corruption as "no pages here" would disguise it as a country nobody built.
+
+### The gap, which is the reason this entry is not a success report
+
+**`.../visit-canada/supporting-documents` is absent from a 1,071-entry corpus, and the corridor run
+fetched it the same day** — scored 64.0 for `document_checklist`. So the corpus is **not** a superset
+of what a corridor finds.
+
+The cause is the thing that makes it corridor-independent — but **the specific diagnosis written here
+first was wrong, and the recall log had the answer sitting in it.** This paragraph originally said
+`corridor_queries` asks `site:canada.ca Canada visa requirements United Kingdom` and blamed the
+*nationality*. Checked 2026-08-22, the page entered the corridor run as a **search seed** from:
+
+```
+site:canada.ca tourism visa documents required
+```
+
+which is `corridor_queries`' second template, `f"site:{domain} {corridor.purpose} visa documents
+required"`. **The discriminating term is the purpose, not the nationality**, and that changes the size
+of the problem completely: purpose has **four** values where nationality has 198, so the measured gap is
+closable offline with four passes rather than being a Cartesian trap. Whether nationality-specific
+phrasing surfaces anything unique is **untested** and must not be assumed either way.
+
+**Two further things this got wrong by inference rather than measurement**, both corrected on the same
+day and both worth keeping visible because the habit is the point:
+
+- **Depth was never exercised, so "depth did not close it" claimed more than was tested.** Of Canada's
+  1,071 entries, **1,032 sit at depth 1** and only 39 deeper. The build produced **203 seeds** against a
+  **200-page budget**, so it spent the whole allowance fetching seeds and barely crawled at all. The
+  offline job's headline advantage over the request path — no latency bound, so it can go deeper — is
+  not currently being realised. That is the same seed-frontier exhaustion already recorded for the
+  corridor crawl under *Smaller things*.
+- **Two-thirds of the corpus is noise.** Scored with the corridor-independent `score_role_vocabulary`,
+  **723 of 1,071 entries score zero** and only 79 score 20 or above. Retention now has a measured basis
+  instead of a guessed one.
+
+The lesson repeats one this file records at least four times already: this was described from reading a
+code path when a recall log written for exactly this question was one command away.
+
+**This gates [TODO.md](TODO.md) item 19.** Switching the request path to corpus-only today would trade
+variance for a *smaller* candidate set — better determinism, worse coverage, which is not the trade
+entry 44 argued for. Two fixes, not exclusive: widen `corpus_queries`, and let a corridor run feed what
+it discovered back into the corpus. **The second is not the fallback entry 44 rejects** — that was
+*deciding a corridor* on a live search after a corpus miss; this is keeping what a run already found,
+which is additive, widens no trust, and cannot change an answer on its own. It still needs arguing in
+writing before it is built.
+
+**And this is the second time in two days that building the thing moved the diagnosis.** Entry 44's
+motivating number had already weakened when three back-to-back Canada runs produced no variance at all;
+now its mechanism turns out to be incomplete in the other direction. Neither kills the corpus — the
+answering page *is* durable now, and offline depth is real — but the case for it is narrower than the
+entry as first written, and both corrections came from running it rather than reasoning about it.
+
+---
+
+## 45. The corridor command reaches the registry, and the test suite stops being allowed on the network
+**2026-08-22 · implemented**
+
+`visa-discover corridor` read `get_destination_registry()` and nothing else, so `--destination canada`
+answered *"Unknown destination: canada"* while the API resolved that same corridor perfectly well.
+Seven destinations are configured; forty have a registry row. **Every live check of a registry
+corridor has therefore been run from a throwaway script** — which is why nobody had a candidate list
+until entry 43, and why the flip rate item 17 asks for had not been counted.
+
+It now falls back to `prepare_destination`, and a configured destination still wins where it has
+domains, because its hand-written sources carry authorisations the registry knows nothing about —
+Singapore's VFS provider is named by an official page, and that naming exists only in
+`destinations.yaml`.
+
+**`--runs N` resolves the corridor N times and reports what varied**, which is item 17's counting.
+It deliberately does not go through `AutomaticDestinationService`, because that reads the corridor
+store, and a stored corridor would answer runs two and three from run one — hiding exactly the thing
+being measured.
+
+### What this cost, and it is the finding worth keeping
+
+**Removing that early exit made the test suite perform a live corridor resolution.** The existing
+test asserted that `united-states` exits 3; with the fallback in place it went on to resolve — 21
+seconds, live Brave searches, live page fetches, and a live model call, because `.env` sits on a
+developer machine and `settings` reads it. A 243KB recall record was written for a corridor nobody
+asked for.
+
+**Nothing caught it.** `AGENTS.md` has always required that tests never touch the network or an LLM,
+and until now that rule was upheld entirely by convention plus the seams — `transport=`, `now=`,
+`renderer=`, the fake generators. Convention holds right up until a change adds a code path that has
+no seam, and `run_corridor` was one: it built its own resolver from global settings and went
+straight to the network. The test "passed" for years by relying on the command bailing out early for
+an unrelated reason. When that reason went away the failure surfaced as an exit-code mismatch, and
+the network access was invisible in the output.
+
+**So the rule now has teeth**, and both halves matter:
+
+- `tests/conftest.py` refuses `socket.socket.connect` for every test. Patched at the socket rather
+  than at `httpx`, because that is the one chokepoint every client, resolver and driver reaches, so
+  a new dependency cannot route around it.
+- It raises `NetworkAccessDuringTest`, **not** an `OSError`. Several paths under test catch `OSError`
+  and `httpx.HTTPError` and turn them into an ordinary "unreachable source" outcome — which is the
+  reporting this project cares most about, and which would have swallowed the guard and let the
+  offending test pass while describing the block as an authority being down.
+- `run_corridor` takes a `resolve=` seam, so the command can be tested without one.
+
+The guard found the offending call on its first run and nothing else in 390 tests, which is the
+evidence that the suite was otherwise honest. It also took the suite from 4.0s to 2.7s, all of which
+was the one test making real requests.
+
+**The lesson is the one this project keeps relearning, one level over:** a rule that is only a
+convention is a rule nobody is checking. Entry 36 found the `robots.txt` parser inert because no
+unit test could catch it; this is the same shape — the safeguard was real, the enforcement was not,
+and only running the thing showed it.
+
+### Two defects in the variance report, both found by writing its test
+
+Neither would have shown in a live run, and both would have quietly corrupted the number item 17
+exists to produce:
+
+- **The run count came from the recall records.** A run whose record could not be read simply
+  vanished, so two runs where one write failed described themselves as one run. Entry 43
+  *deliberately* swallows a recall-log write error rather than costing a corridor its answer, so
+  this was reachable by design. Outcomes now come from the resolutions, which always exist, and
+  records only supply candidates; when fewer records than runs survive, the report says so **before**
+  the numbers, because otherwise an absence reads as "this run did not find it" rather than "no
+  record".
+- **A stale record could be read as this run's.** The log is keyed by corridor and keeps only the
+  newest run, so a record from last week sits exactly where the second run looks. Comparing run 2
+  against last week's run 1 would invent variance that never happened. Records are now accepted only
+  when `recorded_at` is at or after the moment that run started.
+
+---
+
+## 44. A country's page corpus is persisted, and search leaves the request path
+**2026-08-21 · decided; not implemented**
+
+TODO item 17 asks what a corridor that flips between runs should do. This is the answer: **option 3,
+widened.** The set of pages a corridor may consider stops being re-derived from search on every request
+and becomes a stored corpus per **country**, populated by a deliberate offline job. Which of those pages
+answers *this* traveller is unchanged and stays live.
+
+**The evidence is entry 43's, and it is a measurement rather than an inference.**
+`canada/GB/GB/tourism`, twice within an hour, same code, same five domains: refused once, resolved once.
+On the resolving run `entry-requirements-country.html` was candidate **15 of 470** at 53.4 — comfortably
+inside 25 shortlist places — and arrived **two ways**, as a `site:canada.ca` search seed *and* by crawl at
+depth 1 from `check-visa-eta.html`. On the refusing run search did not return it at all. So the page is
+not marginal and the scorer is not at fault: **recall flipped, and a resolved corridor is evidence only
+that this run of the pipeline worked.** The corridor store then keeps the lucky answer for three weeks,
+so a traveller in week one and a traveller in week four get different products from identical code.
+
+> **Measured 2026-08-22, and it weakens the urgency of this entry — recorded here rather than left in
+> the TODO, because an entry whose motivating number moved should say so where it is read.** Three
+> back-to-back runs of `canada/GB/GB/tourism` with the cache cleared produced **471 candidates and no
+> variance whatever**: all three resolved, and `entry-requirements-country.html` arrived every time by
+> *both* routes. So the flip rate is "0 of 3 back-to-back", not 0 — the runs were two minutes apart,
+> where the observed flip was an hour and the original divergence two days — but it does mean **the
+> case for this entry now rests on crawl depth and latency, not on a measured frequency of flipping.**
+> The one flip entry 43 caught remains a single observation. TODO item 17 keeps the gapped re-run that
+> would settle it.
+
+**This is entry 34's move one level down.** That entry took *who to believe* out of the request path
+because domains do not vary by corridor. **Which pages exist** does not vary by corridor either. Only
+which one answers a given traveller does:
+
+| | Who to believe (domains) | **Which pages exist (corpus)** | Which page answers *this* traveller |
+| --- | --- | --- | --- |
+| Corridor-dependent? | No | **No** | Yes |
+| How many | ~3–5 per country | **~20–50 per country** | one per role |
+| Decided by | a rule, once per country | **a crawl, offline, refreshed** | the model, every corridor |
+| Lives in | `config/authority_domains.yaml` (git) | **a store** | computed per request |
+
+`ARCHITECTURE.md` has carried this as a two-column table asserting that URLs *are* corridor-dependent.
+That is true of the chosen URL and false of the corpus, and the conflation is why discovery pays search
+cost, at request latency, for a question that does not change between travellers.
+
+### Why this is not merely caching what search returns
+
+- **Recall effort moves off the latency budget.** The depth-0 budget exhaustion recorded under *Smaller
+  things* — every seed popped before any child, so depth-2 discovery is lost — is a compromise forced by
+  a 60-second request. An offline job has no such bound: deeper hops, sitemaps (item 10), far more
+  queries per country. Canada's page was reachable at depth 1, and the pages currently lost are deeper.
+- **The shortlist stops being a recall gate for most countries.** Entry 40 widened it to 25 because a
+  page ranked out is unrecoverable. Choosing 25 from a curated 20–50-page corpus is a different problem
+  from choosing 25 of 470 crawl candidates, and the scorer's known faults stop being load-bearing.
+- **Cost amortises across nationalities.** One population crawl of Canada serves every corridor into
+  Canada. Up to fifteen Brave queries and a two-hop crawl leave the request path entirely.
+
+**Trust is untouched.** A stored URL is still checked against `trusted_domains` and still fetched through
+`LiveSourceFetcher`, whose `validate_route` cannot be bypassed — so a corpus entry cannot survive a later
+narrowing of the domain registry, and cannot smuggle in a page that would not pass today.
+
+### On a corpus miss: refuse, and flag the country
+
+Entry 38's rule, applied to pages. A country missing from `authority_domains.yaml` is refused, never
+bootstrapped live, because falling back "would silently reintroduce the per-request variance the file
+exists to remove". A thin or rotted corpus is the same situation: **refuse, name what was missing, and
+put the country on the repopulation queue.** Falling back to live search would restore the lottery for
+exactly the requests that most need it not to be one, and would do it invisibly.
+
+The refusal must tell three cases apart, because they have different fixes: *no corpus for this country*,
+*a corpus exists but no page fills `visa_decision`*, and *stored URLs no longer resolve*. Only the third
+means the corpus has rotted.
+
+### The other three options, in item 17's own terms
+
+1. **Re-search on refusal** — rejected. It turns a refusal into "search until something answers", which
+   is how a pipeline talks itself into an answer. Item 17 already calls it the worst of the four.
+2. **Widen or vary the queries** — rejected. Fifteen queries against five domains is already the cold
+   path's cost (known problem 5). More queries is more surface, latency and quota for an unknown gain,
+   and it leaves recall a per-request lottery with better odds rather than removing the lottery.
+3. **Keep what was found** — **taken, and widened from per corridor to per country.** Strictly stronger
+   at identical risk: a page found for `canada/GB/GB/tourism` also serves `canada/IN/IN/business`.
+4. **Accept and report it** — rejected as a resting place, though the reporting is kept. Item 17 is right
+   that this alone "does nothing for the traveller who got the unlucky run".
+
+### What it does not fix, which matters as much as what it does
+
+1. **A page the offline job never finds is then missed deterministically, for ever.** This trades a coin
+   flip for a stable outcome. That is the better failure — a stable gap is visible, diagnosable and
+   fixable where a fifty-percent gap is none of those — but it makes the population job's recall the
+   whole ballgame, and it is option 3's stated risk in mirror image.
+2. **A withdrawn page persists in the corpus.** Bounded by the evidence TTL and by the refresh job
+   catching `404`s and off-domain redirects, which is the corpus-rot signal. Bounded is not zero.
+3. **Adjudication is still a model call.** Entry 43's resolving run was `decided_by=model`, and a later
+   run could judge the same shortlist differently. This removes non-determinism at the **recall** layer
+   only and must not be described as doing more. Known problem 10 stands unchanged.
+
+**So the first step is still item 17's own:** run one corridor three times and count, so the flip rate is
+a number rather than an anecdote. The recall log makes that cheap, and the number is what says how much
+the corpus is worth. It also settles item 17's note about item 3 — **each of the twenty corridors runs
+twice, or the write-up says plainly that it did not.** One run cannot tell a corridor that works from one
+that works half the time.
+
+### This does not undo entry 43
+
+Entry 43 chose **overwritten per corridor, never accumulated**, and that stands. The corpus is a
+different artifact with a different contract, and the two must be built as two:
+
+| | Recall log (entry 43) | Corpus (this entry) |
+| --- | --- | --- |
+| Keyed by | corridor | **country** |
+| Lifetime | overwritten each run | **additive, never pruned by a bad run** |
+| Purpose | diagnose the run that just happened | **be the input to the next run** |
+| Depended on? | **No** — deleting it costs a question | **Yes** — it is the candidate source |
+
+The row shape is nearly the same: `ConsideredCandidate` already carries the URL, title, `found_by`,
+depth, `discovered_from`, the per-role scores, `shortlisted` and `fetched`. But entry 43's *"not evidence
+and nothing depends on it"* is load-bearing for that file — it is what makes a diagnostic safe to run
+inside a request, and what lets a write failure be swallowed. Inheriting the code must not inherit that
+sentence.
+
+### Why the corpus and not precomputed answers
+
+The question that prompted this was whether to precompute visa research per corridor. The arithmetic
+refuses it before the safety argument has to:
+
+| Design | Records | Refresh cost per cycle | Verdict |
+| --- | --- | --- | --- |
+| `destination × nationality × residence × purpose` | 38.8 billion | — | absurd |
+| Residence reduced to post selection | 196,020 | ~2.9M searches, ~392k model calls | categorically impossible |
+| Top ~200 corridors precomputed | 200 | ~3,000 searches, ~400 model calls | affordable, covers only the head |
+| **Page corpus per country** | **~4,000–10,000 URLs** | **conditional GETs, mostly `304`** | **this entry** |
+| Decision rows per nationality | ~157k rows, ~30MB | ~600 model calls to populate once | affordable, and the riskiest layer |
+
+Storage is never the constraint — cleaned text is capped at 50,000 characters. **Search quota and model
+calls are**, and both scale with pages read rather than corridors served. That is what makes a corpus
+work where corridor precomputation cannot: one crawl of Canada serves every nationality asking about
+Canada.
+
+**A decision-row table is deliberately excluded for now, and its cheapness is the reason to be careful.**
+Canada's page *is* a table of roughly 200 nationalities, so a few hundred model calls would populate the
+world. But that is a bulk-inference surface, and this project's defining failure (entry 15) is a
+confident wrong answer. A wrong pick is currently ephemeral and per-request; a wrong row would sit in a
+store for weeks and be served with a citation. Entry 42 proved that a nationality's answer can fall
+outside the excerpt **silently**. If it is ever built: a nationality the page did not name yields **no
+row**, never a false one, and absence must be distinguishable from "no visa needed". It layers onto the
+corpus without rework, so nothing is lost by waiting for item 3's numbers.
+
+**A personalised plan is never stored as truth.** It is a rendering of the corpus and its snapshots for
+one traveller, and the profile fields that would explode its key space — city, residence status, permit
+expiry — change only prose. What may be stored is an audit copy of what a traveller was told and when,
+which is a different artifact with a different purpose.
+
+### What a store must not lose
+
+These are already right in the file stores and are easy to lose in a migration:
+
+- **A row records when the evidence was retrieved, never when the row was written.** `_serve_stale`
+  keeps the original `fetched_at` and a `304` moves it, because a validator match proves currency. A
+  schema that collapses the two starts lying about how current its guidance is (entry 4).
+- **The stale ceiling still refuses.** A stored page past `source_maximum_stale_hours` is refused rather
+  than served, exactly as today.
+- **A hash change marks a source; it never auto-swaps a role-bearing one.** Auto-rediscovery of a
+  checklist is the wrong-checklist failure with the human removed (item 14).
+- **No effective dates and no temporal rules model.** `published_date_in_path` reports rather than vetoes
+  (known problem 12), and inferring effective dates from prose is the class of confident guess this
+  project refuses everywhere else.
+
+### Three provenance gaps found while tracing this, and the store is not the fix for any of them
+
+The brief asked whether the system can answer *"why did you say an Indian passport holder needs this
+visa?"* with a traceable source. It can name the page and when it was read, and no more:
+
+- **`SourceReference.supporting_excerpt` is never populated on the live path.** It is written only by
+  `FixtureSourceFetcher` from the Singapore manifest; `LiveSourceFetcher._build` does not set it and the
+  extractor passes references through unchanged. **Every live plan cites a URL with no supporting
+  quote.**
+- **`content_hash` never reaches `VisaPlan`.** It exists on `FetchedSource`, but `SourceReference` has no
+  hash field, so a plan cannot be tied to the exact text it was read from.
+- **`decided_by`, `score` and `signals` never leave `ResolvedCorridor`.** Why a page was chosen for a
+  role is on disk and invisible in the response.
+
+All three are schema and plumbing, they are worth fixing whether or not the corpus is built, and saying
+so matters: **provenance is not an argument for the store**, and folding it in would let a large change
+borrow justification from a small one. Known problems 20, 21 and 22.
+
+### Rejected
+
+- **Precomputing answers per corridor**, at any width — the arithmetic above, before any safety argument.
+- **A `visa_rule` decision table now** — the riskiest layer, and item 3 is what should decide it.
+- **Storing plans as truth** — a plan is a rendering, and its personalisation is what explodes the keys.
+- **Falling back to live search on a corpus miss** — silently reintroduces the variance the corpus exists
+  to remove, on exactly the corridors that need it most (entry 38).
+- **Effective-date modelling**, and letting a hash change auto-swap a role-bearing source.
+- **Moving `authority_domains.yaml` into the store** — entry 34's whole argument is that the riskiest
+  automated decision in the system should be a reviewable diff. It stays in git.
+- **Collapsing the corpus into `recall_log.py`** — same rows, opposite contract; see above.
+
+---
+
 ## 43. Write down what a corridor considered, because "ranked out" and "never found" had looked identical
 **2026-08-21 · implemented**
 

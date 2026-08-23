@@ -235,9 +235,16 @@ that expired, self-signed, hostname-mismatched and unknown-CA certificates are s
   researched when a plan is asked for. No human approves a domain; the rule below does. See
   `discovery/automatic.py` and [DECISIONS.md](DECISIONS.md) entry 19.
 
-Resolving a corridor cold costs about **53 seconds** — a bootstrap, a crawl, ten fetches and a model
+Resolving a corridor cold is the expensive part of a request — a crawl, twenty-five fetches and a model
 call — so results go in `discovery/corridor_store.py`, one JSON file per corridor, keyed by the
-whole corridor and expiring in **weeks**. That is deliberately a much longer life than the evidence
+whole corridor and expiring in **weeks**.
+
+> **Two numbers that used to sit in this sentence were stale and are deliberately not replaced with a
+> guess.** It read "about 53 seconds — a bootstrap, a crawl, ten fetches and a model call". The bootstrap
+> left the request path in entry 38; the shortlist went from ten places to twenty-five in entry 40; and
+> the 53s predates both. What is measured is the **corridor phase alone at 39–45s** (2026-08-18, on the
+> registry path), and **no full cold request has been timed since** — see known problem 5, which also
+> names the cause: three searches run per trusted domain and the registry gives a country up to five. That is deliberately a much longer life than the evidence
 cache's hours: which *pages* answer a corridor changes when a site is redesigned, not when its
 guidance is edited, and the pages themselves are re-fetched under their own short TTL every time a
 plan is produced. It is a file store rather than an `lru_cache` because a process-lifetime memo
@@ -250,11 +257,19 @@ applied from — because authorities publish per-nationality pages and route app
 serving where they live. There are far too many corridors to curate by hand, which is exactly why
 this is automated while per-country trust is not.
 
-| | Who to believe (domains) | Which page to read (URLs) |
-| --- | --- | --- |
-| Corridor-dependent? | No — `mofa.go.jp` serves everyone | Yes |
-| How many | ~3 per country | Tens of thousands |
-| Decided by | **A rule, once per country** | **The machine, every corridor** |
+| | Who to believe (domains) | Which pages exist (corpus) | Which page answers *this* traveller |
+| --- | --- | --- | --- |
+| Corridor-dependent? | No — `mofa.go.jp` serves everyone | No | Yes |
+| How many | ~3 per country | ~20–50 per country | One per role |
+| Decided by | **A rule, once per country** | **A crawl, offline, refreshed** | **The machine, every corridor** |
+
+> **The middle column is new, and until entry 44 this table did not have it.** It read as two columns,
+> asserting that URLs are corridor-dependent — true of the *chosen* URL and false of the set a corridor
+> chooses from. The conflation is why discovery pays search cost, at request latency, for a question that
+> does not change between travellers, and why recall is re-rolled on every request: entry 43 measured
+> `canada/GB/GB/tourism` finding its answering page fifteenth of 470 on one run and not at all an hour
+> later. **Decided as entry 44 and not implemented** — [TODO.md](TODO.md) items 18 and 19. Until then the
+> middle column is produced live, per corridor, by the search and crawl described below.
 
 > **The left column is committed data (entries 34 and 38).** `config/authority_domains.yaml` is
 > generated offline by `visa-discover registry`, read once at construction, and consulted in place of a
@@ -274,7 +289,9 @@ this is automated while per-country trust is not.
 > domain and survives regeneration (entry 39). That is the hatch entry 33 said would be needed for the
 > governments that use no hostname marker; twelve countries required it.
 >
-> **40 of 198 countries are built.** The rest refuse with a message naming the command.
+> **40 of 198 countries have a row; 39 are researchable.** Austria's row carries no domain the rule
+> could confirm, so it refuses like the 158 countries with no row at all — correctly, and by design
+> (entry 39). The rest refuse with a message naming the command.
 
 ### The stages
 
@@ -310,7 +327,7 @@ this is automated while per-country trust is not.
    dropped first — a host whose name does not resolve, or a URL an authority refused, both facts
    already established rather than predicted. A page that was merely too large, not HTML, or `502`
    stays: retrieval reads PDFs and renders where the crawler does not, so it may still be evidence.
-   Ten places: the best three per role, then the
+   **Twenty-five places** (entry 40): the best three per role, then the
    next best overall, then **one place reserved for each registrable domain's best page**. The
    reservation matters because these places decide what is *read*, and only a read page can fill a
    role — so without it an authority whose pages all score below another's is absent rather than
@@ -441,6 +458,66 @@ marker stays out until reviewed data names it.
 
 The `bootstrap` command still approves nothing: it prints the whole list for a person to read. The
 cap applies where domains are put to use without one, in `automatic.py`.
+
+---
+
+## Persistence and freshness
+
+Four things are kept on disk, at four different lifetimes, and they are described separately above
+because each grew out of a different problem. Together they are the answer to "what does this system
+remember", so they are also worth reading in one place.
+
+| Store | Keyed by | Lifetime | Depended on? | Where |
+| --- | --- | --- | --- | --- |
+| Authority domains | country | reviewed, committed to git | **Yes** — a missing country refuses | `config/authority_domains.yaml` |
+| Source snapshot | URL | TTL 24h, refused past 168h | **Yes** — it is the evidence | `var/cache/`, `research/source_cache.py` |
+| Corridor resolution | full corridor | 3 weeks | **Yes** — it is what a warm request serves | `var/corridors/`, `discovery/corridor_store.py` |
+| Recall log | corridor | overwritten each run | **No** — deleting it costs a question | `var/recall/`, `discovery/recall_log.py` |
+| **Page corpus** | **country** | **additive, never pruned** | **Yes** — the candidate source | `var/corpus/`, `discovery/corpus.py` |
+
+**The corpus is read in the request path** (entry 47): a corridor's candidates are `corpus ∪ live
+discovery`, pages that already filled a role for that corridor keep their shortlist places, and what a
+run discovers is folded back in additively. The property this buys is that a corridor's candidate set is
+**monotonically non-decreasing** across runs — never identical, which would freeze recall, but never
+smaller, which is what lost Canada its answer.
+
+> **Decided and not yet built (entry 48, [TODO.md](TODO.md) item 22).** The crawl is 62% of a cold
+> corridor and contributed **zero** unique shortlisted pages on the run that was measured — every page
+> it found that mattered was already in the corpus. So the corpus becomes a **routing index** rather
+> than a candidate list: a corridor-independent score stored at build time, pre-filtered to the top few
+> hundred, and no crawl at all for a destination that has one. Expected 54.2s → ~21s. Search stays,
+> because the nationality dimension has never been measured.
+
+**The lifetimes differ because the things do.** A government page can be edited any day, so evidence is
+measured in hours. Which *pages* answer a corridor changes when a site is redesigned, so a resolution is
+measured in weeks. Whose domains a country's government controls changes on the timescale of
+governments, so it is committed and reviewed rather than expiring at all.
+
+Three rules hold across all of them, and each is a place where a plausible simplification produces a
+serious defect:
+
+- **A stored row records when the evidence was retrieved, never when the row was written.** A failed
+  refresh serves the cached text flagged `stale` and **keeps its original `fetched_at`**; a `304` moves
+  it, because a validator match proves the text is still current. Collapsing the two would let cached
+  guidance present itself as freshly checked (entry 4).
+- **The stale ceiling refuses.** Past `source_maximum_stale_hours` a cached page is refused rather than
+  served, so out-of-date guidance cannot look current.
+- **A diagnostic may never cost an answer.** The recall log is written in a `finally` and swallows its
+  own `OSError`, which is what makes it safe inside a request. That licence belongs to the recall log
+  alone: the other three are depended on, and a store that cannot be read is a refusal.
+
+**A plan is not stored.** It is a rendering of the snapshots and the resolution for one traveller,
+rebuilt on every request. The profile fields that would explode its key space — city, residence status,
+permit expiry — change only its prose, not the rules behind it, so storing it would multiply rows
+without adding facts and would attach a `last_checked` claim that ages badly. See entry 44, which also
+argues why the **corridor is the wrong unit to precompute** at any width, and what a fifth store — a
+country's page corpus — would add.
+
+> **What this does not yet do.** Nothing detects that a stored page has changed: `content_hash` is
+> recorded on every snapshot and read by nothing ([TODO.md](TODO.md) item 14). Nothing re-validates a
+> cached entry against changed retrieval rules, so clearing `var/cache/` is required when testing one
+> (known problem 17). And all four are local directories, so a disposable host makes **every** request
+> cold (item 20).
 
 ---
 

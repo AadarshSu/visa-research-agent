@@ -6,8 +6,8 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-21 — update this line when you touch the handoff |
-| **Tests** | 384 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean |
+| **Last updated** | 2026-08-23 — update this line when you touch the handoff |
+| **Tests** | 425 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -22,6 +22,14 @@ The headline production goal — **automatic source discovery**, finding the rig
 a traveller and destination with nobody curating URLs — is **done and running in the request path**.
 **Whose** domains a country may be researched from is no longer decided per request either: it is
 generated offline, reviewed, and committed (entries 34 and 38).
+
+**Decided 2026-08-21 and not yet built: *which pages exist* leaves the request path too** (entry 44).
+Discovery re-derives a country's candidate pages from search on every request, and entry 43 measured what
+that costs — the page answering Canada was fifteenth of 470 on one run and absent an hour later. So a
+country's **page corpus** becomes a store, populated by an offline job, and search stops being the entry
+point for a populated country. Only the corridor-dependent step — which of those pages answers *this*
+traveller — stays live. **Not a move toward precomputed answers**: entry 44 rejects those on arithmetic,
+and a plan stays a rendering rather than a stored fact.
 
 **The cold-request timing in these files is stale — do not quote 34.1s.** It was measured before the
 registry, on hand-configured destinations. Measured 2026-08-18 on the registry path, the *corridor phase
@@ -57,11 +65,27 @@ placeholder imagined is a retry loop this project rejects (entry 29).
 
 ## Current state
 
-**Working end to end for any traveller and any of 198 destinations** — with one correction measured on
-2026-08-18 that this line used to overstate. 198 destinations are *reachable*; **19 of 51 countries
-checked cannot be researched at all**, because no domain of their government passes
-`looks_governmental` (entry 33). Germany, Italy, the Netherlands, Sweden and Canada among them. They
-refuse safely, with a message that misdescribes why.
+**Working end to end for any traveller, and for 39 of 198 destinations** — counted from the committed
+files on 2026-08-22, and this line has now overstated twice.
+
+**The binding limit is the authority registry, not the trust rule.** `config/authority_domains.yaml`
+holds **40 rows**; a country with no row is **refused, never bootstrapped live** (entry 38), and Austria
+has a row with no usable domain, so it refuses too. That leaves **39 researchable and 159 refused** —
+158 with no row at all. This line said *"any of 198 destinations"* and *"198 destinations are
+reachable"* until 2026-08-22, which was already false when entry 38 landed on 2026-08-18: the same file
+says *"40 of 198 countries are built; the rest refuse"* two sections further down. **Both sentences were
+in this file at once**, which is the failure mode these documents keep repeating — a headline claim
+written from intent while the detailed claim below it was written from measurement.
+
+The older correction still stands underneath it and is a *different* limit: **19 of 51 countries checked
+have no domain passing `looks_governmental`** (entry 33) — Germany, Italy, the Netherlands, Sweden and
+Canada among them — which is why twelve needed the `reviewed` override in entry 39. That is about which
+domains a rule can confirm; the 39-of-198 figure is about which countries anyone has generated a row
+for. Fixing the second is quota and review time (item 2); fixing the first needs data.
+
+> **And the interface does not say any of this.** `researchable_destinations()` lists all 198 countries
+> with `status="available"` under `destination_mode: automatic`, so a traveller is offered 159
+> destinations that cannot be researched and gets a `503` on choosing one. Recorded as known problem 23.
 
 Seven corridors verified live; the table below is what each one actually did.
 
@@ -460,10 +484,81 @@ call silently substituting the heuristic (entry 31).
    distinguish a corridor that works from a corridor that works half the time.
    **Now diagnosable, which it was not:** every run writes `var/recall/<corridor>.json` with all 470
    candidates, their scores, and the shortlist and fetch flags (entry 43).
+   **Decided 2026-08-21 as entry 44, and not implemented.** The candidate set becomes a stored **corpus
+   of official pages per country**, populated offline, so search leaves the request path for a populated
+   country and two runs of one corridor consider the same candidates. It fixes the measured cause here —
+   Canada's page was also reachable by crawl at depth 1, which an offline job with no latency budget
+   reaches reliably — and it fixes **recall only**: adjudication is still a model call (known problem
+   10), and a page the offline job never finds becomes a permanent gap rather than a coin flip. TODO
+   items 18 and 19; item 17 keeps the counting that sizes it.
+   **Counted 2026-08-22, and the flip did not reproduce.** Three back-to-back runs, cache cleared:
+   **471 candidates, every run saw all 471**, all three resolved, and `entry-requirements-country.html`
+   arrived every time by *both* a `site:canada.ca` seed and a depth-1 crawl. So the rate is **0 of 3
+   back-to-back** — two minutes apart, against an hour for the observed flip and two days for the
+   original divergence — which cannot tell *"recall is stable"* from *"recall is stable over two
+   minutes"*. The gapped re-run is what would settle it, and until then entry 43's flip is one
+   observation. This item stays open; it has not been shown to be fixed, only not to reproduce today.
+20. **A live plan cites a URL with no supporting quote.** `SourceReference.supporting_excerpt` is written
+   only by `FixtureSourceFetcher`, from the Singapore manifest (`fixtures.py:103`).
+   `LiveSourceFetcher._build` does not set it and `OpenAIVisaPlanExtractor` passes retrieval's references
+   through unchanged, so on the live path it is **always `None`**. *"Why did you say an Indian passport
+   holder needs this visa?"* is therefore answerable as *which page*, never *which sentence*. Found while
+   tracing entry 44; TODO item 21. **Careful when fixing:** an excerpt the model produces has to be
+   checked against the retrieved text, because an unverified quote attributed to a government page is
+   worse than no quote.
+21. **A plan cannot be tied to the text it was read from.** `content_hash` is recorded on
+   `FetchedSource` and `SourceReference` has no hash field, so nothing in a `VisaPlan` identifies the
+   version of the page behind a claim. TODO item 21.
+22. **Why a page was chosen for a role never leaves discovery.** `ResolvedSource.decided_by`, `score` and
+   `signals` are stored in `ResolvedCorridor` and appear nowhere in the API response, so a reader of a
+   plan cannot see whether the model or the heuristic picked its decision source, or on what reasoning.
+   TODO item 21.
+23. **The interface offers 198 destinations and can research 39.** `researchable_destinations()`
+   ([api/routes.py](src/visa_research_agent/api/routes.py)) lists every country in `countries.yaml` with
+   `status="available"` when `destination_mode: automatic`, but a country with no row in
+   `authority_domains.yaml` is refused by `AutomaticDestinationService.destination_for` — 158 of them —
+   and Austria's row has no usable domain. So a traveller picks from a full list and gets a `503` for
+   four out of five choices. The refusal itself is honest and names the command; the *offer* is not.
+   Counted 2026-08-22. The fix is either to mark unbuilt countries in the list or to build the registry
+   out (item 2); do not fix it by loosening the refusal.
 
 ---
 
 ## Current task
+
+**Pick up [TODO.md](TODO.md) item 22: route the request path through the corpus and drop the crawl.**
+Everything needed is in that item and in [DECISIONS.md](DECISIONS.md) entry 48. The short version:
+
+- A cold corridor is **54.2s**, and the **crawl is 33.6s of it (62%)**. Measured live, instrumented.
+- Of the 25 pages that reached the shortlist, **14 came from the crawl and every one of those 14 was
+  already in the corpus.** The crawl contributed nothing the corpus did not already have; it spent 62%
+  of the corridor re-deriving a map the offline job had already made.
+- **Corpus-only resolves the same corridor**, keeping all three role-filling pages — and *not*
+  circularly: those pages came from the offline job, not from write-back. So the speed-up needs the
+  **destination** built, never the **corridor** proven, which means it applies to a nationality nobody
+  has ever asked about.
+- Scoring the whole corpus costs 3.6s and grows with it, so the corpus should be a **routing index**:
+  store the corridor-independent score at build time, pre-filter to the top 400, corridor-score only
+  those — **575ms, 24 of the same 25 pages, and bounded** however large the corpus gets.
+- Target **54.2s → ~21s**. Keep search: purpose is swept offline, **nationality is 198-valued and has
+  never been measured**, so dropping search trades a known 9.1s for an unmeasured recall risk.
+
+**Read item 22's proposal critically rather than implementing it.** The measurements are reproducible
+and should be trusted; the design built on them is one session's answer, taken quickly, on one
+destination, by whoever also took the measurements. Item 22 names three places it is most likely wrong
+and asks for your own view first. Two things are constraints rather than preferences, both explained in
+entry 48: **a corridor must not stop reporting that an authority refused it** (the crawl is where
+`blocked_urls` and `disallowed_urls` come from today), and **search stays until nationality is
+measured**.
+
+**Before that, if there is credit: [TODO.md](TODO.md) item 3**, the twenty-corridor measurement, is
+still what decides whether this is a product, and it is now the thing most of the recent work is waiting
+on. Item 22 makes each of those runs cheaper, so doing 22 first is defensible; doing 3 first tells you
+whether any of it matters.
+
+---
+
+### Where the previous work got to
 
 **Updated 2026-08-21. Of the two corridors investigated on 2026-08-19, one fix has landed and one has
 not.** `canada/GB/GB/tourism` refused because the adjudicator's 6,000-character excerpt cut off the page
@@ -483,6 +578,21 @@ visible:** whether the page arrives at all varies between runs (known problem 19
 shortlisted and fetched — so the next refusal can be diagnosed instead of inferred. It answered the
 question on its first run. The other six verified corridors have not been re-run; that is the rest of
 item 15.
+
+**And the variance now has a decided answer, entry 44, which is where the next work is.** A database was
+investigated on 2026-08-21 and the conclusion is narrower than the question: **persist the country's page
+corpus, never the answer.** Which pages exist does not vary by corridor — only which one answers a given
+traveller does — so the corpus is populated by an offline job with no latency budget, and search leaves
+the request path for a populated country. That is entry 34's move one level down. A miss **refuses and
+flags the country**, per entry 38, rather than falling back to live search.
+
+**Read what it does not do, because it is easy to overstate.** It fixes recall, and Canada's page was
+reachable at depth 1, which an offline crawl reaches reliably. It does **not** make adjudication
+deterministic (known problem 10), and it turns a page the job never finds into a *permanent* gap rather
+than a coin flip — a better failure, because a stable gap is visible and fixable, but a trade rather than
+a win. Precomputing answers per corridor was rejected on arithmetic before safety: 196,020 corridors is
+~2.9M searches a refresh cycle. Items 18 and 19 are the implementation; item 17 keeps the counting that
+sizes it.
 
 `france/IN/GB/tourism` is untouched. It resolves without a checklist because `france-visas.gouv.fr`
 serves a Cloudflare *challenge* rather than a refusal — entry 41, item 5 — and **two things are still
@@ -597,14 +707,19 @@ the last was caught only by probing real authorities, not by any test.**
    justification for reaching for stdlib ("its shortfall errs toward fetching less") was written from
    reading the module and was the exact opposite of true.
 
-**Amended 2026-08-21: the excerpt item is done and the two that lead now are a run and a fix.** Pick up
-**[TODO.md](TODO.md) items 15 and 5 first**:
+**Amended 2026-08-21, twice: the excerpt item is done, and the corridor-variance item now has a decided
+answer.** Pick up **[TODO.md](TODO.md) items 17, 18 and 19 first**:
 
+- **Item 17 — count the flip rate.** The *decision* is made (entry 44); what is left is the measurement
+  that sizes it. Run one corridor three times and write the rate down. Cheap now that the recall log
+  exists, and it is what says how much items 18 and 19 are worth.
+- **Item 18 — build the offline corpus job**, and run it on the ~8 destinations item 3 needs. This is
+  the one that costs credit, and the one that changes what a cold request does.
+- **Item 19 — read the corpus in the request path, and refuse on a miss.** Item 18 buys nothing until
+  this lands. Costs no credit.
 - **Item 15 — re-run the verified corridors against the widened excerpt.** Canada was run twice on
   2026-08-21 — one refusal, one resolution, same code (known problems 18 and 19); six corridors are
   left, and each should be run more than once. Needs search and model credit. Entries 42 and 43.
-- **Item 17 — decide what to do about a corridor whose answer depends on one search result.** New, and
-  the reason item 3's numbers need reading carefully. Costs nothing to think about first.
 - **Item 5 — treat a challenge as a challenge.** France's `403` is Cloudflare asking whether we are a
   browser, not an authority refusing us; our own renderer answers it under our own name. It also fixes a
   sentence shown to travellers that is untrue of what was seen. Entry 41.
@@ -647,6 +762,11 @@ corridors by where a nationality falls in an alphabetical list — and became en
 | Entry | What it changed |
 | --- | --- |
 | 42 | The adjudicator's excerpt stops being a flat head slice. It is the head plus a 3,000-character window centred on every later mention of the traveller's own nationality or residence, to 20,000 characters, with omissions marked `[…]` and prompt rule 12 explaining the mark. Short country words ("US", "UK") match in upper case only. **Confirmed live**: Canada now fills `visa_decision` from a sentence at offset 8,597, which the old 6,000 could not show. Six corridors left to re-run (item 15). |
+| 48 | Measured where a cold corridor's 54.2s goes: **crawl 33.6s (62%)**, search 9.1s, adjudicate 10.8s. Of 25 shortlisted pages, 14 came from the crawl and **all 14 were already in the corpus** — it spent 62% of the corridor re-deriving a map the offline job had. Corpus-only keeps all three role-filling pages, **non-circularly** (they came from the offline job, not write-back), so it needs the *destination* built rather than the *corridor* proven. Consuming the whole corpus costs 3.6s and grows, so it becomes a **routing index**: a stored corridor-independent score, pre-filtered to the top 400 — 575ms, 24/25, bounded. **Decided, not implemented — and deliberately left open to challenge.** TODO item 22. |
+| 47 | The candidate set **ratchets**: `corpus ∪ live`, pinned by pages that already filled a role, fed by additive write-back. Measured — the purpose sweep alone did **not** close entry 46's gap, because search did not return the page for the *same query* that once surfaced it, so no offline sweep can guarantee a superset; write-back did, taking Canada to **24 of 24** fetched pages held. Offline, a total search failure now loses **zero** candidates. |
+| 46 | Entry 44's store is built — `discovery/corpus.py`, `corpus_build.py`, `visa-discover corpus`. Canada holds **1,071 pages**, the additive merge kept every entry across two builds, and `entry-requirements-country.html` is durable at depth 1. **But the corpus is not a superset of what a corridor finds**: `supporting-documents`, fetched by the corridor run the same day, is absent, because traveller-free queries lose what corridor-specific ones surface. That gates item 19 — corpus-only today would trade variance for less coverage. |
+| 45 | `visa-discover corridor` reaches a registry destination instead of answering *"Unknown destination"*, and `--runs N` resolves a corridor repeatedly and reports what varied — item 17's counting is now one command. Building it made the test suite perform a **live** corridor resolution (21s, real searches, a real model call), because `run_corridor` had no seam and the rule against it was convention only; `tests/conftest.py` now refuses `socket.connect` for every test, and it caught the offending call on its first run. |
+| 44 | The candidate set stops being re-derived from search on every request: a country's **page corpus** is persisted, populated by an offline job, and search leaves the request path for a populated country. Entry 34's move one level down — *which pages exist* does not vary by corridor; only which one answers a given traveller does. A corpus miss **refuses and flags the country**, per entry 38, rather than falling back to live search. Answers TODO item 17 as option 3, widened from per corridor to per country. Fixes **recall only** — adjudication is still a model call, and a page the job never finds becomes a permanent gap. **Decided, not implemented.** |
 | 43 | Every run writes down what it considered — all candidates with their scores, the shortlist and fetch flags, the queries, the seeds, and each unreadable URL — to `var/recall/`, on refusals too. It exists because "ranked out" and "never found" had looked identical twice, and it answered that question about Canada on its first run: rank 15 of **470**, and simply absent from the run before. A diagnostic nothing reads back; deleting it costs a question, never an answer. |
 
 ### What changed on 2026-08-18, in one line each
@@ -716,9 +836,21 @@ same falsehood entry 33 removed from `withheld_domains`.
 
 [TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape.
 
-**First: [TODO.md](TODO.md) items 17, 15 and 5** — decide what a corridor that flips between runs should
-do, finish re-running the corridors, then treat France's challenge as a challenge. Item 15 needs credit;
-17 and 5 do not, and Canada's own refusal reason named 5. See *Current task* above.
+**First: [TODO.md](TODO.md) item 22** — route the request path through the corpus and drop the crawl.
+Measured, decided, unimplemented, and deliberately left open to argument. See *Current task*.
+
+**Then: [TODO.md](TODO.md) items 17, 18, 19, 15 and 5** — count the flip rate, build the offline corpus
+job and read it in the request path, finish re-running the corridors, then treat France's challenge as a
+challenge. Item 17's decision is made (entry 44); what is left of it is the counting, which is cheap now
+that the recall log exists and which says how much the corpus is worth. Items 15 and 18 need credit;
+17, 19 and 5 do not, and Canada's own refusal reason named 5. See *Current task* above.
+
+**On sequencing against item 3, because it is a fair objection.** Entry 35 commits that nothing large
+ships before the 20-corridor measurement, and a corpus is large. The reconciliation is that item 18 is
+built once and run first on only the ~8 destinations item 3 needs, so the measurement describes the
+architecture the project intends to keep; scaling to 198 countries afterwards needs no rework. Item 3
+should also run each corridor **twice** — one run cannot tell a corridor that works from one that works
+half the time.
 
 **Then the pre-existing list, in this order.** Each of these costs something — a crawl policy, a
 198-country registry, or search quota. Bulleted rather than numbered, because the numbers that matter

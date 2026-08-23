@@ -126,6 +126,25 @@ produces a serious defect.
   Not the prompt: a model asked for null returned `true` in testing. A wrong yes or no about whether
   someone needs a visa is the most damaging thing this can say, so `decision_is_unverified` overrides
   the model rather than trusting it, and such a plan can never be `verified` (entry 27).
+- **What may be stored is a *page*, never an *answer* (entry 44).** The corridor is not the unit of
+  precomputation at any width — `destination × nationality × residence × purpose` is 196,020 corridors
+  even with residence reduced to post selection, roughly 2.9M searches per refresh cycle, and the layer
+  it would freeze is the one with the most inference in it. What *is* stored is a country's **page
+  corpus**, because *which pages exist* does not vary by corridor; only which one answers a given
+  traveller does, and that stays live. A **plan is a rendering, never a stored fact.** A `visa_rule`
+  decision table is deliberately not built: one page names ~200 nationalities, so a wrong row would sit
+  in a store for weeks and be served with a citation, where a wrong pick today is ephemeral. If it is
+  ever built, a nationality the page did not name yields **no row**, never a false one.
+  **A corpus miss refuses and flags the country** — entry 38's rule applied to pages. Falling back to
+  live search would silently restore the per-request lottery for exactly the corridors that need it not
+  to be one.
+- **A stored row records when the evidence was retrieved, never when the row was written.** A failed
+  refresh serves cached text flagged `stale` and **keeps its original `fetched_at`**; only a validator
+  match moves it, because a `304` proves the text is still current (entry 4). Past
+  `source_maximum_stale_hours` a stored page is **refused rather than served**. Both hold in any store,
+  and both are easy to lose in a migration — a schema that collapses `retrieved_at` and `row_written_at`
+  starts lying about how current its guidance is. A content-hash change **marks** a source and may never
+  auto-swap a role-bearing one: that is the wrong-checklist failure with the human removed.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Never show a traveller an unverified claim that would alarm them if wrong.** The rule from entry 6,
