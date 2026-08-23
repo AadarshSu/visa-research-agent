@@ -24,7 +24,7 @@ The rule says which domains *may* be used. It does not say how many should be, a
 to matter: it was calibrated against countries whose government is small enough that its own
 top-level domain names only a handful of domains. A large government's whole namespace passes the
 same rule, and the cost lands on everything downstream — three searches per trusted domain, a crawl
-budget divided by the hosts seeded, ten places in the shortlist. So the set is also capped, and
+budget divided by the hosts seeded, and the shortlist's places. So the set is also capped, and
 ordered by the authority hint the hostname carries, before anything is fetched.
 
 Everything downstream is unchanged. Approved domains still pass `is_bare_public_suffix`, pages are
@@ -36,6 +36,14 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 
 from visa_research_agent.discovery.bootstrap import BootstrapReport, DomainProposal
+from visa_research_agent.discovery.corpus import (
+    CorpusEntry,
+    CorpusError,
+    CountryCorpus,
+    FileCorpusStore,
+    canonical_key,
+    merge,
+)
 from visa_research_agent.discovery.corridor_store import FileCorridorStore
 from visa_research_agent.discovery.lexicon import (
     Country,
@@ -67,6 +75,7 @@ __all__ = [
     "AutomaticDestinationService",
     "AutomaticDiscoveryError",
     "DiscoveredDestination",
+    "PreparedDestination",
     "auto_trusted_domains",
     "is_own_government",
     "unconfirmable_authorities",
@@ -174,6 +183,20 @@ def unconfirmable_authorities(report: BootstrapReport) -> list[str]:
     )
 
 
+class PreparedDestination(StrictModel):
+    """A destination ready to be resolved, before anything has been searched or fetched.
+
+    Deliberately not a `DiscoveredDestination`: nothing has been discovered yet. This is only the
+    answer to *whose pages may this corridor read*, which comes from committed data, so holding the
+    two apart keeps "we know who to ask" from reading as "we found something".
+    """
+
+    config: DestinationConfig
+    country_name: str
+    trusted_domains: list[str]
+    withheld_domains: dict[str, str]
+
+
 class DiscoveredDestination(StrictModel):
     """A destination assembled entirely by machine, and the corridor that produced it."""
 
@@ -188,15 +211,136 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
+def find_country(name: str, countries: CountryRegistry) -> Country | None:
+    """Find a country however it was referred to: by name, synonym, or destination slug.
+
+    The interface sends a slug, the registry stores display names, and a person may type either.
+    All three have to land on the same country or a destination becomes unresearchable purely
+    because of how it was spelled.
+    """
+
+    wanted = name.strip().lower()
+    by_slug = countries.by_slug(wanted)
+    if by_slug is not None:
+        return by_slug
+    return next(
+        (
+            country
+            for country in countries.countries
+            if country.name.lower() == wanted
+            or wanted in {synonym.lower() for synonym in country.synonyms}
+        ),
+        None,
+    )
+
+
+def trusted_domains_for(
+    country: Country, authorities: AuthorityRegistry
+) -> tuple[list[str], dict[str, str]]:
+    """Which of a country's domains may be read, and what was withheld, from committed data."""
+
+    entry = authorities.get(country.code)
+    if entry is None:
+        # Not a refusal about the country — a refusal about this deployment. Searching for the
+        # domains here instead would reintroduce the per-request variance entry 34 removed, and
+        # would do it silently, on exactly the countries nobody had reviewed.
+        raise AutomaticDiscoveryError(
+            f"{country.name} is not in the reviewed authority registry, so there is no "
+            "confirmed government domain to research it from. Nothing was fetched. Regenerate "
+            "the registry with `visa-discover registry` and review the entry."
+        )
+
+    trusted = entry.domains
+    withheld = {
+        domain: (
+            f"under {country.name}'s own top-level domain, but its hostname carries no marker "
+            "this rule recognises as governmental, so it could not be confirmed as an "
+            "authority. It may be a real one: some governments use no such marker, and for "
+            "those the domain has to be named in reviewed data instead"
+        )
+        for domain in entry.unconfirmable
+    }
+    if not trusted:
+        # Name the candidates the rule could not confirm. Without this the message says no
+        # government domain was *identified*, which for Germany or Italy is simply untrue and
+        # sends whoever reads it to look at search or ranking rather than at the trust rule.
+        detail = ""
+        if entry.unconfirmable:
+            detail = (
+                f" Candidates under {country.name}'s own top-level domain were found — "
+                f"{', '.join(entry.unconfirmable)} — but none of their hostnames carries a "
+                "marker this agent recognises as governmental, so none could be confirmed as "
+                "an authority. Some governments use no such marker; for those the domain has "
+                "to be named in reviewed data."
+            )
+        raise AutomaticDiscoveryError(
+            f"No domain belonging to {country.name}'s own government could be confirmed, so "
+            f"there was nothing safe to read. Nothing was fetched.{detail}"
+        )
+    return trusted, withheld
+
+
+def base_config_for(country: Country, corridor: Corridor, trusted: list[str]) -> DestinationConfig:
+    return DestinationConfig(
+        slug=corridor.destination_slug,
+        display_name=country.name,
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=trusted,
+    )
+
+
+def prepare_destination(
+    name: str,
+    corridor: Corridor,
+    *,
+    countries: CountryRegistry | None = None,
+    authorities: AuthorityRegistry | None = None,
+) -> PreparedDestination:
+    """The config a corridor is resolved against, or a refusal saying why there is none.
+
+    Reads committed data and nothing else: **no store, no network, no model, and no search
+    provider.** That last one is why this is a function rather than a method — building
+    `AutomaticDestinationService` requires a `SearchProvider`, and a `BraveSearchProvider` raises
+    without an API key, so a command that only wants to know *whose pages may be read* would have
+    needed a key to ask a question answered entirely from a YAML file.
+
+    Split out of `destination_for` so a command can resolve a registry destination **without** the
+    corridor store in the way, which is what measuring run-to-run variance needs: a stored corridor
+    would answer runs two and three from run one and hide the very thing being counted (TODO
+    item 17).
+
+    The refusals live here rather than in each caller on purpose. A country the CLI cannot research
+    and a country the API cannot research are the same fact, and describing it twice is how the two
+    drift into saying different things about one cause.
+    """
+
+    registry = countries or get_country_registry()
+    country = find_country(name, registry)
+    if country is None:
+        raise AutomaticDiscoveryError(
+            f"{name} is not a country this agent knows how to research. Its own government "
+            "domains cannot be told apart from other countries' pages about it."
+        )
+    trusted, withheld = trusted_domains_for(country, authorities or get_authority_registry())
+    return PreparedDestination(
+        config=base_config_for(country, corridor, trusted),
+        country_name=country.name,
+        trusted_domains=trusted,
+        withheld_domains=withheld,
+    )
+
+
 class AutomaticDestinationService:
     """Turn a country name and a corridor into a destination the plan pipeline can use."""
 
     def __init__(
         self,
         provider: SearchProvider,
-        build_resolver: Callable[[], CorridorResolver],
+        build_resolver: Callable[..., CorridorResolver],
         store: FileCorridorStore,
         *,
+        corpus: FileCorpusStore | None = None,
         countries: CountryRegistry | None = None,
         denylist: Denylist | None = None,
         authorities: AuthorityRegistry | None = None,
@@ -208,6 +352,8 @@ class AutomaticDestinationService:
         # failures), so reusing one across requests would leak one corridor's limits into the next.
         self.build_resolver = build_resolver
         self.store = store
+        # Optional, so a deployment without a corpus behaves exactly as it did before one existed.
+        self.corpus = corpus
         self.countries = countries or get_country_registry()
         self.denylist = denylist or get_denylist()
         # Read once at construction. Which domains belong to a government is not a per-request
@@ -217,25 +363,15 @@ class AutomaticDestinationService:
         self.now = now
 
     def country_named(self, name: str) -> Country | None:
-        """Find a country however it was referred to: by name, synonym, or destination slug.
+        """Find a country however it was referred to. See `find_country`."""
 
-        The interface sends a slug, the registry stores display names, and a person may type
-        either. All three have to land on the same country or a destination becomes unresearchable
-        purely because of how it was spelled.
-        """
+        return find_country(name, self.countries)
 
-        wanted = name.strip().lower()
-        by_slug = self.countries.by_slug(wanted)
-        if by_slug is not None:
-            return by_slug
-        return next(
-            (
-                country
-                for country in self.countries.countries
-                if country.name.lower() == wanted
-                or wanted in {synonym.lower() for synonym in country.synonyms}
-            ),
-            None,
+    def prepare(self, name: str, corridor: Corridor) -> PreparedDestination:
+        """Whose pages this corridor may read, from committed data. See `prepare_destination`."""
+
+        return prepare_destination(
+            name, corridor, countries=self.countries, authorities=self.authorities
         )
 
     async def destination_for(self, name: str, corridor: Corridor) -> DiscoveredDestination:
@@ -250,7 +386,7 @@ class AutomaticDestinationService:
 
         cached = self.store.load(corridor)
         if cached is not None and cached.age_hours(self.now()) < self.maximum_age_hours:
-            base = self._base_config(country, corridor, cached.trusted_domains)
+            base = base_config_for(country, corridor, cached.trusted_domains)
             return DiscoveredDestination(
                 config=cached.resolved.to_destination_config(base),
                 resolved=cached.resolved,
@@ -259,47 +395,14 @@ class AutomaticDestinationService:
                 from_cache=True,
             )
 
-        entry = self.authorities.get(country.code)
-        if entry is None:
-            # Not a refusal about the country — a refusal about this deployment. Searching for the
-            # domains here instead would reintroduce the per-request variance entry 34 removed, and
-            # would do it silently, on exactly the countries nobody had reviewed.
-            raise AutomaticDiscoveryError(
-                f"{country.name} is not in the reviewed authority registry, so there is no "
-                "confirmed government domain to research it from. Nothing was fetched. Regenerate "
-                "the registry with `visa-discover registry` and review the entry."
-            )
-
-        trusted = entry.domains
-        withheld = {
-            domain: (
-                f"under {country.name}'s own top-level domain, but its hostname carries no marker "
-                "this rule recognises as governmental, so it could not be confirmed as an "
-                "authority. It may be a real one: some governments use no such marker, and for "
-                "those the domain has to be named in reviewed data instead"
-            )
-            for domain in entry.unconfirmable
-        }
-        if not trusted:
-            # Name the candidates the rule could not confirm. Without this the message says no
-            # government domain was *identified*, which for Germany or Italy is simply untrue and
-            # sends whoever reads it to look at search or ranking rather than at the trust rule.
-            detail = ""
-            if entry.unconfirmable:
-                detail = (
-                    f" Candidates under {country.name}'s own top-level domain were found — "
-                    f"{', '.join(entry.unconfirmable)} — but none of their hostnames carries a "
-                    "marker this agent recognises as governmental, so none could be confirmed as "
-                    "an authority. Some governments use no such marker; for those the domain has "
-                    "to be named in reviewed data."
-                )
-            raise AutomaticDiscoveryError(
-                f"No domain belonging to {country.name}'s own government could be confirmed, so "
-                f"there was nothing safe to read. Nothing was fetched.{detail}"
-            )
-
-        base = self._base_config(country, corridor, trusted)
-        resolved = await self.build_resolver().resolve(base, corridor)
+        trusted, withheld = trusted_domains_for(country, self.authorities)
+        base = base_config_for(country, corridor, trusted)
+        # The country's known pages, and the pages that already answered *this* corridor. Both are
+        # inputs to the resolver rather than things it discovers: the corpus is what search no
+        # longer has to rediscover, and the pins are what the ranking no longer has to re-win.
+        corpus = self.corpus.load(country.code) if self.corpus else None
+        resolver = self.build_resolver(corpus=corpus, pinned=self._pinned(corridor))
+        resolved = await resolver.resolve(base, corridor)
         if not resolved.is_usable:
             missing = ", ".join(role.replace("_", " ") for role in resolved.unresolved_roles)
             raise AutomaticDiscoveryError(
@@ -307,6 +410,7 @@ class AutomaticDestinationService:
                 f"as the {missing}. Nothing was substituted in its place."
             )
 
+        self._write_back(country, trusted, resolver, resolved)
         self.store.store(corridor, resolved, trusted, withheld, self.now())
         return DiscoveredDestination(
             config=resolved.to_destination_config(base),
@@ -315,13 +419,90 @@ class AutomaticDestinationService:
             withheld_domains=withheld,
         )
 
-    def _base_config(
-        self, country: Country, corridor: Corridor, trusted: list[str]
-    ) -> DestinationConfig:
-        return DestinationConfig(
-            slug=corridor.destination_slug,
-            display_name=country.name,
-            route_type="national",
-            implementation_status="available",
-            trusted_domains=trusted,
+    def _pinned(self, corridor: Corridor) -> list[str]:
+        """URLs that already filled a role for this corridor, from the last stored resolution.
+
+        **No new store is needed for this.** `StoredCorridor.resolved.sources` is already exactly
+        the proven set — today it is used only as a whole-answer cache, and this makes it also the
+        thing that keeps a later run from losing what an earlier one found. A stored corridor may be
+        too old to serve as an answer and still be perfectly good as a hint about which pages
+        matter, so the age check deliberately does not apply here.
+        """
+
+        try:
+            stored = self.store.load(corridor)
+        except VisaResearchError:
+            # A pin is an optimisation. An unreadable corridor store costs recall, never an answer.
+            return []
+        return [] if stored is None else [str(source.url) for source in stored.resolved.sources]
+
+    def _write_back(
+        self,
+        country: Country,
+        trusted: list[str],
+        resolver: CorridorResolver,
+        resolved: ResolvedCorridor,
+    ) -> None:
+        """Fold what this run discovered into the country's corpus, additively.
+
+        **This is not the fallback entry 44 rejects, and the difference is the direction.** That was
+        *deciding a corridor* from a live search after a corpus miss, so the answer depended on that
+        day's search. This keeps what a run already found, so later runs start from more. It cannot
+        change the current answer — the resolution is already made by the time this runs — and it
+        widens no trust: every URL here passed `usable_results` and `is_crawlable`, and is filtered
+        again against the live registry when it is read back.
+
+        It is also what actually closes the gap. Measured 2026-08-22: five of twenty-four pages a
+        Canada run fetched were absent from a 3,130-entry corpus, and one stayed absent when the
+        exact query that had once surfaced it was re-run. Search is nondeterministic at the source,
+        so no offline sweep can guarantee the superset — only keeping what a live run found can.
+        """
+
+        if self.corpus is None:
+            return
+        now = self.now()
+        proven = {canonical_key(str(source.url)) for source in resolved.sources}
+        found = [
+            CorpusEntry(
+                url=link.url,
+                link_text=link.text,
+                heading=link.heading,
+                depth=link.depth,
+                discovered_from=link.discovered_from,
+                first_seen=now,
+                last_seen=now,
+                status="proven" if canonical_key(link.url) in proven else "unknown",
+            )
+            for link in resolver.discovered
+        ]
+        # **The pages that filled a role are written back whether or not this run discovered them**,
+        # and getting that wrong made the strongest tier unreachable. `resolver.discovered` excludes
+        # anything the corpus already held — correctly, since a page from the corpus is not a
+        # discovery — but the common case is precisely that the *answering* page came from the
+        # corpus. Marking proven only from `discovered` left a live Canada run writing 86 entries
+        # and zero proven ones, so the never-evicted tier could never be entered at all.
+        found.extend(
+            CorpusEntry(
+                url=str(source.url),
+                title=source.title,
+                first_seen=now,
+                last_seen=now,
+                status="proven",
+            )
+            for source in resolved.sources
         )
+        if not found:
+            return
+        existing = self.corpus.load(country.code) or CountryCorpus(
+            country_code=country.code,
+            country_name=country.name,
+            trusted_domains=trusted,
+            built_at=now,
+            entries=[],
+        )
+        try:
+            self.corpus.store(merge(existing, found, now=now))
+        except CorpusError:
+            # Never at the cost of the answer: the corridor resolved, and a corpus that could not be
+            # written costs the *next* run recall rather than this one its result.
+            pass

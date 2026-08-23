@@ -5,6 +5,7 @@ from functools import lru_cache
 from visa_research_agent.config.loader import get_runtime_policy
 from visa_research_agent.config.settings import settings
 from visa_research_agent.discovery.automatic import AutomaticDestinationService
+from visa_research_agent.discovery.corpus import FileCorpusStore
 from visa_research_agent.discovery.corridor_store import FileCorridorStore
 from visa_research_agent.domain.models import RuntimePolicy
 from visa_research_agent.research.errors import LLMConfigurationError
@@ -86,8 +87,11 @@ def build_automatic_destinations(policy: RuntimePolicy) -> AutomaticDestinationS
     adjudicator = build_role_adjudicator(policy)
     return AutomaticDestinationService(
         build_search_provider(),
-        lambda: build_resolver(renderer, adjudicator),
+        # Keyword arguments are forwarded, so the service can hand the resolver the country's corpus
+        # and this corridor's proven pages without the API knowing how a resolver is assembled.
+        lambda **kwargs: build_resolver(renderer, adjudicator, **kwargs),
         FileCorridorStore(settings.corridor_directory),
+        corpus=FileCorpusStore(settings.corpus_directory),
         maximum_age_hours=settings.corridor_maximum_age_hours,
     )
 
