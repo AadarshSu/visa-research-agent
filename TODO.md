@@ -4,11 +4,9 @@ Ordered by what unblocks the most. Each item says why it matters, not just what 
 picked up cold.
 
 **How to read this file.** **Now** is what to pick up, in the order written. **Item 22 has left it** —
-built offline on 2026-08-23, entries 49–51 — and it left one thing behind: its live re-measurement is
-deliberately unpaid, because [item 3](#3-measure-the-top-20-corridors-against-a-bar-committed-in-advance--soon)
-buys the same runs. **So item 3 is now the thing most of this list waits on**, even though it sits in
-**Next up** rather than here; nothing large should be built before it, and after item 22 nothing large
-is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
+done and measured live on 2026-08-23, entries 49–53. **Item 3 is now the thing most of this list waits
+on**, even though it sits in **Next up** rather than here; nothing large should be built before it, and
+after item 22 nothing large is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
 (17) and the corpus that answers it (18, 19, entry 44) — and item 15 follows because the excerpt change
 is still unmeasured on six corridors.
 **Next up** is what follows. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
@@ -417,11 +415,9 @@ write-up which it was. Note the ordering question this raises: measuring **befor
 the problem the corpus is meant to fix, and measuring **after** describes the architecture the project
 intends to keep. Doing it before and repeating the outliers after is the cheap version of both.
 
-**Take the phase split while you are there — it is item 22's unpaid last step.** The crawl left the
-request path on 2026-08-23 (entry 51) and the projected **54.2s → ~21s** has never been measured: no
-live corridor has resolved through the new path at all. Instrument one of these runs exactly as entry 48
-did — search, crawl, fetch, adjudicate — and confirm the same three roles still fill. Doing it here costs
-nothing extra; doing it separately pays Brave and OpenAI twice for the same corridor.
+**One destination has been through the corpus-routed path, and it is Canada** (entry 53). These runs are
+what generalise it — and note that the corpus job (item 18) has only ever been run for Canada, so every
+other destination here will still crawl. Expect two populations in the results, and say which is which.
 
 **No longer blocked — 2026-08-21:** Brave credit is available again, so this can run. `robots.txt`
 landed first (entry 36), so the numbers describe the posture the project intends to keep.
@@ -766,7 +762,7 @@ replacement.
 
 ## Done
 
-### ~~Route the request path through the corpus and drop the crawl~~ — **done offline 2026-08-23; not yet re-measured live**
+### ~~Route the request path through the corpus and drop the crawl~~ — **done 2026-08-23, measured live**
 
 Item 22 asked for a view on the design before building it, and the view disagreed with it in two places.
 DECISIONS entries 49, 50 and 51. 7 new tests, all offline; 432 passing.
@@ -802,10 +798,28 @@ a corridor has ever reported came from the crawl (entry 49). And the corpus's `s
 for `_readable_only`: `corpus_build` never writes `readable`, and skipping a page on a stored refusal
 would mean never observing it live, which is what a France-shaped corridor needs to resolve at all.
 
-**Not done: step 4, the live re-measurement.** The phase split has not been re-run, so **~21s is still a
-projection, not a measurement**, and no live corridor has been resolved through the new path. It spends
-Brave and OpenAI credit, and item 3 is what that credit is for — so the re-measure should ride along with
-item 3 rather than be paid for twice. Until it does, this item is done offline only.
+**Step 4 is done, and it earned its cost.** `canada/GB/GB/tourism` run four times, instrumented at entry
+48's four boundaries (entry 53):
+
+| run | total | search | **crawl** | fetch | adjudicate | roles filled |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 21.75s | 4.12s | **0.00s** | 6.34s | 10.16s | **refused** |
+| 2 | 12.73s | 2.77s | **0.00s** | 1.16s | 7.69s | decision, fees, times |
+| 3 | 13.24s | 3.45s | **0.00s** | 1.24s | 7.70s | decision, fees |
+| 4 | 12.82s | 2.86s | **0.00s** | 1.06s | 8.05s | decision, fees |
+
+Against 54.2s. **Do not read 12.7s as beating the ~21s projection on merit** — search answered in
+2.8–3.5s where entry 48 saw 9.1s, and adjudication in 7.7–8.1s where it saw 10.8s, both someone else's
+latency on a different day. The supported claim is narrow: **the crawl's 33.6s is gone and nothing grew
+to replace it**, and 2,387 of 2,455 candidates now come from a file.
+
+**Run 1 refused, which is what the measurement was for.** Removing the crawl exposed a defect it had
+been repairing on every run since entry 47: `_resolve` seeded search first and folded the corpus in with
+`setdefault`, so the corpus could never displace a search candidate for the **same URL** — and search's
+title scores far less than the anchor text and heading an offline crawl harvests. Canada's answering page
+entered at **32.0** instead of **63.4** and was never read. Fixed; three consecutive runs then resolved.
+
+**Adjudication is now ~60% of the corridor.** Whatever is optimised next, that is where it is.
 
 ### ~~Find out whether Canada's answering page was ranked out or never found~~ — **done 2026-08-21**
 

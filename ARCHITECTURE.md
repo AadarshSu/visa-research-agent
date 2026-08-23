@@ -247,8 +247,9 @@ per corridor, keyed by the whole corridor and expiring in **weeks**.
 > names the cause: three searches run per trusted domain and the registry gives a country up to five.
 >
 > **Entry 51 removes the largest single component of that** — the crawl, 33.6s of a measured 54.2s — for
-> a country whose corpus out-covers it. The projection is ~21s and it has **not been measured live**, so
-> it does not go in this sentence either.
+> a country whose corpus out-covers it. **Measured 2026-08-23 (entry 53): 12.7–13.2s** for the corridor
+> phase on Canada, over three runs. That is one destination, and the *full cold request* is still
+> untimed, so it does not go in this sentence either.
 
 Weeks is deliberately a much longer life than the evidence
 cache's hours: which *pages* answer a corridor changes when a site is redesigned, not when its
@@ -508,8 +509,11 @@ smaller, which is what lost Canada its answer.
 > existing check took the whole corpus → candidates path to 346ms — cheaper than the pre-filter, with no
 > recall cut. Entry 50 records the numbers and when to revisit.
 >
-> **54.2s → ~21s is still a projection.** No live corridor has resolved through this path yet; the
-> re-measurement rides along with [TODO.md](TODO.md) item 3.
+> **Measured live 2026-08-23** (entry 53), `canada/GB/GB/tourism`, four runs: **crawl 33.6s → 0.00s,
+> total 54.2s → 12.7–13.2s**, 2,387 of 2,455 candidates from a file, the same 25-page shortlist every
+> run. **Adjudication is now ~60% of the corridor** and is where the next optimisation is. Read the
+> total carefully: search and the model both answered faster than on entry 48's day, so the supported
+> claim is that the crawl's 33.6s is gone and nothing grew to replace it. One destination only.
 
 **The lifetimes differ because the things do.** A government page can be edited any day, so evidence is
 measured in hours. Which *pages* answer a corridor changes when a site is redesigned, so a resolution is

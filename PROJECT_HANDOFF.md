@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-23 — update this line when you touch the handoff |
-| **Tests** | 433 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
+| **Tests** | 434 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -403,6 +403,14 @@ call silently substituting the heuristic (entry 31).
    containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
    six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
    the two deciders disagreed.
+   **Isolated for the first time on 2026-08-23** (entry 53). With the candidate count and shortlist
+   identical across three runs, run 2 filled `processing_times` and runs 3 and 4 did not — so that
+   variance is adjudication rather than recall, which was never separable from known problem 19
+   before. In the same three runs `document_checklist` went unfilled every time although **eleven**
+   candidates scoring for the role were fetched, `supporting-documents.html` among them at 64.0. The
+   recall gate did its job and the decider declined, which is the honest outcome; but it means a
+   corridor can now be `is_usable` with a role unfilled for a purely model-side reason, and nothing
+   distinguishes that from known problem 8's "no checklist exists".
 11. **Bot-blocked official portals are the largest coverage limit — but "permanent" was the wrong
    word.** Three found: `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and Singapore's VFS page.
    France is the clearest case, quantified in entry 26: **every** readable French government page
@@ -492,6 +500,12 @@ call silently substituting the heuristic (entry 31).
    distinguish a corridor that works from a corridor that works half the time.
    **Now diagnosable, which it was not:** every run writes `var/recall/<corridor>.json` with all 470
    candidates, their scores, and the shortlist and fetch flags (entry 43).
+   **Measured again 2026-08-23 on the corpus-routed path** (entry 53): four runs, **2,455 candidates
+   every time**, the same 25-page shortlist and 24 fetched, and `visa_decision` filled from the same
+   page on all three runs that resolved. That is the closest this has come to a stable candidate set,
+   and it follows from 2,387 of the 2,455 coming from a file. **It still does not close this item**:
+   minutes apart, one corridor, one destination, and 68 candidates still come from search, which is
+   nondeterministic at the source. What it *does* buy is separation — see known problem 10.
    **Decided 2026-08-21 as entry 44, and not implemented.** The candidate set becomes a stored **corpus
    of official pages per country**, populated offline, so search leaves the request path for a populated
    country and two runs of one corridor consider the same candidates. It fixes the measured cause here —
@@ -529,11 +543,12 @@ call silently substituting the heuristic (entry 31).
    four out of five choices. The refusal itself is honest and names the command; the *offer* is not.
    Counted 2026-08-22. The fix is either to mark unbuilt countries in the list or to build the registry
    out (item 2); do not fix it by loosening the refusal.
-24. **The corpus-routed path has never been run live, and a thin corpus now has no crawl behind it.**
-   Two separate things, both new on 2026-08-23. First, **~21s is a projection**: the crawl was removed on
-   an offline argument and offline tests, and no live corridor has resolved through the new path, so the
-   phase split, the roles filled and the candidate count are all unconfirmed. That is item 3's job (see
-   *Current task*), and until it runs nothing here should be quoted as measured.
+24. **A thin corpus now has no crawl behind it, and only one destination has been run.**
+   **The first half of this item is closed — the path was run live on 2026-08-23** (entry 53), four
+   times: crawl 33.6s → 0.00s, total 54.2s → 12.7–13.2s, the same 25-page shortlist every run, and
+   `visa_decision` filled from the same page on all three runs that resolved. What that does **not**
+   cover is any destination but Canada, any corridor but `GB/GB/tourism`, or any gap longer than a few
+   minutes — item 3 is still what generalises it.
    Second, **the safety net is thinner than it was.** For a country whose corpus passes
    `DEFAULT_CRAWL_PAGES` but whose corpus *recall* is poor, the crawl used to compensate — badly and
    nondeterministically, but it compensated. Now it does not. Entry 51 argues the trade, and entry 47's
@@ -551,11 +566,16 @@ is a product, it is the thing most of the recent work has been waiting on, and B
 available since 2026-08-21. Nothing large should be built before it — and after item 22, nothing large
 is queued.
 
-**Item 22 is done offline (2026-08-23) and has one unpaid step, which belongs to item 3.** The crawl
-has left the request path for a country whose corpus out-covers it, but **no live corridor has resolved
-through the new path**, so **54.2s → ~21s is a projection, not a measurement**. Instrument one of item
-3's runs exactly as entry 48 did — search, crawl, fetch, adjudicate — and confirm the same three roles
-still fill. Paying for that separately would buy the same corridor twice.
+**Item 22 is done, including its live measurement (entry 53).** `canada/GB/GB/tourism` was run four
+times on 2026-08-23: **crawl 33.6s → 0.00s, total 54.2s → 12.7–13.2s**, 2,455 candidates of which 2,387
+come from a file, and the same 25-page shortlist every run. **Adjudication is now ~60% of the corridor**
+— that is where the next optimisation is, not in retrieval.
+
+**The first of those four runs refused, and that is the most useful thing on this page.** Removing the
+crawl exposed a defect it had been quietly repairing: the corpus's harvested anchor text lost to a
+search result's title for the same URL, so Canada's answering page entered at 32.0 instead of 63.4 and
+was never read. Entry 53. **Two of the three defects found in this work were invisible to the test
+suite and to careful reading, and both surfaced within one live run.**
 
 **What item 22 turned into, because it was read as a proposal and two parts of it were wrong.**
 Entries 49, 50 and 51; the details are in the 2026-08-23 table below. The three sentences worth carrying:
@@ -567,7 +587,10 @@ Entries 49, 50 and 51; the details are in the 2026-08-23 table below. The three 
 - **The top-400 would have cut recall.** A `proven` Canada page scores **0.0** on role vocabulary and
   ranks **2,871 of 3,216**, and a pin could not have rescued it. If a bound is ever needed it should be
   per-role, with `proven` and pinned carved out; entry 50 says when to revisit.
-- **Checking that last claim found a second defect** (entry 52). With *no* pre-filter at all the pin
+- **The live run found a third** (entry 53), and it is the one worth remembering: a `setdefault`
+  meant the corpus could never displace a search candidate for the same page, so the *worse*
+  description of a URL always won. The crawl had been masking it since entry 47 landed.
+- **Checking the top-400 claim found a second defect** (entry 52). With *no* pre-filter at all the pin
   still failed: `_shortlist` protected the per-domain reservation through its truncation and not the
   pins, so entry 47's ratchet had been half-implemented since it landed. Fixed and frozen by a test
   that fails on the old code.
@@ -792,6 +815,7 @@ things built on them did not.
 
 | Entry | What it changed |
 | --- | --- |
+| 53 | **Run live, four times, and the first run refused.** `entry-requirements-country.html` — the only page that states Canada's rule for a British citizen in static text — entered at **32.0** from search's title instead of **63.4** from the corpus's harvested anchor text, missed the shortlist, and was never read. `_resolve` seeded search first and folded the corpus in with `setdefault`, so the *thinner* description of a page always won; **the crawl had been repairing that on every run**, which is why removing it was what exposed it. Fixed, then three consecutive runs resolved. **Crawl 33.6s → 0.00s; total 54.2s → 12.7–13.2s**, with adjudication now ~60% of the corridor. |
 | 52 | **Entry 47's pin only half existed.** A page that already filled a role "keeps its shortlist place regardless of ranking" — it kept it as far as `chosen`, and `_shortlist` then cut the tail by score protecting only the per-domain reservation, so a **low-scoring pin was dropped**, which is the only pin that matters. Found while verifying entry 50's own claim on the real Canada corpus. Pins and reservations are both honoured at the truncation now, pins first. The existing pin tests missed it because they pin a page that scores well. |
 | 51 | **The crawl leaves the request path** for a country whose corpus offers more pages than a crawl could visit — a *derived* bound (`DEFAULT_CRAWL_PAGES`, 40), not another tuned constant, and the skip is recorded in the notes. A country nobody has built, or one with a thin corpus, behaves exactly as before. Also closed: `visa-discover corridor` now reads the corpus, so a measurement taken through the command finally describes the product; pins are still withheld, because they would let run one decide run two's shortlist. `_readable_only` does **not** fall back to corpus status — item 22 proposed it, and it would have stopped a France-shaped corridor resolving. |
 | 50 | **The routing index is not built, because it removes the wrong cost.** Entry 48's ~3.6s is `wrong_country`, not scoring: 198 countries scanned per candidate, the link's segments and text rebuilt once per country, a fresh regex per token. A word-index prefilter in front of the existing exact check made it **3,277ms → 98ms, byte-identical on all 3,216 entries**, and the whole corpus → candidates path **4,757ms → 346ms** — under the 575ms the top-400 was meant to cost. And the top-400 would have dropped a `proven` page ranked 2,871 of 3,216, which a pin could not have rescued. |
