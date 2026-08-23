@@ -393,6 +393,7 @@ class LiveSourceFetcher:
                     "its guidance could not be independently verified here"
                 ),
                 "blocked",
+                status=response.status_code,
             )
 
         if response.status_code != httpx.codes.OK:
@@ -402,6 +403,7 @@ class LiveSourceFetcher:
                 now,
                 f"the source answered HTTP {response.status_code}",
                 "unreachable",
+                status=response.status_code,
             )
 
         try:
@@ -590,6 +592,8 @@ class LiveSourceFetcher:
         now: datetime,
         reason: str,
         outcome: FailureOutcome,
+        *,
+        status: int | None = None,
     ) -> FetchedSource | SourceFailure:
         """Fall back to cached evidence, but only while it is still inside the stale ceiling."""
 
@@ -601,6 +605,10 @@ class LiveSourceFetcher:
                 outcome=outcome,
                 detail=detail,
                 attempted_url=configured_source.url,
+                # Passed on rather than left in the sentence: whether a refusal is settled decides
+                # what a traveller may be told, and that must not depend on prose. See
+                # `SourceFailure.http_status`.
+                http_status=status,
             )
 
         if cached is None:

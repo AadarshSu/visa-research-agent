@@ -9,6 +9,51 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 49. A refusal met while reading the shortlist was never reported at all
+**2026-08-23 · measured; implemented**
+
+[TODO.md](TODO.md) item 22 lists "`blocked_urls` and `disallowed_urls` come from the crawl, so with
+no crawl they must come from the shortlist fetch instead" as the careful part of dropping the crawl.
+Building it turned up something narrower and worse: **they never came from the shortlist fetch at
+all, and the crawl has been covering for it.**
+
+`_fetch_bodies` read `report.fetched` and discarded `report.failures` entirely. So a page refused at
+*retrieval* time reached `notes`, `inaccessible_domains`, `inaccessible_urls` and
+`decision_blocking_urls` only if the crawl had happened to meet the same refusal first while
+walking for links. Every refusal a corridor has ever reported came from `CrawlFetcher`.
+
+That is invisible today because the crawl usually does meet it. It stops being invisible the moment
+the crawl is conditional — which is the next commit — and the failure mode is the one entry 18
+exists to prevent: a corridor that quietly stops saying an authority refused it, lost as a side
+effect of a speed change.
+
+### Two things had to exist before the crawl could go
+
+**`FetchedShortlist.failures`**, carried out of `_fetch_bodies` and folded in beside the crawl's by
+`_report_retrieval_refusals`. Every failure is noted, not only refusals: a shortlisted page that
+could not be read is the difference between *"nothing scored well enough"* and *"the site would not
+give us the page"*, and that is exactly what a reader cannot infer from an empty result. Notes are
+deduplicated per host and reason across both stages, so a reader cannot tell which stage saw a
+refusal — only that one was seen.
+
+**`SourceFailure.http_status`.** `CrawlFetcher` has kept `refusal_statuses` since entry 32, because
+whether a refusal is *settled* decides what a traveller may be told: a `403` supports saying an
+authority would not permit this program to read a page and a `429` does not. Retrieval kept the same
+fact **only inside the sentence** `detail`, so applying entry 32's rule here would have meant parsing
+prose — which entry 36 forbids by name, for the reason that rewording a message then silently empties
+a list something depends on. The status is now carried structurally, and
+`PERSISTENT_REFUSAL_STATUS_CODES` reads it. A failure with no status — a DNS failure, a timeout, a
+`robots.txt` `Disallow` — is excluded, which fails toward *not* claiming an authority refused us.
+
+### How it was confirmed
+
+Two tests where the refusal is answered **only to the retrieval user agent**, so the crawl never
+meets it: a `403` reaches `inaccessible_domains`, `inaccessible_urls` and `decision_blocking_urls`;
+a `429` reaches the notes and `inaccessible_domains` and goes no further. Both fail on the previous
+code, which is the point — the old behaviour was not merely untested, it was wrong.
+
+---
+
 ## 48. The crawl was rediscovering a map the corpus already had; the corpus becomes a routing index
 **2026-08-23 · measured; decided; NOT implemented**
 

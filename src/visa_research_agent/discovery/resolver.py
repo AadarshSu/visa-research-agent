@@ -76,8 +76,10 @@ from visa_research_agent.discovery.urls import (
     published_date_in_path,
 )
 from visa_research_agent.domain.models import (
+    PERSISTENT_REFUSAL_STATUS_CODES,
     ConfiguredSource,
     DestinationConfig,
+    SourceFailure,
     SourceKind,
     StrictModel,
 )
@@ -175,6 +177,16 @@ class FetchedShortlist(StrictModel):
     candidates: list[CandidatePage] = Field(default_factory=list)
     by_id: dict[str, CandidatePage] = Field(default_factory=dict)
     contents: dict[str, str] = Field(default_factory=dict)
+    failures: list[SourceFailure] = Field(default_factory=list)
+    """Why the rest could not be read, carried out rather than dropped.
+
+    This used to be discarded here, and the crawl was covering for it: every refusal a corridor
+    reported came from `CrawlFetcher`, so a page refused at *retrieval* time reached
+    `inaccessible_domains`, `inaccessible_urls` and the notes only if the crawl had happened to
+    meet the same refusal first. With the crawl gone for a destination that has a corpus, this is
+    the only place a refusal is observed at all — and a corridor that stops saying an authority
+    refused it is the reporting discipline of DECISIONS entry 18 lost to a speed change.
+    """
 
 
 @dataclass
@@ -452,8 +464,8 @@ class CorridorResolver:
         # Domains cover every refusal including a rate limit, because reporting must not lose one.
         # The URL list is narrower: only a settled refusal may be handed to a traveller as a page
         # nobody was permitted to read, since a 429 might serve fine next week (entry 32).
-        inaccessible = sorted({host_of(url) for url in self.crawl_fetcher.blocked_urls()})
-        refused = sorted(self.crawl_fetcher.persistent_refusals())
+        crawl_inaccessible = {host_of(url) for url in self.crawl_fetcher.blocked_urls()}
+        crawl_refused = set(self.crawl_fetcher.persistent_refusals())
 
         candidates: dict[str, CandidatePage] = dict(search_candidates)
         # Everything the country is already known to publish, offered to this corridor's scorer as
@@ -498,6 +510,12 @@ class CorridorResolver:
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
         trace.fetched = {candidate.link.url for candidate in fetched.candidates}
+        # Refusals met while reading the shortlist, folded in beside the crawl's. Both are
+        # observations from this run; neither is complete on its own, and with no crawl the fetch
+        # is the only one there is.
+        fetch_inaccessible, fetch_refused = self._report_retrieval_refusals(fetched.failures, notes)
+        inaccessible = sorted(crawl_inaccessible | fetch_inaccessible)
+        refused = sorted(crawl_refused | fetch_refused)
 
         # 4. Assign roles from the combined evidence.
         try:
@@ -536,6 +554,56 @@ class CorridorResolver:
         return [
             entry.to_link() for entry in self.corpus.entries_within(destination.trusted_domains)
         ]
+
+    def _report_retrieval_refusals(
+        self, failures: list[SourceFailure], notes: list[str]
+    ) -> tuple[set[str], set[str]]:
+        """Report what reading the shortlist found out, in the shapes the crawl already reports in.
+
+        Returns the hosts that refused this client and the URLs whose refusal was **settled**, so
+        the caller can merge them with the crawl's. The notes are appended here because they read
+        the same as the crawl's and a reader should not be able to tell which stage saw a refusal —
+        only that one was seen.
+
+        **This is the constraint DECISIONS entry 48 names, and it was already half-broken.**
+        `_fetch_bodies` discarded `report.failures` entirely, so a page refused at retrieval time
+        contributed nothing to `inaccessible_domains`, `inaccessible_urls` or the notes. The crawl
+        covered for it by meeting the same refusals first. Remove the crawl and the cover goes with
+        it, so this has to exist before that can happen.
+
+        Every failure is noted, not only refusals. A shortlisted page that could not be read at all
+        is the difference between "nothing scored well enough" and "the site would not give us the
+        page", and that is precisely what a reader cannot infer from an empty result.
+
+        `outcome` and `http_status` are read; `detail` is only ever repeated. Deciding from the
+        sentence is what entry 36 forbids, because rewording a message would then silently empty a
+        list something depends on.
+        """
+
+        blocked_hosts: set[str] = set()
+        settled: set[str] = set()
+        seen: set[tuple[str, str]] = set()
+        for failure in sorted(failures, key=lambda item: str(item.attempted_url)):
+            url = str(failure.attempted_url)
+            host = host_of(url)
+            if failure.outcome == "blocked":
+                blocked_hosts.add(host)
+                # Only a settled refusal may be handed to a traveller as a page nobody was
+                # permitted to read. A `429` might serve fine next week, and a refusal recorded
+                # with no status is excluded, which fails toward *not* claiming we were blocked.
+                # DECISIONS entry 32, the same rule `CrawlFetcher.persistent_refusals` applies.
+                if failure.http_status in PERSISTENT_REFUSAL_STATUS_CODES:
+                    settled.add(url)
+            if (host, failure.detail) in seen:
+                continue
+            seen.add((host, failure.detail))
+            if failure.outcome == "disallowed":
+                note = f"{host}: pages discovery reached were not fetched because {failure.detail}"
+            else:
+                note = f"{host} could not be read because {failure.detail}"
+            if note not in notes:
+                notes.append(note)
+        return blocked_hosts, settled
 
     def _decision_blocking(
         self, refused: list[str], candidates: dict[str, CandidatePage]
@@ -786,6 +854,7 @@ class CorridorResolver:
             candidates=[by_id[source_id] for source_id in readable],
             by_id={source_id: by_id[source_id] for source_id in readable},
             contents=contents,
+            failures=list(report.failures),
         )
 
     async def _decide_roles(

@@ -620,3 +620,70 @@ def test_a_wider_window_still_refuses_a_page_no_role_wants(tmp_path: Path) -> No
     shortlist = resolver._shortlist([*wanted, *unwanted])
 
     assert len(shortlist) == 3, "spare places are left empty rather than filled with noise"
+
+
+async def resolve_with_retrieval_status(
+    tmp_path: Path, refused_url: str, status: int
+) -> ResolvedCorridor:
+    """Resolve with one URL refusing **the shortlist fetch only**, which the crawl never meets.
+
+    The two stages announce different user agents, which is what separates them here. It reproduces
+    the case the crawl was silently covering for: a page served happily for its links and refused
+    when it is asked for as evidence. Before `_report_retrieval_refusals`, `_fetch_bodies` dropped
+    `report.failures` on the floor, so that refusal reached neither the notes nor
+    `inaccessible_domains` — and with the crawl gone for a destination that has a corpus, it is the
+    only place a refusal is seen at all. DECISIONS entry 48.
+    """
+
+    requests: list[httpx.Request] = []
+    site = handler(requests)
+
+    def refusing(request: httpx.Request) -> httpx.Response:
+        retrieval = request.headers.get("user-agent") == "test-agent"
+        if retrieval and str(request.url).rstrip("/") == refused_url:
+            return httpx.Response(status, text="no")
+        served: httpx.Response = site(request)  # type: ignore[operator]
+        return served
+
+    transport = httpx.MockTransport(refusing)
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, DETAIL_INDIA])
+    resolver.crawl_fetcher.transport = transport
+    resolver.live_fetcher.transport = transport
+    return await resolver.resolve(destination(), corridor())
+
+
+@pytest.mark.anyio
+async def test_a_refusal_met_only_while_reading_the_shortlist_is_still_reported(
+    tmp_path: Path,
+) -> None:
+    """The reporting discipline must not depend on which stage happened to meet the refusal."""
+
+    resolved = await resolve_with_retrieval_status(tmp_path, DETAIL_INDIA, 403)
+
+    assert host_of(DETAIL_INDIA) in resolved.inaccessible_domains
+    assert resolved.inaccessible_urls == [DETAIL_INDIA]
+    assert resolved.decision_blocking_urls == [DETAIL_INDIA]
+    assert any(DETAIL_INDIA.split("//")[1].split("/")[0] in note for note in resolved.notes), (
+        resolved.notes
+    )
+
+
+@pytest.mark.anyio
+async def test_a_rate_limit_while_reading_the_shortlist_is_reported_and_nothing_more(
+    tmp_path: Path,
+) -> None:
+    """Entry 32's line, applied to the stage that had no line at all.
+
+    `CrawlFetcher.persistent_refusals` has told a `429` from a `403` since entry 32; retrieval kept
+    the status only inside a sentence, so anything acting on it would have had to read prose —
+    which entry 36 forbids for exactly this reason. `SourceFailure.http_status` is what makes the
+    same rule enforceable here.
+    """
+
+    resolved = await resolve_with_retrieval_status(tmp_path, DETAIL_INDIA, 429)
+
+    assert host_of(DETAIL_INDIA) in resolved.inaccessible_domains
+    assert any("429" in note for note in resolved.notes), resolved.notes
+    assert resolved.inaccessible_urls == []
+    assert resolved.decision_blocking_urls == []
+    assert not resolved.decision_is_unverified

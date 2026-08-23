@@ -355,6 +355,23 @@ class SourceFailure(StrictModel):
     final_url: AnyHttpUrl | None = None
     """Where the request actually landed, recorded when a redirect left the trusted domains."""
 
+    http_status: int | None = Field(default=None, ge=100, le=599)
+    """The status the authority answered with, when there was one.
+
+    `outcome` says a page was refused; this says whether waiting could change that. A `429` is a
+    rate limit and a `403` is a settled refusal, and only the second supports telling a traveller
+    that an authority would not permit this program to read a page — the distinction DECISIONS
+    entry 32 draws, and `PERSISTENT_REFUSAL_STATUS_CODES` is what reads it.
+
+    Carried structurally rather than left in `detail`, because entry 36's rule applies here too:
+    what acts on a refusal must read a recorded outcome, never parse the sentence describing it, or
+    rewording a message silently empties the list something else depends on. `CrawlFetcher` has
+    kept the same fact in `refusal_statuses` since entry 32; this is the retrieval path catching up.
+
+    None when no response was received at all — a DNS failure, a timeout, a `robots.txt`
+    `Disallow` — which fails toward *not* claiming an authority refused us.
+    """
+
 
 class RetrievalReport(StrictModel):
     """Everything one retrieval pass produced: usable evidence and explained gaps."""
