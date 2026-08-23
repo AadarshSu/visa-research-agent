@@ -7,9 +7,10 @@ picked up cold.
 done and measured live on 2026-08-23, entries 49–53. **Item 3 is now the thing most of this list waits
 on**, even though it sits in **Next up** rather than here; nothing large should be built before it, and
 after item 22 nothing large is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
-(17) and the corpus that answers it (18, 19, entry 44). **Item 23 is new and leads them**: running
-item 15's six corridors through the corpus path on 2026-08-23 found that a blocked page which plainly
-*is* the visa decision cannot qualify a corridor, so entry 27's exception silently stopped firing.
+(17) and the corpus that answers it (18, 19, entry 44). Item 23 is **done** — the vocabulary could not
+recognise a page that *states* the visa answer, so entry 27's exception had stopped firing; entry 56.
+**Everything now waits on credit**: the OpenAI account is exhausted, which blocks item 3 and the last
+step of item 23.
 **Next up** is what follows. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
 and worth stating**: item 18 is built once and run first on only the ~8 destinations item 3 needs, so
 the measurement describes the architecture the project means to keep, and scaling it to 198 countries
@@ -270,41 +271,6 @@ queue**, which is observability the current system has none of.
 **Careful:** trust is unchanged and must stay so. A seeded URL is still checked against `trusted_domains`
 and still fetched through `LiveSourceFetcher`, so `validate_route` still runs and a corpus entry cannot
 survive a later narrowing of the domain registry.
-
-### 23. Give `visa_decision` its floor back, so a blocked decision page can qualify — `next`
-
-**Why:** [DECISIONS.md](DECISIONS.md) entry 55, measured live 2026-08-23. `score_role_vocabulary`
-grants the "this page mentions visas" base score to `visa_decision` **only when the page scored for
-nothing else**:
-
-```python
-if not scores and mentions_visa:
-    scores["visa_decision"] = base
-elif mentions_visa and "visa_decision" in scores:
-    scores["visa_decision"] += base
-```
-
-Any page that picks up another role's vocabulary therefore loses its `visa_decision` floor entirely.
-Entry 41 saw this on France and called it a French quirk. It is general. **Sweden proves it:**
-`government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` — a URL that says
-who requires a visa, in English — scored **`general_entry` 22.4 and no `visa_decision` at all**,
-because its search title matched `general_entry` vocabulary first.
-
-**What it costs, concretely.** `_decision_blocking` only qualifies a refusal on a page that scored for
-`visa_decision`, so **entry 27's whole blocked-authority exception cannot fire for Sweden**: the
-authority refuses the decision page, we correctly report the block, and the corridor refuses anyway
-instead of handing the traveller the URL. That exception exists for exactly this case.
-
-**Do:** remove the `not scores` guard so `mentions_visa` always contributes a `visa_decision` floor,
-then **measure it before keeping it**. This is the scorer that decides what every corridor may see,
-and entry 40's asymmetry cuts both ways — a floor on every visa-mentioning page also promotes noise
-into a 25-place shortlist. Re-run at least the six corridors of item 15 both ways and compare role
-fills, not just Sweden.
-
-**Careful:** do not fix this inside `_decision_blocking` instead by loosening what counts as a
-credible decision candidate. Entry 32 made that bar narrow on purpose, and France is the reason —
-its baseline qualified on a **blank CERFA application form**. Widening the qualification test would
-bring that back; fixing the score is what makes the narrow test work.
 
 ### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
 
@@ -762,6 +728,36 @@ replacement.
 ---
 
 ## Done
+
+### ~~Give `visa_decision` its floor back~~ — **done 2026-08-24, and the proposal was wrong** (was item 23)
+
+DECISIONS entry 56. This item proposed removing the `not scores` guard so `mentions_visa` always
+contributes a `visa_decision` floor. **Measured, that would have made things worse**, and the real
+defect was one the item had not identified.
+
+**Why the guard stays.** Removing it gives a positive `visa_decision` to **12–58% of a country's
+pages** (Netherlands 58%, US 44%, Japan 25%), because `mentions_visa` is a substring test against the
+flattened URL and a visa authority's paths nearly all contain the word. `_decision_blocking` admits
+anything above zero, so entry 32's test would have become "the URL contains the word visa". The guard
+also costs no recall — Sweden's page was shortlisted anyway on `general_entry`.
+
+**The real defect: every `visa_decision` term was a way of *asking*** — `visa requirement`,
+`do i need a visa`, `check if you need` — with no way to recognise a page that *states the answer*.
+Seven answering phrasings added, including `require visa` in its **slug form**, because
+`searchable_url` flattens hyphens and slugs drop the article that prose keeps.
+
+**Measured by replaying the real candidate sets** of all seven corridors: Sweden's blocked decision
+page goes `visa_decision` **0.0 → 82.4** and now qualifies its own refusal; **no shortlist changes
+anywhere**; France still correctly refuses.
+
+**`need a visa` was tried and rejected** — it sits inside `check if you need a visa`, so both fired and
+a Caribbean page displaced the Netherlands' own UK application page. Seven such overlapping pairs
+already exist and are now frozen by a test rather than fixed.
+
+**Live verification stopped one step short**: the page scores 82.4 and `government.se` still `403`s
+it, but the corridor could not be re-resolved because **the OpenAI account ran out of credit**. That
+last step — Sweden resolving `partial` with the decision unknown and the URL handed over — is
+outstanding, and it needs the same credit as item 3.
 
 ### ~~Re-run the remaining six verified corridors~~ — **done 2026-08-23** (was item 15)
 

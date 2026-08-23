@@ -6,8 +6,8 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-23 — update this line when you touch the handoff |
-| **Tests** | 435 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
+| **Last updated** | 2026-08-24 — update this line when you touch the handoff |
+| **Tests** | 437 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -571,7 +571,17 @@ call silently substituting the heuristic (entry 31).
    cost and **nothing counts how often the corpus was the only source and came up short.** The
    `found_by="corpus"` field added with entry 51 is what would make that countable from the recall log;
    nobody has counted it.
-25. **Entry 27's blocked-authority exception has stopped firing, and it is a scoring bug, not a block
+25. **Entry 27's blocked-authority exception stopped firing. Fixed 2026-08-24, unconfirmed live.**
+   The cause was a vocabulary gap, not the `not scores` guard item 23 blamed: Sweden's decision page
+   now scores `visa_decision` **82.4** where it scored **0.0**, and qualifies its own refusal (entry
+   56). Verified by replaying every corridor's real candidate set, and live as far as scoring and the
+   `403`. **The last step is unverified** — that Sweden resolves `partial` with the decision unknown
+   and the URL handed over — because the OpenAI account ran out of credit mid-verification. It stays
+   on this list until a run shows it. France still refuses, correctly: its old qualification was a
+   blank CERFA form.
+   The original description follows.
+
+   **Entry 27's blocked-authority exception has stopped firing, and it is a scoring bug, not a block
    bug.** Measured 2026-08-23 (entry 55): `sweden/IN/GB/tourism` and `france/IN/GB/tourism` both went
    from resolving to **refusing** on the corpus path. Reporting is intact — `inaccessible_domains` and
    `inaccessible_urls` still name the refusing hosts and pages, so entry 49 works. What broke is
@@ -591,37 +601,37 @@ call silently substituting the heuristic (entry 31).
 
 ## Current task
 
-**Pick up [TODO.md](TODO.md) item 23: give `visa_decision` its floor back.** It is the most damaging
-open defect, it is one line plus a measurement, and it was found by running the thing rather than
-reading it.
+> **Blocked on credit, and this is now the first thing to know.** The **OpenAI account is exhausted**
+> — `credit_balance_exhausted`, hit on 2026-08-24 mid-verification. Every corridor refuses, because a
+> failed adjudication refuses rather than falling back to the heuristic (entry 31, working as
+> designed). Brave credit is still fine. **Nothing that needs a model can be measured until this is
+> topped up**, which includes item 3 and the last step of item 23.
 
-`score_role_vocabulary` grants the "this page mentions visas" base score to `visa_decision` **only
-when the page scored for nothing else**, so any page that picks up another role's vocabulary loses its
-`visa_decision` floor entirely. The cost is not ranking, it is entry 27:
-`government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` — a URL that says
-who needs a visa, in English — scores `general_entry` 22.4 and **no `visa_decision`**, so when the
-authority refuses that exact page the corridor cannot qualify and **refuses instead of handing the
-traveller the URL**. Sweden and France both do this now. Known problem 25, entry 55.
+**When credit is back, do these two, in this order — they are the same runs.**
 
-**Fix the score, never `_decision_blocking`.** Entry 32 made that bar narrow deliberately, and France
-is why: its crawl-path qualification was a **blank CERFA application form**. Then measure — this is
-the scorer that decides what every corridor may see, so re-run the six corridors both ways before
-keeping it.
+1. **Confirm Sweden resolves.** Item 23 is implemented and verified offline and as far as the `403`
+   live (entry 56), but not through adjudication. Expect `sweden/IN/GB/tourism` to resolve `partial`
+   with the visa decision stated **unknown** and `government.se`'s blocked page handed over as a URL.
+   If it does, entry 27's exception is confirmed end to end for the first time and known problem 25
+   closes. If it does not, read the recall log before touching the scorer.
+2. **[TODO.md](TODO.md) item 3** — the twenty-corridor measurement, which is still what decides
+   whether this is a product. Seven destinations already have corpora; the rest will crawl, so expect
+   two populations in the results and say which is which.
 
-**Item 22 is finished and measured, on seven destinations** (entries 49–55). Crawl 0.0s, corridors
-2.1×–5.2× faster, roles neutral to better. Three defects surfaced, two now fixed:
+**Everything else is done and measured.** Item 22 (entries 49–53), the six-corridor re-run
+(entry 55), and item 23 (entry 56). The corridor table above is measured rather than remembered.
 
-- **A corpus entry could not displace a thinner search candidate for the same page** (entry 53), so
-  Canada's answering page entered at 32.0 instead of 63.4 and was never read. The crawl had been
-  repairing that silently since entry 47.
-- **One AES-encrypted PDF aborted an entire corridor** (entry 54) — `pypdf`'s `DependencyError`
-  extends `Exception` directly, so no narrower `except` could have caught it. `extract_pdf_text` is
-  now total.
-- **Entry 27's exception stopped firing** (entry 55) — the one above, still open as item 23.
+**The pattern worth carrying, because it has now repeated three sessions running.** Each time, the
+written-down diagnosis named the wrong cause, and only running the thing showed it:
 
-**Then [TODO.md](TODO.md) item 3**, the twenty-corridor measurement. It is still what decides whether
-this is a product, and item 23 should land first so that the corridors which are genuinely
-authority-blocked are counted as such rather than as refusals.
+- item 22 blamed *scoring* for a cost that was `wrong_country`;
+- entry 51's crawl removal was expected to risk *reporting*, and what it actually broke was
+  *qualification*;
+- item 23 blamed the `not scores` guard, and the defect was that the vocabulary had no way to
+  recognise a page that states the answer.
+
+All three were written from reading a code path. `CLAUDE.md` already says to prefer a run to a careful
+reading; these are what it is talking about.
 
 ### Where the previous work got to
 
@@ -840,6 +850,7 @@ things built on them did not.
 
 | Entry | What it changed |
 | --- | --- |
+| 56 | **The `visa_decision` vocabulary could only ask the question, never recognise the answer.** Every term was a way of asking — `visa requirement`, `do i need a visa` — so Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `general_entry` 22.4 and `visa_decision` **0.0**, and could not qualify its own refusal. Seven answering phrasings added, one in **slug form** because `searchable_url` flattens hyphens and slugs drop articles. Measured by replaying all seven corridors' real candidate sets: **0.0 → 82.4 and it now qualifies; no shortlist changes anywhere.** **Item 23's own proposal — removing the `not scores` guard — was measured and rejected**: it would give 12–58% of a country's pages a positive `visa_decision`. |
 | 55 | **Six corridors through the corpus path, 24 live runs — 2.1×–5.2× faster, and two of them stopped resolving.** Crawl 0.0s everywhere; roles genuinely found are neutral to better (US gained `fees`, the Netherlands `processing_times`). **Sweden and France flipped resolve → refuse**: reporting survived (entry 49 works — the blocked hosts and URLs are still named) but *qualification* did not, because `_decision_blocking` needs a refusal observed on a page scoring for `visa_decision` and a 25-page fetch observes far fewer refusals than a crawl. France is a **correction** (its baseline qualified on a blank CERFA form); **Sweden is a real loss**. Root cause is a scoring rule — TODO item 23, deliberately not fixed here. Also: Japan's corpus holds **1 of its 6** role pages and no London embassy, and it resolved anyway **because search still runs**. |
 | 54 | **One encrypted PDF aborted a whole corridor.** `pypdf`'s `DependencyError` extends `Exception` directly — not `PdfReadError`, not `PyPdfError` — so no narrowing of the old `except` tuple could have caught it. `extract_pdf_text` is now total: every input yields text or "could not be read". Latent all along; a corpus-built shortlist is what reached it. |
 | 53 | **Run live, four times, and the first run refused.** `entry-requirements-country.html` — the only page that states Canada's rule for a British citizen in static text — entered at **32.0** from search's title instead of **63.4** from the corpus's harvested anchor text, missed the shortlist, and was never read. `_resolve` seeded search first and folded the corpus in with `setdefault`, so the *thinner* description of a page always won; **the crawl had been repairing that on every run**, which is why removing it was what exposed it. Fixed, then three consecutive runs resolved. **Crawl 33.6s → 0.00s; total 54.2s → 12.7–13.2s**, with adjudication now ~60% of the corridor. |

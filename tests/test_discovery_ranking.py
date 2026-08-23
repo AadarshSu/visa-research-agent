@@ -434,3 +434,66 @@ def test_the_heading_a_footer_link_inherits_cannot_carry_it_alone() -> None:
     # take a fetch place. It still scores; the veto is what stops it, not the score.
     assert inherited > 20
     assert is_boilerplate("https://in.diplomatie.gouv.fr/mentions-legales", get_lexicon())
+
+
+def test_a_page_that_states_the_answer_scores_as_the_visa_decision() -> None:
+    """The vocabulary asked the question and could not recognise the answer.
+
+    Every `visa_decision` term was a way of *asking* — "do I need a visa", "visa requirements" — so
+    Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` matched none of them.
+    It scored `general_entry` instead, on the word "entering" in its title, and therefore could not
+    qualify its own refusal under DECISIONS entry 32: `government.se` blocked that exact page, the
+    block was correctly reported, and the corridor refused rather than handing the traveller the
+    URL. Both the slug and the engine's title are checked, because which one a run sees depends on
+    whether the candidate arrived from the corpus or from search — and on 2026-08-23 it was search.
+    """
+
+    registry = get_country_registry()
+    corridor = Corridor(
+        destination_slug="sweden", passport_nationality="IN", applying_from="GB", purpose="tourism"
+    )
+    url = (
+        "https://www.government.se/government-policy/migration-and-asylum/"
+        "list-of-foreign-citizens-who-require-visa-for-entry-into-sweden"
+    )
+    title = (
+        "List of third countries whose nationals must be in possession of visas "
+        "when entering Sweden - Government.se"
+    )
+    for label, text in (("the slug alone", ""), ("the engine's title", title)):
+        scores = score_link(
+            PageLink(url=url, text=text, heading="", depth=0, discovered_from="seed"),
+            corridor,
+            get_lexicon(),
+            registry.require("IN"),
+            registry.require("GB"),
+        )
+        assert scores.score_for("visa_decision") > 0, label
+
+
+def test_no_new_overlapping_lexicon_terms() -> None:
+    """A term inside another term makes both fire, so the page scores twice.
+
+    Seven such pairs already exist and are frozen below rather than fixed: correcting them would
+    move every score by up to 2× and needs its own measurement. What this guards is *new* ones —
+    adding `need a visa` beside `check if you need` inflated a Caribbean page past the Netherlands'
+    own United Kingdom application page, and the shortlist diff was the only thing that showed it.
+    """
+
+    known = {
+        ("visa_decision", "visa requirement", "visa requirements"),
+        ("visa_decision", "visa exemption", "visa exemptions"),
+        ("application_route", "apply", "how to apply"),
+        ("application_route", "apply", "apply online"),
+        ("fees", "visa fee", "visa fees"),
+        ("fees", "fees", "visa fees"),
+        ("processing_times", "processing time", "processing times"),
+    }
+    found = {
+        (role, inner.phrase, outer.phrase)
+        for role, terms in get_lexicon().roles.items()
+        for inner in terms.terms
+        for outer in terms.terms
+        if inner.phrase != outer.phrase and inner.phrase in outer.phrase
+    }
+    assert found == known, f"new overlaps: {found - known}; resolved: {known - found}"

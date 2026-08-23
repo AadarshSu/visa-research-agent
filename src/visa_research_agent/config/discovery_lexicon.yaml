@@ -48,6 +48,25 @@ roles:
       - {phrase: novisa, weight: 20}
       - {phrase: entry visa, weight: 15}
       - {phrase: entry requirements, weight: 12}
+      # Added 2026-08-23 (DECISIONS entry 56). The list above asks the question — "do I need a
+      # visa", "visa requirements" — and had no way to recognise a page that *states the answer*.
+      # Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` matched none of
+      # it, scored `general_entry` on the word "entering", and therefore could not qualify its own
+      # refusal under DECISIONS entry 32. These are the answering phrasings.
+      #
+      # **No phrase here may contain, or be contained by, another in this role**, or both fire and
+      # the page scores twice. `need a visa` was tried and rejected for exactly that: it sits inside
+      # "check if you need a visa", which inflated a Caribbean page past the Netherlands' own
+      # United Kingdom application page. See `test_no_new_overlapping_lexicon_terms`.
+      - {phrase: needs a visa, weight: 25}
+      - {phrase: require a visa, weight: 22}
+      - {phrase: requires a visa, weight: 22}
+      # The slug form. `searchable_url` flattens hyphens to spaces, and slugs routinely drop the
+      # article that prose keeps, so "require-visa-for-entry" never matches "require a visa".
+      - {phrase: require visa, weight: 22}
+      - {phrase: visa for entry, weight: 20}
+      - {phrase: countries whose nationals, weight: 22}
+      - {phrase: countries whose citizens, weight: 22}
 
   document_checklist:
     terms:

@@ -9,6 +9,90 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 56. The vocabulary asked the question and could not recognise the answer
+**2026-08-24 · measured; implemented; rejects item 23's own proposal**
+
+[TODO.md](TODO.md) item 23 proposed removing the `not scores` guard from `score_role_vocabulary`, so
+that "this page mentions visas" always contributes a `visa_decision` floor. **Measured, that is the
+wrong fix, and the right one is smaller.**
+
+### Why the guard is not the defect
+
+Removing it would give a positive `visa_decision` score to **12–58% of a country's pages** — Canada
+6%, France 12%, Singapore 18%, Japan 25%, United States 44%, **Netherlands 58%** — because
+`mentions_visa` is a substring test against the flattened URL, and on a visa authority's site nearly
+every path contains the word. `_decision_blocking` admits any refusal scoring above zero, so that
+change would turn entry 32's test from *"real visa-decision signal was seen"* into *"the URL contains
+the word visa"*, which is the precise drift entry 32 exists to prevent. Its own docstring would stop
+being true.
+
+**And the guard costs no recall.** Sweden's page was shortlisted anyway, on `general_entry`. The only
+consumer of a `visa_decision` score that the guard changes is `_decision_blocking`. So the guard is
+doing its job — the floor is a "do not lose this page" net, needed only when nothing else caught it.
+
+### What the defect actually is
+
+Every `visa_decision` term was a way of **asking**: `visa requirement`, `do i need a visa`,
+`check if you need`, `visa exemption`. There was no way to recognise a page that **states the
+answer**. Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` matched none of
+them — the list has `entry visa` and the page says *visa for entry*; it has `do i need a visa` and the
+page says *who require visa* — so it scored `general_entry` **22.4** on the word "entering" in its
+title, and `visa_decision` **0.0**. `government.se` then refused that exact page, the block was
+correctly reported, and the corridor refused instead of handing the traveller the URL.
+
+Seven answering phrasings are added: `needs a visa`, `require a visa`, `requires a visa`,
+`require visa`, `visa for entry`, `countries whose nationals`, `countries whose citizens`.
+
+`require visa` looks like a typo and is not. `searchable_url` flattens hyphens to spaces and URL slugs
+routinely drop the article that prose keeps, so `require-visa-for-entry` can never match
+`require a visa`. Half this scorer's signal comes from slugs; the vocabulary was written entirely in
+prose.
+
+### Measured, by replaying the real candidate sets
+
+Each corridor's recorded candidates were rebuilt exactly as its run built them — search candidates
+carrying the engine title, corpus candidates carrying the stored anchor text and heading — and
+re-scored under both lexicons. The replay reproduces every recorded candidate count, so the
+shortlists it produces are the shortlists those runs would have produced.
+
+| | result |
+| --- | --- |
+| Sweden's blocked decision page | `visa_decision` **0.0 → 82.4**, and it **now qualifies its own refusal** |
+| Shortlist changes, all seven corridors | **none** — 25 in, 25 out, same URLs |
+| France | still **0** qualifying refusals, so it still correctly refuses |
+| United States | unchanged at 2 qualifying |
+
+### One term was tried and rejected, and only the shortlist diff caught it
+
+`need a visa` is the obvious general form of `do i need a visa` and matches 25 pages across the seven
+corpora. It sits **inside** `check if you need a visa`, so both terms fire and the page scores twice:
+a Caribbean page on `netherlandsworldwide.nl` went 42.9 → 60.4 and displaced the Netherlands' own
+**United Kingdom application page** from the shortlist. Counting how many pages a term matches would
+never have shown that; diffing the shortlist did.
+
+**Seven such overlapping pairs already exist** — `visa requirement`/`visa requirements`,
+`processing time`/`processing times`, `fees`/`visa fees` and four more — each scoring up to double.
+They are **frozen rather than fixed** by `test_no_new_overlapping_lexicon_terms`: correcting them
+moves every score by up to 2× and needs its own measurement. What the test guards is a *new* one.
+
+### How far this is verified
+
+**Offline: completely.** The replay is faithful and the tests fail on the previous lexicon.
+
+**Live: up to the model call, and no further.** Run 2026-08-24, Sweden's page scores 82.4, is ranked
+`visa_decision` first, is shortlisted, and `government.se` still answers `403` to it. The corridor
+then refused because **the OpenAI account is out of credit** (`credit_balance_exhausted`), so
+adjudication failed twice and entry 31 correctly refused rather than falling back to the heuristic.
+**What remains unverified is the last step**: that Sweden now resolves `partial` with the decision
+stated unknown and the blocked URL handed over. That needs credit, and it is the same credit
+[TODO.md](TODO.md) item 3 is waiting on.
+
+*Note for whoever verifies it:* a corridor that refuses populates only `notes`, not
+`inaccessible_domains`/`inaccessible_urls` — `_refused` does not carry them — so a refusing run cannot
+be used to check block reporting. Read the notes, or the recall log.
+
+---
+
 ## 55. Six corridors through the corpus: 2–5× faster, and it breaks the blocked-authority exception
 **2026-08-23 · measured live; NOT fixed**
 
