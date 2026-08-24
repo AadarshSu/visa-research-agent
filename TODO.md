@@ -50,6 +50,7 @@ one-paragraph defects rather than items.
 | | 9. Tell "no checklist exists" apart from "we failed to find it" | `soon` |
 | | 20. Make the stores substrate-swappable and durable | `soon` |
 | | 21. Fill the three provenance gaps | `soon` |
+| | 26. The nationality bonus rewards naming a country, not being about one | `soon` |
 | **Later** | 10. Try sitemaps before crawling | `later` |
 | | 11. Decide whether a host that has refused everything should be skipped | `later` |
 | | 12. Watch where the two deciders disagree | `later` |
@@ -97,43 +98,59 @@ page the model was given**, so everything they do is downstream of this. `nether
 because its checker reaches the shortlist. `united-kingdom/IN/IN` still refuses — re-run 2026-08-24
 under entry 60, no tool named for any role — because `gov.uk/check-uk-visa` does not.
 
-**The cause is scoring, not crowding, and the first version of this item said otherwise.** It blamed
-eleven of twenty-five places going to near-duplicate `visa-fees.homeoffice.gov.uk` pages. Read off the
-`united-kingdom/IN/IN` recall log, that is real and it is not sufficient:
+**Measured with the real scorer, and it is neither crowding nor the window.** Two earlier write-ups of
+this item named the wrong cause; this one is `score_link` output, not a reading:
 
-| | |
-| --- | --- |
-| `check-uk-visa` score for `visa_decision` | **30.4** — its only role |
-| its rank for that role | **5th of 76** |
-| ranks 3 and 4 | **two URLs for the same page**, `india-young-professionals-scheme-visa[-ballot-system]`, at 54.0 — an unrelated scheme that scores because "india" and "visa" both match |
-| pages outranking it overall | **115** — of which 41 are the fee host and **69 are `www.gov.uk`** |
+```
+the checker      visa_decision= 30.4   text:check if you need+26.4, mentions-visa+6, shallow+8, depth1-10
+ballot scheme    visa_decision= 44.0   mentions-visa+6, nationality:IN+40, shallow+8, depth1-10
+```
 
-So freeing every place the fee host takes still leaves 74 pages above it. The binding fact is that the
-scorer values a wizard landing page at 30.4 while valuing a ballot page at 54.0 — twice.
+`nationality:IN+40` is the largest single term in the scorer, and
+`gov.uk/india-young-professionals-scheme-visa` earns all of it for having "india" in its path — a
+different visa product entirely. **The checker cannot ever earn it**, because a page that asks the
+reader their nationality never names one. It scores **exactly 30.4 in all four recorded UK corridors**;
+it is the corridor-specific pages *around* it that move.
 
-**Measure before implementing, and do not trust a quick simulation of the shortlist.** One was written
-on 2026-08-24 and **disagreed with an observed run** — it predicted the wizard would miss the shortlist
-for Nigeria, where the real run admitted it — because `_reserved_per_domain` keys on the *registrable*
-domain and `_readable_only` drops candidates first. Its verdicts on the fixes below were discarded for
-that reason. Change the real `_shortlist` and re-run the four recorded UK corridors.
+That is why it is admitted in two corridors and not the other two — `_shortlist` reserves the top
+**three** per role:
 
-Candidates, cheapest first:
+| corridor | checker's rank for `visa_decision` | what outranks it |
+| --- | --- | --- |
+| NG, PH | **3rd** — admitted | nothing nationality-named on `gov.uk` for those countries |
+| IN | **5th** — excluded | `india-young-professionals-scheme-visa` at 54.0, on **two different paths** |
+| CN | **5th** — excluded | `translated-visa-application-guidance` 54.0, `ads-visa` 39.0 — ADS is a China-specific scheme |
 
-1. **Collapse near-duplicate URLs before ranking.** Two ballot URLs are one page; four
-   `check-uk-visa?step-by-step-nav=…` rows are one page. Deduplication is not ranking, so it is the
-   least likely to break anything — but on its own it only moves the wizard from 5th to 4th, so it is
-   necessary and not sufficient.
-2. **Deepen the per-role reservation past three.** This is the actual gate: the wizard is 5th for its
-   own role, and `_shortlist` reserves three. With (1) applied it would be 4th. Note this is *not*
-   entry 40's "wider window" — widening the 25 does nothing here, because the fill is by overall score
-   and 115 pages outrank it. Costs a few fetches per corridor.
-3. **Cap how many places one host may take for one role.** Still worth doing for the ten to eleven
-   fee-page places, which are waste whatever else is true — but it will not admit the wizard by itself.
+**Do:** raise the per-role reservation from three to five, and measure. It is mechanical, needs no
+semantic judgement, and 3rd–5th is exactly the observed range. Note the interaction that makes it
+cheap: reserved pages go first in the truncation, so deepening the reservation also cuts the
+score-filled tail, which is where the ten to eleven near-duplicate `visa-fees.homeoffice.gov.uk` places
+live. One change, both problems.
 
-**Do not** fix it by teaching the vocabulary to score `check-uk-visa` higher. Entry 56 rejected exactly
-that shape of fix, and entry 57 established that "what does this page mean" is not a keyword question.
-The wizard's landing page is 804 characters of title, two sentences and a "Start now"; there is no
-honest keyword that ranks it above a page that genuinely discusses visas at length.
+**Do not** fix it in the vocabulary. Entry 56 rejected that shape of fix and entry 57 established that
+"what does this page mean" is not a keyword question. There is no honest keyword that ranks an
+804-character landing page above a page that genuinely discusses visas at length.
+
+**Do not trust a quick simulation of the shortlist.** One was written on 2026-08-24 and **disagreed
+with an observed run** — it predicted the checker would miss the shortlist for Nigeria, where the real
+run admitted it — because `_reserved_per_domain` keys on the *registrable* domain and `_readable_only`
+drops candidates first. Change the real `_shortlist` and re-run the four recorded UK corridors.
+
+### 26. The nationality bonus rewards a page for naming a country, not for being about one — `soon`
+
+**Why:** found while measuring item 25, and it is the defect underneath it. `nationality:IN+40` is the
+scorer's largest term and it is a **substring test against the URL and anchor**. So
+`gov.uk/india-young-professionals-scheme-visa` — a ballot scheme for under-35s, nothing to do with a
+tourist visa — collects the full corridor bonus and outranks the page that actually decides the
+question. China gets the same from `ads-visa`, the Approved Destination Status scheme.
+
+It is load-bearing where it works: `visa-fees.homeoffice.gov.uk/y/india/inr/visit/…` scores 136 partly
+on this, correctly. So it cannot simply be lowered.
+
+**Careful:** the obvious fix — "only count nationality when the page is also about the right visa
+product" — is a semantics question, which is the shape of fix entries 56 and 57 reject. Item 25's
+mechanical fix should be measured **first**, because if a deeper reservation is enough, this becomes a
+precision problem rather than a recall one, and precision is what the adjudicator is for.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
