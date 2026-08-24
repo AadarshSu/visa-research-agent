@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 497 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 481 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -88,23 +88,22 @@ refused before a page is fetched and **158 of those simply have no registry row*
 not rigor. The trust rule's own share of the refusals is one country. Biggest lever there is, and it
 costs no rigor at all. Entries 63 and 64; `visa-discover audit` prints the split.
 
-**Then item 29**, which is the unfinished half of item 28. The control arm is built and confirmed
-live — `visa-discover baseline`, top 8 search results, no domain trust, one model call, guarded from
-the request path by a test. What remains is the destination sample and a committed truth set.
-
-**Read entry 64 before arguing about relaxing anything, because it cuts both ways.** The naive arm is
-~5× faster, answered a country we refuse outright, and produced a document checklist for Germany where
-this project produces none. It also cited **0 of 8 hosts that would pass the trust rule** — the United
-Kingdom's top 8 held no `gov.uk` page at all — and answered `visa_required: false` for Kenya beside
-`visa_name: "Electronic Travel Authorization"` in the same breath. **And the trust rule was wrong about
-one of the eight**: `india.diplo.de` is Germany's own mission, declined because `diplo.de` carries no
-governmental marker, which is known problem 2 with a cost attached.
+**Read entry 64 before arguing about relaxing anything, because it cuts both ways.** A one-off control
+arm — open-web search, no trust model, one model call — was built, run on three corridors and then
+deleted; the entry is the record. It was ~5× faster, answered a country we refuse outright, and
+produced a document checklist for Germany where this project produces none. It also cited **0 of 8
+hosts that would pass the trust rule** — the United Kingdom's top 8 held no `gov.uk` page at all — and
+answered `visa_required: false` for Kenya beside `visa_name: "Electronic Travel Authorization"` in the
+same breath. **And the trust rule was wrong about one of the eight**: `india.diplo.de` is Germany's own
+mission, declined because `diplo.de` carries no governmental marker, which is known problem 2 with a
+cost attached.
 
 **The conclusion those two entries support, stated so it can be argued with:** the rigor is cheap and
-the backlog is expensive, and it has been easy to mistake the second for the first. What would
-overturn it is item 29's truth set showing the naive arm is right ~90% of the time — at which point
-the question becomes "accurate but unattributable versus accurate and attributable", which is harder
-than the one entry 64 answers. Three corridors is a pointer, not a rate.
+the backlog is expensive, and it has been easy to mistake the second for the first. The dimension never
+graded is correctness against a truth set — if a naive arm is right ~90% of the time the question
+becomes "accurate but unattributable versus accurate and attributable", which is harder than the one
+entry 64 answers. Three corridors is a pointer, not a rate, and the arm would have to be rebuilt to go
+further.
 
 One thing worth knowing before choosing: item 7 is **deployment**, which entry 58 unblocked by
 answering the product question.
@@ -129,9 +128,10 @@ re-add the amendment history here.
    do have one**, so bootstrap *succeeds* against a trusted set that cannot contain the guidance, and
    nothing reports it. Canada is sharpest: `gc.ca` passes, but the content moved to `canada.ca`. The fix
    is reviewed data, never a wider regex. Frozen in `tests/test_trust_coverage.py`. **And it refuses
-   correct authorities *inside* countries it accepts, not only whole countries**: the control arm's
-   Germany run cited `india.diplo.de`, Germany's own mission giving guidance to exactly that
-   traveller, and the rule declines it for want of a marker (entry 64). Entry 33; TODO item 2.
+   correct authorities *inside* countries it accepts, not only whole countries**: a one-off control
+   arm's Germany run cited `india.diplo.de`, Germany's own mission giving guidance to exactly that
+   traveller, and the rule declines it for want of a marker (entry 64; the arm itself was deleted
+   after it answered). Entry 33; TODO item 2.
 
 5. **The full cold request has never been timed.** Every figure quoted is the corridor phase; plan
    extraction sits on top. The remaining lever is **search**, roughly 3s per corridor at three queries

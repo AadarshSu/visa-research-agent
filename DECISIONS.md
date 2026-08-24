@@ -110,82 +110,80 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | | |
 | --- | --- |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
-| [64](#64-the-control-arm-exists-and-the-first-three-corridors-answer-the-question-in-both-directions) | **The control arm** — 5× faster, answers more, and 0 of 8 cited hosts pass the trust rule |
+| [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
 
-## 64. The control arm exists, and the first three corridors answer the question in both directions
-**2026-08-24 · implemented and measured live. Closes TODO item 28; the sample is item 29**
+## 64. The control arm: built, run on three corridors, and deleted
+**2026-08-25 · run, then removed. The code is gone; the finding is why item 2 is first**
 
-Entry 63 made the denominator honest. This is the other half: `visa-discover baseline`, a deliberately
-naive arm — one plainly worded query, top 8 results, **no** `is_own_government`, no corpus, no
-shortlist, no adjudication, one model call — run over the same corridors and graded the same way. It
-answers nobody. `tests/test_trust_coverage.py` asserts the request path cannot import it.
+Entry 63 made the denominator honest. This was the other half — `visa-discover baseline`, a
+deliberately naive arm with **no** `is_own_government`, no corpus, no shortlist, no adjudication: one
+plainly worded query, top 8 results, one model call. It existed to answer a question the project had
+never been able to answer about itself, and **it is deleted now that it has.** Same shape as entry 30:
+a thing built, used, and removed rather than carried.
 
-### Three corridors, both arms
+### What it was for
+
+Entry 35 committed a bar in advance and entry 58 measured against it — 75% decision, 50% checklist —
+with **no comparison arm**. So "we are losing too much coverage for this rigor" and "the rigor is worth
+it" were equally unfalsifiable, and every argument about relaxing a rule was settled by whoever was
+talking.
+
+### Three corridors, both arms, 2026-08-24
 
 | corridor | this project | the naive arm |
 | --- | --- | --- |
-| `germany/IN/IN` | resolved; decision confirmed; **0 documents** | **5.3s**; decision + **18 documents**; cited `india.diplo.de`, `airindia.com`, `axa-schengen.com` |
-| `united-kingdom/IN/IN` | resolved; decision handed over as the official checker; checklist, route, times, per-nationality fees | **3.5s**; decision + 8 documents; cited `goindigo.in`, `airindia.com`, `acko.com` |
-| `kenya/IN/IN` | **refused** — no registry row | **5.9s**; decision + 3 documents; cited `joinsherpa.com`, `visarequirements.info` |
+| `germany/IN/IN` | resolved; decision confirmed; **0 documents** | **5.3s**; decision + **18 documents** |
+| `united-kingdom/IN/IN` | resolved; official checker handed over; checklist, route, times, fees | **3.5s**; decision + 8 documents |
+| `kenya/IN/IN` | **refused** — no registry row | **5.9s**; decision + 3 documents |
 
-The corridor arm's own latency is not re-measured here; entry 58's figure is a median of **27.4s** over
-40 runs. So the naive arm is roughly **5× faster, answers a country we refuse outright, and produced a
-document checklist for Germany where this project produces none.** That is the case for relaxing, it
-is real, and it should be stated before the rest.
+Against entry 58's corridor median of **27.4s**. So the naive arm was roughly **5× faster, answered a
+country this project refuses outright, and produced a checklist for Germany where this project
+produces none.** That is the case for relaxing, and it is real.
 
-### What it is built on: 0 of 8
+### What it was built on: 0 of 8
 
-**Across all three corridors, not one cited host passes the trust rule.** Entry 19 recorded three
-anecdotes — `axa-schengen.com`, `usembassy.gov`, VFS. Eight of eight is no longer an anecdote:
+**Not one cited host passed the trust rule.** Entry 19's three anecdotes — `axa-schengen.com`,
+`usembassy.gov`, VFS — became eight of eight:
 
-- **Germany's 18-item checklist** is built partly on a **travel insurer** and **an airline**.
-- **The United Kingdom returned no `gov.uk` result in its top 8 at all.** Not ranked low — absent. The
-  eight were visa agencies, two Indian airlines and an insurance company, for the destination whose
-  `check-uk-visa` this project reads successfully and hands over by name. Its checklist includes
-  "Income Tax Returns or Form 16", which is a real thing an agency tells Indian applicants and is not
-  something the Home Office published.
-- **Kenya contradicts itself in the field that matters most.** `visa_required: false` sits beside
-  `visa_name: "Electronic Travel Authorization (eTA)"` in the same answer. A traveller reads the first
-  and boards without the second. No external ground truth is needed to see this one — the answer
-  disagrees with itself, and the disagreement is in the field CLAUDE.md calls the most damaging thing
-  this program can get wrong.
+- **Germany's 18-item checklist** rested partly on a **travel insurer** and **an airline**.
+- **The United Kingdom returned no `gov.uk` result in its top 8 at all.** Not ranked low — absent.
+  Visa agencies, two Indian airlines and an insurer, for the destination whose `check-uk-visa` this
+  project reads successfully and hands over by name.
+- **Kenya contradicted itself in the field that matters most:** `visa_required: false` beside
+  `visa_name: "Electronic Travel Authorization (eTA)"` in one answer. A traveller reads the first and
+  boards without the second. No external ground truth is needed — the answer disagrees with itself,
+  in the field `CLAUDE.md` calls the most damaging thing this program can get wrong.
 
-### And the rule is wrong about one of them, which is the finding that cuts the other way
+### And the rule was wrong about one of them, which is the finding that survived
 
-`india.diplo.de` **is** Germany's own diplomatic mission — the destination's own government, giving
-guidance to exactly this traveller — and `judge_hosts` declines it, because `diplo.de` carries no
-governmental marker. That is known problem 2 and the 19-of-51 gap, now with a **cost attached rather
-than a description**: the rule is not merely refusing countries, it is refusing correct authorities
-inside countries it accepts. The naive arm found it by having no rule at all.
+`india.diplo.de` **is** Germany's own diplomatic mission, giving guidance to exactly that traveller,
+and the trust rule declines it because `diplo.de` carries no governmental marker. So the honest
+reading of the eight is **seven commercial pages the rule correctly excluded, and one real authority
+it wrongly excluded** — known problem 2 with a measured cost rather than a description. The naive arm
+found it by having no rule at all.
 
-So the honest reading of the eight is not "search returns garbage". It is: **seven commercial pages the
-trust rule correctly excluded, and one real authority it wrongly excluded.** Both halves are the
-measurement.
+### The conclusion, and it is what reordered the queue
 
-### What this does not establish
+**The rigor is cheap and the backlog is expensive, and it had been easy to mistake the second for the
+first.** Of 159 countries refused before a page is fetched, 158 are a registry job nobody has run
+(entry 63); of 15 pages lost mid-corridor, 0 were blocked. The posture that reads most restrictive
+cost nothing measurable. So **item 2 moved to first** and nothing was relaxed.
 
-- **Three corridors, one nationality, one purpose, one engine.** Not a rate. Item 29 asks for ~15
-  destinations, and entry 58's lesson — that nationality varied the outcome once in twenty — says
-  sample destinations.
-- **Nothing here grades correctness against a truth set.** Whether Germany's 18 documents are right is
-  unmeasured; the arm's answers are plausible and detailed, which is exactly what makes the question
-  worth asking rather than settled. Only the *provenance* is graded, because that needs no human.
-- **Search results move.** These were taken on one day through one provider.
+### Why the code is not kept
 
-### What the arm keeps, and why that is not cheating
+Three corridors, one nationality, one purpose, one engine, one day: a pointer, not a rate. Keeping the
+arm would have meant maintaining a second, trust-free retrieval path — guarded by tests, carried
+through every refactor — to re-answer a question already answered well enough to act on. **What would
+have justified keeping it** is the dimension it never graded: correctness against a truth set. If the
+naive arm is right ~90% of the time the question becomes "accurate but unattributable versus accurate
+and attributable", which is harder than the one above. Nobody built that truth set, and this entry is
+the record so the arm can be rebuilt deliberately if that question is ever worth reopening.
 
-It keeps the project's user agent, `robots.txt` (entry 36), TLS verification (entry 12), and no retry
-past a refusal (entry 18) — a `403` from `blog.onevasco.com` was recorded and left alone. A naive
-competitor might skip all four; skipping them here would measure a client this project will not be. It
-keeps the **same model at the same settings** as the adjudicator, so a difference between the arms
-cannot be the model. What it does not keep is the trust gate, the corpus, the shortlist and the
-adjudication, which is the whole of what is being measured.
-
-It also does not enforce what entry 27 enforces: `visa_required` is a plain nullable boolean with
-nothing overriding the model. Kenya is what that costs.
+**What it left behind:** nothing in the codebase. `visa-discover audit` (entry 63) is separate and
+stays — it is a diagnostic over this project's own runs, with no second pipeline behind it.
 
 ---
 

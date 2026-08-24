@@ -46,13 +46,6 @@ from visa_research_agent.discovery.automatic import (
     prepare_destination,
     trusted_domains_for,
 )
-from visa_research_agent.discovery.baseline import (
-    BASELINE_RESULTS,
-    BaselineDecider,
-    BaselineResult,
-    LangChainBaselineDecider,
-    run_baseline,
-)
 from visa_research_agent.discovery.bootstrap import (
     BootstrapReport,
     bootstrap_destination,
@@ -542,135 +535,6 @@ def run_audit(args: argparse.Namespace, stream: TextIO) -> int:
     return 1 if refused or report.unrecorded else 0
 
 
-def build_baseline_decider(policy: RuntimePolicy) -> BaselineDecider | None:
-    """The naive arm's model, or none when the policy asks for the deterministic path.
-
-    Deliberately gated on the same `discovery_decider` line as the real adjudicator, so a machine
-    configured not to call a model does not call one here either.
-    """
-
-    if policy.discovery_decider == "heuristic":
-        return None
-    if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
-        raise LLMConfigurationError("OPENAI_API_KEY is required for the baseline arm")
-    if settings.openai_model is None or not settings.openai_model.strip():
-        raise LLMConfigurationError("OPENAI_MODEL is required for the baseline arm")
-    return LangChainBaselineDecider(
-        api_key=settings.openai_api_key.get_secret_value(),
-        model_name=settings.openai_model,
-        request_timeout_seconds=settings.openai_request_timeout_seconds,
-        max_output_tokens=settings.openai_max_output_tokens,
-        reasoning_effort=settings.openai_reasoning_effort,
-    )
-
-
-def print_baseline(result: BaselineResult, stream: TextIO) -> None:
-    """What the naive arm found, and where it came from.
-
-    The host grading is printed even when the answer looks right, because "it answered" and "it
-    answered from the destination's own government" are the two halves of the comparison and only
-    the first is obvious from reading the output.
-    """
-
-    run = result.run
-    print(f"\nBaseline (no trust model) — {run.corridor.key}", file=stream)
-    print(f'  query: "{run.query}"', file=stream)
-    print(f"  {len(run.results)} results, {len(run.pages)} read, {run.seconds:.1f}s", file=stream)
-
-    print("\n  what the search engine offered, in rank order:", file=stream)
-    for verdict in result.hosts:
-        if verdict.own_government:
-            marker = "OWN GOV"
-        elif verdict.governmental:
-            # Another country's government describing this destination. Vietnam's search ranked
-            # `usembassy.gov` first — a real government, correct for Americans (entry 19).
-            marker = "gov,other"
-        elif verdict.belongs:
-            marker = "in-country"
-        else:
-            marker = "—"
-        print(f"    [{marker:>10}] {verdict.host}", file=stream)
-
-    for url, reason in sorted(run.failures.items()):
-        print(f"    could not read {url}: {reason}", file=stream)
-
-    if result.error is not None:
-        print(f"\n  no answer: {result.error}", file=stream)
-        return
-    answer = result.answer
-    if answer is None:
-        print("\n  no answer, and no reason recorded — that is a defect", file=stream)
-        return
-
-    decision = {True: "visa required", False: "no visa required", None: "not stated"}[
-        answer.visa_required
-    ]
-    print(f"\n  decision: {decision}", file=stream)
-    if answer.visa_name:
-        print(f"  visa: {answer.visa_name}", file=stream)
-    print(f"  documents: {len(answer.documents)}", file=stream)
-    for document in answer.documents[:10]:
-        print(f"    - {document}", file=stream)
-
-    print("\n  cited:", file=stream)
-    for verdict in result.cited:
-        own = "own government" if verdict.own_government else "NOT the destination's government"
-        print(f"    {verdict.host} — {own}", file=stream)
-    total = len(result.cited)
-    own_gov = result.own_government_citations
-    if total:
-        print(
-            f"\n  {own_gov} of {total} cited hosts would pass the trust rule. "
-            f"{total - own_gov} would not, and the request path would never have read them.",
-            file=stream,
-        )
-
-
-async def run_baseline_command(args: argparse.Namespace, stream: TextIO) -> int:
-    """The control arm. Answers nobody — it prints a comparison and exits.
-
-    Exit codes match `corridor`'s shape so the two can be scripted side by side: 0 answered with
-    documents, 1 answered without, 2 did not answer.
-    """
-
-    corridor = Corridor(
-        destination_slug=args.destination.strip().lower(),
-        passport_nationality=args.nationality.upper(),
-        applying_from=getattr(args, "from").upper(),
-        purpose=args.purpose,
-    )
-    countries = get_country_registry()
-    destination = find_country(args.destination, countries)
-    if destination is None:
-        print(f"No country matches {args.destination!r}", file=stream)
-        return 3
-    nationality = next(
-        (
-            country
-            for country in countries.countries
-            if country.code == corridor.passport_nationality
-        ),
-        None,
-    )
-    if nationality is None:
-        print(f"No country matches {corridor.passport_nationality!r}", file=stream)
-        return 3
-
-    result = await run_baseline(
-        build_search_provider(),
-        build_baseline_decider(get_runtime_policy()),
-        corridor,
-        destination,
-        nationality,
-        user_agent=settings.source_user_agent,
-        results=int(getattr(args, "results", BASELINE_RESULTS)),
-    )
-    print_baseline(result, stream)
-    if not result.answered:
-        return 2
-    return 0 if result.has_documents else 1
-
-
 # One cold resolution of a corridor. Named so `run_corridor` can take a fake in tests.
 Resolve = Callable[[DestinationConfig, Corridor, RuntimePolicy], Awaitable[ResolvedCorridor]]
 
@@ -937,18 +801,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="a directory of recall logs; the reachability half needs no runs and is always shown",
     )
 
-    baseline = commands.add_parser(
-        "baseline",
-        help="the control arm: open-web search with no trust model, for comparison only",
-    )
-    baseline.add_argument("--destination", required=True, help="country name or slug, e.g. germany")
-    baseline.add_argument("--nationality", required=True, help="ISO code, e.g. IN")
-    baseline.add_argument("--from", required=True, help="ISO code of where they apply, e.g. GB")
-    baseline.add_argument(
-        "--purpose", default="tourism", choices=["tourism", "business", "study", "transit"]
-    )
-    baseline.add_argument("--results", type=int, default=BASELINE_RESULTS)
-
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
@@ -982,8 +834,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             return asyncio.run(run_corpus(args, sys.stderr))
         if args.command == "audit":
             return run_audit(args, sys.stderr)
-        if args.command == "baseline":
-            return asyncio.run(run_baseline_command(args, sys.stderr))
         return asyncio.run(run_corridor(args, sys.stderr))
     except SearchError as exc:
         print(f"Search is unavailable: {exc}", file=sys.stderr)

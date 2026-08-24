@@ -16,14 +16,11 @@ twenty-corridor measurement, entry 58, which passed marginally). Nothing is bloc
 complaint. Entries 63 and 64 measured what the coverage complaint is actually made of, and it is
 almost entirely this item: **158 of the 159 refused countries are a registry job nobody has run**, and
 the trust rule's own share is one country. The rule is also refusing correct authorities *inside*
-countries it accepts — the control arm cited `india.diplo.de`, Germany's own mission, and
-`judge_hosts` declines it for want of a marker. Biggest lever in the file, and it costs no rigor at
+countries it accepts — a one-off control arm cited `india.diplo.de`, Germany's own mission, and the
+rule declines it for want of a marker. Biggest lever in the file, and it costs no rigor at
 all.
 
-**Then item 29**, which is item 28's unfinished half: the arm is built and three corridors are run,
-and the destination sample and the truth set are what turn a pointer into a rate.
-
-**Then item 17, now that 24, 25, 26 and 28 are settled.** Items 24 and 25 took the United Kingdom from
+**Then item 17, now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
 settles (entries 59–60), and the shortlist reserves five per role rather than three so the answering
 page actually reaches the model (entry 61). Item 26 was then measured and **closed without a code
@@ -51,7 +48,6 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
-|  | 29. Run the control arm over a destination sample, and grade correctness | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 18. Build the offline corpus job, and run it on more destinations | `next` |
 |  | 19. Take search out of the request path too | `next` |
@@ -95,10 +91,11 @@ careful reading and were wrong.
 
 **Why this is now first.** Measured 2026-08-24, entries 63 and 64. Of 198 countries offered, 159 are
 refused before a page is fetched and **158 of those have no registry row at all** — unfinished data,
-not rigor. And the rule does not only refuse whole countries: the control arm's Germany run cited
-`india.diplo.de`, which **is** Germany's own diplomatic mission giving guidance to exactly that
-traveller, and the rule declines it because `diplo.de` carries no governmental marker. That is this
-item, with a measured cost rather than a description.
+not rigor. And the rule does not only refuse whole countries: a one-off control arm — open-web search
+with no trust model, run on three corridors and then deleted (entry 64) — cited `india.diplo.de`,
+which **is** Germany's own diplomatic mission giving guidance to exactly that traveller, and the rule
+declines it because `diplo.de` carries no governmental marker. That is this item, with a measured cost
+rather than a description.
 
 **First, what `looks_governmental` actually is**, because its name misdescribes it and that makes the
 whole rule read as flimsier than it is. Probed against adversarial hostnames 2026-08-18:
@@ -174,43 +171,6 @@ is 19 countries rather than 198.
 **Do first, separately, because they are corrections inside the existing rule rather than relaxations
 of it:** add `gv` and `gub` as markers, and add `canada.ca` beside the `gc.ca` special case — Canada
 fails only because immigration content moved and the pattern did not.
-
-### 29. Run the control arm over a destination sample, and grade correctness — `next`
-
-**Why:** entry 64 built the arm and ran three corridors. What it found is sharp enough to act on and
-**thin enough to be wrong**, and it is currently the evidence behind a decision not to relax anything:
-
-- **0 of 8 cited hosts passed the trust rule**, across Germany, the United Kingdom and Kenya.
-- **The United Kingdom returned no `gov.uk` result in its top 8 at all** — visa agencies, two airlines
-  and an insurer, for the destination whose official checker this project reads and hands over.
-- **Kenya answered `visa_required: false` beside `visa_name: "Electronic Travel Authorization"`** in
-  one answer, for a country this project refuses outright.
-- **And the rule was wrong about one host**: `india.diplo.de` is Germany's own mission, declined for
-  want of a marker. Known problem 2, with a cost attached rather than a description.
-
-Three corridors, one nationality, one purpose, one engine, one day. That is a pointer, not a rate.
-
-**Do:** ~15 destinations × 1 nationality through `visa-discover baseline` and through `corridor`,
-including countries that currently refuse for want of a registry row — those are where the naive arm
-looks best. Sample **destinations**, not corridors: entry 58's own finding is that nationality changed
-the outcome once in twenty, so twenty corridors was five observations replicated four times.
-
-**The dimension that is still ungraded is the one that could overturn the verdict.** Provenance is
-graded automatically by `judge_hosts` and needs nobody. *Correctness* is not graded at all, and
-nothing yet says whether Germany's 18 documents were right. Build a committed truth set with a source
-note per row, on the `reviewed` field's discipline — **a corridor with no truth row yields no verdict,
-never a false one.**
-
-**Be willing to lose.** If the naive arm turns out to be right 90% of the time, the question stops
-being "accurate versus inaccurate" and becomes "accurate but unattributable versus accurate and
-attributable", which is genuinely harder than the one entry 64 answers. Build the truth set so that
-case can be made *against* this project rather than only for it.
-
-**Also unconfirmed at scale:** entry 63's finding that 0 of 15 unreadable pages were `blocked`. If that
-holds, the refusal posture is not what costs coverage and the argument moves entirely to item 2.
-
-**And re-run the 25 causeless recall logs while here** — see *Smaller things*. They predate
-`RecallRecord.cause` and only runs fill them in.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
@@ -791,7 +751,6 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
-| 28. Build the counterfactual arm | 08-24 | 64 | The naive arm is ~5× faster and answered a country we refuse — and cited **0 of 8** hosts that would pass the trust rule. The sample and the truth set are item 29 |
 | — Count why a traveller goes unanswered | 08-24 | 63 | `RecallRecord.unreadable` had been filled from the crawl alone and went **silently empty** when the crawl left. First two corridors: 0 of 15 lost pages were `blocked` |
 | 26. The nationality bonus rewards naming a country | 08-24 | 62 | **Closed with no code change.** Four fixes, four disproofs — including one implemented and reverted when the suite caught it. Cost of leaving it: 0.27 shortlist places |
 | 25. Get the answering page into the shortlist | 08-24 | 61 | The reservation was three per role and the answer was 5th. Five per role, budget 35 — **the UK went 0/8 → 4/4**. Depth and budget only work together |
@@ -818,8 +777,8 @@ in the DECISIONS entry; this is the one-line index.
 repaired by reading their `outcome` line — a corridor that refused for want of a visa decision and one
 that resolved by handing over the questionnaire stating it wrote the same sentence, which is the
 conflation the field exists to end. `visa-discover audit` reports them as unrecorded rather than
-bucketing them. Re-running those corridors is quota, not work, and item 29 needs runs anyway, so do it
-there rather than on its own.
+bucketing them. Re-running those corridors is quota, not work — fold it into the next measurement
+that needs live runs rather than spending the quota on its own.
 
 **The search client has no rate limiting, and a capped plan answers `HTTP 402`.** Found 2026-08-24.
 `BraveSearchProvider.search` paces nothing and `search_all` runs four queries at once, so a corpus
