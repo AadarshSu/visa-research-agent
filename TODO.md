@@ -15,11 +15,12 @@ twenty-corridor measurement, entry 58, which passed marginally). Nothing is bloc
 **Item 25 leads, and it is what building item 24 uncovered.** Item 3 measured the largest coverage
 limit there is and it was not the one this file had been assuming: every United Kingdom corridor
 refused *after* finding the checklist, the route, the times and per-nationality fees, because the
-decision lives inside a wizard. **Item 24 fixed that** — a page read and judged to *ask* the decision
-now resolves the corridor and hands over the tool (entry 59) — **and then measured that it cannot fire
-for half the UK corridors**, because the checker ranks ~110th of ~820 and one role takes eleven of
-twenty-five shortlist places. Items 17, 18 and 19 are the corpus work item 22 grew out of, and 19 is
-now half done — the crawl has gone, search has not.
+decision lives inside a wizard. **Item 24 fixed that, and entry 60 widened it to every role** — a page
+read and judged to *ask* a question is now named for whatever it settles. **But a tool can only be
+named for a page the model was given**, so it all rests on the shortlist: the Netherlands resolves
+because its checker reaches it, and United Kingdom corridors for India and China still refuse because
+theirs does not. Items 17, 18 and 19 are the corpus work item 22 grew out of, and 19 is now half done —
+the crawl has gone, search has not.
 
 Status: `next` · `soon` · `later` — the label on each heading matches the section it sits in, so the two
 can never disagree. There is no **Blocked** section at the moment; give one its own section again if an
@@ -88,36 +89,51 @@ to reading a code path. Every item here assumes that.
 
 ## Now — pick these up in this order
 
-### 25. Get the answering page into the shortlist — one role must not take 11 of 25 places — `next`
+### 25. Get the answering page into the shortlist — `next`
 
-**Why:** [DECISIONS.md](DECISIONS.md) entry 59 built the outcome the United Kingdom needed and then
-measured that it cannot fire for half of the UK corridors, because the page it names never reaches the
-shortlist.
+**Why:** it is the only thing standing between the United Kingdom and a plan. Entries 59 and 60 built
+the outcome that names a questionnaire for the role it settles, and **a tool can only be named for a
+page the model was given**, so everything they do is downstream of this. `netherlands/IN/GB` resolves
+because its checker reaches the shortlist. `united-kingdom/IN/IN` still refuses — re-run 2026-08-24
+under entry 60, no tool named for any role — because `gov.uk/check-uk-visa` does not.
 
-`gov.uk/check-uk-visa` scores **30.4** on every recorded UK run and ranks **104th–116th of ~820**. It
-was shortlisted for **NG and PH, not for IN or CN** — which also corrects entry 58, whose *"it was
-ranked, shortlisted and fetched"* was true of the runs it looked at rather than of all of them.
+**The cause is scoring, not crowding, and the first version of this item said otherwise.** It blamed
+eleven of twenty-five places going to near-duplicate `visa-fees.homeoffice.gov.uk` pages. Read off the
+`united-kingdom/IN/IN` recall log, that is real and it is not sufficient:
 
-The cause is visible in one run's shortlist. **Eleven of twenty-five places went to near-duplicate
-`visa-fees.homeoffice.gov.uk` pages** — `/y/india/inr/visit/all`, `/y/india/inr/visit/transit/all`,
-`/y/india/inr?previous-answer=visit` and eight more — all filling one role, scoring 116–136. The
-top-3-per-role reservation (entry 57) then seats three `visa_decision` pages, one of them a
-*young-professionals-scheme ballot* page at 54.0, and the checker is fourth for its own role and out.
+| | |
+| --- | --- |
+| `check-uk-visa` score for `visa_decision` | **30.4** — its only role |
+| its rank for that role | **5th of 76** |
+| ranks 3 and 4 | **two URLs for the same page**, `india-young-professionals-scheme-visa[-ballot-system]`, at 54.0 — an unrelated scheme that scores because "india" and "visa" both match |
+| pages outranking it overall | **115** — of which 41 are the fee host and **69 are `www.gov.uk`** |
 
-**Measure before implementing** — entry 56 is what happened the last time a scoring proposal in this
-file went straight to code. Three candidates, and at least the first is cheap to disprove:
+So freeing every place the fee host takes still leaves 74 pages above it. The binding fact is that the
+scorer values a wizard landing page at 30.4 while valuing a ballot page at 54.0 — twice.
 
-1. **Cap how many shortlist places one host may take for one role.** Directly targets what was seen.
-   Risk: a country whose answer genuinely lives across several pages of one host loses one.
-2. **Collapse near-duplicate URLs before ranking.** `?previous-answer=`, `?step-by-step-nav=` and
-   trailing `/all` produced obvious duplicates of pages already present — the GB corpus holds *four*
-   `check-uk-visa?step-by-step-nav=…` rows for one page. This is deduplication, not ranking, so it is
-   the least likely to break something.
-3. **Widen the window.** Entry 40's finding is that the cheap fix for bad ranking is more places, not a
-   better ranker. Costs fetches and latency on every corridor, where 1 and 2 cost nothing.
+**Measure before implementing, and do not trust a quick simulation of the shortlist.** One was written
+on 2026-08-24 and **disagreed with an observed run** — it predicted the wizard would miss the shortlist
+for Nigeria, where the real run admitted it — because `_reserved_per_domain` keys on the *registrable*
+domain and `_readable_only` drops candidates first. Its verdicts on the fixes below were discarded for
+that reason. Change the real `_shortlist` and re-run the four recorded UK corridors.
 
-**Do not** fix it by scoring `check-uk-visa` higher. It is one URL on one site, and the failure is
-structural.
+Candidates, cheapest first:
+
+1. **Collapse near-duplicate URLs before ranking.** Two ballot URLs are one page; four
+   `check-uk-visa?step-by-step-nav=…` rows are one page. Deduplication is not ranking, so it is the
+   least likely to break anything — but on its own it only moves the wizard from 5th to 4th, so it is
+   necessary and not sufficient.
+2. **Deepen the per-role reservation past three.** This is the actual gate: the wizard is 5th for its
+   own role, and `_shortlist` reserves three. With (1) applied it would be 4th. Note this is *not*
+   entry 40's "wider window" — widening the 25 does nothing here, because the fill is by overall score
+   and 115 pages outrank it. Costs a few fetches per corridor.
+3. **Cap how many places one host may take for one role.** Still worth doing for the ten to eleven
+   fee-page places, which are waste whatever else is true — but it will not admit the wizard by itself.
+
+**Do not** fix it by teaching the vocabulary to score `check-uk-visa` higher. Entry 56 rejected exactly
+that shape of fix, and entry 57 established that "what does this page mean" is not a keyword question.
+The wizard's landing page is 804 characters of title, two sentences and a "Start now"; there is no
+honest keyword that ranks it above a page that genuinely discusses visas at length.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 

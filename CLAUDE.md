@@ -240,6 +240,7 @@ cause, and only running the thing showed it.
 | the UK's wizard page "was ranked, shortlisted and fetched" | for NG and PH; **not** for IN or CN (entry 59) |
 | the UK answer is behind a tool we cannot drive | it is on a static URL — the reason not to is different (entry 59) |
 | a wizard is a blockade in front of the guidance | it **is** the guidance, in the form published (entry 60) |
+| the UK checker misses the shortlist because one host hogs places | 115 pages outrank it; only 41 are that host (item 25) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

@@ -200,11 +200,14 @@ UK runs it scores 30.4 every time and ranks 104th–116th of ~820, and it was sh
 PH but not IN or CN**. So entry 58's *"it was ranked, shortlisted and fetched"* was true of the runs
 it looked at and not of all of them, and this fix cannot fire where the page never arrives.
 
-The cause is visible in the shortlist: **11 of 25 places went to near-duplicate
-`visa-fees.homeoffice.gov.uk` pages**, all one role, scoring 116–136 against the checker's 30.4. The
-top-3-per-role reservation then seats three higher-scoring `visa_decision` pages — including a
-*young-professionals-scheme ballot* page at 54.0 — and the checker is fourth for its own role. That
-is [TODO.md](TODO.md) item 25, and it is a ranking problem, not this one.
+**The cause named here was wrong, and is corrected below** — it read the shortlist and blamed the
+**11 of 25 places taken by near-duplicate `visa-fees.homeoffice.gov.uk` pages**, all one role, scoring
+116–136 against the checker's 30.4. That crowding is real and it is not sufficient: counted off the
+same log, **115 pages outrank the checker overall and only 41 are the fee host**, so freeing every fee
+place still leaves 74 above it. The binding fact is scoring — the checker is **5th of 76** for its own
+role, behind **two URLs for the same unrelated page**, `india-young-professionals-scheme-visa`, at
+54.0 — and the gate is the top-*three*-per-role reservation, not the window. See
+[TODO.md](TODO.md) item 25, which now says this; it is a ranking problem, not this one.
 
 ---
 
