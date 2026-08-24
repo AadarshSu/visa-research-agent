@@ -117,9 +117,26 @@ destinations × 1 nationality, and **include countries that currently refuse for
 row** — those are where the naive arm looks best and where the honest answer is that the gap is our
 unfinished work rather than our rigor.
 
-**What entry 63's first two corridors already suggest, and this must be allowed to disprove:** of 15
-pages that could not be read, 0 were `blocked`. If that holds at 15 destinations, the refusal posture
-is not what costs coverage and the argument moves entirely to item 2.
+**Built 2026-08-24 as entry 64; what remains is the sample.** `visa-discover baseline` exists, is
+guarded from the request path by a test, and has been run on three corridors. The arm is not the work
+left — **the destination sample and the truth set are.**
+
+What those three corridors found, and what item 28 must now confirm or overturn at scale:
+
+- **0 of 8 cited hosts passed the trust rule**, across Germany, the United Kingdom and Kenya. Entry
+  19's three anecdotes are no longer anecdotes.
+- **The United Kingdom returned no `gov.uk` result in its top 8 at all** — visa agencies, two airlines
+  and an insurer, for the destination whose official checker this project reads and hands over.
+- **Kenya answered `visa_required: false` beside `visa_name: "Electronic Travel Authorization"`** in
+  the same answer, for a country this project refuses outright.
+- **And the rule was wrong about one host**: `india.diplo.de` is Germany's own mission and
+  `judge_hosts` declines it, because `diplo.de` carries no marker. Known problem 2, with a cost now
+  attached rather than a description.
+
+**Still to do:** the ~15-destination sample, the committed truth set, and grading correctness rather
+than only provenance. Also unconfirmed at scale: entry 63's finding that 0 of 15 unreadable pages were
+`blocked`. If that holds, the refusal posture is not what costs coverage and the argument moves
+entirely to item 2.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 

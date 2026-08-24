@@ -21,6 +21,8 @@ bootstrap` output as corridors are run — see DECISIONS entry 33 and TODO item 
 hold the shape of the failure, and they encode why the tempting fix is forbidden.
 """
 
+import ast
+from pathlib import Path
 from typing import NamedTuple
 
 from visa_research_agent.discovery.bootstrap import (
@@ -287,3 +289,81 @@ def test_a_supranational_authority_can_never_belong_to_a_member_state() -> None:
         country = get_country_registry().require(code)
         assert not belongs_to_destination("europa.eu", country.tlds), code
         assert not proposal_for("europa.eu", code).is_own_government, code
+
+
+def test_the_request_path_cannot_reach_the_baseline_arm() -> None:
+    """The control arm has no trust model. Nothing that answers a traveller may import it.
+
+    `baseline.py` fetches through its own `httpx` client precisely so it never touches
+    `LiveSourceFetcher`, whose `validate_route` is what makes a URL safe to read. A single import
+    from the resolver or the API is all it would take for "read whatever the search engine ranked"
+    to become reachable from a request, so the boundary is asserted rather than trusted to review —
+    the same discipline as the mechanism tests above.
+
+    Read as source text rather than by importing: an import graph built at runtime would only see
+    modules something already loaded, and the point is to catch the edge before anyone runs it.
+    """
+
+    root = Path(__file__).resolve().parent.parent / "src" / "visa_research_agent"
+    request_path = [
+        root / "discovery" / "resolver.py",
+        root / "discovery" / "automatic.py",
+        root / "discovery" / "adjudication.py",
+        root / "research" / "service.py",
+        root / "research" / "live_sources.py",
+        *sorted((root / "api").glob("*.py")),
+    ]
+
+    for module in request_path:
+        assert module.exists(), module
+        source = module.read_text(encoding="utf-8")
+        assert "discovery.baseline" not in source, (
+            f"{module.name} imports the baseline arm, which has no trust model at all"
+        )
+        assert "import baseline" not in source, module.name
+
+
+def test_the_baseline_arm_never_builds_a_plan_or_a_trusted_fetcher() -> None:
+    """The other direction: the arm must not quietly acquire the gate it exists without.
+
+    If it ever reached for `LiveSourceFetcher` it would either reproduce the trust check — making
+    it a control for nothing — or need a way to switch that check off, which is a code path that
+    must not exist. And its output must stay a report: a `VisaPlan` is the type a traveller is
+    served, and this one's claims are sourced from whatever a search engine ranked.
+    """
+
+    path = (
+        Path(__file__).resolve().parent.parent
+        / "src"
+        / "visa_research_agent"
+        / "discovery"
+        / "baseline.py"
+    )
+    # Parsed rather than grepped, because the module's own docstring names all three of these to
+    # explain why they are absent. A text search would fail on the documentation of the rule.
+    names = _identifiers(path)
+
+    assert "LiveSourceFetcher" not in names
+    assert "VisaPlan" not in names
+    assert "validate_route" not in names
+    # It must still behave itself as a client: entries 36, 18 and 12 are about our conduct, not
+    # about the pipeline under test, so the control arm keeps them.
+    assert "RobotsCache" in names, "robots.txt is obeyed here too — entry 36"
+    assert "verify=False" not in path.read_text(encoding="utf-8")
+
+
+def _identifiers(path: Path) -> set[str]:
+    """Every name a module actually refers to, ignoring docstrings and comments."""
+
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Name):
+            found.add(node.id)
+        elif isinstance(node, ast.Attribute):
+            found.add(node.attr)
+        elif isinstance(node, ast.ImportFrom):
+            found.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.Import):
+            found.update(alias.name for alias in node.names)
+    return found

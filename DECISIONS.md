@@ -110,7 +110,82 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | | |
 | --- | --- |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
+| [64](#64-the-control-arm-exists-and-the-first-three-corridors-answer-the-question-in-both-directions) | **The control arm** — 5× faster, answers more, and 0 of 8 cited hosts pass the trust rule |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 64. The control arm exists, and the first three corridors answer the question in both directions
+**2026-08-24 · implemented and measured live. TODO item 28**
+
+Entry 63 made the denominator honest. This is the other half: `visa-discover baseline`, a deliberately
+naive arm — one plainly worded query, top 8 results, **no** `is_own_government`, no corpus, no
+shortlist, no adjudication, one model call — run over the same corridors and graded the same way. It
+answers nobody. `tests/test_trust_coverage.py` asserts the request path cannot import it.
+
+### Three corridors, both arms
+
+| corridor | this project | the naive arm |
+| --- | --- | --- |
+| `germany/IN/IN` | resolved; decision confirmed; **0 documents** | **5.3s**; decision + **18 documents**; cited `india.diplo.de`, `airindia.com`, `axa-schengen.com` |
+| `united-kingdom/IN/IN` | resolved; decision handed over as the official checker; checklist, route, times, per-nationality fees | **3.5s**; decision + 8 documents; cited `goindigo.in`, `airindia.com`, `acko.com` |
+| `kenya/IN/IN` | **refused** — no registry row | **5.9s**; decision + 3 documents; cited `joinsherpa.com`, `visarequirements.info` |
+
+The corridor arm's own latency is not re-measured here; entry 58's figure is a median of **27.4s** over
+40 runs. So the naive arm is roughly **5× faster, answers a country we refuse outright, and produced a
+document checklist for Germany where this project produces none.** That is the case for relaxing, it
+is real, and it should be stated before the rest.
+
+### What it is built on: 0 of 8
+
+**Across all three corridors, not one cited host passes the trust rule.** Entry 19 recorded three
+anecdotes — `axa-schengen.com`, `usembassy.gov`, VFS. Eight of eight is no longer an anecdote:
+
+- **Germany's 18-item checklist** is built partly on a **travel insurer** and **an airline**.
+- **The United Kingdom returned no `gov.uk` result in its top 8 at all.** Not ranked low — absent. The
+  eight were visa agencies, two Indian airlines and an insurance company, for the destination whose
+  `check-uk-visa` this project reads successfully and hands over by name. Its checklist includes
+  "Income Tax Returns or Form 16", which is a real thing an agency tells Indian applicants and is not
+  something the Home Office published.
+- **Kenya contradicts itself in the field that matters most.** `visa_required: false` sits beside
+  `visa_name: "Electronic Travel Authorization (eTA)"` in the same answer. A traveller reads the first
+  and boards without the second. No external ground truth is needed to see this one — the answer
+  disagrees with itself, and the disagreement is in the field CLAUDE.md calls the most damaging thing
+  this program can get wrong.
+
+### And the rule is wrong about one of them, which is the finding that cuts the other way
+
+`india.diplo.de` **is** Germany's own diplomatic mission — the destination's own government, giving
+guidance to exactly this traveller — and `judge_hosts` declines it, because `diplo.de` carries no
+governmental marker. That is known problem 2 and the 19-of-51 gap, now with a **cost attached rather
+than a description**: the rule is not merely refusing countries, it is refusing correct authorities
+inside countries it accepts. The naive arm found it by having no rule at all.
+
+So the honest reading of the eight is not "search returns garbage". It is: **seven commercial pages the
+trust rule correctly excluded, and one real authority it wrongly excluded.** Both halves are the
+measurement.
+
+### What this does not establish
+
+- **Three corridors, one nationality, one purpose, one engine.** Not a rate. Item 28 asks for ~15
+  destinations, and entry 58's lesson — that nationality varied the outcome once in twenty — says
+  sample destinations.
+- **Nothing here grades correctness against a truth set.** Whether Germany's 18 documents are right is
+  unmeasured; the arm's answers are plausible and detailed, which is exactly what makes the question
+  worth asking rather than settled. Only the *provenance* is graded, because that needs no human.
+- **Search results move.** These were taken on one day through one provider.
+
+### What the arm keeps, and why that is not cheating
+
+It keeps the project's user agent, `robots.txt` (entry 36), TLS verification (entry 12), and no retry
+past a refusal (entry 18) — a `403` from `blog.onevasco.com` was recorded and left alone. A naive
+competitor might skip all four; skipping them here would measure a client this project will not be. It
+keeps the **same model at the same settings** as the adjudicator, so a difference between the arms
+cannot be the model. What it does not keep is the trust gate, the corpus, the shortlist and the
+adjudication, which is the whole of what is being measured.
+
+It also does not enforce what entry 27 enforces: `visa_required` is a plain nullable boolean with
+nothing overriding the model. Kenya is what that costs.
 
 ---
 

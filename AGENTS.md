@@ -32,6 +32,11 @@ the CLI does not offer it.
   in `authority_domains.yaml`, configured or not. It deliberately **does not touch the corridor
   store** — no load, no write — so its numbers are always cold and a run never warms the store for the
   API (`resolve_once`, entry 61).
+- **`visa-discover baseline --destination germany --nationality IN --from IN`** runs the **control
+  arm** — open-web search, no trust model, one model call — and prints what an ungated search offered,
+  what the model cited, and how many of those hosts would have passed the trust rule. It answers
+  nobody and writes nothing. Use it to check whether a coverage complaint is about our rigor or about
+  our unfinished registry; entry 64 is what the first three said.
 - **`visa-discover audit var/recall/`** answers "how much are we not answering, and why" in two
   halves that are deliberately not added together: reachability from `authority_domains.yaml`, which
   needs no runs, and the cause of every recorded run. It reads only typed fields, so a run older than

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 481 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 497 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -82,12 +82,18 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
 
-**Item 28 leads**: build the counterfactual arm. The project has measured itself against a bar set in
-advance (entry 58) and has **never** measured the alternative — top search results with no domain
-trust, over the same corridors, graded the same way. Until that exists, "the rigor costs too much
-coverage" and "the rigor is worth it" are both unfalsifiable. Entry 63 built the counting half and its
-first two corridors already point somewhere unexpected: of 15 pages that could not be read, **none was
-blocked**.
+**Item 28 leads, and it is now half built.** The project had measured itself against a bar set in
+advance (entry 58) and had **never** measured the alternative. `visa-discover baseline` is that
+alternative — top 8 search results, no domain trust, one model call — and entries 63 and 64 are what
+running it found. What remains is the **destination sample and a truth set**; the arm itself is done.
+
+Read entry 64 before arguing about relaxing anything, because it cuts both ways. The naive arm is
+~5× faster, answered a country we refuse outright, and produced a document checklist for Germany where
+this project produces none. It also cited **0 of 8 hosts that would pass the trust rule** — the United
+Kingdom's top 8 held no `gov.uk` page at all — and answered `visa_required: false` for Kenya beside
+`visa_name: "Electronic Travel Authorization"` in the same breath. **And the trust rule was wrong about
+one of the eight**: `india.diplo.de` is Germany's own mission, declined because `diplo.de` carries no
+governmental marker, which is known problem 2 with a cost attached.
 
 Everything that used to gate the queue is finished and confirmed live — the corpus replaced the crawl
 (entries 49–53), the twenty-corridor measurement ran (entry 58), and the wizard work took the United
@@ -116,7 +122,10 @@ re-add the amendment history here.
    NO, SE, UY) have no marked domain and refuse safely; **ten (CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU)
    do have one**, so bootstrap *succeeds* against a trusted set that cannot contain the guidance, and
    nothing reports it. Canada is sharpest: `gc.ca` passes, but the content moved to `canada.ca`. The fix
-   is reviewed data, never a wider regex. Frozen in `tests/test_trust_coverage.py`. Entry 33; TODO item 2.
+   is reviewed data, never a wider regex. Frozen in `tests/test_trust_coverage.py`. **And it refuses
+   correct authorities *inside* countries it accepts, not only whole countries**: the control arm's
+   Germany run cited `india.diplo.de`, Germany's own mission giving guidance to exactly that
+   traveller, and the rule declines it for want of a marker (entry 64). Entry 33; TODO item 2.
 
 5. **The full cold request has never been timed.** Every figure quoted is the corridor phase; plan
    extraction sits on top. The remaining lever is **search**, roughly 3s per corridor at three queries
