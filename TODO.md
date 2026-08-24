@@ -85,6 +85,33 @@ to reading a code path. Every item here assumes that.
 
 ## Now — pick these up in this order
 
+### 24. Say "the answer is behind a tool we cannot drive" — `next`
+
+**Why:** [DECISIONS.md](DECISIONS.md) entry 58 measured it as the largest coverage limit there is,
+displacing bot-blocks. **All eight United Kingdom runs refused** having already found the checklist,
+the application route, the processing times and per-nationality fees — because `gov.uk/check-uk-visa`
+is a step-by-step wizard. It was ranked, shortlisted, fetched and read; the adjudicator correctly
+judged that it does not state the answer, because it does not.
+
+There are three outcomes and the code can express two. *Found* resolves. *Blocked* resolves `partial`,
+names the page and says the decision could not be verified (entries 27 and 57). **"The answer exists,
+on a page we read, but only inside an interactive tool"** has nowhere to go, so it falls into *not
+found* and the corridor refuses — discarding real, correct, traveller-useful work.
+
+**Do:** give the adjudicator a way to say it, and treat it like a block for the purpose of resolving:
+name the tool's URL, state the decision as unknown, mark the plan `partial`. The traveller can open a
+wizard themselves; that is the same thing entry 27 offers for a refused page, and for the same reason.
+
+**Careful, and this is the whole difficulty.** *Not found* and *behind a wizard* must not blur. Entry
+32's lesson applies exactly: if "we could not find it" can present as "an authority made it
+unavailable", every failed corridor drifts into looking authority-limited, and the refusal discipline
+leaks. The model must be judging a page **it has read** and saying the answer is not in the text
+because the page defers it to a form — which is a narrower and more checkable claim than the block
+judgement, since here the text is actually in hand.
+
+**Do not** solve it by rendering the wizard and driving it. That is an application flow, and it is on
+the permanent no list in [CLAUDE.md](CLAUDE.md).
+
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
 **Why:** measured 2026-08-21, and it changes how every other number in this file should be read.
@@ -352,57 +379,6 @@ way the Netherlands was, and it should be before anything else is changed on its
 ---
 
 ## Next up
-
-### 3. Measure the top 20 corridors against a bar committed in advance — `soon`
-
-**Why:** DECISIONS entry 35. This is the measurement that decides whether the project is a product or a
-demonstration, so **nothing large should be built before it.** Seven corridors cannot answer whether
-bot-blocks are the rule, and choosing a threshold after seeing the numbers is how a demonstration talks
-itself into being a product.
-
-**Do:** run the top 20 corridors by real traveller volume cold — India/China/Nigeria/Philippines →
-US/UK/Schengen/Gulf/Canada — and count per corridor: decision confirmed, checklist found, checklist
-blocked.
-
-> **The bar, committed now: product if ≥70% confirm the decision and ≥50% yield a checklist.** Below
-> that, the anonymous-crawl posture is dead and the choice is licensed data (which forfeits the
-> verifiability that is the whole differentiator) or client-side retrieval.
-
-Today's seven are 5/7 and 4/7 — which would pass, on a sample chosen partly because it was easy.
-**Treat those two fractions as a stale floor, not a baseline.** They come from the corridor table in
-[PROJECT_HANDOFF.md](PROJECT_HANDOFF.md), which that file itself marks as predating the registry and the
-wider shortlist, with at least two rows now wrong — Japan and Canada both fill every role at 25 places.
-Re-derive them from this measurement rather than comparing against them.
-
-**Run each corridor at least twice — item 17.** `canada/GB/GB/tourism` refused once and resolved once
-within an hour on identical code, so **one run cannot tell a corridor that works from one that works half
-the time**, and a single-run measurement would report the flip rate as the pass rate. If credit does not
-stretch to twenty corridors twice, halve the sample rather than the repeats, and say plainly in the
-write-up which it was. Note the ordering question this raises: measuring **before** items 18 and 19 sizes
-the problem the corpus is meant to fix, and measuring **after** describes the architecture the project
-intends to keep. Doing it before and repeating the outliers after is the cheap version of both.
-
-**One destination has been through the corpus-routed path, and it is Canada** (entry 53). These runs are
-what generalise it — and note that the corpus job (item 18) has only ever been run for Canada, so every
-other destination here will still crawl. Expect two populations in the results, and say which is which.
-
-**No longer blocked — 2026-08-21:** Brave credit is available again, so this can run. `robots.txt`
-landed first (entry 36), so the numbers describe the posture the project intends to keep.
-
-**Fold in the France read-through**, which was the previous head of this list and needs the same credit:
-run `france/IN/GB/tourism` and read the plan as a traveller. Three things no test can judge:
-
-1. Does the explanation say plainly that the decision could not be verified, and name France-Visas?
-2. Do the application steps stay useful when the first is "check the authority yourself"? Rule 8b asks;
-   whether the model obliges is unknown.
-3. Does "Uncertain" read as *we could not check* rather than *no visa needed*? If it reads as the latter
-   to anyone, the wording is wrong and it matters more than anything else on this list.
-
-The layout was already confirmed by injecting a France-shaped plan into the real renderer (entry 28), so
-what is left to judge is the model's own words. **Careful:** if it reads as verified, the fix is the
-wording and the banner, never a narrower `visa_required`. A corridor stored before 2026-08-17 has no
-`inaccessible_urls` field, so clear `var/corridors/`.
-
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
@@ -729,6 +705,31 @@ replacement.
 
 ## Done
 
+### ~~Measure the top 20 corridors against a bar committed in advance~~ — **done 2026-08-24** (was item 3)
+
+**It passes, marginally.** DECISIONS entry 58. Forty live runs, twenty corridors twice, all
+corpus-routed, none crawled.
+
+| | | bar | |
+| --- | --- | --- | --- |
+| decision confirmed, both runs | **15/20 — 75%** | ≥70% | pass |
+| checklist found, both runs | **10/20 — 50%** | ≥50% | pass, **exactly on the line** |
+
+**Read the sample structure before quoting the numbers.** Nationality changed the outcome once in
+twenty; destination decided everything else. Five destinations replicated four times is the real
+sample, so 75% is "three and three-quarters of five". A future bar should sample **destinations**.
+
+**The United Kingdom is what to act on.** All eight UK runs refuse, after filling the checklist,
+the route, the processing times and per-nationality fees. Nothing was blocked; `gov.uk/check-uk-visa`
+was fetched and read, and it is a step-by-step **wizard** that asks questions rather than listing
+nationalities. That is France's cause (entry 26) without France's `403`, so no exception fires and
+the whole plan is discarded. **It inverts known problem 11**: the wizard costs more coverage than
+bot-blocks do. See the new item below.
+
+**Reproducibility was much better than feared** — 19 of 20 corridors identical across both runs, the
+exception being UK/Philippines' checklist on an identical candidate set. Recall is now stable enough
+that adjudication is the only variance left (known problem 10).
+
 ### ~~Give `visa_decision` its floor back~~ — **done 2026-08-24, and the proposal was wrong** (was item 23)
 
 DECISIONS entry 56. This item proposed removing the `not scores` guard so `mentions_visa` always
@@ -1026,6 +1027,28 @@ which are item 1, and English-only scoring, which is known problem 13 in
 ---
 
 ## Smaller things
+
+**The search client has no rate limiting, and a capped plan answers `HTTP 402`.** Found 2026-08-24.
+`BraveSearchProvider.search` paces nothing and `search_all` runs four queries at once, so a corpus
+build firing 70 queries fails outright on a plan capped near one query a second — and `402` is
+"payment required", so it reads as *out of credit* rather than *too fast*. It cost this session an
+hour of believing the account was empty when single queries were answering fine. A shared limiter at
+1.3s between calls, with backoff on `402`, ran the same 70 queries cleanly. Two things to fix
+together: pace the provider, and stop reporting a throttle as an exhausted account.
+
+**A country with a complete corpus still cannot resolve when search is down.** Same day, same cause.
+`search_all` raises if any query fails and `_resolve` searches *before* it reads the corpus, so
+`canada/GB/GB/tourism` — 3,216 stored pages, resolving in 12s off a file — dies with a `SearchError`
+exactly like a country nobody has built. Entry 48 kept search for **recall**; it never considered
+search being *absent*, and entries 44–57 have quietly made it the only remaining single point of
+failure for a fully built destination.
+
+**Do not "fix" that by falling back silently.** Entry 44's rule is that a corpus miss refuses and
+flags the country rather than quietly substituting another source; the mirror applies here. A
+corridor answered from a narrower candidate set than usual, with nobody told, is the shape this
+project keeps rejecting. If it is worth doing, the corridor must record that it ran without search
+and say so in its notes — and it needs a decision entry first. What is **not** in doubt is that a
+`402` should not read as "this country has no pages".
 
 **Settled in part, 2026-08-24 — DECISIONS entry 57 moved the meaning question to the model, and left
 the ranking with the heuristic.** What follows is the evidence that produced that split, kept because

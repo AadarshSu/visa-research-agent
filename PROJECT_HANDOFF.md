@@ -102,6 +102,10 @@ throughout, so it describes what the API does. DECISIONS entry 55.
 | Checklist | found | found | found | **blocked** | **blocked** | found | **not found** |
 | Resolves (corpus path) | 2/2 | **0/2** | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
 
+**A second, larger table now exists and supersedes this one for judging the project**: entry 58's
+twenty corridors, run twice each on 2026-08-24. This table is seven corridors chosen for what they
+taught; that one is the top twenty by volume, measured against a bar committed in advance.
+
 **Read the "resolves" row against the row above it, not on its own.** The Netherlands has never
 resolved — its visa decision is not found, which is an honest refusal, and the only corridor here that
 refuses. Sweden and France resolve through entry 27's blocked-authority exception: an authority
@@ -423,7 +427,16 @@ call silently substituting the heuristic (entry 31).
    recall gate did its job and the decider declined, which is the honest outcome; but it means a
    corridor can now be `is_usable` with a role unfilled for a purely model-side reason, and nothing
    distinguishes that from known problem 8's "no checklist exists".
-11. **Bot-blocked official portals are the largest coverage limit — but "permanent" was the wrong
+11. **~~Bot-blocked official portals are the largest coverage limit~~ — measured 2026-08-24, and they
+   are not. The *wizard* is.** Entry 58: across 40 runs, blocks cost the United States its checklist
+   and turned one corridor's decision into *blocked*. An interactive tool cost **every United Kingdom
+   corridor its entire plan** — eight runs refused after successfully finding the checklist, the
+   route, the processing times and per-nationality fees, because `gov.uk/check-uk-visa` is a
+   step-by-step wizard that was fetched, read, and correctly judged not to state the answer. France
+   is the same cause with a `403` on top, which is the only reason France resolves and the UK does
+   not. TODO item 24. The rest of this entry stands and is about blocks specifically.
+
+   **Bot-blocked official portals are a large coverage limit — but "permanent" was the wrong
    word.** Three found: `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and Singapore's VFS page.
    France is the clearest case, quantified in entry 26: **every** readable French government page
    delegates the visa decision to the blocked portal, so no amount of better ranking can confirm it.
@@ -603,30 +616,42 @@ call silently substituting the heuristic (entry 31).
 
 ## Current task
 
-**[TODO.md](TODO.md) item 3 — the twenty-corridor measurement.** Credit is available and nothing is
-queued ahead of it. It decides whether this is a product, against a bar committed in advance
-(entry 35): **≥70% confirm the decision and ≥50% yield a checklist.**
+> **The measurement that decides whether this is a product has run, and it passes — marginally.**
+> Entry 58, 2026-08-24: **75%** confirm the decision against a ≥70% bar, **50%** yield a checklist
+> against a ≥50% bar. The bar was committed in advance (entry 35) and was met. It was met by one
+> corridor on the first number and by nothing at all on the second, so quote it as a marginal pass,
+> and read the sample caveat below before quoting it at all.
 
-Two things to hold while reading the results. Seven destinations have corpora and the rest will crawl,
-so expect **two populations** and say which is which. And run each corridor **twice** — one run cannot
-tell a corridor that works from one that works half the time (known problem 19).
+**The sample is five destinations, not twenty corridors.** Nationality changed the outcome once in
+twenty; destination decided the rest. So 75% is "three and three-quarters of five destinations", and
+the next measurement should sample **destinations**, not corridors.
 
-**The blocked-authority path is now worth counting separately.** Entry 27's exception fires for real
-as of 2026-08-24 (entries 56 and 57): Sweden and France both resolve `partial` with the decision
-stated unknown and the blocked page handed over. A corridor that resolves this way is **not** a
-corridor that confirmed the decision, so item 3's ≥70% must not count it as one. Record three
-outcomes, not two: decision confirmed, decision **blocked and named**, decision not found.
+**Pick up [TODO.md](TODO.md) item 24 — say "the answer is behind a tool we cannot drive."** It is the
+largest coverage limit there is, now measured rather than assumed:
 
-**Everything else is done and confirmed live** — item 22 (entries 49–53), the six-corridor re-run
-(entry 55), item 23 (entry 56), and the `_decision_blocking` question (entry 57).
+- **All eight United Kingdom runs refused**, having already found the checklist, the application
+  route, the processing times, and per-nationality fees down to the currency. Nothing was blocked.
+  `gov.uk/check-uk-visa` was ranked, shortlisted, **fetched and read**, and the adjudicator correctly
+  judged that it does not state the answer — because it is a step-by-step wizard.
+- There are three outcomes and the code can express two. *Found* resolves; *blocked* resolves
+  `partial` and hands over a URL (entries 27, 57); **"read it, and the answer is only inside a
+  form"** has nowhere to go, so it becomes *not found* and the corridor throws away correct work.
+- This inverts known problem 11. Blocks cost the US its checklist; the wizard cost the UK five
+  destinations' worth of plans in one.
 
-**The pattern worth carrying, because it has now repeated four sessions running.** Each time the
-written-down diagnosis named the wrong cause, and only running the thing showed it: item 22 blamed
-scoring for a cost that was `wrong_country`; removing the crawl was expected to risk *reporting* and
-actually broke *qualification*; item 23 blamed a guard when the vocabulary had no way to recognise an
-answer; and the fix for that was seven more phrases in a word list, which is what finally showed the
-scorer was being asked a question it should never have been asked. `CLAUDE.md` says to prefer a run to
-a careful reading; these are what it means.
+**The trap to avoid is entry 32's, exactly.** If "we could not find it" can present as "an authority
+made it unavailable", every failed corridor drifts into looking authority-limited. The difference
+here is that the page **was read**, so the claim is narrower and checkable — the model is saying the
+text defers to a form, not guessing about a page nobody saw. Do not solve it by driving the wizard;
+that is an application flow and it is on the permanent no list in [CLAUDE.md](CLAUDE.md).
+
+**Then item 9** — tell "this country publishes no checklist" from "we failed to find it". Germany and
+the United States both return 0/8 checklists and nothing distinguishes the two cases, which is now
+two of five destinations rather than a hypothetical.
+
+**Everything before this is done and confirmed live** — item 22 (entries 49–53), the six-corridor
+re-run (entry 55), item 23 (entry 56), the `_decision_blocking` question (entry 57), and item 3
+itself (entry 58).
 
 ### Where the previous work got to
 
@@ -845,6 +870,7 @@ things built on them did not.
 
 | Entry | What it changed |
 | --- | --- |
+| 58 | **The twenty-corridor measurement ran, and it passes the bar committed in advance** — 75% confirm the decision (bar 70%), 50% yield a checklist (bar 50%, *exactly*). 40 live runs, all corpus-routed, none crawled, median 27.4s. **Read the sample structure**: nationality changed the outcome once in twenty, so it is five destinations replicated four times, not twenty independent corridors. **The United Kingdom refuses all eight runs** after finding the checklist, route, times and per-nationality fees, because `gov.uk/check-uk-visa` is a **wizard** — France's cause without France's `403`. That inverts known problem 11: the wizard costs more coverage than bot-blocks. |
 | 57 | **A block is now judged, not keyword-matched.** `_decision_blocking` asked "could this page have held the visa decision?" and answered by keyword, on a page **nobody read** — the one place the scorer decided what a page *means*. It now asks the model, over **address and label only** (there is no text; the authority refused it), and the packet has no parameter through which content could be passed. Fails closed after two attempts; the deterministic path keeps the keyword test. **France now qualifies `/en/royaume-uni`, `/en/web/france-visas` and `/india` and rejects the FAQ, the form page and the visa-category page** — where its old qualification was a blank CERFA form. Corridors whose decision is found make **no extra call**. |
 | 56 | **The `visa_decision` vocabulary could only ask the question, never recognise the answer.** Every term was a way of asking — `visa requirement`, `do i need a visa` — so Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `general_entry` 22.4 and `visa_decision` **0.0**, and could not qualify its own refusal. Seven answering phrasings added, one in **slug form** because `searchable_url` flattens hyphens and slugs drop articles. Measured by replaying all seven corridors' real candidate sets: **0.0 → 82.4 and it now qualifies; no shortlist changes anywhere.** **Item 23's own proposal — removing the `not scores` guard — was measured and rejected**: it would give 12–58% of a country's pages a positive `visa_decision`. |
 | 55 | **Six corridors through the corpus path, 24 live runs — 2.1×–5.2× faster, and two of them stopped resolving.** Crawl 0.0s everywhere; roles genuinely found are neutral to better (US gained `fees`, the Netherlands `processing_times`). **Sweden and France flipped resolve → refuse**: reporting survived (entry 49 works — the blocked hosts and URLs are still named) but *qualification* did not, because `_decision_blocking` needs a refusal observed on a page scoring for `visa_decision` and a 25-page fetch observes far fewer refusals than a crawl. France is a **correction** (its baseline qualified on a blank CERFA form); **Sweden is a real loss**. Root cause is a scoring rule — TODO item 23, deliberately not fixed here. Also: Japan's corpus holds **1 of its 6** role pages and no London embassy, and it resolved anyway **because search still runs**. |

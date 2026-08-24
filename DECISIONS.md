@@ -9,6 +9,92 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 58. The twenty-corridor measurement: it passes the bar, and the bar was nearly the wrong question
+**2026-08-24 · measured live; the bar was committed in advance as entry 35**
+
+Twenty corridors, each run twice — India, China, Nigeria and the Philippines to the United States,
+United Kingdom, Germany (Schengen), the UAE (Gulf) and Canada, applying from home, tourism. Forty
+live runs, all corpus-routed, **none crawled**. Germany was chosen over France for Schengen because
+France is already measured and entry 35 warns against a sample picked for being easy; Germany is the
+trust rule's hard case, running on a single `reviewed` domain (entry 33).
+
+### The result
+
+| | | bar | |
+| --- | --- | --- | --- |
+| decision confirmed, both runs | **15/20 — 75%** | ≥70% | **pass** |
+| checklist found, both runs | **10/20 — 50%** | ≥50% | **pass, exactly** |
+| decision blocked and named | 1/20 | | US/Nigeria |
+| decision not found | 4/20 | | every UK corridor |
+
+**It passes. It passes by one corridor on the decision and by nothing at all on the checklist** — the
+checklist number is exactly the threshold, and a single corridor moving either way changes the answer.
+That is a pass, and it should be quoted as a marginal one.
+
+### The sample is five destinations, not twenty corridors
+
+This is the finding that should govern how much weight the numbers carry. Within every destination,
+all four nationalities behave almost identically:
+
+| destination | decision | checklist | produced a plan |
+| --- | --- | --- | --- |
+| Canada | 8/8 confirmed | 8/8 | 8/8 |
+| UAE | 8/8 confirmed | 6/8 | 8/8 |
+| Germany | 8/8 confirmed | **0/8** | 8/8 |
+| United States | 6/8 confirmed, 2 blocked | **0/8** | 8/8 |
+| United Kingdom | **0/8** — all not found | 7/8 | **0/8** |
+
+Nationality changed the outcome exactly once in twenty (US/Nigeria, confirmed → blocked). So the
+effective sample is **five independent observations replicated four times**, and "75%" is really
+"three and three-quarters destinations out of five". Entry 35 specified twenty corridors and got
+twenty corridors; what it did not anticipate is that a corridor is not the unit of variation. **A
+future bar should sample destinations, not corridors.**
+
+### The United Kingdom is the result worth acting on
+
+Every UK corridor **refuses and throws away work it had already done**. It fills the checklist, the
+application route, the processing times, and per-nationality fees down to the currency
+(`visa-fees.homeoffice.gov.uk/y/philippines/usd/visit/standard-visitor-visa`) — and then produces
+nothing, because `visa_decision` is load-bearing and unfilled.
+
+**Nothing was blocked.** `inaccessible_domains` is empty. `gov.uk/check-uk-visa` was ranked, shortlisted
+**and fetched**, and the adjudicator read it and correctly judged that it does not state the answer:
+it is the entry page of a step-by-step wizard that asks questions rather than listing nationalities.
+
+So this is not recall, not access, and not the model being wrong. It is the same cause entry 26 found
+in France — *the answer exists only inside an interactive tool* — without France's `403` to trigger the
+blocked-authority exception. France resolves `partial` and hands over a URL; the UK, whose page is
+served willingly and read successfully, resolves nothing.
+
+**That inverts known problem 11.** Bot-blocked portals were called the largest coverage limit. Measured
+here, blocks cost the United States its checklist and turned one corridor's decision into *blocked*;
+**the wizard cost every UK corridor its entire plan.** The wizard is the larger limit, and the project
+has no way to say "the answer is behind a tool we cannot drive" — which is a third outcome, neither
+found nor blocked.
+
+### What else the run establishes
+
+- **Reproducibility is far better than known problem 19 feared.** 19 of 20 corridors gave identical
+  outcomes across both runs; the single exception is UK/Philippines, whose checklist was found on one
+  run and not the other, on an identical 813-candidate set. That is adjudication variance with recall
+  held fixed — known problem 10, now the only variance left.
+- **The corpus path carried all of it.** 0 of 40 runs crawled; median corridor 27.4s, range 8.8–48.3s.
+- **42 model calls for 40 runs** — the two extra are entry 57's blocked-page judgements, confirming
+  that gating keeps it off the ordinary corridor.
+- **Three authorities refused us**, consistently: `travel.state.gov` and `egov.uscis.gov` (8 runs each,
+  which is what costs the US its checklist) and `gdrfad.gov.ae`.
+- **Germany confirms 8/8 on one reviewed domain and a 294-entry corpus**, whose build had fired the
+  `depth_is_exercised` warning at 2%. A thin corpus was enough for the decision and not for a checklist.
+
+### What it does not establish
+
+Purpose was tourism throughout and residence equalled nationality, so neither dimension is measured.
+Germany's and the United States' 0/8 checklists are not distinguished between *the country publishes
+none* and *we failed to find it* — known problem 8, still open and now attached to two of five
+destinations rather than a hypothetical.
+
+---
+
 ## 57. A block is judged, not keyword-matched — the one place the scorer was doing semantics
 **2026-08-24 · decided; implemented**
 
