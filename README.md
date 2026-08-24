@@ -50,7 +50,9 @@ twenty independent corridors.
 after successfully finding the checklist, the application route, the processing times and
 per-nationality fees, because `gov.uk/check-uk-visa` is a step-by-step wizard: the page is served
 willingly, fetched and read, and simply does not state the answer. An interactive tool costs more
-coverage than bot-blocking does.
+coverage than bot-blocking does. **All four United Kingdom corridors resolve as of 2026-08-24** — the
+plan hands over the checker rather than refusing, and the shortlist now reserves enough places per
+question for the checker to reach the model at all.
 
 **So a page that *asks* a question is now its own outcome** (entries 59 and 60). A questionnaire is
 not an obstacle in front of the guidance — it is the guidance, in the form the authority published it.

@@ -12,15 +12,19 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
 
-**Item 25 leads, and it is what building item 24 uncovered.** Item 3 measured the largest coverage
-limit there is and it was not the one this file had been assuming: every United Kingdom corridor
-refused *after* finding the checklist, the route, the times and per-nationality fees, because the
-decision lives inside a wizard. **Item 24 fixed that, and entry 60 widened it to every role** — a page
-read and judged to *ask* a question is now named for whatever it settles. **But a tool can only be
-named for a page the model was given**, so it all rests on the shortlist: the Netherlands resolves
-because its checker reaches it, and United Kingdom corridors for India and China still refuse because
-theirs does not. Items 17, 18 and 19 are the corpus work item 22 grew out of, and 19 is now half done —
-the crawl has gone, search has not.
+**Item 17 leads now that 24 and 25 are done.** Items 24 and 25 together took the United Kingdom from
+refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
+settles (entries 59–60), and the shortlist reserves five per role rather than three so the answering
+page actually reaches the model (entry 61). What that leaves is item 26 — the scorer rewards a page for
+naming a country rather than being about one, which depth 5 routes around rather than fixes.
+
+**For context, and it is what those items grew out of:** item 3 measured the largest coverage limit
+there is and it was not the one this file had been assuming — every United Kingdom corridor refused
+*after* finding the checklist, the route, the times and per-nationality fees, because the decision
+lives inside a wizard. Item 24 gave a corridor the words to say so, entry 60 widened it to every role,
+and item 25 got the answering page into the shortlist it was falling five-deep out of. Items 17, 18 and
+19 are the corpus work item 22 grew out of, and 19 is now half done — the crawl has gone, search has
+not.
 
 Status: `next` · `soon` · `later` — the label on each heading matches the section it sits in, so the two
 can never disagree. There is no **Blocked** section at the moment; give one its own section again if an
@@ -34,8 +38,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 25. Get the answering page into the shortlist | `next` |
-| | 17. Decide what a corridor that flips between runs should do | `next` |
+| **Now** | 17. Decide what a corridor that flips between runs should do | `next` |
 | | 18. Build the offline corpus job, and run it on item 3's destinations | `next` |
 | | 22. Route the request path through the corpus and drop the crawl | `next` |
 | | 19. Read the corpus in the request path, and refuse on a miss | `next` |
@@ -89,68 +92,6 @@ to reading a code path. Every item here assumes that.
 ---
 
 ## Now — pick these up in this order
-
-### 25. Get the answering page into the shortlist — `next`
-
-**Why:** it is the only thing standing between the United Kingdom and a plan. Entries 59 and 60 built
-the outcome that names a questionnaire for the role it settles, and **a tool can only be named for a
-page the model was given**, so everything they do is downstream of this. `netherlands/IN/GB` resolves
-because its checker reaches the shortlist. `united-kingdom/IN/IN` still refuses — re-run 2026-08-24
-under entry 60, no tool named for any role — because `gov.uk/check-uk-visa` does not.
-
-**Measured with the real scorer, and it is neither crowding nor the window.** Two earlier write-ups of
-this item named the wrong cause; this one is `score_link` output, not a reading:
-
-```
-the checker      visa_decision= 30.4   text:check if you need+26.4, mentions-visa+6, shallow+8, depth1-10
-ballot scheme    visa_decision= 44.0   mentions-visa+6, nationality:IN+40, shallow+8, depth1-10
-```
-
-`nationality:IN+40` is the largest single term in the scorer, and
-`gov.uk/india-young-professionals-scheme-visa` earns all of it for having "india" in its path — a
-different visa product entirely. **The checker cannot ever earn it**, because a page that asks the
-reader their nationality never names one. It scores **exactly 30.4 in all four recorded UK corridors**;
-it is the corridor-specific pages *around* it that move.
-
-That is why it is admitted in two corridors and not the other two — `_shortlist` reserves the top
-**three** per role:
-
-| corridor | checker's rank for `visa_decision` | what outranks it |
-| --- | --- | --- |
-| NG, PH | **3rd** — admitted | nothing nationality-named on `gov.uk` for those countries |
-| IN | **5th** — excluded | `india-young-professionals-scheme-visa` at 54.0, on **two different paths** |
-| CN | **5th** — excluded | `translated-visa-application-guidance` 54.0, `ads-visa` 39.0 — ADS is a China-specific scheme |
-
-**Do:** raise the per-role reservation from three to five, and measure. It is mechanical, needs no
-semantic judgement, and 3rd–5th is exactly the observed range. Note the interaction that makes it
-cheap: reserved pages go first in the truncation, so deepening the reservation also cuts the
-score-filled tail, which is where the ten to eleven near-duplicate `visa-fees.homeoffice.gov.uk` places
-live. One change, both problems.
-
-**Do not** fix it in the vocabulary. Entry 56 rejected that shape of fix and entry 57 established that
-"what does this page mean" is not a keyword question. There is no honest keyword that ranks an
-804-character landing page above a page that genuinely discusses visas at length.
-
-**Do not trust a quick simulation of the shortlist.** One was written on 2026-08-24 and **disagreed
-with an observed run** — it predicted the checker would miss the shortlist for Nigeria, where the real
-run admitted it — because `_reserved_per_domain` keys on the *registrable* domain and `_readable_only`
-drops candidates first. Change the real `_shortlist` and re-run the four recorded UK corridors.
-
-### 26. The nationality bonus rewards a page for naming a country, not for being about one — `soon`
-
-**Why:** found while measuring item 25, and it is the defect underneath it. `nationality:IN+40` is the
-scorer's largest term and it is a **substring test against the URL and anchor**. So
-`gov.uk/india-young-professionals-scheme-visa` — a ballot scheme for under-35s, nothing to do with a
-tourist visa — collects the full corridor bonus and outranks the page that actually decides the
-question. China gets the same from `ads-visa`, the Approved Destination Status scheme.
-
-It is load-bearing where it works: `visa-fees.homeoffice.gov.uk/y/india/inr/visit/…` scores 136 partly
-on this, correctly. So it cannot simply be lowered.
-
-**Careful:** the obvious fix — "only count nationality when the page is also about the right visa
-product" — is a semantics question, which is the shape of fix entries 56 and 57 reject. Item 25's
-mechanical fix should be measured **first**, because if a deeper reservation is enough, this becomes a
-precision problem rather than a recall one, and precision is what the adjudicator is for.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
@@ -437,6 +378,22 @@ way the Netherlands was, and it should be before anything else is changed on its
 ---
 
 ## Next up
+
+### 26. The nationality bonus rewards a page for naming a country, not for being about one — `soon`
+
+**Why:** found while measuring item 25, and it is the defect underneath it. `nationality:IN+40` is the
+scorer's largest term and it is a **substring test against the URL and anchor**. So
+`gov.uk/india-young-professionals-scheme-visa` — a ballot scheme for under-35s, nothing to do with a
+tourist visa — collects the full corridor bonus and outranks the page that actually decides the
+question. China gets the same from `ads-visa`, the Approved Destination Status scheme.
+
+It is load-bearing where it works: `visa-fees.homeoffice.gov.uk/y/india/inr/visit/…` scores 136 partly
+on this, correctly. So it cannot simply be lowered.
+
+**Careful:** the obvious fix — "only count nationality when the page is also about the right visa
+product" — is a semantics question, which is the shape of fix entries 56 and 57 reject. Item 25's
+mechanical fix should be measured **first**, because if a deeper reservation is enough, this becomes a
+precision problem rather than a recall one, and precision is what the adjudicator is for.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
@@ -767,6 +724,25 @@ replacement.
 ---
 
 ## Done
+
+### ~~Get the answering page into the shortlist~~ — **done 2026-08-24** (was item 25)
+
+[DECISIONS.md](DECISIONS.md) entry 61. `_shortlist` reserved the top **three** candidates per role and
+`gov.uk/check-uk-visa` is **5th** for `visa_decision` in the two corridors that failed, so the tool
+entries 59–60 exist to hand over never reached the model. Raised to **five**, with the budget 25 → 35
+because the two only work together: six roles five deep wants thirty places, and at 25 the deepest
+reservations are pushed straight back out at truncation, making depth non-monotone.
+
+**Live: the United Kingdom went from 0 of 8 runs resolving to 4 of 4.** Seven regression corridors
+unchanged, and replaying 26 recorded candidate sets through the real `_shortlist` drops **not one**
+page that is shortlisted today.
+
+**Two things it taught.** This item named the wrong cause twice, both times written from reading the
+code — first fee-page crowding, then the truncation discarding the per-role reservation; the second
+was measured and changes nothing for the better. What settled it was a harness that replays recorded
+candidate sets through the **real** `_shortlist` and reproduces 26 of 26 corridors exactly. And France
+gained a checklist: its UK mission page says the wizard will name the documents, so it is now offered
+for that too, which entry 26 had assumed needed the wizard to be driven.
 
 ### ~~Say "the answer is behind a tool we cannot drive"~~ — **done 2026-08-24** (was item 24)
 

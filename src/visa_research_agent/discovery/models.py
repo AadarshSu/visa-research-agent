@@ -378,19 +378,23 @@ class ResolvedCorridor(StrictModel):
         # the traveller can finish themselves, and the detail says exactly that — never a guess at
         # what answering it would produce. A tool is offered only where no source filled its role:
         # once a page answers the question, a questionnaire is a longer route to the same place.
-        # One page often settles several questions — the Netherlands' short-stay questionnaire
-        # answers both the visa decision and the entry requirements — but a traveller does not need
-        # the same link twice. The corridor keeps every judgement; the plan is a rendering, so it
-        # offers each page once, under the first topic in `ROLE_ORDER` it was named for.
+        # A tool is offered only where no source filled its role: once a page answers the question,
+        # a questionnaire is a longer route to the same place.
+        #
+        # **Not deduplicated by URL, though it was for an hour on 2026-08-24 and that was wrong.**
+        # France's `uk.diplomatie.gouv.fr/en/applying-for-a-visa` settles three questions —
+        # whether a visa is needed, which documents, and the fee — and collapsing it to one hid the
+        # checklist tool from the documents panel, which is exactly where a reader looking for
+        # documents goes. The same page under two questions is two answers, not one link twice.
+        # Where it *would* read as repetition — the catch-all panel carrying fees, times and
+        # entry conditions together — the interface skips a URL it has already shown.
         filled = {role for source in self.sources for role in source.roles}
-        offered: set[str] = set()
-        tools = []
-        for role in ROLE_ORDER:
-            for tool in self.interactive_tools:
-                if tool.role != role or tool.role in filled or tool.url in offered:
-                    continue
-                offered.add(tool.url)
-                tools.append(tool)
+        tools = [
+            tool
+            for role in ROLE_ORDER
+            for tool in self.interactive_tools
+            if tool.role == role and tool.role not in filled
+        ]
         payload["official_tools"] = [
             {
                 "topic": tool.role,

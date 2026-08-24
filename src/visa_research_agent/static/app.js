@@ -178,8 +178,18 @@ function toolCallout(tool) {
   return callout;
 }
 
-function appendTools(container, plan, topic) {
-  toolsFor(plan, topic).forEach((tool) => container.append(toolCallout(tool)));
+function appendTools(container, plan, topic, seen) {
+  toolsFor(plan, topic).forEach((tool) => {
+    // One page can settle several questions, and each is a different answer worth giving — France's
+    // mission page covers the decision, the documents and the fee. So a repeated URL is fine across
+    // panels, where the panel supplies the question. It is not fine inside the catch-all panel that
+    // carries fees, times and entry conditions together, which would just show the same link thrice.
+    if (seen) {
+      if (seen.has(tool.url)) return;
+      seen.add(tool.url);
+    }
+    container.append(toolCallout(tool));
+  });
 }
 
 function renderDecision(plan, ctx) {
@@ -348,7 +358,9 @@ function renderReliability(plan) {
   // The two-column grid went with it rather than being left to render one block in half the width.
   // Fees, processing times and entry conditions have no panel of their own — they live inside the
   // steps — so a questionnaire holding one is offered here rather than dropped.
-  ["fees", "processing_times", "general_entry"].forEach((topic) => appendTools(container, plan, topic));
+  const shown = new Set();
+  ["fees", "processing_times", "general_entry"].forEach((topic) =>
+    appendTools(container, plan, topic, shown));
   container.append(issueBlock("Unresolved questions", plan.unresolved_questions));
   container.append(
     element(

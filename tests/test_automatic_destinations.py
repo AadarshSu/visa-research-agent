@@ -769,10 +769,15 @@ def test_an_unverified_decision_cannot_be_claimed_without_naming_the_authority()
         )
 
 
-def test_one_page_answering_two_questions_is_offered_once() -> None:
-    """The Netherlands' short-stay questionnaire settles both the visa decision and the entry
-    requirements. The corridor records both judgements; the plan is a rendering, and a traveller
-    does not need the same link twice."""
+def test_one_page_answering_two_questions_is_offered_for_both() -> None:
+    """The same page under two questions is two answers, not one link twice.
+
+    France's `uk.diplomatie.gouv.fr/en/applying-for-a-visa` settles whether a visa is needed, which
+    documents to bring and the fee. Collapsing it to one entry — which this did for an hour on
+    2026-08-24 — hides the checklist tool from the documents panel, which is where a reader looking
+    for documents goes. Repetition is suppressed in the interface, and only in the catch-all panel
+    that carries several topics together.
+    """
 
     resolved = behind_a_tool().model_copy(
         update={
@@ -786,7 +791,8 @@ def test_one_page_answering_two_questions_is_offered_once() -> None:
     config = resolved.to_destination_config(uk_base())
 
     assert [(tool.topic, str(tool.url)) for tool in config.official_tools] == [
-        ("visa_decision", WIZARD_PAGE)
+        ("visa_decision", WIZARD_PAGE),
+        ("general_entry", WIZARD_PAGE),
     ]
 
 

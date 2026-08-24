@@ -9,6 +9,109 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 61. The United Kingdom's answer was five deep in a list that reserved three
+**2026-08-24 · measured, then implemented, then measured live. Closes TODO item 25**
+
+Entries 59 and 60 gave a corridor the words to say *"an official tool answers this"*, and then could
+not say it for half the United Kingdom, because the tool never reached the twenty-five pages the model
+is shown. This is that gate.
+
+### What the scorer actually does, measured with `score_link` rather than read
+
+```
+the checker      visa_decision= 30.4   text:check if you need+26.4, mentions-visa+6, shallow+8, depth1-10
+ballot scheme    visa_decision= 44.0   mentions-visa+6, nationality:IN+40,          shallow+8, depth1-10
+```
+
+`nationality:+40` is the scorer's largest single term, and `gov.uk/india-young-professionals-scheme-visa`
+earns all of it for a substring of its path — a ballot for under-35s, nothing to do with a tourist
+visa. **The checker can never earn it**, because a page that asks the reader their nationality names
+none. It scores **exactly 30.4 in all four recorded UK corridors**; only the pages around it move:
+
+| corridor | checker's rank for `visa_decision` | what displaces it |
+| --- | --- | --- |
+| NG, PH | **3rd** — admitted | nothing nationality-named on `gov.uk` for those countries |
+| IN | **5th** — excluded | the Young Professionals scheme at 54.0, on **two different paths** |
+| CN | **5th** — excluded | `translated-visa-application-guidance` 54.0 and `ads-visa` 39.0 (a China-specific scheme) |
+
+`_shortlist` reserves the top **three** per role. Three is why India and China had no plan.
+
+### Two wrong diagnoses first, and a harness so there was not a third
+
+This item was written twice from *reading* the shortlist and named the wrong cause both times — first
+"eleven of twenty-five places go to near-duplicate fee pages" (real, but 115 pages outrank the checker
+and only 41 are that host), then "the per-role reservation is discarded at truncation" (real, and
+measured to change nothing for the better).
+
+The third attempt replayed recorded candidate sets through **the real `_shortlist`**, by binding the
+actual unbound methods to a stub. It reproduces **26 of 26 recorded corridors exactly**, which is the
+property the first simulation lacked — that one predicted the checker would miss the shortlist for
+Nigeria, where the real run admitted it, because it modelled neither `_reserved_per_domain`'s
+registrable-domain key nor `_readable_only`.
+
+### The grid, and why depth alone is not the answer
+
+| depth | size 25 | size 30 | size 35 | pages dropped vs today, size 35 |
+| --- | --- | --- | --- | --- |
+| 3 (today) | NG PH | NG PH | NG PH | — |
+| 4 | NG PH | NG PH | NG PH | 0.0 |
+| **5** | all four | all four | **all four** | **0.0** |
+| 6 | NG PH IN | all four | all four | 0.5 |
+
+Depth alone is **non-monotone**: at size 25, depth 6 admits *fewer* corridors than depth 5. Six roles
+five deep wants thirty places and there are twenty-five, so the deepest reservations are pushed back
+out at truncation — and the truncation refills by raw score, where 30.4 loses. The two constants have
+to move together, which is why both did: **depth 3 → 5 and size 25 → 35**.
+
+At 35 the truncation barely fires, and replayed over all 26 recorded corridors **not one page that is
+shortlisted today is dropped.** That is the property worth having: this is an addition, not a
+reshuffle. Honouring the per-role reservation *inside* the truncation was tried and measured — it
+raises churn and admits nothing extra, so the code is left alone.
+
+### Live
+
+The United Kingdom, all four corridors, cold and unpinned:
+
+| | before | after |
+| --- | --- | --- |
+| UK/IN, UK/CN, UK/NG, UK/PH | **0 of 8 runs resolved** (entry 58) | **4 of 4** — checklist, route, fees and processing times filled, `visa_decision` handed over as a tool |
+
+Seven regression corridors — Canada, Japan, Singapore, the United States, France, Germany, the
+Netherlands — all still behave as recorded: 35 pages read each, roles filled as before, France still
+reporting its twelve refusals with the blocked-page judgement still running (`model_calls: 2`).
+Corridor phase 13–30s against a 27.4s median, though the page cache was warm, so read that as "no
+blow-up" rather than as a timing measurement.
+
+**France gained a checklist.** Its UK mission page — read, not refused — says the France-Visas wizard
+will tell the applicant whether they need a visa, which documents to attach, and the fee, so it is now
+named for all three. Entry 26 concluded France's checklist "needs the wizard"; naming the wizard turns
+out to be enough to tell the traveller where it is.
+
+### Two corrections this produced
+
+- **Entry 60's URL deduplication was wrong and is reverted.** It collapsed one page settling several
+  questions into a single entry, which hid France's checklist tool from the documents panel — exactly
+  where a reader looking for documents goes. The same page under two questions is two answers. The
+  interface suppresses a repeat only inside the catch-all panel that carries fees, times and entry
+  conditions together.
+- **`resolve_once` in the CLI never touches the corridor store** — no load, no write, deliberately, so
+  `--runs` measures variance rather than replay. So CLI numbers are always cold *and* a CLI run never
+  warms the store for the API. An earlier note claiming a 33.4s API request had been served from a
+  CLI-populated corridor was wrong on that basis; it was a genuine cold resolve plus extraction, with
+  only the page cache warm.
+
+### What it does not fix
+
+The scorer still rewards a page for **naming** a country rather than for being **about** one, which is
+what put a ballot scheme above the checker in the first place. Depth 5 routes around it; it does not
+remove it, and the next country whose gov.uk namespace holds three nationality-named schemes will hit
+it again. That is [TODO.md](TODO.md) item 26, and it is a precision problem, which is what the
+adjudicator is for. The adjudication packet also grew by up to 40% — 35 candidates rather than 25, at
+the same per-candidate excerpt budget — and that was **not** measured in tokens; no call failed across
+eleven live corridors.
+
+---
+
 ## 60. A questionnaire is an answer, for every role — not a blockade in front of one
 **2026-08-24 · decided; implemented; measured live. Widens entry 59, which was too narrow the day it shipped**
 

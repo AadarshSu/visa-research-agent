@@ -119,7 +119,30 @@ MINIMUM_ROLE_SCORE = 20.0
 # Japan's corridor took 44.5s at ten and 39.3s at twenty-five, Canada's 45.2s and 41.7s — within
 # noise both times, with no systematic penalty either way. Adjudication input roughly doubles, to
 # about 19k tokens, which is small for one call.
-DEFAULT_SHORTLIST_SIZE = 25
+#
+# **Raised from 25 to 35 on 2026-08-24, together with the per-role depth below** (entry 61). The two
+# move together and neither works alone: at depth 5 the reservation wants 30 places, so leaving the
+# budget at 25 pushes the deepest reservations straight back out at truncation — measured, that
+# dropped three previously-shortlisted pages per corridor and made the whole thing non-monotone,
+# with depth 6 admitting *fewer* answers than depth 5. At 35 the truncation barely fires: replayed
+# over 26 recorded corridors, **not one page that is shortlisted today is dropped.**
+DEFAULT_SHORTLIST_SIZE = 35
+# How many candidates each role reserves before the budget is filled best-first.
+#
+# **Three until 2026-08-24, and three was the reason the United Kingdom had no plan.** The page that
+# decides a UK visa, `gov.uk/check-uk-visa`, scores 30.4 for `visa_decision` in every corridor —
+# identically, because it names no country, which is what a page that *asks* your nationality does.
+# What moves is the pages around it: for Nigeria and the Philippines it is 3rd for its role and got
+# in; for India a ballot scheme on two paths and for China `ads-visa` and a translated-guidance page
+# take the places, and at 5th it did not. Every one of those outranks it on `nationality:+40`, the
+# scorer's largest term, awarded for a substring of the URL (TODO item 26).
+#
+# Five is the measured threshold rather than a guess, and the whole grid is in entry 61: depth 4
+# admits nothing new, depth 5 admits the checker in all four UK corridors, and depths above it buy
+# nothing until the budget grows to match. It is deliberately not a fix to the *scoring* — entries
+# 56 and 57 both establish that "what does this page mean" is not a keyword question, and there is
+# no honest keyword ranking an 804-character landing page above one that discusses visas at length.
+DEFAULT_SHORTLIST_ROLE_DEPTH = 5
 # Places held for each trusted domain before the rest are filled best-first. One is enough for what
 # this protects against — an authority being shut out of the fetch entirely — and cheap: with the
 # trusted set capped, the reserved places cannot crowd out the fill they exist to balance.
@@ -303,6 +326,7 @@ class CorridorResolver:
         lexicon: Lexicon | None = None,
         countries: CountryRegistry | None = None,
         shortlist_size: int = DEFAULT_SHORTLIST_SIZE,
+        shortlist_role_depth: int = DEFAULT_SHORTLIST_ROLE_DEPTH,
         shortlist_domain_floor: int = DEFAULT_SHORTLIST_DOMAIN_FLOOR,
         minimum_role_score: float = MINIMUM_ROLE_SCORE,
         results_per_query: int = 8,
@@ -321,6 +345,7 @@ class CorridorResolver:
         self.lexicon = lexicon or get_lexicon()
         self.countries = countries or get_country_registry()
         self.shortlist_size = shortlist_size
+        self.shortlist_role_depth = shortlist_role_depth
         self.shortlist_domain_floor = shortlist_domain_floor
         self.minimum_role_score = minimum_role_score
         self.results_per_query = results_per_query
@@ -866,7 +891,7 @@ class CorridorResolver:
                     chosen.setdefault(candidate.link.url, candidate)
                     pinned_urls.add(candidate.link.url)
         for role in ROLE_ORDER:
-            for candidate, _ in rank_for_role(candidates, role)[:3]:
+            for candidate, _ in rank_for_role(candidates, role)[: self.shortlist_role_depth]:
                 chosen.setdefault(candidate.link.url, candidate)
 
         by_score = sorted(candidates, key=lambda c: (-c.link_scores.best()[1], c.link.url))
