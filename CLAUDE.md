@@ -20,8 +20,9 @@ end to end and has been measured against a bar committed in advance (entry 35): 
 high-volume corridors run twice each, **75% confirm the visa decision** (bar ≥70%) and **50% yield a
 document checklist** (bar ≥50%) — a pass, by one corridor and by nothing at all. Corridors are served
 from **stored per-country page corpora** rather than a live crawl, at a median 27.4s. The largest
-remaining coverage limit is **not** bot-blocking: it is authorities that put the answer inside an
-interactive wizard, which costs every United Kingdom corridor its entire plan. Entries 44–58.
+coverage limit is **not** bot-blocking: it is authorities that put the answer inside an interactive
+tool, which cost every United Kingdom corridor its entire plan — and a corridor can now say so and
+hand the tool over instead of refusing (entry 59). Entries 44–59.
 
 ## Rules that must not be broken
 
@@ -139,6 +140,23 @@ produces a serious defect.
   reported must be true of what was seen**: a policy that could not be read is *"could not be read, so
   whether this client may fetch it is unknown"*, never *"does not permit"*, and an unreachable host is
   still reported as unreachable rather than as a policy nobody read.
+- **A tool that *asks* the decision may be named, never driven (entry 59).** A page read successfully
+  and judged to defer the answer to an official questionnaire is a third outcome beside *found* and
+  *blocked*: the corridor resolves `partial`, the URL is handed over, `visa_required` is null. The
+  bounds are entry 32's, because the risk is entry 32's — *not found* must not drift into *behind a
+  tool*. **Only the adjudicator names one**, on a page it was given the text of; the heuristic never
+  does, because "is this a questionnaire" is a meaning question and entry 57 is what keyword-matching
+  meaning cost. An invented id is discarded, a tool named beside a found decision is dropped, and the
+  URL is checked against the approved domains like everything else. A `VisaPlan` naming a tool cannot
+  also state `visa_required`, and can never be `verified`.
+
+  **Driving the tool stays out of scope, and entry 59 argues it against the strongest case.** GOV.UK's
+  checker is *server-rendered*: `robots.txt` allows it, and a plain GET under our own user agent to
+  `/check-uk-visa/y/india/no/tourism/no` returns *"You'll need a visa to come to the UK"*. So "we
+  cannot retrieve it" is false and is **not** the reason. The reason is that two of the checker's
+  questions — dual citizenship, travelling with family — are not in a corridor, and answering them is
+  inventing traveller input on the one question where being wrong is most damaging. If it is ever
+  revisited, the bar is in entry 59, and it must sit **on top of** naming the tool, never instead of it.
 - **A visa decision that could not be confirmed must be `null`, and the application enforces that.**
   Not the prompt: a model asked for null returned `true` in testing. A wrong yes or no about whether
   someone needs a visa is the most damaging thing this can say, so `decision_is_unverified` overrides
@@ -206,6 +224,8 @@ cause, and only running the thing showed it.
 | removing the crawl risks *reporting* | reporting held; **qualification** broke (entries 55–56) |
 | `visa_decision` needs its floor guard removed | the vocabulary could not recognise an answer (entry 56) |
 | bot-blocks are the largest coverage limit | the **wizard** is (entry 58) |
+| the UK's wizard page "was ranked, shortlisted and fetched" | for NG and PH; **not** for IN or CN (entry 59) |
+| the UK answer is behind a tool we cannot drive | it is on a static URL — the reason not to is different (entry 59) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

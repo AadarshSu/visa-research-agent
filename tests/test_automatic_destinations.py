@@ -659,6 +659,97 @@ def test_the_refused_page_reaches_the_destination_it_will_be_planned_from() -> N
     assert [source.source_id for source in config.sources] == ["fr_route"]
 
 
+# --- the decision behind an official tool -----------------------------------------------------
+
+WIZARD_PAGE = "https://www.gov.uk/check-uk-visa"
+
+
+def behind_a_tool(*, with_sources: bool = True) -> ResolvedCorridor:
+    """The United Kingdom as it actually resolves: a checklist found, and a checker for the rest.
+
+    Nothing refused us here, which is the whole difference from France. `gov.uk/check-uk-visa` was
+    ranked, shortlisted, fetched and read; it asks the traveller questions rather than answering
+    them. Before entry 59 that fell into *not found* and threw the checklist away with everything
+    else (entry 58).
+    """
+
+    sources = (
+        [
+            ResolvedSource(
+                source_id="gb_checklist",
+                title="Standard Visitor visa: documents you must provide",
+                url="https://www.gov.uk/standard-visitor/documents-you-must-provide",  # type: ignore[arg-type]
+                authority="UK Visas and Immigration",
+                kind="immigration_authority",
+                roles=["document_checklist"],
+                score=61.2,
+                decided_by="model",
+            )
+        ]
+        if with_sources
+        else []
+    )
+    return ResolvedCorridor(
+        corridor=corridor("united-kingdom"),
+        resolved_at=NOW,
+        sources=sources,
+        unresolved_roles=["visa_decision"],
+        decision_tool_urls=[WIZARD_PAGE],
+    )
+
+
+def uk_base() -> DestinationConfig:
+    return DestinationConfig(
+        slug="united-kingdom",
+        display_name="United Kingdom",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["www.gov.uk"],
+    )
+
+
+def test_a_decision_only_an_official_tool_can_give_still_yields_a_plan() -> None:
+    """Entry 58's largest coverage limit. The checklist, route, times and fees were all correct;
+    discarding them because a questionnaire holds the decision helped nobody."""
+
+    resolved = behind_a_tool()
+
+    assert resolved.is_usable
+    assert resolved.decision_is_unverified
+
+
+def test_a_tool_alone_is_not_a_plan_either() -> None:
+    """The same bound as a block: with nothing readable to cite there is no plan, only a link."""
+
+    assert not behind_a_tool(with_sources=False).is_usable
+
+
+def test_the_tool_reaches_the_destination_as_a_tool_and_not_as_a_refusal() -> None:
+    """The distinction is the point. This page was served, fetched and read, so reporting it as an
+    authority that would not permit retrieval would be false about what happened."""
+
+    config = behind_a_tool().to_destination_config(uk_base())
+
+    assert config.decision_is_unverified
+    assert [str(tool.url) for tool in config.decision_tools] == [WIZARD_PAGE]
+    assert config.unreadable_authorities == []
+    assert "asking questions" in config.decision_tools[0].detail
+    # Not a source either: it states no decision, so nothing may cite it as evidence of one.
+    assert [source.source_id for source in config.sources] == ["gb_checklist"]
+
+
+def test_a_tool_off_the_approved_domains_is_refused() -> None:
+    """A traveller is being sent to this URL to settle the question the plan could not. Officialness
+    is still a property of the domain, and reading the page changes nothing about that."""
+
+    resolved = behind_a_tool().model_copy(
+        update={"decision_tool_urls": ["https://uk-visa-help.example.com/checker"]}
+    )
+
+    with pytest.raises(ValueError, match="not on an approved domain"):
+        resolved.to_destination_config(uk_base())
+
+
 def test_an_unverified_decision_cannot_be_claimed_without_naming_the_authority() -> None:
     """Otherwise "we were not allowed to read it" would quietly cover for "we did not find it"."""
 

@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 441 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
+| **Tests** | 458 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -60,9 +60,14 @@ client-side retrieval question — and [TODO.md](TODO.md) is what remains. The s
   volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). **It ran on
   2026-08-24 and passed, marginally: 75% and exactly 50%** (entry 58). Read the sample caveat with it —
   five destinations replicated four times, not twenty independent corridors.
+- **The largest coverage limit is the interactive tool, and a corridor can now say so** (entry 59). A
+  page that was read and judged to *ask* the visa decision rather than state it resolves the corridor
+  `partial` and hands the traveller the tool's URL. Driving such a tool stays out of scope — measured
+  and argued, not assumed.
 
 Deliberately out of scope, permanently: submitting applications, booking appointments, filling
-forms, or claiming an approval is guaranteed. **Also settled: LangGraph is not adopted** — the pipeline
+forms, or claiming an approval is guaranteed. **Driving an authority's questionnaire is out too**, and
+entry 59 argues it against the strongest case for the other answer rather than by assertion. **Also settled: LangGraph is not adopted** — the pipeline
 is linear, the trust checkpoints are typed validators rather than graph nodes, and the one loop the old
 placeholder imagined is a retry loop this project rejects (entry 29).
 
@@ -360,8 +365,10 @@ not firing** (entries 56–57), both 2026-08-24.
    from 39–45s (2026-08-18, registry path) and 54.2s (entry 48), because the crawl left the request path
    (entry 51). **Ignore 34.1s and 54.2s wherever they still appear.**
    **What remains unmeasured is the total**: every figure here is the corridor phase only, and plan
-   extraction sits on top of it. Nobody has timed `POST /visa-plans` end to end since the corpus work, so
-   deployment still cannot be planned against a number. The remaining lever is **search**, which is now
+   extraction sits on top of it. `POST /visa-plans` was measured once on 2026-08-24 at **33.4s**
+   (`united-kingdom/NG/NG`) — but the corridor was **already in the store** from a CLI run minutes
+   before, so that number is extraction plus overhead, not the cold path. Cold total is still unmeasured
+   and deployment still cannot be planned against a number. The remaining lever is **search**, which is now
    the largest live component at roughly 3s of a corridor and 3 queries per trusted domain — TODO
    item 19. Warm is instant, and the local `var/` stores are what make it warm.
 6. **A destination is trusted on a rule whose output a person now reviews once, and the audit behind
@@ -448,7 +455,17 @@ not firing** (entries 56–57), both 2026-08-24.
    route, the processing times and per-nationality fees, because `gov.uk/check-uk-visa` is a
    step-by-step wizard that was fetched, read, and correctly judged not to state the answer. France
    is the same cause with a `403` on top, which is the only reason France resolves and the UK does
-   not. TODO item 24. The rest of this entry stands and is about blocks specifically.
+   not. The rest of this entry stands and is about blocks specifically.
+
+   **Fixed 2026-08-24 as entry 59 — and the fix then found the real United Kingdom limit.** A page
+   that was *read* and judged to **ask** the decision rather than state it is now its own outcome: the
+   corridor resolves `partial`, the tool is named, `visa_required` is null. Measured live,
+   `united-kingdom/NG/NG/tourism` went from refusing to a full plan with seven steps. **But
+   `gov.uk/check-uk-visa` scores 30.4 and ranks ~110th of ~820, and reaches the shortlist for NG and PH
+   and not for IN or CN** — so entry 58's *"it was ranked, shortlisted and fetched"* held for the runs
+   it inspected and not for all of them. Eleven of twenty-five shortlist places went to near-duplicate
+   `visa-fees.homeoffice.gov.uk` pages filling one role. **The UK's binding limit is now recall, not
+   expressiveness: TODO item 25.**
 
    **Bot-blocked official portals are a large coverage limit — but "permanent" was the wrong
    word.** Three found: `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and Singapore's VFS page.
@@ -623,19 +640,34 @@ not firing** (entries 56–57), both 2026-08-24.
 twenty; destination decided the rest. So 75% is "three and three-quarters of five destinations", and
 the next measurement should sample **destinations**, not corridors.
 
-**Pick up [TODO.md](TODO.md) item 24 — say "the answer is behind a tool we cannot drive."** It is the
-largest coverage limit there is, now measured rather than assumed:
+**Item 24 is done — the wizard outcome shipped on 2026-08-24 as entry 59.** A page that was *read*
+and judged to **ask** the decision rather than state it is now a third outcome beside *found* and
+*blocked*: the corridor resolves `partial`, the tool's URL is named in the decision panel with a
+sentence saying answering its questions there gives the traveller their answer, and `visa_required`
+stays null. Measured live, `united-kingdom/NG/NG/tourism` went from refusing to a full plan — four
+document requirements, seven steps, the first *"Open the official visa checker and answer its
+questions"*.
 
-- **All eight United Kingdom runs refused**, having already found the checklist, the application
-  route, the processing times, and per-nationality fees down to the currency. Nothing was blocked.
-  `gov.uk/check-uk-visa` was ranked, shortlisted, **fetched and read**, and the adjudicator correctly
-  judged that it does not state the answer — because it is a step-by-step wizard.
-- There are three outcomes and the code can express two. *Found* resolves; *blocked* resolves
-  `partial` and hands over a URL (entries 27, 57); **"read it, and the answer is only inside a
-  form"** has nowhere to go, so it becomes *not found* and the corridor throws away correct work.
-- This inverts known problem 11. A block cost the United States one role — its checklist. The wizard
-  cost the United Kingdom **every plan, on every run**: one of the five destinations measured, gone
-  entirely.
+**Entry 59 also declines the larger version of the idea, with measurements, so nobody re-derives it.**
+GOV.UK's checker is server-rendered and its answers are addressable — plain `curl` under our own user
+agent gets *"You'll need a visa to come to the UK"* out of `/check-uk-visa/y/india/no/tourism/no`, and
+`robots.txt` allows it. It is still rejected: two of the checker's questions are not in a corridor, so
+answering them means inventing traveller input on the one question where being wrong matters most.
+
+**Pick up [TODO.md](TODO.md) item 25 — get the answering page into the shortlist.** Building item 24
+found the limit underneath it:
+
+- `gov.uk/check-uk-visa` scores **30.4** on every recorded UK run and ranks **104th–116th of ~820**. It
+  reaches the shortlist for **NG and PH, not for IN or CN** — so entry 58's *"it was ranked,
+  shortlisted and fetched"* was true of the runs it looked at, not of all of them, and the new outcome
+  cannot fire where the page never arrives.
+- **Eleven of twenty-five shortlist places went to near-duplicate `visa-fees.homeoffice.gov.uk`
+  pages**, all one role, scoring 116–136. The top-3-per-role reservation then seats three
+  `visa_decision` pages — one a *young-professionals-scheme ballot* page at 54.0 — and the checker is
+  fourth for its own role and out.
+- Measure before implementing. Deduplicating `?previous-answer=` and `?step-by-step-nav=` URLs is the
+  cheapest candidate and the least likely to break anything; a per-host-per-role cap is the most
+  targeted; a wider window is entry 40's answer and costs every corridor.
 
 **The trap to avoid is entry 32's, exactly.** If "we could not find it" can present as "an authority
 made it unavailable", every failed corridor drifts into looking authority-limited. The difference
@@ -848,8 +880,9 @@ the last was caught only by probing real authorities, not by any test.**
 
 **Amended 2026-08-24: everything that gated this list is finished and confirmed by live runs.** The
 corpus replaced the crawl (entries 49–53), the vocabulary and the block judgement were fixed (entries
-56–57), and the twenty-corridor measurement ran and passed marginally (entry 58). **Pick up
-[TODO.md](TODO.md) item 24** — the wizard — and see *Next steps* below for the order after it.
+56–57), and the twenty-corridor measurement ran and passed marginally (entry 58). The wizard outcome
+item 58 called for is built (entry 59). **Pick up [TODO.md](TODO.md) item 25** — the shortlist crowding
+that keeps the wizard page out of half the UK corridors — and see *Next steps* below for the order.
 
 ### What changed on 2026-08-19, in one line each
 
@@ -864,10 +897,12 @@ corridors by where a nationality falls in an alphabetical list — and became en
 
 Item 22 was written as a proposal and read as one. The measurements behind it held; two of the three
 things built on them did not. Entries 54–57 are defects that only appeared once the crawl was gone,
-and entry 58 is the measurement that finally answered whether this is a product.
+entry 58 is the measurement that finally answered whether this is a product, and entry 59 acts on what
+it found.
 
 | Entry | What it changed |
 | --- | --- |
+| 59 | **The third outcome: a page read and judged to *ask* the decision now resolves the corridor and hands over the tool.** `decision_tool_urls` / `decision_tools` / `VisaPlan.decision_tools`; `visa_required` stays null and a verified plan cannot carry one. Only the adjudicator may name one, only on a page it read, only when `visa_decision` is unfilled, and only on an approved domain. Measured live: `united-kingdom/NG/NG` went from refusing to a full seven-step plan; `netherlands/IN/GB` saw a questionnaire and correctly declined it. **It also declines URL-construction with measurements** — GOV.UK's checker is addressable by plain GET, and driving it would still mean inventing two traveller answers. **And it found the real UK limit**: the checker ranks ~110th of ~820 and misses the shortlist for IN and CN, so entry 58's "shortlisted and fetched" was not true of every run. Item 25. |
 | 58 | **The twenty-corridor measurement ran, and it passes the bar committed in advance** — 75% confirm the decision (bar 70%), 50% yield a checklist (bar 50%, *exactly*). 40 live runs, all corpus-routed, none crawled, median 27.4s. **Read the sample structure**: nationality changed the outcome once in twenty, so it is five destinations replicated four times, not twenty independent corridors. **The United Kingdom refuses all eight runs** after finding the checklist, route, times and per-nationality fees, because `gov.uk/check-uk-visa` is a **wizard** — France's cause without France's `403`. That inverts known problem 11: the wizard costs more coverage than bot-blocks. |
 | 57 | **A block is now judged, not keyword-matched.** `_decision_blocking` asked "could this page have held the visa decision?" and answered by keyword, on a page **nobody read** — the one place the scorer decided what a page *means*. It now asks the model, over **address and label only** (there is no text; the authority refused it), and the packet has no parameter through which content could be passed. Fails closed after two attempts; the deterministic path keeps the keyword test. **France now qualifies `/en/royaume-uni`, `/en/web/france-visas` and `/india` and rejects the FAQ, the form page and the visa-category page** — where its old qualification was a blank CERFA form. Corridors whose decision is found make **no extra call**. |
 | 56 | **The `visa_decision` vocabulary could only ask the question, never recognise the answer.** Every term was a way of asking — `visa requirement`, `do i need a visa` — so Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `general_entry` 22.4 and `visa_decision` **0.0**, and could not qualify its own refusal. Seven answering phrasings added, one in **slug form** because `searchable_url` flattens hyphens and slugs drop articles. Measured by replaying all seven corridors' real candidate sets: **0.0 → 82.4 and it now qualifies; no shortlist changes anywhere.** **Item 23's own proposal — removing the `not scores` guard — was measured and rejected**: it would give 12–58% of a country's pages a positive `visa_decision`. |
@@ -959,9 +994,10 @@ same falsehood entry 33 removed from `withheld_domains`.
 [TODO.md](TODO.md) is the ordered list and the reasoning. This is only its shape; where the two
 disagree, TODO is right and this needs fixing.
 
-**First: [TODO.md](TODO.md) item 24** — let a corridor say *the answer is behind a tool we cannot
-drive*. It is the largest coverage limit there is, measured (entry 58), and it costs a whole
-destination rather than a role. See *Current task* for the trap to avoid.
+**First: [TODO.md](TODO.md) item 25** — get the answering page into the shortlist. Item 24 built the
+outcome that lets a corridor say *the answer is behind a tool* (entry 59) and then measured that it
+cannot fire for half the United Kingdom corridors, because one role takes eleven of twenty-five
+shortlist places and the checker ranks ~110th of ~820. See *Current task*.
 
 **Then, in order:**
 

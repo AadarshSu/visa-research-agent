@@ -33,8 +33,9 @@ def require_load_bearing_sources(
     required = destination.load_bearing_source_ids
     if not required:
         # Nothing load-bearing is normally a broken configuration. It is not when the reason is on
-        # the record: an authority under this destination's own government refused us, so there was
-        # nothing to confirm the decision *with*. The plan then says that and names the page, which
+        # the record: either an authority under this destination's own government refused us, or it
+        # publishes the decision only inside a questionnaire, so there was nothing to confirm the
+        # decision *with*. The plan then says which of the two happened and names the page, which
         # is a next step the traveller can take, rather than nothing at all.
         if destination.decision_is_unverified:
             return

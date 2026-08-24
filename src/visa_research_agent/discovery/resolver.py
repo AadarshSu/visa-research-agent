@@ -33,6 +33,7 @@ from visa_research_agent.discovery.adjudication import (
     load_blocked_prompt,
     validated_blocked_choices,
     validated_choices,
+    validated_decision_tool,
 )
 from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
 from visa_research_agent.discovery.crawl import (
@@ -568,7 +569,7 @@ class CorridorResolver:
 
         # 5. Assign roles from the combined evidence.
         try:
-            sources, unresolved, model_calls = await self._decide_roles(
+            sources, unresolved, model_calls, decision_tool = await self._decide_roles(
                 destination, corridor, fetched, notes
             )
         except AdjudicationRefusal as exc:
@@ -582,6 +583,15 @@ class CorridorResolver:
         # `is_usable` and `decision_is_unverified`, and both are inert once `visa_decision` is
         # filled. So the ordinary corridor makes no extra call at all. DECISIONS entry 57.
         decision_found = any("visa_decision" in source.roles for source in sources)
+        # A tool is what to say when nothing stated the answer. Once a page did, it is at best a
+        # second route to something already established, and naming it would tell the traveller to
+        # go and work out what the plan already says.
+        if decision_found and decision_tool is not None:
+            notes.append(
+                f"a decision tool was named at {decision_tool} but a page states the decision, "
+                "so it was not carried"
+            )
+            decision_tool = None
         if decision_found or not refused:
             blocking = []
         elif self.adjudicator is None:
@@ -603,6 +613,7 @@ class CorridorResolver:
             inaccessible_domains=inaccessible,
             inaccessible_urls=refused,
             decision_blocking_urls=blocking,
+            decision_tool_urls=[decision_tool] if decision_tool is not None else [],
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
@@ -1044,8 +1055,15 @@ class CorridorResolver:
         corridor: Corridor,
         fetched: "FetchedShortlist",
         notes: list[str],
-    ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int]:
+    ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int, str | None]:
         """Choose the page for each role, by judgement when an adjudicator is configured.
+
+        The fourth return is the URL of an interactive tool the model read and judged to hold the
+        decision behind its questions. It is **only** ever produced here, on the path where the
+        model was handed page text — the heuristic never produces one, because "is this page a
+        questionnaire" is a question about meaning, and entry 57 is what keyword-matching meaning
+        cost the last time. No adjudicator therefore means no tool, which is the deterministic
+        baseline refusing exactly as it did before.
 
         The heuristic is not replaced. It produced the shortlist these candidates come from, and it
         is the answer when no adjudicator is configured — which keeps the deterministic path as the
@@ -1064,7 +1082,7 @@ class CorridorResolver:
 
         if self.adjudicator is None or not fetched.candidates:
             sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
-            return sources, unresolved, 0
+            return sources, unresolved, 0, None
 
         # The traveller's own country words, so a long page is cut around them rather than at a
         # fixed offset. Nationality and residence only: the destination is named on every page it
@@ -1083,8 +1101,15 @@ class CorridorResolver:
 
         chosen, discarded = validated_choices(adjudication, fetched.by_id)
         notes.extend(discarded)
+        tool, tool_discarded = validated_decision_tool(adjudication, fetched.by_id)
+        notes.extend(tool_discarded)
         sources, unresolved = self._sources_from_choices(destination, fetched, chosen, notes)
-        return sources, unresolved, model_calls
+        tool_url: str | None = None
+        if tool is not None:
+            source_id, reason = tool
+            tool_url = fetched.by_id[source_id].link.url
+            notes.append(f"{tool_url} decides the visa question interactively: {reason}")
+        return sources, unresolved, model_calls, tool_url
 
     async def _adjudicate_with_one_retry(
         self, packet: str, notes: list[str]

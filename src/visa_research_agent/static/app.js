@@ -172,6 +172,24 @@ function renderDecision(plan, ctx) {
     );
   }
   container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
+  // The one case where the traveller can finish the answer themselves in a minute: the authority
+  // publishes it as a questionnaire. It sits in the decision panel rather than with the caveats
+  // because it is the next step for the decision, not a footnote about the evidence.
+  (plan.decision_tools || []).forEach((tool) => {
+    const callout = element("div", "decision-tool");
+    callout.append(
+      element(
+        "p",
+        "decision-tool-title",
+        `${tool.authority} decides this with an official questionnaire`,
+      ),
+    );
+    const body = element("p", "", "Answering its questions gives you the decision for your own passport and trip. It asks a handful — nationality, why you are travelling — and we cannot answer them on your behalf. Open it at ");
+    body.append(externalLink(tool.url, tool.url));
+    body.append(document.createTextNode("."));
+    callout.append(body);
+    container.append(callout);
+  });
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
   return container;
 }

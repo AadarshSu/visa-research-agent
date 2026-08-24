@@ -132,6 +132,39 @@ are different claims and only one is about what the authority allows.
 `unreachable` and `unusable` are kept apart deliberately: one is a transient site problem, the other
 needs a different retriever. They demand different remedies even though they grade the same.
 
+### A third way the decision can be unverified: an official tool holds it
+
+Nothing above applies when the page was served willingly and read, and still does not answer — because
+the authority publishes the decision as an interactive questionnaire. `gov.uk/check-uk-visa` is the
+case, and before entry 59 it fell into *not found* and refused the corridor, discarding a checklist,
+route, fees and processing times that had all resolved correctly.
+
+`ResolvedCorridor.decision_tool_urls` carries it into `DestinationConfig.decision_tools` and then
+`VisaPlan.decision_tools`. `is_usable` and `decision_is_unverified` accept it exactly as they accept
+`decision_blocking_urls`, so the corridor resolves `partial`, `visa_required` is null, and the plan
+names the URL with a sentence saying that answering its questions there gives the traveller the answer.
+
+It is deliberately neither of the two things it resembles. Not an `UnreadableAuthority` — nothing
+refused us, and saying so would be false about what happened, so it is not reported under unavailable
+evidence. Not a `ConfiguredSource` for the decision — the page states no decision, so citing it as
+evidence of one would be reading an answer out of a question.
+
+Four bounds keep *not found* and *behind a tool* apart, which is entry 32's risk in a new place:
+
+- **Only the adjudicator may name one**, and only on a page it was given the text of. The heuristic
+  never does: whether a page is a questionnaire is a question about meaning, and entry 57 is what
+  keyword-matching meaning cost. With no adjudicator configured the corridor refuses as before.
+- **An invented id is discarded**, exactly as in `validated_choices`.
+- **Only when nothing filled `visa_decision`.** A tool named beside a found decision is dropped with a
+  note, the same short-circuit `decision_blocking_urls` gets.
+- **The URL is checked against the approved domains.** Officialness is the domain's; reading the page
+  changes nothing about that, and a traveller is being sent there.
+
+It does not need entry 32's "could this page plausibly have held the decision" gate. That exists
+because a blocked page is judged with no text at all; here the text is in hand, so the claim is
+narrower and checkable. **Driving the tool is out of scope** — argued with measurements in entry 59,
+not assumed.
+
 ### Grading and refusal
 
 `research/outcomes.py`, shared by both extractors so the modes can never disagree.

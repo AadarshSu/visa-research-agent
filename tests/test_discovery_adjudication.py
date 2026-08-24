@@ -16,12 +16,14 @@ from discovery_site import DETAIL_INDIA, MISSION_CHECKLIST, destination, handler
 from visa_research_agent.discovery.adjudication import (
     EXCERPT_GAP_MARKER,
     AdjudicationError,
+    DecisionTool,
     RoleAdjudication,
     RoleChoice,
     anchored_excerpt,
     build_candidate_packet,
     load_adjudication_prompt,
     validated_choices,
+    validated_decision_tool,
 )
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink
 from visa_research_agent.discovery.resolver import (
@@ -201,7 +203,7 @@ async def test_a_refusal_is_honoured_rather_than_filled_in() -> None:
     )
     notes: list[str] = []
 
-    sources, unresolved, calls = await resolver_with(adjudicator)._decide_roles(
+    sources, unresolved, calls, _ = await resolver_with(adjudicator)._decide_roles(
         destination(), corridor(), shortlist(), notes
     )
 
@@ -224,7 +226,7 @@ async def test_a_chosen_page_is_recorded_as_decided_by_the_model() -> None:
         )
     )
 
-    sources, _, _ = await resolver_with(adjudicator)._decide_roles(
+    sources, _, _, _ = await resolver_with(adjudicator)._decide_roles(
         destination(), corridor(), shortlist(), []
     )
 
@@ -254,7 +256,7 @@ async def test_a_momentary_failure_is_retried_rather_than_costing_the_corridor()
     )
     notes: list[str] = []
 
-    sources, _, calls = await resolver_with(adjudicator)._decide_roles(
+    sources, _, calls, _ = await resolver_with(adjudicator)._decide_roles(
         destination(), corridor(), shortlist(), notes
     )
 
@@ -285,7 +287,7 @@ async def test_a_call_that_keeps_failing_refuses_instead_of_using_the_heuristic(
 
 
 async def test_without_an_adjudicator_nothing_changes_and_no_call_is_made() -> None:
-    sources, _, calls = await resolver_with(None)._decide_roles(
+    sources, _, calls, _ = await resolver_with(None)._decide_roles(
         destination(), corridor(), shortlist(), []
     )
 
@@ -494,3 +496,84 @@ async def test_the_resolver_anchors_on_the_travellers_own_countries() -> None:
     await resolver_with(adjudicator)._decide_roles(destination(), corridor(), fetched, [])
 
     assert "British citizen" in adjudicator.calls[0]
+
+
+# --- the decision behind a tool -------------------------------------------------------------
+
+
+def test_a_tool_the_model_invented_is_discarded_like_any_other_id() -> None:
+    """Same containment as `validated_choices`. A traveller is being sent to this URL, so it has to
+    be a page the application fetched, not one the model produced."""
+
+    kept, discarded = validated_decision_tool(
+        RoleAdjudication(
+            choices=[],
+            decision_tool=DecisionTool(
+                source_id="tl_checker",
+                reason="A step-by-step checker that asks the reader their nationality.",
+            ),
+        ),
+        shortlist().by_id,
+    )
+
+    assert kept is None
+    assert any("not a candidate" in reason for reason in discarded)
+
+
+async def test_a_page_that_asks_the_decision_resolves_the_corridor_instead_of_losing_it() -> None:
+    """The United Kingdom outcome from entry 58: the checklist was found and then thrown away with
+    the rest of the plan, because `visa_decision` was unfilled and nothing could say why."""
+
+    adjudicator = FakeAdjudicator(
+        RoleAdjudication(
+            choices=[
+                RoleChoice(
+                    role="visa_decision",
+                    source_id=None,
+                    reason="No candidate states whether this traveller needs a visa.",
+                ),
+                RoleChoice(
+                    role="document_checklist",
+                    source_id="tl_checklist",
+                    reason="It lists the items to bring.",
+                ),
+            ],
+            decision_tool=DecisionTool(
+                source_id="tl_india",
+                reason="It asks nationality and purpose, then says whether a visa is needed.",
+            ),
+        )
+    )
+    notes: list[str] = []
+
+    sources, unresolved, _, tool = await resolver_with(adjudicator)._decide_roles(
+        destination(), corridor(), shortlist(), notes
+    )
+
+    assert tool == DETAIL_INDIA
+    assert "visa_decision" in unresolved
+    assert [role for source in sources for role in source.roles] == ["document_checklist"]
+    assert any("decides the visa question interactively" in note for note in notes)
+
+
+async def test_the_heuristic_path_never_names_a_tool() -> None:
+    """Whether a page is a questionnaire is a question about meaning, and entry 57 is what keyword
+    matching meaning cost. With no adjudicator the corridor refuses exactly as it did before."""
+
+    _, _, calls, tool = await resolver_with(None)._decide_roles(
+        destination(), corridor(), shortlist(), []
+    )
+
+    assert calls == 0
+    assert tool is None
+
+
+def test_the_prompt_keeps_not_found_and_behind_a_tool_apart() -> None:
+    """Entry 32's lesson, applied to a new exception: if "could not find it" can present as "an
+    official tool holds it", every failed corridor drifts into looking tool-limited."""
+
+    prompt = load_adjudication_prompt()
+
+    assert "decision_tool" in prompt
+    assert "not among the candidates" in prompt
+    assert "not a way to soften a refusal" in prompt

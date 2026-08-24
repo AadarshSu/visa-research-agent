@@ -75,6 +75,16 @@ def build_research_packet(
                 }
                 for authority in destination.unreadable_authorities
             ],
+            # Read, and it asks rather than answers. Named for the same reason and with the same
+            # limit: the model is being told where the decision is settled, not what it settles to.
+            "decision_tools": [
+                {
+                    "url": str(tool.url),
+                    "authority": tool.authority,
+                    "detail": tool.detail,
+                }
+                for tool in destination.decision_tools
+            ],
         },
         "traveller_profile": {
             **traveller_profile.model_dump(mode="json"),
@@ -251,6 +261,9 @@ class OpenAIVisaPlanExtractor:
                     decision_is_unverified=destination.decision_is_unverified,
                 ),
                 unavailable_sources=[*report.failures, *refused],
+                # Straight from the configuration, never from the draft: the traveller is being
+                # sent to this URL, so it has to be one an authority published.
+                decision_tools=destination.decision_tools,
             )
         except ValidationError as exc:
             raise LLMExtractionError("Model output failed source and schema validation") from exc

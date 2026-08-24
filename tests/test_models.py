@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from visa_research_agent.domain.models import (
     ApplicationStep,
+    InteractiveDecisionTool,
     SourceReference,
     VisaPlan,
     VisaRequirement,
@@ -259,3 +260,79 @@ def test_a_step_title_has_room_for_a_label_and_no_more() -> None:
                 "link_source_id": None,
             }
         )
+
+
+# --- a decision an official tool holds ---------------------------------------------------------
+
+
+def plan_payload(**overrides: object) -> dict[str, object]:
+    checked_at = datetime(2026, 8, 5, tzinfo=UTC)
+    payload: dict[str, object] = {
+        "destination": "United Kingdom",
+        "visa_required": None,
+        "visa_type": None,
+        "explanation": "The Home Office decides this through its own official checker.",
+        "decision_source_ids": ["official-source"],
+        "where_to_apply": None,
+        "requirements": [],
+        "application_document_source_ids": [],
+        "application_steps": [step.model_dump() for step in application_steps()],
+        "sources": [
+            {
+                "source_id": "official-source",
+                "title": "Official source",
+                "url": "https://example.gov/visas",
+                "authority": "Example authority",
+                "retrieved_at": checked_at,
+            }
+        ],
+        "unresolved_questions": ["Answer the official checker to get the decision."],
+        "last_checked": checked_at,
+        "status": "partial",
+        "decision_tools": [
+            {
+                "url": "https://www.gov.uk/check-uk-visa",
+                "authority": "United Kingdom authority (www.gov.uk)",
+                "detail": "decides this by asking questions rather than stating an answer",
+            }
+        ],
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_a_plan_may_name_the_tool_that_holds_the_decision_it_could_not_state() -> None:
+    plan = VisaPlan.model_validate(plan_payload())
+
+    assert plan.visa_required is None
+    assert [str(tool.url) for tool in plan.decision_tools] == ["https://www.gov.uk/check-uk-visa"]
+
+
+def test_naming_the_tool_and_answering_it_are_mutually_exclusive() -> None:
+    """A tool is named because no page stated the decision. Stating one anyway means it came from
+    somewhere else — most likely the questionnaire's own prompts, which is reading an answer out of
+    a question."""
+
+    with pytest.raises(ValidationError, match="cannot also state whether a visa is required"):
+        VisaPlan.model_validate(plan_payload(visa_required=True))
+
+
+def test_a_plan_resting_on_an_unanswered_questionnaire_is_never_verified() -> None:
+    """The decision is the one thing a traveller most needs right, and nobody read it off a page."""
+
+    with pytest.raises(ValidationError, match="nobody read off a page"):
+        VisaPlan.model_validate(plan_payload(status="verified"))
+
+
+def test_a_decision_tool_carries_no_claim_about_what_it_would_answer() -> None:
+    """Only where the decision is settled, never what it settles to."""
+
+    tool = InteractiveDecisionTool.model_validate(
+        {
+            "url": "https://www.gov.uk/check-uk-visa",
+            "authority": "United Kingdom authority (www.gov.uk)",
+            "detail": "decides this by asking questions rather than stating an answer",
+        }
+    )
+
+    assert set(tool.model_dump()) == {"url", "authority", "detail"}

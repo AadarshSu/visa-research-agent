@@ -236,6 +236,26 @@ class ResolvedCorridor(StrictModel):
     prevent. See DECISIONS entry 32.
     """
 
+    decision_tool_urls: list[str] = Field(default_factory=list)
+    """Pages that were read and found to *ask* the decision rather than state it.
+
+    The third outcome. `sources` is "a page answered it", `decision_blocking_urls` is "an authority
+    would not let us look", and this is "we looked, and the authority publishes the answer only
+    inside a questionnaire". Before it existed that case fell into *not found* and refused the
+    corridor, discarding a checklist, a route, processing times and fees that had all been resolved
+    correctly — every United Kingdom corridor, in the twenty-corridor measurement (entry 58).
+
+    Kept as its own list rather than merged into `decision_blocking_urls` because the two support
+    different sentences and one of them would become false: nothing refused us here. It is also the
+    stronger claim of the two, which is why it does not need entry 32's second gate — the model is
+    judging a page whose text it was actually given, so "this page defers the answer to a form" is
+    checkable in a way "this page nobody read might have held the answer" is not.
+
+    Entry 32's *lesson* still binds, though: *not found* and *behind a tool* must not blur, or every
+    failed corridor drifts into looking tool-limited. So this is filled only by the adjudicator, on
+    a page it read, and only when no page filled `visa_decision`.
+    """
+
     queries: list[str] = Field(default_factory=list)
     model_calls: int = 0
     pages_fetched: int = 0
@@ -256,34 +276,41 @@ class ResolvedCorridor(StrictModel):
         A corridor that simply could not find its visa decision is still refused: a substitute page
         would be worse than nothing.
 
-        The exception is narrow and is not a relaxation of that rule. When an authority under the
-        destination's *own* government refused this program, the honest position is not silence —
-        it is naming the page and saying we were not permitted to read it, which is something the
-        traveller can act on by opening it themselves. That needs a plan to exist to say it in, so
-        the corridor resolves and `decision_is_unverified` carries the reason. Readable sources are
-        still required: with nothing at all to cite there is no plan, only a link.
+        There are two exceptions and they share a shape. When an authority under the destination's
+        *own* government refused this program, or when it publishes the answer only inside an
+        interactive tool, the honest position is not silence — it is naming the page and saying why
+        it did not answer, which is something the traveller can act on by opening it themselves.
+        That needs a plan to exist to say it in, so the corridor resolves and
+        `decision_is_unverified` carries the reason. Readable sources are still required in both:
+        with nothing at all to cite there is no plan, only a link.
 
-        Three things have to hold, and each one keeps the exception from swallowing the rule: the
-        refusal must be **settled** rather than a rate limit, it must be of a page that could
-        plausibly have **held the decision**, and something readable must remain to cite.
+        For a refusal, three things have to hold, and each keeps the exception from swallowing the
+        rule: it must be **settled** rather than a rate limit, it must be of a page that could
+        plausibly have **held the decision**, and something readable must remain to cite. For a
+        tool, the page must have been **read** and judged to defer the answer, which is the same
+        discipline reached by a shorter route — the text was in hand.
         """
 
         filled = {role for source in self.sources for role in source.roles}
         if all(role in filled for role in LOAD_BEARING_ROLES):
             return True
-        return bool(self.decision_blocking_urls) and bool(self.sources)
+        handed_over = bool(self.decision_blocking_urls or self.decision_tool_urls)
+        return handed_over and bool(self.sources)
 
     @property
     def decision_is_unverified(self) -> bool:
-        """True when nothing confirmed the visa decision and a refusal of *that page* is why.
+        """True when nothing confirmed the visa decision and a named page is why.
 
         Deliberately not "and something somewhere was blocked". A decision that was merely not
         found must still refuse, so the blocked page has to be one that could have answered the
-        question — which is what `decision_blocking_urls` records.
+        question — which is what `decision_blocking_urls` records — or the page has to have been
+        read and found to ask the question rather than answer it, which is `decision_tool_urls`.
         """
 
         filled = {role for source in self.sources for role in source.roles}
-        return "visa_decision" not in filled and bool(self.decision_blocking_urls)
+        if "visa_decision" in filled:
+            return False
+        return bool(self.decision_blocking_urls or self.decision_tool_urls)
 
     def source_ids_for(self, role: DiscoveryRole) -> list[str]:
         return [source.source_id for source in self.sources if role in source.roles]
@@ -331,6 +358,20 @@ class ResolvedCorridor(StrictModel):
                 ),
             }
             for url in self.inaccessible_urls
+        ]
+        # Read, not refused, so it is neither a source nor an unreadable authority. It is a page
+        # the traveller can finish themselves, and the detail says exactly that — never a guess at
+        # what answering it would produce.
+        payload["decision_tools"] = [
+            {
+                "url": url,
+                "authority": f"{destination.display_name} authority ({host_of(url)})",
+                "detail": (
+                    "decides this by asking questions rather than stating an answer, so the "
+                    "decision could not be read from the page"
+                ),
+            }
+            for url in self.decision_tool_urls
         ]
         payload["decision_is_unverified"] = self.decision_is_unverified
         return DestinationConfig.model_validate(payload)

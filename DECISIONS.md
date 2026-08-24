@@ -9,6 +9,125 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 59. The third outcome: the answer is behind a tool, so hand over the tool
+**2026-08-24 · decided; implemented; measured live. Closes TODO item 24, and declines a larger version of it**
+
+Entry 58 measured the largest coverage limit there is and it was not bot-blocking: it was authorities
+that publish the visa decision inside an interactive tool. Every United Kingdom corridor refused
+after correctly resolving the checklist, the application route, the processing times and
+per-nationality fees, because `visa_decision` is load-bearing and `gov.uk/check-uk-visa` is a
+questionnaire. The page was served willingly, fetched cleanly and read; the adjudicator judged it
+does not state the answer, because it does not.
+
+There were three outcomes and the code could express two. *Found* resolves. *Blocked* resolves
+`partial`, names the page and says the decision could not be verified (entries 27 and 57). **"The
+answer exists, on a page we read, but only inside a tool"** had nowhere to go, so it fell into *not
+found* and threw a working plan away.
+
+It is now its own outcome. `ResolvedCorridor.decision_tool_urls`, `DestinationConfig.decision_tools`
+and `VisaPlan.decision_tools` carry it; `is_usable` and `decision_is_unverified` accept it the way
+they accept a settled refusal; the plan states `visa_required` as null and the interface prints the
+URL in the decision panel with a sentence saying that answering its questions there gives the
+traveller their answer.
+
+### The alternative that was measured and declined: construct the answer URL
+
+GOV.UK's checker is a *server-rendered* smart answer, and its answers are addressable. Measured
+2026-08-24 with `curl` under our own user agent, no browser and no JavaScript:
+
+| probe | result |
+| --- | --- |
+| `gov.uk/robots.txt` | `/check-uk-visa/*` allowed — only `/*/print$` and `/search/all*` are disallowed |
+| `GET /check-uk-visa/y/india/no/tourism/no` | **200**, server-rendered, *"You'll need a visa to come to the UK — Apply for a Standard Visitor visa"*, and it restates every question and answer used |
+| `GET /check-uk-visa/y` (already in the GB corpus) | a `method="get"` form publishing **221 nationality slugs** as `<option value>`, and the purpose step publishes nine more as radio values |
+
+So the transitions are published by the authority, and following them is a sequence of plain GETs to
+URLs GOV.UK itself printed. That is **not** what CLAUDE.md's no-list forbids: nothing is rendered,
+nothing is POSTed, no application is begun. The rejection is not on those grounds.
+
+**It is rejected on what it would have to invent.** Two of the checker's questions — dual British or
+Irish citizenship, and whether the traveller is visiting a partner or family member — are not in a
+corridor. Answering them is supplying traveller input nobody gave us, on the one question where a
+wrong answer is the most damaging thing this project can produce. A leaf walk requiring every
+reachable branch to agree would avoid that, and measured it holds for the four nationalities entry 58
+sampled — India, Nigeria and China all reach *"you'll need a visa"* on both branches, and only the
+*"usually"* differs. But it holds by luck of those corridors, not by construction, and the failure
+modes are quiet: an invalid slug (`united-states`, where the slug is `usa`) returns **200 with
+question one**, not a 404, and branch depth varies by nationality, so `usa/no/tourism/no` **404s**
+where India's five-segment path resolves. Two ways to be wrong that look like ordinary responses.
+
+**And it generalises to almost nothing.** It is one authority's URL scheme. France — the other
+wizard country, entry 26 — is a JavaScript application behind a Cloudflare challenge, and none of it
+applies. Naming the tool works for both, today, with no per-country code.
+
+It is written down rather than dismissed because the measurements are cheap to re-derive and the idea
+is attractive. If it ever returns, the bar is: only options parsed from a page actually fetched, stop
+at a page publishing no options, **unanimity across every reachable leaf**, 404 and restart-to-
+question-one both treated as no answer, and never a question the corridor does not answer. And it
+must sit *on top of* this entry, so a walk that fails lands on "here is the tool" rather than on a
+guess.
+
+### Keeping *not found* and *behind a tool* apart
+
+Entry 32's lesson, on a new exception: if "we could not find it" can present as "an official tool
+holds it", every failed corridor drifts into looking tool-limited and the refusal discipline leaks.
+Four things hold it:
+
+- **Only the adjudicator names one, and only on a page it was given the text of.** The heuristic
+  never does. Whether a page is a questionnaire is a question about *meaning*, and entry 57 is what
+  keyword-matching meaning cost the last time; with no adjudicator configured the corridor refuses
+  exactly as before.
+- **The application decides what is real.** An id the model invents is discarded, like every other,
+  so it can only ever point at a page that was fetched.
+- **Only when nothing filled `visa_decision`.** A tool named beside a found decision is dropped with
+  a note — the same short-circuit `decision_blocking_urls` gets, and for entry 57's reason: a field
+  describing something that did not happen is one a later reader will believe.
+- **Officialness is still the domain's.** A tool URL off the approved domains is refused by
+  `DestinationConfig`, exactly as an unreadable authority is. Reading the page changes nothing about
+  what vouches for it, and a traveller is being sent there.
+
+It does **not** need entry 32's second gate — the "could this page plausibly have held the decision"
+test. That gate exists because a blocked page is judged with no text at all. Here the text is in
+hand, so "this page defers the answer to a form" is the stronger and more checkable claim.
+
+The plan-level guards are structural rather than requested in a prompt, for the reason entry 27 gives
+about `decision_is_unverified`: a model asked for null returned `true`. A `VisaPlan` naming a tool
+**cannot** also state `visa_required`, and can never be `verified`.
+
+### Measured live, and the first version did not work
+
+Run on the real corridors, corpus-routed:
+
+| corridor | before | after |
+| --- | --- | --- |
+| `united-kingdom/NG/NG/tourism` | refused | **resolves `partial`** — checklist, route, fees, times, and `gov.uk/check-uk-visa` named. Full plan through the API: `visa_required: null`, 4 document requirements, 7 steps, first step *"Open the official visa checker and answer its questions"*, 33.4s |
+| `netherlands/IN/GB/tourism` | refused, decision not found | **still refuses** — and the model saw a page that *"offers a questionnaire"* and declined to name it, because the page's subject is entry requirements rather than the decision |
+
+**The first prompt wording produced nothing.** `gov.uk/check-uk-visa` was shortlisted, fetched and
+read, and the model left `decision_tool` null — correctly, under the rule as first written, which
+said to skip a page that "merely links to a tool". Measured, that landing page is **804 characters**:
+a title, two sentences, and a "Start now". It reads as a signpost. The rule now names the case
+explicitly — a short landing page whose whole purpose is to start the checker qualifies, a page about
+another subject that links to one does not — and asks for two things together: the page's own subject
+is the visa question, *and* it puts the reader into a checker instead of answering. That is a
+sharpening, not a loosening, and the Netherlands run is the evidence: a questionnaire on a page about
+something else is still declined.
+
+### What it does not fix, and this is now the binding limit for the United Kingdom
+
+**`gov.uk/check-uk-visa` does not reach the shortlist for every corridor.** Across the four recorded
+UK runs it scores 30.4 every time and ranks 104th–116th of ~820, and it was shortlisted for **NG and
+PH but not IN or CN**. So entry 58's *"it was ranked, shortlisted and fetched"* was true of the runs
+it looked at and not of all of them, and this fix cannot fire where the page never arrives.
+
+The cause is visible in the shortlist: **11 of 25 places went to near-duplicate
+`visa-fees.homeoffice.gov.uk` pages**, all one role, scoring 116–136 against the checker's 30.4. The
+top-3-per-role reservation then seats three higher-scoring `visa_decision` pages — including a
+*young-professionals-scheme ballot* page at 54.0 — and the checker is fourth for its own role. That
+is [TODO.md](TODO.md) item 25, and it is a ranking problem, not this one.
+
+---
+
 ## 58. The twenty-corridor measurement: it passes the bar, and the bar was nearly the wrong question
 **2026-08-24 · measured live; the bar was committed in advance as entry 35**
 

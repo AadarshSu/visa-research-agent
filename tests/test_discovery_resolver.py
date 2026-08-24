@@ -24,6 +24,7 @@ from discovery_site import (
 
 from visa_research_agent.discovery.adjudication import (
     AdjudicationError,
+    DecisionTool,
     RoleAdjudication,
     RoleChoice,
 )
@@ -953,3 +954,81 @@ async def test_a_judged_page_the_model_invented_is_discarded(tmp_path: Path) -> 
 
     assert resolved.decision_blocking_urls == []
     assert any("which was not one of the refused pages" in note for note in resolved.notes)
+
+
+# --- the decision behind an official tool -------------------------------------------------------
+
+
+class StubToolJudge:
+    """Fills the checklist, refuses the decision, and names one candidate as the tool that holds it.
+
+    `also_fill_decision` is the case where the model contradicts itself: it names a page that states
+    the decision *and* a tool. The tool is then pointless, and carrying it would send a traveller
+    off to work out something the plan already says.
+    """
+
+    def __init__(self, *, also_fill_decision: bool = False) -> None:
+        self.also_fill_decision = also_fill_decision
+        self.packets: list[str] = []
+
+    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+        self.packets.append(packet)
+        candidates = json.loads(packet)["candidates"]
+        first = candidates[0]["source_id"]
+        choices = [RoleChoice(role="document_checklist", source_id=first, reason="the checklist")]
+        if self.also_fill_decision:
+            choices.append(
+                RoleChoice(role="visa_decision", source_id=first, reason="it states it plainly")
+            )
+        return RoleAdjudication(
+            choices=choices,
+            decision_tool=DecisionTool(
+                source_id=candidates[-1]["source_id"],
+                reason="a step-by-step checker that asks nationality and purpose",
+            ),
+        )
+
+
+async def resolve_with_tool_judge(tmp_path: Path, judge: StubToolJudge) -> ResolvedCorridor:
+    """Nothing is refused here — that is the whole point. Every page is served and read."""
+
+    transport = httpx.MockTransport(handler([]))  # type: ignore[arg-type]
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, DETAIL_INDIA, MISSION_INDEX])
+    resolver.crawl_fetcher.transport = transport
+    resolver.live_fetcher.transport = transport
+    resolver.adjudicator = judge
+    return await resolver.resolve(destination(), corridor())
+
+
+@pytest.mark.anyio
+async def test_a_decision_held_by_a_tool_resolves_without_anything_being_blocked(
+    tmp_path: Path,
+) -> None:
+    """The United Kingdom shape from entry 58, end to end. Nothing refused us, so none of the block
+    machinery fires — and before entry 59 that meant the corridor refused and discarded a checklist
+    it had resolved correctly."""
+
+    resolved = await resolve_with_tool_judge(tmp_path, StubToolJudge())
+
+    assert resolved.inaccessible_urls == [], "nothing was blocked; that is the difference"
+    assert resolved.decision_blocking_urls == []
+    assert len(resolved.decision_tool_urls) == 1
+    assert resolved.decision_is_unverified
+    assert resolved.is_usable, "the checklist survives instead of being thrown away with the plan"
+    assert "visa_decision" in resolved.unresolved_roles
+
+
+@pytest.mark.anyio
+async def test_a_tool_is_dropped_when_a_page_states_the_decision(tmp_path: Path) -> None:
+    """Once a page answers the question, a checker is at best a second route to the same answer.
+
+    The same short-circuit `decision_blocking_urls` gets, for the same reason: a field describing
+    something that did not happen is one a later reader will believe.
+    """
+
+    resolved = await resolve_with_tool_judge(tmp_path, StubToolJudge(also_fill_decision=True))
+
+    assert "visa_decision" in {role for source in resolved.sources for role in source.roles}
+    assert resolved.decision_tool_urls == []
+    assert not resolved.decision_is_unverified
+    assert any("was not carried" in note for note in resolved.notes), resolved.notes

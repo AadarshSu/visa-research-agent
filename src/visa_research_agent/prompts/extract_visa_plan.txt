@@ -35,6 +35,16 @@ Follow these rules:
    authority and its URL are in destination.unreadable_authorities. Never treat those entries as
    evidence of what they contain: you have not read them. Steps may still describe the route where a
    readable page states it, and the first step should be to check that authority.
+8c. destination.decision_tools is the other reason decision_is_unverified can be true, and it needs
+   a different sentence. Those pages were read successfully. They do not state the answer because
+   the authority publishes it as an interactive questionnaire that works it out from answers this
+   program was not given. Set visa_required to null, and explain in one plain sentence that this
+   authority decides the question through its own official checker, which the traveller can answer
+   themselves in a few questions. Record an unresolved question telling them to do that, and make
+   the first application step opening that page and answering it. Never guess what the checker
+   would say, and never assemble an answer from the questions it asks — a question is not evidence
+   of its answer. The rest of the plan stands: where readable pages state the documents, the route,
+   the fees or the times, use them as normal.
 
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it

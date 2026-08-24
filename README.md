@@ -46,16 +46,24 @@ against a ≥50% bar. It passes, by one corridor on the first number and by noth
 Read entry 58 with it — the sample is five destinations replicated across four nationalities rather than
 twenty independent corridors.
 
-**What that measurement found matters more than the verdict.** Every United Kingdom corridor refuses
+**What that measurement found matters more than the verdict.** Every United Kingdom corridor refused
 after successfully finding the checklist, the application route, the processing times and
 per-nationality fees, because `gov.uk/check-uk-visa` is a step-by-step wizard: the page is served
-willingly, fetched and read, and simply does not state the answer. An interactive tool now costs more
+willingly, fetched and read, and simply does not state the answer. An interactive tool costs more
 coverage than bot-blocking does.
+
+**So a page that *asks* the decision is now its own outcome** (entry 59). Read successfully and judged
+to defer the answer to an official questionnaire, it resolves the corridor as partial, states the visa
+decision as unknown, and hands the traveller the tool's URL with a sentence saying that answering its
+questions there will give them the answer. Driving the questionnaire is deliberately not done: two of
+that checker's questions are not part of a corridor, and answering them for a traveller would be
+inventing the input to the one question where being wrong is most damaging.
 
 **A caveat on timing**, because it is the number a deployment plan would want: the **corridor phase**
 measures a median of **27.4s** (40 live runs, 2026-08-24, all served from stored page corpora rather
 than crawling). Plan extraction sits on top and the two have never been timed together, so the full
-cold request is still an unknown. Ignore 34.1s and 54.2s wherever they survive in these files.
+cold request is still an unknown — the one 33.4s API request measured on 2026-08-24 was served from an
+already-stored corridor, so it times extraction, not the whole path. Ignore 34.1s and 54.2s wherever they survive in these files.
 
 **A corridor that cannot be established says so rather than guessing.** France is the standing
 example: its visa portal refuses automated retrieval, so the plan states the visa decision as

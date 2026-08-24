@@ -54,8 +54,25 @@ class RoleChoice(StrictModel):
     reason: str = Field(min_length=1)
 
 
+class DecisionTool(StrictModel):
+    """A candidate the model read and found to *ask* the visa decision rather than state it."""
+
+    source_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
 class RoleAdjudication(StrictModel):
     choices: list[RoleChoice] = Field(default_factory=list)
+
+    decision_tool: DecisionTool | None = None
+    """Set only when no candidate states the decision because an official tool computes it.
+
+    Carried beside the choices rather than as a seventh role because it is not one: nothing here
+    fills anything, and a page named here is not cited as evidence of a decision. It is read only
+    from the *role* adjudication, where the model was given page text. The blocked-page call
+    (`validated_blocked_choices`) shares this schema and ignores this field, which it must — there
+    is no text on that path, so a claim about what a page does could not be grounded in anything.
+    """
 
 
 class RoleAdjudicator(Protocol):
@@ -159,6 +176,28 @@ def validated_blocked_choices(
             continue
         kept.add(choice.source_id)
     return kept, discarded
+
+
+def validated_decision_tool(
+    adjudication: RoleAdjudication,
+    candidates: dict[str, CandidatePage],
+) -> tuple[tuple[str, str] | None, list[str]]:
+    """The candidate the model says holds the decision behind a questionnaire, if it is a real one.
+
+    The application decides what is real, exactly as `validated_choices` does: an id the model
+    invented is dropped and nothing is named, which leaves the corridor refusing — the same outcome
+    as before this existed. It can only ever point at a page that was fetched and shown to it.
+    """
+
+    tool = adjudication.decision_tool
+    if tool is None:
+        return None, []
+    if tool.source_id not in candidates:
+        return None, [
+            f"the model named {tool.source_id!r} as an interactive decision tool, which was not a "
+            "candidate"
+        ]
+    return (tool.source_id, tool.reason.strip()), []
 
 
 # What is written into the excerpt where page text was left out. It exists so a page that was cut

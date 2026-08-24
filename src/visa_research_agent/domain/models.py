@@ -150,6 +150,33 @@ class UnreadableAuthority(StrictModel):
     """A safe summary of what happened. Never carries retrieved page text."""
 
 
+class InteractiveDecisionTool(StrictModel):
+    """An official page that *determines* the visa decision instead of *stating* it.
+
+    `gov.uk/check-uk-visa` is why this exists. It is served willingly, fetched cleanly and read in
+    full, and it does not answer the question: it is a questionnaire that computes an answer from
+    replies this program does not have. Measured over twenty corridors, that cost every United
+    Kingdom corridor its entire plan — the checklist, the route, the times and the per-nationality
+    fees were all found, and all discarded, because `visa_decision` was unfilled (DECISIONS entry
+    58).
+
+    So it is deliberately **not** an `UnreadableAuthority`: nothing refused us, and saying so would
+    be false. It is equally **not** a `ConfiguredSource` for the decision: the page states no
+    decision, so citing it as evidence of one would be inventing an answer out of a form. What it
+    is, is a next step the traveller can take and this program cannot — they can answer the
+    questions themselves — which is the same thing entry 27 offers for a refused page, and for the
+    same reason.
+
+    Driving the questionnaire is not the alternative. That is an application flow, permanently out
+    of scope in CLAUDE.md, and it would mean supplying traveller answers nobody gave us.
+    """
+
+    url: AnyHttpUrl
+    authority: str = Field(min_length=1)
+    detail: str = Field(min_length=1)
+    """A safe summary of why the page did not answer. Never a guess at what answering would say."""
+
+
 class DestinationConfig(StrictModel):
     """Country-specific research configuration."""
 
@@ -167,13 +194,23 @@ class DestinationConfig(StrictModel):
     unreadable_authorities: list[UnreadableAuthority] = Field(default_factory=list)
     """The destination's own authorities that refused this program, for the plan to point at."""
 
+    decision_tools: list[InteractiveDecisionTool] = Field(default_factory=list)
+    """Official questionnaires that decide the question, for the plan to hand over."""
+
     decision_is_unverified: bool = False
     """True when no page could be confirmed as saying whether a visa is needed, *and* the reason is
-    that an authority refused automated retrieval rather than that nothing was found.
+    one the traveller can act on rather than simply that nothing was found.
 
-    It is what lets a plan be produced at all in that case, so it must never be set without an
-    entry in `unreadable_authorities` — otherwise "we could not read it" would cover for "we did not
-    find it", which are different facts with different remedies."""
+    There are two such reasons and they are different facts. An authority refused automated
+    retrieval, so the page exists and we were not permitted to read it — `unreadable_authorities`.
+    Or the authority publishes the answer only inside an interactive tool, which was read and asks
+    questions rather than stating anything — `decision_tools`. Both leave the traveller one page to
+    open; neither licenses an inference about what it would say.
+
+    It is what lets a plan be produced at all in either case, so it must never be set without an
+    entry in one of those two lists — otherwise "we could not read it" and "the answer is behind a
+    form" would both cover for "we did not find it", which needs a different remedy and must still
+    refuse."""
 
     @property
     def load_bearing_source_ids(self) -> list[str]:
@@ -218,9 +255,10 @@ class DestinationConfig(StrictModel):
             unknown = ", ".join(sorted(unknown_required_ids))
             raise ValueError(f"required sources contain unknown IDs: {unknown}")
 
-        if self.decision_is_unverified and not self.unreadable_authorities:
+        if self.decision_is_unverified and not (self.unreadable_authorities or self.decision_tools):
             raise ValueError(
-                "an unverified visa decision must name the authority that could not be read"
+                "an unverified visa decision must name the authority that could not be read, or "
+                "the official tool that decides it"
             )
 
         # These are presented to a traveller as this destination's own guidance, so they are held to
@@ -231,6 +269,13 @@ class DestinationConfig(StrictModel):
                 raise ValueError(
                     f"unreadable authority {authority.url} is not on an approved domain"
                 )
+
+        # The same rule, for the same reason. A tool's page *was* read, but nothing in its text is
+        # what makes it official — entry 2 — and a traveller is being sent there to get the answer
+        # this plan could not state, which is the last place to start trusting prose.
+        for tool in self.decision_tools:
+            if not self.trusts_host(host_of(str(tool.url))):
+                raise ValueError(f"decision tool {tool.url} is not on an approved domain")
 
         for domain in self.trusted_domains:
             if is_bare_public_suffix(domain):
@@ -499,6 +544,15 @@ class VisaPlan(StrictModel):
     status: PlanStatus
     unavailable_sources: list[SourceFailure] = Field(default_factory=list)
 
+    decision_tools: list[InteractiveDecisionTool] = Field(default_factory=list)
+    """Official questionnaires that hold the decision this plan could not state.
+
+    Deliberately not folded into `unavailable_sources`: these pages were read, and reporting them
+    as evidence that could not be used would be false about what happened. They are set by the
+    application from the resolved corridor, never by the model, so the URL handed to a traveller is
+    one an authority published rather than one that was generated.
+    """
+
     _validate_last_checked = field_validator("last_checked")(_require_aware_datetime)
 
     @model_validator(mode="after")
@@ -510,6 +564,25 @@ class VisaPlan(StrictModel):
                 raise ValueError("a verified plan cannot report unavailable sources")
             if any(source.is_stale for source in self.sources):
                 raise ValueError("a verified plan cannot rest on stale evidence")
+            if self.decision_tools:
+                raise ValueError("a verified plan cannot rest on a decision nobody read off a page")
+        return self
+
+    @model_validator(mode="after")
+    def validate_decision_tool_leaves_decision_open(self) -> "VisaPlan":
+        """Naming the questionnaire and answering it are mutually exclusive.
+
+        A tool is named precisely because no page stated the decision. Stating one anyway would
+        mean it came from somewhere else — the questionnaire's own prompts, most likely, which is
+        reading an answer out of a question. Enforced here rather than asked for in the prompt,
+        for the same reason `decision_is_unverified` is: a model asked for null returned `true`.
+        """
+
+        if self.decision_tools and self.visa_required is not None:
+            raise ValueError(
+                "a plan naming an interactive decision tool cannot also state whether a visa is "
+                "required"
+            )
         return self
 
     @model_validator(mode="after")

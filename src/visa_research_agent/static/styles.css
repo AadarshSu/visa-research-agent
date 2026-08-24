@@ -331,6 +331,31 @@ button:disabled {
   font-weight: 600;
 }
 
+/* An official questionnaire holding the decision is a next step, not a caveat, so it is set in the
+   green used for things the traveller can act on rather than the amber used for gaps in evidence. */
+.decision-tool {
+  margin: 0 0 16px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--green);
+  border-radius: 8px;
+  background: var(--green-soft);
+  color: var(--green);
+  line-height: 1.55;
+}
+
+.decision-tool-title {
+  margin: 0 0 8px;
+  font-weight: 800;
+}
+
+.decision-tool p {
+  margin: 0;
+}
+
+.decision-tool a {
+  overflow-wrap: anywhere;
+}
+
 .evidence-banner {
   margin-bottom: 24px;
   padding: 20px;

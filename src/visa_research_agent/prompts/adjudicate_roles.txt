@@ -39,8 +39,30 @@ Follow these rules:
    stale-looking content agree, prefer a fresher candidate, and say so in your reason.
 10. Give a short, concrete reason for each choice, quoting or naming what in the page decided it.
    For a refusal, say what was missing from every candidate.
-11. Return only the structured output requested by the schema.
-12. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
+11. Set `decision_tool` only when you returned null for `visa_decision`, and then only for a
+   candidate where **both** of these are true of the text you were given:
+
+   a. the page's own subject is whether a traveller needs a visa — that is the question it exists
+      to answer, not something it mentions on the way to another topic; and
+   b. instead of stating the answer, it puts the reader into an official interactive checker —
+      a step-by-step questionnaire, an eligibility wizard, a "start now" into one — that works the
+      answer out from replies the reader gives it.
+
+   A short landing page whose whole purpose is to start that checker **does** qualify: the
+   authority has put the answer behind it, and the reader can get it in a few questions. Name that
+   candidate, and say in the reason what the page asks or offers, and what it says it will tell the
+   reader.
+
+   This is a narrow claim and it is not a way to soften a refusal. Leave `decision_tool` null when
+   the answer was simply not among the candidates, when a page about some other subject links to a
+   checker in passing, or when the interactive thing is an application form, a fee calculator, an
+   appointment booker or a document uploader — none of those decide whether a visa is needed. If
+   you are unsure whether a page decides the question or merely handles the application, leave it
+   null. "We could not find it" and "an official tool holds it" are different things to tell a
+   traveller, and the second one sends them somewhere specific, so it has to be true.
+
+12. Return only the structured output requested by the schema.
+13. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
    the page says around each mention of the traveller's own country. `[…]` marks text left out.
    Do not read across one — two passages either side of it may be pages apart — and do not treat a
    list that ends at one as complete. What is present is still quoted verbatim, so a page that

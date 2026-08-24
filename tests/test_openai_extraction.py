@@ -13,7 +13,10 @@ from visa_research_agent.research.errors import (
     LLMExtractionError,
 )
 from visa_research_agent.research.fixtures import FixtureSourceFetcher
-from visa_research_agent.research.openai_extraction import OpenAIVisaPlanExtractor
+from visa_research_agent.research.openai_extraction import (
+    OpenAIVisaPlanExtractor,
+    load_extraction_prompt,
+)
 
 
 def singapore_config() -> DestinationConfig:
@@ -350,3 +353,91 @@ async def test_the_model_is_told_where_the_guidance_lives_but_never_quoted_it() 
     named = packet["destination"]["unreadable_authorities"]
     assert named[0]["url"] == "https://france-visas.gouv.fr/en/web/france-visas"
     assert "untrusted_content" not in named[0]
+
+
+def decision_behind_a_tool(destination: DestinationConfig) -> DestinationConfig:
+    """A destination whose visa decision is published only inside an official questionnaire.
+
+    The same unverified decision as `decision_unverified`, reached the other way: nothing refused
+    us, the page was read, and it asks rather than answers.
+    """
+
+    payload = destination.model_dump(mode="json")
+    payload["application_document_source_ids"] = []
+    payload["required_source_ids"] = []
+    payload["decision_is_unverified"] = True
+    payload["trusted_domains"] = [*payload["trusted_domains"], "www.gov.uk"]
+    payload["decision_tools"] = [
+        {
+            "url": "https://www.gov.uk/check-uk-visa",
+            "authority": "United Kingdom authority (www.gov.uk)",
+            "detail": (
+                "decides this by asking questions rather than stating an answer, so the decision "
+                "could not be read from the page"
+            ),
+        }
+    ]
+    return DestinationConfig.model_validate(payload)
+
+
+@pytest.mark.anyio
+async def test_a_questionnaire_reaches_the_plan_as_a_next_step_not_as_a_failed_source() -> None:
+    """It was fetched and read successfully, so reporting it under unavailable evidence would be
+    false about what happened. It is the one thing the traveller can act on, and it goes with the
+    decision rather than with the caveats."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={
+                "requirements": [],
+                "visa_required": True,
+                "unresolved_questions": ["Answer the official checker to get the decision."],
+            }
+        )
+    )
+    destination = decision_behind_a_tool(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert [str(tool.url) for tool in plan.decision_tools] == ["https://www.gov.uk/check-uk-visa"]
+    # Overridden, exactly as for a block: the model said True and no page said anything.
+    assert plan.visa_required is None
+    assert plan.status == "partial"
+    assert not any(failure.outcome == "blocked" for failure in plan.unavailable_sources), (
+        "nothing refused us; saying so would be false"
+    )
+
+
+@pytest.mark.anyio
+async def test_the_model_is_told_where_the_question_is_settled_never_what_it_settles_to() -> None:
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={"requirements": [], "unresolved_questions": ["Answer the checker."]}
+        )
+    )
+    destination = decision_behind_a_tool(singapore_config())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert generator.research_packet is not None
+    packet = json.loads(generator.research_packet)
+    named = packet["destination"]["decision_tools"]
+    assert named[0]["url"] == "https://www.gov.uk/check-uk-visa"
+    assert "untrusted_content" not in named[0]
+
+
+def test_the_extraction_prompt_separates_a_block_from_a_questionnaire() -> None:
+    """Two reasons a decision can be unverified, and they need different sentences: one page was
+    withheld, the other was read and asks questions."""
+
+    prompt = load_extraction_prompt()
+
+    assert "decision_tools" in prompt
+    assert "read successfully" in prompt
+    assert "a question is not evidence" in prompt
