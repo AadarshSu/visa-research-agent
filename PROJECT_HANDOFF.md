@@ -52,9 +52,10 @@ client-side retrieval question — and [TODO.md](TODO.md) is what remains. The s
 - **The trust rule's governmental half fails closed for a fifth of the world**, measured: 19 of 51
   countries, including Germany, Italy, the Netherlands, Sweden and Canada (entry 33). Known problem 2 had
   been warning about the other half.
-- **Whether this is a product is now a measurement with a bar committed in advance** — top 20 corridors
-  by volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). **Brave credit
-  arrived on 2026-08-21, so it can run**, and nothing large should be built before it does.
+- **Whether this is a product was a measurement with a bar committed in advance** — top 20 corridors by
+  volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). **It ran on
+  2026-08-24 and passed, marginally: 75% and exactly 50%** (entry 58). Read the sample caveat with it —
+  five destinations replicated four times, not twenty independent corridors.
 
 Deliberately out of scope, permanently: submitting applications, booking appointments, filling
 forms, or claiming an approval is guaranteed. **Also settled: LangGraph is not adopted** — the pipeline
@@ -285,13 +286,13 @@ and still unimplemented. Three were **removed** on 2026-08-18 because they are g
 it had nothing to do with (entry 32), the unverified `conflicts` field (entry 30), and a failed model
 call silently substituting the heuristic (entry 31).
 
-1. **Whether this is a product is genuinely unmeasured.** Two of the highest-volume corridors there are,
-   India→US and India→France, yield a plan with **no document checklist**, because the pages holding the
-   answer are bot-blocked. Seven corridors cannot say whether that is the rule or the exception, and the
-   sample was chosen partly for being easy. Entry 35 commits a bar in advance — top 20 corridors by
-   volume, product if ≥70% confirm the decision and ≥50% yield a checklist — precisely so the answer
-   cannot be rationalised after the fact. **Brave credit arrived on 2026-08-21, so it can run.** Nothing
-   large should be built before it does.
+1. **~~Whether this is a product is genuinely unmeasured.~~ Measured 2026-08-24: it passes, marginally**
+   (entry 58). 75% confirm the decision against a ≥70% bar; **50%** yield a checklist against a ≥50%
+   bar — exactly on the line, so one corridor either way changes the answer. **What replaces this item
+   is the sample structure**: nationality changed the outcome once in twenty, so five destinations
+   replicated four times is the real sample, and the next bar should sample destinations. Two of those
+   five — Germany and the United States — return **no checklist at all**, which is known problem 8 with
+   numbers attached. Kept for one cycle as a record; delete after the next handoff edit.
 2. **The trust rule refuses a fifth of the world, with a wrong diagnosis.** Measured offline on
    2026-08-18: `is_own_government` fails for **19 of 51** countries — Austria, Belgium, Canada, Chile,
    Czechia, Germany, Denmark, Finland, Greece, Hungary, Ireland, Italy, Netherlands, Norway, Portugal,
