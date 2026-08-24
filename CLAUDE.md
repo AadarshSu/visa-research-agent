@@ -21,8 +21,12 @@ high-volume corridors run twice each, **75% confirm the visa decision** (bar ≥
 document checklist** (bar ≥50%) — a pass, by one corridor and by nothing at all. Corridors are served
 from **stored per-country page corpora** rather than a live crawl, at a median 27.4s. The largest
 coverage limit is **not** bot-blocking: it is authorities that put the answer inside an interactive
-tool, which cost every United Kingdom corridor its entire plan — and a corridor can now say so and
-hand the tool over instead of refusing (entry 59). Entries 44–59.
+tool, which cost every United Kingdom corridor its entire plan. **A questionnaire is now treated as an
+answer rather than a blockade** — a page read and judged to *ask* a question is named for the role it
+settles, for any role, and the plan offers it beside that question (entries 59 and 60). Getting those
+pages in front of the model needed the shortlist to reserve five candidates per role rather than
+three, which took **the United Kingdom from 0 of 8 runs resolving to 4 of 4** (entry 61). Entries
+44–62.
 
 ## Rules that must not be broken
 
@@ -242,6 +246,8 @@ cause, and only running the thing showed it.
 | a wizard is a blockade in front of the guidance | it **is** the guidance, in the form published (entry 60) |
 | the UK checker misses the shortlist because one host hogs places | it is **5th** for its role and three were reserved (entry 61) |
 | a wider shortlist is the cheap fix for bad ranking | widening alone does nothing; the *per-role depth* is the gate (entry 61) |
+| the scorer rewards *naming* a country, not being about one | it is token-based already; the page really is about India (entry 62) |
+| a floor-only role score is safe to withhold bonuses from | a terse per-nationality decision page is floor-only too (entry 62) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

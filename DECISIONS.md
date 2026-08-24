@@ -9,6 +9,75 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 62. The nationality bonus is left alone — four fixes, four disproofs, and a cost of 0.27 places
+**2026-08-24 · measured; **no code change**. Closes TODO item 26**
+
+Item 26 said the scorer "rewards a page for naming a country, not for being about one", and pointed at
+`gov.uk/india-young-professionals-scheme-visa` outranking `gov.uk/check-uk-visa` for a tourist. Four
+ways to fix that were measured. All four are wrong, and the item is closed without touching the
+scorer.
+
+### The premise was wrong
+
+`_describes_country` is already token-based, not a substring test: it matches a whole path segment, a
+hyphen-separated token inside one, or a word in the anchor. The ballot page matches on `india` as a
+token of `india-young-professionals-scheme-visa` and by the word "India" in its title — so it is
+**genuinely about India**. What it is not about is a *tourist visa*. That is a question about the
+page's subject, not about how its country was matched.
+
+### Four candidate fixes, and what disproved each
+
+| fix | disproved by |
+| --- | --- |
+| require the country as its own path segment | the ballot page also matches on the word "India" in its title, so the segment test never fires |
+| **context may not exceed role evidence** | `gov.uk/standard-visitor/apply-standard-visitor-visa` fills the checklist **and** the route for every United Kingdom corridor on **0.0 vocabulary and 36 points of pure context**. Context standing in for evidence is deliberate and load-bearing — it is what the purpose-label branch exists to do (Japan's checklist is reached by a link saying only "Tourism") |
+| **withhold the corridor bonus when `visa_decision` rests only on the `mentions-visa` floor** | implemented, and the test suite caught it: a per-nationality decision page with a terse URL — the fixture `…/visa/detail/india.html`, labelled "India" — is *also* floor-only, so the rule cannot tell the answer from the noise. Reverted |
+| add the scheme names to `off_scope` | vocabulary work for a meaning question, which is the shape entries 56 and 57 reject; and it does not generalise past the schemes someone thought of |
+
+The third is worth dwelling on, because it looked right. The measurement that motivated it is real —
+the ballot page carries **6.0** of role evidence, the bare floor, and context adds **+38**; the checker
+carries **32.4** and context takes it *down* to 30.4. But "a floor is not evidence" and "a terse
+per-nationality page is the answer" are the same shape to the scorer, and only reading the page tells
+them apart.
+
+### And the cost is 0.27 shortlist places per corridor
+
+Measured across 22 corridors whose candidates could be rescored faithfully from the corpus: pages
+whose `visa_decision` rests on the floor **and** which took a shortlist place on the nationality bonus
+average **0.27 of 35 places**. For the corridor that motivated the item it is 2 of 35, both of them
+the same ballot scheme under two paths.
+
+That is a lower bound — it counts only corpus-sourced candidates, and search-sourced ones are not
+reproducible offline — but it is the right order of magnitude, and it is under one percent. **After
+entry 61 the residual cost of this defect is a fetch, not a wrong answer:** the ballot page takes a
+place, the adjudicator reads it, and does not choose it. Precision at the shortlist buys fetches;
+correctness is the adjudicator's job, which is exactly where entries 56 and 57 put meaning questions.
+
+### The adjacent thing that is real, and also not worth shipping
+
+While measuring, 5.9% of shortlist places (54 of 910 over 26 corridors, up to **6 of 35** for Germany,
+whose corpus is the thinnest) turned out to be **query-string duplicates of a page already in the
+shortlist**. Two dedup rules were measured and both are unsafe:
+
+- collapsing every query string mis-merges real pages — `j1visa.state.gov/?page_id=152` is a page, not
+  a decoration of the site root, which is why `canonical_key` already refuses to do this;
+- dropping a decorated URL only when the bare one is also a candidate hits the same case.
+
+Restricted to parameters that provably change presentation and not content — GOV.UK's
+`step-by-step-nav` and `utm_*` — it frees **0.8%**, 0.3 places per corridor. Not worth the rule. Noted
+here so the 5.9% figure is not rediscovered and acted on without the two counter-examples.
+
+### The method note
+
+The measurements above rest on rescoring recorded corridors, and the first attempt at that was not
+faithful: rebuilding a `PageLink` from the recall log's `title` reproduces only **70%** of recorded
+scores, because the log stores a title where the scorer saw link text and a heading. Joining against
+the country's **corpus**, which stores `link_text`, `heading` and `depth` as the crawl found them,
+reproduces **99%** (799 of 804). Any future scoring measurement should join the corpus, not the recall
+log.
+
+---
+
 ## 61. The United Kingdom's answer was five deep in a list that reserved three
 **2026-08-24 · measured, then implemented, then measured live. Closes TODO item 25**
 

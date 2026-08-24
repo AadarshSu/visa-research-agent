@@ -677,13 +677,19 @@ Replaying 26 recorded candidate sets through the real `_shortlist` drops **not o
 shortlisted today, and seven live regression corridors are unchanged. **France gained a checklist**: its
 UK mission page says the wizard will name the documents, so it is offered for that too.
 
-**Pick up [TODO.md](TODO.md) item 26 — the scorer rewards a page for naming a country, not for being
-about one.** `nationality:+40` is its largest term and a substring test, so
-`gov.uk/india-young-professionals-scheme-visa` — a ballot for under-35s — outranks the page that
-decides the question. Depth 5 routes around that; it does not remove it, and the next country whose
-namespace holds three nationality-named schemes hits it again. It is a *precision* problem, which is
-what the adjudicator is for, so weigh that before touching the vocabulary — entries 56 and 57 both
-reject keyword fixes for meaning questions.
+**Item 26 is closed too, without a code change** (entry 62). Its premise was wrong —
+`_describes_country` is already token-based, and `gov.uk/india-young-professionals-scheme-visa`
+genuinely *is* about India; what it is not about is a tourist visa, which is a question about the
+page's subject. Four fixes were measured and four disproved, including one that was implemented and
+reverted when the test suite caught it: a terse per-nationality decision page is *also* floor-only, so
+"withhold the corridor bonus from a floor-only score" cannot tell the answer from the noise.
+**Measured cost of leaving it: 0.27 shortlist places per corridor** — after entry 61 the residual is a
+fetch, not a wrong answer.
+
+**So there is no single obvious next item, and that is worth saying plainly.** [TODO.md](TODO.md) is
+the ordered list; item 17 (the corridor flip rate) leads it, item 9 separates "no checklist exists"
+from "we failed to find it" and is attached to two of five measured destinations, and item 7 is
+deployment, which entry 58 unblocked.
 
 **Two method notes worth keeping.** Item 25 named the wrong cause twice, both times written from
 reading the code; what settled it was a harness replaying recorded candidate sets through the **real**
@@ -919,14 +925,15 @@ corridors by where a nationality falls in an alphabetical list — and became en
 
 Item 22 was written as a proposal and read as one. The measurements behind it held; two of the three
 things built on them did not. Entries 54–57 are defects that only appeared once the crawl was gone,
-entry 58 is the measurement that finally answered whether this is a product, and entries 59–61 act on
+entry 58 is the measurement that finally answered whether this is a product, and entries 59–62 act on
 what it found.
 
 | Entry | What it changed |
 | --- | --- |
 | 59 | **The third outcome: a page read and judged to *ask* the decision now resolves the corridor and hands over the tool.** `decision_tool_urls` / `decision_tools` / `VisaPlan.decision_tools`; `visa_required` stays null and a verified plan cannot carry one. Only the adjudicator may name one, only on a page it read, only when `visa_decision` is unfilled, and only on an approved domain. Measured live: `united-kingdom/NG/NG` went from refusing to a full seven-step plan; `netherlands/IN/GB` saw a questionnaire and correctly declined it. **It also declines URL-construction with measurements** — GOV.UK's checker is addressable by plain GET, and driving it would still mean inventing two traveller answers. **And it found the real UK limit**: the checker ranks ~110th of ~820 and misses the shortlist for IN and CN, so entry 58's "shortlisted and fetched" was not true of every run. Item 25. |
 | 60 | **A questionnaire is an answer for *every* role, not only the decision — and not a blockade in front of the guidance.** Entry 59 shipped with one slot and the Netherlands proved it too narrow the same day: it read a nine-question checker offering entry requirements and reported nothing. Tools are now a list over roles, each carrying the topic it settles, offered beside the question it answers. **Only `visa_decision` changes whether a corridor resolves**, so entry 32's drift risk is untouched; a tool never fills its role, and a `document_checklist` tool still forbids listing a single requirement. Measured: `netherlands/IN/GB` went from the standing **0/2** to a `partial` plan with 9 requirements and the checker linked. |
-| 61 | **The United Kingdom's answer was five deep in a list that reserved three.** `_shortlist` held the top three per role; `gov.uk/check-uk-visa` scores **exactly 30.4 in all four** UK corridors — it names no country, which is what a page that *asks* your nationality does — and is 3rd where nothing nationality-named competes and 5th where something does. Raised to **five per role, budget 25 → 35**; the two only work together, and depth alone is non-monotone. **UK: 0 of 8 runs → 4 of 4.** Replaying 26 recorded corridors through the real `_shortlist` drops nothing. France gained a checklist tool. Leaves item 26: `nationality:+40` is a substring test, so a ballot scheme outranks the page that decides. |
+| 61 | **The United Kingdom's answer was five deep in a list that reserved three.** `_shortlist` held the top three per role; `gov.uk/check-uk-visa` scores **exactly 30.4 in all four** UK corridors — it names no country, which is what a page that *asks* your nationality does — and is 3rd where nothing nationality-named competes and 5th where something does. Raised to **five per role, budget 25 → 35**; the two only work together, and depth alone is non-monotone. **UK: 0 of 8 runs → 4 of 4.** Replaying 26 recorded corridors through the real `_shortlist` drops nothing. France gained a checklist tool. |
+| 62 | **The nationality bonus is left alone — four fixes, four disproofs.** The premise was wrong (`_describes_country` is token-based; the ballot page *is* about India, just not about a tourist visa), and the strongest candidate — withhold the corridor bonus when `visa_decision` rests only on the `mentions-visa` floor — was implemented and reverted when the suite caught that a terse per-nationality decision page is floor-only too. **Cost of leaving it: 0.27 shortlist places per corridor.** Also records why the adjacent 5.9% duplicate-URL waste is not worth a rule, and that scoring measurements must join the **corpus** (99% faithful) rather than the recall log (70%). |
 | 58 | **The twenty-corridor measurement ran, and it passes the bar committed in advance** — 75% confirm the decision (bar 70%), 50% yield a checklist (bar 50%, *exactly*). 40 live runs, all corpus-routed, none crawled, median 27.4s. **Read the sample structure**: nationality changed the outcome once in twenty, so it is five destinations replicated four times, not twenty independent corridors. **The United Kingdom refuses all eight runs** after finding the checklist, route, times and per-nationality fees, because `gov.uk/check-uk-visa` is a **wizard** — France's cause without France's `403`. That inverts known problem 11: the wizard costs more coverage than bot-blocks. |
 | 57 | **A block is now judged, not keyword-matched.** `_decision_blocking` asked "could this page have held the visa decision?" and answered by keyword, on a page **nobody read** — the one place the scorer decided what a page *means*. It now asks the model, over **address and label only** (there is no text; the authority refused it), and the packet has no parameter through which content could be passed. Fails closed after two attempts; the deterministic path keeps the keyword test. **France now qualifies `/en/royaume-uni`, `/en/web/france-visas` and `/india` and rejects the FAQ, the form page and the visa-category page** — where its old qualification was a blank CERFA form. Corridors whose decision is found make **no extra call**. |
 | 56 | **The `visa_decision` vocabulary could only ask the question, never recognise the answer.** Every term was a way of asking — `visa requirement`, `do i need a visa` — so Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `general_entry` 22.4 and `visa_decision` **0.0**, and could not qualify its own refusal. Seven answering phrasings added, one in **slug form** because `searchable_url` flattens hyphens and slugs drop articles. Measured by replaying all seven corridors' real candidate sets: **0.0 → 82.4 and it now qualifies; no shortlist changes anywhere.** **Item 23's own proposal — removing the `not scores` guard — was measured and rejected**: it would give 12–58% of a country's pages a positive `visa_decision`. |

@@ -12,11 +12,12 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
 
-**Item 17 leads now that 24 and 25 are done.** Items 24 and 25 together took the United Kingdom from
+**Item 17 leads now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
 settles (entries 59–60), and the shortlist reserves five per role rather than three so the answering
-page actually reaches the model (entry 61). What that leaves is item 26 — the scorer rewards a page for
-naming a country rather than being about one, which depth 5 routes around rather than fixes.
+page actually reaches the model (entry 61). Item 26 was then measured and **closed without a code
+change** — four candidate fixes, four disproofs, and a residual cost of 0.27 shortlist places per
+corridor (entry 62).
 
 **For context, and it is what those items grew out of:** item 3 measured the largest coverage limit
 there is and it was not the one this file had been assuming — every United Kingdom corridor refused
@@ -53,8 +54,8 @@ one-paragraph defects rather than items.
 | | 9. Tell "no checklist exists" apart from "we failed to find it" | `soon` |
 | | 20. Make the stores substrate-swappable and durable | `soon` |
 | | 21. Fill the three provenance gaps | `soon` |
-| | 26. The nationality bonus rewards naming a country, not being about one | `soon` |
-| **Later** | 10. Try sitemaps before crawling | `later` |
+| **Later** | 27. Decide whether a hosted scraping service may be used, for corpus discovery only | `later` |
+| | 10. Try sitemaps before crawling | `later` |
 | | 11. Decide whether a host that has refused everything should be skipped | `later` |
 | | 12. Watch where the two deciders disagree | `later` |
 | | 13. Revisit conflict detection, with claim scope | `later` |
@@ -379,22 +380,6 @@ way the Netherlands was, and it should be before anything else is changed on its
 
 ## Next up
 
-### 26. The nationality bonus rewards a page for naming a country, not for being about one — `soon`
-
-**Why:** found while measuring item 25, and it is the defect underneath it. `nationality:IN+40` is the
-scorer's largest term and it is a **substring test against the URL and anchor**. So
-`gov.uk/india-young-professionals-scheme-visa` — a ballot scheme for under-35s, nothing to do with a
-tourist visa — collects the full corridor bonus and outranks the page that actually decides the
-question. China gets the same from `ads-visa`, the Approved Destination Status scheme.
-
-It is load-bearing where it works: `visa-fees.homeoffice.gov.uk/y/india/inr/visit/…` scores 136 partly
-on this, correctly. So it cannot simply be lowered.
-
-**Careful:** the obvious fix — "only count nationality when the page is also about the right visa
-product" — is a semantics question, which is the shape of fix entries 56 and 57 reject. Item 25's
-mechanical fix should be measured **first**, because if a deeper reservation is enough, this becomes a
-precision problem rather than a recall one, and precision is what the adjudicator is for.
-
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
 
 **First, what `looks_governmental` actually is**, because its name misdescribes it and that makes the
@@ -638,6 +623,41 @@ work would let a large change borrow justification from a small one. Known probl
 
 ## Later
 
+### 27. Decide whether a hosted scraping service may be used, and only for corpus discovery — `later`
+
+**Why:** asked directly on 2026-08-24 (Firecrawl). Worth writing down because the answer is *mostly
+already decided* by rules this project treats as inviolable, and the one open part is narrow.
+
+**Retrieval through such a service is refused by existing rules, not by a new one.** Firecrawl's own
+front page sells "Proxies, anti-bot, JavaScript rendering". That is the thing
+[CLAUDE.md](CLAUDE.md) forbids outright: a refusal must never be worked around, and a service whose
+selling point is bypassing bot detection makes that unauditable even if the feature is never
+deliberately switched on. Three further rules land on the same answer:
+
+- **The posture is honest client** (entry 35). The project announces `VisaResearchAgent/0.1`, and
+  entry 41's argument for answering France's Cloudflare challenge — "our own renderer, under our own
+  user agent, misrepresents nothing to anybody" — depends entirely on the client being ours. Through a
+  third party the authority sees their infrastructure, not ours, and that argument evaporates.
+- **`robots.txt` is read and obeyed by us** (entry 36). Delegating that to a vendor's policy is
+  delegating a rule this project does not delegate.
+- **Never disable TLS verification** (entry 12). The chain is verified here, with intermediates
+  bundled and each checked to a trusted root, because an attacker impersonating an immigration
+  authority could dictate what documents a traveller brings. A third-party fetch cannot be attested.
+
+Provenance is a fourth: entry 4 requires a stored row to record when the **evidence** was retrieved,
+and a vendor cache layer muddies that. And `/extract` — LLM extraction inside the vendor — would be a
+second unaudited model deciding what a page says.
+
+**What is genuinely open, and only this:** `/map`, for **offline corpus discovery**. Enumerating which
+URLs a government site has is not retrieval, not evidence, and not in the request path — it is the same
+role search already plays under entry 11, *a candidate generator that may never widen trust*. Pages
+would still have to be fetched by our own client to become evidence, and every domain rule still
+applies. It would speed corpus builds, which currently cost search quota (item 18).
+
+**Do first, because it may make the question moot:** [item 10](#10-try-sitemaps-before-crawling---later),
+which is the same idea with no third party, no cost and no new trust surface — read `sitemap.xml`,
+which `robots.txt` already points at, before crawling.
+
 ### 10. Try sitemaps before crawling — `later`
 
 **Why:** within already-approved domains, `sitemap.xml` gives the full URL inventory for scoring without
@@ -724,6 +744,29 @@ replacement.
 ---
 
 ## Done
+
+### ~~The nationality bonus rewards naming a country, not being about one~~ — **closed 2026-08-24, no code change** (was item 26)
+
+[DECISIONS.md](DECISIONS.md) entry 62. **The premise was wrong** — `_describes_country` is already
+token-based, and `gov.uk/india-young-professionals-scheme-visa` genuinely *is* about India; what it is
+not about is a tourist visa, which is a question about the page's subject.
+
+Four fixes measured, four disproved. The one that looked strongest — withhold the corridor bonus when
+`visa_decision` rests only on the `mentions-visa` floor — was implemented and the **test suite caught
+it**: a terse per-nationality decision page (`…/visa/detail/india.html`, labelled "India") is also
+floor-only, so the rule cannot tell the answer from the noise. Reverted.
+
+**Measured cost of leaving it: 0.27 shortlist places per corridor**, under 1%. After entry 61 the
+residual is a *fetch*, not a wrong answer — the page takes a place, the adjudicator reads it and does
+not choose it. Meaning questions belong to the adjudicator (entries 56, 57).
+
+**Do not reopen on the 5.9% duplicate-URL figure** without reading entry 62: two dedup rules were
+measured and both mis-merge real pages (`j1visa.state.gov/?page_id=152` is a page, not a decoration),
+and the provably safe subset frees 0.8%.
+
+**Method, for any future scoring measurement:** rebuild candidates by joining the country's **corpus**
+(which stores `link_text`, `heading`, `depth`), not the recall log (which stores a title). Corpus
+reproduces 99% of recorded scores; the recall log reproduces 70%.
 
 ### ~~Get the answering page into the shortlist~~ — **done 2026-08-24** (was item 25)
 
