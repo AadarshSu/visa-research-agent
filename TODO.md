@@ -3,25 +3,24 @@
 Ordered by what unblocks the most. Each item says why it matters, not just what to do, so it can be
 picked up cold.
 
-**How to read this file.** **Now** is what to pick up, in the order written. **Item 22 has left it** —
-done and measured live on 2026-08-23, entries 49–53. **Item 3 is now the thing most of this list waits
-on**, even though it sits in **Next up** rather than here; nothing large should be built before it, and
-after item 22 nothing large is queued. Items 17, 18 and 19 are the work item 22 grew out of — the corridor variance that started it
-(17) and the corpus that answers it (18, 19, entry 44). Item 23 is **done** — the vocabulary could not
-recognise a page that *states* the visa answer, so entry 27's exception had stopped firing; entry 56.
-Credit was restored on 2026-08-24 and item 23 is confirmed live, so **item 3 is now the only thing
-left in front of everything else.**
-**Next up** is what follows. **That reasoning and item 18 are not in conflict, but the reconciliation is deliberate
-and worth stating**: item 18 is built once and run first on only the ~8 destinations item 3 needs, so
-the measurement describes the architecture the project means to keep, and scaling it to 198 countries
-afterwards needs no rework. Building the corpus for all 198 *before* measuring would be the thing entry
-35 forbids. **Later** is real but not urgent. **Done** is finished work, kept because what building it found is
-usually why the item after it exists. **Smaller things** are one-paragraph defects with no owner yet.
+**How to read this file.** **Now** is what to pick up, in the order written; **Next up** follows it;
+**Later** is real but not urgent; **Done** keeps finished work because what building it found is usually
+why the item after it exists; **Smaller things** are one-paragraph defects with no owner yet.
+
+**Where the list stands, 2026-08-24.** The three items that used to gate everything are finished and
+confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 49–53), **item 23** (the
+vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
+twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
+
+**Item 24 leads, and it is new.** Item 3 measured the largest coverage limit there is and it was not the
+one this file had been assuming: every United Kingdom corridor refuses *after* finding the checklist,
+the route, the times and per-nationality fees, because the decision lives inside a wizard. Blocks cost
+one destination its checklist; the wizard costs a destination everything. Items 17, 18 and 19 are the
+corpus work item 22 grew out of, and 19 is now half done — the crawl has gone, search has not.
 
 Status: `next` · `soon` · `later` — the label on each heading matches the section it sits in, so the two
-can never disagree. There is no **Blocked** section at the moment: the 20-corridor measurement was the
-only item in it, and Brave credit arrived on 2026-08-21. Give a blocked item its own section again if
-one appears.
+can never disagree. There is no **Blocked** section at the moment; give one its own section again if an
+item acquires a dependency it cannot clear itself.
 
 **Every open item has a number, and numbering is append-only** so that the cross-references in
 [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) stay valid. The numbers are names, not an order: **the section
@@ -254,11 +253,20 @@ refused the corridor on 2026-08-21 is now durable, which is the thing this was b
 > closed it was write-back — after one corridor run through the new path, **24 of 24** pages that run
 > fetched are held. The candidate set is now `corpus ∪ live`, pinned by what already filled a role.
 
-### 19. Read the corpus in the request path, and refuse on a miss — `next`
+### 19. Take search out of the request path too — `next`
 
-**Why:** item 18 buys nothing until the request path reads it. Together they are what removes search from
-a populated country's cold path — up to fifteen Brave queries and a two-hop crawl — and what makes two
-runs of the same corridor consider the same candidates.
+**Why:** the crawl half of this is done (entry 51) and search is what remains. It is now the largest
+live component of a corridor — roughly 3s and **three queries per trusted domain** — and, since entries
+44–57 removed everything else, the **only remaining single point of failure for a fully built
+destination**: `search_all` raises if any query fails and `_resolve` searches *before* reading the
+corpus, so Canada's 3,216 stored pages cannot answer a corridor when the provider is down. See
+"smaller things".
+
+**The bar for doing it is unchanged and has not been met.** `corridor_queries` interpolates purpose
+*and* nationality; purpose is swept offline (four values), and **nationality is 198-valued and still
+never measured** (entry 48). Removing search trades a known cost for an unmeasured recall risk on the
+one dimension nobody has examined. Item 3's twenty corridors varied nationality four ways across five
+destinations and changed the outcome **once**, which is suggestive and is not the measurement.
 
 **Narrowed 2026-08-22 by entry 47.** The gap that blocked this is closed for Canada — the union plus
 write-back holds 24 of 24 pages the live run fetched — so what is left here is no longer "make the
@@ -483,6 +491,11 @@ some environment variables, done. No pipelines, no orchestration; CI already run
 
 **Reordered after the direction work**, because deploying before item 2 ships a product whose two
 highest-volume corridors return no checklist.
+
+**Timing, measured 2026-08-24:** the **corridor phase** is a median of **27.4s** over 40 live runs, all
+corpus-routed. Plan extraction sits on top and the two have never been timed together, so the number a
+deployment plan actually needs — full cold `POST /visa-plans` — is still unknown. The stale note that
+follows is kept for the reasoning, not the figures.
 
 **The timing needs re-measuring before this is planned.** The **34.1s** figure (19.4s corridor + 14.7s
 plan, `united-states/IN/IN/tourism`, both caches cleared) was taken before the domain registry and no

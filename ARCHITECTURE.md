@@ -239,17 +239,15 @@ Resolving a corridor cold is the expensive part of a request — search, twenty-
 and a crawl for a country with no corpus — so results go in `discovery/corridor_store.py`, one JSON file
 per corridor, keyed by the whole corridor and expiring in **weeks**.
 
-> **Two numbers that used to sit in this sentence were stale and are deliberately not replaced with a
-> guess.** It read "about 53 seconds — a bootstrap, a crawl, ten fetches and a model call". The bootstrap
-> left the request path in entry 38; the shortlist went from ten places to twenty-five in entry 40; and
-> the 53s predates both. What is measured is the **corridor phase alone at 39–45s** (2026-08-18, on the
-> registry path), and **no full cold request has been timed since** — see known problem 5, which also
-> names the cause: three searches run per trusted domain and the registry gives a country up to five.
+> **The corridor phase is measured; the full cold request is not.** Over **40 live runs of 20 corridors
+> on 2026-08-24** (entry 58), all corpus-routed and none crawling: **median 27.4s, range 8.8–48.3s.**
+> Earlier figures in these files — 53s, 34.1s, 39–45s, 54.2s — all predate the crawl leaving the request
+> path (entry 51) and should not be quoted.
 >
-> **Entry 51 removes the largest single component of that** — the crawl, 33.6s of a measured 54.2s — for
-> a country whose corpus out-covers it. **Measured 2026-08-23 (entry 53): 12.7–13.2s** for the corridor
-> phase on Canada, over three runs. That is one destination, and the *full cold request* is still
-> untimed, so it does not go in this sentence either.
+> **Plan extraction sits on top of this and has never been timed with it**, so `POST /visa-plans` end to
+> end is still an unknown number and deployment cannot be planned against one. The largest remaining
+> live component is **search**, at roughly 3s and three queries per trusted domain — see known problem 5
+> and [TODO.md](TODO.md) item 19.
 
 Weeks is deliberately a much longer life than the evidence
 cache's hours: which *pages* answer a corridor changes when a site is redesigned, not when its
@@ -512,7 +510,12 @@ smaller, which is what lost Canada its answer.
 > **Measured live on seven destinations, 2026-08-23** (entries 53 and 55): **crawl 0.0s everywhere,
 > corridors 2.1×–5.2× faster** — Singapore 56.1s → 10.8s, Japan 37.5s → 14.9s, Canada 54.2s → 12.7s.
 > Roles genuinely found are neutral to better. **Adjudication is now ~60% of a corridor** and is where
-> the next optimisation is.
+> the next optimisation is. Confirmed again on 2026-08-24 across **40 runs of 20 corridors** (entry 58):
+> none crawled, median 27.4s.
+>
+> **Ten countries have a corpus** as of 2026-08-24 — Canada, UAE, Netherlands, United States, France,
+> Japan, Singapore, United Kingdom, Sweden, Germany — 16,298 pages between them. A country without one
+> crawls exactly as before.
 >
 > **One thing broke on the way, and it is fixed.** Removing the crawl left entry 27's
 > blocked-authority exception unable to fire: `_decision_blocking` needed a refusal observed on a page

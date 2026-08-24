@@ -15,6 +15,14 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [TODO.md](TODO.md) | What remains, ordered, with the reasoning for each |
 | [AGENTS.md](AGENTS.md) | Full contributor rules |
 
+**Where it stands, as of 2026-08-24**, so the rest of this file reads in context. The pipeline works
+end to end and has been measured against a bar committed in advance (entry 35): over twenty
+high-volume corridors run twice each, **75% confirm the visa decision** (bar ≥70%) and **50% yield a
+document checklist** (bar ≥50%) — a pass, by one corridor and by nothing at all. Corridors are served
+from **stored per-country page corpora** rather than a live crawl, at a median 27.4s. The largest
+remaining coverage limit is **not** bot-blocking: it is authorities that put the answer inside an
+interactive wizard, which costs every United Kingdom corridor its entire plan. Entries 44–58.
+
 ## Rules that must not be broken
 
 These are repeated here because they are the ones where a plausible-looking "simplification"
@@ -96,10 +104,19 @@ produces a serious defect.
   **And naming it must stay narrow (entry 32).** Only `401`/`403` may qualify a corridor — a `429` is a
   transient rate limit, and "try again later" is the honest advice. **A challenged `403` may not qualify
   one either (entry 41):** a refusal is at least a page an authority withheld, while a challenge is a
-  page nobody asked the authority about. France is the live example — it resolves today on an incidental
-  challenge that happened to score for `visa_decision`, and it flips between runs. The blocked URL must also have been
+  page nobody asked the authority about. The blocked URL must also have been
   a credible `visa_decision` candidate: a `403` on a footer link is not grounds to declare the decision
-  unverifiable. Without both bounds, corridors whose decision was merely *not found* — which must refuse
+  unverifiable.
+
+  **Whether it is credible is now *judged*, never keyword-matched (entry 57).** `_decision_blocking`
+  asks a model over the refused page's **address and label only** — there is no page text, because the
+  authority refused it, and `build_blocked_packet` has no parameter through which any could be passed.
+  Keep it that way: a packet that ever grew an excerpt field would be inferring content about a page
+  nobody read, which is the thing this rule forbids outright. It fails closed after two attempts, and
+  with no adjudicator configured the keyword test still runs, which is the deterministic baseline rather
+  than entry 31's forbidden fallback. Measured: France qualifies its own United Kingdom and India pages
+  and rejects its FAQ, its application form and its visa-category page — where the keyword version had
+  qualified a **blank CERFA form**. Without both bounds, corridors whose decision was merely *not found* — which must refuse
   — drift into presenting as authority-blocked, which resolves. Every block is still *reported*
   regardless; the bounds govern what may *resolve a corridor*.
 
@@ -135,9 +152,17 @@ produces a serious defect.
   decision table is deliberately not built: one page names ~200 nationalities, so a wrong row would sit
   in a store for weeks and be served with a citation, where a wrong pick today is ephemeral. If it is
   ever built, a nationality the page did not name yields **no row**, never a false one.
-  **A corpus miss refuses and flags the country** — entry 38's rule applied to pages. Falling back to
-  live search would silently restore the per-request lottery for exactly the corridors that need it not
-  to be one.
+  **A corpus miss must never be answered by *quietly* falling back** — entry 38's rule applied to pages.
+  Deciding a corridor from that day's search after the store came up short would restore the
+  per-request lottery for exactly the corridors that need it not to be one.
+
+  **Read that as the constraint it is, not as a description of today.** Entry 44 wrote it as "a miss
+  refuses and flags the country", and entry 47 chose a different shape that satisfies the same
+  constraint: the candidate set is **`corpus ∪ live search`**, with search running on *every* corridor
+  rather than as a fallback after a miss, so nothing silently degrades because nothing was ever
+  conditional. A country with **no** corpus simply crawls, exactly as before. Refusing on a miss is
+  still unbuilt and still wanted — [TODO.md](TODO.md) item 19 — and it only becomes safe once search
+  has left the request path, which needs the nationality dimension measured first (entry 48).
 - **A stored row records when the evidence was retrieved, never when the row was written.** A failed
   refresh serves cached text flagged `stale` and **keeps its original `fetched_at`**; only a validator
   match moves it, because a `304` proves the text is still current (entry 4). Past
@@ -170,10 +195,21 @@ Do not record a problem as fixed unless it is fixed, or a result as verified unl
 These files are read by someone with no other context.
 
 **Check a documented claim against the code before carrying it forward.** These files are self-written,
-and two claims turned out to be wrong when finally tested: the trust rule's coverage gap was blamed on
-the wrong half of the rule for a week, and a known problem asserted that a blocked authority never
-reached the plan when in fact it reached it by two separate routes. Both were described from reading a
-code path rather than from output. Prefer a run, a test, or a printed result over a careful reading.
+and the pattern has now repeated in five separate sessions: the written-down diagnosis named the wrong
+cause, and only running the thing showed it.
+
+| what the file said | what a run showed |
+| --- | --- |
+| the trust rule's gap is in the TLD half | it is the governmental half (entry 33) |
+| a blocked authority never reaches the plan | it reaches it by two routes (known problem 7) |
+| consuming the corpus is slow because of *scoring* | it was `wrong_country`, 33× (entry 50) |
+| removing the crawl risks *reporting* | reporting held; **qualification** broke (entries 55–56) |
+| `visa_decision` needs its floor guard removed | the vocabulary could not recognise an answer (entry 56) |
+| bot-blocks are the largest coverage limit | the **wizard** is (entry 58) |
+
+Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
+**measure the proposal before implementing it** — three of the rows above are proposals that were
+wrong, and each was cheap to disprove and expensive to have shipped.
 
 **Commits:** one lowercase subject line, no body, no attribution trailers, straight to `main`. One
 concern per commit, **with the documentation for that concern in the same commit** — a `docs:` commit is
@@ -189,6 +225,19 @@ for when documentation is the only thing changing.
 Secrets (`OPENAI_API_KEY`, `SEARCH_API_KEY`) live only in `.env`. Reviewable policy — source mode,
 extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.yaml`.
 
+```bash
+.venv/bin/visa-discover corpus --country CA     # build a country's offline page corpus
+```
+
+Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US). A country
+without one crawls in the request path, exactly as before.
+
 Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
 change — either one will serve a pre-change result and make a fix appear not to work. A stored
-corridor is kept for three weeks.
+corridor is kept for three weeks. **`var/corpus/` is deliberately not cleared between runs**; it is
+the store, not a cache, and rebuilding one costs search quota.
+
+**Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`
+when out; Brave answers **`HTTP 402`** both when out of credit *and* when queried too fast, so a `402`
+is not proof the account is empty — check a single query before believing it. `search_all` has no
+rate limiting (TODO, smaller things).

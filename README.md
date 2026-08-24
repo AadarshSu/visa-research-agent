@@ -39,15 +39,23 @@ discovery in the request path** — nobody curates URLs. What it does today:
   and a missing load-bearing source refuses the run before the model is called;
 - a small Jinja and vanilla JavaScript research interface, and fully offline tests and CI checks.
 
-**Not deployed yet**, and three things are deliberately unresolved: whether bot-blocked authorities make
-the highest-volume corridors unservable; how to reach the governments whose domains carry no recognisable
-marker; and why some corridors still refuse on authorities they can now read. All three are measurements
-with a plan; see [TODO.md](TODO.md).
+**Not deployed yet.** The question of whether this is a product was settled against a bar committed in
+advance (DECISIONS entry 35) and measured on 2026-08-24 over twenty high-volume corridors, run twice
+each: **75% confirm the visa decision** against a ≥70% bar and **50% yield a document checklist**
+against a ≥50% bar. It passes, by one corridor on the first number and by nothing at all on the second.
+Read entry 58 with it — the sample is five destinations replicated across four nationalities rather than
+twenty independent corridors.
 
-**A caveat on timing**, because it is the one number a deployment plan would want: the cold-request
-figure these files used to quote (34.1s) predates the domain registry and is stale. Three searches run
-per trusted domain, and the registry gives a country up to five where a hand-configured one had two, so
-the corridor phase alone now measures 39–45s. A full cold request has not been re-timed.
+**What that measurement found matters more than the verdict.** Every United Kingdom corridor refuses
+after successfully finding the checklist, the application route, the processing times and
+per-nationality fees, because `gov.uk/check-uk-visa` is a step-by-step wizard: the page is served
+willingly, fetched and read, and simply does not state the answer. An interactive tool now costs more
+coverage than bot-blocking does.
+
+**A caveat on timing**, because it is the number a deployment plan would want: the **corridor phase**
+measures a median of **27.4s** (40 live runs, 2026-08-24, all served from stored page corpora rather
+than crawling). Plan extraction sits on top and the two have never been timed together, so the full
+cold request is still an unknown. Ignore 34.1s and 54.2s wherever they survive in these files.
 
 **A corridor that cannot be established says so rather than guessing.** France is the standing
 example: its visa portal refuses automated retrieval, so the plan states the visa decision as

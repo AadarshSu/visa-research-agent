@@ -23,19 +23,23 @@ a traveller and destination with nobody curating URLs — is **done and running 
 **Whose** domains a country may be researched from is no longer decided per request either: it is
 generated offline, reviewed, and committed (entries 34 and 38).
 
-**Decided 2026-08-21 and not yet built: *which pages exist* leaves the request path too** (entry 44).
-Discovery re-derives a country's candidate pages from search on every request, and entry 43 measured what
-that costs — the page answering Canada was fifteenth of 470 on one run and absent an hour later. So a
-country's **page corpus** becomes a store, populated by an offline job, and search stops being the entry
-point for a populated country. Only the corridor-dependent step — which of those pages answers *this*
-traveller — stays live. **Not a move toward precomputed answers**: entry 44 rejects those on arithmetic,
-and a plan stays a rendering rather than a stored fact.
+**Built 2026-08-22 to 2026-08-24: *which pages exist* has left the request path too** (entries 44–57).
+Discovery used to re-derive a country's candidate pages from search on every request, and entry 43
+measured what that cost — the page answering Canada was fifteenth of 470 on one run and absent an hour
+later. A country's **page corpus** is now a store, populated by an offline job, and **the crawl no
+longer runs at all** for a country whose corpus out-covers it. Only the corridor-dependent step — which
+of those pages answers *this* traveller — stays live. **Search still runs** (entry 48; TODO item 19).
+**Not a move toward precomputed answers**: entry 44 rejects those on arithmetic, and a plan stays a
+rendering rather than a stored fact.
 
-**The cold-request timing in these files is stale — do not quote 34.1s.** It was measured before the
-registry, on hand-configured destinations. Measured 2026-08-18 on the registry path, the *corridor phase
-alone* is 39–45s for Japan and Canada. The cause is arithmetic rather than a regression in any component:
-three searches run per trusted domain, and the registry gives a country up to five where `japan` in
-`destinations.yaml` had two — six queries became fifteen. See known problem 5.
+**Ten countries have a corpus**, 16,298 pages between them: Canada 3,216, UAE 2,758, Netherlands 2,698,
+United States 1,840, France 1,590, Japan 1,558, Singapore 928, United Kingdom 895, Sweden 521,
+Germany 294. Build one with `visa-discover corpus --country XX`.
+
+**Cold-corridor timing, measured 2026-08-24 over 40 live runs: median 27.4s, range 8.8–48.3s**, every
+one corpus-routed and none crawling. Ignore 34.1s and 54.2s wherever they still appear in these files —
+both predate the crawl leaving the request path (entries 51 and 53). **The full cold *request* — corridor
+plus plan extraction — has still never been timed**; only the corridor phase has.
 
 **The direction changed on 2026-08-18**, after an outside review that was agreed with in full and is
 recorded as [DECISIONS.md](DECISIONS.md) entries 29–35, plus entries 36–42 which came out of building
@@ -66,8 +70,14 @@ placeholder imagined is a retry loop this project rejects (entry 29).
 
 ## Current state
 
-**Working end to end for any traveller, and for 39 of 198 destinations** — counted from the committed
-files on 2026-08-22, and this line has now overstated twice.
+**Working end to end for any traveller, and for 39 of 198 destinations** — re-counted from the
+committed files on 2026-08-24, and this line has overstated twice before, so it is checked rather than
+carried forward. **Of those 39, ten have an offline page corpus** (AE, CA, DE, FR, GB, JP, NL, SE, SG,
+US) and are served without crawling; the other 29 still crawl in the request path.
+
+**Measured against the bar committed in advance, it passes — marginally** (entry 58, 2026-08-24): over
+twenty high-volume corridors run twice each, **75%** confirm the visa decision (bar ≥70%) and **50%**
+yield a document checklist (bar ≥50%). Corridor phase, median **27.4s**.
 
 **The binding limit is the authority registry, not the trust rule.** `config/authority_domains.yaml`
 holds **40 rows**; a country with no row is **refused, never bootstrapped live** (entry 38), and Austria
@@ -278,21 +288,17 @@ why.
 ## Known problems
 
 Ordered by how much they limit the product, **except that numbering is append-only**, because references
-to these numbers exist in `CLAUDE.md`, `ARCHITECTURE.md` and `TODO.md`. **None of these are secretly
-fixed; they are all live** — with one qualified exception, item 18, whose *cause* was changed on
-2026-08-21 and whose corridor has not been re-run since. It stays on the list until it has.
-Several carry a *decision* (entries 29–35), and a decision is not a fix — items 3 and 4 below are decided
-and still unimplemented. Three were **removed** on 2026-08-18 because they are genuinely fixed: a block resolving a corridor
-it had nothing to do with (entry 32), the unverified `conflicts` field (entry 30), and a failed model
-call silently substituting the heuristic (entry 31).
+to these numbers exist in `CLAUDE.md`, `ARCHITECTURE.md` and `TODO.md`. **Everything still numbered below is live unless its
+heading is struck through.** A struck-through item is fixed *and confirmed by a run*, and is kept only
+so the number keeps its meaning; delete it once nothing references it.
 
-1. **~~Whether this is a product is genuinely unmeasured.~~ Measured 2026-08-24: it passes, marginally**
-   (entry 58). 75% confirm the decision against a ≥70% bar; **50%** yield a checklist against a ≥50%
-   bar — exactly on the line, so one corridor either way changes the answer. **What replaces this item
-   is the sample structure**: nationality changed the outcome once in twenty, so five destinations
-   replicated four times is the real sample, and the next bar should sample destinations. Two of those
-   five — Germany and the United States — return **no checklist at all**, which is known problem 8 with
-   numbers attached. Kept for one cycle as a record; delete after the next handoff edit.
+**Removed as genuinely fixed:** a block resolving a corridor it had nothing to do with (entry 32), the
+unverified `conflicts` field (entry 30), and a failed model call silently substituting the heuristic
+(entry 31) — all 2026-08-18; **the unmeasured-product question** (entry 58) and **entry 27's exception
+not firing** (entries 56–57), both 2026-08-24.
+
+1. *(retired 2026-08-24 — the twenty-corridor measurement ran and passed marginally; entry 58. What
+   replaced it is in the current task: the sample is five destinations, not twenty corridors.)*
 2. **The trust rule refuses a fifth of the world, with a wrong diagnosis.** Measured offline on
    2026-08-18: `is_own_government` fails for **19 of 51** countries — Austria, Belgium, Canada, Chile,
    Czechia, Germany, Denmark, Finland, Greece, Hungary, Ireland, Italy, Netherlands, Norway, Portugal,
@@ -309,11 +315,21 @@ call silently substituting the heuristic (entry 31).
    cannot contain the page holding the guidance. Nothing reports that, so it will read as a ranking
    failure. Canada is the sharpest: `gc.ca` is special-cased and passes, but the content moved to
    `canada.ca`.
-3. **"Who to believe" is decided inside every request and cached per corridor.** `bootstrap_destination`
-   runs in the cold path, so a country's trusted set is re-derived from that day's search rankings for
-   every new nationality — the variance entry 22 diagnosed as a ranking problem. `ARCHITECTURE.md`
-   already says domains should be decided once per country. Entry 34 moves it to committed data.
-4. **The blocked-source plan has never been run live.** Entry 27 lets a corridor resolve when the only
+3. **~~"Who to believe" is decided inside every request.~~ FIXED 2026-08-18 (entries 34 and 38).**
+   `bootstrap_destination` used to run in the cold path, so a country's trusted set was re-derived from
+   that day's search rankings for every new nationality — the variance entry 22 misdiagnosed as
+   ranking. It is now read from committed `config/authority_domains.yaml`, and a country with no row is
+   refused rather than bootstrapped live. **What survives is a different item: only 39 of 198 countries
+   have a usable row** — see item 23.
+4. **~~The blocked-source plan has never been run live.~~ RUN AND CONFIRMED 2026-08-24 (entries 56–57).**
+   `sweden/IN/GB/tourism` and `france/IN/GB/tourism` both resolve `partial` with the decision stated
+   unknown and the blocked page handed over as a URL, reproducibly across runs. France qualifies its
+   `/royaume-uni`, `/web/france-visas` and `/india` pages and rejects its FAQ, form page and
+   visa-category page. **What is still unread is a traveller's-eye view of the finished plan** — the
+   three wording questions in [TODO.md](TODO.md) item 3's "France read-through", now folded into item 8.
+   The original description follows.
+
+   Entry 27 lets a corridor resolve when the only
    gap is behind a block, states the decision as unknown, and hands the traveller the URL. The chain is
    covered by tests, but Brave answered `HTTP 402` before France could be re-run, so what a model
    actually writes for it is unverified — as is whether "Uncertain" reads as *we could not check* rather
@@ -339,18 +355,15 @@ call silently substituting the heuristic (entry 31).
    later. So this is now two problems: the plan is *still* unread by a traveller, and what reaches it is
    decided by an incidental WAF hit. `boilerplate_tokens` vetoes legal notices and sitemaps but not
    search pages. Entry 41 and [TODO.md](TODO.md) item 5.
-5. **A cold request is slower than the 34.1s these files used to quote, and the current figure is
-   unmeasured.** That number was 19.4s corridor + 14.7s plan, measured before the registry on
-   hand-configured destinations. **Measured 2026-08-18 on the registry path, the corridor phase alone is
-   39–45s** (Japan 44.5s, Canada 45.2s at the old 10-place shortlist). The cause is arithmetic:
-   `corridor_queries` runs **three searches per trusted domain**, and the registry gives a country up to
-   five where `japan` in `destinations.yaml` had two — so six queries became fifteen. **This is a
-   consequence of entry 38, not of entry 40**: the wider shortlist was measured separately and had no
-   latency cost, because fetching is concurrent.
-   **Nobody has timed a full cold request end to end since**, so the total is genuinely unknown rather
-   than known-and-bad — but it plainly no longer fits a 30–60s proxy timeout comfortably, and deployment
-   should not be planned against 34.1s. The obvious lever is the per-domain query count, not the
-   shortlist. Warm is instant, and the local `var/` stores are what make it warm.
+5. **The corridor phase is now fast; the full cold *request* has still never been timed.**
+   **Measured 2026-08-24 over 40 live runs, all corpus-routed: median 27.4s, range 8.8–48.3s** — down
+   from 39–45s (2026-08-18, registry path) and 54.2s (entry 48), because the crawl left the request path
+   (entry 51). **Ignore 34.1s and 54.2s wherever they still appear.**
+   **What remains unmeasured is the total**: every figure here is the corridor phase only, and plan
+   extraction sits on top of it. Nobody has timed `POST /visa-plans` end to end since the corpus work, so
+   deployment still cannot be planned against a number. The remaining lever is **search**, which is now
+   the largest live component at roughly 3s of a corridor and 3 queries per trusted domain — TODO
+   item 19. Warm is instant, and the local `var/` stores are what make it warm.
 6. **A destination is trusted on a rule whose output a person now reviews once, and the audit behind
    the rule was survivorship.** **Changed on 2026-08-18 (entries 38 and 39):** the rule no longer runs
    per request — its output is committed in `config/authority_domains.yaml`, so a wrong call is a
@@ -532,13 +545,19 @@ call silently substituting the heuristic (entry 31).
    and it follows from 2,387 of the 2,455 coming from a file. **It still does not close this item**:
    minutes apart, one corridor, one destination, and 68 candidates still come from search, which is
    nondeterministic at the source. What it *does* buy is separation — see known problem 10.
-   **Decided 2026-08-21 as entry 44, and not implemented.** The candidate set becomes a stored **corpus
+   **Decided 2026-08-21 as entry 44, and implemented across entries 46–57.** The candidate set is a stored **corpus
    of official pages per country**, populated offline, so search leaves the request path for a populated
    country and two runs of one corridor consider the same candidates. It fixes the measured cause here —
    Canada's page was also reachable by crawl at depth 1, which an offline job with no latency budget
    reaches reliably — and it fixes **recall only**: adjudication is still a model call (known problem
    10), and a page the offline job never finds becomes a permanent gap rather than a coin flip. TODO
    items 18 and 19; item 17 keeps the counting that sizes it.
+   **Largely answered 2026-08-24 (entry 58): across 40 runs of 20 corridors, 19 of 20 gave identical
+   outcomes on both runs.** The single exception is UK/Philippines, whose checklist was found on one run
+   and not the other from an identical 813-candidate set — adjudication, not recall. So the candidate
+   set is now stable in practice and **known problem 10 is the only variance left**. This item stays
+   open only for the gap it never closed: the runs are minutes apart, and the original divergence was
+   two days apart.
    **Counted 2026-08-22, and the flip did not reproduce.** Three back-to-back runs, cache cleared:
    **471 candidates, every run saw all 471**, all three resolved, and `entry-requirements-country.html`
    arrived every time by *both* a `site:canada.ca` seed and a depth-1 crawl. So the rate is **0 of 3
@@ -587,31 +606,8 @@ call silently substituting the heuristic (entry 31).
    cost and **nothing counts how often the corpus was the only source and came up short.** The
    `found_by="corpus"` field added with entry 51 is what would make that countable from the recall log;
    nobody has counted it.
-25. **~~Entry 27's blocked-authority exception stopped firing.~~ FIXED and confirmed live 2026-08-24.**
-   The cause was a vocabulary gap, not the `not scores` guard item 23 blamed — the `visa_decision`
-   terms were all ways of *asking* the question, with no way to recognise a page that states the
-   answer (entry 56). Sweden's decision page went `visa_decision` **0.0 → 82.4**, and two live runs
-   now give `usable: True`, `decision_is_unverified: True`, and `decision_blocking` naming the exact
-   page `government.se` refused. **Entry 27's exception has now fired on a real corridor for the first
-   time.** France still refuses with nothing qualifying, correctly — its old qualification was a blank
-   CERFA form. Kept here for one cycle as a record; delete it after the next handoff edit.
-   The original description follows.
-
-   **Entry 27's blocked-authority exception has stopped firing, and it is a scoring bug, not a block
-   bug.** Measured 2026-08-23 (entry 55): `sweden/IN/GB/tourism` and `france/IN/GB/tourism` both went
-   from resolving to **refusing** on the corpus path. Reporting is intact — `inaccessible_domains` and
-   `inaccessible_urls` still name the refusing hosts and pages, so entry 49 works. What broke is
-   *qualification*: `_decision_blocking` requires a refusal observed on a page that scored for
-   `visa_decision`, a 25-page fetch observes far fewer refusals than a crawl did (France: 6 against 18),
-   and the pages it does observe score for the wrong role.
-   **The root cause is one line in `score_role_vocabulary`**, which grants the "mentions visas" base
-   score to `visa_decision` only when the page scored for *nothing else*. So
-   `government.se/.../list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scores
-   `general_entry` 22.4 and **no `visa_decision` at all**. Entry 41 saw this on France and recorded it
-   as a French quirk; it is general.
-   **Not all of it is a regression.** France's crawl-path qualification was on a **blank CERFA
-   application form**, which is the incidental hit entry 41 warns about — refusing is better. Sweden is
-   a genuine loss. [TODO.md](TODO.md) item 23; do not fix it by loosening `_decision_blocking`.
+25. *(retired 2026-08-24 — entry 27's exception now fires on real corridors; entries 56 and 57, and
+   known problem 4 above.)*
 
 ---
 
@@ -655,6 +651,43 @@ re-run (entry 55), item 23 (entry 56), the `_decision_blocking` question (entry 
 itself (entry 58).
 
 ### Where the previous work got to
+
+**Written 2026-08-24, covering the four sessions that took the corpus from a decision to a measured
+product claim.** Everything below is confirmed by a run, not by reading the code.
+
+**The corpus replaced the crawl, and it is 2–5× faster.** Entries 49–53: a country whose stored corpus
+offers more pages than a crawl could visit no longer crawls at all. Measured across seven destinations,
+then across twenty corridors — 40 runs, **none crawled**, median 27.4s. The bound is derived rather than
+tuned: `LinkCrawler` visits at most `DEFAULT_CRAWL_PAGES` pages, so a corpus larger than that cannot be
+out-covered by one.
+
+**Three defects were found by running it, and none was visible from reading.** A `setdefault` meant the
+corpus could never displace a *thinner* search candidate for the same URL, so Canada's answering page
+entered at 32.0 instead of 63.4 and was never read (entry 53). Pinned pages were dropped by the
+shortlist truncation, so entry 47's ratchet had been half-implemented since it landed (entry 52). One
+AES-encrypted PDF aborted an entire corridor, because `pypdf`'s `DependencyError` extends `Exception`
+directly and no narrower `except` could catch it (entry 54).
+
+**Then a proposal was measured and rejected, which is the pattern to copy.** TODO item 22 proposed a
+top-400 routing index over the corpus; measured, the ~3.6s it targeted was `wrong_country` scanning 198
+countries per candidate, and an index over *countries* took the whole path from 4,757ms to 346ms —
+cheaper than the pre-filter, with no recall cut (entry 50). The same happened again with item 23, which
+blamed a guard when the real defect was that the `visa_decision` vocabulary could only ask the question
+and never recognise an answer (entry 56).
+
+**The one place the heuristic was judging *meaning* has moved to the model** (entry 57).
+`_decision_blocking` asked "could this refused page have held the decision?" by keyword, on a page
+nobody read. It now asks the model over the address and label only — there is no text, because the
+authority refused it — and France went from qualifying on a **blank CERFA form** to qualifying its own
+United Kingdom and India pages while rejecting its FAQ and form pages.
+
+**And the product question was answered** (entry 58): 75% confirm the decision against a ≥70% bar, 50%
+yield a checklist against a ≥50% bar. A pass, by one corridor and by nothing at all. **Read the current
+task for what that measurement actually found**, which is more useful than the verdict: the sample is
+five destinations rather than twenty corridors, and the United Kingdom refuses every run because its
+answer sits inside a wizard.
+
+---
 
 **Updated 2026-08-21. Of the two corridors investigated on 2026-08-19, one fix has landed and one has
 not.** `canada/GB/GB/tourism` refused because the adjudicator's 6,000-character excerpt cut off the page
@@ -812,62 +845,25 @@ the last was caught only by probing real authorities, not by any test.**
    justification for reaching for stdlib ("its shortfall errs toward fetching less") was written from
    reading the module and was the exact opposite of true.
 
-**Amended 2026-08-23: the corpus is built and read, and the crawl is out of the request path.** Pick up
-**[TODO.md](TODO.md) item 3 first** (see *Current task*), then:
-
-- **Item 17 — count the flip rate.** The *decision* is made (entry 44); what is left is the measurement
-  that sizes it. Run one corridor three times and write the rate down. Cheap now that the recall log
-  exists — and now more interesting, because the crawl half of the variance is gone and what remains
-  should be attributable to search and to the model.
-- **Item 18 — run the offline corpus job** on the rest of the ~8 destinations item 3 needs. The job
-  exists (entry 46); only Canada has been built. This is the one that costs credit.
-- **Item 19 — decay live search.** Half of this landed with entry 51: the crawl no longer runs for a
-  country whose corpus out-covers it. What remains is search, which stays until the nationality
-  dimension has been measured. Costs no credit to build; the measurement it waits on does.
-- **Item 15 — re-run the verified corridors against the widened excerpt.** Canada was run twice on
-  2026-08-21 — one refusal, one resolution, same code (known problems 18 and 19); six corridors are
-  left, and each should be run more than once. Needs search and model credit. Entries 42 and 43.
-- **Item 5 — treat a challenge as a challenge.** France's `403` is Cloudflare asking whether we are a
-  browser, not an authority refusing us; our own renderer answers it under our own name. It also fixes a
-  sentence shown to travellers that is untrue of what was seen. Entry 41.
-
-Then the pre-existing list, which all costs something — a 198-country registry, search quota, or a
-decision nobody has argued yet:
-
-- **Item 1 — fix the post-over-nationality weighting** — precise and reproducible: the scorer gives
-  `checklist-schengen-visa-tourism/india` 113.0 against 73.0 for `/united-kingdom`, for a traveller
-  applying *from* the UK. The adjudicator then correctly discards a checklist the corridor had already
-  fetched. **And trace Sweden**, which neither the domain fix nor the wider window moved. Still
-  outstanding from entry 38: the cap's alphabetical tie-break, which spends two of India's five slots on
-  United States missions.
-- **Item 3 — the 20-corridor measurement against the committed bar.** **No longer blocked: Brave credit
-  arrived on 2026-08-21.** It decides whether this is a product, so nothing large should be built before
-  it, and it now has a posture worth measuring: `robots.txt` landed first on purpose.
-
-**Deployment has moved down the list deliberately, and speed is now part of why.** It used to be
-"not blocked on speed — 34.1s, which fits a 30–60s proxy timeout". That number predates the registry and
-is stale: the corridor phase alone measures 39–45s now, because three searches run per trusted domain and
-the registry gives up to five where a hand-configured destination had two (known problem 5). A full cold
-request has not been re-timed, so the total is unknown rather than known-and-bad. Warm is still **0.0s**.
-It is also blocked on item 3 — publishing a URL whose two highest-volume corridors return no checklist is
-publishing the demonstration rather than the product — and item 1 changes what a cold request does, so
-deploying first means deploying twice. **Item 5 adds a reason of its own:** answering challenges needs
-Chromium on the host (~150MB plus system libraries) and costs ~7s per rendered page, which the deployment
-notes currently assume away with `render_mode: never`.
+**Amended 2026-08-24: everything that gated this list is finished and confirmed by live runs.** The
+corpus replaced the crawl (entries 49–53), the vocabulary and the block judgement were fixed (entries
+56–57), and the twenty-corridor measurement ran and passed marginally (entry 58). **Pick up
+[TODO.md](TODO.md) item 24** — the wizard — and see *Next steps* below for the order after it.
 
 ### What changed on 2026-08-19, in one line each
 
 | Entry | What it changed |
 | --- | --- |
-| 41 | A Cloudflare challenge is not a refusal. France's `403` carries `cf-mitigated: challenge` and is served for `robots.txt` too, so no policy was ever stated; the project's own renderer reads the page under our own user agent. A challenge becomes its own outcome, may be answered by the renderer, and may never resolve a corridor. `robots.txt` stays obeyed everywhere and outranks it. Spoofing and retrying stay forbidden. **Decided, not implemented.** |
+| 41 | A Cloudflare challenge is not a refusal. France's `403` carries `cf-mitigated: challenge` and is served for `robots.txt` too, so no policy was ever stated; the project's own renderer reads the page under our own user agent. A challenge becomes its own outcome, may be answered by the renderer, and may never resolve a corridor. `robots.txt` stays obeyed everywhere and outranks it. Spoofing and retrying stay forbidden. **Still not implemented — TODO item 5**, and the interface still tells travellers a challenged authority "does not permit automated retrieval", which is untrue of what was seen. |
 
 Known problem 18 was found the same day and taught the same lesson — a 6,000-character excerpt deciding
 corridors by where a nationality falls in an alphabetical list — and became entry 42 on 2026-08-21.
 
-### What changed on 2026-08-23, in one line each
+### What changed on 2026-08-23 and 2026-08-24, in one line each
 
 Item 22 was written as a proposal and read as one. The measurements behind it held; two of the three
-things built on them did not.
+things built on them did not. Entries 54–57 are defects that only appeared once the crawl was gone,
+and entry 58 is the measurement that finally answered whether this is a product.
 
 | Entry | What it changed |
 | --- | --- |
@@ -891,7 +887,7 @@ things built on them did not.
 | 47 | The candidate set **ratchets**: `corpus ∪ live`, pinned by pages that already filled a role, fed by additive write-back. Measured — the purpose sweep alone did **not** close entry 46's gap, because search did not return the page for the *same query* that once surfaced it, so no offline sweep can guarantee a superset; write-back did, taking Canada to **24 of 24** fetched pages held. Offline, a total search failure now loses **zero** candidates. |
 | 46 | Entry 44's store is built — `discovery/corpus.py`, `corpus_build.py`, `visa-discover corpus`. Canada holds **1,071 pages**, the additive merge kept every entry across two builds, and `entry-requirements-country.html` is durable at depth 1. **But the corpus is not a superset of what a corridor finds**: `supporting-documents`, fetched by the corridor run the same day, is absent, because traveller-free queries lose what corridor-specific ones surface. That gates item 19 — corpus-only today would trade variance for less coverage. |
 | 45 | `visa-discover corridor` reaches a registry destination instead of answering *"Unknown destination"*, and `--runs N` resolves a corridor repeatedly and reports what varied — item 17's counting is now one command. Building it made the test suite perform a **live** corridor resolution (21s, real searches, a real model call), because `run_corridor` had no seam and the rule against it was convention only; `tests/conftest.py` now refuses `socket.connect` for every test, and it caught the offending call on its first run. |
-| 44 | The candidate set stops being re-derived from search on every request: a country's **page corpus** is persisted, populated by an offline job, and search leaves the request path for a populated country. Entry 34's move one level down — *which pages exist* does not vary by corridor; only which one answers a given traveller does. A corpus miss **refuses and flags the country**, per entry 38, rather than falling back to live search. Answers TODO item 17 as option 3, widened from per corridor to per country. Fixes **recall only** — adjudication is still a model call, and a page the job never finds becomes a permanent gap. **Decided, not implemented.** |
+| 44 | The candidate set stops being re-derived from search on every request: a country's **page corpus** is persisted, populated by an offline job, and search leaves the request path for a populated country. Entry 34's move one level down — *which pages exist* does not vary by corridor; only which one answers a given traveller does. A corpus miss **refuses and flags the country**, per entry 38, rather than falling back to live search. Answers TODO item 17 as option 3, widened from per corridor to per country. Fixes **recall only** — adjudication is still a model call, and a page the job never finds becomes a permanent gap. **Decided here; built across entries 46–57.** Entry 47 chose a *union* (`corpus ∪ search`) over the refuse-on-miss described here, which is why search still runs — TODO item 19. |
 | 43 | Every run writes down what it considered — all candidates with their scores, the shortlist and fetch flags, the queries, the seeds, and each unreadable URL — to `var/recall/`, on refusals too. It exists because "ranked out" and "never found" had looked identical twice, and it answered that question about Canada on its first run: rank 15 of **470**, and simply absent from the run before. A diagnostic nothing reads back; deleting it costs a question, never an answer. |
 
 ### What changed on 2026-08-18, in one line each
@@ -959,56 +955,32 @@ same falsehood entry 33 removed from `withheld_domains`.
 
 ## Next steps
 
-[TODO.md](TODO.md) is the ordered list and the reasoning; this is its shape.
+[TODO.md](TODO.md) is the ordered list and the reasoning. This is only its shape; where the two
+disagree, TODO is right and this needs fixing.
 
-**First: [TODO.md](TODO.md) item 3** — the twenty-corridor measurement. It decides whether this is a
-product, Brave credit has been available since 2026-08-21, and after item 22 nothing large is queued
-ahead of it. **Carry item 22's unpaid last step with it**: instrument one run's phase split the way
-entry 48 did, because ~21s is still a projection and no live corridor has resolved through the
-corpus-routed path. Run each corridor **twice** — one run cannot tell a corridor that works from one
-that works half the time. See *Current task*.
+**First: [TODO.md](TODO.md) item 24** — let a corridor say *the answer is behind a tool we cannot
+drive*. It is the largest coverage limit there is, measured (entry 58), and it costs a whole
+destination rather than a role. See *Current task* for the trap to avoid.
 
-**Then: [TODO.md](TODO.md) items 17, 18, 19, 15 and 5** — count the flip rate, run the offline corpus
-job on the rest of item 3's destinations, decay live *search* the way the crawl has already gone, finish
-re-running the corridors, then treat France's challenge as a challenge. Item 17's decision is made
-(entry 44); what is left of it is the counting, which is cheap now that the recall log exists. Item 19
-is now half done — entry 51 took the crawl out of the request path, and what remains there is search.
-Items 15 and 18 need credit; 17, 19 and 5 do not, and Canada's own refusal reason named 5.
+**Then, in order:**
 
-**On sequencing against item 3, because it is a fair objection.** Entry 35 commits that nothing large
-ships before the 20-corridor measurement, and a corpus is large. The reconciliation is that item 18 is
-built once and run first on only the ~8 destinations item 3 needs, so the measurement describes the
-architecture the project intends to keep; scaling to 198 countries afterwards needs no rework. **That
-argument is now spent, not open-ended:** item 22 was the last thing taken ahead of item 3 on it.
+| item | what | costs |
+| --- | --- | --- |
+| **9** | tell "this country publishes no checklist" apart from "we failed to find it" — now attached to two of five measured destinations, not a hypothetical | nothing |
+| **19** | take **search** out of the request path; the crawl already went (entry 51), and search is the last single point of failure for a built destination | needs the nationality dimension measured |
+| **2** | amend the trust rule for governments with no marker, and for Schengen — still the reason 159 of 198 countries cannot be researched | review time |
+| **5** | treat France's Cloudflare *challenge* as a challenge; the interface still tells travellers something untrue of what was seen | nothing |
+| **18** | run the offline corpus job on more countries — ten are built, and a country without one crawls | search quota |
+| **17** | count the corridor flip rate; entry 58 makes this much less urgent (19 of 20 corridors reproduced) | nothing |
+| **7** | deployment — **no longer blocked on the product question**, which entry 58 answered | a decision about hosting |
 
-**Then the pre-existing list, in this order.** Each of these costs something — a crawl policy, a
-198-country registry, or search quota. Bulleted rather than numbered, because the numbers that matter
-are the TODO item numbers on each line.
+**What is deliberately *not* next.** The heuristic scorer's **ranking** is measurably weak — five of
+eighteen chosen pages sat outside the twenty-five places, rescued by the per-role reservation — but
+replacing it with a model would put non-determinism back exactly where entries 44–58 removed it. Entry
+40's cheaper answer, a wider window, has never been retested since the corpus made the pool six times
+larger. **Try 25 → 40 places and measure before trying anything cleverer.** See *smaller things* in
+TODO.
 
-- **Fix the post-over-nationality weighting**, and trace why Sweden does not move. Reproducible, written
-  up under *Current task*, and it decides what every corridor reads. Entries 39 and 40. TODO item 1.
-- **Measure the top 20 corridors against the bar committed in advance** — product if ≥70% confirm the
-  decision and ≥50% yield a checklist. **No longer blocked: Brave credit arrived on 2026-08-21.** It
-  decides the project's direction, so nothing large should be built before it. Fold in the France
-  read-through, which needs the same credit and is still the one shipped change never run live.
-  TODO item 3.
-- **Amend the trust rule** for the governments with no hostname marker, for the twelve confirmed-and-wrong
-  countries entry 38 found, and for Schengen. **The measurement it was waiting on is done** — entry 38's
-  table names the countries and the domains, so this is now a data edit against a committed file rather
-  than a regex change. `gv.at`, `canada.ca`, `esteri.it`, `government.nl`, `sef.pt`, `irishimmigration.ie`
-  are the concrete cases. Fix the cap's alphabetical tie-break at the same time: India spends two of five
-  slots on United States missions. TODO item 2.
-- **Decide the client-side retrieval question** in writing, either way (entry 35 raises it and explicitly
-  does not approve it). TODO item 4.
-- **Then deploy**, precompute popular corridors, and put a key or a rate limit on `POST /visa-plans`.
-  TODO item 7.
-- Standing work: confirm a blocked authority reads usefully (item 8 — the plumbing turned out to already
-  exist, see known problem 7); tell "no checklist exists" apart from "we failed to find it" (item 9); try
-  sitemaps before crawling (item 10); decide whether a host that refused everything may be skipped
-  (item 11); watch where the two deciders disagree (item 12); revisit conflict detection with claim scope
-  recorded (item 13); detect drift in configured sources (item 14).
-
----
 
 ## Working agreements
 
