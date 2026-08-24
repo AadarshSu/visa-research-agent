@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 465 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 481 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -79,14 +79,19 @@ found. No human approves anything per request. Seven destinations are also hand-
 
 ## What to do next
 
-**There is no single obvious next item, and that is worth saying plainly.** The three that gated
-everything are finished and confirmed live: the corpus replaced the crawl (entries 49–53), the
-twenty-corridor measurement ran (entry 58), and the wizard work took the United Kingdom from refusing
-every corridor to resolving all four (entries 59–62).
-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
-it cannot drift; this file deliberately does not copy it. **Item 17 leads**: decide what a corridor
-that flips between runs should do, which is a decision to argue before it is code.
+it cannot drift; this file deliberately does not copy it.
+
+**Item 28 leads**: build the counterfactual arm. The project has measured itself against a bar set in
+advance (entry 58) and has **never** measured the alternative — top search results with no domain
+trust, over the same corridors, graded the same way. Until that exists, "the rigor costs too much
+coverage" and "the rigor is worth it" are both unfalsifiable. Entry 63 built the counting half and its
+first two corridors already point somewhere unexpected: of 15 pages that could not be read, **none was
+blocked**.
+
+Everything that used to gate the queue is finished and confirmed live — the corpus replaced the crawl
+(entries 49–53), the twenty-corridor measurement ran (entry 58), and the wizard work took the United
+Kingdom from refusing every corridor to resolving all four (entries 59–62).
 
 Two things worth knowing before choosing: item 7 is **deployment**, which entry 58 unblocked by
 answering the product question, and item 2 is the **trust rule**, which is still why 159 of 198
@@ -135,7 +140,9 @@ re-add the amendment history here.
    produce an empty checklist, and since a missing one no longer refuses the corridor, a find-or-read
    failure now yields a plan with a visibly empty list. The plan says so — `VisaPlan` enforces it — but
    not *which* case it is. Now attached to Germany and the United States, 0/8 checklists each, rather
-   than to a hypothetical. Entry 14; TODO item 9.
+   than to a hypothetical. **And a third answer is on the table for Germany**: `visa-discover audit`
+   records seven pages on `www.auswaertiges-amt.de` fetched and holding too little readable text to
+   trust, which is neither of the two cases this problem names. Entry 14, entry 63; TODO item 9.
 
 9. **The heuristic scorer mis-ranks, and it is a recall gate rather than a decider.** The conclusion to
    draw is *widen the gate*, not *improve the ranking* — entry 40, and entry 61 is the same lesson
@@ -156,7 +163,9 @@ re-add the amendment history here.
 
 11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
    was, and that is now handled (entries 58–61). Three blocked portals found: `france-visas.gouv.fr`,
-   `www.france-visas.gouv.fr` and Singapore's VFS page. Working around a block stays forbidden. What
+   `www.france-visas.gouv.fr` and Singapore's VFS page. **Narrower again as of entry 63, on two
+   corridors:** of 15 pages that could not be read, 0 were `blocked` — 13 held no readable text and 2
+   were unreachable. Two corridors is not a rate; it is a pointer at where the losses actually are. Working around a block stays forbidden. What
    entry 35 corrects is the conclusion: the loss is permanent *given an anonymous client*, and that
    posture was never itself decided. `robots.txt` is now read and obeyed (entry 36) and buys nothing
    here — those hosts answer `403` to their own `robots.txt`. **And France's `403` is not a refusal at
@@ -215,8 +224,10 @@ re-add the amendment history here.
 
 23. **The interface offers 198 destinations and can research 39.** `researchable_destinations()` lists
    every country with `status="available"`, but 158 have no row in `authority_domains.yaml` and are
-   refused with a `503`. The refusal is honest; the *offer* is not. Fix by marking unbuilt countries or
-   by building the registry out (item 2) — not by loosening the refusal.
+   refused with a `503`, and Austria has a row with nothing confirmable. The refusal is honest; the
+   *offer* is not. Fix by marking unbuilt countries or by building the registry out (item 2) — not by
+   loosening the refusal. **Countable now rather than asserted**: `visa-discover audit` prints the
+   split, and attributes it — 158 of the 159 are a job nobody has run, not the trust rule (entry 63).
 
 24. **A thin corpus has no crawl behind it, and coverage varies enormously between countries.**
    Measured against the pages that actually filled roles on the crawl path: Singapore 6/6, United States

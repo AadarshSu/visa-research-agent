@@ -25,8 +25,13 @@ from typing import Literal, Protocol
 
 from pydantic import Field, field_validator
 
-from visa_research_agent.discovery.models import CandidatePage, Corridor
-from visa_research_agent.domain.models import StrictModel
+from visa_research_agent.discovery.models import (
+    CandidatePage,
+    Corridor,
+    DiscoveryRole,
+    RefusalCause,
+)
+from visa_research_agent.domain.models import FailureOutcome, StrictModel
 
 
 class ConsideredCandidate(StrictModel):
@@ -55,12 +60,47 @@ class RecallRecord(StrictModel):
     outcome: str = Field(min_length=1)
     """"resolved", or the reason it refused. So a reader knows which run they are looking at."""
 
+    cause: RefusalCause | None = None
+    """The same thing as a value, so a set of runs can be counted rather than read.
+
+    `None` means *this log predates the field*, and it is deliberately not a default that guesses.
+    The 27 logs from the twenty-corridor measurement are all `None`, and they cannot be repaired by
+    reading `outcome`: "resolved, with no visa_decision" is written both by a corridor that refused
+    and by one that resolved on a questionnaire, and nothing else in the record separates them. An
+    audit reports those as unrecorded rather than bucketing them, because inferring the cause from
+    the sentence is the habit that produced two wrong entries in `CLAUDE.md`'s corrections table.
+    """
+
+    unresolved_roles: list[DiscoveryRole] = Field(default_factory=list)
+    """Which reported roles went unfilled, as values rather than inside the `outcome` sentence.
+
+    Separate from `cause` because they answer different questions and only one of them refuses a
+    corridor: a run missing only its `document_checklist` is `resolved` (entry 14) and still worth
+    counting, since it is the number entry 58's second bar was measured against.
+    """
+
     queries: list[str] = Field(default_factory=list)
     seeds: list[str] = Field(default_factory=list)
     candidates: list[ConsideredCandidate] = Field(default_factory=list)
     unreadable: dict[str, str] = Field(default_factory=dict)
     """Per URL, not per host. The notes on a resolved corridor collapse these to one line per host,
-    which answers "was this site readable" but not "was this page"."""
+    which answers "was this site readable" but not "was this page".
+
+    **Both stages, since 2026-08-24.** This was filled from the crawl's failures alone, which was
+    complete only while the crawl ran. It stopped crawling (entry 51) and the field silently went
+    empty: all 27 logs from the twenty-corridor measurement record nothing unreadable, on runs whose
+    `ResolvedCorridor` named three authorities that refused us. The shortlist fetch is where a
+    refusal is met now, and it is merged in here.
+    """
+
+    unreadable_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
+    """Per URL, why it could not be read, as the typed outcome rather than the sentence.
+
+    `unreadable` carries the detail a person reads; this carries the thing a count may be taken
+    from. Keeping them apart is DECISIONS entry 36's rule — a `Disallow` and a `403` license
+    different statements, and deciding which one happened by matching words in `detail` would make
+    rewording a message silently change what an audit reports.
+    """
 
     @field_validator("recorded_at")
     @classmethod

@@ -110,6 +110,97 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | | |
 | --- | --- |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
+| [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 63. Why a traveller goes unanswered becomes a count, and the first count contradicts the assumption
+**2026-08-24 · implemented and confirmed live**
+
+The project could say how often it succeeded — 75% of corridors confirmed a visa decision, 50% yielded
+a checklist (entry 58) — and could not say, in any countable form, **why the rest did not.** Those
+failures have completely different fixes and opposite bearing on the trust rules: a country with no row
+in `authority_domains.yaml` is unfinished data, an authority answering `403` is a permanent cost of
+entry 18's posture, and a page nobody could rank is recall. Reported as one number they argue for
+whatever the reader already believed, which is how "the rigor is costing us too much" and "the rigor is
+worth it" had both stayed unfalsifiable.
+
+`visa-discover audit` counts it, in two halves that are deliberately **not** added together.
+
+### The two halves, and why merging them would lie
+
+**Reachability is decided before a resolver is ever built**, so a country refused for want of a registry
+row leaves no recall log at all. It is computed from committed data instead — exact, no runs, no
+network, read through the same `CountryAuthorities.domains` the request path reads so the two cannot
+drift:
+
+```
+researchable                   39   19.7%  —
+row, no confirmable domain      1    0.5%  partly — the trust rule's real cost
+no registry row at all        158   79.8%  no — unfinished data
+```
+
+**159 of 198 are refused before a page is fetched, and 158 of those are a job nobody has run.** Sharing
+a denominator with the recall causes would have buried that inside a percentage of corridors that
+mostly succeed.
+
+### The conflation this was built to end
+
+`RecallRecord.outcome` is prose, and two outcomes write **the same sentence**: a corridor refused
+because nothing stated the visa decision, and a corridor resolved by handing over the questionnaire
+that states it, both record `"resolved, with no visa_decision"`. One refuses the traveller; the other
+hands them the thing they can act on. Every United Kingdom run in the twenty-corridor logs is the
+second wearing the first's words.
+
+So `RefusalCause` is a value, derived from the result by `ResolvedCorridor.outcome_cause` rather than
+set twice, and confirmed live on the two corridors that differ:
+
+| run | `outcome` | `cause` |
+| --- | --- | --- |
+| `germany/IN/IN` | `resolved, with no document_checklist` | `resolved` |
+| `united-kingdom/IN/IN` | `resolved, with no visa_decision` | **`resolved_decision_tool`** |
+
+**Old logs are reported as unrecorded, never inferred.** All 27 predate the field, and they cannot be
+repaired by reading `outcome` — nothing else in the record separates the two rows above. Guessing from
+the sentence is the habit behind two of the corrections table's thirteen rows, and a `cause` recovered
+that way would be a number nobody could check.
+
+### A defect only running it could find
+
+`RecallRecord.unreadable` was filled from **the crawl's failures alone.** That was complete while the
+crawl ran; the crawl left the request path (entry 51) and the field silently went empty. All 27 logs
+record nothing unreadable — on runs whose own `ResolvedCorridor` named three authorities that had
+refused us. An audit over them would have reported the posture costing zero pages, by reading a field
+that had stopped being filled. The shortlist fetch is now recorded too, with `unreadable_outcomes`
+keeping the **typed** `FailureOutcome` beside the readable detail, because deciding a `Disallow` from a
+`403` by matching words in a message is what entry 36 forbids.
+
+This is the fourth time a documented claim survived only until something ran, and the second in this
+file where the thing that ran was written to measure something else.
+
+### What the first two corridors already say, and it is not what known problem 11 assumed
+
+Fifteen pages could not be read across `germany/IN/IN` and `united-kingdom/IN/IN`. **Not one of them was
+`blocked`:**
+
+```
+unusable       13   www.auswaertiges-amt.de (7), visa-fees.homeoffice.gov.uk (6)
+unreachable     2   portal.immigrationadviceauthority.gov.uk, visa-processingtimes.homeoffice.gov.uk
+```
+
+Every loss is a page that answered and held too little readable text to trust, a dead hostname, or a
+certificate chain that would not verify. **The refusal posture cost nothing in either run.** That is two
+corridors and must not be quoted as a rate, but it points where entry 58 could not: Germany's 0/8
+checklists sat under known problem 8 as *"publishes none, or we failed to find it"*, and there is now a
+third answer on the table — **seven pages on the foreign ministry's own domain were fetched and held no
+readable text.** That is a rendering question, not a recall one.
+
+### What this deliberately does not do
+
+It does not compare anything. The naive arm — top search results, no domain trust, one model call —
+still does not exist, so the *rigor tax* is still unquantified; this only makes the denominator
+honest enough for that comparison to mean something. Nothing here loosens a rule, and the exit code
+reports unrecorded runs as work outstanding rather than as failures.
 
 ---
 

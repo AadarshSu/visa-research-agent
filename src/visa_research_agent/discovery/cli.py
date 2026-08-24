@@ -29,6 +29,17 @@ from visa_research_agent.discovery.adjudication import (
     LangChainRoleAdjudicator,
     RoleAdjudicator,
 )
+from visa_research_agent.discovery.audit import (
+    CAUSE_LABELS,
+    CAUSE_ORDER,
+    POSTURE_COST,
+    Reachability,
+    RecallAudit,
+    audit_records,
+    counted,
+    reachability,
+    read_records,
+)
 from visa_research_agent.discovery.automatic import (
     AutomaticDiscoveryError,
     find_country,
@@ -418,6 +429,112 @@ def print_variance(report: VarianceReport, stream: TextIO) -> None:
         print(f"            seen in runs {seen}; read in runs {fetched}", file=stream)
 
 
+def print_reachability(report: Reachability, stream: TextIO) -> None:
+    """How much of the world can be researched, and what stands in the way of the rest."""
+
+    print(
+        f"\nReachability, from committed data — {report.countries} countries offered", file=stream
+    )
+    # Each row names the key its cost is looked up under, rather than the cost itself, so the
+    # answer to "is this the price of rigor" has one home and cannot drift between the two halves
+    # of this report. `researchable` has no key because it cost nothing — it is the successes.
+    rows = (
+        ("researchable", len(report.researchable), ""),
+        ("row, no confirmable domain", len(report.row_without_domain), "row_without_domain"),
+        ("no registry row at all", len(report.no_row), "no_row"),
+    )
+    for label, count, key in rows:
+        cost = POSTURE_COST.get(key, "—")
+        share = 100.0 * count / report.countries if report.countries else 0.0
+        print(f"  {label:<28} {count:>4}  {share:>5.1f}%  {cost}", file=stream)
+    print(
+        f"  {report.refused} of {report.countries} are refused before any page is fetched. "
+        "None of them leaves a recall log,\n  so they cannot appear in the causes below — which is "
+        "why the two halves are counted apart.",
+        file=stream,
+    )
+    if report.unconfirmable_candidates:
+        total = sum(report.unconfirmable_candidates.values())
+        named = ", ".join(
+            f"{code} ({count})" for code, count in report.unconfirmable_candidates.items()
+        )
+        plural = "domain" if total == 1 else "domains"
+        print(
+            f"\n  {len(report.unconfirmable_candidates)} of the refused countries had "
+            f"{total} candidate {plural} the rule declined: {named}.\n"
+            "  Those are the ones with something a reviewer could promote by hand; the rest "
+            "found nothing at all.",
+            file=stream,
+        )
+
+
+def print_recall_audit(report: RecallAudit, stream: TextIO) -> None:
+    """What the runs on disk actually did, bucketed by a cause each of them recorded."""
+
+    print(f"\nOutcomes, over {report.records} recorded runs", file=stream)
+    if not report.records:
+        print("  no recall logs found. Run a corridor first.", file=stream)
+        return
+    for cause, count in counted(report.causes, CAUSE_ORDER):
+        if cause == "not recorded":
+            continue
+        label = CAUSE_LABELS.get(cause, cause)
+        cost = POSTURE_COST.get(cause, "")
+        print(f"  {label:<52} {count:>4}  {cost}", file=stream)
+    if report.unrecorded:
+        # Said as its own paragraph rather than as a row, because it is not a bucket — it is the
+        # absence of bucketing, and a reader skimming a column of counts would read it as one.
+        print(
+            f"\n  {report.unrecorded} of {report.records} runs predate the cause field and are "
+            "not bucketed above.\n  They cannot be repaired by reading their outcome line: a "
+            "corridor that refused for want of\n  a visa decision and one that resolved by handing "
+            'over the questionnaire stating it both\n  wrote "resolved, with no visa_decision", '
+            "and nothing else in the record separates them.\n  Re-run them to fill this in.",
+            file=stream,
+        )
+    if report.unresolved_roles:
+        print("\n  roles left unfilled, counted across the same runs:", file=stream)
+        for role, count in sorted(report.unresolved_roles.items(), key=lambda i: (-i[1], i[0])):
+            print(f"    {role:<50} {count:>4}", file=stream)
+    print("\n  pages that could not be read:", file=stream)
+    if not report.unreadable:
+        print(
+            "    none recorded. Note what that does and does not mean: until 2026-08-24 this\n"
+            "    field was filled from the crawl alone, and the crawl left the request path\n"
+            "    (entry 51), so a run older than that records nothing here however many\n"
+            "    authorities refused it.",
+            file=stream,
+        )
+        return
+    for outcome, count in sorted(report.unreadable.items(), key=lambda item: (-item[1], item[0])):
+        print(f"    {outcome:<50} {count:>4}  {POSTURE_COST.get(outcome, '')}", file=stream)
+    for host, count in sorted(report.unreadable_hosts.items(), key=lambda i: (-i[1], i[0]))[:8]:
+        print(f"      {host:<48} {count:>4}", file=stream)
+
+
+def run_audit(args: argparse.Namespace, stream: TextIO) -> int:
+    """Both halves of the question, always. Exit code reports whether anything went unanswered.
+
+    The reachability half is printed even when there are no logs, because it is the larger number
+    and it needs no runs — a reader who has never run a corridor should still learn that most of
+    the world is refused before a page is fetched.
+    """
+
+    print_reachability(reachability(get_authority_registry(), get_country_registry()), stream)
+    directory = Path(args.directory)
+    if not directory.is_dir():
+        print(f"\nNo recall logs at {directory}; the outcome half needs runs.", file=stream)
+        return 1
+    report = audit_records(read_records(directory))
+    print_recall_audit(report, stream)
+    refused = sum(
+        count
+        for cause, count in report.causes.items()
+        if cause in {"decision_not_found", "no_candidates", "adjudication_failed", "run_raised"}
+    )
+    return 1 if refused or report.unrecorded else 0
+
+
 # One cold resolution of a corridor. Named so `run_corridor` can take a fake in tests.
 Resolve = Callable[[DestinationConfig, Corridor, RuntimePolicy], Awaitable[ResolvedCorridor]]
 
@@ -673,6 +790,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="how many hops from a seed; the request path affords two, this is not that path",
     )
 
+    audit = commands.add_parser(
+        "audit",
+        help="count why travellers go unanswered: reachability from data, causes from runs",
+    )
+    audit.add_argument(
+        "directory",
+        nargs="?",
+        default="var/recall",
+        help="a directory of recall logs; the reachability half needs no runs and is always shown",
+    )
+
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
@@ -704,6 +832,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return asyncio.run(run_registry(args, sys.stderr))
         if args.command == "corpus":
             return asyncio.run(run_corpus(args, sys.stderr))
+        if args.command == "audit":
+            return run_audit(args, sys.stderr)
         return asyncio.run(run_corridor(args, sys.stderr))
     except SearchError as exc:
         print(f"Search is unavailable: {exc}", file=sys.stderr)

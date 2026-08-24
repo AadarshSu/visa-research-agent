@@ -103,6 +103,7 @@ visa-discover registry                                   # generate the committe
 visa-discover registry --only FR,DE                      # rebuild just these, keeping the rest
 visa-discover bootstrap --destination-name Brazil        # propose one country's domains, to read
 visa-discover corridor --destination japan --nationality IN --from GB --purpose tourism
+visa-discover audit var/recall/                          # why travellers go unanswered, counted
 ```
 
 The correct pages depend on the **corridor** — destination, passport nationality, and the country

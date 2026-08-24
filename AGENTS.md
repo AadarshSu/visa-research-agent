@@ -32,6 +32,10 @@ the CLI does not offer it.
   in `authority_domains.yaml`, configured or not. It deliberately **does not touch the corridor
   store** — no load, no write — so its numbers are always cold and a run never warms the store for the
   API (`resolve_once`, entry 61).
+- **`visa-discover audit var/recall/`** answers "how much are we not answering, and why" in two
+  halves that are deliberately not added together: reachability from `authority_domains.yaml`, which
+  needs no runs, and the cause of every recorded run. It reads only typed fields, so a run older than
+  entry 63 is reported as unrecorded rather than guessed at. Nothing here touches the network.
 - **`visa-discover bootstrap --destination-name "United States"`** prints the proposed domains with
   their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
   the trusted set is checked before blaming ranking for anything.

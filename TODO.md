@@ -12,7 +12,9 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
 
-**Item 17 leads now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
+**Item 28 leads.** It is the measurement nothing else in this file can settle without: the project has never run the naive approach — top search results, no domain trust — over the same corridors and graded both the same way, so every argument about relaxing a rule is currently decided by whoever is talking. Entry 63 built the counting half; item 28 is the comparison half.
+
+**Then item 17, now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
 settles (entries 59–60), and the shortlist reserves five per role rather than three so the answering
 page actually reaches the model (entry 61). Item 26 was then measured and **closed without a code
@@ -39,7 +41,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 17. Decide what a corridor that flips between runs should do | `next` |
+| **Now** | 28. Build the counterfactual arm, and grade both against it | `next` |
+|  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 18. Build the offline corpus job, and run it on more destinations | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
@@ -78,6 +81,45 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+### 28. Build the counterfactual arm, and grade both against it — `next`
+
+**Why:** the project has never once measured itself against the thing a traveller would otherwise do.
+Entry 35 committed a bar in advance and entry 58 measured against it honestly — 75% decision, 50%
+checklist — but with **no comparison arm**, so "we are losing too much convenience for this rigor" and
+"the rigor is worth it" are equally unfalsifiable, and every argument about relaxing a rule is decided
+by whoever is talking. Entry 63 made the denominator honest; this is the other half.
+
+**Do:** `visa-discover baseline`, a deliberately naive pipeline over the same corridors — one plainly
+worded query, top 8 results through the existing `BraveSearchProvider`, **no** `is_own_government`, no
+corpus, no `score_role_vocabulary`, no shortlist, no role adjudication, one model call. Emit the fields
+entry 58 graded plus the host behind each claim and the wall clock.
+
+**Grade both arms on four things, and the third is why this is worth building:**
+
+1. did it answer at all;
+2. how fast;
+3. **is the cited host the destination's own government** — computable offline afterwards by running
+   `is_own_government` over the baseline's cited hosts, no human needed. This is what turns entry 19's
+   three anecdotes — `axa-schengen.com` for France, `usembassy.gov` for Vietnam, VFS for Brazil — into
+   a rate, and it is the number the whole trust model is a bet about;
+4. is the answer right, against a hand-graded truth set built once and committed.
+
+**Hard constraints, because this is exactly what entries 38 and 44 refuse as a fallback.** A separate
+subcommand, never imported by `resolver.py` or anything under `api/`, with a test asserting that —
+alongside the mechanism tests in `tests/test_trust_coverage.py`, which exist for this. Its output is a
+report and never a `VisaPlan`, so nothing it produces can reach a traveller. Network stays in the CLI;
+the suite stays offline (entry 45).
+
+**Sample destinations, not corridors.** Entry 58's own finding is that nationality changed the outcome
+once in twenty, so twenty corridors was five observations replicated four times. Roughly 15
+destinations × 1 nationality, and **include countries that currently refuse for want of a registry
+row** — those are where the naive arm looks best and where the honest answer is that the gap is our
+unfinished work rather than our rigor.
+
+**What entry 63's first two corridors already suggest, and this must be allowed to disprove:** of 15
+pages that could not be read, 0 were `blocked`. If that holds at 15 destinations, the refusal posture
+is not what costs coverage and the argument moves entirely to item 2.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
@@ -735,6 +777,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| — Count why a traveller goes unanswered | 08-24 | 63 | `RecallRecord.unreadable` had been filled from the crawl alone and went **silently empty** when the crawl left. First two corridors: 0 of 15 lost pages were `blocked` |
 | 26. The nationality bonus rewards naming a country | 08-24 | 62 | **Closed with no code change.** Four fixes, four disproofs — including one implemented and reverted when the suite caught it. Cost of leaving it: 0.27 shortlist places |
 | 25. Get the answering page into the shortlist | 08-24 | 61 | The reservation was three per role and the answer was 5th. Five per role, budget 35 — **the UK went 0/8 → 4/4**. Depth and budget only work together |
 | 24. Say "the answer is behind a tool we cannot drive" | 08-24 | 59, 60 | Widened the same day: a questionnaire is an answer **for every role**, not a blockade. Also declines URL-construction, with measurements |
@@ -754,6 +797,14 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**25 recall logs carry no cause, and only a re-run fills them in.** Entry 63 added
+`RecallRecord.cause`, and the logs from the twenty-corridor measurement predate it. They cannot be
+repaired by reading their `outcome` line — a corridor that refused for want of a visa decision and one
+that resolved by handing over the questionnaire stating it wrote the same sentence, which is the
+conflation the field exists to end. `visa-discover audit` reports them as unrecorded rather than
+bucketing them. Re-running those corridors is quota, not work, and item 28 needs runs anyway, so do it
+there rather than on its own.
 
 **The search client has no rate limiting, and a capped plan answers `HTTP 402`.** Found 2026-08-24.
 `BraveSearchProvider.search` paces nothing and `search_all` runs four queries at once, so a corpus

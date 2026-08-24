@@ -46,6 +46,29 @@ LOAD_BEARING_ROLES: tuple[DiscoveryRole, ...] = ("visa_decision",)
 # traveller can be told, so it is reported and moves the command's exit code from 0 to 1.
 REPORTED_ROLES: tuple[DiscoveryRole, ...] = (*LOAD_BEARING_ROLES, "document_checklist")
 
+# Why one run ended the way it did, as a value rather than a sentence.
+#
+# `RecallRecord.outcome` has always carried this in prose, and prose cannot be counted. Worse, two
+# of these read *identically* there: a corridor refused because nothing stated the visa decision and
+# a corridor resolved by handing over the questionnaire that states it both write "resolved, with no
+# visa_decision". Those have opposite meanings for a traveller and opposite fixes for us, and the
+# twenty-corridor logs on disk cannot be told apart at all — which is what this exists to end.
+#
+# Deliberately **not** every reason a traveller can go unanswered. The two largest are decided
+# before a resolver is constructed — a country with no row in `authority_domains.yaml`, and a row
+# whose domains the trust rule cannot confirm — so no run happens and no record is written. Those
+# are counted from committed data instead (`visa-discover audit`), and conflating the two sources
+# would let a reachability failure hide inside a recall failure.
+RefusalCause = Literal[
+    "resolved",
+    "resolved_decision_blocked",
+    "resolved_decision_tool",
+    "decision_not_found",
+    "no_candidates",
+    "adjudication_failed",
+    "run_raised",
+]
+
 # Display and output order, so proposals diff cleanly between runs.
 ROLE_ORDER: tuple[DiscoveryRole, ...] = (
     "visa_decision",
@@ -326,6 +349,41 @@ class ResolvedCorridor(StrictModel):
         if "visa_decision" in filled:
             return False
         return bool(self.decision_blocking_urls or self.decision_tool_urls)
+
+    @property
+    def outcome_cause(self) -> RefusalCause:
+        """Why this corridor ended as it did, as a value something can count.
+
+        This is the distinction `RecallRecord.outcome` cannot express. A corridor that refused
+        because nothing stated the visa decision and a corridor that resolved by handing over the
+        questionnaire stating it both write "resolved, with no visa_decision" there, and every
+        United Kingdom run in the twenty-corridor logs is the second wearing the first's words.
+
+        `resolved` means the load-bearing roles were filled outright. It says nothing about
+        `document_checklist`, which is reported by `unresolved_roles` and counted separately — a
+        corridor missing only its checklist resolved, and calling that a failure would re-open the
+        question DECISIONS entry 14 settled.
+
+        **Two refusals are invisible from the result alone**: a run that found no candidates and a
+        run whose adjudication failed both produce a corridor with no sources. Those are recorded
+        where they happen, by `ResolutionTrace.refusal_cause`, and the recall log prefers it. Left
+        to this property a sourceless corridor reads as `decision_not_found`, which is what a
+        corridor that fetched pages and filled nothing is — the accurate answer in every case the
+        two overrides do not already claim.
+
+        Blocked is checked before tool, so a corridor holding both is counted as blocked. That is
+        the narrower fact of the two: an authority refused us, which is a thing that happened to a
+        request, where a questionnaire is a judgement about a page we read.
+        """
+
+        filled = {role for source in self.sources for role in source.roles}
+        if all(role in filled for role in LOAD_BEARING_ROLES):
+            return "resolved"
+        if self.sources and self.decision_blocking_urls:
+            return "resolved_decision_blocked"
+        if self.sources and self.decision_tool_urls:
+            return "resolved_decision_tool"
+        return "decision_not_found"
 
     def source_ids_for(self, role: DiscoveryRole) -> list[str]:
         return [source.source_id for source in self.sources if role in source.roles]

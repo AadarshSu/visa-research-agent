@@ -54,6 +54,7 @@ from visa_research_agent.discovery.models import (
     Corridor,
     DiscoveryRole,
     PageLink,
+    RefusalCause,
     ResolvedCorridor,
     ResolvedSource,
     ResolvedTool,
@@ -89,6 +90,7 @@ from visa_research_agent.domain.models import (
     PERSISTENT_REFUSAL_STATUS_CODES,
     ConfiguredSource,
     DestinationConfig,
+    FailureOutcome,
     SourceFailure,
     SourceKind,
     StrictModel,
@@ -237,6 +239,21 @@ class ResolutionTrace:
     shortlisted: set[str] = field(default_factory=set)
     fetched: set[str] = field(default_factory=set)
     crawl_failures: dict[str, str] = field(default_factory=dict)
+    fetch_failures: list[SourceFailure] = field(default_factory=list)
+    """What reading the shortlist could not read, kept typed rather than flattened to a sentence.
+
+    The crawl's failures were the only ones recorded until 2026-08-24, and once the crawl left the
+    request path (entry 51) that meant none were. The shortlist fetch is the only stage that meets a
+    refusal now.
+    """
+
+    refusal_cause: RefusalCause | None = None
+    """Set only where a refusal is decided, for the two `ResolvedCorridor` cannot show.
+
+    A run that found no candidates and a run whose adjudication failed both return a corridor with
+    no sources, so `outcome_cause` cannot separate them from the result. Everything else is derived
+    there rather than set here, because a value recorded twice drifts.
+    """
 
 
 def _slugify(value: str, *, maximum: int = 24) -> str:
@@ -579,6 +596,7 @@ class CorridorResolver:
             if canonical_key(url) not in held
         ]
         if not candidates:
+            trace.refusal_cause = "no_candidates"
             return self._refused(corridor, queries, notes, "no candidate pages were found")
 
         # 4. Fetch the shortlist through the ordinary retrieval path.
@@ -589,6 +607,9 @@ class CorridorResolver:
         # Refusals met while reading the shortlist, folded in beside the crawl's. Both are
         # observations from this run; neither is complete on its own, and with no crawl the fetch
         # is the only one there is.
+        # Kept on the trace as well as reported, because the recall log is the only place a refusal
+        # can be counted across runs and it had been recording the crawl's alone.
+        trace.fetch_failures = list(fetched.failures)
         fetch_inaccessible, fetch_refused = self._report_retrieval_refusals(fetched.failures, notes)
         inaccessible = sorted(crawl_inaccessible | fetch_inaccessible)
         refused = sorted(crawl_refused | fetch_refused)
@@ -602,6 +623,7 @@ class CorridorResolver:
             # Refuse rather than fall back to the heuristic. Degrading to the decider that named
             # Brazil's Riyadh page as a document checklist is not the conservative option — see
             # DECISIONS entry 31, which amends entry 16.
+            trace.refusal_cause = "adjudication_failed"
             return self._refused(corridor, queries, notes, str(exc), model_calls=exc.attempts)
 
         # Which refused pages, if any, could have held the decision. Asked only when the decision is
@@ -1312,12 +1334,27 @@ class CorridorResolver:
         elif resolved.unresolved_roles:
             unfilled = ", ".join(resolved.unresolved_roles)
             outcome = f"resolved, with no {unfilled}"
+        # The sentence above and the value below say the same thing to different readers, and only
+        # one of them can be counted. Where a refusal recorded its own cause that wins, because the
+        # result cannot show it; everything else is derived from the result so the two cannot drift.
+        cause: RefusalCause = "run_raised"
+        if resolved is not None:
+            cause = trace.refusal_cause or resolved.outcome_cause
+        # Both stages, and the crawl's first so a page the fetch also met keeps the earlier reason.
+        unreadable = dict(trace.crawl_failures)
+        outcomes: dict[str, FailureOutcome] = {}
+        for failure in trace.fetch_failures:
+            url = str(failure.attempted_url)
+            unreadable.setdefault(url, failure.detail)
+            outcomes[url] = failure.outcome
         try:
             self.recall_log.write(
                 RecallRecord(
                     corridor_key=corridor.key,
                     recorded_at=self.now(),
                     outcome=outcome,
+                    cause=cause,
+                    unresolved_roles=list(resolved.unresolved_roles) if resolved else [],
                     queries=trace.queries,
                     seeds=trace.seeds,
                     candidates=considered(
@@ -1325,7 +1362,8 @@ class CorridorResolver:
                         shortlisted=trace.shortlisted,
                         fetched=trace.fetched,
                     ),
-                    unreadable=trace.crawl_failures,
+                    unreadable=unreadable,
+                    unreadable_outcomes=outcomes,
                 )
             )
         except OSError:
