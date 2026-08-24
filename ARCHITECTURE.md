@@ -514,12 +514,22 @@ smaller, which is what lost Canada its answer.
 > Roles genuinely found are neutral to better. **Adjudication is now ~60% of a corridor** and is where
 > the next optimisation is.
 >
-> **One thing broke, and it is not the reporting.** `inaccessible_domains` and `inaccessible_urls`
-> still name every refusing host and page (entry 49). But `_decision_blocking` needs a refusal
-> *observed on a page scoring for `visa_decision`*, and a 25-page fetch observes far fewer refusals
-> than a crawl did — France 6 against 18 — so entry 27's blocked-authority exception stopped firing
-> for Sweden and France. The root cause is a scoring rule rather than anything about blocks; known
-> problem 25 and [TODO.md](TODO.md) item 23.
+> **One thing broke on the way, and it is fixed.** Removing the crawl left entry 27's
+> blocked-authority exception unable to fire: `_decision_blocking` needed a refusal observed on a page
+> scoring for `visa_decision`, and a 25-page fetch observes far fewer refusals than a crawl did
+> (France 6 against 18). The reporting never broke — `inaccessible_domains` and `inaccessible_urls`
+> still name every refusing host and page (entry 49) — what broke was *qualification*. Two fixes:
+> the `visa_decision` vocabulary could only ask the question, never recognise an answer (entry 56),
+> and **`_decision_blocking` no longer keyword-matches at all** (entry 57).
+
+**Which page could a blocked authority have been hiding?** That question is judged, not scored.
+`_decision_blocking` asks a model over the refused page's **address and label only** — there is no
+text, because the authority refused it, and `build_blocked_packet` has no parameter through which any
+could be passed. It is the one place the heuristic was deciding what a page *means* rather than
+whether it was worth reading. It runs only when a corridor has settled refusals **and** no
+`visa_decision` was found, so an ordinary corridor makes no extra call; it fails closed after two
+attempts; and with no adjudicator configured the keyword test still runs, which keeps the
+deterministic path intact. See DECISIONS entry 57.
 
 **The lifetimes differ because the things do.** A government page can be edited any day, so evidence is
 measured in hours. Which *pages* answer a corridor changes when a site is redesigned, so a resolution is

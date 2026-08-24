@@ -1,5 +1,6 @@
 """Resolving a whole corridor: search, crawl, fetch, assign roles, or refuse."""
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -21,7 +22,11 @@ from discovery_site import (
     site_pages,
 )
 
-from visa_research_agent.discovery.adjudication import AdjudicationError
+from visa_research_agent.discovery.adjudication import (
+    AdjudicationError,
+    RoleAdjudication,
+    RoleChoice,
+)
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.crawl import DEFAULT_CRAWL_PAGES, CrawlFetcher
 from visa_research_agent.discovery.models import (
@@ -475,24 +480,34 @@ async def test_a_url_an_authority_refused_is_not_asked_for_a_second_time(tmp_pat
     assert [str(request.url) for request in requests].count(MISSION_CHECKLIST) == 1
 
 
-async def resolve_with_status(tmp_path: Path, refused_url: str, status: int) -> ResolvedCorridor:
+async def resolve_with_status(
+    tmp_path: Path, refused_url: str, status: int, *, also_refuse: tuple[str, ...] = ()
+) -> ResolvedCorridor:
     """Resolve the corridor with one URL answering `status`, reached as a search result.
 
     Via search deliberately: the crawl discards a page it could not fetch, so a refusal only has a
     score to be judged on when something else scored it first.
+
+    `also_refuse` exists because `decision_blocking_urls` is only populated when the visa decision
+    is genuinely **missing** — if another page answered it, nothing blocked it. Refusing every page
+    that could fill the role is what actually reproduces the France shape.
     """
 
     requests: list[httpx.Request] = []
     site = handler(requests)
+    refused_urls = {refused_url, *also_refuse}
 
     def refusing(request: httpx.Request) -> httpx.Response:
-        if str(request.url).rstrip("/") == refused_url:
+        if str(request.url).rstrip("/") in refused_urls:
             return httpx.Response(status, text="no")
         served: httpx.Response = site(request)  # type: ignore[operator]
         return served
 
     transport = httpx.MockTransport(refusing)
-    resolver, _ = build_resolver(tmp_path, [], [INDEX, DETAIL_INDIA])
+    # The mission is seeded too, so that refusing every visa-decision page still leaves
+    # something readable to cite. Entry 27 requires that: with nothing at all to cite there is
+    # no plan, only a link.
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, DETAIL_INDIA, MISSION_INDEX])
     resolver.crawl_fetcher.transport = transport
     resolver.live_fetcher.transport = transport
     return await resolver.resolve(destination(), corridor())
@@ -528,12 +543,42 @@ async def test_a_settled_refusal_of_the_decision_page_is_what_may_resolve_one(
     handing over the URL is the one useful thing left to say.
     """
 
-    resolved = await resolve_with_status(tmp_path, DETAIL_INDIA, 403)
+    resolved = await resolve_with_status(
+        tmp_path,
+        DETAIL_INDIA,
+        403,
+        also_refuse=(EXEMPTIONS, f"https://{AUTHORITY}/visa/detail"),
+    )
 
-    assert resolved.inaccessible_urls == [DETAIL_INDIA]
-    assert resolved.decision_blocking_urls == [DETAIL_INDIA], (
+    assert DETAIL_INDIA in resolved.inaccessible_urls
+    assert "visa_decision" not in {role for source in resolved.sources for role in source.roles}, (
+        "this shape only exists when the decision was not found elsewhere"
+    )
+    assert DETAIL_INDIA in resolved.decision_blocking_urls, (
         "the per-nationality decision page refused us, so it is why the decision is unverifiable"
     )
+    assert resolved.decision_is_unverified
+    assert resolved.is_usable, "a corridor whose only gap is behind a block still produces a plan"
+
+
+@pytest.mark.anyio
+async def test_a_refusal_is_not_decision_blocking_when_the_decision_was_found(
+    tmp_path: Path,
+) -> None:
+    """Nothing blocked the decision if we got the decision.
+
+    `decision_blocking_urls` used to be populated from the keyword score whether or not
+    `visa_decision` was filled, so it listed pages that had blocked nothing. Both its consumers —
+    `is_usable` and `decision_is_unverified` — short-circuit once the role is filled, so this was
+    never read; it was a field describing something that had not happened. DECISIONS entry 57.
+    """
+
+    resolved = await resolve_with_status(tmp_path, DETAIL_INDIA, 403)
+
+    assert "visa_decision" in {role for source in resolved.sources for role in source.roles}
+    assert DETAIL_INDIA in resolved.inaccessible_urls, "the refusal is still reported"
+    assert resolved.decision_blocking_urls == []
+    assert not resolved.decision_is_unverified
 
 
 @pytest.mark.anyio
@@ -665,10 +710,12 @@ async def test_a_refusal_met_only_while_reading_the_shortlist_is_still_reported(
 
     assert host_of(DETAIL_INDIA) in resolved.inaccessible_domains
     assert resolved.inaccessible_urls == [DETAIL_INDIA]
-    assert resolved.decision_blocking_urls == [DETAIL_INDIA]
     assert any(DETAIL_INDIA.split("//")[1].split("/")[0] in note for note in resolved.notes), (
         resolved.notes
     )
+    # Not asserted here: `decision_blocking_urls`. The decision *was* found in this corridor, so
+    # nothing blocked it — see the "not decision blocking when the decision was found" test. What
+    # this one is about is that the refusal is reported at all.
 
 
 @pytest.mark.anyio
@@ -791,4 +838,118 @@ async def test_a_corridor_that_does_not_crawl_still_reports_a_refusal(tmp_path: 
     assert resolver.crawl_fetcher.requested == []
     assert host_of(DETAIL_INDIA) in resolved.inaccessible_domains
     assert resolved.inaccessible_urls == [DETAIL_INDIA]
-    assert resolved.decision_blocking_urls == [DETAIL_INDIA]
+
+
+class StubBlockedJudge:
+    """An adjudicator that fills no role, then answers the blocked-page question as told."""
+
+    def __init__(self, *, blocked_reply: object) -> None:
+        self.blocked_reply = blocked_reply
+        self.packets: list[str] = []
+        self.prompts: list[str] = []
+
+    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+        self.prompts.append(system_prompt)
+        self.packets.append(packet)
+        if "refused_pages" not in packet:
+            # The role call. Fill the checklist from a real candidate and nothing else, so the visa
+            # decision is genuinely missing *and* something readable remains to cite — entry 27
+            # requires both, and without the second the corridor refuses for a different reason.
+            first = json.loads(packet)["candidates"][0]["source_id"]
+            return RoleAdjudication(
+                choices=[
+                    RoleChoice(role="document_checklist", source_id=first, reason="the checklist")
+                ]
+            )
+        if isinstance(self.blocked_reply, Exception):
+            raise self.blocked_reply
+        assert isinstance(self.blocked_reply, RoleAdjudication)
+        return self.blocked_reply
+
+
+async def resolve_with_judge(tmp_path: Path, judge: StubBlockedJudge) -> ResolvedCorridor:
+    """Refuse every visa-decision page, so the blocked-page question is actually asked."""
+
+    site = handler([])
+    refused = {DETAIL_INDIA, EXEMPTIONS, f"https://{AUTHORITY}/visa/detail"}
+
+    def refusing(request: httpx.Request) -> httpx.Response:
+        if str(request.url).rstrip("/") in refused:
+            return httpx.Response(403, text="no")
+        served: httpx.Response = site(request)  # type: ignore[operator]
+        return served
+
+    transport = httpx.MockTransport(refusing)
+    resolver, _ = build_resolver(tmp_path, [], [INDEX, DETAIL_INDIA, MISSION_INDEX])
+    resolver.crawl_fetcher.transport = transport
+    resolver.live_fetcher.transport = transport
+    resolver.adjudicator = judge
+    return await resolver.resolve(destination(), corridor())
+
+
+def blocked_id(url: str) -> str:
+    return build_source_id("testland", url, set())
+
+
+@pytest.mark.anyio
+async def test_a_refused_page_is_judged_rather_than_keyword_matched(tmp_path: Path) -> None:
+    """DECISIONS entry 57: the one place the scorer was deciding what a page *means*.
+
+    The judged page is asserted to carry no text, because there is none — the authority refused it.
+    A packet that ever grew an excerpt field would be inferring content about a page nobody read,
+    which is the thing DECISIONS entry 18 forbids outright.
+    """
+
+    chosen = blocked_id(DETAIL_INDIA)
+    judge = StubBlockedJudge(
+        blocked_reply=RoleAdjudication(
+            choices=[RoleChoice(role="visa_decision", source_id=chosen, reason="per-nationality")]
+        )
+    )
+
+    resolved = await resolve_with_judge(tmp_path, judge)
+
+    assert resolved.decision_blocking_urls == [DETAIL_INDIA], (
+        "the judged page, and only it — the other two refusals were not chosen"
+    )
+    assert resolved.decision_is_unverified
+    assert resolved.is_usable
+    packet = next(p for p in judge.packets if "refused_pages" in p)
+    assert "untrusted_content" not in packet, "a refused page has no text and must carry none"
+    assert "excerpt" not in packet
+
+
+@pytest.mark.anyio
+async def test_judging_the_refused_pages_fails_closed(tmp_path: Path) -> None:
+    """A model outage may cost a blocked-authority plan; it may never invent one.
+
+    Empty is the same outcome as nothing qualifying, so the corridor refuses — which is what this
+    project does when it cannot tell. It retries first, for entry 31's reason: a momentary failure
+    should not cost a corridor its answer.
+    """
+
+    judge = StubBlockedJudge(blocked_reply=AdjudicationError("the request failed"))
+
+    resolved = await resolve_with_judge(tmp_path, judge)
+
+    assert resolved.decision_blocking_urls == []
+    assert not resolved.decision_is_unverified
+    assert not resolved.is_usable
+    assert any("could not be judged" in note for note in resolved.notes), resolved.notes
+    assert sum(1 for p in judge.packets if "refused_pages" in p) == 2, "one retry, then give up"
+
+
+@pytest.mark.anyio
+async def test_a_judged_page_the_model_invented_is_discarded(tmp_path: Path) -> None:
+    """The application decides what is real, exactly as `validated_choices` does for roles."""
+
+    judge = StubBlockedJudge(
+        blocked_reply=RoleAdjudication(
+            choices=[RoleChoice(role="visa_decision", source_id="not_a_real_id", reason="made up")]
+        )
+    )
+
+    resolved = await resolve_with_judge(tmp_path, judge)
+
+    assert resolved.decision_blocking_urls == []
+    assert any("which was not one of the refused pages" in note for note in resolved.notes)

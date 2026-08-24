@@ -23,11 +23,15 @@ from urllib.parse import urlsplit
 from pydantic import Field
 
 from visa_research_agent.discovery.adjudication import (
+    MAXIMUM_BLOCKED_JUDGED,
     AdjudicationError,
     RoleAdjudication,
     RoleAdjudicator,
+    build_blocked_packet,
     build_candidate_packet,
     load_adjudication_prompt,
+    load_blocked_prompt,
+    validated_blocked_choices,
     validated_choices,
 )
 from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
@@ -572,6 +576,24 @@ class CorridorResolver:
             # Brazil's Riyadh page as a document checklist is not the conservative option — see
             # DECISIONS entry 31, which amends entry 16.
             return self._refused(corridor, queries, notes, str(exc), model_calls=exc.attempts)
+
+        # Which refused pages, if any, could have held the decision. Asked only when the decision is
+        # actually missing and something was actually refused: `decision_blocking_urls` is read by
+        # `is_usable` and `decision_is_unverified`, and both are inert once `visa_decision` is
+        # filled. So the ordinary corridor makes no extra call at all. DECISIONS entry 57.
+        decision_found = any("visa_decision" in source.roles for source in sources)
+        if decision_found or not refused:
+            blocking = []
+        elif self.adjudicator is None:
+            # The deterministic path keeps the keyword test, exactly as `_decide_roles` does. This
+            # is a configured mode, not entry 31's forbidden fallback from a failed call.
+            blocking = self._decision_blocking(refused, candidates)
+        else:
+            blocking, blocked_calls = await self._decision_blocking_judged(
+                corridor, refused, candidates, notes
+            )
+            model_calls += blocked_calls
+
         return ResolvedCorridor(
             corridor=corridor,
             resolved_at=self.now(),
@@ -580,7 +602,7 @@ class CorridorResolver:
             notes=notes,
             inaccessible_domains=inaccessible,
             inaccessible_urls=refused,
-            decision_blocking_urls=self._decision_blocking(refused, candidates),
+            decision_blocking_urls=blocking,
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
@@ -708,6 +730,61 @@ class CorridorResolver:
             if candidate is not None and candidate.link_scores.score_for("visa_decision") > 0:
                 blocking.append(url)
         return blocking
+
+    async def _decision_blocking_judged(
+        self,
+        corridor: Corridor,
+        refused: list[str],
+        candidates: dict[str, CandidatePage],
+        notes: list[str],
+    ) -> tuple[list[str], int]:
+        """Ask which refused pages could have held the decision, instead of keyword-matching them.
+
+        The one place the heuristic was deciding what a page *means* rather than whether it was
+        worth reading — and it was doing it on a page **nobody read**. DECISIONS entry 57; entry 56
+        is what it cost, when Sweden's country list scored `visa_decision` 0.0 and an authority
+        refusing the decision page could not make the decision unverifiable.
+
+        **Fails closed.** Two attempts, then an empty list, which refuses the corridor exactly as
+        nothing qualifying would. A model outage can never *create* a blocked-authority plan; it can
+        only cost one, which is why it retries at all (entry 31's reasoning).
+        """
+
+        judged = {
+            source_id: candidates[url]
+            for source_id, url in (
+                (build_source_id(corridor.destination_slug, url, set()), url)
+                for url in sorted(refused)[:MAXIMUM_BLOCKED_JUDGED]
+            )
+            if url in candidates
+        }
+        if not judged or self.adjudicator is None:
+            return [], 0
+
+        by_id = {source_id: candidate.link.url for source_id, candidate in judged.items()}
+        packet = build_blocked_packet(corridor, judged)
+        prompt = load_blocked_prompt()
+        calls = 0
+        for attempt in range(1, ADJUDICATION_ATTEMPTS + 1):
+            calls += 1
+            try:
+                adjudication = await self.adjudicator.adjudicate(prompt, packet)
+            except AdjudicationError as exc:
+                if attempt < ADJUDICATION_ATTEMPTS:
+                    notes.append(f"judging the refused pages failed ({exc}); retrying once")
+                    continue
+                # Not a fallback to the heuristic: this reports nothing rather than substituting a
+                # decider whose keyword answer is the one entry 57 removed.
+                notes.append(
+                    f"the refused pages could not be judged after {ADJUDICATION_ATTEMPTS} "
+                    "attempts, so none is treated as having held the visa decision"
+                )
+                return [], calls
+            kept, discarded = validated_blocked_choices(adjudication, judged)
+            for reason in discarded:
+                notes.append(reason)
+            return sorted(by_id[source_id] for source_id in kept), calls
+        return [], calls
 
     def _mission_domains(self, destination: DestinationConfig, residence: object) -> list[str]:
         """Hosts that look like the post serving the traveller's residence.

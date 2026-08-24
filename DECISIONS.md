@@ -9,6 +9,90 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 57. A block is judged, not keyword-matched — the one place the scorer was doing semantics
+**2026-08-24 · decided; implemented**
+
+`_decision_blocking` asks *"could this page have held the visa decision?"* and answers it by keyword
+match, on a page **nobody read**. That is the only place in the pipeline where the heuristic decides
+what a page *means* rather than whether it is worth reading, and entry 56 is what it cost: Sweden's
+`list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `visa_decision` **0.0**, so
+an authority refusing the visa-decision page could not make the decision unverifiable, and the
+corridor refused instead of handing the traveller the URL. The fix was to add seven phrases to a word
+list. That is the wrong kind of fix for a meaning question, and it will keep being needed.
+
+### Why this is the right place to spend a model call, and the shortlist is not
+
+The scorer has three jobs and does them very differently:
+
+| job | verdict |
+| --- | --- |
+| reject obvious non-guidance | **well** — archived paths, site furniture, wrong audience, wrong country. Cheap, deterministic, and a veto is safe. |
+| rank what survives | **poorly**, but survivably — measured over six corridors, 5 of the 18 pages the model chose ranked outside the 25 places (27th, 31st, 35th, 57th, 101st) and **every one was admitted by the top-3-per-role reservation**, not by its rank |
+| **judge what a page means** | **badly, and it should not be doing it at all** |
+
+Only the third moves. **The shortlist deliberately stays heuristic**, for three reasons that do not
+apply here: something must cut ~2,455 candidates to what a model can read, and reading them all is
+thousands of fetches and ~1.9M tokens per corridor; entries 44–53 spent four sessions making the
+candidate set *deterministic*, and putting a model in front of it would reintroduce variance exactly
+where it was removed; and entry 40 already showed the cheap fix for bad ranking is a wider window, not
+a better ranker.
+
+**The cost objection is weakest here.** A blocked page has a URL, an anchor text and a title, and
+nothing else — there is no page text, because the authority refused it. So this is a small call over
+metadata, and it only runs when a corridor has settled refusals *and* no `visa_decision` was found,
+which is a handful of corridors. Most corridors make no extra call at all.
+
+### What must not change, and how each is held
+
+- **Nobody read the page, and nothing may be inferred about its content.** The packet carries the URL,
+  the title and the anchor text — never `untrusted_content`, which does not exist for a refused page.
+  The prompt says so explicitly, and the packet builder has no parameter through which text could be
+  passed.
+- **Only settled refusals.** `401`/`403` only, filtered by `persistent_refusals` **before** anything
+  is asked. A `429` never reaches the model, so a rate limit still cannot resolve a corridor
+  (entry 32).
+- **The application decides what is real.** Ids the model invents are discarded, exactly as
+  `validated_choices` does for roles. It may only ever narrow the set it was given.
+- **Failure fails closed.** Two attempts, then an empty result — which means the corridor refuses,
+  the same outcome as nothing qualifying. A model outage can never *create* a blocked-authority plan.
+  It can cost one, which is why it retries (entry 31's reasoning).
+- **The deterministic path is unchanged.** With no adjudicator configured — the offline regression
+  baseline — the keyword test still runs. That is the same split `_decide_roles` already makes, and
+  it is not entry 31's forbidden fallback: "no model configured" is a deliberate mode, where "the
+  model call failed" is an outage.
+
+### Measured live, and the prediction held
+
+The test committed in advance was that France should resolve again **for the right reason** — its old
+qualification was a blank CERFA application form (entry 55). Run 2026-08-24, twice, France's six
+settled refusals were judged:
+
+| | page |
+| --- | --- |
+| **qualified** | `/en/royaume-uni` — the page for applying **from the United Kingdom**, which is this traveller |
+| **qualified** | `/en/web/france-visas` — the portal's main visa page |
+| **qualified** | `/en/web/france-visas/india` — France's own India page, for an Indian passport |
+| rejected | `/en/faq` |
+| rejected | `/en/demande-de-visa` — the application form page |
+| rejected | `/en/short-stay-visa` — a visa *category*, not a decision |
+
+That is the discrimination keywords could not make: the keyword scorer rates `/india`
+`application_route` 74.4 and `visa_decision` **0.0**, and rated the CERFA form 14.0. France now
+resolves `partial`, `decision_is_unverified`, naming pages that plausibly hold the answer — which is
+what entry 26 established was true of that portal and what entry 27 exists to produce.
+
+Sweden qualifies its country list on both runs, unchanged and stable. **Canada makes no extra call at
+all** — `model_calls` 1, because its decision was found — which is the gating working.
+
+**Cost and variance, stated plainly.** A corridor whose decision is blocked pays one extra small call
+(`model_calls` 2); every other corridor pays nothing. The judgement is non-deterministic like any
+other: France returned three pages on one run and two on the next, dropping `/india`. The *outcome*
+did not move — both runs resolved, both `decision_is_unverified` — but the reported list can differ,
+and a corridor sitting on exactly one marginal refusal could flip. That is known problem 10's family,
+now reaching one more field.
+
+---
+
 ## 56. The vocabulary asked the question and could not recognise the answer
 **2026-08-24 · measured; implemented; rejects item 23's own proposal**
 

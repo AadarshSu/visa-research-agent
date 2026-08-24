@@ -1027,8 +1027,9 @@ which are item 1, and English-only scoring, which is known problem 13 in
 
 ## Smaller things
 
-**Open question: is the heuristic's *ranking* earning its place, now that a model reads the pages?**
-Raised 2026-08-24, not yet a decision, and it should be settled before anyone tunes the scorer again.
+**Settled in part, 2026-08-24 — DECISIONS entry 57 moved the meaning question to the model, and left
+the ranking with the heuristic.** What follows is the evidence that produced that split, kept because
+the ranking half is still open.
 Measured across the six corridors: of the **18** distinct pages the model chose, **5 ranked outside the
 25 places** by heuristic score — 27th, 31st, 35th, 57th and **101st** — and **every one was admitted by
 the top-3-per-role reservation**, not by its rank. So the ranking is not what finds the answers; the
@@ -1045,12 +1046,18 @@ cut 2,455 candidates down to what a model can read — reading them all is thous
 | **rank what survives** | **poorly** | 5 of 18 answers outside the window; reservations rescue them |
 | **judge what a page means** | **badly, and it should not be doing this** | `_decision_blocking` asks "could this page have held the decision?" by keyword, on a page **nobody read** — and that is what item 23 had to patch |
 
-The third row is where a model plausibly belongs, and where the cost objection is weakest: a blocked
-page has a URL and an anchor text and nothing else, so asking a model about *that* is a small call over
-metadata, not a page read. Against it: entry 31 makes every model call a way for a corridor to refuse,
-and entries 44–53 spent four sessions making the candidate set *deterministic* — putting a model in
-front of it would re-introduce variance exactly where it was removed. Argue it in a decision entry
-before writing code.
+**The third row is now done** (entry 57): a blocked page has a URL and an anchor text and nothing
+else, so asking a model about *that* is a small call over metadata rather than a page read, and it
+measurably discriminates where keywords could not — France now qualifies its UK and India pages and
+rejects its FAQ and application form.
+
+**The second row is still open, and the arguments against changing it are strong.** Entry 31 makes
+every model call another way for a corridor to refuse; entries 44–53 spent four sessions making the
+candidate set *deterministic*, and a model in front of the shortlist would reintroduce variance
+exactly where it was removed; and something must still cut ~2,455 candidates to what a model can read.
+Entry 40's answer — a wider window rather than a better ranker — has never been retested since the
+corpus made the pool six times larger. **Try 25 → 40 places and measure before trying anything
+cleverer.**
 
 **The corpus crawl's page budget is tuned to Canada and does not generalise.** `DEFAULT_CORPUS_PAGES`
 is 1,200, chosen because Canada produced 203 seeds and a 200-page budget meant the crawl never left

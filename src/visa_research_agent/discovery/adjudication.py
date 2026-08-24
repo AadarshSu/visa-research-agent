@@ -78,6 +78,89 @@ def load_adjudication_prompt() -> str:
     return prompt
 
 
+def load_blocked_prompt() -> str:
+    """Load the policy for judging a page an authority refused. See DECISIONS entry 57."""
+
+    prompt = (
+        files("visa_research_agent.prompts")
+        .joinpath("judge_blocked_pages.txt")
+        .read_text(encoding="utf-8")
+        .strip()
+    )
+    if not prompt:
+        raise AdjudicationError("The blocked-page prompt is empty")
+    return prompt
+
+
+# How many refused pages one corridor may ask about. France produced eighteen on the crawl path and
+# six through the corpus, so this is generous rather than binding — it exists so a site that refuses
+# everything cannot turn one corridor into an unbounded packet. Ordered by URL, so two runs ask
+# about the same pages in the same order.
+MAXIMUM_BLOCKED_JUDGED = 25
+
+
+def build_blocked_packet(corridor: Corridor, blocked: dict[str, CandidatePage]) -> str:
+    """Serialize refused pages for judgement — **address and label only, never text**.
+
+    There is deliberately no parameter through which page content could be passed, because there is
+    no content: the authority answered `401` or `403`. That is not a limitation to work around — it
+    is the fact being reported (DECISIONS entry 18) — and the shape of this function stops a
+    later change quietly handing the model a cached body and calling it evidence.
+
+    Heuristic scores are withheld for the same reason `build_candidate_packet` withholds them: the
+    point of asking is to get a judgement the keyword scorer could not make.
+    """
+
+    packet = {
+        "traveller": {
+            "passport_nationality": corridor.passport_nationality,
+            "applying_from": corridor.applying_from,
+            "purpose": corridor.purpose,
+            "destination": corridor.destination_slug,
+        },
+        "refused_pages": [
+            {
+                "source_id": source_id,
+                "url": candidate.link.url,
+                "title": candidate.title or "",
+                "link_text": candidate.link.text,
+                "published_in_path": published_date_in_path(candidate.link.url),
+            }
+            for source_id, candidate in sorted(blocked.items())
+        ],
+    }
+    return json.dumps(packet, indent=2, ensure_ascii=False)
+
+
+def validated_blocked_choices(
+    adjudication: RoleAdjudication, blocked: dict[str, CandidatePage]
+) -> tuple[set[str], list[str]]:
+    """The refused pages the model judged could have held the decision, and what was discarded.
+
+    Deliberately **not** `validated_choices`: that keeps one candidate per role, and here several
+    refused pages may each plausibly have held the decision — an authority that blocks its whole
+    visa section blocks the country list and the checker alike. Everything else is the same
+    discipline: an id the model invented is dropped, so it may only ever narrow the set it was
+    given, never add to it.
+    """
+
+    kept: set[str] = set()
+    discarded: list[str] = []
+    for choice in adjudication.choices:
+        if choice.role != "visa_decision":
+            continue
+        if choice.source_id is None:
+            continue
+        if choice.source_id not in blocked:
+            discarded.append(
+                f"the model named {choice.source_id!r} as a blocked decision page, which was not "
+                "one of the refused pages it was given"
+            )
+            continue
+        kept.add(choice.source_id)
+    return kept, discarded
+
+
 # What is written into the excerpt where page text was left out. It exists so a page that was cut
 # cannot read as a page that ended: without it the adjudicator saw Canada's visa-required list stop
 # at "Morocco" with no sign that an eTA list followed. It is deliberately not a sentence, because
