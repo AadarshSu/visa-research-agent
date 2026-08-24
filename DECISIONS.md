@@ -116,7 +116,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 ---
 
 ## 64. The control arm exists, and the first three corridors answer the question in both directions
-**2026-08-24 · implemented and measured live. TODO item 28**
+**2026-08-24 · implemented and measured live. Closes TODO item 28; the sample is item 29**
 
 Entry 63 made the denominator honest. This is the other half: `visa-discover baseline`, a deliberately
 naive arm — one plainly worded query, top 8 results, **no** `is_own_government`, no corpus, no
@@ -167,7 +167,7 @@ measurement.
 
 ### What this does not establish
 
-- **Three corridors, one nationality, one purpose, one engine.** Not a rate. Item 28 asks for ~15
+- **Three corridors, one nationality, one purpose, one engine.** Not a rate. Item 29 asks for ~15
   destinations, and entry 58's lesson — that nationality varied the outcome once in twenty — says
   sample destinations.
 - **Nothing here grades correctness against a truth set.** Whether Germany's 18 documents are right is

@@ -82,12 +82,17 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
 
-**Item 28 leads, and it is now half built.** The project had measured itself against a bar set in
-advance (entry 58) and had **never** measured the alternative. `visa-discover baseline` is that
-alternative — top 8 search results, no domain trust, one model call — and entries 63 and 64 are what
-running it found. What remains is the **destination sample and a truth set**; the arm itself is done.
+**Item 2 leads: build the authority registry out.** It sat at `soon` for weeks as a coverage
+complaint, and on 2026-08-24 it was measured rather than asserted. Of 198 countries offered, 159 are
+refused before a page is fetched and **158 of those simply have no registry row** — unfinished data,
+not rigor. The trust rule's own share of the refusals is one country. Biggest lever there is, and it
+costs no rigor at all. Entries 63 and 64; `visa-discover audit` prints the split.
 
-Read entry 64 before arguing about relaxing anything, because it cuts both ways. The naive arm is
+**Then item 29**, which is the unfinished half of item 28. The control arm is built and confirmed
+live — `visa-discover baseline`, top 8 search results, no domain trust, one model call, guarded from
+the request path by a test. What remains is the destination sample and a committed truth set.
+
+**Read entry 64 before arguing about relaxing anything, because it cuts both ways.** The naive arm is
 ~5× faster, answered a country we refuse outright, and produced a document checklist for Germany where
 this project produces none. It also cited **0 of 8 hosts that would pass the trust rule** — the United
 Kingdom's top 8 held no `gov.uk` page at all — and answered `visa_required: false` for Kenya beside
@@ -95,13 +100,14 @@ Kingdom's top 8 held no `gov.uk` page at all — and answered `visa_required: fa
 one of the eight**: `india.diplo.de` is Germany's own mission, declined because `diplo.de` carries no
 governmental marker, which is known problem 2 with a cost attached.
 
-Everything that used to gate the queue is finished and confirmed live — the corpus replaced the crawl
-(entries 49–53), the twenty-corridor measurement ran (entry 58), and the wizard work took the United
-Kingdom from refusing every corridor to resolving all four (entries 59–62).
+**The conclusion those two entries support, stated so it can be argued with:** the rigor is cheap and
+the backlog is expensive, and it has been easy to mistake the second for the first. What would
+overturn it is item 29's truth set showing the naive arm is right ~90% of the time — at which point
+the question becomes "accurate but unattributable versus accurate and attributable", which is harder
+than the one entry 64 answers. Three corridors is a pointer, not a rate.
 
-Two things worth knowing before choosing: item 7 is **deployment**, which entry 58 unblocked by
-answering the product question, and item 2 is the **trust rule**, which is still why 159 of 198
-countries cannot be researched at all.
+One thing worth knowing before choosing: item 7 is **deployment**, which entry 58 unblocked by
+answering the product question.
 
 ---
 

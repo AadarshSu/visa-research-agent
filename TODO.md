@@ -12,9 +12,18 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
 
-**Item 28 leads.** It is the measurement nothing else in this file can settle without: the project has never run the naive approach — top search results, no domain trust — over the same corridors and graded both the same way, so every argument about relaxing a rule is currently decided by whoever is talking. Entry 63 built the counting half; item 28 is the comparison half.
+**Item 2 leads, and the reason changed on 2026-08-24.** It was `soon` for weeks as a coverage
+complaint. Entries 63 and 64 measured what the coverage complaint is actually made of, and it is
+almost entirely this item: **158 of the 159 refused countries are a registry job nobody has run**, and
+the trust rule's own share is one country. The rule is also refusing correct authorities *inside*
+countries it accepts — the control arm cited `india.diplo.de`, Germany's own mission, and
+`judge_hosts` declines it for want of a marker. Biggest lever in the file, and it costs no rigor at
+all.
 
-**Then item 17, now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
+**Then item 29**, which is item 28's unfinished half: the arm is built and three corridors are run,
+and the destination sample and the truth set are what turn a pointer into a rate.
+
+**Then item 17, now that 24, 25, 26 and 28 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
 settles (entries 59–60), and the shortlist reserves five per role rather than three so the answering
 page actually reaches the model (entry 61). Item 26 was then measured and **closed without a code
@@ -41,14 +50,14 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 28. Build the counterfactual arm, and grade both against it | `next` |
+| **Now** | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
+|  | 29. Run the control arm over a destination sample, and grade correctness | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 18. Build the offline corpus job, and run it on more destinations | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 |  | 1. Fix the post-over-nationality weighting, and find out why Sweden does not move | `next` |
-| **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
-|  | 4. Decide the client-side retrieval question | `soon` |
+| **Next up** | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 8. Confirm a blocked authority actually reads usefully | `soon` |
 |  | 9. Tell "no checklist exists" apart from "we failed to find it" | `soon` |
@@ -82,61 +91,126 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 28. Build the counterfactual arm, and grade both against it — `next`
+### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 
-**Why:** the project has never once measured itself against the thing a traveller would otherwise do.
-Entry 35 committed a bar in advance and entry 58 measured against it honestly — 75% decision, 50%
-checklist — but with **no comparison arm**, so "we are losing too much convenience for this rigor" and
-"the rigor is worth it" are equally unfalsifiable, and every argument about relaxing a rule is decided
-by whoever is talking. Entry 63 made the denominator honest; this is the other half.
+**Why this is now first.** Measured 2026-08-24, entries 63 and 64. Of 198 countries offered, 159 are
+refused before a page is fetched and **158 of those have no registry row at all** — unfinished data,
+not rigor. And the rule does not only refuse whole countries: the control arm's Germany run cited
+`india.diplo.de`, which **is** Germany's own diplomatic mission giving guidance to exactly that
+traveller, and the rule declines it because `diplo.de` carries no governmental marker. That is this
+item, with a measured cost rather than a description.
 
-**Do:** `visa-discover baseline`, a deliberately naive pipeline over the same corridors — one plainly
-worded query, top 8 results through the existing `BraveSearchProvider`, **no** `is_own_government`, no
-corpus, no `score_role_vocabulary`, no shortlist, no role adjudication, one model call. Emit the fields
-entry 58 graded plus the host behind each claim and the wall clock.
+**First, what `looks_governmental` actually is**, because its name misdescribes it and that makes the
+whole rule read as flimsier than it is. Probed against adversarial hostnames 2026-08-18:
 
-**Grade both arms on four things, and the third is why this is worth building:**
+```
+visa-gov.com  gov-uk.com  govuk.com  mygov.in  e-gov.in  thegov.uk
+gov.sg.evil.example   immigration.gov.in.attacker.net   esteri.it.visa-help.com
+    -> every one rejected
+fakegov.gov   help.gov.co   visa.gov.tk   -> accepted
+```
 
-1. did it answer at all;
-2. how fast;
-3. **is the cited host the destination's own government** — computable offline afterwards by running
-   `is_own_government` over the baseline's cited hosts, no human needed. This is what turns entry 19's
-   three anecdotes — `axa-schengen.com` for France, `usembassy.gov` for Vietnam, VFS for Brazil — into
-   a rate, and it is the number the whole trust model is a bet about;
-4. is the answer right, against a hand-graded truth set built once and committed.
+The regex only matches a marker at a **label boundary anchored to the end**, so it cannot be spoofed by
+putting "gov" in a name — `gov.ica.sg` and `go.mofa.jp` are both rejected. What the three accepted ones
+have in common is that they genuinely sit under `.gov`, `gov.co`, `gov.tk`: **namespaces whose registry
+restricts who may register.** You cannot buy `foo.gov.sg`. So the check is not "reads as official" — it is
+"sits inside a registry-controlled government namespace", which is a real, unforgeable property and
+exactly the kind of thing this project's trust model wants.
 
-**Hard constraints, because this is exactly what entries 38 and 44 refuse as a fallback.** A separate
-subcommand, never imported by `resolver.py` or anything under `api/`, with a test asserting that —
-alongside the mechanism tests in `tests/test_trust_coverage.py`, which exist for this. Its output is a
-report and never a `VisaPlan`, so nothing it produces can reach a traveller. Network stays in the CLI;
-the suite stays offline (entry 45).
+**So judge it by the right standard:**
 
-**Sample destinations, not corridors.** Entry 58's own finding is that nationality changed the outcome
-once in twenty, so twenty corridors was five observations replicated four times. Roughly 15
-destinations × 1 nationality, and **include countries that currently refuse for want of a registry
-row** — those are where the naive arm looks best and where the honest answer is that the gap is our
-unfinished work rather than our rigor.
+| As a test of | Verdict |
+| --- | --- |
+| *this IS official* (sufficient) | **Sound.** Registry-backed, zero false positives in the probe above. |
+| *only these are official* (necessary) | **Wrong, measured 19 of 51.** Where a country has no government namespace there is no signal to find, so no regex can ever fix it. |
+| *this is a **visa** authority* | **Does not try.** `nasa.gov` and `recreation.gov` pass as US own-government. Bounded by the cap and corroboration bar (entry 22), not by this rule. |
 
-**Built 2026-08-24 as entry 64; what remains is the sample.** `visa-discover baseline` exists, is
-guarded from the request path by a test, and has been run on three corridors. The arm is not the work
-left — **the destination sample and the truth set are.**
+That is why the fix is to **add other sufficient conditions, never to loosen this one** — and why
+renaming `looks_governmental` to something like `in_government_namespace` is worth doing while here.
 
-What those three corridors found, and what item 28 must now confirm or overturn at scale:
+**The tension this item must resolve, and currently ducks.** "A reviewed authority domain" was written
+without saying *how the reviewer knows*, and hand-reviewing 198 countries is the manual curation the
+production goal exists to remove. Four mechanisms could supply officialness without per-country
+judgement, and the cheap measurement comes first:
 
-- **0 of 8 cited hosts passed the trust rule**, across Germany, the United Kingdom and Kenya. Entry
-  19's three anecdotes are no longer anecdotes.
+1. **The government's own published domain list.** Where a country publishes one, that is the
+   destination's own government asserting which domains are its own — this project's trust model applied
+   recursively, no human taste involved. Strongest where it exists; coverage patchy.
+2. **Registry (RDAP/WHOIS) organisation data.** `esteri.it`'s registrant is Italy's foreign ministry —
+   authoritative registry data, not prose. **Measure coverage before committing:** GDPR redaction is
+   heaviest on European ccTLDs, which is exactly the 19.
+3. **TLS certificate organisation.** OV/EV certificates carry a CA-validated `O=` field, and this project
+   already handles certificates (entry 12). Partial: many authorities now use DV certificates with no
+   organisation. Note it needs a TLS handshake before trust is decided — closer to DNS resolution than to
+   fetching evidence, but say so explicitly rather than sliding past it.
+4. **Cross-vouching from an already-trusted domain.** For the ten countries that *do* have a marked
+   domain, `interno.gov.it` naming `esteri.it` as the foreign ministry is the government vouching for its
+   own domain — the existing `appointed_by` idea generalised. **The hole:** governments link to
+   contractors, partners and news, so "linked from a trusted domain" is far too weak, and
+   `ARCHITECTURE.md` says appointing a provider is human judgement never automated. This is a decision to
+   argue, not a patch to apply.
+
+**Do the measurement first** — for the 19, how many are covered by (1), (2) and (3)? It is offline-ish,
+needs no search credit, and it decides whether this item is automatable or genuinely needs a human. If
+most are covered, the production goal survives; if not, reviewed data is the honest answer and the review
+is 19 countries rather than 198.
+
+**Then the two problems the measurement is for:**
+
+- **19 of 51 governments have no governmental marker in their hostname.** The amendment is an authority
+  domain named in the entry 34 registry, by whichever of the four mechanisms above survives measurement
+  — **never a wider regex.** Adding `.de`, `.nl`, `.it` as markers would trust every commercial site in
+  those countries, and `belongs_to_destination` cannot narrow it, because for exactly these countries the
+  own-TLD test is the only other signal there is. `tests/test_trust_coverage.py` asserts that trap
+  directly: it checks a German visa agency is indistinguishable from the ministry on the only half that
+  would remain.
+- **Schengen is a definition problem, not a bug.** For short-stay visas the decision genuinely lives at
+  EU level as much as nationally, and `europa.eu` passes `looks_governmental` but can never pass
+  `belongs_to_destination` for any member state. "The destination's own government" is the wrong trust
+  unit for a supranational regime. A reviewed supranational-domain list per member is the fix, and it
+  amends the rule as stated in entry 19 and in `CLAUDE.md`, so **record a decision rather than
+  patching.**
+
+**Do first, separately, because they are corrections inside the existing rule rather than relaxations
+of it:** add `gv` and `gub` as markers, and add `canada.ca` beside the `gc.ca` special case — Canada
+fails only because immigration content moved and the pattern did not.
+
+### 29. Run the control arm over a destination sample, and grade correctness — `next`
+
+**Why:** entry 64 built the arm and ran three corridors. What it found is sharp enough to act on and
+**thin enough to be wrong**, and it is currently the evidence behind a decision not to relax anything:
+
+- **0 of 8 cited hosts passed the trust rule**, across Germany, the United Kingdom and Kenya.
 - **The United Kingdom returned no `gov.uk` result in its top 8 at all** — visa agencies, two airlines
   and an insurer, for the destination whose official checker this project reads and hands over.
 - **Kenya answered `visa_required: false` beside `visa_name: "Electronic Travel Authorization"`** in
-  the same answer, for a country this project refuses outright.
-- **And the rule was wrong about one host**: `india.diplo.de` is Germany's own mission and
-  `judge_hosts` declines it, because `diplo.de` carries no marker. Known problem 2, with a cost now
-  attached rather than a description.
+  one answer, for a country this project refuses outright.
+- **And the rule was wrong about one host**: `india.diplo.de` is Germany's own mission, declined for
+  want of a marker. Known problem 2, with a cost attached rather than a description.
 
-**Still to do:** the ~15-destination sample, the committed truth set, and grading correctness rather
-than only provenance. Also unconfirmed at scale: entry 63's finding that 0 of 15 unreadable pages were
-`blocked`. If that holds, the refusal posture is not what costs coverage and the argument moves
-entirely to item 2.
+Three corridors, one nationality, one purpose, one engine, one day. That is a pointer, not a rate.
+
+**Do:** ~15 destinations × 1 nationality through `visa-discover baseline` and through `corridor`,
+including countries that currently refuse for want of a registry row — those are where the naive arm
+looks best. Sample **destinations**, not corridors: entry 58's own finding is that nationality changed
+the outcome once in twenty, so twenty corridors was five observations replicated four times.
+
+**The dimension that is still ungraded is the one that could overturn the verdict.** Provenance is
+graded automatically by `judge_hosts` and needs nobody. *Correctness* is not graded at all, and
+nothing yet says whether Germany's 18 documents were right. Build a committed truth set with a source
+note per row, on the `reviewed` field's discipline — **a corridor with no truth row yields no verdict,
+never a false one.**
+
+**Be willing to lose.** If the naive arm turns out to be right 90% of the time, the question stops
+being "accurate versus inaccurate" and becomes "accurate but unattributable versus accurate and
+attributable", which is genuinely harder than the one entry 64 answers. Build the truth set so that
+case can be made *against* this project rather than only for it.
+
+**Also unconfirmed at scale:** entry 63's finding that 0 of 15 unreadable pages were `blocked`. If that
+holds, the refusal posture is not what costs coverage and the argument moves entirely to item 2.
+
+**And re-run the 25 causeless recall logs while here** — see *Smaller things*. They predate
+`RecallRecord.cause` and only runs fill them in.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
@@ -423,83 +497,6 @@ way the Netherlands was, and it should be before anything else is changed on its
 ---
 
 ## Next up
-
-### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`
-
-**First, what `looks_governmental` actually is**, because its name misdescribes it and that makes the
-whole rule read as flimsier than it is. Probed against adversarial hostnames 2026-08-18:
-
-```
-visa-gov.com  gov-uk.com  govuk.com  mygov.in  e-gov.in  thegov.uk
-gov.sg.evil.example   immigration.gov.in.attacker.net   esteri.it.visa-help.com
-    -> every one rejected
-fakegov.gov   help.gov.co   visa.gov.tk   -> accepted
-```
-
-The regex only matches a marker at a **label boundary anchored to the end**, so it cannot be spoofed by
-putting "gov" in a name — `gov.ica.sg` and `go.mofa.jp` are both rejected. What the three accepted ones
-have in common is that they genuinely sit under `.gov`, `gov.co`, `gov.tk`: **namespaces whose registry
-restricts who may register.** You cannot buy `foo.gov.sg`. So the check is not "reads as official" — it is
-"sits inside a registry-controlled government namespace", which is a real, unforgeable property and
-exactly the kind of thing this project's trust model wants.
-
-**So judge it by the right standard:**
-
-| As a test of | Verdict |
-| --- | --- |
-| *this IS official* (sufficient) | **Sound.** Registry-backed, zero false positives in the probe above. |
-| *only these are official* (necessary) | **Wrong, measured 19 of 51.** Where a country has no government namespace there is no signal to find, so no regex can ever fix it. |
-| *this is a **visa** authority* | **Does not try.** `nasa.gov` and `recreation.gov` pass as US own-government. Bounded by the cap and corroboration bar (entry 22), not by this rule. |
-
-That is why the fix is to **add other sufficient conditions, never to loosen this one** — and why
-renaming `looks_governmental` to something like `in_government_namespace` is worth doing while here.
-
-**The tension this item must resolve, and currently ducks.** "A reviewed authority domain" was written
-without saying *how the reviewer knows*, and hand-reviewing 198 countries is the manual curation the
-production goal exists to remove. Four mechanisms could supply officialness without per-country
-judgement, and the cheap measurement comes first:
-
-1. **The government's own published domain list.** Where a country publishes one, that is the
-   destination's own government asserting which domains are its own — this project's trust model applied
-   recursively, no human taste involved. Strongest where it exists; coverage patchy.
-2. **Registry (RDAP/WHOIS) organisation data.** `esteri.it`'s registrant is Italy's foreign ministry —
-   authoritative registry data, not prose. **Measure coverage before committing:** GDPR redaction is
-   heaviest on European ccTLDs, which is exactly the 19.
-3. **TLS certificate organisation.** OV/EV certificates carry a CA-validated `O=` field, and this project
-   already handles certificates (entry 12). Partial: many authorities now use DV certificates with no
-   organisation. Note it needs a TLS handshake before trust is decided — closer to DNS resolution than to
-   fetching evidence, but say so explicitly rather than sliding past it.
-4. **Cross-vouching from an already-trusted domain.** For the ten countries that *do* have a marked
-   domain, `interno.gov.it` naming `esteri.it` as the foreign ministry is the government vouching for its
-   own domain — the existing `appointed_by` idea generalised. **The hole:** governments link to
-   contractors, partners and news, so "linked from a trusted domain" is far too weak, and
-   `ARCHITECTURE.md` says appointing a provider is human judgement never automated. This is a decision to
-   argue, not a patch to apply.
-
-**Do the measurement first** — for the 19, how many are covered by (1), (2) and (3)? It is offline-ish,
-needs no search credit, and it decides whether this item is automatable or genuinely needs a human. If
-most are covered, the production goal survives; if not, reviewed data is the honest answer and the review
-is 19 countries rather than 198.
-
-**Then the two problems the measurement is for:**
-
-- **19 of 51 governments have no governmental marker in their hostname.** The amendment is an authority
-  domain named in the entry 34 registry, by whichever of the four mechanisms above survives measurement
-  — **never a wider regex.** Adding `.de`, `.nl`, `.it` as markers would trust every commercial site in
-  those countries, and `belongs_to_destination` cannot narrow it, because for exactly these countries the
-  own-TLD test is the only other signal there is. `tests/test_trust_coverage.py` asserts that trap
-  directly: it checks a German visa agency is indistinguishable from the ministry on the only half that
-  would remain.
-- **Schengen is a definition problem, not a bug.** For short-stay visas the decision genuinely lives at
-  EU level as much as nationally, and `europa.eu` passes `looks_governmental` but can never pass
-  `belongs_to_destination` for any member state. "The destination's own government" is the wrong trust
-  unit for a supranational regime. A reviewed supranational-domain list per member is the fix, and it
-  amends the rule as stated in entry 19 and in `CLAUDE.md`, so **record a decision rather than
-  patching.**
-
-**Do first, separately, because they are corrections inside the existing rule rather than relaxations
-of it:** add `gv` and `gub` as markers, and add `canada.ca` beside the `gc.ca` special case — Canada
-fails only because immigration content moved and the pattern did not.
 
 ### 4. Decide the client-side retrieval question — `soon`
 
@@ -794,6 +791,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 28. Build the counterfactual arm | 08-24 | 64 | The naive arm is ~5× faster and answered a country we refuse — and cited **0 of 8** hosts that would pass the trust rule. The sample and the truth set are item 29 |
 | — Count why a traveller goes unanswered | 08-24 | 63 | `RecallRecord.unreadable` had been filled from the crawl alone and went **silently empty** when the crawl left. First two corridors: 0 of 15 lost pages were `blocked` |
 | 26. The nationality bonus rewards naming a country | 08-24 | 62 | **Closed with no code change.** Four fixes, four disproofs — including one implemented and reverted when the suite caught it. Cost of leaving it: 0.27 shortlist places |
 | 25. Get the answering page into the shortlist | 08-24 | 61 | The reservation was three per role and the answer was 5th. Five per role, budget 35 — **the UK went 0/8 → 4/4**. Depth and budget only work together |
@@ -820,7 +818,7 @@ in the DECISIONS entry; this is the one-line index.
 repaired by reading their `outcome` line — a corridor that refused for want of a visa decision and one
 that resolved by handing over the questionnaire stating it wrote the same sentence, which is the
 conflation the field exists to end. `visa-discover audit` reports them as unrecorded rather than
-bucketing them. Re-running those corridors is quota, not work, and item 28 needs runs anyway, so do it
+bucketing them. Re-running those corridors is quota, not work, and item 29 needs runs anyway, so do it
 there rather than on its own.
 
 **The search client has no rate limiting, and a capped plan answers `HTTP 402`.** Found 2026-08-24.
