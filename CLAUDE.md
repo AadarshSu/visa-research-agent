@@ -7,13 +7,17 @@ and the traveller must be told plainly when something could not be verified.
 
 This file is loaded automatically; the documents below are not. **Read them before starting work.**
 
-| File | What it holds |
+| File | The question it answers |
 | --- | --- |
-| [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) | **Start here.** Current state, known problems, current task, next steps |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | How it is built — trust model, pipeline, retrieval, discovery |
-| [DECISIONS.md](DECISIONS.md) | Why it is built that way, including what was tried and rejected |
-| [TODO.md](TODO.md) | What remains, ordered, with the reasoning for each |
-| [AGENTS.md](AGENTS.md) | Full contributor rules |
+| [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) | **Start here.** Where it stands, what to do next, what is known to be broken |
+| [TODO.md](TODO.md) | What is the ordered queue of work, and why each item matters |
+| [DECISIONS.md](DECISIONS.md) | Why is it built this way, what was tried and rejected — **start at its index** |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How is it built — trust model, pipeline, retrieval, discovery |
+| [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
+
+Each fact has one home. When one of these files summarises another, the two drift, and the drift is
+what has wasted the most time here — see the corrections table further down, whose thirteen rows are
+mostly a written-down diagnosis that a run then contradicted.
 
 **Where it stands, as of 2026-08-24**, so the rest of this file reads in context. The pipeline works
 end to end and has been measured against a bar committed in advance (entry 35): over twenty

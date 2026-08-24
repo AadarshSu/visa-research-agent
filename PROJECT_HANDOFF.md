@@ -1,1097 +1,248 @@
 # Visa Research Agent — Project Handoff
 
-**Read this first when picking the project up.** It is the entry point for a new session and the
-source of truth for where things stand. The chat is not the source of truth; this file is.
+**Read this first when picking the project up.** It answers three questions and nothing else: where
+the project stands, what to do next, and what is known to be broken. The chat is not the source of
+truth; these files are.
 
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 465 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
-| **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
-| **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
+| **Tests** | 465 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
-## Goal
+## Where each thing is written down
 
-Produce visa application plans for a traveller where **every claim is grounded in an official
-government source**, and the traveller is told plainly when something could not be verified.
+This file grew to a thousand lines by absorbing all four of the others. It is deliberately short now,
+and each kind of question has one home:
 
-The headline production goal — **automatic source discovery**, finding the right official pages for
-a traveller and destination with nobody curating URLs — is **done and running in the request path**.
-**Whose** domains a country may be researched from is no longer decided per request either: it is
-generated offline, reviewed, and committed (entries 34 and 38).
+| Question | File |
+| --- | --- |
+| Where are we, what is next, what is broken | **this file** |
+| What is the ordered queue of work, and why each item matters | [TODO.md](TODO.md) |
+| Why is it built this way, what was tried and rejected | [DECISIONS.md](DECISIONS.md) — **start at its index** |
+| How is it built — trust model, pipeline, retrieval, discovery | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| What are the rules I must not break | [CLAUDE.md](CLAUDE.md) — loaded automatically |
+| How do I contribute, and how do I debug a corridor | [AGENTS.md](AGENTS.md) |
+| What is this project, for someone who has never seen it | [README.md](README.md) |
 
-**Built 2026-08-22 to 2026-08-24: *which pages exist* has left the request path too** (entries 44–57).
-Discovery used to re-derive a country's candidate pages from search on every request, and entry 43
-measured what that cost — the page answering Canada was fifteenth of 470 on one run and absent an hour
-later. A country's **page corpus** is now a store, populated by an offline job, and **the crawl no
-longer runs at all** for a country whose corpus out-covers it. Only the corridor-dependent step — which
-of those pages answers *this* traveller — stays live. **Search still runs** (entry 48; TODO item 19).
-**Not a move toward precomputed answers**: entry 44 rejects those on arithmetic, and a plan stays a
-rendering rather than a stored fact.
-
-**Ten countries have a corpus**, 16,298 pages between them: Canada 3,216, UAE 2,758, Netherlands 2,698,
-United States 1,840, France 1,590, Japan 1,558, Singapore 928, United Kingdom 895, Sweden 521,
-Germany 294. Build one with `visa-discover corpus --country XX`.
-
-**Cold-corridor timing, measured 2026-08-24 over 40 live runs: median 27.4s, range 8.8–48.3s**, every
-one corpus-routed and none crawling. Ignore 34.1s and 54.2s wherever they still appear in these files —
-both predate the crawl leaving the request path (entries 51 and 53). **The full cold *request* — corridor
-plus plan extraction — has still never been timed**; only the corridor phase has.
-
-**The direction changed on 2026-08-18**, after an outside review that was agreed with in full and is
-recorded as [DECISIONS.md](DECISIONS.md) entries 29–35, plus entries 36–42 which came out of building
-them. Nothing in it weakens the grounding principle. What it changes is the diagnosis of why coverage is
-poor, and it found three things shipping that this project's own rules argue against. **All of it is
-implemented except two of entry 35's three legitimacy steps** — asking authorities for access, and the
-client-side retrieval question — and [TODO.md](TODO.md) is what remains. The sentences worth carrying:
-
-- **The blocker is the posture, not the principle.** "Grounded in an official page" and "grounded only in
-  what an anonymous Python client can fetch" were treated as one commitment. Entry 18 forbids
-  *deception*, not *legitimacy* (entry 35). The first step is shipped: `robots.txt` is now read once per
-  origin and obeyed, by the crawl and by retrieval (entry 36). It is expected to *cost* coverage, and
-  nothing has been run live since, so it has not been measured.
-- **The trust rule's governmental half fails closed for a fifth of the world**, measured: 19 of 51
-  countries, including Germany, Italy, the Netherlands, Sweden and Canada (entry 33). Known problem 2 had
-  been warning about the other half.
-- **Whether this is a product was a measurement with a bar committed in advance** — top 20 corridors by
-  volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). **It ran on
-  2026-08-24 and passed, marginally: 75% and exactly 50%** (entry 58). Read the sample caveat with it —
-  five destinations replicated four times, not twenty independent corridors.
-- **The largest coverage limit is the interactive tool, and a questionnaire is now treated as an
-  answer rather than a blockade** (entries 59 and 60). A page read and judged to *ask* a question
-  rather than answer it is named for the role it settles, and the plan offers it beside that question.
-  Only `visa_decision` changes whether a corridor resolves; the rest add a link to a plan that already
-  stands, and a tool never fills the role it is named for. Driving such a tool stays out of scope —
-  measured and argued, not assumed.
-
-Deliberately out of scope, permanently: submitting applications, booking appointments, filling
-forms, or claiming an approval is guaranteed. **Driving an authority's questionnaire is out too**, and
-entry 59 argues it against the strongest case for the other answer rather than by assertion. **Also settled: LangGraph is not adopted** — the pipeline
-is linear, the trust checkpoints are typed validators rather than graph nodes, and the one loop the old
-placeholder imagined is a retry loop this project rejects (entry 29).
+**Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
+TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
+corrections table in [CLAUDE.md](CLAUDE.md) has thirteen rows; three of them are *this file's* known
+problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
+disproved. Link instead of copying.
 
 ---
 
-## Current state
+## Where it stands
 
-**Working end to end for any traveller, and for 39 of 198 destinations** — re-counted from the
-committed files on 2026-08-24, and this line has overstated twice before, so it is checked rather than
-carried forward. **Of those 39, ten have an offline page corpus** (AE, CA, DE, FR, GB, JP, NL, SE, SG,
-US) and are served without crawling; the other 29 still crawl in the request path.
+**The goal:** produce visa application plans where every claim is grounded in an official government
+source, and the traveller is told plainly when something could not be verified. Permanently out of
+scope: submitting applications, booking appointments, filling forms, driving an authority's
+questionnaire, or claiming approval is guaranteed.
 
-**Measured against the bar committed in advance, it passes — marginally** (entry 58, 2026-08-24): over
-twenty high-volume corridors run twice each, **75%** confirm the visa decision (bar ≥70%) and **50%**
-yield a document checklist (bar ≥50%). Corridor phase, median **27.4s**.
+**It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
+twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar
+≥70%) and **50% yield a document checklist** (bar ≥50%). It passes — by one corridor on the first
+number and by nothing at all on the second, so quote it as a marginal pass. Entry 58.
 
-**The binding limit is the authority registry, not the trust rule.** `config/authority_domains.yaml`
-holds **40 rows**; a country with no row is **refused, never bootstrapped live** (entry 38), and Austria
-has a row with no usable domain, so it refuses too. That leaves **39 researchable and 159 refused** —
-158 with no row at all. This line said *"any of 198 destinations"* and *"198 destinations are
-reachable"* until 2026-08-22, which was already false when entry 38 landed on 2026-08-18: the same file
-says *"40 of 198 countries are built; the rest refuse"* two sections further down. **Both sentences were
-in this file at once**, which is the failure mode these documents keep repeating — a headline claim
-written from intent while the detailed claim below it was written from measurement.
+**Read the sample structure before quoting that.** Nationality changed the outcome once in twenty;
+destination decided the rest. So the sample is **five destinations replicated four times**, not twenty
+independent corridors, and 75% is "three and three-quarters of five". A future bar should sample
+destinations.
 
-The older correction still stands underneath it and is a *different* limit: **19 of 51 countries checked
-have no domain passing `looks_governmental`** (entry 33) — Germany, Italy, the Netherlands, Sweden and
-Canada among them — which is why twelve needed the `reviewed` override in entry 39. That is about which
-domains a rule can confirm; the 39-of-198 figure is about which countries anyone has generated a row
-for. Fixing the second is quota and review time (item 2); fixing the first needs data.
+### What is built
 
-> **And the interface does not say any of this.** `researchable_destinations()` lists all 198 countries
-> with `status="available"` under `destination_mode: automatic`, so a traveller is offered 159
-> destinations that cannot be researched and gets a `503` on choosing one. Recorded as known problem 23.
+| | |
+| --- | --- |
+| **Researchable destinations** | **39 of 198.** The binding limit is `config/authority_domains.yaml`, which holds 40 rows; a country with no row is refused, never bootstrapped live (entry 38). Austria has a row with no usable domain. |
+| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,298 pages. These are served without crawling. The other 29 crawl in the request path. |
+| **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
+| **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
+| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
 
-**Eight corridors have now been run live, and seven of them on 2026-08-23 through both paths.** The
-table below replaces the 2026-08-16/17 one that this file carried — and warned about — for a week.
-Each cell is two runs on the crawl path and two corpus-routed, `visa-discover` registry domains
-throughout, so it describes what the API does. DECISIONS entry 55.
+**The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
+inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
+to **ask** a question rather than answer it is now a third outcome beside *found* and *blocked*: it is
+named for whatever role it settles and the plan offers it beside that question (entries 59 and 60).
+Getting those pages in front of the model needed the shortlist to reserve five candidates per role
+rather than three, which took **the United Kingdom from 0 of 8 corridor runs resolving to 4 of 4**
+(entry 61).
 
-| | Japan | Netherlands | Sweden | United States | France | Singapore | Canada |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Corridor | IN/GB | IN/GB | IN/GB | IN/IN | IN/GB | IN/GB | GB/GB |
-| Corpus entries | 1,558 | 2,698 | 521 | 1,840 | 1,590 | 928 | 3,216 |
-| Crawl path | 37.5s | 30.9s | 39.9s | 31.4s | 23.6s | 56.1s | 54.2s |
-| **Corpus path** | **14.9s** | **12.9s** | **18.0s** | **14.9s** | **11.2s** | **10.8s** | **12.7s** |
-| Visa decision | found | **not found** | blocked | found | blocked | found | found |
-| Checklist | found | found | found | **blocked** | **blocked** | found | **not found** |
-| Resolves (corpus path) | 2/2 | **0/2** — *now resolves, entry 60* | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
-
-**A second, larger table now exists and supersedes this one for judging the project**: entry 58's
-twenty corridors, run twice each on 2026-08-24. This table is seven corridors chosen for what they
-taught; that one is the top twenty by volume, measured against a bar committed in advance.
-
-**Read the "resolves" row against the row above it, not on its own.** The Netherlands had never
-resolved — its visa decision was not found, which was an honest refusal, and the only corridor here
-that refused. **It resolves as of 2026-08-24** (entry 60): the page its decision lives on is a
-nine-question checker, and a corridor can now name a questionnaire for the role it settles instead of
-refusing. The row above is unchanged — no page states the answer — so the plan states the decision
-unknown and hands over the checker, the same shape France and Sweden get from a block. Sweden and France resolve through entry 27's blocked-authority exception: an authority
-refuses the page holding the decision, so the plan names it, states the decision **unknown**, and
-hands over the URL. Both were broken for a day when the crawl left (entries 55–57) and both are
-confirmed working live on 2026-08-24 — **the first time that exception has fired on a real
-corridor.**
-
-**Two rows that used to be here are gone deliberately.** Vietnam and China were last run on
-2026-08-16 against hand-configured sources and have not been re-run; quoting them beside measured
-numbers is what made the old table misleading. Vietnam needs rendering (known problem 14) and China
-refused on a not-found decision.
-
-**France and Sweden were not the same failure as the Netherlands, and the difference is the one this
-project cares about.** The Netherlands could not find its decision, so it refused — correct at the
-time, and now superseded: entry 60 established that it *can* find it, inside a questionnaire, so it
-hands that over instead. France and
-Sweden *were* refused by an authority, which entry 27 turns into a plan that says so and hands over
-the URL. They no longer do, and the reason is a scoring rule rather than anything about the block:
-item 23.
-
-France was re-examined on 2026-08-17 because `france/IN/GB/tourism` is a common corridor to refuse —
-entries 26 and 27. **It no longer refuses**: a corridor whose only missing piece is behind a block now
-resolves, with the visa decision stated as *unknown* rather than guessed, the blocked authority named
-with its URL, and the plan marked `partial`.
-
-**Run live on 2026-08-19, and both halves of that came out wrong — see entry 41 and known problem 11.**
-Whether France resolves at all is **not reproducible**: it resolved at 13:30 and refused on a fresh run
-an hour later. `is_usable` needs a refused URL that also scored for `visa_decision`, and none of the eight
-`france-visas.gouv.fr` URLs that were refused does — every one scores `application_route` only,
-including `/en/assistant-visa`, which is literally the visa-decision tool. (Two France-Visas URLs do
-score for `visa_decision`, both 14.0, and neither was among the refusals.) The 13:30 run qualified on
-`www.diplomatie.gouv.fr/spip.php?page=recherche&recherche=Demande+de+visa`, a **site-search results
-page** scored on the words in its own query string. So the corridor resolves on an incidental WAF hit,
-which is the opposite of entry 32's intent, and known problem 4's assumption that "France should be
-unaffected" is false.
-
-**And the 403 is not a refusal at all.** `france-visas.gouv.fr` answers `cf-mitigated: challenge` — a
-Cloudflare interstitial reading *"enable JavaScript and cookies to continue"* — and answers it for
-`/robots.txt` as well, so the authority never stated anything. The project's own renderer, under our own
-user agent with nothing spoofed, reads the page. That is decided (entry 41) and unimplemented
-([TODO.md](TODO.md) item 5).
-
-The underlying coverage fact survives, with a narrower reason: France publishes the visa decision only on
-`france-visas.gouv.fr`, and behind the challenge it sits inside a **four-step wizard** rather than on a
-page, so no amount of reading reaches it. Every readable French government page delegates there rather
-than saying it. Two real scoring defects turned up on the way and are
-fixed — a mission host label read as who a page is *for*, which put France's India post above its UK
-post for a UK applicant, and footer boilerplate taking three of the ten fetch places.
-
-The first six were verified live on 2026-08-16 with `discovery_decider: model`. Brazil was the
-out-of-sample test that broke keyword ranking, so the last step now asks a model — entries 15 and 16.
-France and China were the confirmation runs, and both refused correctly at the time — entry 17;
-France's outcome has since changed, above.
-
-The United States was added on 2026-08-17 and is the corridor that showed the trust rule needs a
-bound as well as a test — entry 22. It now resolves, and **identically on three consecutive runs**
-with both caches cleared between them, where before it was a coin flip. Its `document_checklist`
-goes unfilled because the canonical B1/B2 checklist lives on `travel.state.gov`, which answers 403;
-that is reported as `blocked` and nothing is put in its place.
-
-**It also produces a plan, which no checklist-less corridor previously could** — entry 23. Entry 14
-decided a missing checklist should not refuse, and built the validator to make that safe, but the
-extractor still demanded one, so the decision reached nobody and Vietnam would have hit the same wall.
-`POST /visa-plans` for an Indian passport, resident in India, tourism, now answers **HTTP 200 in
-16.6s**: `partial`, visa required, B-2, five steps, three cited sources, **zero document
-requirements**, and unresolved questions naming the gap. A plan with no checklist source is never
-`verified`, so it cannot look complete.
-
-**The limit has moved from ranking to access.** Of seven corridors, none now fails because a page was
-mis-ranked. They fail because a page could not be read at all — bot-blocked portals, client-rendered
-shells, dead endpoints.
-
-**Amended 2026-08-19: there is a third thing, and it is neither.** `canada/GB/GB/tourism` fetched and read
-the page that answers it, and refused anyway, because the adjudicator's 6,000-character excerpt ended
-2,597 characters before the sentence naming a British citizen as eTA-required. Not ranking, not access —
-**truncation**. The excerpt now follows the traveller rather than the page (entry 42), and on 2026-08-21
-that corridor resolved from exactly the sentence the old excerpt cut. But the run before it refused, on
-the same code, because the page was never retrieved — so there is a fourth thing, **recall variance
-between runs** (known problem 19), and "access" remains an incomplete diagnosis.
-
-`countries.yaml` covers ISO 3166-1. Fourteen entries are curated from corridors actually run; the
-rest carry the name and ccTLD, which is all the own-government trust rule needs. A country only
-needs promoting to curated status once you have run it and seen which hints it lacks.
-
-**Discovery is wired into the request path.** A destination nobody configured is researched when
-it is asked for: its own government's domains are identified, the corridor resolved, and the plan
-built from what was found. No human approves anything. Verified end to end — Brazil, with zero
-configured sources, produces a `verified` plan with six source-cited requirements.
-
-Runtime mode is `source_mode: live`, `extraction_mode: openai`, `render_mode: never`,
-`discovery_decider: model`, `destination_mode: automatic` in
-`src/visa_research_agent/config/runtime.yaml`. `visa-discover` now
-needs `OPENAI_API_KEY`; set `discovery_decider: heuristic` for the free, offline, deterministic
-path, which is still tested and still the regression baseline. Japan only works live, because its checklist is a PDF
-and there are no snapshots for it.
-
-**Client-rendered pages can now be read**, but rendering is off in committed config. Turning it on
-means `render_mode: on_demand` plus the optional extra:
-
-**Before turning it on, note what was fixed on 2026-08-18 (entry 37).** Two of the three render
-allowances were counted on objects that outlive a run — `LiveSourceFetcher`, which is an
-`lru_cache(maxsize=1)` singleton, and the renderer itself, which the API never closes. They were
-process-lifetime budgets: after 5 rendered sources, and 17 rendered pages installation-wide,
-rendering silently stopped and every client-rendered page reported *"too little readable text to
-trust"* — a reason that was not true of what was seen, since the page had never been read. The
-allowance is now a per-call value and the renderer keeps no count. **This was latent, not observed
-in production**, because `render_mode: never` means nothing has rendered yet; the corridor it would
-have hit first is Vietnam, which is exactly the one rendering exists for.
-
-```bash
-.venv/bin/pip install -e ".[render]" && .venv/bin/playwright install chromium
-```
-
-Selecting `on_demand` without the extra raises rather than silently skipping rendering.
-
-**The traveller comes from the request.** Passport, country applied from and purpose are required;
-city, residence status and permit expiry are optional. Countries are ISO codes, normalised at the
-API from whatever the caller wrote. `config/traveller.py` holds the default the interface opens on
-and the profile the Singapore fixture was recorded against.
-
-Ordinary passports only, and that is deliberate: diplomatic and official passport pages are a hard
-veto in scoring, so such a plan cannot be researched and the schema refuses it rather than
-answering with the ordinary-passport rules.
+**Discovery runs in the request path** for a destination nobody configured: the country's own
+government domains are read from committed data, the corridor resolved, the plan built from what was
+found. No human approves anything per request. Seven destinations are also hand-configured in
+`destinations.yaml`; everything else uses the automatic path.
 
 ---
 
-## How the pieces fit
+## What to do next
 
-A plan is produced by a two-stage pipeline with one seam:
+**There is no single obvious next item, and that is worth saying plainly.** The three that gated
+everything are finished and confirmed live: the corpus replaced the crawl (entries 49–53), the
+twenty-corridor measurement ran (entry 58), and the wizard work took the United Kingdom from refusing
+every corridor to resolving all four (entries 59–62).
 
-```
-DestinationConfig ──▶ SourceFetcher ──▶ RetrievalReport ──▶ VisaPlanExtractor ──▶ VisaPlan
-                      fixtures | live    fetched+failures    fixture | openai
-```
+**[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
+it cannot drift; this file deliberately does not copy it. **Item 17 leads**: decide what a corridor
+that flips between runs should do, which is a decision to argue before it is code.
 
-Discovery sits *before* this and produces the `DestinationConfig` the pipeline consumes. It runs
-either as the `visa-discover` command or, for a destination nobody configured, inside the request:
-
-```
-Corridor ──▶ search ──▶ corpus ──▶ crawl ──▶ fetch shortlist ──▶ score ──▶ ResolvedCorridor
-             (Brave)  (var/corpus)  (skipped   (via LiveSourceFetcher)      or a refusal
-                                     when the corpus
-                                     out-covers it)
-```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the detail, including the trust model, which is the part
-most likely to be misunderstood.
-
----
-
-## The one idea that explains most decisions
-
-> **Officialness is a property of who controls the domain, never of how a page reads.**
-
-An unofficial page cannot become evidence however convincing it looks, because it is unreachable
-rather than merely low-scoring. This is enforced in three places, and any change touching retrieval
-must keep all three: when configuration loads, after every HTTP redirect, and after every
-meta-refresh forward.
-
-The second idea, which follows from the first:
-
-> **Refusing is a legitimate, and often correct, output.**
-
-A plausible-but-wrong document checklist is worse than no answer, because the traveller is told with
-full confidence to bring the wrong papers to a visa centre. Every layer prefers to refuse and say
-why.
+Two things worth knowing before choosing: item 7 is **deployment**, which entry 58 unblocked by
+answering the product question, and item 2 is the **trust rule**, which is still why 159 of 198
+countries cannot be researched at all.
 
 ---
 
 ## Known problems
 
-Ordered by how much they limit the product, **except that numbering is append-only**, because references
-to these numbers exist in `CLAUDE.md`, `ARCHITECTURE.md` and `TODO.md`. **Everything still numbered below is live unless its
-heading is struck through.** A struck-through item is fixed *and confirmed by a run*, and is kept only
-so the number keeps its meaning; delete it once nothing references it.
+**Numbering is append-only** — `CLAUDE.md`, `ARCHITECTURE.md`, `TODO.md` and two comments in the code
+reference these numbers. Everything listed is **live**. Retired numbers are listed at the end rather
+than kept as struck-through entries, which is what made this section unreadable.
 
-**Removed as genuinely fixed:** a block resolving a corridor it had nothing to do with (entry 32), the
-unverified `conflicts` field (entry 30), and a failed model call silently substituting the heuristic
-(entry 31) — all 2026-08-18; **the unmeasured-product question** (entry 58) and **entry 27's exception
-not firing** (entries 56–57), both 2026-08-24.
+Each entry says what is true now. *How* it was learned is in the DECISIONS entry it names — do not
+re-add the amendment history here.
 
-1. *(retired 2026-08-24 — the twenty-corridor measurement ran and passed marginally; entry 58. What
-   replaced it is in the current task: the sample is five destinations, not twenty corridors.)*
-2. **The trust rule refuses a fifth of the world, with a wrong diagnosis.** Measured offline on
-   2026-08-18: `is_own_government` fails for **19 of 51** countries — Austria, Belgium, Canada, Chile,
-   Czechia, Germany, Denmark, Finland, Greece, Hungary, Ireland, Italy, Netherlands, Norway, Portugal,
-   Romania, Russia, Sweden, Uruguay. Every one fails on `looks_governmental`, whose pattern list happens
-   to cover all seven verified countries — so entry 19's 22/22 agreement with human decisions is
-   survivorship. Most of Schengen is unreachable, and **Schengen is additionally a definition problem** —
-   `europa.eu` can never pass `belongs_to_destination` for a member state. Entry 33; fix is reviewed data,
-   never a wider regex. Frozen in `tests/test_trust_coverage.py`, so the number moving is a visible diff.
+2. **The trust rule refuses a fifth of the world, and the failing half is the governmental one.**
+   Measured offline: `is_own_government` fails for **19 of 51** countries, every one of them on
+   `looks_governmental` rather than the own-TLD test. Most of Schengen is unreachable, and Schengen is
+   additionally a definition problem — `europa.eu` can never pass `belongs_to_destination` for a member
+   state. **Two distinct failures, and the second is worse:** nine countries (AT, BE, DE, DK, FI, NL,
+   NO, SE, UY) have no marked domain and refuse safely; **ten (CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU)
+   do have one**, so bootstrap *succeeds* against a trusted set that cannot contain the guidance, and
+   nothing reports it. Canada is sharpest: `gc.ca` passes, but the content moved to `canada.ca`. The fix
+   is reviewed data, never a wider regex. Frozen in `tests/test_trust_coverage.py`. Entry 33; TODO item 2.
 
-   **These are two failures, and the second is the one to worry about.** Nine countries (AT, BE, DE, DK,
-   FI, NL, NO, SE, UY) have no marked domain at all: they refuse, safely, with a message that misdescribes
-   why. **Ten (CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU) do have one** — `interno.gov.it`, `gov.ie`,
-   `gob.cl`, `cic.gc.ca` — so bootstrap **succeeds** and resolves the corridor against a trusted set that
-   cannot contain the page holding the guidance. Nothing reports that, so it will read as a ranking
-   failure. Canada is the sharpest: `gc.ca` is special-cased and passes, but the content moved to
-   `canada.ca`.
-3. **~~"Who to believe" is decided inside every request.~~ FIXED 2026-08-18 (entries 34 and 38).**
-   `bootstrap_destination` used to run in the cold path, so a country's trusted set was re-derived from
-   that day's search rankings for every new nationality — the variance entry 22 misdiagnosed as
-   ranking. It is now read from committed `config/authority_domains.yaml`, and a country with no row is
-   refused rather than bootstrapped live. **What survives is a different item: only 39 of 198 countries
-   have a usable row** — see item 23.
-4. **~~The blocked-source plan has never been run live.~~ RUN AND CONFIRMED 2026-08-24 (entries 56–57).**
-   `sweden/IN/GB/tourism` and `france/IN/GB/tourism` both resolve `partial` with the decision stated
-   unknown and the blocked page handed over as a URL, reproducibly across runs. France qualifies its
-   `/royaume-uni`, `/web/france-visas` and `/india` pages and rejects its FAQ, form page and
-   visa-category page. **What is still unread is a traveller's-eye view of the finished plan** — the
-   three wording questions in [TODO.md](TODO.md) item 3's "France read-through", now folded into item 8.
-   The original description follows.
+5. **The full cold request has never been timed.** Every figure quoted is the corridor phase; plan
+   extraction sits on top. The remaining lever is **search**, roughly 3s per corridor at three queries
+   per trusted domain — TODO item 19. Warm is instant, and the local `var/` stores are what make it warm.
 
-   Entry 27 lets a corridor resolve when the only
-   gap is behind a block, states the decision as unknown, and hands the traveller the URL. The chain is
-   covered by tests, but Brave answered `HTTP 402` before France could be re-run, so what a model
-   actually writes for it is unverified — as is whether "Uncertain" reads as *we could not check* rather
-   than *no visa needed*. **And the code changed before it was ever run live:** the block-handover
-   narrowing (entry 32) landed first, so what needs re-running is the narrowed behaviour rather than what
-   entry 27 originally shipped. France should be unaffected — `france-visas.gouv.fr` is exactly the
-   credible decision candidate the narrowing keeps — but that is the assumption the live run tests.
+6. **The trust rule's audit was survivorship, and the cap is uncalibrated.** The rule reproduces all 22
+   recorded human decisions, but every country in that audit was one `looks_governmental` already
+   handled — which is item 2. Its output is now committed and reviewable rather than re-derived per
+   request (entries 38, 39), and twelve countries needed a `reviewed` override. Two things remain
+   unreported: whether an accepted domain set plausibly holds a visa authority at all, and the **cap** —
+   at most five of a destination's own domains are used (entry 22), so a country whose guidance spans
+   six or more loses one, and `withheld_domains` is the only warning. Five is calibrated against
+   corridors run, not derived.
 
-   **Run again 2026-08-23 across six corridors, and the picture is now much clearer — see entry 55.**
-   The chain *does* work end to end and Sweden proved it on the crawl path: `government.se` refuses five
-   URLs including its visa list, `decision_blocking_urls` narrowed correctly to a credible decision page,
-   `decision_is_unverified` was true, and the corridor resolved `partial` naming the blocked pages. **So
-   this item's mechanism is confirmed live for the first time.** What is *not* confirmed is the last
-   step — nobody has read the plan a traveller receives. And on the **corpus path** the exception stops
-   firing entirely for both Sweden and France, which is known problem 25.
+7. **Nobody has read a blocked-authority plan as a traveller would.** The mechanism is confirmed live
+   on real corridors (entries 55–57): the decision is stated unknown and the page handed over as a URL.
+   What is unverified is the *wording* — whether "Uncertain" reads as *we could not check* rather than
+   *no visa needed*. Do not fix the mechanism before reading a real plan. TODO item 8.
 
-   **Run 2026-08-19, and the assumption is false.** None of the eight `france-visas.gouv.fr` URLs that
-   were actually refused scores for `visa_decision` — every one scores `application_route` only,
-   including `/en/assistant-visa`, the visa-decision tool itself — so none of them can qualify a
-   corridor. France resolved once on
-   `www.diplomatie.gouv.fr/spip.php?page=recherche&recherche=Demande+de+visa`, a **site-search results
-   page** scored on the words in its own query string, then refused outright on a fresh run an hour
-   later. So this is now two problems: the plan is *still* unread by a traveller, and what reaches it is
-   decided by an incidental WAF hit. `boilerplate_tokens` vetoes legal notices and sitemaps but not
-   search pages. Entry 41 and [TODO.md](TODO.md) item 5.
-5. **The corridor phase is now fast; the full cold *request* has still never been timed.**
-   **Measured 2026-08-24 over 40 live runs, all corpus-routed: median 27.4s, range 8.8–48.3s** — down
-   from 39–45s (2026-08-18, registry path) and 54.2s (entry 48), because the crawl left the request path
-   (entry 51). **Ignore 34.1s and 54.2s wherever they still appear.**
-   **What remains unmeasured is the total**: every figure here is the corridor phase only, and plan
-   extraction sits on top of it. `POST /visa-plans` was measured on 2026-08-24 at **33.4s**
-   (`united-kingdom/NG/NG`), **36.2s** (`netherlands/IN/GB`) and **42.7s** (`france/IN/GB`), each a
-   corridor resolve *and* extraction — `resolve_once` in the CLI never writes the corridor store, so a
-   preceding CLI run leaves nothing for the API to reuse. The page cache was warm, so read these as
-   cold corridor with warm fetches rather than a fully cold request. An earlier note here claimed the
-   33.4s was served from a stored corridor; that was wrong. The remaining lever is **search**, which is now
-   the largest live component at roughly 3s of a corridor and 3 queries per trusted domain — TODO
-   item 19. Warm is instant, and the local `var/` stores are what make it warm.
-6. **A destination is trusted on a rule whose output a person now reviews once, and the audit behind
-   the rule was survivorship.** **Changed on 2026-08-18 (entries 38 and 39):** the rule no longer runs
-   per request — its output is committed in `config/authority_domains.yaml`, so a wrong call is a
-   reviewable diff rather than a search ranking, and a person may override it in `reviewed` with the
-   evidence. Twelve countries needed that override. **40 of 198 countries are built**; the rest refuse
-   naming the command. The rule reproduces all 22 recorded human decisions, but every country in that audit
-   was one `looks_governmental` already handled — see item 1, which is the concrete failure this warning
-   used to describe hypothetically. The other half of the hole stands: a country whose TLD hosts a
-   convincing government-shaped domain it does not control. Watch `withheld_domains` on resolved
-   corridors for domains declined that should not be; it carries everything declined, including what the
-   cap left out and what bootstrap rejected outright. **Trustworthy as of 2026-08-18, and it was not
-   before:** Italy's real foreign ministry used to be declined as *"not a government domain for this
-   destination"* — false, and character-identical to what a commercial visa agency got, so a reviewer
-   following this very advice was misled rather than warned. It now reads *could not be confirmed as an
-   authority … may be a real one*, and a refusal names such candidates instead of claiming none were
-   found (entry 33). **Still not reported:** whether an accepted set plausibly holds a visa authority at
-   all — the second failure in item 1. **The cap (entry 22) is where a wrong call would
-   show first:** at most five of a destination's own domains are used, ordered by the hostname's
-   authority hint then corroboration, so a country whose guidance genuinely spans six or more of its own
-   domains loses one, and that reason is the only warning. Five is calibrated against corridors run, not
-   derived.
-7. **A blocked authority reaches the plan, but nobody has confirmed it reads usefully.** This entry
-   used to claim a discovery-time block reached the plan *only* when it blocked the decision, and that
-   the US plan therefore never said `travel.state.gov` refused us. **Checked on 2026-08-18, and that
-   was wrong:** `to_destination_config` populates `unreadable_authorities` from `inaccessible_urls`
-   unconditionally, the extractor turns those into `unavailable_sources` regardless of
-   `decision_is_unverified`, and retrieval-time blocks arrive by a second route through
-   `RetrievalReport.failures`. The interface then gives any `blocked` failure with a URL the sentence
-   *"does not permit automated retrieval"* and a link. So the mechanism is in place by two paths.
-   **Amended 2026-08-23 (entry 49): one of those two paths was narrower than described.**
-   `inaccessible_urls` could only ever be populated by the **crawl** — `_fetch_bodies` discarded
-   `report.failures`, so a page refused while the shortlist was being *read* contributed nothing to the
-   corridor at all. The second path named above is the *plan* pipeline's own `RetrievalReport`, which is
-   real and unchanged; what did not exist was the discovery-side one. It does now, which is what allowed
-   the crawl to be dropped.
-   **What is genuinely unknown** is whether a traveller reads it that way, which needs the live run in
-   item 3 — and whether the two `travel.state.gov` places entry 24 left unfetched mean the US corridor
-   records the block at all. Do not fix the mechanism before reading a real plan; the previous entry is
-   an example of describing this from the code rather than from output.
-8. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."**
-   Both produce the same empty result, and since a missing checklist no longer refuses the corridor,
-   a find-or-read failure now yields a plan with a visibly empty checklist rather than a refusal.
-   The plan says so — `VisaPlan` enforces that — but nobody is told *which* case it is. If plans
-   start shipping empty checklists for countries that do publish one, this is the cause; a
-   per-country human declaration is the designed fix. See [DECISIONS.md](DECISIONS.md) entry 14.
-9. **The heuristic scorer still mis-ranks — but it is a recall gate, not a decider, and that changes
-   what to do about it (entry 40).** This entry used to say "a page it ranks out of the ten fetch places
-   is one the model never sees" and then reason about improving the ranking. The conclusion to draw was
-   the other one: **widen the gate.** At 25 places Canada and Japan went from refusing to filling every
-   role, with no scoring rule touched and no latency cost. What remains is genuinely a ranking fault and
-   is now sharply defined: for an Indian national applying from Great Britain the scorer gives
-   `checklist-schengen-visa-tourism/india` **113.0** against **73.0** for `/united-kingdom`, when for a
-   consular checklist the **post** governs. The adjudicator correctly discards the wrong-post page, so
-   the corridor throws away a checklist it already fetched.
-   Two older fixes landed — a checklist is known by the documents it names, and the traveller's post
-   governs — but both rest on English vocabulary and per-country city labels, so it will keep degrading
-   on new countries and languages. **It is no longer the fallback** (entry 31), but it still matters,
-   because it builds the shortlist the model chooses from: a page it ranks outside the window is one the
-   model never sees. It also remains the offline regression baseline.
+8. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."** Both
+   produce an empty checklist, and since a missing one no longer refuses the corridor, a find-or-read
+   failure now yields a plan with a visibly empty list. The plan says so — `VisaPlan` enforces it — but
+   not *which* case it is. Now attached to Germany and the United States, 0/8 checklists each, rather
+   than to a hypothetical. Entry 14; TODO item 9.
 
-   **There is a second recall gate behind this one, and on 2026-08-19 it was the binding one.** Getting a
-   page into the shortlist was not enough — the adjudicator saw only its first 6,000 characters, so Canada
-   ranked its answer *first* for `visa_decision`, fetched it, and refused anyway. Widening the shortlist
-   without widening the excerpt moved the bottleneck rather than removing it. Changed 2026-08-21 —
-   known problem 18 and entry 42.
-10. **The model decider is non-deterministic and evidenced by six corridors on one day.** Its
-   containment is tested with a fake; its *judgement* is not something tests can pin. Re-run the
-   six after any prompt change, and read `decided_by` and the recorded heuristic score to see where
-   the two deciders disagreed.
-   **Isolated for the first time on 2026-08-23** (entry 53). With the candidate count and shortlist
-   identical across three runs, run 2 filled `processing_times` and runs 3 and 4 did not — so that
-   variance is adjudication rather than recall, which was never separable from known problem 19
-   before. In the same three runs `document_checklist` went unfilled every time although **eleven**
-   candidates scoring for the role were fetched, `supporting-documents.html` among them at 64.0. The
-   recall gate did its job and the decider declined, which is the honest outcome; but it means a
-   corridor can now be `is_usable` with a role unfilled for a purely model-side reason, and nothing
-   distinguishes that from known problem 8's "no checklist exists".
-11. **~~Bot-blocked official portals are the largest coverage limit~~ — measured 2026-08-24, and they
-   are not. The *wizard* is.** Entry 58: across 40 runs, blocks cost the United States its checklist
-   and turned one corridor's decision into *blocked*. An interactive tool cost **every United Kingdom
-   corridor its entire plan** — eight runs refused after successfully finding the checklist, the
-   route, the processing times and per-nationality fees, because `gov.uk/check-uk-visa` is a
-   step-by-step wizard that was fetched, read, and correctly judged not to state the answer. France
-   is the same cause with a `403` on top, which is the only reason France resolves and the UK does
-   not. The rest of this entry stands and is about blocks specifically.
+9. **The heuristic scorer mis-ranks, and it is a recall gate rather than a decider.** The conclusion to
+   draw is *widen the gate*, not *improve the ranking* — entry 40, and entry 61 is the same lesson
+   again. It still matters, because it builds the shortlist the model chooses from, and it rests on
+   English vocabulary and per-country city labels, so it will keep degrading on new countries and
+   languages. It remains the offline regression baseline. A sharply defined residual: for an Indian
+   national applying from Great Britain the scorer rates `checklist-schengen-visa-tourism/india`
+   **113.0** against **73.0** for `/united-kingdom`, when for a consular checklist the **post** governs;
+   the adjudicator discards the wrong-post page, so the corridor throws away a checklist it fetched.
+   TODO item 1.
 
-   **Fixed 2026-08-24 as entry 59 — and the fix then found the real United Kingdom limit.** A page
-   that was *read* and judged to **ask** the decision rather than state it is now its own outcome: the
-   corridor resolves `partial`, the tool is named, `visa_required` is null. Measured live,
-   `united-kingdom/NG/NG/tourism` went from refusing to a full plan with seven steps. **But
-   `gov.uk/check-uk-visa` scores 30.4 and ranks ~110th of ~820, and reaches the shortlist for NG and PH
-   and not for IN or CN** — so entry 58's *"it was ranked, shortlisted and fetched"* held for the runs
-   it inspected and not for all of them. The cause was the top-**three**-per-role reservation against a
-   checker sitting **5th of 76** for its own role — not the eleven of twenty-five places taken by
-   near-duplicate fee pages, since 115 pages outrank it and only 41 are that host. **Fixed as entry
-   61**: five per role, budget 35, and all four UK corridors resolve.
+10. **The model decider is non-deterministic, and it is now the only variance left.** Isolated for the
+   first time on 2026-08-23 (entry 53): with the candidate count and shortlist identical across runs,
+   one run filled `processing_times` and two did not. Confirmed as the residual by entry 58 — 19 of 20
+   corridors reproduced exactly, the exception being adjudication with recall held fixed. It means a
+   corridor can be `is_usable` with a role unfilled for a purely model-side reason, indistinguishable
+   from item 8. It also reaches which *tools* get named (entry 60).
 
-   **Bot-blocked official portals are a large coverage limit — but "permanent" was the wrong
-   word.** Three found: `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and Singapore's VFS page.
-   France is the clearest case, quantified in entry 26: **every** readable French government page
-   delegates the visa decision to the blocked portal, so no amount of better ranking can confirm it.
-   Working around a block stays forbidden by entry 18 and by `CLAUDE.md`, and nothing about that has
-   changed. What entry 35 corrects is the conclusion drawn from it: the loss is permanent *given an
-   anonymous, unauthenticated client*, and that posture was never itself decided. Honouring
-   `robots.txt` — **now read and obeyed** (entry 36) — asking for access, and the open
-   client-side-retrieval question are all legitimacy rather than circumvention. **Measured 2026-08-18:
-   `robots.txt` buys nothing here at all.** `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and
-   `travel.state.gov` answer `403` **to their own `robots.txt`**, served as a bot-detection
-   interstitial — there is no stated policy to honour, because it is a WAF rather than a rule. So the
-   first legitimacy step is spent and this limit is exactly where it was. What remains of entry 35 is
-   asking for access and the client-side question; item 3's twenty corridors still size it.
+11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
+   was, and that is now handled (entries 58–61). Three blocked portals found: `france-visas.gouv.fr`,
+   `www.france-visas.gouv.fr` and Singapore's VFS page. Working around a block stays forbidden. What
+   entry 35 corrects is the conclusion: the loss is permanent *given an anonymous client*, and that
+   posture was never itself decided. `robots.txt` is now read and obeyed (entry 36) and buys nothing
+   here — those hosts answer `403` to their own `robots.txt`. **And France's `403` is not a refusal at
+   all**: it carries `cf-mitigated: challenge`, so no policy was ever stated, and our own renderer reads
+   the page under our own user agent. Decided as entry 41, **not implemented** — TODO item 5 — and the
+   interface still tells travellers a challenged authority "does not permit automated retrieval", which
+   is untrue of what was seen.
 
-   **Reopened 2026-08-19: this item had the right observation and the wrong conclusion.** It noticed the
-   `403`-on-`robots.txt` and concluded the limit was unchanged. The response headers say what it actually
-   is: `cf-mitigated: challenge`, *"enable JavaScript and cookies to continue"* — a Cloudflare
-   **challenge** rather than a refusal, and Cloudflare's act rather than the Ministry's. Nothing was ever
-   stated to disobey. The project's own renderer, announcing `VisaResearchAgent/0.1` with nothing
-   spoofed, reads the page: 221,476 bytes, `blocked_hosts: []`, ~7s. **So "largest permanent coverage
-   limit" is wrong twice over** — not permanent, and never a policy. Decided as entry 41, unimplemented
-   as item 5. **What survives:** France's answers sit inside a four-step wizard rather than on a page, so
-   reading the host honestly is necessary and not sufficient — and "asking for access" is largely moot
-   here, because there is nobody to ask about a rule that was never made.
-12. **Discovered pages still have no staleness check.** A CMS publication date is now read from the
-   path and reported — to the adjudicator, which can weigh it against the page's text, and in the
-   proposal for a human. But that is a *report*, not a check: it is deliberately not a veto,
-   because two of China's correct picks carry dated paths and one is from 2013. Content-hash drift
-   detection remains a TODO and covers configured sources only.
-13. **Scoring is English-only.** A destination publishing solely in its own language will score near
-   zero and refuse. Now visible in practice: rendering `xuatnhapcanh.gov.vn` yields 9,327
-   characters of Vietnamese, which scores nothing.
-14. **`xuatnhapcanh.gov.vn/en` is broken server-side.** It answers `200` with a
-   `location: http://localhost:4000/vi` header and an empty body — a misconfigured Next.js i18n
-   redirect. Browsers ignore `Location` on a `200`, so **rendering does not fix this one either**;
-   it renders to 0 characters. The site root works; only the `/en` path is broken.
-15. **An authority's own outdated microsite is undetectable** — right domain, live, linked,
-   text-rich, so every check passes.
-16. **Mission detection only works when a mission has its own subdomain**, and does nothing at all
-   for a consolidated portal. `_mission_domains` returns `[]` for Brazil, whose every mission sits
-   on `www.gov.br` with the post in the *path* — so Riyadh and Atlanta outrank Edinburgh for a UK
-   applicant. It also misses Singapore's `london.mfa.gov.sg`, which is named by city rather than
-   country code. Recorded here as latent; Brazil proved it changes the answer. **Broader than
-   recorded:** `_mission_domains` reads `destination.sources`, and the automatic path builds a config
-   with none, so it returns `[]` for **every** discovered destination regardless of how its missions
-   are named. Mission detection survives there only through `mission_affinity`'s host-label check —
-   which is what still recognises `in.usembassy.gov` as the post serving an Indian traveller.
+12. **Discovered pages have no staleness check.** A publication date is read from the path and
+   *reported* to the adjudicator, deliberately not a veto — two of China's correct picks carry dated
+   paths and one is from 2013. Content-hash drift detection covers configured sources only.
+
+13. **Scoring is English-only.** A destination publishing solely in its own language scores near zero
+   and refuses. Rendering `xuatnhapcanh.gov.vn` yields 9,327 characters of Vietnamese, which scores
+   nothing.
+
+14. **`xuatnhapcanh.gov.vn/en` is broken server-side** — it answers `200` with a
+   `location: http://localhost:4000/vi` header and an empty body. Browsers ignore `Location` on a
+   `200`, so **rendering does not fix this one**; it renders to 0 characters. The site root works.
+
+15. **An authority's own outdated microsite is undetectable** — right domain, live, linked, text-rich,
+   so every check passes.
+
+16. **Mission detection only works when a mission has its own subdomain.** `_mission_domains` returns
+   `[]` for a consolidated portal — Brazil puts every mission on `www.gov.br` with the post in the
+   *path*, so Riyadh and Atlanta outrank Edinburgh for a UK applicant. **Broader than it reads:** it
+   reads `destination.sources`, and the automatic path builds a config with none, so it returns `[]` for
+   **every** discovered destination. Mission detection survives there only through `mission_affinity`'s
+   host-label check.
+
 17. **The retrieval cache is not re-validated against changed rules.** After changing what counts as
-   usable, cached entries still serve the old result until their TTL expires. Clear `var/cache/`
-   when testing a retrieval change, or a fix will appear not to work.
-18. **The adjudicator's excerpt silently decided corridors, and which travellers got an answer depended
-   on the alphabet. Changed 2026-08-21; not yet confirmed live.** Added 2026-08-19, when
-   `DEFAULT_EXCERPT_CHARACTERS` was a flat 6,000-character head slice. `canada/GB/GB/tourism` ranked the
-   right page **first** for `visa_decision`, fetched it, and refused: the sentence answering a British
-   traveller sits at offset 8,597 of 16,465 and the window ended at 6,000 — mid-alphabet in the
-   *visa-required* list, at "Morocco".
-   **Why it was worse than one corridor:** the page lists visa-required countries alphabetically and the
-   eTA list only from offset 8,517, so Brazil (4,720), China (4,909) and India (5,325) were answered while
-   Vietnam (7,787), Australia (8,815), a British citizen (8,858), Japan (9,647) and Singapore (9,856) were
-   not — **every visa-exempt nationality was past the cut**. Nothing in the output distinguished "the page
-   did not say" from "we stopped reading", and the adjudicator's refusal reason was accurate about what it
-   had been shown, which is what made it invisible. It is also why entry 40's "Canada fills every role"
-   did not generalise.
-   **What changed:** `anchored_excerpt` shows the head plus a 3,000-character window centred on every
-   later mention of the traveller's own nationality or residence, to a 20,000-character budget, marking
-   omissions with `[…]` (entry 42).
-   **Run live 2026-08-21, twice, and the two runs disagreed.** The first refused: of 24 candidates
-   fetched, `entry-requirements-country.html` was not one, so the excerpt had nothing to widen. The
-   second **resolved**, with `visa_decision` filled from that page by the model, quoting the sentence at
-   offset 8,597 — which a flat 6,000-character excerpt could not have shown. So this defect is confirmed
-   fixed on the corridor that found it. What the two runs also showed is known problem 19.
-   **This item stays open** only until the other six corridors have been re-run
-   ([TODO.md](TODO.md) item 15); nothing about the excerpt itself is outstanding.
-19. **The candidate set for one corridor varies between runs, and the answer varies with it.** Measured
-   2026-08-21: `canada/GB/GB/tourism` run cold twice within the hour, same five trusted domains, same
-   fifteen queries, same code. The first run refused — `entry-requirements-country.html` was not among
-   its candidates at all. The second **resolved**, with that page ranked **15th of 470** candidates at
-   53.4, arriving both as a `site:canada.ca` search seed and by crawl at depth 1 from
-   `check-visa-eta.html`. So it is not a marginal candidate that scoring pushed out; on the failing run
-   search simply did not return it. That page is still the only one found that states Canada's
-   requirement for a British citizen in static text.
-   **What this means for every other corridor:** a resolved corridor is not evidence the pipeline is
-   reliable, only that this run of it was. The corridor store then keeps the lucky result for three
-   weeks, which hides the variance until re-resolution. TODO item 17 is what to do about it, and the
-   20-corridor measurement (item 3) should be read with it in mind — one run per corridor cannot
-   distinguish a corridor that works from a corridor that works half the time.
-   **Now diagnosable, which it was not:** every run writes `var/recall/<corridor>.json` with all 470
-   candidates, their scores, and the shortlist and fetch flags (entry 43).
-   **Measured again 2026-08-23 on the corpus-routed path** (entry 53): four runs, **2,455 candidates
-   every time**, the same 25-page shortlist and 24 fetched, and `visa_decision` filled from the same
-   page on all three runs that resolved. That is the closest this has come to a stable candidate set,
-   and it follows from 2,387 of the 2,455 coming from a file. **It still does not close this item**:
-   minutes apart, one corridor, one destination, and 68 candidates still come from search, which is
-   nondeterministic at the source. What it *does* buy is separation — see known problem 10.
-   **Decided 2026-08-21 as entry 44, and implemented across entries 46–57.** The candidate set is a stored **corpus
-   of official pages per country**, populated offline, so search leaves the request path for a populated
-   country and two runs of one corridor consider the same candidates. It fixes the measured cause here —
-   Canada's page was also reachable by crawl at depth 1, which an offline job with no latency budget
-   reaches reliably — and it fixes **recall only**: adjudication is still a model call (known problem
-   10), and a page the offline job never finds becomes a permanent gap rather than a coin flip. TODO
-   items 18 and 19; item 17 keeps the counting that sizes it.
-   **Largely answered 2026-08-24 (entry 58): across 40 runs of 20 corridors, 19 of 20 gave identical
-   outcomes on both runs.** The single exception is UK/Philippines, whose checklist was found on one run
-   and not the other from an identical 813-candidate set — adjudication, not recall. So the candidate
-   set is now stable in practice and **known problem 10 is the only variance left**. This item stays
-   open only for the gap it never closed: the runs are minutes apart, and the original divergence was
-   two days apart.
-   **Counted 2026-08-22, and the flip did not reproduce.** Three back-to-back runs, cache cleared:
-   **471 candidates, every run saw all 471**, all three resolved, and `entry-requirements-country.html`
-   arrived every time by *both* a `site:canada.ca` seed and a depth-1 crawl. So the rate is **0 of 3
-   back-to-back** — two minutes apart, against an hour for the observed flip and two days for the
-   original divergence — which cannot tell *"recall is stable"* from *"recall is stable over two
-   minutes"*. The gapped re-run is what would settle it, and until then entry 43's flip is one
-   observation. This item stays open; it has not been shown to be fixed, only not to reproduce today.
-20. **A live plan cites a URL with no supporting quote.** `SourceReference.supporting_excerpt` is written
-   only by `FixtureSourceFetcher`, from the Singapore manifest (`fixtures.py:103`).
-   `LiveSourceFetcher._build` does not set it and `OpenAIVisaPlanExtractor` passes retrieval's references
-   through unchanged, so on the live path it is **always `None`**. *"Why did you say an Indian passport
-   holder needs this visa?"* is therefore answerable as *which page*, never *which sentence*. Found while
-   tracing entry 44; TODO item 21. **Careful when fixing:** an excerpt the model produces has to be
-   checked against the retrieved text, because an unverified quote attributed to a government page is
-   worse than no quote.
-21. **A plan cannot be tied to the text it was read from.** `content_hash` is recorded on
-   `FetchedSource` and `SourceReference` has no hash field, so nothing in a `VisaPlan` identifies the
-   version of the page behind a claim. TODO item 21.
-22. **Why a page was chosen for a role never leaves discovery.** `ResolvedSource.decided_by`, `score` and
-   `signals` are stored in `ResolvedCorridor` and appear nowhere in the API response, so a reader of a
-   plan cannot see whether the model or the heuristic picked its decision source, or on what reasoning.
-   TODO item 21.
-23. **The interface offers 198 destinations and can research 39.** `researchable_destinations()`
-   ([api/routes.py](src/visa_research_agent/api/routes.py)) lists every country in `countries.yaml` with
-   `status="available"` when `destination_mode: automatic`, but a country with no row in
-   `authority_domains.yaml` is refused by `AutomaticDestinationService.destination_for` — 158 of them —
-   and Austria's row has no usable domain. So a traveller picks from a full list and gets a `503` for
-   four out of five choices. The refusal itself is honest and names the command; the *offer* is not.
-   Counted 2026-08-22. The fix is either to mark unbuilt countries in the list or to build the registry
-   out (item 2); do not fix it by loosening the refusal.
-24. **A thin corpus now has no crawl behind it, and coverage varies enormously between countries.**
-   **The first half of this item is closed** — the path has been run live on **seven** destinations
-   (entries 53 and 55), 2.1×–5.2× faster with the crawl at 0.0s, and roles genuinely found are neutral
-   to better.
-   **What the six-corridor run added is how uneven corpus coverage is.** Measured against the pages
-   that actually filled roles on the crawl path: Singapore 6/6, United States 3/3, Sweden 3/4, France
-   2/3, Netherlands 1/2, **Japan 1/6**. Japan's corpus holds 29 mission hosts — Auckland, Boston, San
-   Francisco, Edinburgh — and **not the London embassy**, where five of its six roles came from,
-   because the offline build is traveller-free and takes whatever missions search returns. It resolved
-   all six roles anyway **because search still runs**, which is the strongest evidence yet for entry
-   48's refusal to drop search, and the clearest warning against doing so later.
-   Second, **the safety net is thinner than it was.** For a country whose corpus passes
-   `DEFAULT_CRAWL_PAGES` but whose corpus *recall* is poor, the crawl used to compensate — badly and
-   nondeterministically, but it compensated. Now it does not. Entry 51 argues the trade, and entry 47's
-   write-back is what repairs it over runs, but the first corridor into such a country pays the whole
-   cost and **nothing counts how often the corpus was the only source and came up short.** The
-   `found_by="corpus"` field added with entry 51 is what would make that countable from the recall log;
-   nobody has counted it.
-25. *(retired 2026-08-24 — entry 27's exception now fires on real corridors; entries 56 and 57, and
-   known problem 4 above.)*
+   usable, cached entries serve the old result until their TTL expires. Clear `var/cache/` when testing
+   a retrieval change, or a fix will appear not to work.
+
+19. **The candidate set can vary between runs, and the answer varies with it.** The original
+   observation: `canada/GB/GB/tourism` run cold twice within an hour, same domains, same queries, same
+   code — one refused because the answering page was not among its candidates, one resolved with that
+   page ranked 15th of 470. **Largely answered by the corpus** (entries 44–53) and by entry 58: across
+   40 runs, 19 of 20 corridors gave identical outcomes, and the candidate set is stable in practice
+   because most of it comes from a file. It stays open for the gap it never closed — those runs were
+   minutes apart, and the original divergence was two days apart. Every run writes
+   `var/recall/<corridor>.json` so it is diagnosable (entry 43). TODO item 17.
+
+20. **A live plan cites a URL with no supporting quote.** `SourceReference.supporting_excerpt` is
+   written only by `FixtureSourceFetcher`; on the live path it is always `None`. *"Why did you say an
+   Indian passport holder needs this visa?"* is answerable as *which page*, never *which sentence*.
+   **Careful when fixing:** a model-produced excerpt must be checked against the retrieved text, because
+   an unverified quote attributed to a government page is worse than no quote. TODO item 21.
+
+21. **A plan cannot be tied to the text it was read from.** `content_hash` is on `FetchedSource`;
+   `SourceReference` has no hash field, so nothing in a `VisaPlan` identifies the version of the page
+   behind a claim. TODO item 21.
+
+22. **Why a page was chosen for a role never leaves discovery.** `decided_by`, `score` and `signals`
+   live in `ResolvedCorridor` and appear nowhere in the API response. TODO item 21.
+
+23. **The interface offers 198 destinations and can research 39.** `researchable_destinations()` lists
+   every country with `status="available"`, but 158 have no row in `authority_domains.yaml` and are
+   refused with a `503`. The refusal is honest; the *offer* is not. Fix by marking unbuilt countries or
+   by building the registry out (item 2) — not by loosening the refusal.
+
+24. **A thin corpus has no crawl behind it, and coverage varies enormously between countries.**
+   Measured against the pages that actually filled roles on the crawl path: Singapore 6/6, United States
+   3/3, Sweden 3/4, France 2/3, Netherlands 1/2, **Japan 1/6** — Japan's corpus holds 29 mission hosts
+   and not the London embassy, where five of its six roles came from. It resolved anyway **because
+   search still runs**, which is the strongest argument against dropping search (entry 48). The safety
+   net is thinner than it was: the crawl used to compensate for poor corpus recall, badly and
+   nondeterministically, and now does not. **Nothing counts how often the corpus was the only source and
+   came up short**, though `found_by="corpus"` in the recall log would make it countable.
+
+**Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
+entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source
+plan never run live — entries 56, 57), **18** (the excerpt silently deciding corridors — entry 42),
+**25** (entry 27's exception not firing on the corpus path — entries 56, 57). Also removed as fixed: a
+block resolving a corridor it had nothing to do with (entry 32), the unverified `conflicts` field
+(entry 30), and a failed model call substituting the heuristic (entry 31).
 
 ---
-
-## Current task
-
-> **The measurement that decides whether this is a product has run, and it passes — marginally.**
-> Entry 58, 2026-08-24: **75%** confirm the decision against a ≥70% bar, **50%** yield a checklist
-> against a ≥50% bar. The bar was committed in advance (entry 35) and was met. It was met by one
-> corridor on the first number and by nothing at all on the second, so quote it as a marginal pass,
-> and read the sample caveat below before quoting it at all.
-
-**The sample is five destinations, not twenty corridors.** Nationality changed the outcome once in
-twenty; destination decided the rest. So 75% is "three and three-quarters of five destinations", and
-the next measurement should sample **destinations**, not corridors.
-
-**Item 24 is done — the wizard outcome shipped on 2026-08-24 as entry 59.** A page that was *read*
-and judged to **ask** the decision rather than state it is now a third outcome beside *found* and
-*blocked*: the corridor resolves `partial`, the tool's URL is named in the decision panel with a
-sentence saying answering its questions there gives the traveller their answer, and `visa_required`
-stays null. Measured live, `united-kingdom/NG/NG/tourism` went from refusing to a full plan — four
-document requirements, seven steps, the first *"Open the official visa checker and answer its
-questions"*.
-
-**Entry 59 also declines the larger version of the idea, with measurements, so nobody re-derives it.**
-GOV.UK's checker is server-rendered and its answers are addressable — plain `curl` under our own user
-agent gets *"You'll need a visa to come to the UK"* out of `/check-uk-visa/y/india/no/tourism/no`, and
-`robots.txt` allows it. It is still rejected: two of the checker's questions are not in a corridor, so
-answering them means inventing traveller input on the one question where being wrong matters most.
-
-**Item 25 is done too, and the United Kingdom now resolves.** `_shortlist` reserved the top **three**
-candidates per role, and `gov.uk/check-uk-visa` is **5th** for `visa_decision` in the two corridors
-that were failing — so the tool entries 59–60 exist to hand over never reached the model. Raised to
-**five**, with the shortlist budget 25 → 35 because the two only work together (entry 61).
-
-| | before | after |
-| --- | --- | --- |
-| UK/IN, UK/CN, UK/NG, UK/PH | **0 of 8 runs resolved** | **4 of 4** — checklist, route, fees and times filled, decision handed over as a tool |
-
-Replaying 26 recorded candidate sets through the real `_shortlist` drops **not one** page that is
-shortlisted today, and seven live regression corridors are unchanged. **France gained a checklist**: its
-UK mission page says the wizard will name the documents, so it is offered for that too.
-
-**Item 26 is closed too, without a code change** (entry 62). Its premise was wrong —
-`_describes_country` is already token-based, and `gov.uk/india-young-professionals-scheme-visa`
-genuinely *is* about India; what it is not about is a tourist visa, which is a question about the
-page's subject. Four fixes were measured and four disproved, including one that was implemented and
-reverted when the test suite caught it: a terse per-nationality decision page is *also* floor-only, so
-"withhold the corridor bonus from a floor-only score" cannot tell the answer from the noise.
-**Measured cost of leaving it: 0.27 shortlist places per corridor** — after entry 61 the residual is a
-fetch, not a wrong answer.
-
-**So there is no single obvious next item, and that is worth saying plainly.** [TODO.md](TODO.md) is
-the ordered list; item 17 (the corridor flip rate) leads it, item 9 separates "no checklist exists"
-from "we failed to find it" and is attached to two of five measured destinations, and item 7 is
-deployment, which entry 58 unblocked.
-
-**Two method notes worth keeping.** Item 25 named the wrong cause twice, both times written from
-reading the code; what settled it was a harness replaying recorded candidate sets through the **real**
-`_shortlist`, which reproduces 26 of 26 corridors exactly. And `resolve_once` in the CLI **never
-touches the corridor store** — no load, no write, deliberately, so `--runs` measures variance rather
-than replay. CLI numbers are therefore always cold, and a CLI run never warms the store for the API.
-
-**The trap to avoid is entry 32's, exactly.** If "we could not find it" can present as "an authority
-made it unavailable", every failed corridor drifts into looking authority-limited. The difference
-here is that the page **was read**, so the claim is narrower and checkable — the model is saying the
-text defers to a form, not guessing about a page nobody saw. Do not solve it by driving the wizard;
-that is an application flow and it is on the permanent no list in [CLAUDE.md](CLAUDE.md).
-
-**Then item 9** — tell "this country publishes no checklist" from "we failed to find it". Germany and
-the United States both return 0/8 checklists and nothing distinguishes the two cases, which is now
-two of five destinations rather than a hypothetical.
-
-**Everything before this is done and confirmed live** — item 22 (entries 49–53), the six-corridor
-re-run (entry 55), item 23 (entry 56), the `_decision_blocking` question (entry 57), and item 3
-itself (entry 58).
-
-### Where the previous work got to
-
-**Written 2026-08-24, covering the four sessions that took the corpus from a decision to a measured
-product claim.** Everything below is confirmed by a run, not by reading the code.
-
-**The corpus replaced the crawl, and it is 2–5× faster.** Entries 49–53: a country whose stored corpus
-offers more pages than a crawl could visit no longer crawls at all. Measured across seven destinations,
-then across twenty corridors — 40 runs, **none crawled**, median 27.4s. The bound is derived rather than
-tuned: `LinkCrawler` visits at most `DEFAULT_CRAWL_PAGES` pages, so a corpus larger than that cannot be
-out-covered by one.
-
-**Three defects were found by running it, and none was visible from reading.** A `setdefault` meant the
-corpus could never displace a *thinner* search candidate for the same URL, so Canada's answering page
-entered at 32.0 instead of 63.4 and was never read (entry 53). Pinned pages were dropped by the
-shortlist truncation, so entry 47's ratchet had been half-implemented since it landed (entry 52). One
-AES-encrypted PDF aborted an entire corridor, because `pypdf`'s `DependencyError` extends `Exception`
-directly and no narrower `except` could catch it (entry 54).
-
-**Then a proposal was measured and rejected, which is the pattern to copy.** TODO item 22 proposed a
-top-400 routing index over the corpus; measured, the ~3.6s it targeted was `wrong_country` scanning 198
-countries per candidate, and an index over *countries* took the whole path from 4,757ms to 346ms —
-cheaper than the pre-filter, with no recall cut (entry 50). The same happened again with item 23, which
-blamed a guard when the real defect was that the `visa_decision` vocabulary could only ask the question
-and never recognise an answer (entry 56).
-
-**The one place the heuristic was judging *meaning* has moved to the model** (entry 57).
-`_decision_blocking` asked "could this refused page have held the decision?" by keyword, on a page
-nobody read. It now asks the model over the address and label only — there is no text, because the
-authority refused it — and France went from qualifying on a **blank CERFA form** to qualifying its own
-United Kingdom and India pages while rejecting its FAQ and form pages.
-
-**And the product question was answered** (entry 58): 75% confirm the decision against a ≥70% bar, 50%
-yield a checklist against a ≥50% bar. A pass, by one corridor and by nothing at all. **Read the current
-task for what that measurement actually found**, which is more useful than the verdict: the sample is
-five destinations rather than twenty corridors, and the United Kingdom refuses every run because its
-answer sits inside a wizard.
-
----
-
-**Updated 2026-08-21. Of the two corridors investigated on 2026-08-19, one fix has landed and one has
-not.** `canada/GB/GB/tourism` refused because the adjudicator's 6,000-character excerpt cut off the page
-that answers it; the excerpt now follows the traveller — head plus a window around every later mention of
-their own country, at 20,000 characters, with omissions marked (entry 42, known problem 18).
-
-**It was re-run cold twice the same day, and the two runs disagreed — which is the most useful thing on
-this page.** The first refused: the answering page was not among the 24 candidates at all, and the
-adjudicator refused because what it *did* get is the JavaScript wizard, which it described as showing
-*"Your result is loading"* (item 5, named independently by the model). The second **resolved**, filling
-`visa_decision` from that page with the sentence at offset 8,597 — which the old flat 6,000-character
-excerpt could not have shown. **So entry 42 is confirmed, and a second gate upstream of it is now
-visible:** whether the page arrives at all varies between runs (known problem 19).
-
-**That variance is why `discovery/recall_log.py` now exists** (entry 43). Every run writes
-`var/recall/<corridor>.json` — all 470 candidates Canada considered, their scores, and whether each was
-shortlisted and fetched — so the next refusal can be diagnosed instead of inferred. It answered the
-question on its first run. The other six verified corridors have not been re-run; that is the rest of
-item 15.
-
-**And the variance now has a decided answer, entry 44, which is where the next work is.** A database was
-investigated on 2026-08-21 and the conclusion is narrower than the question: **persist the country's page
-corpus, never the answer.** Which pages exist does not vary by corridor — only which one answers a given
-traveller does — so the corpus is populated by an offline job with no latency budget, and search leaves
-the request path for a populated country. That is entry 34's move one level down. A miss **refuses and
-flags the country**, per entry 38, rather than falling back to live search.
-
-**Read what it does not do, because it is easy to overstate.** It fixes recall, and Canada's page was
-reachable at depth 1, which an offline crawl reaches reliably. It does **not** make adjudication
-deterministic (known problem 10), and it turns a page the job never finds into a *permanent* gap rather
-than a coin flip — a better failure, because a stable gap is visible and fixable, but a trade rather than
-a win. Precomputing answers per corridor was rejected on arithmetic before safety: 196,020 corridors is
-~2.9M searches a refresh cycle. Items 18 and 19 are the implementation; item 17 keeps the counting that
-sizes it.
-
-**Finished 2026-08-23, and the last step of it argued against its own design.** Entries 46 and 47 built
-the store and made the candidate set ratchet; entry 48 measured where a corridor's 54.2s goes and
-proposed a routing index; entries 49–51 built the outcome. **The crawl is out of the request path** for a
-country whose corpus out-covers it, **the routing index is not built** because the cost it targeted was
-`wrong_country` rather than scoring, and a reporting hole that predated all of it was closed first. Read
-entry 50 before proposing a pre-filter over the corpus again: a flat top-400 drops a page that has
-already answered a corridor, and a pin cannot rescue it. **Nothing here has been run live** — known
-problem 24.
-
-`france/IN/GB/tourism` is untouched. It resolves without a checklist because `france-visas.gouv.fr`
-serves a Cloudflare *challenge* rather than a refusal — entry 41, item 5 — and **two things are still
-shipping against the project's own rules:** the interface tells travellers a challenged authority
-*"does not permit automated retrieval"*, which is untrue of what was seen, and France resolves on an
-incidental WAF hit that flips between runs. Neither is a new defect; both were invisible because they
-were described from code rather than from output.
-
-The 2026-08-18 review was agreed with in full, recorded as entries 29–35, and turned into an ordered list
-in [TODO.md](TODO.md). **All of it is implemented bar two of entry 35's three legitimacy steps.** Five
-further entries (36–40) came out of the building, and entry 41 out of the investigation above.
-
-**The pattern across all five is the one to carry forward.** Each time, the constraint was not where the
-documentation said it was, and only running the thing showed it: the domain classifier was discarding
-domains the search had already found; a wrong trusted set made corridors *refuse* rather than answer,
-where these files claimed the opposite; the `robots.txt` parser was inert against every wildcard rule; and
-the scorer's ranking was never binding — the ten-place window in front of it was. Four false lines in
-these files in two days, every one of them written from reading a code path. **Prefer a corridor run to a
-careful reading.**
-
-**Done, all offline and all with tests:**
-
-- **The trust-coverage measurement** (entry 33) — `tests/test_trust_coverage.py`, 7 tests. Freezes the 19
-  unreachable countries so a change is a visible diff, asserts every failure is on the governmental half
-  rather than the TLD half, and guards `countries.yaml` against another country acquiring a governmental
-  marker in its `tlds` unreviewed.
-- **The block-handover narrowing** (entry 32) — `PERSISTENT_REFUSAL_STATUS_CODES = {401, 403}` and
-  `ResolvedCorridor.decision_blocking_urls`, so a `429` and a `403` on a footer link can no longer resolve
-  a corridor or force a visa decision to unknown. Both are still reported. France's shape still resolves.
-- **Three deletions** (entries 30 and 29) — the unverified `conflicts` field, `domain/state.py`, and the
-  unused `langgraph` dependency.
-- **A failed adjudication refuses** (entry 31) — two attempts, then an ordinary refusal, instead of
-  silently substituting the heuristic that named Brazil's Riyadh page as a checklist at full confidence.
-  A refusal now also reports the model calls it paid for.
-- **`withheld_domains` stopped stating something false** (entry 33) — a ministry under its own country's
-  top-level domain with no governmental marker now reads as *could not be confirmed*, not *not a
-  government domain*, and no longer identically to a commercial visa agency. The refusal message names
-  the candidates it could not confirm instead of claiming none were found. Reporting only; nothing new
-  is trusted.
-- **The shortlist widened from 10 to 25** (entry 40) — one constant, and it bought more than every
-  scoring rule in the file. The scorer decides *what the model may see*, not what is chosen, so a page
-  ranked out of the window is unrecoverable while a page ranked in wrongly costs an excerpt. At ten
-  places the heuristic was the effective decider. **Canada and Japan went from refusing to filling every
-  role**; the Netherlands gained its checklist. No latency penalty — fetching is concurrent, and both
-  corridors were marginally *faster* at 25 — and adjudication input roughly doubles to ~19k tokens.
-  A test pins the width, because narrowing it again fails silently.
-- **A person may override the trust rule in committed data** (entry 39) — `CountryAuthorities.reviewed`,
-  a domain-to-evidence map that leads the set, counts against the same cap, and **survives
-  regeneration**. Twelve countries corrected, each confirmed by a Wikidata reverse lookup (the domain is
-  the official website of an entity whose country is that country) — Germany, Italy, the Netherlands,
-  Canada, Sweden, Belgium, Denmark, Greece, Ireland, Morocco, Portugal, the UAE. Four domains that could
-  not be confirmed were left alone, so **Austria still refuses**, correctly.
-  **Measured before and after, and it changed the diagnosis:** Sweden went from fetching *nothing* to
-  reading `migrationsverket.se` with two roles filled; Canada gained its document checklist; the
-  Netherlands did not move. **None of the three resolves end to end.** The binding constraint moved
-  rather than lifted — from "we cannot tell which domain is this government" to "we cannot confirm the
-  visa decision on pages we can now read".
-- **The trusted-domain registry is committed** (entry 38) — `config/authority_domains.yaml`, generated
-  by `visa-discover registry`, read by `AutomaticDestinationService` in place of a live bootstrap. The
-  trust rule is untouched; only *when* it runs moved. **40 of 198 countries built**; the rest refuse with
-  a message naming the command, which is quota rather than work. Verified live: New Zealand resolved
-  fully from committed domains with **0 searches** in the service where 4 went on bootstrap.
-  **Reading it found what running it could not** — five countries refused, **twelve confirmed *and
-  wrong*** (the Netherlands trusts only its business portal; Canada trusts five `gc.ca` domains while
-  IRCC's content is on the unconfirmable `canada.ca`), and the cap spending slots on United States
-  missions for an India corridor. The first two are **fixed** by entry 39; the cap's alphabetical
-  tie-break is not. **And entry 39 corrected this entry by running it:** a wrong trusted set makes a
-  corridor *refuse*, not answer. The line above said the opposite, from reading the code path.
-- **`robots.txt` is read and obeyed** (entry 36) — `research/robots.py`, one policy per origin with a
-  24-hour expiry, consulted by `discovery/crawl.py` before every page and by `research/live_sources.py`
-  before every source and every meta-refresh forward. 32 tests, all offline. A skip is the new
-  `disallowed` outcome and gets its own corridor note, so it can never read as "nothing found"; it is
-  reported and may never resolve a corridor. **Matching implements RFC 9309 rather than using
-  `urllib.robotparser`**, which supports neither `*` nor `$` and so would obey none of the rules
-  `www.gov.uk` publishes. **Measured live across six corridors** — the table is in entry 36. It cost
-  almost nothing and nothing of value: France lost one news listing, China lost two portals already
-  answering `502`, and Japan, Singapore, Vietnam and Brazil lost nothing at all.
-
-**Five findings came out of doing the work, all recorded rather than left in the diff. The pattern in
-them is worth carrying: each was a claim that turned out to be wrong when finally tested or run — and
-the last was caught only by probing real authorities, not by any test.**
-
-1. **The 19 unreachable countries are two different failures**, and the second is worse (entry 33's
-   table). Nine have no marked domain at all and refuse outright with a misleading message. **Ten do have
-   one** — `interno.gov.it`, `gov.ie`, `gob.cl`, `cic.gc.ca` — so bootstrap *succeeds* and builds a trusted
-   set that cannot contain the visa guidance, and **nothing measures that**. Canada is sharpest: `gc.ca`
-   still passes, but immigration content moved to `canada.ca`. The reasons now describe it where the
-   ministry was seen at all; measuring it properly is part of TODO item 2.
-2. **The trust rule's coverage gap was blamed on the wrong half of the rule** for a week. Known problem 2
-   warned about a government publishing outside its own TLD; not one of the 19 failures is that. Every one
-   is `looks_governmental`, whose pattern list happened to cover all seven verified countries — so entry
-   19's "22 human decisions reproduced, 0 disagreements" was survivorship, not assurance.
-3. **A known problem asserted something the code does not do.** It said a discovery-time block reached the
-   plan *only* when it blocked the decision. Testing it showed a blocked authority reaches the plan by
-   **two** routes regardless, and the interface already renders it with a link — so the plumbing that
-   TODO item said to write was already there. Corrected in known problem 7 and in entry 23, and the todo
-   became "confirm it reads usefully" instead. Both this and finding 2 were described from reading a code
-   path rather than from output, which is the habit to break.
-4. **A boolean `robots.txt` verdict produced a false reason, and the test suite caught it** (entry 36).
-   Collapsing every non-answer into "disallowed" made the crawl describe **every unreachable host** as
-   *"its robots.txt does not permit this client"* — a sentence about a policy nobody had read, and the
-   same class of falsehood finding 1 had just removed from `withheld_domains`. The fix is three verdicts
-   rather than two, and a transport failure that **raises** instead of deciding, so the caller keeps
-   diagnosing an unreachable host as unreachable. The lesson repeats: a reason has to be true of what
-   was actually observed, not merely of the branch that produced it.
-5. **The stdlib `robots.txt` parser was inert, and only a live probe showed it** (entry 36).
-   `urllib.robotparser` matches with `startswith` and supports neither `*` nor `$`. Every rule
-   `www.gov.uk` publishes is a wildcard, so this shipped, tested and documented as honouring crawl
-   policies while honouring almost none of them. **No unit test could have caught it** — the fake
-   policies in the suite were all literal prefixes, because those are what a person writes from memory.
-   Matching is now RFC 9309 implemented directly. Same lesson as findings 2 and 3, one level deeper: the
-   justification for reaching for stdlib ("its shortfall errs toward fetching less") was written from
-   reading the module and was the exact opposite of true.
-
-**Amended 2026-08-24: everything that gated this list is finished and confirmed by live runs.** The
-corpus replaced the crawl (entries 49–53), the vocabulary and the block judgement were fixed (entries
-56–57), and the twenty-corridor measurement ran and passed marginally (entry 58). The wizard outcome
-item 58 called for is built (entry 59). **Pick up [TODO.md](TODO.md) item 25** — the shortlist crowding
-that keeps the wizard page out of half the UK corridors — and see *Next steps* below for the order.
-
-### What changed on 2026-08-19, in one line each
-
-| Entry | What it changed |
-| --- | --- |
-| 41 | A Cloudflare challenge is not a refusal. France's `403` carries `cf-mitigated: challenge` and is served for `robots.txt` too, so no policy was ever stated; the project's own renderer reads the page under our own user agent. A challenge becomes its own outcome, may be answered by the renderer, and may never resolve a corridor. `robots.txt` stays obeyed everywhere and outranks it. Spoofing and retrying stay forbidden. **Still not implemented — TODO item 5**, and the interface still tells travellers a challenged authority "does not permit automated retrieval", which is untrue of what was seen. |
-
-Known problem 18 was found the same day and taught the same lesson — a 6,000-character excerpt deciding
-corridors by where a nationality falls in an alphabetical list — and became entry 42 on 2026-08-21.
-
-### What changed on 2026-08-23 and 2026-08-24, in one line each
-
-Item 22 was written as a proposal and read as one. The measurements behind it held; two of the three
-things built on them did not. Entries 54–57 are defects that only appeared once the crawl was gone,
-entry 58 is the measurement that finally answered whether this is a product, and entries 59–62 act on
-what it found.
-
-| Entry | What it changed |
-| --- | --- |
-| 59 | **The third outcome: a page read and judged to *ask* the decision now resolves the corridor and hands over the tool.** `decision_tool_urls` / `decision_tools` / `VisaPlan.decision_tools`; `visa_required` stays null and a verified plan cannot carry one. Only the adjudicator may name one, only on a page it read, only when `visa_decision` is unfilled, and only on an approved domain. Measured live: `united-kingdom/NG/NG` went from refusing to a full seven-step plan; `netherlands/IN/GB` saw a questionnaire and correctly declined it. **It also declines URL-construction with measurements** — GOV.UK's checker is addressable by plain GET, and driving it would still mean inventing two traveller answers. **And it found the real UK limit**: the checker ranks ~110th of ~820 and misses the shortlist for IN and CN, so entry 58's "shortlisted and fetched" was not true of every run. Item 25. |
-| 60 | **A questionnaire is an answer for *every* role, not only the decision — and not a blockade in front of the guidance.** Entry 59 shipped with one slot and the Netherlands proved it too narrow the same day: it read a nine-question checker offering entry requirements and reported nothing. Tools are now a list over roles, each carrying the topic it settles, offered beside the question it answers. **Only `visa_decision` changes whether a corridor resolves**, so entry 32's drift risk is untouched; a tool never fills its role, and a `document_checklist` tool still forbids listing a single requirement. Measured: `netherlands/IN/GB` went from the standing **0/2** to a `partial` plan with 9 requirements and the checker linked. |
-| 61 | **The United Kingdom's answer was five deep in a list that reserved three.** `_shortlist` held the top three per role; `gov.uk/check-uk-visa` scores **exactly 30.4 in all four** UK corridors — it names no country, which is what a page that *asks* your nationality does — and is 3rd where nothing nationality-named competes and 5th where something does. Raised to **five per role, budget 25 → 35**; the two only work together, and depth alone is non-monotone. **UK: 0 of 8 runs → 4 of 4.** Replaying 26 recorded corridors through the real `_shortlist` drops nothing. France gained a checklist tool. |
-| 62 | **The nationality bonus is left alone — four fixes, four disproofs.** The premise was wrong (`_describes_country` is token-based; the ballot page *is* about India, just not about a tourist visa), and the strongest candidate — withhold the corridor bonus when `visa_decision` rests only on the `mentions-visa` floor — was implemented and reverted when the suite caught that a terse per-nationality decision page is floor-only too. **Cost of leaving it: 0.27 shortlist places per corridor.** Also records why the adjacent 5.9% duplicate-URL waste is not worth a rule, and that scoring measurements must join the **corpus** (99% faithful) rather than the recall log (70%). |
-| 58 | **The twenty-corridor measurement ran, and it passes the bar committed in advance** — 75% confirm the decision (bar 70%), 50% yield a checklist (bar 50%, *exactly*). 40 live runs, all corpus-routed, none crawled, median 27.4s. **Read the sample structure**: nationality changed the outcome once in twenty, so it is five destinations replicated four times, not twenty independent corridors. **The United Kingdom refuses all eight runs** after finding the checklist, route, times and per-nationality fees, because `gov.uk/check-uk-visa` is a **wizard** — France's cause without France's `403`. That inverts known problem 11: the wizard costs more coverage than bot-blocks. |
-| 57 | **A block is now judged, not keyword-matched.** `_decision_blocking` asked "could this page have held the visa decision?" and answered by keyword, on a page **nobody read** — the one place the scorer decided what a page *means*. It now asks the model, over **address and label only** (there is no text; the authority refused it), and the packet has no parameter through which content could be passed. Fails closed after two attempts; the deterministic path keeps the keyword test. **France now qualifies `/en/royaume-uni`, `/en/web/france-visas` and `/india` and rejects the FAQ, the form page and the visa-category page** — where its old qualification was a blank CERFA form. Corridors whose decision is found make **no extra call**. |
-| 56 | **The `visa_decision` vocabulary could only ask the question, never recognise the answer.** Every term was a way of asking — `visa requirement`, `do i need a visa` — so Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `general_entry` 22.4 and `visa_decision` **0.0**, and could not qualify its own refusal. Seven answering phrasings added, one in **slug form** because `searchable_url` flattens hyphens and slugs drop articles. Measured by replaying all seven corridors' real candidate sets: **0.0 → 82.4 and it now qualifies; no shortlist changes anywhere.** **Item 23's own proposal — removing the `not scores` guard — was measured and rejected**: it would give 12–58% of a country's pages a positive `visa_decision`. |
-| 55 | **Six corridors through the corpus path, 24 live runs — 2.1×–5.2× faster, and two of them stopped resolving.** Crawl 0.0s everywhere; roles genuinely found are neutral to better (US gained `fees`, the Netherlands `processing_times`). **Sweden and France flipped resolve → refuse**: reporting survived (entry 49 works — the blocked hosts and URLs are still named) but *qualification* did not, because `_decision_blocking` needs a refusal observed on a page scoring for `visa_decision` and a 25-page fetch observes far fewer refusals than a crawl. France is a **correction** (its baseline qualified on a blank CERFA form); **Sweden is a real loss**. Root cause is a scoring rule — TODO item 23, deliberately not fixed here. Also: Japan's corpus holds **1 of its 6** role pages and no London embassy, and it resolved anyway **because search still runs**. |
-| 54 | **One encrypted PDF aborted a whole corridor.** `pypdf`'s `DependencyError` extends `Exception` directly — not `PdfReadError`, not `PyPdfError` — so no narrowing of the old `except` tuple could have caught it. `extract_pdf_text` is now total: every input yields text or "could not be read". Latent all along; a corpus-built shortlist is what reached it. |
-| 53 | **Run live, four times, and the first run refused.** `entry-requirements-country.html` — the only page that states Canada's rule for a British citizen in static text — entered at **32.0** from search's title instead of **63.4** from the corpus's harvested anchor text, missed the shortlist, and was never read. `_resolve` seeded search first and folded the corpus in with `setdefault`, so the *thinner* description of a page always won; **the crawl had been repairing that on every run**, which is why removing it was what exposed it. Fixed, then three consecutive runs resolved. **Crawl 33.6s → 0.00s; total 54.2s → 12.7–13.2s**, with adjudication now ~60% of the corridor. |
-| 52 | **Entry 47's pin only half existed.** A page that already filled a role "keeps its shortlist place regardless of ranking" — it kept it as far as `chosen`, and `_shortlist` then cut the tail by score protecting only the per-domain reservation, so a **low-scoring pin was dropped**, which is the only pin that matters. Found while verifying entry 50's own claim on the real Canada corpus. Pins and reservations are both honoured at the truncation now, pins first. The existing pin tests missed it because they pin a page that scores well. |
-| 51 | **The crawl leaves the request path** for a country whose corpus offers more pages than a crawl could visit — a *derived* bound (`DEFAULT_CRAWL_PAGES`, 40), not another tuned constant, and the skip is recorded in the notes. A country nobody has built, or one with a thin corpus, behaves exactly as before. Also closed: `visa-discover corridor` now reads the corpus, so a measurement taken through the command finally describes the product; pins are still withheld, because they would let run one decide run two's shortlist. `_readable_only` does **not** fall back to corpus status — item 22 proposed it, and it would have stopped a France-shaped corridor resolving. |
-| 50 | **The routing index is not built, because it removes the wrong cost.** Entry 48's ~3.6s is `wrong_country`, not scoring: 198 countries scanned per candidate, the link's segments and text rebuilt once per country, a fresh regex per token. A word-index prefilter in front of the existing exact check made it **3,277ms → 98ms, byte-identical on all 3,216 entries**, and the whole corpus → candidates path **4,757ms → 346ms** — under the 575ms the top-400 was meant to cost. And the top-400 would have dropped a `proven` page ranked 2,871 of 3,216, which a pin could not have rescued. |
-| 49 | **A refusal met while reading the shortlist was never reported at all.** `_fetch_bodies` discarded `report.failures`, so every refusal a corridor has ever reported came from the crawl. Fixed before the crawl could go, with `SourceFailure.http_status` so a `429` can be told from a `403` without parsing prose (entry 36's rule). Two tests refuse only to the retrieval user agent, so the crawl never sees it; both fail on the old code. |
-
-### What changed on 2026-08-21, in one line each
-
-| Entry | What it changed |
-| --- | --- |
-| 42 | The adjudicator's excerpt stops being a flat head slice. It is the head plus a 3,000-character window centred on every later mention of the traveller's own nationality or residence, to 20,000 characters, with omissions marked `[…]` and prompt rule 12 explaining the mark. Short country words ("US", "UK") match in upper case only. **Confirmed live**: Canada now fills `visa_decision` from a sentence at offset 8,597, which the old 6,000 could not show. Six corridors left to re-run (item 15). |
-| 48 | Measured where a cold corridor's 54.2s goes: **crawl 33.6s (62%)**, search 9.1s, adjudicate 10.8s. Of 25 shortlisted pages, 14 came from the crawl and **all 14 were already in the corpus** — it spent 62% of the corridor re-deriving a map the offline job had. Corpus-only keeps all three role-filling pages, **non-circularly** (they came from the offline job, not write-back), so it needs the *destination* built rather than the *corridor* proven. Consuming the whole corpus costs 3.6s and grows, so it becomes a **routing index**: a stored corridor-independent score, pre-filtered to the top 400 — 575ms, 24/25, bounded. **Decided, not implemented — and deliberately left open to challenge.** TODO item 22. **Challenged and partly overturned on 2026-08-23: entries 50 and 51.** The phase split and the fourteen-of-fourteen redundancy held; the routing index did not. |
-| 47 | The candidate set **ratchets**: `corpus ∪ live`, pinned by pages that already filled a role, fed by additive write-back. Measured — the purpose sweep alone did **not** close entry 46's gap, because search did not return the page for the *same query* that once surfaced it, so no offline sweep can guarantee a superset; write-back did, taking Canada to **24 of 24** fetched pages held. Offline, a total search failure now loses **zero** candidates. |
-| 46 | Entry 44's store is built — `discovery/corpus.py`, `corpus_build.py`, `visa-discover corpus`. Canada holds **1,071 pages**, the additive merge kept every entry across two builds, and `entry-requirements-country.html` is durable at depth 1. **But the corpus is not a superset of what a corridor finds**: `supporting-documents`, fetched by the corridor run the same day, is absent, because traveller-free queries lose what corridor-specific ones surface. That gates item 19 — corpus-only today would trade variance for less coverage. |
-| 45 | `visa-discover corridor` reaches a registry destination instead of answering *"Unknown destination"*, and `--runs N` resolves a corridor repeatedly and reports what varied — item 17's counting is now one command. Building it made the test suite perform a **live** corridor resolution (21s, real searches, a real model call), because `run_corridor` had no seam and the rule against it was convention only; `tests/conftest.py` now refuses `socket.connect` for every test, and it caught the offending call on its first run. |
-| 44 | The candidate set stops being re-derived from search on every request: a country's **page corpus** is persisted, populated by an offline job, and search leaves the request path for a populated country. Entry 34's move one level down — *which pages exist* does not vary by corridor; only which one answers a given traveller does. A corpus miss **refuses and flags the country**, per entry 38, rather than falling back to live search. Answers TODO item 17 as option 3, widened from per corridor to per country. Fixes **recall only** — adjudication is still a model call, and a page the job never finds becomes a permanent gap. **Decided here; built across entries 46–57.** Entry 47 chose a *union* (`corpus ∪ search`) over the refuse-on-miss described here, which is why search still runs — TODO item 19. |
-| 43 | Every run writes down what it considered — all candidates with their scores, the shortlist and fetch flags, the queries, the seeds, and each unreadable URL — to `var/recall/`, on refusals too. It exists because "ranked out" and "never found" had looked identical twice, and it answered that question about Canada on its first run: rank 15 of **470**, and simply absent from the run before. A diagnostic nothing reads back; deleting it costs a question, never an answer. |
-
-### What changed on 2026-08-18, in one line each
-
-Seven entries from one outside review, agreed with in full, plus five more (36–40) that came out of
-building them. **Everything is implemented except two of entry 35's three legitimacy steps** — asking
-authorities for access, and the client-side retrieval question, which is deliberately unargued. Read them
-in [DECISIONS.md](DECISIONS.md).
-
-| Entry | What it changed |
-| --- | --- |
-| 29 | LangGraph is not adopted and the question is closed: no cycle to express, trust checkpoints are typed validators rather than graph nodes, and the only loop the placeholder imagined is one this project rejects. `domain/state.py` and the dependency are deleted. |
-| 30 | `conflicts` is deleted. Entry 6 removed a *working* conflict detector for being too alarming when wrong; the unverified version is the same feature without the verification. |
-| 31 | A failed adjudication refuses rather than falling back to the heuristic. Entry 16 chose the fallback thinking it conservative; it silently swaps in the decider entry 15 proved gives confident wrong answers. |
-| 32 | A block may hand over a link only when it plausibly held the answer. `429` stops qualifying, and the blocked URL must have been a credible `visa_decision` candidate. Narrows entry 27, which behaves more broadly than it claims. |
-| 33 | Measured: `is_own_government` fails for 19 of 51 countries, all on `looks_governmental`, not the TLD half. Amend through reviewed data, never a wider regex. Schengen is additionally a definition problem. |
-| 34 | "Who to believe" leaves the request path and becomes a committed registry a person skims once. Not the gate entry 19 removed — that was URLs; this is ~3 domains per country, machine-proposed. |
-| 35 | The posture is honest client, not anonymous client: read `robots.txt`, ask for access, and decide the client-side-retrieval question explicitly. Plus the bar that decides whether this is a product, committed before the measurement. |
-| 36 | `robots.txt` is read once per origin and obeyed, by the crawl and by retrieval. A skip is the `disallowed` outcome, never an absence; it is reported but may never resolve a corridor; and an unread policy is never reported as a policy that refused us. |
-| 37 | A per-run allowance may not be counted on an object that outlives the run. The render budget was process-lifetime, so rendering switched itself off after a handful of pages and never came back. |
-| 38 | The trusted-domain registry is generated offline and committed; `bootstrap_destination` leaves the request path. Reviewing it found twelve countries confirmed *and wrong*, and the cap spending slots on the wrong parts of a government. |
-| 39 | A person may override the trust rule in committed data, with required evidence, preserved across regeneration. Twelve countries corrected. Measured: they help but do not make a corridor resolve — the binding constraint moved to confirming the visa decision. |
-| 40 | The shortlist is a recall budget, not a precision one. Ten places made the heuristic the effective decider; at 25, Canada and Japan resolve completely. One constant outperformed every scoring rule, at no measurable latency cost. |
-
-### What changed on 2026-08-17, in one line each
-
-Seven entries were added to [DECISIONS.md](DECISIONS.md) that day; read them there rather than here.
-
-| Entry | What it changed |
-| --- | --- |
-| 22 | A large government's whole namespace passed the trust rule, so how many domains may be used is now bounded at five and the relaxed evidence bar is scoped. Fixed the US coin flip. |
-| 23 | A checklist-less corridor could not produce a plan at all, because the extractor refused before entry 14's validator could run. Vietnam would have hit the same wall. |
-| 24 | Five of the US corridor's ten fetch places went to pages already proved unreadable. Three recovered; DNS-dead and refused URLs are now skipped, nothing else is. |
-| 25 | The politeness delay was owed to a host but applied to the whole crawl. Now per host, hosts crawled concurrently, searches four at a time: 54.5s → 19.4s. |
-| 26 | France's India post outranked its UK post for a UK applicant, and footer boilerplate took three fetch places. Two scoring defects, both fixed. |
-| 27 | A blocked authority can now carry a plan: named, linked, never read, with the decision forced to unknown. **Unverified live.** |
-| 28 | Four things found by reading the rendered page: a truncated step heading, a corridor that cannot have an answer, an empty checklist panel, caveats burying the answer. |
-
-### Answered, for background
-
-Seven corridors have run live. The model decider refuses well under pressure and its judgement beats
-the scorer's where it can read at all: for China it picked the UK embassy checklist because that page
-names the required passport, photo and UK legal-stay evidence for non-British applicants, noticing the
-traveller is an Indian national resident in the UK, which no lexicon keyword expresses.
-
-**Never work around a block** (entry 18) is settled and unchanged. No user-agent spoofing, no
-pointing the renderer at a `403`, no retrying past a rate limit. What entry 27 added is narrower than
-it may sound: the page may now be **named** with its URL so the traveller can open it themselves. It
-still may not be read, inferred from, or counted as a source.
-
-**What entry 35 changes about that, precisely, because it is easy to misread.** Entry 18 is untouched:
-it forbids *deception*, and every example above stays forbidden. What entry 35 rejects is a separate
-belief that had attached itself to entry 18 — that being an anonymous, unauthenticated client is
-therefore required. Honouring `robots.txt` is submitting to an authority's stated policy, not routing
-around it; asking for access is asking. **Anything that involves this program presenting itself as
-something it is not remains out of the question**, and the client-side-retrieval idea is explicitly *not
-approved* — it is written down so it gets argued rather than drifted into.
-
-**The first step is now shipped (entry 36), and it added a rule of its own.** A `Disallow` is obeyed and
-*reported*, and it may **never** resolve a corridor: `disallowed_urls()` sits outside `blocked_urls()` and
-`persistent_refusals()`, so it reaches neither `inaccessible_urls` nor `decision_blocking_urls`. A `403`
-was observed on the page; a `Disallow` covers a path we chose not to request. And the reason reported must
-be true of what was seen — a policy that could not be read is not a policy that refused us, which is the
-same falsehood entry 33 removed from `withheld_domains`.
-
-## Next steps
-
-[TODO.md](TODO.md) is the ordered list and the reasoning. This is only its shape; where the two
-disagree, TODO is right and this needs fixing.
-
-**First: [TODO.md](TODO.md) item 25** — get the answering page into the shortlist. Item 24 built the
-outcome that lets a corridor say *the answer is behind a tool* (entry 59) and then measured that it
-cannot fire for half the United Kingdom corridors, because one role takes eleven of twenty-five
-shortlist places and the checker ranks ~110th of ~820. See *Current task*.
-
-**Then, in order:**
-
-| item | what | costs |
-| --- | --- | --- |
-| **9** | tell "this country publishes no checklist" apart from "we failed to find it" — now attached to two of five measured destinations, not a hypothetical | nothing |
-| **19** | take **search** out of the request path; the crawl already went (entry 51), and search is the last single point of failure for a built destination | needs the nationality dimension measured |
-| **2** | amend the trust rule for governments with no marker, and for Schengen — still the reason 159 of 198 countries cannot be researched | review time |
-| **5** | treat France's Cloudflare *challenge* as a challenge; the interface still tells travellers something untrue of what was seen | nothing |
-| **18** | run the offline corpus job on more countries — ten are built, and a country without one crawls | search quota |
-| **17** | count the corridor flip rate; entry 58 makes this much less urgent (19 of 20 corridors reproduced) | nothing |
-| **7** | deployment — **no longer blocked on the product question**, which entry 58 answered | a decision about hosting |
-
-**What is deliberately *not* next.** The heuristic scorer's **ranking** is measurably weak — five of
-eighteen chosen pages sat outside the twenty-five places, rescued by the per-role reservation — but
-replacing it with a model would put non-determinism back exactly where entries 44–58 removed it. Entry
-40's cheaper answer, a wider window, has never been retested since the corpus made the pool six times
-larger. **Try 25 → 40 places and measure before trying anything cleverer.** See *smaller things* in
-TODO.
-
 
 ## Working agreements
 
-- **Update this file at the end of a session**, particularly *Current state*, *Current task* and
-  *Known problems*. A stale handoff is worse than none, because it is believed.
+- **Update this file at the end of a session** — *Where it stands*, *What to do next*, *Known
+  problems*. A stale handoff is worse than none, because it is believed.
+- **Keep it short.** If something belongs in TODO, DECISIONS or ARCHITECTURE, put it there and link.
 - **Record decisions in [DECISIONS.md](DECISIONS.md) as they are made**, with the reasoning and what
-  was rejected. The reasoning is the part that cannot be recovered from the code later.
-- Before handing off, run `ruff check .`, `ruff format --check .`, `mypy`, `pytest`.
-- Contributor rules, including the safety boundaries, are in [AGENTS.md](AGENTS.md).
-
-## Running it
-
-```bash
-python3.12 -m venv .venv && .venv/bin/python -m pip install -e ".[dev]"
-cp .env.example .env          # then add OPENAI_API_KEY and SEARCH_API_KEY
-.venv/bin/uvicorn visa_research_agent.api.app:create_app --factory
-```
-
-Secrets live only in `.env`, which is gitignored. Reviewable policy — source mode, extraction mode,
-cache TTL, stale ceiling — lives in `config/runtime.yaml` and is committed on purpose.
-
-### Looking at a corridor, which is not obvious
-
-Most of 2026-08-17's findings came from inspecting a corridor directly, and the way in is worth
-writing down because the CLI does not offer it.
-
-- **`visa-discover bootstrap --destination-name "United States"`** prints the proposed domains with
-  their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
-  the trusted set is checked before blaming ranking for anything.
-- **`visa-discover corridor --destination france …` only works where `destinations.yaml` already
-  lists `trusted_domains`.** For an unconfigured destination it exits 3, so it cannot exercise the
-  automatic path — which is the path a request actually takes. Use
-  `api.dependencies.build_automatic_destinations(get_runtime_policy())` and call
-  `destination_for(country_name, corridor)`; about twenty lines, and it skips the plan call.
-- **To see the shortlist** — 25 places since entry 40, and where the wasted budget, the boilerplate and
-  the wrong post were all found — wrap `CorridorResolver._shortlist`, print each candidate's score, role,
-  link text, inherited heading and `link_scores.signals`, and return the list unchanged. Nothing else
-  exposes it. Wrapping `_fetch_bodies` instead also shows which of them were *readable*, which is how
-  the Netherlands' 250-character signpost was found (entry 39).
-- **To time a cold corridor by phase**, wrap `BraveSearchProvider.search`, `CrawlFetcher.fetch_html`,
-  `LinkCrawler.crawl`, `_fetch_bodies` and `_decide_roles` with a timer. Note that summed fetch time
-  now exceeds wall-clock crawl time, which is what concurrency looks like.
-- **Clear `var/cache/` and `var/corridors/` between cold runs**, or a stored corridor answers
-  instantly and a retrieval fix appears not to work.
-- **A `HTTP 402` from search means the Brave quota is spent**, not that anything is broken. It is what
-  stopped the France run on 2026-08-17.
+  was rejected, and add the entry to its index.
+- Do not record a problem as fixed unless it is fixed, or a result as verified unless it was run.
+- Before handing off: `ruff check .`, `ruff format --check .`, `mypy`, `pytest`.
+- Contributor rules, safety boundaries and how to debug a corridor are in [AGENTS.md](AGENTS.md).

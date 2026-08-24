@@ -287,17 +287,27 @@ that expired, self-signed, hostname-mismatched and unknown-CA certificates are s
   researched when a plan is asked for. No human approves a domain; the rule below does. See
   `discovery/automatic.py` and [DECISIONS.md](DECISIONS.md) entry 19.
 
-Resolving a corridor cold is the expensive part of a request — search, twenty-five fetches, a model call,
-and a crawl for a country with no corpus — so results go in `discovery/corridor_store.py`, one JSON file
-per corridor, keyed by the whole corridor and expiring in **weeks**.
+```
+Corridor ──▶ search ──▶ corpus ──▶ crawl ──▶ fetch shortlist ──▶ adjudicate ──▶ ResolvedCorridor
+             (Brave)  (var/corpus)  (skipped when   (35 places)    (one model      or a refusal
+                                     the corpus                     call)
+                                     out-covers it)
+```
+
+Resolving a corridor cold is the expensive part of a request — search, thirty-five fetches, a model
+call, and a crawl for a country with no corpus — so results go in `discovery/corridor_store.py`, one
+JSON file per corridor, keyed by the whole corridor and expiring in **weeks**. The `visa-discover
+corridor` command deliberately **bypasses that store** in both directions, so its numbers are always
+cold and it never warms the store for the API (`resolve_once`, entry 61).
 
 > **The corridor phase is measured; the full cold request is not.** Over **40 live runs of 20 corridors
 > on 2026-08-24** (entry 58), all corpus-routed and none crawling: **median 27.4s, range 8.8–48.3s.**
 > Earlier figures in these files — 53s, 34.1s, 39–45s, 54.2s — all predate the crawl leaving the request
 > path (entry 51) and should not be quoted.
 >
-> **Plan extraction sits on top of this and has never been timed with it**, so `POST /visa-plans` end to
-> end is still an unknown number and deployment cannot be planned against one. The largest remaining
+> **Plan extraction sits on top of this.** `POST /visa-plans` was measured on 2026-08-24 at **33.4s**,
+> **36.2s** and **42.7s** on three corridors, each a corridor resolve *and* extraction — but with the
+> page cache warm, so a fully cold request is still untimed. The largest remaining
 > live component is **search**, at roughly 3s and three queries per trusted domain — see known problem 5
 > and [TODO.md](TODO.md) item 19.
 
@@ -392,11 +402,15 @@ this is automated while per-country trust is not.
    live observation is what entry 32 requires before a block may resolve a corridor.
    **This is also where refusals are seen when no crawl ran** — `report.failures` is carried out of the
    fetch and reported exactly as the crawl's are (entry 49), which it was not before 2026-08-23.
-   **Twenty-five places** (entry 40): the best three per role, then the
-   next best overall, then **one place reserved for each registrable domain's best page**. The
-   reservation matters because these places decide what is *read*, and only a read page can fill a
+   **Thirty-five places, five reserved per role** (entries 40 and 61): the best five for each role,
+   then the next best overall, then **one place reserved for each registrable domain's best page**.
+   The reservation matters because these places decide what is *read*, and only a read page can fill a
    role — so without it an authority whose pages all score below another's is absent rather than
-   merely ranked low, and the corridor refuses with the answer one place outside the cut.
+   merely ranked low, and the corridor refuses with the answer one place outside the cut. **The depth
+   and the budget move together**: six roles five deep wants thirty places, so at twenty-five the
+   deepest reservations were pushed straight back out at truncation, and depth alone was non-monotone.
+   Five is the measured threshold — `gov.uk/check-uk-visa` is 3rd for its role in two United Kingdom
+   corridors and 5th in the other two, and three reserved places is why the latter had no plan.
 4. **Score** (`scoring.py`) — deterministic, **no model calls**. Vocabulary and weights live in
    `config/discovery_lexicon.yaml` so they can be tuned without touching Python.
 5. **Assign roles or refuse** — by judgement when `discovery_decider: model`, otherwise by the
@@ -454,9 +468,11 @@ it, and a write failure is swallowed rather than costing the corridor an answer.
 **What it is, precisely, is a recall gate — and reading it as a decider is what kept the gate too
 narrow** (entry 40). A page it ranks *in* wrongly costs one excerpt; a page it ranks *out* is one
 nothing downstream can recover. At ten places the heuristic was the effective decider for every corridor
-whose right page sat eleventh. The window is now **25**, which took Canada and Japan from refusing to
-filling every role with no scoring rule touched and no measurable latency cost. Its ranking faults are
-real and still worth fixing; they were not what was binding.
+whose right page sat eleventh. Widening to 25 took Canada and Japan from refusing to filling every role
+with no scoring rule touched; **deepening the per-role reservation from three to five, at 35 places,
+then took the United Kingdom from 0 of 8 corridor runs resolving to 4 of 4** (entry 61). The same
+lesson twice: widen the gate rather than improve the ranking. Its ranking faults are real — entry 62
+measures the largest one at 0.27 shortlist places per corridor — and they were never what was binding.
 
 ### Scoring, in brief
 

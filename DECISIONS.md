@@ -9,6 +9,110 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## Index
+
+**If you read only a handful, read these.** They are the rules a plausible-looking change breaks, and
+each is restated in [CLAUDE.md](CLAUDE.md): **2** (trust the domain, never the prose), **5** (refusing
+is a correct output), **18** + **35** + **41** (never work around a block; honest client, not anonymous
+client), **12** (never disable TLS verification), **27** + **32** (what a block may hand over),
+**60** (a questionnaire is an answer, not a blockade), **44** (a page may be stored, an answer may not).
+
+### Trust: who may be believed at all
+| | |
+| --- | --- |
+| [2](#2-trust-the-domain-never-the-prose) | Officialness is a property of the domain, never of how a page reads |
+| [10](#10-a-destinations-own-government-outranks-other-countries-pages-about-it) | A destination's own government outranks other countries' pages about it |
+| [11](#11-search-may-generate-candidates-it-may-never-widen-trust) | Search generates candidates; it never widens trust |
+| [12](#12-complete-certificate-chains-never-disable-verification) | Complete certificate chains; never disable TLS verification |
+| [19](#19-the-human-approval-gate-becomes-a-rule-not-an-absence) | The human approval gate becomes a rule, not an absence |
+| [21](#21-any-country-is-a-destination-and-a-country-name-stops-matching-inside-a-word) | Any country is a destination; a country name stops matching inside a word |
+| [22](#22-a-large-government-passes-the-same-rule-with-far-more-domains-so-how-many-is-capped) | How many domains a government may contribute is capped |
+| [33](#33-the-governmental-half-of-the-trust-rule-fails-closed-for-a-fifth-of-the-world) | **Measured:** the governmental half fails closed for a fifth of the world |
+| [34](#34-who-to-believe-becomes-committed-data-only-which-page-is-decided-live) | Who to believe becomes committed data; only which page is decided live |
+| [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
+| [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
+
+### Refusal, blocks, and how we behave as a client
+| | |
+| --- | --- |
+| [5](#5-refuse-rather-than-serve-evidence-that-may-be-wrong) | Refuse rather than serve evidence that may be wrong |
+| [18](#18-a-block-is-not-a-fact-about-the-guidance-never-work-around-one) | A block is not a fact about the guidance; never work around one |
+| [24](#24-a-fetch-place-is-not-spent-on-a-page-already-proved-unreadable) | A fetch place is not spent on a page already proved unreadable |
+| [25](#25-the-politeness-delay-is-owed-to-a-host-not-to-the-crawl) | The politeness delay is owed to a host, not to the crawl |
+| [27](#27-a-block-becomes-a-next-step-name-the-page-hand-over-the-link-decide-nothing) | A block becomes a next step: name the page, decide nothing |
+| [32](#32-a-block-hands-over-a-link-only-when-it-plausibly-held-the-answer) | A block hands over a link only when it plausibly held the answer |
+| [35](#35-the-posture-is-honest-client-not-anonymous-client--and-the-bar-that-decides-whether-this-is-a-product) | **Honest client, not anonymous client** — and the bar that decided the product question |
+| [36](#36-robotstxt-is-read-and-obeyed-and-a-page-skipped-for-it-is-its-own-outcome) | `robots.txt` is read and obeyed; a page skipped for it is its own outcome |
+| [41](#41-a-challenge-is-not-a-refusal-answer-it-as-an-honest-browser-and-honour-every-robotstxt) | A challenge is not a refusal — answer it as an honest browser |
+| [49](#49-a-refusal-met-while-reading-the-shortlist-was-never-reported-at-all) | A refusal met while reading the shortlist must still be reported |
+| [54](#54-one-encrypted-pdf-took-a-whole-corridor-down-and-no-narrower-except-could-have-caught-it) | One encrypted PDF took a whole corridor down |
+| [57](#57-a-block-is-judged-not-keyword-matched--the-one-place-the-scorer-was-doing-semantics) | A block is judged, not keyword-matched |
+
+### The questionnaire outcome
+| | |
+| --- | --- |
+| [26](#26-france-refuses-because-france-does-not-publish-the-answer-anywhere-readable) | France: the answer exists only inside an interactive tool |
+| [59](#59-the-third-outcome-the-answer-is-behind-a-tool-so-hand-over-the-tool) | The third outcome — hand over the tool. Declines URL-construction, with measurements |
+| [60](#60-a-questionnaire-is-an-answer-for-every-role--not-a-blockade-in-front-of-one) | **A questionnaire is an answer, for every role** — widens 59 |
+
+### What a plan may say to a traveller
+| | |
+| --- | --- |
+| [6](#6-structured-conflict-detection-built-then-deliberately-deleted) | Conflict detection: built, then deliberately deleted |
+| [8](#8-wrong-audience-is-a-veto-not-a-penalty) | Wrong audience is a veto, not a penalty |
+| [14](#14-a-missing-document-checklist-stops-refusing-the-corridor) | A missing document checklist stops refusing the corridor |
+| [23](#23-entry-14s-decision-never-reached-a-traveller-because-extraction-refused-first) | Entry 14's decision never reached a traveller |
+| [28](#28-four-fixes-from-reading-the-interface-as-a-traveller) | Four fixes from reading the interface as a traveller |
+| [30](#30-conflicts-is-deleted-by-entry-6s-own-rule) | `conflicts` is deleted, by entry 6's own rule |
+| [31](#31-a-failed-adjudication-refuses-rather-than-falling-back-to-the-heuristic) | A failed adjudication refuses rather than falling back — **amends 16** |
+
+### Finding the right page: ranking, recall, judgement
+| | |
+| --- | --- |
+| [9](#9-a-page-can-fill-several-roles) | A page can fill several roles |
+| [15](#15-brazil-the-out-of-sample-test-discovery-ranks-the-wrong-page-confidently) | Brazil: the heuristic ranks the wrong page, confidently |
+| [16](#16-judgement-decides-the-last-step-heuristics-decide-everything-before-it) | Judgement decides the last step; heuristics everything before it |
+| [17](#17-france-and-china-the-decider-refuses-well-and-the-wall-is-now-access-not-ranking) | France and China: the wall is access, not ranking |
+| [40](#40-the-shortlist-is-a-recall-budget-and-ten-places-made-the-heuristic-the-real-decider) | The shortlist is a recall budget, not a ranking |
+| [42](#42-the-excerpt-is-the-second-recall-gate-and-a-flat-6000-made-truncation-the-decider) | The excerpt is the second recall gate |
+| [43](#43-write-down-what-a-corridor-considered-because-ranked-out-and-never-found-had-looked-identical) | Write down what a corridor considered |
+| [50](#50-the-routing-index-removes-the-wrong-cost-it-is-wrong_country-not-scoring) | The routing index removed the wrong cost |
+| [52](#52-entry-47s-pin-only-half-existed-the-truncation-dropped-it) | Entry 47's pin only half existed |
+| [56](#56-the-vocabulary-asked-the-question-and-could-not-recognise-the-answer) | The vocabulary could not recognise the answer |
+| [61](#61-the-united-kingdoms-answer-was-five-deep-in-a-list-that-reserved-three) | **Five reserved places per role** — the United Kingdom went 0/8 → 4/4 |
+| [62](#62-the-nationality-bonus-is-left-alone--four-fixes-four-disproofs-and-a-cost-of-027-places) | The nationality bonus is left alone — four fixes, four disproofs |
+
+### The stores: corpus, corridors, freshness
+| | |
+| --- | --- |
+| [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [44](#44-a-countrys-page-corpus-is-persisted-and-search-leaves-the-request-path) | **A page may be stored; an answer may not.** The corpus is the unit |
+| [45](#45-the-corridor-command-reaches-the-registry-and-the-test-suite-stops-being-allowed-on-the-network) | The test suite stops being allowed on the network |
+| [46](#46-the-corpus-is-built-and-it-is-not-yet-a-superset-of-what-a-corridor-finds) | The corpus is built, and is not yet a superset |
+| [47](#47-the-candidate-set-ratchets-corpus--live-pinned-by-what-already-worked-fed-by-write-back) | The candidate set ratchets: corpus ∪ live, pinned, written back |
+| [48](#48-the-crawl-was-rediscovering-a-map-the-corpus-already-had-the-corpus-becomes-a-routing-index) | The corpus becomes a routing index |
+| [51](#51-the-crawl-leaves-the-request-path-for-a-country-whose-corpus-already-out-covers-it) | The crawl leaves the request path |
+| [53](#53-measured-live-the-crawls-336s-is-gone-and-removing-it-exposed-a-defect-only-a-run-could-find) | Measured live: the crawl's 33.6s is gone |
+| [55](#55-six-corridors-through-the-corpus-25-faster-and-it-breaks-the-blocked-authority-exception) | Six corridors through the corpus: faster, and it broke the block exception |
+
+### Shape of the system
+| | |
+| --- | --- |
+| [1](#1-separate-retrieval-from-extraction-behind-a-protocol) | Separate retrieval from extraction behind a protocol |
+| [3](#3-reviewable-policy-in-git-secrets-in-env) | Reviewable policy in git; secrets in `.env` |
+| [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
+| [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
+| [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
+| [37](#37-a-per-run-allowance-may-not-be-counted-on-an-object-that-outlives-the-run) | A per-run allowance may not live on an object that outlives the run |
+
+### Whether this is a product
+| | |
+| --- | --- |
+| [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
+
+---
+
 ## 62. The nationality bonus is left alone — four fixes, four disproofs, and a cost of 0.27 places
 **2026-08-24 · measured; **no code change**. Closes TODO item 26**
 
