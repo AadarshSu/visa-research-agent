@@ -470,9 +470,11 @@ not firing** (entries 56–57), both 2026-08-24.
    `united-kingdom/NG/NG/tourism` went from refusing to a full plan with seven steps. **But
    `gov.uk/check-uk-visa` scores 30.4 and ranks ~110th of ~820, and reaches the shortlist for NG and PH
    and not for IN or CN** — so entry 58's *"it was ranked, shortlisted and fetched"* held for the runs
-   it inspected and not for all of them. Eleven of twenty-five shortlist places went to near-duplicate
-   `visa-fees.homeoffice.gov.uk` pages filling one role. **The UK's binding limit is now recall, not
-   expressiveness: TODO item 25.**
+   it inspected and not for all of them. Eleven of twenty-five shortlist places go to near-duplicate
+   `visa-fees.homeoffice.gov.uk` pages filling one role — **but crowding is not the binding cause**:
+   115 pages outrank the checker overall and only 41 are that host, so the gate is the top-3-per-role
+   reservation against a checker sitting **5th of 76** for its own role. **The UK's binding limit is
+   recall, not expressiveness: TODO item 25.**
 
    **Bot-blocked official portals are a large coverage limit — but "permanent" was the wrong
    word.** Three found: `france-visas.gouv.fr`, `www.france-visas.gouv.fr` and Singapore's VFS page.
@@ -667,14 +669,23 @@ found the limit underneath it:
 - `gov.uk/check-uk-visa` scores **30.4** on every recorded UK run and ranks **104th–116th of ~820**. It
   reaches the shortlist for **NG and PH, not for IN or CN** — so entry 58's *"it was ranked,
   shortlisted and fetched"* was true of the runs it looked at, not of all of them, and the new outcome
-  cannot fire where the page never arrives.
-- **Eleven of twenty-five shortlist places went to near-duplicate `visa-fees.homeoffice.gov.uk`
-  pages**, all one role, scoring 116–136. The top-3-per-role reservation then seats three
-  `visa_decision` pages — one a *young-professionals-scheme ballot* page at 54.0 — and the checker is
-  fourth for its own role and out.
-- Measure before implementing. Deduplicating `?previous-answer=` and `?step-by-step-nav=` URLs is the
-  cheapest candidate and the least likely to break anything; a per-host-per-role cap is the most
-  targeted; a wider window is entry 40's answer and costs every corridor.
+  cannot fire where the page never arrives. **Re-confirmed 2026-08-24 under entry 60**:
+  `united-kingdom/IN/IN` names no tool for any role and still refuses, having found the checklist, the
+  route, the fees and the times.
+- **The cause is scoring, not crowding, and the first write-up of this said otherwise.** Eleven of
+  twenty-five places do go to near-duplicate `visa-fees.homeoffice.gov.uk` pages, which is waste — but
+  **115 pages outrank the checker overall and only 41 are that host**, so freeing every one of those
+  places still leaves 74 above it. The checker is **5th of 76** for its own role, behind **two URLs for
+  the same unrelated page** (`india-young-professionals-scheme-visa`, 54.0), and `_shortlist` reserves
+  three per role.
+- So the gate is the per-role reservation depth, **not** the window: widening 25 → 40 does nothing,
+  because the fill is by overall score. Deduplicating near-identical URLs moves the checker 5th → 4th,
+  which is necessary and not sufficient. Both are in item 25 with the numbers.
+- **Do not trust a quick simulation of `_shortlist`.** One was written on 2026-08-24 and disagreed
+  with an observed run — it predicted the checker would miss the shortlist for Nigeria, where the real
+  run admitted it — because `_reserved_per_domain` keys on the *registrable* domain and
+  `_readable_only` drops candidates first. Change the real thing and re-run the four recorded UK
+  corridors.
 
 **The trap to avoid is entry 32's, exactly.** If "we could not find it" can present as "an authority
 made it unavailable", every failed corridor drifts into looking authority-limited. The difference
