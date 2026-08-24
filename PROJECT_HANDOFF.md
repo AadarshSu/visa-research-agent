@@ -633,8 +633,9 @@ largest coverage limit there is, now measured rather than assumed:
 - There are three outcomes and the code can express two. *Found* resolves; *blocked* resolves
   `partial` and hands over a URL (entries 27, 57); **"read it, and the answer is only inside a
   form"** has nowhere to go, so it becomes *not found* and the corridor throws away correct work.
-- This inverts known problem 11. Blocks cost the US its checklist; the wizard cost the UK five
-  destinations' worth of plans in one.
+- This inverts known problem 11. A block cost the United States one role — its checklist. The wizard
+  cost the United Kingdom **every plan, on every run**: one of the five destinations measured, gone
+  entirely.
 
 **The trap to avoid is entry 32's, exactly.** If "we could not find it" can present as "an authority
 made it unavailable", every failed corridor drifts into looking authority-limited. The difference
