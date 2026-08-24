@@ -150,27 +150,45 @@ class UnreadableAuthority(StrictModel):
     """A safe summary of what happened. Never carries retrieved page text."""
 
 
-class InteractiveDecisionTool(StrictModel):
-    """An official page that *determines* the visa decision instead of *stating* it.
+# What an official page can answer for a traveller. The same vocabulary discovery assigns to pages,
+# minus `irrelevant`, which is a verdict rather than a topic. `DiscoveryRole` is built from this so
+# the two can never drift apart — a tool named for a role the plan has no place for would be a link
+# nobody ever sees.
+GuidanceTopic = Literal[
+    "visa_decision",
+    "document_checklist",
+    "application_route",
+    "fees",
+    "processing_times",
+    "general_entry",
+]
+
+
+class InteractiveTool(StrictModel):
+    """An official page that *works out* an answer by questioning the traveller, not stating it.
 
     `gov.uk/check-uk-visa` is why this exists. It is served willingly, fetched cleanly and read in
-    full, and it does not answer the question: it is a questionnaire that computes an answer from
-    replies this program does not have. Measured over twenty corridors, that cost every United
-    Kingdom corridor its entire plan — the checklist, the route, the times and the per-nationality
-    fees were all found, and all discarded, because `visa_decision` was unfilled (DECISIONS entry
-    58).
+    full, and it does not state whether a visa is needed: it is a questionnaire that computes an
+    answer from replies this program does not have. Measured over twenty corridors, that cost every
+    United Kingdom corridor its entire plan — the checklist, the route, the times and the
+    per-nationality fees were all found, and all discarded (DECISIONS entry 58).
 
-    So it is deliberately **not** an `UnreadableAuthority`: nothing refused us, and saying so would
-    be false. It is equally **not** a `ConfiguredSource` for the decision: the page states no
-    decision, so citing it as evidence of one would be inventing an answer out of a form. What it
-    is, is a next step the traveller can take and this program cannot — they can answer the
-    questions themselves — which is the same thing entry 27 offers for a refused page, and for the
-    same reason.
+    It is deliberately **not** an `UnreadableAuthority`: nothing refused us, and saying so would be
+    false. It is equally **not** a `ConfiguredSource` for its topic: the page states no answer, so
+    citing it as evidence of one would be reading an answer out of a question. What it is, is a next
+    step the traveller can take and this program cannot — they can answer the questions themselves —
+    which is the same thing entry 27 offers for a refused page, and for the same reason.
+
+    **It is not only the visa decision** (entry 60). An authority that puts its document checklist,
+    its fees or its entry requirements behind a questionnaire has published that guidance; a plan
+    that stayed silent about it would be withholding the one thing the traveller could act on. The
+    topic says which question the tool settles, so the plan can offer it in the right place.
 
     Driving the questionnaire is not the alternative. That is an application flow, permanently out
     of scope in CLAUDE.md, and it would mean supplying traveller answers nobody gave us.
     """
 
+    topic: GuidanceTopic
     url: AnyHttpUrl
     authority: str = Field(min_length=1)
     detail: str = Field(min_length=1)
@@ -194,8 +212,8 @@ class DestinationConfig(StrictModel):
     unreadable_authorities: list[UnreadableAuthority] = Field(default_factory=list)
     """The destination's own authorities that refused this program, for the plan to point at."""
 
-    decision_tools: list[InteractiveDecisionTool] = Field(default_factory=list)
-    """Official questionnaires that decide the question, for the plan to hand over."""
+    official_tools: list[InteractiveTool] = Field(default_factory=list)
+    """Official questionnaires that answer a question this destination publishes no page for."""
 
     decision_is_unverified: bool = False
     """True when no page could be confirmed as saying whether a visa is needed, *and* the reason is
@@ -204,13 +222,23 @@ class DestinationConfig(StrictModel):
     There are two such reasons and they are different facts. An authority refused automated
     retrieval, so the page exists and we were not permitted to read it — `unreadable_authorities`.
     Or the authority publishes the answer only inside an interactive tool, which was read and asks
-    questions rather than stating anything — `decision_tools`. Both leave the traveller one page to
-    open; neither licenses an inference about what it would say.
+    questions rather than stating anything — an `official_tools` entry whose topic is
+    `visa_decision`. Both leave the traveller one page to open; neither licenses an inference about
+    what it would say.
 
-    It is what lets a plan be produced at all in either case, so it must never be set without an
-    entry in one of those two lists — otherwise "we could not read it" and "the answer is behind a
-    form" would both cover for "we did not find it", which needs a different remedy and must still
-    refuse."""
+    It is what lets a plan be produced at all in either case, so it must never be set without one of
+    those — otherwise "we could not read it" and "the answer is behind a form" would both cover for
+    "we did not find it", which needs a different remedy and must still refuse.
+
+    A tool for any **other** topic does not set this and never could: only `visa_decision` is
+    load-bearing, so a questionnaire holding the fees or the checklist adds a link to a plan that
+    stands on its own."""
+
+    @property
+    def decision_tools(self) -> list[InteractiveTool]:
+        """The tools settling the visa decision, which is the only load-bearing topic."""
+
+        return [tool for tool in self.official_tools if tool.topic == "visa_decision"]
 
     @property
     def load_bearing_source_ids(self) -> list[str]:
@@ -271,11 +299,11 @@ class DestinationConfig(StrictModel):
                 )
 
         # The same rule, for the same reason. A tool's page *was* read, but nothing in its text is
-        # what makes it official — entry 2 — and a traveller is being sent there to get the answer
+        # what makes it official — entry 2 — and a traveller is being sent there to get an answer
         # this plan could not state, which is the last place to start trusting prose.
-        for tool in self.decision_tools:
+        for tool in self.official_tools:
             if not self.trusts_host(host_of(str(tool.url))):
-                raise ValueError(f"decision tool {tool.url} is not on an approved domain")
+                raise ValueError(f"official tool {tool.url} is not on an approved domain")
 
         for domain in self.trusted_domains:
             if is_bare_public_suffix(domain):
@@ -544,14 +572,25 @@ class VisaPlan(StrictModel):
     status: PlanStatus
     unavailable_sources: list[SourceFailure] = Field(default_factory=list)
 
-    decision_tools: list[InteractiveDecisionTool] = Field(default_factory=list)
-    """Official questionnaires that hold the decision this plan could not state.
+    official_tools: list[InteractiveTool] = Field(default_factory=list)
+    """Official questionnaires that answer a question no page in this plan could.
 
     Deliberately not folded into `unavailable_sources`: these pages were read, and reporting them
     as evidence that could not be used would be false about what happened. They are set by the
     application from the resolved corridor, never by the model, so the URL handed to a traveller is
     one an authority published rather than one that was generated.
+
+    Each carries the topic it settles, so the interface can offer it beside the question it answers
+    rather than in a footnote. A tool is never a substitute for the evidence it stands in for: one
+    for `document_checklist` still leaves `application_document_source_ids` empty, so
+    `validate_absent_checklist` still forbids listing any requirement (entry 60).
     """
+
+    @property
+    def decision_tools(self) -> list[InteractiveTool]:
+        """The tools settling the visa decision, which is the only load-bearing topic."""
+
+        return [tool for tool in self.official_tools if tool.topic == "visa_decision"]
 
     _validate_last_checked = field_validator("last_checked")(_require_aware_datetime)
 
@@ -569,19 +608,31 @@ class VisaPlan(StrictModel):
         return self
 
     @model_validator(mode="after")
-    def validate_decision_tool_leaves_decision_open(self) -> "VisaPlan":
-        """Naming the questionnaire and answering it are mutually exclusive.
+    def validate_tools_leave_their_questions_open(self) -> "VisaPlan":
+        """Naming a questionnaire and answering its question are mutually exclusive.
 
-        A tool is named precisely because no page stated the decision. Stating one anyway would
-        mean it came from somewhere else — the questionnaire's own prompts, most likely, which is
-        reading an answer out of a question. Enforced here rather than asked for in the prompt,
-        for the same reason `decision_is_unverified` is: a model asked for null returned `true`.
+        A tool is named precisely because no page stated the answer. Stating one anyway would mean
+        it came from somewhere else — the questionnaire's own prompts, most likely, which is reading
+        an answer out of a question. Enforced here rather than asked for in the prompt, for the same
+        reason `decision_is_unverified` is: a model asked for null returned `true`.
+
+        Checked for the two topics a plan has a field to contradict itself in. The visa decision is
+        the load-bearing one; the checklist is the one whose wrong answer this project exists to
+        prevent, and `validate_absent_checklist` already blocks it from the other direction, so this
+        is the same rule reached from the side where a tool exists.
         """
 
         if self.decision_tools and self.visa_required is not None:
             raise ValueError(
                 "a plan naming an interactive decision tool cannot also state whether a visa is "
                 "required"
+            )
+        if any(tool.topic == "document_checklist" for tool in self.official_tools) and (
+            self.application_document_source_ids
+        ):
+            raise ValueError(
+                "a plan naming an interactive document-checklist tool cannot also designate a "
+                "checklist source"
             )
         return self
 

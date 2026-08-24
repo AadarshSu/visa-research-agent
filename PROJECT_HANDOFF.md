@@ -7,7 +7,7 @@ source of truth for where things stand. The chat is not the source of truth; thi
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 458 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
+| **Tests** | 465 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. **The suite is now blocked from the network** — `tests/conftest.py`, entry 45 |
 | **Companion docs** | [ARCHITECTURE.md](ARCHITECTURE.md) · [DECISIONS.md](DECISIONS.md) · [TODO.md](TODO.md) · [README.md](README.md) |
 | **Agent entry point** | [CLAUDE.md](CLAUDE.md) is loaded automatically and points back here |
 
@@ -60,10 +60,12 @@ client-side retrieval question — and [TODO.md](TODO.md) is what remains. The s
   volume, product if ≥70% confirm the decision and ≥50% yield a checklist (entry 35). **It ran on
   2026-08-24 and passed, marginally: 75% and exactly 50%** (entry 58). Read the sample caveat with it —
   five destinations replicated four times, not twenty independent corridors.
-- **The largest coverage limit is the interactive tool, and a corridor can now say so** (entry 59). A
-  page that was read and judged to *ask* the visa decision rather than state it resolves the corridor
-  `partial` and hands the traveller the tool's URL. Driving such a tool stays out of scope — measured
-  and argued, not assumed.
+- **The largest coverage limit is the interactive tool, and a questionnaire is now treated as an
+  answer rather than a blockade** (entries 59 and 60). A page read and judged to *ask* a question
+  rather than answer it is named for the role it settles, and the plan offers it beside that question.
+  Only `visa_decision` changes whether a corridor resolves; the rest add a link to a plan that already
+  stands, and a tool never fills the role it is named for. Driving such a tool stays out of scope —
+  measured and argued, not assumed.
 
 Deliberately out of scope, permanently: submitting applications, booking appointments, filling
 forms, or claiming an approval is guaranteed. **Driving an authority's questionnaire is out too**, and
@@ -116,15 +118,18 @@ throughout, so it describes what the API does. DECISIONS entry 55.
 | **Corpus path** | **14.9s** | **12.9s** | **18.0s** | **14.9s** | **11.2s** | **10.8s** | **12.7s** |
 | Visa decision | found | **not found** | blocked | found | blocked | found | found |
 | Checklist | found | found | found | **blocked** | **blocked** | found | **not found** |
-| Resolves (corpus path) | 2/2 | **0/2** | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
+| Resolves (corpus path) | 2/2 | **0/2** — *now resolves, entry 60* | 2/2 | 2/2 | 2/2 | 2/2 | 2/2 |
 
 **A second, larger table now exists and supersedes this one for judging the project**: entry 58's
 twenty corridors, run twice each on 2026-08-24. This table is seven corridors chosen for what they
 taught; that one is the top twenty by volume, measured against a bar committed in advance.
 
-**Read the "resolves" row against the row above it, not on its own.** The Netherlands has never
-resolved — its visa decision is not found, which is an honest refusal, and the only corridor here that
-refuses. Sweden and France resolve through entry 27's blocked-authority exception: an authority
+**Read the "resolves" row against the row above it, not on its own.** The Netherlands had never
+resolved — its visa decision was not found, which was an honest refusal, and the only corridor here
+that refused. **It resolves as of 2026-08-24** (entry 60): the page its decision lives on is a
+nine-question checker, and a corridor can now name a questionnaire for the role it settles instead of
+refusing. The row above is unchanged — no page states the answer — so the plan states the decision
+unknown and hands over the checker, the same shape France and Sweden get from a block. Sweden and France resolve through entry 27's blocked-authority exception: an authority
 refuses the page holding the decision, so the plan names it, states the decision **unknown**, and
 hands over the URL. Both were broken for a day when the crawl left (entries 55–57) and both are
 confirmed working live on 2026-08-24 — **the first time that exception has fired on a real
@@ -135,8 +140,10 @@ corridor.**
 numbers is what made the old table misleading. Vietnam needs rendering (known problem 14) and China
 refused on a not-found decision.
 
-**France and Sweden are not the same failure as the Netherlands, and the difference is the one this
-project cares about.** The Netherlands cannot find its decision, so it refuses — correct. France and
+**France and Sweden were not the same failure as the Netherlands, and the difference is the one this
+project cares about.** The Netherlands could not find its decision, so it refused — correct at the
+time, and now superseded: entry 60 established that it *can* find it, inside a questionnaire, so it
+hands that over instead. France and
 Sweden *were* refused by an authority, which entry 27 turns into a plan that says so and hands over
 the URL. They no longer do, and the reason is a scoring rule rather than anything about the block:
 item 23.
@@ -897,12 +904,13 @@ corridors by where a nationality falls in an alphabetical list — and became en
 
 Item 22 was written as a proposal and read as one. The measurements behind it held; two of the three
 things built on them did not. Entries 54–57 are defects that only appeared once the crawl was gone,
-entry 58 is the measurement that finally answered whether this is a product, and entry 59 acts on what
-it found.
+entry 58 is the measurement that finally answered whether this is a product, and entries 59–60 act on
+what it found.
 
 | Entry | What it changed |
 | --- | --- |
 | 59 | **The third outcome: a page read and judged to *ask* the decision now resolves the corridor and hands over the tool.** `decision_tool_urls` / `decision_tools` / `VisaPlan.decision_tools`; `visa_required` stays null and a verified plan cannot carry one. Only the adjudicator may name one, only on a page it read, only when `visa_decision` is unfilled, and only on an approved domain. Measured live: `united-kingdom/NG/NG` went from refusing to a full seven-step plan; `netherlands/IN/GB` saw a questionnaire and correctly declined it. **It also declines URL-construction with measurements** — GOV.UK's checker is addressable by plain GET, and driving it would still mean inventing two traveller answers. **And it found the real UK limit**: the checker ranks ~110th of ~820 and misses the shortlist for IN and CN, so entry 58's "shortlisted and fetched" was not true of every run. Item 25. |
+| 60 | **A questionnaire is an answer for *every* role, not only the decision — and not a blockade in front of the guidance.** Entry 59 shipped with one slot and the Netherlands proved it too narrow the same day: it read a nine-question checker offering entry requirements and reported nothing. Tools are now a list over roles, each carrying the topic it settles, offered beside the question it answers. **Only `visa_decision` changes whether a corridor resolves**, so entry 32's drift risk is untouched; a tool never fills its role, and a `document_checklist` tool still forbids listing a single requirement. Measured: `netherlands/IN/GB` went from the standing **0/2** to a `partial` plan with 9 requirements and the checker linked. |
 | 58 | **The twenty-corridor measurement ran, and it passes the bar committed in advance** — 75% confirm the decision (bar 70%), 50% yield a checklist (bar 50%, *exactly*). 40 live runs, all corpus-routed, none crawled, median 27.4s. **Read the sample structure**: nationality changed the outcome once in twenty, so it is five destinations replicated four times, not twenty independent corridors. **The United Kingdom refuses all eight runs** after finding the checklist, route, times and per-nationality fees, because `gov.uk/check-uk-visa` is a **wizard** — France's cause without France's `403`. That inverts known problem 11: the wizard costs more coverage than bot-blocks. |
 | 57 | **A block is now judged, not keyword-matched.** `_decision_blocking` asked "could this page have held the visa decision?" and answered by keyword, on a page **nobody read** — the one place the scorer decided what a page *means*. It now asks the model, over **address and label only** (there is no text; the authority refused it), and the packet has no parameter through which content could be passed. Fails closed after two attempts; the deterministic path keeps the keyword test. **France now qualifies `/en/royaume-uni`, `/en/web/france-visas` and `/india` and rejects the FAQ, the form page and the visa-category page** — where its old qualification was a blank CERFA form. Corridors whose decision is found make **no extra call**. |
 | 56 | **The `visa_decision` vocabulary could only ask the question, never recognise the answer.** Every term was a way of asking — `visa requirement`, `do i need a visa` — so Sweden's `list-of-foreign-citizens-who-require-visa-for-entry-into-sweden` scored `general_entry` 22.4 and `visa_decision` **0.0**, and could not qualify its own refusal. Seven answering phrasings added, one in **slug form** because `searchable_url` flattens hyphens and slugs drop articles. Measured by replaying all seven corridors' real candidate sets: **0.0 → 82.4 and it now qualifies; no shortlist changes anywhere.** **Item 23's own proposal — removing the `not scores` guard — was measured and rejected**: it would give 12–58% of a country's pages a positive `visa_decision`. |

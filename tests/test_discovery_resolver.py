@@ -24,9 +24,9 @@ from discovery_site import (
 
 from visa_research_agent.discovery.adjudication import (
     AdjudicationError,
-    DecisionTool,
     RoleAdjudication,
     RoleChoice,
+    RoleTool,
 )
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.crawl import DEFAULT_CRAWL_PAGES, CrawlFetcher
@@ -982,10 +982,13 @@ class StubToolJudge:
             )
         return RoleAdjudication(
             choices=choices,
-            decision_tool=DecisionTool(
-                source_id=candidates[-1]["source_id"],
-                reason="a step-by-step checker that asks nationality and purpose",
-            ),
+            tools=[
+                RoleTool(
+                    role="visa_decision",
+                    source_id=candidates[-1]["source_id"],
+                    reason="a step-by-step checker that asks nationality and purpose",
+                )
+            ],
         )
 
 
@@ -1029,6 +1032,6 @@ async def test_a_tool_is_dropped_when_a_page_states_the_decision(tmp_path: Path)
     resolved = await resolve_with_tool_judge(tmp_path, StubToolJudge(also_fill_decision=True))
 
     assert "visa_decision" in {role for source in resolved.sources for role in source.roles}
-    assert resolved.decision_tool_urls == []
+    assert resolved.interactive_tools == []
     assert not resolved.decision_is_unverified
     assert any("was not carried" in note for note in resolved.notes), resolved.notes

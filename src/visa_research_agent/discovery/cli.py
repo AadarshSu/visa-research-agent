@@ -205,13 +205,13 @@ def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
             "    judgement about their guidance: it could not be verified from here.",
             file=stream,
         )
-    if resolved.decision_tool_urls:
-        print("\n  the visa decision is behind an official tool:", file=stream)
-        for url in resolved.decision_tool_urls:
-            print(f"    {url}", file=stream)
+    if resolved.interactive_tools:
+        print("\n  answered only by an official tool:", file=stream)
+        for tool in resolved.interactive_tools:
+            print(f"    {tool.role:<22} {tool.url}", file=stream)
         print(
-            "    This page was read. It asks the traveller questions and works the answer out\n"
-            "    from them, so nothing here states whether a visa is needed.",
+            "    These pages were read. They ask the traveller questions and work the answer out\n"
+            "    from them, so nothing here states what they would say.",
             file=stream,
         )
     if resolved.unresolved_roles:

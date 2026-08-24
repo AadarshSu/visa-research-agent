@@ -150,6 +150,38 @@ function renderEvidenceBanner(plan) {
   return banner;
 }
 
+// A question an authority answers only through its own questionnaire is guidance it has published,
+// not a gap: the traveller can get the real answer in a few clicks, which is more than a page we
+// could not find gives them. So a tool is offered beside the question it settles rather than filed
+// under caveats — and never as evidence, because nobody has answered it.
+const TOOL_TOPICS = {
+  visa_decision: ["decides whether you need a visa", "the decision for your own passport and trip"],
+  document_checklist: ["lists the documents through a questionnaire", "the document list for your own application"],
+  application_route: ["sets out where to apply through a questionnaire", "where and how you apply"],
+  fees: ["works out the fee through a questionnaire", "the fee for your own application"],
+  processing_times: ["works out the processing time through a questionnaire", "how long your own application should take"],
+  general_entry: ["sets out entry requirements through a questionnaire", "the entry requirements for your own trip"],
+};
+
+function toolsFor(plan, topic) {
+  return (plan.official_tools || []).filter((tool) => tool.topic === topic);
+}
+
+function toolCallout(tool) {
+  const [what, gives] = TOOL_TOPICS[tool.topic] || ["answers this through a questionnaire", "the answer for your own trip"];
+  const callout = element("div", "decision-tool");
+  callout.append(element("p", "decision-tool-title", `${tool.authority} ${what}`));
+  const body = element("p", "", `This is the official tool, and answering its questions gives you ${gives}. It asks things we cannot answer on your behalf. Open it at `);
+  body.append(externalLink(tool.url, tool.url));
+  body.append(document.createTextNode("."));
+  callout.append(body);
+  return callout;
+}
+
+function appendTools(container, plan, topic) {
+  toolsFor(plan, topic).forEach((tool) => container.append(toolCallout(tool)));
+}
+
 function renderDecision(plan, ctx) {
   const { container, header } = panel(plan.destination, "Visa decision");
   const decision = plan.visa_required === null ? "Uncertain" : plan.visa_required ? "Visa required" : "No visa required";
@@ -172,24 +204,7 @@ function renderDecision(plan, ctx) {
     );
   }
   container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
-  // The one case where the traveller can finish the answer themselves in a minute: the authority
-  // publishes it as a questionnaire. It sits in the decision panel rather than with the caveats
-  // because it is the next step for the decision, not a footnote about the evidence.
-  (plan.decision_tools || []).forEach((tool) => {
-    const callout = element("div", "decision-tool");
-    callout.append(
-      element(
-        "p",
-        "decision-tool-title",
-        `${tool.authority} decides this with an official questionnaire`,
-      ),
-    );
-    const body = element("p", "", "Answering its questions gives you the decision for your own passport and trip. It asks a handful — nationality, why you are travelling — and we cannot answer them on your behalf. Open it at ");
-    body.append(externalLink(tool.url, tool.url));
-    body.append(document.createTextNode("."));
-    callout.append(body);
-    container.append(callout);
-  });
+  appendTools(container, plan, "visa_decision");
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
   return container;
 }
@@ -199,8 +214,10 @@ function renderApplicationLocation(plan, ctx) {
   const location = plan.where_to_apply;
   if (!location) {
     container.append(element("p", "lead", "The application location remains unresolved."));
+    appendTools(container, plan, "application_route");
     return container;
   }
+  appendTools(container, plan, "application_route");
 
   const grid = element("div", "detail-grid");
   const details = [
@@ -226,12 +243,27 @@ function renderApplicationLocation(plan, ctx) {
 }
 
 function renderRequirements(plan, ctx) {
+  const checklistTools = toolsFor(plan, "document_checklist");
   // No checklist source means no documents may be listed, so the panel would be a heading and a
   // caveat above nothing. The absence is not hidden by dropping it: it is stated under unresolved
   // questions, which the plan is structurally required to carry when there is no checklist source.
-  if (!plan.requirements.length) return null;
+  // Unless the authority publishes its list through a questionnaire — then there is somewhere to
+  // send the traveller, and that is worth a panel even with nothing to list.
+  if (!plan.requirements.length && !checklistTools.length) return null;
 
   const { container } = panel("Visa application documents", "Official checklist");
+
+  if (!plan.requirements.length) {
+    container.append(
+      element(
+        "p",
+        "lead",
+        "No official page lists the documents for this application. The authority publishes them through its own questionnaire instead.",
+      ),
+    );
+    appendTools(container, plan, "document_checklist");
+    return container;
+  }
 
   container.append(
     element(
@@ -240,6 +272,7 @@ function renderRequirements(plan, ctx) {
       "Extracted from the designated official application-document source. Confirm the linked guidance before applying; general entry and travel duties are excluded.",
     ),
   );
+  appendTools(container, plan, "document_checklist");
   appendIfFilled(container, renderEvidence(plan.application_document_source_ids, ctx, "requirements"));
 
   const list = element("div", "requirement-list");
@@ -313,6 +346,9 @@ function renderReliability(plan) {
   // made it read as a finding, and nothing checked it — see DECISIONS entry 30. A disagreement
   // between official pages is stated as something unresolved instead, which is what it honestly is.
   // The two-column grid went with it rather than being left to render one block in half the width.
+  // Fees, processing times and entry conditions have no panel of their own — they live inside the
+  // steps — so a questionnaire holding one is offered here rather than dropped.
+  ["fees", "processing_times", "general_entry"].forEach((topic) => appendTools(container, plan, topic));
   container.append(issueBlock("Unresolved questions", plan.unresolved_questions));
   container.append(
     element(

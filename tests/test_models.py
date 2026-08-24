@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from visa_research_agent.domain.models import (
     ApplicationStep,
-    InteractiveDecisionTool,
+    InteractiveTool,
     SourceReference,
     VisaPlan,
     VisaRequirement,
@@ -289,8 +289,9 @@ def plan_payload(**overrides: object) -> dict[str, object]:
         "unresolved_questions": ["Answer the official checker to get the decision."],
         "last_checked": checked_at,
         "status": "partial",
-        "decision_tools": [
+        "official_tools": [
             {
+                "topic": "visa_decision",
                 "url": "https://www.gov.uk/check-uk-visa",
                 "authority": "United Kingdom authority (www.gov.uk)",
                 "detail": "decides this by asking questions rather than stating an answer",
@@ -327,12 +328,58 @@ def test_a_plan_resting_on_an_unanswered_questionnaire_is_never_verified() -> No
 def test_a_decision_tool_carries_no_claim_about_what_it_would_answer() -> None:
     """Only where the decision is settled, never what it settles to."""
 
-    tool = InteractiveDecisionTool.model_validate(
+    tool = InteractiveTool.model_validate(
         {
+            "topic": "visa_decision",
             "url": "https://www.gov.uk/check-uk-visa",
             "authority": "United Kingdom authority (www.gov.uk)",
             "detail": "decides this by asking questions rather than stating an answer",
         }
     )
 
-    assert set(tool.model_dump()) == {"url", "authority", "detail"}
+    assert set(tool.model_dump()) == {"topic", "url", "authority", "detail"}
+
+
+def test_a_checklist_tool_may_never_sit_beside_a_designated_checklist_source() -> None:
+    """A tool is named because no page listed the documents. Designating a source anyway means the
+    list came from somewhere that is not a checklist, which is the failure this project exists to
+    prevent — `validate_absent_checklist` blocks it from the other side."""
+
+    payload = plan_payload(
+        official_tools=[
+            {
+                "topic": "document_checklist",
+                "url": "https://www.gov.uk/check-uk-visa",
+                "authority": "United Kingdom authority (www.gov.uk)",
+                "detail": "lists the documents by asking questions",
+            }
+        ],
+        application_document_source_ids=["official-source"],
+    )
+
+    with pytest.raises(ValidationError, match="cannot also designate a checklist source"):
+        VisaPlan.model_validate(payload)
+
+
+def test_a_tool_for_another_topic_leaves_the_visa_decision_alone() -> None:
+    """Only `visa_decision` is load-bearing. A questionnaire holding the fees adds a link to a plan
+    that stands on its own, and must not force the decision to unknown."""
+
+    plan = VisaPlan.model_validate(
+        plan_payload(
+            visa_required=True,
+            visa_type="Standard Visitor visa",
+            status="partial",
+            official_tools=[
+                {
+                    "topic": "fees",
+                    "url": "https://www.gov.uk/check-uk-visa",
+                    "authority": "United Kingdom authority (www.gov.uk)",
+                    "detail": "works out the fee by asking questions",
+                }
+            ],
+        )
+    )
+
+    assert plan.visa_required is True
+    assert plan.decision_tools == []

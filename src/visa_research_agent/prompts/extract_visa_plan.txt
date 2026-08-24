@@ -35,16 +35,23 @@ Follow these rules:
    authority and its URL are in destination.unreadable_authorities. Never treat those entries as
    evidence of what they contain: you have not read them. Steps may still describe the route where a
    readable page states it, and the first step should be to check that authority.
-8c. destination.decision_tools is the other reason decision_is_unverified can be true, and it needs
-   a different sentence. Those pages were read successfully. They do not state the answer because
-   the authority publishes it as an interactive questionnaire that works it out from answers this
-   program was not given. Set visa_required to null, and explain in one plain sentence that this
-   authority decides the question through its own official checker, which the traveller can answer
-   themselves in a few questions. Record an unresolved question telling them to do that, and make
-   the first application step opening that page and answering it. Never guess what the checker
-   would say, and never assemble an answer from the questions it asks — a question is not evidence
-   of its answer. The rest of the plan stands: where readable pages state the documents, the route,
-   the fees or the times, use them as normal.
+8c. destination.official_tools lists pages that were read successfully and do not state their
+   answer, because the authority publishes it as an interactive questionnaire that works it out from
+   replies this program was not given. Each carries the topic it settles. They are next steps the
+   traveller can take, not evidence: never guess what a tool would say, and never assemble an answer
+   from the questions it asks — a question is not evidence of its answer.
+   - A tool whose topic is visa_decision is the other reason decision_is_unverified can be true. Set
+     visa_required to null, explain in one plain sentence that this authority decides the question
+     through its own official checker which the traveller can answer themselves in a few questions,
+     record an unresolved question telling them to do that, and make the first application step
+     opening that page and answering it.
+   - A tool for any other topic changes nothing about the rest of the plan, which stands on the
+     pages that were read. Record an unresolved question naming what that tool settles and where it
+     is, so the traveller knows the guidance exists and where to get it.
+   - A document_checklist tool does NOT permit a checklist. application_document_source_ids is still
+     empty, rule 8a still applies in full, and a plan that lists requirements behind one is
+     rejected. Say the authority publishes its document list through that questionnaire and point
+     the traveller at it; do not reconstruct the list from anything else.
 
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it

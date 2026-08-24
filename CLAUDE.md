@@ -140,15 +140,28 @@ produces a serious defect.
   reported must be true of what was seen**: a policy that could not be read is *"could not be read, so
   whether this client may fetch it is unknown"*, never *"does not permit"*, and an unreachable host is
   still reported as unreachable rather than as a policy nobody read.
-- **A tool that *asks* the decision may be named, never driven (entry 59).** A page read successfully
-  and judged to defer the answer to an official questionnaire is a third outcome beside *found* and
-  *blocked*: the corridor resolves `partial`, the URL is handed over, `visa_required` is null. The
-  bounds are entry 32's, because the risk is entry 32's — *not found* must not drift into *behind a
-  tool*. **Only the adjudicator names one**, on a page it was given the text of; the heuristic never
-  does, because "is this a questionnaire" is a meaning question and entry 57 is what keyword-matching
-  meaning cost. An invented id is discarded, a tool named beside a found decision is dropped, and the
-  URL is checked against the approved domains like everything else. A `VisaPlan` naming a tool cannot
-  also state `visa_required`, and can never be `verified`.
+- **A questionnaire is an answer, and may be named, never driven (entries 59 and 60).** A page read
+  successfully and judged to *ask* a question rather than answer it is a third outcome beside *found*
+  and *blocked*: it is named for the role it settles, and the plan offers it beside that question —
+  the decision in the decision panel, the checklist in the documents panel, fees and times under
+  caveats. **It is not a blockade in front of the guidance; it is the form the authority published
+  the guidance in**, and a plan that stayed silent would withhold the one thing the traveller can act
+  on in a minute.
+
+  **A tool never fills the role it is named for.** The role stays unresolved, no source is invented,
+  and nothing about the tool is citable. For `document_checklist` that is the rule this project
+  exists to enforce: `application_document_source_ids` stays empty, so `validate_absent_checklist`
+  still forbids listing a single requirement, and a plan naming a checklist tool may not designate a
+  checklist source either.
+
+  **Only `visa_decision` changes whether a corridor resolves**, because only it is load-bearing. That
+  asymmetry is what makes the other roles cheap: entry 32's drift risk — *not found* presenting as
+  *behind a tool* — lives entirely in the load-bearing role and is untouched. Its bounds are
+  unchanged: **only the adjudicator names a tool**, on a page it was given the text of; the heuristic
+  never does, because "is this a questionnaire" is a meaning question and entry 57 is what
+  keyword-matching meaning cost. An invented id is discarded, a tool is dropped for any role a source
+  already answers, and the URL is checked against the approved domains like everything else. A
+  `VisaPlan` naming a decision tool cannot also state `visa_required`, and can never be `verified`.
 
   **Driving the tool stays out of scope, and entry 59 argues it against the strongest case.** GOV.UK's
   checker is *server-rendered*: `robots.txt` allows it, and a plain GET under our own user agent to
@@ -226,6 +239,7 @@ cause, and only running the thing showed it.
 | bot-blocks are the largest coverage limit | the **wizard** is (entry 58) |
 | the UK's wizard page "was ranked, shortlisted and fetched" | for NG and PH; **not** for IN or CN (entry 59) |
 | the UK answer is behind a tool we cannot drive | it is on a static URL — the reason not to is different (entry 59) |
+| a wizard is a blockade in front of the guidance | it **is** the guidance, in the form published (entry 60) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

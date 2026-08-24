@@ -367,8 +367,9 @@ def decision_behind_a_tool(destination: DestinationConfig) -> DestinationConfig:
     payload["required_source_ids"] = []
     payload["decision_is_unverified"] = True
     payload["trusted_domains"] = [*payload["trusted_domains"], "www.gov.uk"]
-    payload["decision_tools"] = [
+    payload["official_tools"] = [
         {
+            "topic": "visa_decision",
             "url": "https://www.gov.uk/check-uk-visa",
             "authority": "United Kingdom authority (www.gov.uk)",
             "detail": (
@@ -402,7 +403,7 @@ async def test_a_questionnaire_reaches_the_plan_as_a_next_step_not_as_a_failed_s
         destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
     )
 
-    assert [str(tool.url) for tool in plan.decision_tools] == ["https://www.gov.uk/check-uk-visa"]
+    assert [str(tool.url) for tool in plan.official_tools] == ["https://www.gov.uk/check-uk-visa"]
     # Overridden, exactly as for a block: the model said True and no page said anything.
     assert plan.visa_required is None
     assert plan.status == "partial"
@@ -427,7 +428,7 @@ async def test_the_model_is_told_where_the_question_is_settled_never_what_it_set
 
     assert generator.research_packet is not None
     packet = json.loads(generator.research_packet)
-    named = packet["destination"]["decision_tools"]
+    named = packet["destination"]["official_tools"]
     assert named[0]["url"] == "https://www.gov.uk/check-uk-visa"
     assert "untrusted_content" not in named[0]
 
@@ -438,6 +439,8 @@ def test_the_extraction_prompt_separates_a_block_from_a_questionnaire() -> None:
 
     prompt = load_extraction_prompt()
 
-    assert "decision_tools" in prompt
+    assert "official_tools" in prompt
     assert "read successfully" in prompt
     assert "a question is not evidence" in prompt
+    # A checklist tool must never read as permission to list a checklist.
+    assert "does NOT permit a checklist" in prompt

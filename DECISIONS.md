@@ -9,8 +9,88 @@ Newest first. Add an entry when a decision is made, not afterwards.
 
 ---
 
+## 60. A questionnaire is an answer, for every role — not a blockade in front of one
+**2026-08-24 · decided; implemented; measured live. Widens entry 59, which was too narrow the day it shipped**
+
+Entry 59 gave the pipeline a way to say *"the answer is behind an official tool"* and then allowed it
+for exactly one role. That was the wrong shape, and the reason is visible in the run that motivated
+it: the Netherlands corridor read `netherlandsworldwide.nl/visa-the-netherlands/entering-without-visa`
+— *"a questionnaire of up to 9 questions to determine those requirements for the trip"* — and reported
+nothing, because entry 59 only had a slot for the visa decision.
+
+**The framing was wrong, not just the scope.** A wizard was being treated as an obstacle between us
+and the guidance. It is not: it *is* the guidance, published in the form the authority chose. An
+authority that answers "which documents do I bring" through nine questions has published its document
+list, and a plan that stays silent withholds the one thing the traveller can actually act on — they
+can answer nine questions in a minute, which is more than a page we could not find gives them.
+
+So `tools` is now a list over roles. `RoleAdjudication.tools`, `ResolvedCorridor.interactive_tools`,
+`DestinationConfig.official_tools`, `VisaPlan.official_tools`, each entry carrying the topic it
+settles, and the interface offers it beside the question it answers: the decision in the decision
+panel, the checklist in the documents panel, the route with the route, and fees, times and entry
+conditions — which have no panel of their own — under evidence and caveats.
+
+`DiscoveryRole` is now built from the domain's new `GuidanceTopic` rather than restated beside it, so
+a role a page can fill and a topic a plan can offer a tool for cannot drift apart. `irrelevant` stays
+discovery's alone: it is a verdict about a page, not a question a traveller has, and a tool named for
+it is refused outright because there is nowhere in a plan to put it.
+
+### What does not widen, and this is the load-bearing half
+
+**Only `visa_decision` changes whether a corridor resolves**, because only `visa_decision` is
+load-bearing. A questionnaire holding the fees adds a link to a plan that already stands; it can never
+turn a corridor that should refuse into one that does not. That asymmetry is what makes widening the
+*rest* cheap: entry 32's drift risk lives entirely in the load-bearing role, and it is untouched.
+
+**A tool never fills the role it is named for.** The role stays in `unresolved_roles`, no source is
+invented, and nothing about the tool is citable. For the checklist that is not a nicety but the rule
+this project exists to enforce: naming a `document_checklist` tool leaves
+`application_document_source_ids` empty, so `validate_absent_checklist` still forbids listing a single
+requirement, and a new validator forbids the contradiction from the other side — a plan naming a
+checklist tool may not also designate a checklist source. Both prompts say it explicitly, and both
+validators would reject it anyway, because entry 27's lesson is that a model asked for null returned
+`true`.
+
+**The per-role suppression generalises rather than relaxes.** Entry 59 dropped a tool when a page
+stated the decision; that is now applied per role, so a checklist found on a page suppresses only the
+checklist tool. And because one page often settles several questions, the *plan* offers each URL once,
+under the first topic in `ROLE_ORDER` it was named for — the corridor keeps every judgement, and a
+plan is a rendering.
+
+### Measured live
+
+`netherlands/IN/GB/tourism` is the corridor [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) has recorded as
+resolving **0/2** since it was first run — the standing example of a corridor that finds a checklist
+and refuses anyway.
+
+| | before | after |
+| --- | --- | --- |
+| corridor | refused, `visa_decision` not found | **resolves**, naming `entering-without-visa` for `visa_decision` and `general_entry`, and `consular-fees` for `fees` |
+| plan | `503`, nothing | **`partial`, 9 document requirements, 6 steps**, `visa_required: null`, the checker linked in the decision panel |
+
+The model's own reasons are the discrimination the widening needed: the fees page *"asks the reader to
+choose their country and says the resulting consular-fee list shows how much consular services cost"*,
+while the same run declined to name anything for `application_route`. Under entry 59's wording, the
+identical page had been assigned `general_entry` and reported as nothing at all.
+
+The interface was checked against a plan carrying a decision tool, a checklist tool and a fees tool at
+once: each rendered in its own panel, and the **documents panel appears at all**, which it previously
+could not — with no requirements it returned nothing, so an authority publishing its list through a
+questionnaire produced a plan with no document section and no explanation of why.
+
+**One caveat, and it is known problem 10 again.** Two runs of the same Netherlands corridor named
+three tools and then two — `consular-fees` appeared on one and not the other. The *outcome* did not
+move (both resolved, both `decision_is_unverified`), but which tools are offered can differ between
+runs, exactly as entry 57 found for blocked-page judgements.
+
+---
+
 ## 59. The third outcome: the answer is behind a tool, so hand over the tool
 **2026-08-24 · decided; implemented; measured live. Closes TODO item 24, and declines a larger version of it**
+
+> **Widened the same day by entry 60**, which allows a tool for *any* role rather than only the visa
+> decision. Everything below still holds — the bounds, the rejected URL-construction alternative, and
+> the reasoning — but read `decision_tool` as one topic of several, and the field names have changed.
 
 Entry 58 measured the largest coverage limit there is and it was not bot-blocking: it was authorities
 that publish the visa decision inside an interactive tool. Every United Kingdom corridor refused

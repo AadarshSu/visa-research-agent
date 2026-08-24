@@ -16,14 +16,14 @@ from discovery_site import DETAIL_INDIA, MISSION_CHECKLIST, destination, handler
 from visa_research_agent.discovery.adjudication import (
     EXCERPT_GAP_MARKER,
     AdjudicationError,
-    DecisionTool,
     RoleAdjudication,
     RoleChoice,
+    RoleTool,
     anchored_excerpt,
     build_candidate_packet,
     load_adjudication_prompt,
     validated_choices,
-    validated_decision_tool,
+    validated_tools,
 )
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink
 from visa_research_agent.discovery.resolver import (
@@ -498,26 +498,45 @@ async def test_the_resolver_anchors_on_the_travellers_own_countries() -> None:
     assert "British citizen" in adjudicator.calls[0]
 
 
-# --- the decision behind a tool -------------------------------------------------------------
+# --- an answer behind an official tool ----------------------------------------------------------
 
 
 def test_a_tool_the_model_invented_is_discarded_like_any_other_id() -> None:
     """Same containment as `validated_choices`. A traveller is being sent to this URL, so it has to
     be a page the application fetched, not one the model produced."""
 
-    kept, discarded = validated_decision_tool(
+    kept, discarded = validated_tools(
         RoleAdjudication(
             choices=[],
-            decision_tool=DecisionTool(
-                source_id="tl_checker",
-                reason="A step-by-step checker that asks the reader their nationality.",
-            ),
+            tools=[
+                RoleTool(
+                    role="visa_decision",
+                    source_id="tl_checker",
+                    reason="A step-by-step checker that asks the reader their nationality.",
+                )
+            ],
         ),
         shortlist().by_id,
     )
 
-    assert kept is None
+    assert kept == {}
     assert any("not a candidate" in reason for reason in discarded)
+
+
+def test_a_tool_for_the_irrelevant_role_is_refused() -> None:
+    """`irrelevant` is a verdict about a page, not a question a traveller has, so a plan has nowhere
+    to put a tool for it and a link nobody sees is worse than none."""
+
+    kept, discarded = validated_tools(
+        RoleAdjudication(
+            choices=[],
+            tools=[RoleTool(role="irrelevant", source_id="tl_india", reason="a questionnaire")],
+        ),
+        shortlist().by_id,
+    )
+
+    assert kept == {}
+    assert any("irrelevant role" in reason for reason in discarded)
 
 
 async def test_a_page_that_asks_the_decision_resolves_the_corridor_instead_of_losing_it() -> None:
@@ -538,34 +557,71 @@ async def test_a_page_that_asks_the_decision_resolves_the_corridor_instead_of_lo
                     reason="It lists the items to bring.",
                 ),
             ],
-            decision_tool=DecisionTool(
-                source_id="tl_india",
-                reason="It asks nationality and purpose, then says whether a visa is needed.",
-            ),
+            tools=[
+                RoleTool(
+                    role="visa_decision",
+                    source_id="tl_india",
+                    reason="It asks nationality and purpose, then says whether a visa is needed.",
+                )
+            ],
         )
     )
     notes: list[str] = []
 
-    sources, unresolved, _, tool = await resolver_with(adjudicator)._decide_roles(
+    sources, unresolved, _, tools = await resolver_with(adjudicator)._decide_roles(
         destination(), corridor(), shortlist(), notes
     )
 
-    assert tool == DETAIL_INDIA
+    assert [(tool.role, tool.url) for tool in tools] == [("visa_decision", DETAIL_INDIA)]
     assert "visa_decision" in unresolved
     assert [role for source in sources for role in source.roles] == ["document_checklist"]
-    assert any("decides the visa question interactively" in note for note in notes)
+    assert any("answers visa_decision interactively" in note for note in notes)
+
+
+async def test_a_tool_is_carried_for_any_role_not_only_the_decision() -> None:
+    """Entry 60. An authority that publishes its checklist through a questionnaire has published it;
+    a plan that said nothing would be withholding the one thing the traveller could act on."""
+
+    adjudicator = FakeAdjudicator(
+        RoleAdjudication(
+            choices=[
+                RoleChoice(role="visa_decision", source_id="tl_india", reason="States it plainly."),
+                RoleChoice(
+                    role="document_checklist",
+                    source_id=None,
+                    reason="No candidate names any document to bring.",
+                ),
+            ],
+            tools=[
+                RoleTool(
+                    role="document_checklist",
+                    source_id="tl_checklist",
+                    reason="It asks the traveller their situation and then lists their documents.",
+                )
+            ],
+        )
+    )
+
+    sources, unresolved, _, tools = await resolver_with(adjudicator)._decide_roles(
+        destination(), corridor(), shortlist(), []
+    )
+
+    assert [tool.role for tool in tools] == ["document_checklist"]
+    assert "document_checklist" in unresolved
+    # It fills nothing. The role is still unresolved and no source was invented for it.
+    assert [role for source in sources for role in source.roles] == ["visa_decision"]
 
 
 async def test_the_heuristic_path_never_names_a_tool() -> None:
     """Whether a page is a questionnaire is a question about meaning, and entry 57 is what keyword
-    matching meaning cost. With no adjudicator the corridor refuses exactly as it did before."""
+    matching meaning cost. With no adjudicator the corridor behaves exactly as it did before."""
 
-    _, _, calls, tool = await resolver_with(None)._decide_roles(
+    _, _, calls, tools = await resolver_with(None)._decide_roles(
         destination(), corridor(), shortlist(), []
     )
 
     assert calls == 0
-    assert tool is None
+    assert tools == []
 
 
 def test_the_prompt_keeps_not_found_and_behind_a_tool_apart() -> None:
@@ -574,6 +630,8 @@ def test_the_prompt_keeps_not_found_and_behind_a_tool_apart() -> None:
 
     prompt = load_adjudication_prompt()
 
-    assert "decision_tool" in prompt
+    assert "`tools`" in prompt
     assert "not among the candidates" in prompt
     assert "not a way to soften a refusal" in prompt
+    # Naming a tool must never read as filling the role it is named for.
+    assert "does **not** fill" in prompt

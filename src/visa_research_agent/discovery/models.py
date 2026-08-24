@@ -14,6 +14,7 @@ from visa_research_agent.domain.models import (
     COUNTRY_CODE_PATTERN,
     ConfiguredSource,
     DestinationConfig,
+    GuidanceTopic,
     SourceKind,
     SourcePass,
     StrictModel,
@@ -21,15 +22,10 @@ from visa_research_agent.domain.models import (
 )
 from visa_research_agent.domain.trust import host_of
 
-DiscoveryRole = Literal[
-    "visa_decision",
-    "document_checklist",
-    "application_route",
-    "fees",
-    "processing_times",
-    "general_entry",
-    "irrelevant",
-]
+# Built from the domain's `GuidanceTopic` rather than restated, so a role a page can fill and a
+# topic a plan can offer a tool for can never drift apart. `irrelevant` is discovery's alone: it
+# is a verdict about a page, not a question a traveller has.
+DiscoveryRole = Literal[GuidanceTopic, "irrelevant"]
 DecidedBy = Literal["heuristic", "model"]
 
 # The roles a corridor cannot be considered resolved without. Everything else is useful context.
@@ -193,6 +189,13 @@ class ResolvedSource(StrictModel):
         )
 
 
+class ResolvedTool(StrictModel):
+    """One official questionnaire, and the question it settles."""
+
+    role: GuidanceTopic
+    url: str = Field(min_length=1)
+
+
 class ResolvedCorridor(StrictModel):
     """The sources discovery selected for one corridor, plus what it could not resolve."""
 
@@ -236,24 +239,30 @@ class ResolvedCorridor(StrictModel):
     prevent. See DECISIONS entry 32.
     """
 
-    decision_tool_urls: list[str] = Field(default_factory=list)
-    """Pages that were read and found to *ask* the decision rather than state it.
+    interactive_tools: list["ResolvedTool"] = Field(default_factory=list)
+    """Pages that were read and found to *ask* a question rather than answer it.
 
-    The third outcome. `sources` is "a page answered it", `decision_blocking_urls` is "an authority
+    The third outcome. A source is "a page answered it", `decision_blocking_urls` is "an authority
     would not let us look", and this is "we looked, and the authority publishes the answer only
-    inside a questionnaire". Before it existed that case fell into *not found* and refused the
-    corridor, discarding a checklist, a route, processing times and fees that had all been resolved
-    correctly — every United Kingdom corridor, in the twenty-corridor measurement (entry 58).
+    inside a questionnaire". Before it existed, a `visa_decision` in that state fell into *not
+    found* and refused the corridor, discarding a checklist, a route, processing times and fees
+    that had all been resolved correctly — every United Kingdom corridor, in the twenty-corridor
+    measurement (entry 58).
 
-    Kept as its own list rather than merged into `decision_blocking_urls` because the two support
-    different sentences and one of them would become false: nothing refused us here. It is also the
-    stronger claim of the two, which is why it does not need entry 32's second gate — the model is
-    judging a page whose text it was actually given, so "this page defers the answer to a form" is
-    checkable in a way "this page nobody read might have held the answer" is not.
+    **Every role, not only the decision** (entry 60). An authority that puts its checklist or its
+    entry requirements behind a questionnaire has published that guidance, and a plan that said
+    nothing would be withholding the one thing the traveller could act on. Only a `visa_decision`
+    tool changes whether the corridor resolves, because only that role is load-bearing; the rest add
+    a link to a plan that already stands.
 
-    Entry 32's *lesson* still binds, though: *not found* and *behind a tool* must not blur, or every
-    failed corridor drifts into looking tool-limited. So this is filled only by the adjudicator, on
-    a page it read, and only when no page filled `visa_decision`.
+    Kept apart from `decision_blocking_urls` because the two support different sentences and one of
+    them would become false: nothing refused us here. It is also the stronger claim of the two,
+    which is why it does not need entry 32's second gate — the model is judging a page whose text
+    it was actually given, so "this page defers the answer to a form" is checkable in a way "this
+    page nobody read might have held the answer" is not.
+
+    Entry 32's *lesson* still binds, though: *not found* and *behind a tool* must not blur. So this
+    is filled only by the adjudicator, on a page it read, and only for a role no source filled.
     """
 
     queries: list[str] = Field(default_factory=list)
@@ -296,6 +305,12 @@ class ResolvedCorridor(StrictModel):
             return True
         handed_over = bool(self.decision_blocking_urls or self.decision_tool_urls)
         return handed_over and bool(self.sources)
+
+    @property
+    def decision_tool_urls(self) -> list[str]:
+        """Only the tools that settle the visa decision. The other topics resolve nothing."""
+
+        return [tool.url for tool in self.interactive_tools if tool.role == "visa_decision"]
 
     @property
     def decision_is_unverified(self) -> bool:
@@ -361,17 +376,32 @@ class ResolvedCorridor(StrictModel):
         ]
         # Read, not refused, so it is neither a source nor an unreadable authority. It is a page
         # the traveller can finish themselves, and the detail says exactly that — never a guess at
-        # what answering it would produce.
-        payload["decision_tools"] = [
+        # what answering it would produce. A tool is offered only where no source filled its role:
+        # once a page answers the question, a questionnaire is a longer route to the same place.
+        # One page often settles several questions — the Netherlands' short-stay questionnaire
+        # answers both the visa decision and the entry requirements — but a traveller does not need
+        # the same link twice. The corridor keeps every judgement; the plan is a rendering, so it
+        # offers each page once, under the first topic in `ROLE_ORDER` it was named for.
+        filled = {role for source in self.sources for role in source.roles}
+        offered: set[str] = set()
+        tools = []
+        for role in ROLE_ORDER:
+            for tool in self.interactive_tools:
+                if tool.role != role or tool.role in filled or tool.url in offered:
+                    continue
+                offered.add(tool.url)
+                tools.append(tool)
+        payload["official_tools"] = [
             {
-                "url": url,
-                "authority": f"{destination.display_name} authority ({host_of(url)})",
+                "topic": tool.role,
+                "url": tool.url,
+                "authority": f"{destination.display_name} authority ({host_of(tool.url)})",
                 "detail": (
-                    "decides this by asking questions rather than stating an answer, so the "
-                    "decision could not be read from the page"
+                    "answers this by asking questions rather than stating it, so the answer could "
+                    "not be read from the page"
                 ),
             }
-            for url in self.decision_tool_urls
+            for tool in tools
         ]
         payload["decision_is_unverified"] = self.decision_is_unverified
         return DestinationConfig.model_validate(payload)

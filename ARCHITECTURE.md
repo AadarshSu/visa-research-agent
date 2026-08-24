@@ -132,22 +132,39 @@ are different claims and only one is about what the authority allows.
 `unreachable` and `unusable` are kept apart deliberately: one is a transient site problem, the other
 needs a different retriever. They demand different remedies even though they grade the same.
 
-### A third way the decision can be unverified: an official tool holds it
+### A third outcome: an official tool answers it, by asking
 
 Nothing above applies when the page was served willingly and read, and still does not answer — because
 the authority publishes the decision as an interactive questionnaire. `gov.uk/check-uk-visa` is the
 case, and before entry 59 it fell into *not found* and refused the corridor, discarding a checklist,
 route, fees and processing times that had all resolved correctly.
 
-`ResolvedCorridor.decision_tool_urls` carries it into `DestinationConfig.decision_tools` and then
-`VisaPlan.decision_tools`. `is_usable` and `decision_is_unverified` accept it exactly as they accept
-`decision_blocking_urls`, so the corridor resolves `partial`, `visa_required` is null, and the plan
-names the URL with a sentence saying that answering its questions there gives the traveller the answer.
+`ResolvedCorridor.interactive_tools` carries them into `DestinationConfig.official_tools` and then
+`VisaPlan.official_tools`, each entry naming the `GuidanceTopic` it settles. `is_usable` and
+`decision_is_unverified` read only the `visa_decision` ones, exactly as they read
+`decision_blocking_urls`, so that corridor resolves `partial` with `visa_required` null.
+
+**This is every role, not only the decision** (entry 60). A wizard is not an obstacle between us and
+the guidance — it *is* the guidance, in the form the authority chose to publish it. So the plan offers
+each tool beside the question it answers: the decision in the decision panel, the checklist in the
+documents panel, the route with the route, and fees, times and entry conditions — which have no panel
+of their own — under evidence and caveats. `DiscoveryRole` is built from `GuidanceTopic` so the two
+vocabularies cannot drift; `irrelevant` is discovery's alone and a tool named for it is refused.
+
+**Only `visa_decision` changes whether a corridor resolves**, because only it is load-bearing. A
+questionnaire holding the fees adds a link to a plan that already stands. That asymmetry is what makes
+widening the rest cheap: entry 32's drift risk lives entirely in the load-bearing role.
+
+**A tool never fills the role it is named for.** The role stays in `unresolved_roles`, no source is
+invented, and nothing about the tool is citable. For `document_checklist` this is the rule the project
+exists to enforce: `application_document_source_ids` stays empty, so `validate_absent_checklist` still
+forbids listing a single requirement, and a plan naming a checklist tool may not designate a checklist
+source either.
 
 It is deliberately neither of the two things it resembles. Not an `UnreadableAuthority` — nothing
 refused us, and saying so would be false about what happened, so it is not reported under unavailable
-evidence. Not a `ConfiguredSource` for the decision — the page states no decision, so citing it as
-evidence of one would be reading an answer out of a question.
+evidence. Not a `ConfiguredSource` for its topic — the page states no answer, so citing it as evidence
+of one would be reading an answer out of a question.
 
 Four bounds keep *not found* and *behind a tool* apart, which is entry 32's risk in a new place:
 
@@ -155,8 +172,10 @@ Four bounds keep *not found* and *behind a tool* apart, which is entry 32's risk
   never does: whether a page is a questionnaire is a question about meaning, and entry 57 is what
   keyword-matching meaning cost. With no adjudicator configured the corridor refuses as before.
 - **An invented id is discarded**, exactly as in `validated_choices`.
-- **Only when nothing filled `visa_decision`.** A tool named beside a found decision is dropped with a
-  note, the same short-circuit `decision_blocking_urls` gets.
+- **Only for a role no source filled.** A tool named beside a page that answers the same role is
+  dropped with a note, the same short-circuit `decision_blocking_urls` gets. And because one page
+  often settles several questions, the plan offers each URL once, under the first topic in
+  `ROLE_ORDER` it was named for — the corridor keeps every judgement; a plan is a rendering.
 - **The URL is checked against the approved domains.** Officialness is the domain's; reading the page
   changes nothing about that, and a traveller is being sent there.
 

@@ -33,7 +33,7 @@ from visa_research_agent.discovery.adjudication import (
     load_blocked_prompt,
     validated_blocked_choices,
     validated_choices,
-    validated_decision_tool,
+    validated_tools,
 )
 from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
 from visa_research_agent.discovery.crawl import (
@@ -56,6 +56,7 @@ from visa_research_agent.discovery.models import (
     PageLink,
     ResolvedCorridor,
     ResolvedSource,
+    ResolvedTool,
     RoleScores,
 )
 from visa_research_agent.discovery.recall_log import (
@@ -569,7 +570,7 @@ class CorridorResolver:
 
         # 5. Assign roles from the combined evidence.
         try:
-            sources, unresolved, model_calls, decision_tool = await self._decide_roles(
+            sources, unresolved, model_calls, tools = await self._decide_roles(
                 destination, corridor, fetched, notes
             )
         except AdjudicationRefusal as exc:
@@ -584,14 +585,17 @@ class CorridorResolver:
         # filled. So the ordinary corridor makes no extra call at all. DECISIONS entry 57.
         decision_found = any("visa_decision" in source.roles for source in sources)
         # A tool is what to say when nothing stated the answer. Once a page did, it is at best a
-        # second route to something already established, and naming it would tell the traveller to
-        # go and work out what the plan already says.
-        if decision_found and decision_tool is not None:
-            notes.append(
-                f"a decision tool was named at {decision_tool} but a page states the decision, "
-                "so it was not carried"
-            )
-            decision_tool = None
+        # second route to something already established, and offering it would tell the traveller to
+        # go and work out what the plan already says. Applied per role, so a checklist found on a
+        # page suppresses only the checklist tool.
+        filled = {role for source in sources for role in source.roles}
+        for tool in tools:
+            if tool.role in filled:
+                notes.append(
+                    f"a {tool.role} tool was named at {tool.url} but a page answers it, "
+                    "so it was not carried"
+                )
+        tools = [tool for tool in tools if tool.role not in filled]
         if decision_found or not refused:
             blocking = []
         elif self.adjudicator is None:
@@ -613,7 +617,7 @@ class CorridorResolver:
             inaccessible_domains=inaccessible,
             inaccessible_urls=refused,
             decision_blocking_urls=blocking,
-            decision_tool_urls=[decision_tool] if decision_tool is not None else [],
+            interactive_tools=tools,
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
@@ -1055,15 +1059,15 @@ class CorridorResolver:
         corridor: Corridor,
         fetched: "FetchedShortlist",
         notes: list[str],
-    ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int, str | None]:
+    ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int, list[ResolvedTool]]:
         """Choose the page for each role, by judgement when an adjudicator is configured.
 
-        The fourth return is the URL of an interactive tool the model read and judged to hold the
-        decision behind its questions. It is **only** ever produced here, on the path where the
+        The fourth return is the interactive tools the model read and judged to hold a role's
+        answer behind their questions. They are **only** ever produced here, on the path where the
         model was handed page text — the heuristic never produces one, because "is this page a
         questionnaire" is a question about meaning, and entry 57 is what keyword-matching meaning
         cost the last time. No adjudicator therefore means no tool, which is the deterministic
-        baseline refusing exactly as it did before.
+        baseline behaving exactly as it did before.
 
         The heuristic is not replaced. It produced the shortlist these candidates come from, and it
         is the answer when no adjudicator is configured — which keeps the deterministic path as the
@@ -1082,7 +1086,7 @@ class CorridorResolver:
 
         if self.adjudicator is None or not fetched.candidates:
             sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
-            return sources, unresolved, 0, None
+            return sources, unresolved, 0, []
 
         # The traveller's own country words, so a long page is cut around them rather than at a
         # fixed offset. Nationality and residence only: the destination is named on every page it
@@ -1101,15 +1105,19 @@ class CorridorResolver:
 
         chosen, discarded = validated_choices(adjudication, fetched.by_id)
         notes.extend(discarded)
-        tool, tool_discarded = validated_decision_tool(adjudication, fetched.by_id)
+        named, tool_discarded = validated_tools(adjudication, fetched.by_id)
         notes.extend(tool_discarded)
         sources, unresolved = self._sources_from_choices(destination, fetched, chosen, notes)
-        tool_url: str | None = None
-        if tool is not None:
+        tools: list[ResolvedTool] = []
+        for role in ROLE_ORDER:
+            tool = named.get(role)
+            if tool is None or role == "irrelevant":
+                continue
             source_id, reason = tool
-            tool_url = fetched.by_id[source_id].link.url
-            notes.append(f"{tool_url} decides the visa question interactively: {reason}")
-        return sources, unresolved, model_calls, tool_url
+            url = fetched.by_id[source_id].link.url
+            tools.append(ResolvedTool(role=role, url=url))
+            notes.append(f"{url} answers {role} interactively: {reason}")
+        return sources, unresolved, model_calls, tools
 
     async def _adjudicate_with_one_retry(
         self, packet: str, notes: list[str]

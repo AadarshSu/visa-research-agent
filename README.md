@@ -52,12 +52,20 @@ per-nationality fees, because `gov.uk/check-uk-visa` is a step-by-step wizard: t
 willingly, fetched and read, and simply does not state the answer. An interactive tool costs more
 coverage than bot-blocking does.
 
-**So a page that *asks* the decision is now its own outcome** (entry 59). Read successfully and judged
-to defer the answer to an official questionnaire, it resolves the corridor as partial, states the visa
-decision as unknown, and hands the traveller the tool's URL with a sentence saying that answering its
-questions there will give them the answer. Driving the questionnaire is deliberately not done: two of
-that checker's questions are not part of a corridor, and answering them for a traveller would be
-inventing the input to the one question where being wrong is most damaging.
+**So a page that *asks* a question is now its own outcome** (entries 59 and 60). A questionnaire is
+not an obstacle in front of the guidance — it is the guidance, in the form the authority published it.
+Read successfully and judged to work an answer out from questions rather than state it, the page is
+named for whatever it settles, and the plan offers it beside that question: the visa decision in the
+decision panel, the document checklist in the documents panel, fees and processing times with the
+caveats. The Netherlands, whose corridor refused for weeks because no page states whether a visa is
+needed, now produces a plan with nine document requirements and a link to the nine-question checker
+that holds the decision.
+
+Naming a tool never fills the role it stands in for — a checklist questionnaire still leaves the plan
+structurally unable to list a single document — and only the visa decision changes whether a corridor
+resolves at all. Driving the questionnaire is deliberately not done: some of a checker's questions are
+not part of a corridor, and answering them for a traveller would be inventing the input to the one
+question where being wrong is most damaging.
 
 **A caveat on timing**, because it is the number a deployment plan would want: the **corridor phase**
 measures a median of **27.4s** (40 live runs, 2026-08-24, all served from stored page corpora rather

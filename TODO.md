@@ -737,6 +737,15 @@ replacement.
 
 ### ~~Say "the answer is behind a tool we cannot drive"~~ — **done 2026-08-24** (was item 24)
 
+**Widened the same day by entry 60**, and the widening is the part worth carrying: a tool may now be
+named for **any** role, not only the visa decision, because a questionnaire is the form an authority
+published its guidance in rather than a blockade in front of it. `netherlands/IN/GB` — the standing
+example of a corridor that finds a checklist and refuses anyway, **0/2** in the handoff table since it
+was first run — now resolves with nine document requirements and a link to the nine-question checker
+that holds its decision. Only `visa_decision` changes whether a corridor resolves, so entry 32's drift
+risk is untouched, and a tool never fills the role it is named for.
+
+
 Built as [DECISIONS.md](DECISIONS.md) entry 59, and the entry is worth reading rather than this
 summary: it also records the **URL-construction alternative, measured and declined**, so nobody
 re-derives it. GOV.UK's checker is server-rendered and its answers are addressable — `curl` gets

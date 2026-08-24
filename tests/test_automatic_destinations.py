@@ -32,6 +32,7 @@ from visa_research_agent.discovery.models import (
     Corridor,
     ResolvedCorridor,
     ResolvedSource,
+    ResolvedTool,
     SearchResult,
 )
 from visa_research_agent.discovery.registry import AuthorityRegistry, CountryAuthorities
@@ -694,7 +695,7 @@ def behind_a_tool(*, with_sources: bool = True) -> ResolvedCorridor:
         resolved_at=NOW,
         sources=sources,
         unresolved_roles=["visa_decision"],
-        decision_tool_urls=[WIZARD_PAGE],
+        interactive_tools=[ResolvedTool(role="visa_decision", url=WIZARD_PAGE)],
     )
 
 
@@ -743,7 +744,11 @@ def test_a_tool_off_the_approved_domains_is_refused() -> None:
     is still a property of the domain, and reading the page changes nothing about that."""
 
     resolved = behind_a_tool().model_copy(
-        update={"decision_tool_urls": ["https://uk-visa-help.example.com/checker"]}
+        update={
+            "interactive_tools": [
+                ResolvedTool(role="visa_decision", url="https://uk-visa-help.example.com/checker")
+            ]
+        }
     )
 
     with pytest.raises(ValueError, match="not on an approved domain"):
@@ -762,3 +767,61 @@ def test_an_unverified_decision_cannot_be_claimed_without_naming_the_authority()
             trusted_domains=["diplomatie.gouv.fr"],
             decision_is_unverified=True,
         )
+
+
+def test_one_page_answering_two_questions_is_offered_once() -> None:
+    """The Netherlands' short-stay questionnaire settles both the visa decision and the entry
+    requirements. The corridor records both judgements; the plan is a rendering, and a traveller
+    does not need the same link twice."""
+
+    resolved = behind_a_tool().model_copy(
+        update={
+            "interactive_tools": [
+                ResolvedTool(role="visa_decision", url=WIZARD_PAGE),
+                ResolvedTool(role="general_entry", url=WIZARD_PAGE),
+            ]
+        }
+    )
+
+    config = resolved.to_destination_config(uk_base())
+
+    assert [(tool.topic, str(tool.url)) for tool in config.official_tools] == [
+        ("visa_decision", WIZARD_PAGE)
+    ]
+
+
+def test_a_tool_is_dropped_where_a_source_already_answers_that_role() -> None:
+    """Per role, not per corridor: a checklist found on a page suppresses only its own tool."""
+
+    resolved = behind_a_tool().model_copy(
+        update={
+            "interactive_tools": [
+                ResolvedTool(role="visa_decision", url=WIZARD_PAGE),
+                ResolvedTool(role="document_checklist", url=WIZARD_PAGE + "/y"),
+            ]
+        }
+    )
+
+    config = resolved.to_destination_config(uk_base())
+
+    # `behind_a_tool` resolves a real checklist source, so only the decision tool survives.
+    assert [tool.topic for tool in config.official_tools] == ["visa_decision"]
+
+
+def test_a_tool_for_a_role_no_source_fills_reaches_the_destination() -> None:
+    """Entry 60: only `visa_decision` is load-bearing, so a fees questionnaire adds a link to a plan
+    that already stands rather than deciding whether it exists."""
+
+    resolved = behind_a_tool().model_copy(
+        update={
+            "interactive_tools": [
+                ResolvedTool(role="visa_decision", url=WIZARD_PAGE),
+                ResolvedTool(role="fees", url="https://www.gov.uk/visa-fees-checker"),
+            ]
+        }
+    )
+
+    config = resolved.to_destination_config(uk_base())
+
+    assert [tool.topic for tool in config.official_tools] == ["visa_decision", "fees"]
+    assert config.decision_is_unverified
