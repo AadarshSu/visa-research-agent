@@ -32,6 +32,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
 | [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
+| [69](#69-batch-1-bounds-destinations-never-nationalities--and-184-of-198-passports-have-no-demonym) | **Batch 1 bounds destinations, not nationalities** — and 184 of 198 passports have no demonym |
 | [68](#68-a-batch-is-done-in-three-stages-and-accuracy-is-measured-outside-the-codebase) | **A batch is done in three stages** — reachable, resolves, fast. Accuracy is verified outside the codebase |
 | [67](#67-the-registry-grows-in-batches-and-a-domain-can-be-confirmed-by-asking-wikidata-about-the-domain) | **Batch 1: EU/EEA, 41 → 53 researchable.** Confirm a domain by asking Wikidata about the domain |
 | [66](#66-what-could-confirm-a-government-that-marks-no-hostname-tls-half-the-time-and-not-automatically) | **TLS names the authority for 9 of 16; RDAP for 1 and it is dropped.** The human job shrinks to seven |
@@ -116,6 +117,68 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 69. Batch 1 bounds destinations, never nationalities — and 184 of 198 passports have no demonym
+**2026-08-25 · direction, set by the project owner, with a measured consequence**
+
+Entry 68 set the three stages. This fixes what they are measured *over*, because the two dimensions are
+not treated alike:
+
+> **Batch 1 bounds the destination list. It does not bound nationality. Whatever passport a traveller
+> holds, a batch-1 destination must answer them.**
+
+A destination is not done because it answered an Indian and a Chinese passport. 53 destinations × 198
+nationalities is 10,494 corridors, so exhaustive testing is out — which makes it a question about
+*mechanism* rather than sample size, and there is a defect in the mechanism.
+
+### What actually varies with nationality, measured
+
+`Country.text_tokens` is `name + synonyms + demonyms`, and it feeds `_describes_country`, which awards
+the **nationality bonus** in `score_link`. **184 of 198 countries have no demonyms** — only the
+fourteen hand-curated ones do, and `countries.yaml` says so plainly for anyone who reads that far.
+
+The consequence, probed rather than reasoned about:
+
+```
+page: "Visa requirements for Indian nationals"  /visa-for-indian-nationals
+      IN  ->  nationality bonus fires
+page: "Visa requirements for Kenyan nationals"  /visa-for-kenyan-nationals
+      KE  ->  does not fire
+page: "Entry requirements: Kenya"               /entry-requirements-kenya
+      KE  ->  fires
+```
+
+Matching is anchored to word and segment boundaries, so `kenya` does not match `kenyan`. **Stemming
+would not fix it either**: the Philippines' demonym is *Filipino*, Poland's is *Polish*, the
+Netherlands' is *Dutch*. These are lexicon entries, not morphology.
+
+**Bounded honestly: this is a scoring aid, not a gate.** `countries.yaml` is right that a country
+without demonyms is still researchable, and the model decides the last step. But entry 40 established
+that the scorer is a **recall gate** — a page ranked out is unrecoverable — so a bonus that does not
+fire can cost the answering page its shortlist place, which is how a corridor fails. Entry 62 measured
+what *having* the bonus is worth at 0.27 shortlist places; **what lacking it costs has never been
+measured**, and that is now the question stage 2 has to answer.
+
+### How stage 2 tests a dimension it cannot enumerate
+
+Not by sampling harder. **Classify each destination by how its authority publishes**, because that
+decides whether nationality is a recall problem at all:
+
+| shape | example | nationality risk |
+| --- | --- | --- |
+| **One page naming every nationality** | a Schengen annex table, Germany's country list | **None.** One page answers all 198; find it once and the dimension is closed |
+| **A page per nationality** | Canada's per-nationality pages | **The real risk.** Recall must find the right one of ~200, and this is where a missing demonym bites |
+| **A questionnaire** | `gov.uk/check-uk-visa` | **None.** The tool is handed over whole (entries 59–60), and it serves every passport by construction |
+
+So stage 2 records the shape per destination, and tests nationality **only where the shape makes it a
+risk** — a handful of deliberately awkward passports against the per-nationality destinations, chosen
+for demonyms that do not resemble the country name.
+
+**Do not fix this by hand-writing 184 demonym lists before measuring.** That is the manual curation the
+production goal exists to remove, and entry 62 is a standing reminder that four plausible scorer fixes
+were measured and all four were wrong.
 
 ---
 

@@ -86,8 +86,9 @@ it cannot drift; this file deliberately does not copy it.
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
 
-**Batch 1 is all 53 reachable countries.** The fourteen added on 2026-08-25 were catching up to the
-ones already in the registry — and counting those the same way is what found the real gap: **41 of the
+**Batch 1 bounds destinations, never nationalities** (entry 69): whatever passport a traveller holds,
+a batch-1 destination must answer them. **Batch 1 is all 53 reachable countries.** The fourteen added
+on 2026-08-25 were catching up to the ones already in the registry — and counting those the same way is what found the real gap: **41 of the
 53 have never had a single corridor run against them**, which is not the same as failing, and **43 have
 no corpus**. Ten are fully done (AE, CA, DE, FR, GB, JP, NL, SE, SG, US); Austria and Norway resolve but
 crawl. A registry row was never evidence that a country works, and that had gone uncounted 41 rows
@@ -295,6 +296,20 @@ re-add the amendment history here.
    project owner outside this repository, deliberately (entry 68) — so do not build a truth set, a
    correctness grader or an accuracy metric without asking. Listed because quoting 75% without this
    sentence overstates what was measured.
+
+27. **184 of 198 nationalities have no demonym, and the nationality bonus runs on them.**
+   `Country.text_tokens` is `name + synonyms + demonyms` and feeds `_describes_country`, which awards
+   the nationality bonus in `score_link`. Only the fourteen hand-curated countries carry demonyms.
+   Probed: a page titled "Visa requirements for Kenyan nationals" at `/visa-for-kenyan-nationals`
+   awards **no** bonus to a Kenyan traveller; the identical page does for an Indian one, because
+   matching is anchored to word and segment boundaries and `kenya` does not match `kenyan`. Stemming
+   would not fix it — the Philippines' demonym is *Filipino*, the Netherlands' is *Dutch*.
+
+   **Bounded:** it is a scoring aid, not a gate, and the model decides the last step. But the scorer is
+   a **recall gate** (entry 40), so a bonus that does not fire can cost the answering page its
+   shortlist place. **What lacking it costs has never been measured**; entry 62 measured only what
+   having it is worth (0.27 places). Matters now because batch 1 bounds destinations and **not**
+   nationalities. Entry 69; TODO item 30.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

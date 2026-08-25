@@ -145,12 +145,31 @@ ones already in the registry, and counting those the same way is what found the 
 this repository (entry 68). Do not build a truth set, a correctness grader or an accuracy metric here
 without asking.
 
-### Stage 2: run the 41
+### Stage 2: run the 41, and **for every nationality**
 
-Two or three nationalities each — entry 58's lesson is that destination decides the outcome far more
-often than nationality, so sample destinations broadly and nationalities narrowly. At two, that is
-**82 corridors**; the registry searches are already spent, so the cost is search-per-corridor and one
-model call each.
+**Batch 1 bounds the destination list, not nationality** (entry 69). Whatever passport a traveller
+holds, a batch-1 destination must answer them. 53 × 198 is 10,494 corridors, so this is a question
+about *mechanism*, not sample size.
+
+**Classify each destination by how its authority publishes**, because that decides whether nationality
+is a recall problem at all:
+
+| shape | nationality risk |
+| --- | --- |
+| one page naming every nationality (a Schengen annex table) | **none** — find it once and the dimension is closed |
+| a page per nationality (Canada's) | **the real risk** — recall must find the right one of ~200 |
+| a questionnaire (`gov.uk/check-uk-visa`) | **none** — the tool is handed over whole and serves every passport |
+
+So: two or three nationalities per destination to establish the shape, then **a handful of deliberately
+awkward passports against the per-nationality destinations only** — chosen for demonyms that do not
+resemble the country name.
+
+**The known defect this is testing for** (entry 69, known problem 27): `text_tokens` is
+`name + synonyms + demonyms`, and **184 of 198 countries have no demonyms**. A page titled "Visa
+requirements for Kenyan nationals" awards no nationality bonus to a Kenyan traveller; the identical
+page does for an Indian one. It is a scoring aid rather than a gate, but the scorer is a recall gate
+(entry 40), so it can cost the answering page its shortlist place. **What lacking the bonus costs has
+never been measured** — measure it here before writing 184 demonym lists, and read entry 62 first.
 
 What the codebase is answerable for is **resolve or refuse, and refuse for a reason true of what was
 seen** — entries 33, 36 and 63. `visa-discover audit` buckets a run set by cause, so read it there
