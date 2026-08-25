@@ -97,6 +97,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [76](#76-what-a-corpus-can-and-cannot-buy-measured--and-the-seven-that-no-corpus-will-fix) | **A corpus buys speed, stability and outage tolerance — not coverage.** Seven refusals no crawl can fix |
 | [44](#44-a-countrys-page-corpus-is-persisted-and-search-leaves-the-request-path) | **A page may be stored; an answer may not.** The corpus is the unit |
 | [45](#45-the-corridor-command-reaches-the-registry-and-the-test-suite-stops-being-allowed-on-the-network) | The test suite stops being allowed on the network |
 | [46](#46-the-corpus-is-built-and-it-is-not-yet-a-superset-of-what-a-corridor-finds) | The corpus is built, and is not yet a superset |
@@ -123,6 +124,95 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 76. What a corpus can and cannot buy, measured — and the seven that no corpus will fix
+**2026-08-25 · measured before spending stage 3's ~1,792 searches. Answers known problem 24's open count**
+
+Before building 43 corpora, two questions were asked directly rather than assumed: *is search as good
+as it can be*, and *will corpora make batch 1 largely work*. Both were measured. The answer to the
+second is **no**, and the reason is structural rather than a matter of degree.
+
+### Where the pages that actually filled roles came from
+
+Known problem 24 said nothing counted how often the corpus was the only source and came up short.
+Counted now, from `found_by` in the recall logs, over the **shortlist that was actually read**:
+
+| | search | corpus |
+| --- | --- | --- |
+| United Arab Emirates | 14 | 7 |
+| United Kingdom | 9–15 | 16–18 |
+| Canada | 9–11 | 13–15 |
+| United States | 4–5 | 7–14 |
+| Germany | 4–7 | 11–14 |
+
+**Search contributes between 30% and 67% of the pages a corridor reads, in the ten countries with the
+best-built corpora.** The corpus is not a superset and never was (entry 47 said so); this is the first
+number attached to it.
+
+### And what corpus-only actually costs, observed on a real outage
+
+While the search account was capped, all ten ran from the corpus alone:
+
+```
+resolved in full      singapore, united-arab-emirates
+resolved, no checklist canada, japan, germany, united-states
+handed over a tool     france, sweden, united-kingdom
+REFUSED                netherlands   <- decision_not_found
+```
+
+So corpus-only is not equivalent to a normal run: **one of the ten refuses outright**, and four lose
+their document checklist. A corpus keeps a country *working*; it does not keep it working *as well*.
+
+### The seven that no corpus can fix, and why the reason is structural
+
+The renderer arriving (entry 75) took the nine countries that refused every passport down to seven —
+**Cyprus** and **India** now resolve, India with all six roles. The remaining seven fail like this:
+
+| | why | would a corpus crawl fare differently? |
+| --- | --- | --- |
+| DK | every `um.dk` mission's `robots.txt` answers `520`, so nothing is requested | **no** — the corpus crawler obeys the same policy |
+| RO | every `mae.ro` host's `robots.txt` answers `503` | **no** — same |
+| LT | Cloudflare challenge fingerprints past our user agent | **no** — same client, same challenge |
+| SK | challenges every page; the render budget runs out before the decision | **no** — a crawl meets the same wall, more of it |
+| MX | `consulmex.sre.gob.mx` redirects to `validate.perfdrive.com`, and **rendering it navigates there too** and is refused as untrusted | **no** — same redirect |
+| SA | `embassies.mofa.gov.sa` redirects to `saudiembassy.sa`, off the trusted domains | **no** — same |
+| MA | pages come back with too little readable text even rendered | **no** — same pages |
+
+> **A corpus is built by crawling the very pages that currently fail.** Every one of these seven fails
+> at *retrieval*, before ranking or recall enter into it, so a crawl run offline meets the identical
+> wall. Stage 3 cannot convert any of them.
+
+### What stage 3 is therefore for, stated so it is not oversold
+
+Three things, all real and none of them coverage:
+
+1. **Latency** — 2.1×–5.2× (entry 55).
+2. **Recall stability across passports** — entry 70's finding that a one-page-names-all destination
+   only closes the nationality dimension when the page is reached by crawl or corpus, because
+   `corridor_queries` puts the passport's name literally into one of three templates.
+3. **Outage tolerance** — entry 74, now with the caveat above about what corpus-only costs.
+
+**Coverage is not on that list.** 34 of 41 already answer at least one passport with no corpus at all.
+
+### Is search as good as it can be? No, and the gaps are recall rather than reliability
+
+Entry 74 fixed **reliability** — pacing, `402` classification, outage tolerance. Nothing has touched
+**recall**, and what is known about it is unflattering:
+
+- `corridor_queries` is **three fixed English templates per trusted domain**, and one of them carries
+  the nationality's name literally. Entry 70 measured the consequence: Belgium refused an Indian
+  passport and resolved an American one on the *same page*, which was never a candidate in the losing
+  run.
+- Scoring is English-only (known problem 13), so a destination publishing in its own language scores
+  near zero.
+- The five-domain cap is calibrated against corridors run, not derived (known problem 6).
+- **Nobody has ever measured search recall directly** — how often the answering page was returned by
+  search at all, as opposed to ranked out. The recall log now holds enough to compute it.
+
+None of that blocks stage 3. It does mean "search is fixed" is a statement about reliability only, and
+the next real coverage win is more likely to be here than in corpora.
 
 ---
 

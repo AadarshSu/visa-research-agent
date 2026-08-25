@@ -14,9 +14,14 @@ twenty-corridor measurement, entry 58, which passed marginally).
 
 **Search has credit again, and the three things that were gating stage 3 are fixed and confirmed
 live**: pacing and `402` classification (entry 74), the post mis-pick (entry 72, six of seven
-regression corridors correct), and the challenge (entry 75, Cyprus resolves). **Stage 3 is clear to
-run.** Build Cyprus's corpus *after* the challenge work, not before — its pages were unreadable until
-today, so a corpus built this morning would have been empty.
+regression corridors correct), and the challenge (entry 75, Cyprus and India recovered — 41 - 9 - 2 =
+**34 of 41 now answer**). **Stage 3 is clear to run.**
+
+**But do not expect it to add coverage** (entry 76). Measured first: search supplies 30–67% of the
+pages a corridor actually reads even in the ten best corpus countries, and none of the seven remaining
+refusals can be fixed by a crawl, because every one of them fails at *retrieval* — the corpus builder
+hits the same wall. Stage 3 buys latency, passport-stability and outage tolerance. **The next coverage
+win is search recall, which nobody has measured** — see item 19 and known problem 13.
 
 **Item 5's challenge half is done** (entry 75): `challenged` is its own outcome, detected from headers
 **and body**, answered by the renderer under our own user agent, and `render_mode` is now `on_demand`.
