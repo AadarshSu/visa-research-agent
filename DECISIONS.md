@@ -97,6 +97,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [77](#77-does-the-corpus-inherit-searchs-weaknesses-three-diagnoses-all-wrong-and-one-real-defect) | **A corpus build stops at its seeds** — and Japan's missing embassy was a `403`, not recall |
 | [76](#76-what-a-corpus-can-and-cannot-buy-measured--and-the-seven-that-no-corpus-will-fix) | **A corpus buys speed, stability and outage tolerance — not coverage.** Seven refusals no crawl can fix |
 | [44](#44-a-countrys-page-corpus-is-persisted-and-search-leaves-the-request-path) | **A page may be stored; an answer may not.** The corpus is the unit |
 | [45](#45-the-corridor-command-reaches-the-registry-and-the-test-suite-stops-being-allowed-on-the-network) | The test suite stops being allowed on the network |
@@ -124,6 +125,64 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 77. Does the corpus inherit search's weaknesses? Three diagnoses, all wrong, and one real defect
+**2026-08-26 · measured. Rewrites known problem 24; gates TODO item 30's stage 3**
+
+A fair question before paying for 43 corpora: **the corpus builder seeds itself from search, so does a
+search-recall gap get frozen into the store?** The mechanism is exactly as suspected —
+`build_country_corpus` runs `all_corpus_queries` (70 for Japan) and every host in the corpus descends
+from those results. The conclusion, measured, is that search recall is **not** what limits them.
+
+### What the corpus is actually made of
+
+Across the ten built corpora, **97–100% of entries lie beyond the seeds**: AE 100%, CA 98.9%, NL 99.3%,
+JP 100%. Search picks the entry points; the crawl does all the volume. And seeds are already
+privileged — pushed onto the frontier at `-1000.0`, ahead of every discovered link, under a fair
+per-host budget.
+
+### The test case, and three diagnoses that were all wrong
+
+Known problem 24 said Japan's corpus holds 29 mission hosts and **not** the London embassy, "where five
+of its six roles came from". A per-post authority missing the busiest post is exactly the shape that
+would prove the worry.
+
+| diagnosis | whose | what the measurement said |
+| --- | --- | --- |
+| search never seeds London | the question's | **wrong** — running Japan's own 70 corpus queries returns `www.uk.emb-japan.go.jp` |
+| the crawl budget starves it | mine | **wrong** — seeds already sort ahead of everything at `-1000.0` |
+| the corpus has a recall gap there | known problem 24's | **wrong** — `www.uk.emb-japan.go.jp` answers a genuine Akamai `403`, the same signature as Greece's `www.mfa.gr`. Nothing can fetch it, by search or by crawl |
+
+**And the premise was stale too.** Japan's latest run filled **all six roles from `mofa.go.jp`**, out of
+the corpus, with search down. It does not need the London embassy at all. Four plausible readings, one
+`curl`, and only the `curl` was right — the fourth time in two days.
+
+### The real defect, which the rebuild reported about itself
+
+Rebuilding Japan: **70 queries, 276 seeds, 1,918 crawled** — and the job's own warning:
+
+> *only 7% of what it found lies beyond depth 1 — this crawl fetched its seeds and stopped, which is
+> the request path's behaviour, not this job's. Raise --pages well above the seed count.*
+
+`DEFAULT_CORPUS_PAGES` is **1,200**, and `host_budget = min(400, max(4, 1200 // 276))` = **four pages
+per host**. A corpus built at that budget is little more than its search results plus one hop — which
+is precisely the thing the question was worried about, arriving by a different route. **The store would
+not be inheriting search's *recall*; it would be inheriting search's *shape*.**
+
+So the ordering instinct behind the question is right and the reason is not. **Size `--pages` from the
+seed count before building 43 of them**, and read `depth_is_exercised` on the first before paying for
+the rest. That is a fetch cost, not a search cost — the 1,792 searches are unchanged.
+
+### And search recall is still unmeasured
+
+Separately from all of the above, nothing has ever measured how often the answering page is returned by
+search *at all*. Entry 70 found the one hard example — Belgium refusing an Indian passport and
+resolving an American one on a page the losing run never saw — and `corridor_queries`' three English
+templates with the nationality's name inside one are the obvious suspect. That is a live-corridor
+problem rather than a corpus one, because `corpus_queries` deliberately carries no nationality. It
+belongs to item 19, not to stage 3.
 
 ---
 

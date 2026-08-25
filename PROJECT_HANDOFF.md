@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has twenty-one rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has twenty-three rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -355,11 +355,26 @@ re-add the amendment history here.
    job nobody has run, not the trust rule (entries 63, 65, 67). **And 53 overstates it**: reachable is
    stage 1 of four, and only 9 destinations have ever been shown to answer a traveller (entry 68).
 
-24. **A thin corpus has no crawl behind it, and coverage varies enormously between countries.**
-   **The open count in this entry is now closed (entry 76):** search supplies **30–67% of the
-   shortlist a corridor actually reads** in the ten corpus countries, and on a real outage corpus-only
-   left the Netherlands refusing outright and four others without a checklist. A corpus keeps a
-   country working; it does not keep it working as well.
+24. **A corpus build stops at its seeds, and that is the defect stage 3 would freeze.**
+   **Rewritten 2026-08-26 after three wrong diagnoses, entry 77.** What this entry used to say —
+   Japan's corpus holds 29 mission hosts and not the London embassy, "where five of its six roles came
+   from" — is **stale and was misleading**. Measured: search *does* seed
+   `www.uk.emb-japan.go.jp`; it is absent because that host answers a genuine Akamai `403`, the same
+   signature as Greece's `www.mfa.gr`, so nothing can fetch it. And Japan does not need it — its
+   latest run filled all six roles from `mofa.go.jp` alone, from the corpus, with search down.
+
+   **The real defect, from rebuilding Japan:** 70 queries produced **276 seeds** against a
+   `DEFAULT_CORPUS_PAGES` of **1,200**, so `host_budget` collapses to `max(4, 1200 // 276)` = **four
+   pages per host**, and the job reports it itself — *"only 7% of what it found lies beyond depth 1 —
+   this crawl fetched its seeds and stopped, which is the request path's behaviour, not this job's."*
+   A corpus built that way is a list of search results with one hop, which is most of what search
+   would have returned anyway. **Raise `--pages` well above the seed count before building 43 of
+   them.**
+
+   **What is settled (entry 76):** search supplies **30–67% of the shortlist a corridor actually
+   reads** in the ten corpus countries, and on a real outage corpus-only left the Netherlands refusing
+   outright and four others without a checklist. A corpus keeps a country working; it does not keep it
+   working as well.
    Measured against the pages that actually filled roles on the crawl path: Singapore 6/6, United States
    3/3, Sweden 3/4, France 2/3, Netherlands 1/2, **Japan 1/6** — Japan's corpus holds 29 mission hosts
    and not the London embassy, where five of its six roles came from. It resolved anyway **because

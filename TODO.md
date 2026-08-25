@@ -136,7 +136,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty-one rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty-three rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -265,6 +265,13 @@ searches each and which are refusing for a reason no corpus can fix.
 
 **The search rate limiter this stage was waiting on is done** (entry 74): the provider paces itself at
 1.3s and a `402` now says which kind it is. 1,792 searches still need a cap that allows them.
+
+**Do not run this stage at the default `--pages`** (entry 77). Rebuilding Japan produced **276 seeds
+against a 1,200-page budget**, which is four pages per host, and the job says so itself: *"only 7% of
+what it found lies beyond depth 1 — this crawl fetched its seeds and stopped."* A corpus built that
+way is barely more than the search results that seeded it, and stage 3 would freeze that shape into 43
+countries. Size `--pages` from the seed count — Japan wants several thousand — and check
+`depth_is_exercised` in the output of the first one before paying for the rest.
 
 ### Done when
 
