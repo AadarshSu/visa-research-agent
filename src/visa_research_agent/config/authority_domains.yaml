@@ -69,9 +69,10 @@ countries:
 - code: BG
   name: Bulgaria
   trusted: []
-  reviewed: {}
-  unconfirmable:
-  - mfa.bg
+  reviewed:
+    mfa.bg: official website of the Ministry of Foreign Affairs of Bulgaria — Wikidata Q1813345, P856/P17,
+      checked 2026-08-25
+  unconfirmable: []
 - code: BR
   name: Brazil
   trusted:
@@ -171,12 +172,14 @@ countries:
 - code: FI
   name: Finland
   trusted: []
-  reviewed: {}
+  reviewed:
+    migri.fi: official website of the Finnish Immigration Service — Wikidata Q11880302, P856/P17, checked
+      2026-08-25. It decides Finnish residence and entry matters
+    um.fi: official website of the Ministry of Foreign Affairs of Finland — Wikidata Q2639539, P856/P17,
+      checked 2026-08-25
   unconfirmable:
   - finlandabroad.fi
   - finlandvisa.fi
-  - migri.fi
-  - um.fi
 - code: FR
   name: France
   trusted:
@@ -293,18 +296,21 @@ countries:
 - code: LT
   name: Lithuania
   trusted: []
-  reviewed: {}
+  reviewed:
+    urm.lt: official website of the Ministry of Foreign Affairs of Lithuania — Wikidata Q1548931, P856/P17,
+      checked 2026-08-25
   unconfirmable:
   - mfa.lt
   - migracija.lt
-  - urm.lt
   - vrm.lt
 - code: LU
   name: Luxembourg
   trusted: []
-  reviewed: {}
+  reviewed:
+    gouvernement.lu: official website of the Government of Luxembourg — Wikidata Q21479996, P856/P17,
+      checked 2026-08-25. The whole-government portal rather than a named visa authority, which is the
+      weakest of these seven
   unconfirmable:
-  - gouvernement.lu
   - mae.lu
   - public.lu
 - code: LV
@@ -369,11 +375,12 @@ countries:
 - code: 'NO'
   name: Norway
   trusted: []
-  reviewed: {}
+  reviewed:
+    udi.no: official website of the Norwegian Directorate of Immigration — Wikidata Q12008658, P856/P17,
+      checked 2026-08-25
   unconfirmable:
   - norway.no
   - regjeringen.no
-  - udi.no
 - code: NZ
   name: New Zealand
   trusted:
@@ -461,10 +468,11 @@ countries:
 - code: SK
   name: Slovakia
   trusted: []
-  reviewed: {}
+  reviewed:
+    mzv.sk: official website of the Ministry of Foreign and European Affairs of the Slovak Republic —
+      Wikidata Q3499939, P856/P17, checked 2026-08-25
   unconfirmable:
   - iom.sk
-  - mzv.sk
 - code: TH
   name: Thailand
   trusted:

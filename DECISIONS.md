@@ -32,6 +32,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
 | [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
+| [67](#67-the-registry-grows-in-batches-and-a-domain-can-be-confirmed-by-asking-wikidata-about-the-domain) | **Batch 1: EU/EEA, 41 → 53 researchable.** Confirm a domain by asking Wikidata about the domain |
 | [66](#66-what-could-confirm-a-government-that-marks-no-hostname-tls-half-the-time-and-not-automatically) | **TLS names the authority for 9 of 16; RDAP for 1 and it is dropped.** The human job shrinks to seven |
 
 ### Refusal, blocks, and how we behave as a client
@@ -114,6 +115,91 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 67. The registry grows in batches, and a domain can be confirmed by asking Wikidata about the domain
+**2026-08-25 · implemented, reviewed and confirmed live. TODO item 2, first batch**
+
+The sweep is done **in batches** rather than all at once, so each one can be reviewed before the next is
+paid for. Batch 1 completes the EU and EEA: BG, CY, EE, FI, IS, LI, LT, LU, LV, MT, NO, RO, SI, SK.
+
+### What the rule alone did: 6 of 14
+
+**56 searches, no `402`** — the rate limiter recorded under *Smaller things* does not bite at this size,
+which is itself worth knowing before the 143 that remain.
+
+Six confirmed automatically — CY, EE, LV, MT, RO, SI — and every one of them uses a `gov.xx`
+convention. Eight refused: BG, FI, IS, LI, LT, LU, NO, SK. That split is entry 66's finding reproduced
+on new countries: where a government runs a `gov` namespace the rule works, and where it does not there
+is nothing for a pattern to find.
+
+### The method that recovered 6 of the 8, and it is the reusable part
+
+Entry 66 measured TLS certificates at 9 of 16. **On this batch TLS managed 2 of 8**, and one of those
+two was Luxembourg's `gouvernement.lu` naming *Centre des technologies de l'État* — the Hungary case
+again, an infrastructure operator rather than an authority. Only Finland's `migri.fi` →
+`Maahanmuuttovirasto` was a clean hit.
+
+**The samples are not the same question, and the difference matters.** Entry 66 probed each country's
+*known-correct* visa-guidance domain, taken from a hand-written table. This probes *whatever search
+found*, which is the harder and more realistic case — and the honest reading is that TLS is weaker in
+production than entry 66's number suggests.
+
+What worked instead was Wikidata, **queried from the domain rather than from a name**:
+
+```
+GET /w/api.php?action=query&list=search&srsearch=haswbstatement:P856=https://udi.no/
+   -> Q12008658  Norwegian Directorate of Immigration   P17 = Norway
+```
+
+That is an exact statement match — *this entity's official website is this domain* — so no step guesses
+an organisation's name and then looks for it. The country is then checked against `P17`. Both halves
+were verified for all seven promoted domains.
+
+| | domain | Wikidata | |
+| --- | --- | --- | --- |
+| BG | `mfa.bg` | Q1813345 | Ministry of Foreign Affairs of Bulgaria |
+| FI | `migri.fi` | Q11880302 | Finnish Immigration Service |
+| FI | `um.fi` | Q2639539 | Ministry of Foreign Affairs of Finland |
+| LT | `urm.lt` | Q1548931 | Ministry of Foreign Affairs of Lithuania |
+| LU | `gouvernement.lu` | Q21479996 | Government of Luxembourg |
+| NO | `udi.no` | Q12008658 | Norwegian Directorate of Immigration |
+| SK | `mzv.sk` | Q3499939 | Ministry of Foreign and European Affairs of Slovakia |
+
+**Wikidata was already this file's evidence standard** — fifteen existing rows cite "P856/P17, checked
+2026-08-18" from a lookup done by hand. What is new is doing it from the domain, which removes the
+step where a person's own knowledge proposes the answer. The QID is now recorded too, so the claim is
+checkable rather than merely cited.
+
+**Iceland and Liechtenstein stay refused.** `government.is`, `island.is` and `llv.li` have no Wikidata
+entity claiming them and DV certificates naming nobody. That is the right outcome: nothing was found,
+so nothing is asserted.
+
+**53 of 198 researchable, from 41.** The batch cost 56 searches, ~25 Wikidata lookups and one review.
+
+### Three things the batch surfaced that are not about this batch
+
+- **`iom.sk` was proposed for Slovakia and correctly declined.** The International Organization for
+  Migration is a UN agency, not Slovakia's government, and it ranks for Slovak migration queries. A
+  live example of the rule earning its keep, and of why "looks like an authority" may never be the test.
+- **Two of the six automatic confirmations may be confirmed on the wrong domain.** Estonia was accepted
+  on `e-resident.gov.ee` — the e-Residency programme, not visa guidance — while its foreign ministry
+  `vm.ee` was declined; Romania on `euraxess.gov.ro`, a researcher-mobility portal, alongside the more
+  plausible `mai.gov.ro`, while `mae.ro` was declined. This is known problem 2's *quieter* failure:
+  bootstrap succeeds against a trusted set that need not contain the answer, and nothing reports it.
+  Both will resolve or refuse on their own merits when a corridor runs; they are the two to watch.
+- **`finlandvisa.fi` was proposed and matched nothing** — no Wikidata entity, no certificate
+  organisation. The one candidate in the batch whose name reads commercial is also the one both
+  mechanisms declined to vouch for.
+
+### Verified live
+
+`norway/IN/IN/tourism` resolves on the new reviewed row: visa decision confirmed, fees, processing
+times and general entry all filled from `udi.no`, and the document checklist correctly handed over as
+UDI's own checklist tool, which asks for the country of application rather than stating the answer
+(entry 60). `forms.udi.no` was skipped for `robots.txt` and reported as skipped. First try, no
+adjustment.
 
 ---
 

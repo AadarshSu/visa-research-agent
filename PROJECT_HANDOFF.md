@@ -56,7 +56,7 @@ destinations.
 
 | | |
 | --- | --- |
-| **Researchable destinations** | **47 of 198.** The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). 8 rows carry nothing the rule could confirm and await a reviewed domain — BG, FI, IS, LI, LT, LU, NO, SK. `visa-discover audit` prints the split. |
+| **Researchable destinations** | **53 of 198.** The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. The registry grows **in batches**, each reviewed before the next is paid for — batch 1 completed the EU and EEA (entry 67). `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **31** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |

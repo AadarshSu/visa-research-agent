@@ -29,8 +29,14 @@ with no marker: a TLS certificate names the organisation for **9**, RDAP for 1 (
 nothing machine-readable**. So the rest is reviewed rows, not automation — but the review is nine
 certificate confirmations and seven pieces of research, one time.
 
-**What remains is the sweep.** All 157 remaining refusals are countries nobody has run the registry job
-for — 4 searches each. Two things to know before spending it: **fix the search rate limiter first** (see
+**Batch 1 is done (entry 67): the EU and EEA, 41 → 53 researchable.** The sweep runs **in batches**, so
+each is reviewed before the next is paid for. The method for a country the rule cannot confirm is now
+settled and cheap: ask Wikidata about the *domain* — `haswbstatement:P856=https://<domain>/` — and check
+`P17` against the country. It recovered 6 of the 8 refusals in batch 1 and guesses no names. TLS
+certificates managed only 2 of 8 here against entry 66's 9 of 16, because that measured each country's
+known-correct domain while this measures whatever search found.
+
+**What remains is the rest of the sweep.** 143 countries have no row at all — 4 searches each. Two things to know before spending it: **fix the search rate limiter first** (see
 *Smaller things* — a capped plan answers `402`, which reads as *out of credit* rather than *too fast*),
 and **the sweep does not build the corpus.** The corpus is a separate, far larger job and is a speed
 optimisation rather than a prerequisite; a country without one crawls in the request path exactly as it
