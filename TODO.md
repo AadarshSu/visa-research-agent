@@ -7,10 +7,17 @@ picked up cold.
 **Later** is real but not urgent; **Done** keeps finished work because what building it found is usually
 why the item after it exists; **Smaller things** are one-paragraph defects with no owner yet.
 
-**Where the list stands, 2026-08-24.** The three items that used to gate everything are finished and
+**Where the list stands, 2026-08-25.** The three items that used to gate everything are finished and
 confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 49–53), **item 23** (the
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
+
+**The session of 2026-08-24/25 asked what the rigor costs and answered it** (entries 63–66). Short
+version: **the rigor is cheap and the backlog is expensive, and it has been easy to mistake the second
+for the first.** Of 198 countries, 157 are refused before a page is fetched and every one of those is a
+registry job nobody has run. A one-off control arm — plain web search, no trust model — was ~5× faster
+and answered more, and cited **0 of 8 hosts that would pass the trust rule**. Read entry 64 before
+arguing to relax anything; it cuts both ways.
 
 **Item 2 leads, and its cheap half is done.** It was `soon` for weeks as a coverage complaint;
 entries 63 and 64 measured what that complaint is made of and it is almost entirely this item.
@@ -23,8 +30,12 @@ nothing machine-readable**. So the rest is reviewed rows, not automation — but
 certificate confirmations and seven pieces of research, one time.
 
 **What remains is the sweep.** All 157 remaining refusals are countries nobody has run the registry job
-for. The rule is also refusing correct authorities *inside* countries it accepts — a one-off control arm
-cited `india.diplo.de`, Germany's own mission, declined for want of a marker.
+for — 4 searches each. Two things to know before spending it: **fix the search rate limiter first** (see
+*Smaller things* — a capped plan answers `402`, which reads as *out of credit* rather than *too fast*),
+and **the sweep does not build the corpus.** The corpus is a separate, far larger job and is a speed
+optimisation rather than a prerequisite; a country without one crawls in the request path exactly as it
+does today. The rule is also refusing correct authorities *inside* countries it accepts — a one-off
+control arm cited `india.diplo.de`, Germany's own mission, declined for want of a marker.
 
 **Then item 17, now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it

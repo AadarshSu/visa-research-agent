@@ -28,6 +28,21 @@ low-scoring, which is a much stronger property than filtering.
 > own-TLD test is the only other signal there is. **Schengen is a further problem of definition** — for
 > short-stay visas the decision lives at EU level as much as nationally, and `europa.eu` can never
 > belong to a member state. See [DECISIONS.md](DECISIONS.md) entry 33 and entry 34.
+>
+> **What could close the rest is measured (entry 66):** of the 16, a TLS certificate names the
+> organisation for **9** — eight of them the authority outright, Hungary naming a state IT operator
+> instead — and **7 have nothing machine-readable**. RDAP is dropped at 1 of 16; 13 of those ccTLDs run
+> no RDAP service at all. So the amendment is reviewed rows, and the review is nine confirmations plus
+> seven pieces of research — bounded, and once.
+
+> **Two lists, and they must move together.** `bootstrap.GOVERNMENT_NAMESPACE_LABELS` asks *is this a
+> government namespace*; `trust.SUFFIX_MARKER_LABELS` asks *is it too broad to trust whole*. A label in
+> the first and missing from the second is a hole, not an omission: with `gv` added to only the first,
+> `registrable_domain("bmeia.gv.at")` returned `gv.at`, so trusting Austria's foreign ministry would
+> have trusted every Austrian public body — what refusing `gov.br` whole exists to prevent, arriving by
+> the back door. Neither file looked wrong on its own. `tests/test_trust.py` now asserts the
+> containment, one-directionally: `co` and `org` belong in the suffix list and are not governmental.
+> Entry 65.
 
 ### Where it is enforced
 
@@ -283,7 +298,7 @@ that expired, self-signed, hostname-mismatched and unknown-CA certificates are s
 `discovery/`. Runs two ways, on the same code:
 
 - **`visa-discover`**, a deliberate command with a person reading the result. Still the way to
-  investigate a corridor.
+  investigate a corridor — `corridor` to resolve one, `audit` to count what goes unanswered and why.
 - **In the request path**, when `destination_mode: automatic` — a destination nobody configured is
   researched when a plan is asked for. No human approves a domain; the rule below does. See
   `discovery/automatic.py` and [DECISIONS.md](DECISIONS.md) entry 19.
@@ -466,6 +481,20 @@ told apart from a mis-ranking — Canada considered **470** candidates and the p
 fifteenth, which no other output said. It is a diagnostic: nothing reads it back, no decision depends on
 it, and a write failure is swallowed rather than costing the corridor an answer.
 
+**Two of its fields are typed so a run set can be counted rather than read** (entry 63). `cause` is a
+`RefusalCause` derived from the result by `ResolvedCorridor.outcome_cause`, because the prose in
+`outcome` cannot express the distinction that matters most: a corridor that refused for want of a visa
+decision and one that *resolved* by handing over the questionnaire stating it both write "resolved, with
+no visa_decision". `unreadable_outcomes` keeps the typed `FailureOutcome` beside the readable detail, so
+a `Disallow` and a `403` are never told apart by matching words in a message (entry 36). A record
+written before those fields existed reports as **unrecorded** rather than being guessed at.
+
+**`visa-discover audit`** reads a directory of these and prints why travellers go unanswered, in two
+halves that are deliberately never added together: **reachability**, computed from
+`authority_domains.yaml` against the country registry — exact, no runs, no network — and **causes**,
+from the runs that happened. A country refused for want of a registry row leaves no recall log at all,
+so merging the two would let the larger failure hide inside the smaller one.
+
 **What it is, precisely, is a recall gate — and reading it as a decider is what kept the gate too
 narrow** (entry 40). A page it ranks *in* wrongly costs one excerpt; a page it ranks *out* is one
 nothing downstream can recover. At ten places the heuristic was the effective decider for every corridor
@@ -583,8 +612,10 @@ smaller, which is what lost Canada its answer.
 > none crawled, median 27.4s.
 >
 > **Ten countries have a corpus** as of 2026-08-24 — Canada, UAE, Netherlands, United States, France,
-> Japan, Singapore, United Kingdom, Sweden, Germany — 16,298 pages between them. A country without one
-> crawls exactly as before.
+> Japan, Singapore, United Kingdom, Sweden, Germany — 16,375 pages between them (the count grows as
+> live runs write back what they found, entry 47). A country without one crawls exactly as before, and
+> **31 of the 41 researchable countries are in that position** — a corpus is a speed optimisation, not
+> a prerequisite.
 >
 > **One thing broke on the way, and it is fixed.** Removing the crawl left entry 27's
 > blocked-authority exception unable to fire: `_decision_blocking` needed a refusal observed on a page

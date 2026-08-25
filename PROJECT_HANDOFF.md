@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-24 — update this line when you touch the handoff |
+| **Last updated** | 2026-08-25 — update this line when you touch the handoff |
 | **Tests** | 486 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -57,7 +57,7 @@ destinations.
 | | |
 | --- | --- |
 | **Researchable destinations** | **41 of 198.** The binding limit is `config/authority_domains.yaml`, which holds 41 rows; a country with no row is refused, never bootstrapped live (entry 38). Every row now carries a usable domain. `visa-discover audit` prints the split. |
-| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,298 pages. These are served without crawling. The other 29 crawl in the request path. |
+| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **31** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
@@ -130,7 +130,7 @@ than kept as struck-through entries, which is what made this section unreadable.
 Each entry says what is true now. *How* it was learned is in the DECISIONS entry it names — do not
 re-add the amendment history here.
 
-2. **The trust rule refuses a fifth of the world, and the failing half is the governmental one.**
+2. **The trust rule refuses a third of the countries measured, and the failing half is the governmental one.**
    Measured offline: `is_own_government` failed for **19 of 51** countries, **16 since 2026-08-25**
    (entry 65 added the markers Austria, Uruguay and Canada actually use), every one of them on
    `looks_governmental` rather than the own-TLD test. Most of Schengen is unreachable, and Schengen is
@@ -143,7 +143,13 @@ re-add the amendment history here.
    correct authorities *inside* countries it accepts, not only whole countries**: a one-off control
    arm's Germany run cited `india.diplo.de`, Germany's own mission giving guidance to exactly that
    traveller, and the rule declines it for want of a marker (entry 64; the arm itself was deleted
-   after it answered). Entry 33; TODO item 2.
+   after it answered).
+
+   **The fix path is measured (entry 66).** Of the 16, a TLS certificate names the organisation for
+   **9** — eight of them the authority outright — RDAP for **1**, and **7 have nothing machine-readable
+   at all** (BE, CL, DK, GR, IE, NO, RU). So this is reviewed rows rather than automation, and the
+   review is nine certificate confirmations plus seven pieces of research, once. Entries 33, 65, 66;
+   TODO item 2.
 
 5. **The full cold request has never been timed.** Every figure quoted is the corridor phase; plan
    extraction sits on top. The remaining lever is **search**, roughly 3s per corridor at three queries
@@ -190,9 +196,13 @@ re-add the amendment history here.
 
 11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
    was, and that is now handled (entries 58–61). Three blocked portals found: `france-visas.gouv.fr`,
-   `www.france-visas.gouv.fr` and Singapore's VFS page. **Narrower again as of entry 63, on two
-   corridors:** of 15 pages that could not be read, 0 were `blocked` — 13 held no readable text and 2
-   were unreachable. Two corridors is not a rate; it is a pointer at where the losses actually are. Working around a block stays forbidden. What
+   `www.france-visas.gouv.fr` and Singapore's VFS page. **Counted rather than assumed since entry 63**:
+   `visa-discover audit` buckets every unreadable page by typed outcome. Across the runs on disk, 0 are
+   `blocked` — but **23 are `disallowed`**, all Austrian, and they refuse `austria/IN/IN` outright
+   (entry 65). So the honest statement is that a stated crawl policy, obeyed, is what actually costs
+   corridors here; an outright `403` has not, yet. An earlier reading of "0 blocked" as *the posture
+   costs nothing* was drawn from two corridors and did not survive the third.
+   Working around a block stays forbidden. What
    entry 35 corrects is the conclusion: the loss is permanent *given an anonymous client*, and that
    posture was never itself decided. `robots.txt` is now read and obeyed (entry 36) and buys nothing
    here — those hosts answer `403` to their own `robots.txt`. **And France's `403` is not a refusal at

@@ -5,11 +5,11 @@ government domains have been confirmed. It reports what official government sour
 claim, and states plainly what it could not verify. It does not guarantee eligibility, completeness, or
 visa approval, and it never submits anything on anyone's behalf.
 
-**39 of 198 countries are currently researchable.** Which domains a country may be researched from is
+**41 of 198 countries are currently researchable.** Which domains a country may be researched from is
 generated offline, reviewed once, and committed in `config/authority_domains.yaml`; a country absent from
-it is refused rather than guessed at. The file holds **40 rows**, and Austria's carries no domain the
-trust rule could confirm, so it refuses too — deliberately (see `DECISIONS.md` entry 39). Building the
-rest is search quota rather than work — see `visa-discover registry`.
+it is refused rather than guessed at. The file holds **41 rows** and every one now carries a usable
+domain. Building the rest is mostly search quota rather than work — see `visa-discover registry`, and
+`visa-discover audit` for what is refused and why.
 
 > **Picking the project up?** Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) — current state,
 > open problems and what is next. Then [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built,
