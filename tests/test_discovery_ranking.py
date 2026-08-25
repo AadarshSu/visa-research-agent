@@ -15,7 +15,9 @@ out of sample, and failed it. Both cases below are taken from the real pages:
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, PageLink
 from visa_research_agent.discovery.scoring import (
+    POST_SPECIFIC_ROLES,
     _matches_country,
+    foreign_post_labels,
     is_archived,
     is_boilerplate,
     mission_affinity,
@@ -32,6 +34,8 @@ BR = "https://www.gov.br/mre/pt-br"
 VIVIS = "visa-section/types-of-visa/visit-visa-vivis-1/tourism-and-transit-vivis"
 EDINBURGH = f"{BR}/consulado-edimburgo/{VIVIS}"
 RIYADH = f"{BR}/embaixada-riade/how-to-apply-for-services-on-e-consular"
+NEW_DELHI_AU = "https://india.embassy.gov.au/ndli/visas_and_migration.html"
+LONDON_AU = "https://uk.embassy.gov.au/lhlh/visas_and_migration.html"
 
 # Shortened from the real pages, keeping what each one does with the word "document".
 CHECKLIST_TEXT = (
@@ -127,6 +131,65 @@ def test_a_post_named_by_city_in_the_host_is_recognised() -> None:
     lexicon, gb = get_lexicon(), get_country_registry().require("GB")
 
     assert mission_affinity("https://london.mfa.gov.sg/visa", gb, lexicon) == "own"
+
+
+def test_a_post_named_by_country_in_the_host_is_another_post() -> None:
+    """`india.embassy.gov.au` is the New Delhi post, and for a traveller in Great Britain it is
+    somebody else's — but until 2026-08-25 it scored as belonging to no post at all, because
+    "other" could only ever be concluded from a path. DECISIONS entry 72.
+    """
+
+    lexicon, registry = get_lexicon(), get_country_registry()
+    gb = registry.require("GB")
+    posts = foreign_post_labels(registry, "AU", gb)
+
+    assert mission_affinity(NEW_DELHI_AU, gb, lexicon, other_posts=posts) == "other"
+    assert mission_affinity(LONDON_AU, gb, lexicon, other_posts=posts) == "own"
+
+
+def test_a_governments_own_hostname_is_never_another_post() -> None:
+    """The safety of the rule, and the half that measurement found rather than reasoning.
+
+    `cz` is one of Czechia's own mission labels, so without exempting the destination every page
+    on `mzv.gov.cz` read as another post for a traveller in Great Britain — 146 pages that had
+    correctly filled a role were penalised for sitting on their own government's hostname.
+    A country's code inside its own public suffix must never mean somebody else's mission.
+    """
+
+    lexicon, registry = get_lexicon(), get_country_registry()
+    gb = registry.require("GB")
+    posts = foreign_post_labels(registry, "CZ", gb)
+
+    ministry = "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/index.html"
+    assert mission_affinity(ministry, gb, lexicon, other_posts=posts) is None
+    assert "cz" not in posts
+
+    portugal = foreign_post_labels(registry, "PT", gb)
+    fees = "https://vistos.mne.gov.pt/en/short-stay-visas-schengen/general-information/visa-fees"
+    assert mission_affinity(fees, gb, lexicon, other_posts=portugal) is None
+    # The same host with a real post in front of it is still caught.
+    delhi = "https://novadeli.embaixadaportugal.mne.gov.pt/en/consular-section/visas"
+    assert mission_affinity(delhi, gb, lexicon, other_posts=portugal) == "other"
+
+
+def test_the_post_governs_fees_and_processing_times_but_never_the_visa_decision() -> None:
+    """Which roles a different post loses points for, and the two it deliberately does not.
+
+    A fee is quoted in the post's own currency and a processing time is that post's queue, so a
+    corridor taking Brazil's Edinburgh fee page for a traveller in the United States is wrong.
+    Whether a passport needs a visa is set by the destination's law and is identical at every
+    consulate, so `visa_decision` is left alone — demoting the only page that states it would
+    refuse corridors to buy nothing. DECISIONS entry 72.
+    """
+
+    assert POST_SPECIFIC_ROLES == (
+        "document_checklist",
+        "application_route",
+        "fees",
+        "processing_times",
+    )
+    assert "visa_decision" not in POST_SPECIFIC_ROLES
+    assert "general_entry" not in POST_SPECIFIC_ROLES
 
 
 # --- naming documents rather than talking about them ----------------------------------------

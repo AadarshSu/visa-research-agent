@@ -66,6 +66,7 @@ from visa_research_agent.discovery.recall_log import (
     considered,
 )
 from visa_research_agent.discovery.scoring import (
+    foreign_post_labels,
     is_archived,
     is_boilerplate,
     rank_for_role,
@@ -415,6 +416,9 @@ class CorridorResolver:
         destination_code = self._destination_code(destination)
         notes: list[str] = []
         mission_domains = self._mission_domains(destination, residence)
+        # Computed once per corridor rather than per link: it walks every country in the registry,
+        # and the answer depends only on the corridor's two endpoints.
+        other_posts = foreign_post_labels(self.countries, destination_code, residence)
 
         def score(link: PageLink) -> RoleScores:
             return score_link(
@@ -424,6 +428,7 @@ class CorridorResolver:
                 nationality,
                 residence,
                 mission_domains=mission_domains,
+                other_posts=other_posts,
             )
 
         def reject(link: PageLink) -> str | None:

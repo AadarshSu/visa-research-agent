@@ -29,7 +29,7 @@ from visa_research_agent.discovery.models import (
 )
 from visa_research_agent.discovery.urls import is_pdf_url, path_segments
 from visa_research_agent.domain.models import SourceKind
-from visa_research_agent.domain.trust import host_is_within, host_of
+from visa_research_agent.domain.trust import host_is_within, host_of, registrable_domain
 
 _WORDS = re.compile(r"\w+")
 
@@ -158,24 +158,86 @@ def mission_in_path(url: str, lexicon: Lexicon) -> str | None:
     return None
 
 
-def mission_affinity(url: str, residence: Country, lexicon: Lexicon) -> str | None:
+# The roles whose answer is a property of the *post*, so a different post's page is the wrong page.
+#
+# Deliberately not every role. `visa_decision` is left out because whether a passport needs a visa
+# is set by the destination's law and is the same at every consulate — demoting the page that
+# states it would cost answers to buy nothing, and it is the one role whose absence refuses a
+# corridor. `general_entry` is left out for the same reason: Schengen entry conditions do not vary
+# by where the traveller lodges.
+#
+# `fees` and `processing_times` were added on 2026-08-25 after a corridor was measured taking
+# Brazil's **Edinburgh** fee page for a traveller in the United States (DECISIONS entry 72). A fee
+# is quoted in the post's own currency and a processing time is that post's queue.
+POST_SPECIFIC_ROLES: tuple[str, ...] = (
+    "document_checklist",
+    "application_route",
+    "fees",
+    "processing_times",
+)
+
+
+def foreign_post_labels(
+    countries: CountryRegistry, destination_code: str | None, residence: Country
+) -> frozenset[str]:
+    """Mission labels that can only mean *somebody else's* post, for this corridor.
+
+    A label is included only when **no** country claiming it is the destination or the residence.
+    That exemption is the whole safety of the rule and it was found by measurement, not by
+    reasoning: without it, `mzv.gov.cz` reads as another post for a traveller in Great Britain
+    because `cz` is one of Czechia's own mission labels, and 146 pages that had correctly filled a
+    role were penalised for sitting on their own government's hostname (DECISIONS entry 72).
+    """
+
+    exempt = {code for code in (destination_code, residence.code) if code}
+    claimed: dict[str, set[str]] = {}
+    for country in countries.countries:
+        for label in country.mission_labels:
+            claimed.setdefault(label.lower(), set()).add(country.code)
+    return frozenset(label for label, owners in claimed.items() if not owners & exempt)
+
+
+def mission_affinity(
+    url: str,
+    residence: Country,
+    lexicon: Lexicon,
+    *,
+    other_posts: frozenset[str] = frozenset(),
+) -> str | None:
     """Whether a page belongs to the post serving this traveller, another post, or no post.
 
-    Returns "own", "other", or None. "other" is only ever concluded from a path that explicitly
-    names a different post: inferring it from a host would misread the many ministry pages that
-    belong to no mission at all.
+    Returns "own", "other", or None.
+
+    **A host may now conclude "other", where before only a path could.** The original caution was
+    right about the general case — inferring "other" from any host label would misread the many
+    ministry pages that belong to no mission at all — but it left a gap with a name:
+    `india.embassy.gov.au` is unmistakably the New Delhi post, and for a traveller in Great Britain
+    it scored as though it belonged to no post whatsoever. `other_posts` closes it without
+    reopening the original problem, because it holds only labels that some *third* country claims
+    as a post of its own: `www`, `mfa` and `mzv` are in it for nobody.
+
+    Only labels outside the registrable domain are read. `gov.au` is Australia's public suffix, not
+    a post, and a country's own code sitting in its own TLD must never read as somebody else's
+    mission. Measured over 132 recorded corridors: 703 candidates become "other", and the single
+    one of them that had filled a role is the New Delhi page this exists to demote.
     """
 
     labels = {label.lower() for label in residence.mission_labels}
-    if labels and any(label in host_of(url).split(".") for label in labels):
+    host = host_of(url)
+    host_labels = host.split(".")
+    subdomain_labels = host_labels[: -len(registrable_domain(host).split("."))]
+    if labels and any(label in host_labels for label in labels):
         return "own"
 
     post = mission_in_path(url, lexicon)
-    if post is None:
-        return None
-    if post.lower() in labels or any(part in labels for part in post.lower().split("-")):
-        return "own"
-    return "other"
+    if post is not None:
+        if post.lower() in labels or any(part in labels for part in post.lower().split("-")):
+            return "own"
+        return "other"
+
+    if any(label.lower() in other_posts for label in subdomain_labels):
+        return "other"
+    return None
 
 
 def names_documents(haystack: str, lexicon: Lexicon) -> list[str]:
@@ -314,6 +376,7 @@ def score_link(
     *,
     host_kind: SourceKind | None = None,
     mission_domains: list[str] | None = None,
+    other_posts: frozenset[str] = frozenset(),
 ) -> RoleScores:
     """Score a link for every role, from its URL, anchor text and heading."""
 
@@ -422,12 +485,12 @@ def score_link(
         signals[scored_role].extend(shared_reasons)
 
     # How this traveller applies is set by the mission serving where they live, so it outranks a
-    # ministry's general pages for those two roles only — and a *different* post's page loses them,
-    # because its fees, address and appointment system are not the ones this traveller will use.
+    # ministry's general pages for the post-specific roles — and a *different* post's page loses
+    # them, because its fees, address and appointment system are not the ones this traveller uses.
     on_mission_host = bool(mission_domains) and host_is_within(
         host_of(link.url), mission_domains or []
     )
-    affinity = mission_affinity(link.url, residence, lexicon)
+    affinity = mission_affinity(link.url, residence, lexicon, other_posts=other_posts)
     if on_mission_host and affinity is None:
         affinity = "own"
     if affinity is not None:
@@ -435,7 +498,7 @@ def score_link(
             lexicon.mission_host_bonus if affinity == "own" else lexicon.other_mission_penalty
         )
         label_text = "mission" if affinity == "own" else "other-mission"
-        for mission_role in ("document_checklist", "application_route"):
+        for mission_role in POST_SPECIFIC_ROLES:
             if mission_role in scores:
                 scores[mission_role] += adjustment
                 signals[mission_role].append(f"{label_text}{adjustment:+g}")
