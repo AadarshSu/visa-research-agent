@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose thirteen rows are
+what has wasted the most time here — see the corrections table further down, whose seventeen rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **Where it stands, as of 2026-08-24**, so the rest of this file reads in context. The pipeline works
@@ -31,6 +31,13 @@ settles, for any role, and the plan offers it beside that question (entries 59 a
 pages in front of the model needed the shortlist to reserve five candidates per role rather than
 three, which took **the United Kingdom from 0 of 8 runs resolving to 4 of 4** (entry 61). Entries
 44–62.
+
+**Stage 2 of batch 1 is done** (entry 70): all 41 never-run destinations ran on 2026-08-25 — 103
+corridors — and every one resolved or refused for a reason verified against what was seen; 32 of 41
+answered at least one passport. Two things it found that change how the rest is read: authorities
+mostly publish **per diplomatic post**, keyed by where the traveller applies from rather than by their
+passport, and the missing-demonym defect costs **nothing** measurable, so do not write 184 demonym
+lists. What remains of batch 1 is stage 3, the 43 corpora.
 
 ## Rules that must not be broken
 
@@ -254,6 +261,10 @@ cause, and only running the thing showed it.
 | a wider shortlist is the cheap fix for bad ranking | widening alone does nothing; the *per-role depth* is the gate (entry 61) |
 | the scorer rewards *naming* a country, not being about one | it is token-based already; the page really is about India (entry 62) |
 | a floor-only role score is safe to withhold bonuses from | a terse per-nationality decision page is floor-only too (entry 62) |
+| a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
+| a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
+| an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
+| a wider sweep only tests the countries it runs | breadth found two defects five countries never could (entry 71) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

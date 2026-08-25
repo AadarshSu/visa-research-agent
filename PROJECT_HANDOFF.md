@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-25 — update this line when you touch the handoff |
-| **Tests** | 486 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 487 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has thirteen rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has seventeen rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -56,9 +56,9 @@ destinations.
 
 | | |
 | --- | --- |
-| **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of four and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
-| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **31** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
-| **Verified working** | **12 of the 53 reachable have ever been run; 10 have a corpus.** Fully done: AE, CA, DE, FR, GB, JP, NL, SE, SG, US. AT and NO resolve but crawl. **41 have never been tried.** Item 30. |
+| **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
+| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
+| **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **32 of the 41 answered at least one passport**; nine refuse every passport with a diagnosis checked against what was seen — CY, DK, IN, LT, MA, MX, RO, SA, SK. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
@@ -86,13 +86,27 @@ it cannot drift; this file deliberately does not copy it.
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
 
+**Stage 2 is done, and stage 3 is what remains of item 30.** All 41 never-run destinations ran on
+2026-08-25 — 103 corridors, two or three passports each, with `--from` deliberately different from
+`--nationality` — and every one resolved or refused for a reason verified against what was seen. 54
+resolved outright, 4 handed over a blocked page, 4 handed over a questionnaire, 41 refused; **0 raised
+and 0 model failures** in the run set. Entry 70 is the record. What is left is **43 corpora, ~1,792
+searches**, and the search rate limiter should be fixed first.
+
+**Two things entry 69 expected came out backwards, and both change what a future batch tests.**
+Authorities largely publish **per diplomatic post**, keyed by where the traveller applies from rather
+than by their passport — a fourth shape entry 69's table does not have, which closes nationality and
+**opens residence**. Entry 69's "real risk", a page per nationality, was not the shape of a single one
+of the 41. And **known problem 27 is measured and the demonym bonus buys nothing**: 0.18 shortlist
+places per corridor over 122 corridors, none of the 22 filling a role. Do not write 184 demonym lists.
+
+**The sweep also found two defects that no five-country corridor could** (entry 71): a Saudi host
+answering `HTTP 990` crashed both its corridors against a `le=599` bound, and Morocco's foreign
+ministry omits a TLS intermediate. Both fixed, the first with a regression test.
+
 **Batch 1 bounds destinations, never nationalities** (entry 69): whatever passport a traveller holds,
-a batch-1 destination must answer them. **Batch 1 is all 53 reachable countries.** The fourteen added
-on 2026-08-25 were catching up to the ones already in the registry — and counting those the same way is what found the real gap: **41 of the
-53 have never had a single corridor run against them**, which is not the same as failing, and **43 have
-no corpus**. Ten are fully done (AE, CA, DE, FR, GB, JP, NL, SE, SG, US); Austria and Norway resolve but
-crawl. A registry row was never evidence that a country works, and that had gone uncounted 41 rows
-deep.
+a batch-1 destination must answer them. A registry row was never evidence that a country works, and
+that had gone uncounted 41 rows deep.
 
 **Accuracy is verified by the project owner, outside this repository, and is deliberately not a
 stage.** Do not build a truth set, a correctness grader or an accuracy metric here without asking
@@ -162,6 +176,14 @@ re-add the amendment history here.
    review is nine certificate confirmations plus seven pieces of research, once. Entries 33, 65, 66;
    TODO item 2.
 
+   **The quieter failure was confirmed on Estonia and is fixed.** Estonia was trusted on
+   `e-resident.gov.ee` and refused both its corridors with the e-Residency help centre as the only
+   readable page — bootstrap succeeding against a trusted set that could not hold the answer, exactly
+   as entry 67 warned. `vm.ee` (Q6867006) and `mae.ro` (Q15628977) are now reviewed rows, and
+   **Estonia resolves all three passports on `vm.ee`**. Romania still refuses, but on a different and
+   truer diagnosis: `mae.ro`'s hosts are now reached and every one of their `robots.txt` answers `503`.
+   Entry 70.
+
 5. **The full cold request has never been timed.** Every figure quoted is the corridor phase; plan
    extraction sits on top. The remaining lever is **search**, roughly 3s per corridor at three queries
    per trusted domain — TODO item 19. Warm is instant, and the local `var/` stores are what make it warm.
@@ -198,6 +220,14 @@ re-add the amendment history here.
    the adjudicator discards the wrong-post page, so the corridor throws away a checklist it fetched.
    TODO item 1.
 
+   **Observed on three further countries, 2026-08-25** (entry 70). For an Indian passport holder
+   resident in Great Britain, Australia answered from `india.embassy.gov.au`, Brazil from
+   `embaixada-nova-delhi` and Slovenia from `embassy-new-delhi` — the post serving their *passport*
+   rather than the one they must lodge at. South Africa, Poland, Estonia and Italy got the same
+   corridor right (`dirco.gov.za/uk`, `gov.pl/web/unitedkingdom`, a UK supporting-documents list,
+   `conslondra.esteri.it`), so this is a mis-pick rather than a missing capability. The visa
+   *decision* can survive it; fees, lodging route and checklist do not.
+
 10. **The model decider is non-deterministic, and it is now the only variance left.** Isolated for the
    first time on 2026-08-23 (entry 53): with the candidate count and shortlist identical across runs,
    one run filled `processing_times` and two did not. Confirmed as the residual by entry 58 — 19 of 20
@@ -206,13 +236,22 @@ re-add the amendment history here.
    from item 8. It also reaches which *tools* get named (entry 60).
 
 11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
-   was, and that is now handled (entries 58–61). Three blocked portals found: `france-visas.gouv.fr`,
-   `www.france-visas.gouv.fr` and Singapore's VFS page. **Counted rather than assumed since entry 63**:
-   `visa-discover audit` buckets every unreadable page by typed outcome. Across the runs on disk, 0 are
-   `blocked` — but **23 are `disallowed`**, all Austrian, and they refuse `austria/IN/IN` outright
-   (entry 65). So the honest statement is that a stated crawl policy, obeyed, is what actually costs
-   corridors here; an outright `403` has not, yet. An earlier reading of "0 blocked" as *the posture
-   costs nothing* was drawn from two corridors and did not survive the third.
+   was, and that is now handled (entries 58–61). **Counted rather than assumed since entry 63**:
+   `visa-discover audit` buckets every unreadable page by typed outcome. Across the 132 runs on disk,
+   **102 are `disallowed`** — Austria's 23, Denmark's mission hosts and Romania's, whose `robots.txt`
+   answers `520` and `503` so nothing was requested — and **80 are `blocked`**, led by `www.mfa.gr`,
+   `www.gov.cy`, `mzv.sk` and `urm.lt`. **An outright `403` has now cost corridors**, which the
+   previous two readings of this number said it had not — Lithuania and Slovakia lose their *entire*
+   trusted set to one: `www.gov.cy`
+   answers `403` from Azure Front Door with **no `cf-mitigated` header**, so it is a real refusal and
+   entry 41's challenge exception does not apply; `www.police.gov.cy` `301`s into the same wall; and
+   `www.mip.gov.cy` presents a certificate that expired 2026-08-02 and is refused rather than bypassed.
+   Both Cyprus corridors refuse, name the blocked hosts, and correctly do not claim
+   `resolved_decision_blocked` — nothing was read, and entry 32 requires a source. Verified
+   independently with `curl`; entry 70. **Greece's `www.mfa.gr` answers a plain `403` too**, verified
+   the same way, though Greece resolves anyway for an Indian passport. **Malta and Thailand produced
+   the first four `resolved_decision_blocked` corridors ever recorded** — entries 27, 32 and 57 firing
+   on a real corridor for the first time since August.
    Working around a block stays forbidden. What
    entry 35 corrects is the conclusion: the loss is permanent *given an anonymous client*, and that
    posture was never itself decided. `robots.txt` is now read and obeyed (entry 36) and buys nothing
@@ -305,11 +344,16 @@ re-add the amendment history here.
    matching is anchored to word and segment boundaries and `kenya` does not match `kenyan`. Stemming
    would not fix it — the Philippines' demonym is *Filipino*, the Netherlands' is *Dutch*.
 
-   **Bounded:** it is a scoring aid, not a gate, and the model decides the last step. But the scorer is
-   a **recall gate** (entry 40), so a bonus that does not fire can cost the answering page its
-   shortlist place. **What lacking it costs has never been measured**; entry 62 measured only what
-   having it is worth (0.27 places). Matters now because batch 1 bounds destinations and **not**
-   nationalities. Entry 69; TODO item 30.
+   **Measured 2026-08-25, and the cost is nothing** (entry 70). Over 122 recorded corridors, candidates
+   matched on a demonym and *not* on the country's name took **0.18 shortlist places per corridor**,
+   and **not one of the twenty-two filled a role** — they are approved-insurer lists, a Work Holiday
+   notice, an embassy press release about staffing, and four `indianvisaonline.gov.in` pages in a
+   corridor whose destination is India. So the demonym half of the bonus is a fetch spent on noise,
+   which is entry 62's conclusion about the whole bonus reached from the other side.
+   **Do not write 184 demonym lists on a recall argument.** Kept here as a description of the
+   mechanism, not as queued work. Method limit: the URL half of the match is exact, the text half
+   approximate (entry 62's fidelity note), so twelve is a lower bound — which makes the noise finding
+   stronger, not weaker. Entries 69, 70; TODO item 30.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

@@ -33,6 +33,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
 | [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
 | [71](#71-two-defects-a-sweep-found-that-no-corridor-had-status-990-and-a-chain-morocco-does-not-send) | **Status `990` crashed a corridor; Morocco's chain is now bundled** — two defects only breadth found |
+| [70](#70-stage-2-of-batch-1-all-41-run-and-both-things-entry-69-expected-were-wrong) | **Stage 2, all 41 run** — authorities publish per *post*; the demonym bonus buys 0.18 places, all noise |
 | [69](#69-batch-1-bounds-destinations-never-nationalities--and-184-of-198-passports-have-no-demonym) | **Batch 1 bounds destinations, not nationalities** — and 184 of 198 passports have no demonym |
 | [68](#68-a-batch-is-done-in-three-stages-and-accuracy-is-measured-outside-the-codebase) | **A batch is done in three stages** — reachable, resolves, fast. Accuracy is verified outside the codebase |
 | [67](#67-the-registry-grows-in-batches-and-a-domain-can-be-confirmed-by-asking-wikidata-about-the-domain) | **Batch 1: EU/EEA, 41 → 53 researchable.** Confirm a domain by asking Wikidata about the domain |
@@ -180,6 +181,170 @@ recall problem — the two things stage 2 was designed to look for. That is an a
 being the point, and against the reflex to widen a batch only after the current one is perfect: some
 defects are only reachable by volume. It does not overturn entry 68's staging, which is about not
 *trusting* untested rows; it qualifies what a stage-2 sweep is worth beyond its own countries.
+
+---
+
+## 70. Stage 2 of batch 1: all 41 run, and both things entry 69 expected were wrong
+**2026-08-25 · measured on 103 live corridors across all 41 never-run destinations. TODO item 30, stage 2**
+
+Entry 69 said stage 2 must classify each destination by **how its authority publishes**, named three
+shapes, and told this stage to measure the missing-demonym defect before anyone wrote 184 demonym
+lists. All 41 destinations have now been run — two or three passports each, 103 corridors — and both
+of entry 69's expectations came out backwards.
+
+### The result
+
+| | |
+| --- | --- |
+| corridors | **103**, over all 41 destinations |
+| resolved outright | **54** |
+| decision handed over as a blocked page (entries 27, 32, 57) | **4** |
+| decision handed over as a questionnaire (entries 59, 60) | **4** |
+| refused, nothing stated the visa decision | **41** |
+| the run raised, or the model call failed | **0** |
+| document checklist present | **45 of 103** |
+
+**32 of 41 destinations answered at least one passport. The other nine refused every passport, each
+for a reason verified against what was actually seen**, which is the bar TODO item 30 sets:
+
+| | why every passport refuses |
+| --- | --- |
+| CY | `www.gov.cy` answers `403`, `www.police.gov.cy` `301`s into it, `www.mip.gov.cy`'s certificate **expired 2026-08-02** |
+| DK | every `um.dk` mission's `robots.txt` answers `520`, so nothing was requested (entry 36) |
+| IN | its own domains carry the checklist, route and fees, and no page states **who needs a visa** |
+| LT | `urm.lt` and `keliauk.urm.lt` — its whole trusted set — answer `403` |
+| MA | certificate chain fixed this session (entry 71); the pages are client-rendered and `render_mode: never` |
+| MX | `consulmex.sre.gob.mx` redirects to `validate.perfdrive.com`, off the trusted domains |
+| RO | every `mae.ro` host's `robots.txt` answers `503` — policy unreadable, so not requested |
+| SA | `www.sta.gov.sa` answers **`990`**, `moi.gov.sa` times out, `embassies.mofa.gov.sa` redirects to `saudiembassy.sa` |
+| SK | `mzv.sk` — its only trusted domain — answers `403` |
+
+Do not read the 54/103 against entry 58's bars. That sample was five high-volume destinations
+replicated four times; this is every country nobody had ever run, and the two measure different
+things.
+
+### The shape entry 69's table does not have: **per post**
+
+Entry 69 listed one-page-names-all, page-per-nationality, and questionnaire. The corridors were run
+with **`--from` deliberately different from `--nationality`** (`IN/GB` beside `US/US`) so the two axes
+could be told apart, and a fourth shape is plainly there: the answer comes from the page of the
+**diplomatic post that serves the applicant**, chosen by *where they apply from*, and that page then
+names many nationalities.
+
+```
+south-africa  IN/GB -> dirco.gov.za/uk              US/US -> dirco.gov.za/washingtondc
+poland        IN/GB -> gov.pl/web/unitedkingdom     US/US -> gov.pl/web/usa-en
+estonia       IN/GB -> "List of supporting documents in the United Kingdom.PDF"
+italy         IN/GB -> conslondra.esteri.it         hungary IN/GB -> london.mfa.gov.hu
+```
+
+That closes the nationality dimension and **opens the residence one**, which is the same size. Entry
+69 reasoned about `passport_nationality` alone because the defect it found lives there; the
+authorities largely index on the other axis. Known problem 9 knew this from the other end — "for a
+consular checklist the **post** governs" — without connecting it to what a batch has to test.
+
+**And three destinations pick the post by nationality instead, which is the wrong page.** For an
+Indian passport holder resident in Great Britain, Australia answered from `india.embassy.gov.au`,
+Brazil from `embaixada-nova-delhi` and Slovenia from `embassy-new-delhi` — the post serving their
+*passport*, not the one they must lodge at. The visa *decision* may survive that (Australia's rule is
+nationality-based), but fees, lodging route and checklist do not. That is known problem 9's residual,
+now observed on three further countries; TODO item 1.
+
+**A page per nationality — entry 69's "the real risk" — was not the shape of a single one of the 41.**
+
+### The nationality risk that is real is **search recall**
+
+Belgium refused an Indian passport applying from India and resolved an American one **on the same
+page** — and the page was not ranked out, it was **never a candidate**: 0 hits in 137 for that run,
+found by *search* in the other. Moving the same Indian passport's residence to Great Britain resolved
+it, all six roles. Bulgaria is the mirror image, its all-nationality PDF appearing for `IN` and not
+for `US`.
+
+`corridor_queries` builds three templates per trusted domain and puts the nationality's **name**
+literally into one of them, so on a destination whose answer sits on one page, whether that page is
+found can turn on the passport in the query. Czechia is the control: its
+`list_of_states_whose_citizens_are_exempt` page was reached by **crawl**, scored the same, and
+answered all three passports identically.
+
+> **A one-page-names-all destination closes the nationality dimension only when the page is reached by
+> crawl or corpus. Where it depends on search, nationality still decides.**
+
+That is a reason to build corpora which entry 68 did not have: stage 3 was costed purely as latency
+(2.1×–5.2×), and on this evidence it also buys **recall stability across passports**. It does not
+reorder the stages — a corpus for a country that refuses is still worth nothing — but it changes what
+stage 3 is for.
+
+### Known problem 27, measured twice: the demonym bonus buys 0.18 places, all of them noise
+
+Over the **122 recorded corridors** on disk, counting candidates that `_describes_country` matches on
+a **demonym and not on the country's name**:
+
+```
+76 candidates matched by demonym alone
+22 of them took a shortlist place        ->  0.18 places per corridor
+ 0 of the 22 filled a role in any run
+```
+
+They are approved-travel-insurer lists (Switzerland, Hungary, Denmark), a Work Holiday notice for
+Indian nationals, an `mfa.gr` press release about embassy staffing in New Delhi, `gov.uk/ads-visa`,
+and several `indianvisaonline.gov.in` pages in a corridor whose destination *is* India. **Not one is
+the page any corridor answered from.** The same measurement at 59 corridors gave 0.20 and 12 of 12;
+it did not move when the sample doubled.
+
+So the bonus's demonym half, where it fires, is a fetch spent on noise — entry 62's conclusion about
+the whole bonus, reached from the other side. **Writing 184 demonym lists would buy ~0.2 wasted
+fetches per corridor and, on this evidence, no answers.** Not done, and it should not be done on a
+recall argument.
+
+**Method, and its limit.** `_describes_country` reads a link's URL path and its text. The URL half is
+exact — the recall log stores the URL the scorer saw. The text half is approximate, because the log
+stores a page **title** where the scorer saw link text and a heading (entry 62's fidelity note), and
+no corpus exists for these countries to join against. So 22 is a **lower bound** on matches, which
+cuts the right way: more matches of this quality is a worse case for demonyms, not a better one.
+
+### Estonia is fixed; Romania's diagnosis changed and the row was still right
+
+Estonia refused exactly as entry 67 warned — the only readable page on its trusted set was
+`learn.e-resident.gov.ee`, the e-Residency help centre. Reviewed rows were added for both watched
+countries by entry 67's own method, the exact-statement lookup from the domain plus `P17`:
+
+| | domain | Wikidata | |
+| --- | --- | --- | --- |
+| EE | `vm.ee` | Q6867006 | Ministry of Foreign Affairs (Estonia), `P856 = http://www.vm.ee`, `P17 = Q191` |
+| RO | `mae.ro` | Q15628977 | Ministry of Foreign Affairs of Romania, `P856 = http://www.mae.ro`, `P17 = Q218` |
+
+**Estonia now resolves all three passports on `vm.ee`, all six roles for `IN/GB`.** Romania still
+refuses — but the row changed the *diagnosis*, which is what it was for: `mae.ro` and its missions are
+now reached, and every one of their `robots.txt` answers `503`, so the reason moved from "the trusted
+set cannot hold the answer" to "the authority's crawl policy could not be read". Both are true of what
+was seen; only the second is about Romania.
+
+**Note for whoever repeats the lookup**: those two `P856` values are `http://www.vm.ee` and
+`http://www.mae.ro`, with no trailing slash. A query that tries only `https://<domain>/` returns
+nothing and the domain reads as unconfirmable when it is not — which is how the batch-1 sweep
+mislaid both.
+
+### Blocks, and one that finally qualified
+
+`www.gov.cy` and `www.mfa.gr` both answer a plain `403` with **no `cf-mitigated` header**, verified
+independently with `curl` — real refusals, not France's challenge, so entry 41 does not apply and the
+renderer may not be pointed at them. Across the run set 80 pages are `blocked` and 102 `disallowed`,
+against 0 and 23 before this stage.
+
+**Malta and Thailand produced the first `resolved_decision_blocked` corridors ever recorded** — four
+of them. Entries 27, 32 and 57 have been live since August and had never fired on a real corridor:
+the block is judged a credible `visa_decision` candidate, the page is named with its URL, nothing is
+read from it, and the decision stays unknown. Cyprus, by contrast, refuses outright and correctly does
+**not** claim it, because entry 32 requires a source to have been read and nothing was.
+
+### The interruption, and that the pipeline handled it correctly
+
+The OpenAI account ran out of credit part-way through and 18 corridors refused with
+`role adjudication failed on all 2 attempts`. Entry 31 forbids falling back to the heuristic and it
+did not. Every one of those corridors was re-run after the account was topped up, so the run set now
+records **0** model failures and **0** raised runs. What is worth fixing is that nothing noticed at the
+time: 16 corridors' search quota went on runs that could not answer. That is a sweep-harness job, not
+the resolver's — TODO, *Smaller things*.
 
 ---
 

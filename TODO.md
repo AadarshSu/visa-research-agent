@@ -10,7 +10,14 @@ why the item after it exists; **Smaller things** are one-paragraph defects with 
 **Where the list stands, 2026-08-25.** The three items that used to gate everything are finished and
 confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 49–53), **item 23** (the
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
-twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
+twenty-corridor measurement, entry 58, which passed marginally).
+
+**Item 30's stage 2 is finished, and stage 3 is what is left of it.** All 41 never-run destinations
+ran on 2026-08-25 — 103 corridors — and every one resolved or refused for a verified reason; 32 of 41
+answered at least one passport. The sweep also found two defects no five-country corridor could
+(entry 71) and closed known problem 27 with a measurement. **What remains under item 30 is building
+43 corpora**, which is the expensive stage: ~1,792 searches. Fix the search rate limiter first — see
+*Smaller things*.
 
 **The session of 2026-08-24/25 asked what the rigor costs and answered it** (entries 63–66). Short
 version: **the rigor is cheap and the backlog is expensive, and it has been easy to mistake the second
@@ -19,7 +26,7 @@ registry job nobody has run. A one-off control arm — plain web search, no trus
 and answered more, and cited **0 of 8 hosts that would pass the trust rule**. Read entry 64 before
 arguing to relax anything; it cuts both ways.
 
-**Item 2 leads, and its cheap half is done.** It was `soon` for weeks as a coverage complaint;
+**Item 2 follows item 30, and its cheap half is done.** It was `soon` for weeks as a coverage complaint;
 entries 63 and 64 measured what that complaint is made of and it is almost entirely this item.
 **Entry 65 did the corrections half on 2026-08-25** — three missing markers, coverage 39 → 41
 researchable, and the "row with nothing confirmable" bucket emptied.
@@ -112,7 +119,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has eight rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventeen rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -133,13 +140,29 @@ ones already in the registry, and counting those the same way is what found the 
 | | stage | today |
 | --- | --- | --- |
 | 1 | Reachable — a confirmed authority domain | **53** |
-| 2 | Resolves — a decision, or a refusal for a *correct* named reason | **12 of 53** — 41 have **never been run**, which is not the same as failing |
+| 2 | Resolves — a decision, or a refusal for a *correct* named reason | **53 of 53 — cleared 2026-08-25** |
 | 3 | Fast — corpus-routed rather than crawling | **10 of 53** |
 
-- **Fully done (10):** AE, CA, DE, FR, GB, JP, NL, SE, SG, US
-- **Resolves, no corpus (2):** AT, NO
-- **Never run (41):** AU, BE, BG, BR, CH, CN, CY, CZ, DK, EE, EG, ES, FI, GR, HR, HU, ID, IE, IN, IT,
-  KR, LT, LU, LV, MA, MT, MX, MY, NZ, PH, PL, PT, RO, SA, SI, SK, TH, TR, UY, VN, ZA
+**Stage 2 is done. Stage 3 is the whole of what remains.** All 41 never-run destinations were run on
+2026-08-25 — 103 corridors, two or three passports each, `--from` deliberately different from
+`--nationality` — and every one either resolved or refused for a reason verified against what was
+seen. Entry 70 has the table, the shapes and the nine that refuse every passport.
+
+| | |
+| --- | --- |
+| resolved outright | 54 |
+| decision handed over as a blocked page | 4 |
+| decision handed over as a questionnaire | 4 |
+| refused, nothing stated the visa decision | 41 |
+| the run raised, or the model call failed | **0** |
+
+- **Answered at least one passport (32):** AU, BE, BG, BR, CH, CN, CZ, EE, EG, ES, FI, GR, HR, HU, ID,
+  IE, IT, KR, LU, LV, MT, MY, NZ, PH, PL, PT, SI, TH, TR, UY, VN, ZA
+- **Refused every passport, each for a verified reason (9):** CY, DK, IN, LT, MA, MX, RO, SA, SK — see
+  entry 70's table. These pass stage 2 and are **not** the same as working; several are one policy or
+  configuration change away (Morocco needs `render_mode: on_demand`, Romania a `robots.txt` that can
+  be read).
+- **Corpus-routed (10):** AE, CA, DE, FR, GB, JP, NL, SE, SG, US. Everything else crawls.
 
 **Accuracy is not a stage** — whether a decision is *correct* is verified by the project owner outside
 this repository (entry 68). Do not build a truth set, a correctness grader or an accuracy metric here
@@ -164,23 +187,47 @@ So: two or three nationalities per destination to establish the shape, then **a 
 awkward passports against the per-nationality destinations only** — chosen for demonyms that do not
 resemble the country name.
 
-**The known defect this is testing for** (entry 69, known problem 27): `text_tokens` is
-`name + synonyms + demonyms`, and **184 of 198 countries have no demonyms**. A page titled "Visa
-requirements for Kenyan nationals" awards no nationality bonus to a Kenyan traveller; the identical
-page does for an Indian one. It is a scoring aid rather than a gate, but the scorer is a recall gate
-(entry 40), so it can cost the answering page its shortlist place. **What lacking the bonus costs has
-never been measured** — measure it here before writing 184 demonym lists, and read entry 62 first.
+**The known defect this was testing for is now measured, and the answer is "nothing"** (entry 70).
+Over 59 recorded corridors, candidates matched on a demonym and *not* on the country's name took
+**0.20 shortlist places per corridor**, and **not one of the twelve filled a role** — they are
+approved-insurer lists, a Work Holiday notice and an embassy press release. **Do not write 184 demonym
+lists on a recall argument.** Known problem 27 stays open only as a description; the cost attached to it
+is now zero answers and ~0.2 wasted fetches.
+
+**What the 41 found, and what it changes about the stages after this one** (entry 70):
+
+- **There is a fourth shape: per diplomatic post**, keyed by where the traveller applies from rather
+  than by their passport — `dirco.gov.za/uk`, `gov.pl/web/unitedkingdom`, `conslondra.esteri.it`. That
+  closes nationality and **opens residence**, which is the same size. Nothing is queued for it yet, and
+  it is the honest successor to the question entry 69 asked.
+- **Three destinations pick the post by *nationality* instead**, which is the wrong page wherever the
+  post governs: for an Indian passport resident in Great Britain, Australia, Brazil and Slovenia all
+  answered from their New Delhi post. Known problem 9's residual on three new countries — **item 1**.
+- **A page per nationality — entry 69's "the real risk" — was not the shape of a single one of the 41.**
+  The awkward-passport runs it prescribed were never worth running; there was nothing to run them
+  against.
+- **The real nationality risk is search recall.** Belgium refused `IN/IN` and resolved `US/US` on the
+  *same page*, which was never a candidate in the losing run — `corridor_queries` puts the
+  nationality's name literally into one of three templates. Czechia's equivalent page came from the
+  **crawl** and answered all three passports identically. So a one-page-names-all destination closes
+  nationality only when the page is reached by crawl or corpus — which is a reason for stage 3 that
+  entry 68's latency argument did not have.
 
 What the codebase is answerable for is **resolve or refuse, and refuse for a reason true of what was
 seen** — entries 33, 36 and 63. `visa-discover audit` buckets a run set by cause, so read it there
 rather than by eye. Expect the causes to spread: some will be wrong-domain (below), some wizard-only
 (entries 59–60), some `robots.txt`-blocked as Austria is.
 
-**Two to watch** (entry 67): Estonia is confirmed on `e-resident.gov.ee`, the e-Residency programme
-rather than visa guidance, and Romania on `euraxess.gov.ro`, a researcher-mobility portal. Both may
-resolve against a trusted set that cannot hold the answer — known problem 2's quieter failure. If they
-refuse, the fix is a reviewed row for `vm.ee` and `mae.ro` by entry 67's Wikidata method; both already
-matched entities in the batch-1 lookup, so the evidence is known to exist.
+**The two to watch are done, and they came out differently.** Reviewed rows are committed for `vm.ee`
+(Wikidata Q6867006) and `mae.ro` (Q15628977), both confirmed by entry 67's exact-statement method.
+**Estonia now resolves all three passports on `vm.ee`**, six of six roles for `IN/GB`. **Romania still
+refuses**, but the row did its job: `mae.ro` and its missions are now reached, and the reason moved
+from "the trusted set cannot hold the answer" to "every one of their `robots.txt` answers `503`, so
+nothing was requested". Only the second is a fact about Romania.
+
+**And they cost less to confirm than entry 67 implies**: the P856 statements are `http://www.vm.ee` and
+`http://www.mae.ro`, with no trailing slash, so a lookup that tries only `https://<domain>/` finds
+nothing and the domain reads as unconfirmable when it is not.
 
 **Iceland and Liechtenstein are stage-1 failures and may stay that way.** `government.is`, `island.is`
 and `llv.li` all sit under their own top-level domain and carry no governmental marker; no Wikidata
@@ -203,8 +250,8 @@ capped plan, and `402` reads as *out of credit* rather than *too fast*.
 
 ### Done when
 
-All 53 resolve, or refuse for a correct named reason, **for any nationality**, and all 53 are
-corpus-routed. **Then** batch 2.
+All 53 resolve, or refuse for a correct named reason, **for any nationality** — **done, 2026-08-25** —
+and all 53 are corpus-routed, which is stage 3 and untouched. **Then** batch 2.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 
@@ -912,6 +959,17 @@ that resolved by handing over the questionnaire stating it wrote the same senten
 conflation the field exists to end. `visa-discover audit` reports them as unrecorded rather than
 bucketing them. Re-running those corridors is quota, not work — fold it into the next measurement
 that needs live runs rather than spending the quota on its own.
+
+**A sweep has no way to notice that every corridor is failing for the same non-country reason.**
+Found 2026-08-25, entry 70. The OpenAI account ran out of credit mid-way through stage 2 and the next
+sixteen corridors each searched their domains, crawled, built a shortlist, then refused with
+`role adjudication failed on all 2 attempts`. **The resolver was right** — entry 31 forbids the
+heuristic standing in — but sixteen corridors' worth of search quota went on runs that could not have
+answered, and the run set now holds eight countries that look measured and are not. The fix belongs to
+whatever drives a sweep, not to the resolver: stop after N consecutive `adjudication_failed`, and say
+which provider said what. Related: `429 credit_balance_exhausted` and a genuine model-side blip are
+indistinguishable in the note the corridor prints, which is the same conflation the `402` item below
+describes for search.
 
 **The search client has no rate limiting, and a capped plan answers `HTTP 402`.** Found 2026-08-24.
 `BraveSearchProvider.search` paces nothing and `search_all` runs four queries at once, so a corpus

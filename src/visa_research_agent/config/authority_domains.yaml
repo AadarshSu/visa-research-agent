@@ -147,9 +147,11 @@ countries:
   name: Estonia
   trusted:
   - e-resident.gov.ee
-  reviewed: {}
-  unconfirmable:
-  - vm.ee
+  reviewed:
+    vm.ee: official website of the Ministry of Foreign Affairs of Estonia — Wikidata Q6867006, P856/P17,
+      checked 2026-08-25. It issues Estonian visas; the confirmed e-resident.gov.ee is the e-Residency
+      programme and does not carry visa guidance
+  unconfirmable: []
 - code: EG
   name: Egypt
   trusted:
@@ -426,9 +428,11 @@ countries:
   trusted:
   - euraxess.gov.ro
   - mai.gov.ro
-  reviewed: {}
-  unconfirmable:
-  - mae.ro
+  reviewed:
+    mae.ro: official website of the Ministry of Foreign Affairs of Romania — Wikidata Q15628977, P856/P17,
+      checked 2026-08-25. It publishes Romanian visa guidance; the confirmed euraxess.gov.ro is a
+      researcher-mobility portal
+  unconfirmable: []
 - code: SA
   name: Saudi Arabia
   trusted:
