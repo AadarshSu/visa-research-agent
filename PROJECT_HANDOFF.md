@@ -88,12 +88,16 @@ with nothing confirmable" bucket. It also found a hole worth knowing about: `GOV
 and `trust.SUFFIX_MARKER_LABELS` are two hand-maintained lists that must move together, or trusting one
 authority trusts its whole government. A test now asserts it.
 
-**What is left of item 2 is the measurement, then the sweep.** All 157 remaining refusals are countries
-nobody has run `visa-discover registry` for — unfinished data, not rigor. Before spending that quota,
-run the coverage check the item asks for: of the 16 governments with no hostname marker, how many are
-reachable via a published government domain list, RDAP registrant data, or a TLS certificate
-organisation? That decides whether the rest automates or is 16 reviewed rows. Entries 63, 64 and 65;
-`visa-discover audit` prints the split.
+**The gating measurement is also done (entry 66), and it answered against the production goal.** Of the
+16 governments with no hostname marker, a TLS certificate names the organisation for **9** — eight of
+them the authority outright, Hungary naming a state IT operator instead — RDAP for **1**, and **7 have
+nothing machine-readable at all**. RDAP is dropped: 13 of 16 ccTLDs run no RDAP service. So the rest of
+item 2 is reviewed rows rather than automation, and the review is nine certificate confirmations plus
+seven pieces of research, once.
+
+**What is left is the sweep.** All 157 remaining refusals are countries nobody has run
+`visa-discover registry` for — unfinished data, not rigor. Entries 63–66; `visa-discover audit` prints
+the split.
 
 **Read entry 64 before arguing about relaxing anything, because it cuts both ways.** A one-off control
 arm — open-web search, no trust model, one model call — was built, run on three corridors and then

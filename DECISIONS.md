@@ -32,6 +32,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
 | [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
+| [66](#66-what-could-confirm-a-government-that-marks-no-hostname-tls-half-the-time-and-not-automatically) | **TLS names the authority for 9 of 16; RDAP for 1 and it is dropped.** The human job shrinks to seven |
 
 ### Refusal, blocks, and how we behave as a client
 | | |
@@ -113,6 +114,91 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 66. What could confirm a government that marks no hostname: TLS, half the time, and not automatically
+**2026-08-25 · measured. TODO item 2's gating measurement; RDAP is dropped**
+
+Item 2 named four mechanisms that might supply officialness without per-country judgement, and said to
+measure before building because the answer decides whether the production goal survives. Measured
+against the sixteen governments whose visa-guidance domain carries no hostname marker.
+
+### The result
+
+| mechanism | covers | of 16 |
+| --- | --- | --- |
+| **TLS certificate organisation** | CZ, DE, FI, HU, IT, NL, PT, RO, SE | **9** |
+| **RDAP registrant** | FI | **1** |
+| either | the same nine | **9** |
+| **neither** | BE, CL, DK, GR, IE, NO, RU | **7** |
+
+**RDAP is dropped.** It adds nothing — Finland is in both sets — and its failure is worse than item 2
+predicted. The prediction was GDPR redaction; the reality is that **13 of the 16 ccTLDs answer no RDAP
+at all**, so there is nothing to redact. Of the other three, the Netherlands is `REDACTED FOR PRIVACY`
+and **Norway's response names only the registrar** — `Domeneshop AS`, the company that sold the domain,
+which says precisely nothing about who owns it. A naive count says 2 of 16; the honest count is 1.
+
+### What TLS actually returns, and why it is not a verdict
+
+Nine certificates name an organisation, and the names are unambiguous:
+
+```
+CZ  mvcr.cz              Ministerstvo vnitra
+DE  auswaertiges-amt.de  Auswärtiges Amt
+FI  migri.fi             Maahanmuuttovirasto
+IT  esteri.it            Ministero degli Affari Esteri e Cooperazione Internazionale
+NL  ind.nl               Immigratie- en Naturalisatiedienst
+PT  vistos.mne.pt        Ministério dos Negócios Estrangeiros
+RO  mae.ro               Ministerul Afacerilor Externe
+SE  migrationsverket.se  Migrationsverket
+HU  kormany.hu           NISZ Zrt.
+```
+
+**Eight of the nine name the authority. Hungary names an infrastructure operator** — `NISZ Zrt.` is a
+state IT provider, not a ministry — which is nearer an appointed provider than a government, and
+exactly the distinction `appointed_providers` exists to keep. So the mechanism yields a **name, not a
+verdict**, and turning "Auswärtiges Amt" into "this is Germany's own government" is still a judgement.
+One in nine of those judgements has to come out *no*.
+
+The other seven serve DV certificates naming nobody. There is no machine-readable proof to find.
+
+### So the production goal does not survive as stated, and the job it leaves is small
+
+Automating this away entirely was the goal. It is not available: 7 of 16 have nothing to read, and the
+9 that do still need a person to say whether the named organisation is the government.
+
+**What changes is the shape of the human work, and it changes a lot.** A reviewer filling `reviewed`
+was previously researching a country's domain conventions from nothing. Now, for nine of them, they
+read a CA-validated organisation name and confirm it in seconds — and that certificate is exactly the
+"something independent of the page" that `CountryAuthorities.reviewed` demands as evidence. The
+remaining seven are research, and **seven is a bounded, one-time job**, not the 198-country curation
+the production goal exists to avoid.
+
+**Mechanism (1), a government's own published domain list, is not measured here** and is not generically
+probeable — there is no predictable location to fetch. It matters most for the seven with nothing, so
+the follow-up is bounded to those seven rather than all sixteen.
+
+**One property to state rather than slide past, as item 2 asked:** reading a certificate needs a TLS
+handshake to the host *before* trust is decided. That is a connection, not a fetch — no page is
+retrieved and nothing is read — but it is not nothing, and a mechanism that contacts a host in order
+to decide whether it may be contacted deserves saying out loud.
+
+### A correction inside the measurement itself
+
+The first RDAP pass reported 1 of 16 with Finland showing `HTTP 406`. That was **this probe's own
+`Accept` header**, not an absence: with `application/rdap+json`, Finland returns
+`Maahanmuuttovirasto AM` as registrant. Three more results were `429` from the bootstrap redirector
+rather than real answers. Retrying only the inconclusive ones changed the finding, and the numbers
+above are from a clean pass with no inconclusives left. Recorded because "the tool said no" and "the
+tool was not asked properly" look identical in a result table, which is the same failure this project
+has now recorded several times.
+
+**The probe is not kept.** It is ~60 lines: read `AUTHORITIES` in `tests/test_trust_coverage.py` for
+the sixteen domains, `GET https://rdap.org/domain/<domain>` with `Accept: application/rdap+json`
+looking for a `registrant` entity's `org`/`fn` and ignoring `registrar` roles, and
+`ssl.create_default_context()` + `getpeercert()` reading `subject.organizationName`, falling back to
+`www.`. Rebuildable in ten minutes if the question returns.
 
 ---
 

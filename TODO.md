@@ -17,12 +17,14 @@ entries 63 and 64 measured what that complaint is made of and it is almost entir
 **Entry 65 did the corrections half on 2026-08-25** — three missing markers, coverage 39 → 41
 researchable, and the "row with nothing confirmable" bucket emptied.
 
-**What remains is the measurement, and then the sweep.** All 157 remaining refusals are countries
-nobody has run the registry job for. Before spending that quota, do the coverage check this item asks
-for: of the 16 governments with no marker, how many are reachable by a published domain list, by RDAP
-registrant data, or by a TLS certificate organisation? That decides whether the rest is automatable or
-is 16 reviewed rows. The rule is also refusing correct authorities *inside* countries it accepts — a
-one-off control arm cited `india.diplo.de`, Germany's own mission, declined for want of a marker.
+**The measurement is done too (entry 66), and it settled the design question.** Of the 16 governments
+with no marker: a TLS certificate names the organisation for **9**, RDAP for 1 (dropped), and **7 have
+nothing machine-readable**. So the rest is reviewed rows, not automation — but the review is nine
+certificate confirmations and seven pieces of research, one time.
+
+**What remains is the sweep.** All 157 remaining refusals are countries nobody has run the registry job
+for. The rule is also refusing correct authorities *inside* countries it accepts — a one-off control arm
+cited `india.diplo.de`, Germany's own mission, declined for want of a marker.
 
 **Then item 17, now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
@@ -137,13 +139,16 @@ judgement, and the cheap measurement comes first:
 1. **The government's own published domain list.** Where a country publishes one, that is the
    destination's own government asserting which domains are its own — this project's trust model applied
    recursively, no human taste involved. Strongest where it exists; coverage patchy.
-2. **Registry (RDAP/WHOIS) organisation data.** `esteri.it`'s registrant is Italy's foreign ministry —
-   authoritative registry data, not prose. **Measure coverage before committing:** GDPR redaction is
-   heaviest on European ccTLDs, which is exactly the 19.
-3. **TLS certificate organisation.** OV/EV certificates carry a CA-validated `O=` field, and this project
-   already handles certificates (entry 12). Partial: many authorities now use DV certificates with no
-   organisation. Note it needs a TLS handshake before trust is decided — closer to DNS resolution than to
-   fetching evidence, but say so explicitly rather than sliding past it.
+2. ~~**Registry (RDAP/WHOIS) organisation data.**~~ **Dropped, measured 1 of 16 (entry 66).** It adds
+   nothing TLS did not already give, and the failure is worse than the GDPR redaction predicted here:
+   **13 of the 16 ccTLDs answer no RDAP at all.** Norway's response names only the *registrar*, which
+   says nothing about who owns the domain — do not count that as a hit if this is ever revisited.
+3. **TLS certificate organisation.** **Measured 9 of 16 (entry 66) — the one that works, and it is not
+   automatic.** OV/EV certificates carry a CA-validated `O=`, and eight of the nine name the authority
+   outright (`Auswärtiges Amt`, `Migrationsverket`, `Ministerstvo vnitra`). The ninth, Hungary, names
+   `NISZ Zrt.`, a state IT operator rather than an authority — so this yields a **name, not a verdict**,
+   and one judgement in nine has to come out *no*. Confirmed: it needs a TLS handshake before trust is
+   decided.
 4. **Cross-vouching from an already-trusted domain.** For the ten countries that *do* have a marked
    domain, `interno.gov.it` naming `esteri.it` as the foreign ministry is the government vouching for its
    own domain — the existing `appointed_by` idea generalised. **The hole:** governments link to
@@ -151,16 +156,24 @@ judgement, and the cheap measurement comes first:
    `ARCHITECTURE.md` says appointing a provider is human judgement never automated. This is a decision to
    argue, not a patch to apply.
 
-**Do the measurement first** — for the 19, how many are covered by (1), (2) and (3)? It is offline-ish,
-needs no search credit, and it decides whether this item is automatable or genuinely needs a human. If
-most are covered, the production goal survives; if not, reviewed data is the honest answer and the review
-is 19 countries rather than 198.
+**~~Do the measurement first~~ — done 2026-08-25, entry 66, and it answers the question against the
+production goal.** Coverage of the 16: TLS 9, RDAP 1, **neither 7** (BE, CL, DK, GR, IE, NO, RU — all
+serving DV certificates that name nobody). Mechanism (1), a government's own published domain list, is
+**still unmeasured** and is not generically probeable; it matters only for those seven, so that
+follow-up is bounded to seven countries rather than sixteen.
 
-**Then the two problems the measurement is for:**
+**So: reviewed data is the honest answer, and the review is small.** Automating it away is not
+available — seven have nothing machine-readable, and the nine that do still need a person to say
+whether the named organisation is the government. What changed is the *shape* of that work: for nine
+countries a reviewer reads a CA-validated organisation name and confirms it in seconds, and the
+certificate is exactly the independent evidence `CountryAuthorities.reviewed` demands. Seven are
+research. Both are one-time.
 
-- **16 of 51 governments have no governmental marker in their hostname** (19 before entry 65). The amendment is an authority
-  domain named in the entry 34 registry, by whichever of the four mechanisms above survives measurement
-  — **never a wider regex.** Adding `.de`, `.nl`, `.it` as markers would trust every commercial site in
+**Then the two problems the measurement was for:**
+
+- **16 of 51 governments have no governmental marker in their hostname** (19 before entry 65). The
+  amendment is an authority domain named in the entry 34 registry — **never a wider regex**, and now
+  with the evidence for each row coming from its TLS certificate where one names an organisation. Adding `.de`, `.nl`, `.it` as markers would trust every commercial site in
   those countries, and `belongs_to_destination` cannot narrow it, because for exactly these countries the
   own-TLD test is the only other signal there is. `tests/test_trust_coverage.py` asserts that trap
   directly: it checks a German visa agency is indistinguishable from the ministry on the only half that
