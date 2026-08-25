@@ -125,19 +125,29 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 Entry 67 called batch 1 done. It was not, and the correction changes what every future batch costs.
 
 **What entry 67 achieved is *reachability*:** fourteen countries have registry rows, twelve carry a
-confirmed domain, and the trust rule accepts them. That is the first of three stages and the cheapest.
+confirmed domain, and the trust rule accepts them. That is the first of three stages and the cheapest —
+and counting the rest of the registry the same way showed the gap was never about those fourteen.
 
 ### What "done" means for a batch, from now on
 
+**Batch 1 is every reachable country — all 53 — not the fourteen entry 67 added.** Those fourteen were
+added to *catch up* to the ones already in the registry, and the ones already there are in no better
+state: **41 of the 53 have never had a single corridor run against them.** A registry row was never
+evidence that a country works.
+
 | | stage | batch 1 today |
 | --- | --- | --- |
-| 1 | **Reachable** — a confirmed authority domain | **12 of 14** (IS and LI refuse) |
-| 2 | **Resolves** — a representative nationality set yields a visa decision, or refuses for a named reason that is *correct* | **1 of 12** — and 11 of those have simply never been run |
-| 3 | **Fast** — served from a stored corpus rather than a live crawl | **0 of 12** |
+| 1 | **Reachable** — a confirmed authority domain | **53 of 198** |
+| 2 | **Resolves** — a representative nationality set yields a visa decision, or refuses for a named reason that is *correct* | **12 of 53.** 41 have never been run, which is not the same as failing |
+| 3 | **Fast** — served from a stored corpus rather than a live crawl | **10 of 53** |
+
+Fully done: AE, CA, DE, FR, GB, JP, NL, SE, SG, US — ten. Austria and Norway resolve but crawl.
+Everything else is a row nobody has tried: AU, BE, BG, BR, CH, CN, CY, CZ, DK, EE, EG, ES, FI, GR, HR,
+HU, ID, IE, IN, IT, KR, LT, LU, LV, MA, MT, MX, MY, NZ, PH, PL, PT, RO, SA, SI, SK, TH, TR, UY, VN, ZA.
 
 **No more countries are added until batch 1 clears all three.** Adding breadth on top of untested depth
 is how a registry of 198 rows becomes 198 unverified claims, and the cost of finding that out grows
-with every batch.
+with every batch. That failure had already happened quietly — 41 rows deep — before anyone counted.
 
 ### Accuracy is deliberately not a stage, and not the codebase's job
 
@@ -158,15 +168,17 @@ refuses the named reason has to be true of what was seen — which is the discip
 
 ### Stage 3 is latency, and it is already understood
 
-None of the fourteen has a corpus, so every one crawls in the request path. Entry 55 measured
-corpus-routing at **2.1×–5.2× faster** — Singapore 56.1s → 10.8s. So stage 3 is `visa-discover corpus`
-per country, and it is the expensive one: ~49 searches and up to 1,200 page fetches each, against 4
+**43 of the 53 have no corpus**, so they crawl in the request path. Entry 55 measured corpus-routing at
+**2.1×–5.2× faster** — Singapore 56.1s → 10.8s. So stage 3 is `visa-discover corpus` per country, and it
+is by far the expensive stage: **~1,792 searches and up to 51,600 page fetches** for the 43, against 4
 searches for a registry row.
 
-**Deliberately after stage 2.** A corpus built for a country whose corridors do not yet resolve is a
-corpus of unknown value, and known problem 24 records how badly coverage varies — Japan's holds 1 of
-its 6 role pages. Build it where the corridors are known to work, so a thin one is visible as a
-regression rather than baked in as a baseline.
+**Deliberately after stage 2**, and the cost is why it matters. A corpus built for a country whose
+corridors do not yet resolve is a corpus of unknown value, and known problem 24 records how badly
+coverage varies — Japan's holds 1 of its 6 role pages. Build it where the corridors are known to work,
+so a thin one is visible as a regression rather than baked in as a baseline. Running stage 2 first also
+tells us which countries are worth 42 searches each and which are refusing for a reason a corpus cannot
+fix.
 
 ### What this supersedes
 

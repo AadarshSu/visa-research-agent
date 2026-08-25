@@ -58,7 +58,7 @@ destinations.
 | --- | --- |
 | **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of four and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **31** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
-| **Verified working** | the 5 destinations of entry 58 plus Japan, Singapore, France, Sweden. **Batch 1's twelve are reachable and almost entirely unrun** — 1 of 12, none corpus-routed. Item 30. |
+| **Verified working** | **12 of the 53 reachable have ever been run; 10 have a corpus.** Fully done: AE, CA, DE, FR, GB, JP, NL, SE, SG, US. AT and NO resolve but crawl. **41 have never been tried.** Item 30. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
@@ -83,11 +83,15 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
 
-**Item 30 leads: perfect batch 1 before adding a single further country.** The registry now grows in
-batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*. Batch 1
-— the EU and EEA — is at stage 1. Twelve of its fourteen have a confirmed domain; **one has ever been
-run and none has a corpus**, so all twelve crawl on every request. The other eleven have never been
-tried, which is not the same as failing.
+**Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
+batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
+
+**Batch 1 is all 53 reachable countries.** The fourteen added on 2026-08-25 were catching up to the
+ones already in the registry — and counting those the same way is what found the real gap: **41 of the
+53 have never had a single corridor run against them**, which is not the same as failing, and **43 have
+no corpus**. Ten are fully done (AE, CA, DE, FR, GB, JP, NL, SE, SG, US); Austria and Norway resolve but
+crawl. A registry row was never evidence that a country works, and that had gone uncounted 41 rows
+deep.
 
 **Accuracy is verified by the project owner, outside this repository, and is deliberately not a
 stage.** Do not build a truth set, a correctness grader or an accuracy metric here without asking

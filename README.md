@@ -13,8 +13,8 @@ domain that could be confirmed, so they refuse too.
 **Reachable is not the same as working**, and the difference is deliberate (`DECISIONS.md` entry 68).
 The registry grows **in batches**, and a batch is done in three stages — *reachable*, then *resolves*,
 then *fast from a stored corpus*. No further country is added until the current batch clears all three.
-Batch 1 is the EU and EEA and is at stage 1. See `visa-discover registry --only` and
-`visa-discover audit`.
+**Batch 1 is all 53**: 12 have ever been run and 10 have a corpus, so most of it is stage 1. See
+`visa-discover registry --only` and `visa-discover audit`.
 
 Whether a visa decision is **correct** is verified outside this repository; the codebase's own measures
 report whether a corridor answered, never whether the answer was right.
