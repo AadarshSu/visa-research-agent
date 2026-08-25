@@ -48,6 +48,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [25](#25-the-politeness-delay-is-owed-to-a-host-not-to-the-crawl) | The politeness delay is owed to a host, not to the crawl |
 | [27](#27-a-block-becomes-a-next-step-name-the-page-hand-over-the-link-decide-nothing) | A block becomes a next step: name the page, decide nothing |
 | [32](#32-a-block-hands-over-a-link-only-when-it-plausibly-held-the-answer) | A block hands over a link only when it plausibly held the answer |
+| [73](#73-cyprus-and-slovakia-were-never-refusing-us--entry-70-read-a-challenge-as-a-refusal) | **A header-only test read a challenge as a refusal** — Cyprus and Slovakia are answerable |
 | [35](#35-the-posture-is-honest-client-not-anonymous-client--and-the-bar-that-decides-whether-this-is-a-product) | **Honest client, not anonymous client** — and the bar that decided the product question |
 | [36](#36-robotstxt-is-read-and-obeyed-and-a-page-skipped-for-it-is-its-own-outcome) | `robots.txt` is read and obeyed; a page skipped for it is its own outcome |
 | [41](#41-a-challenge-is-not-a-refusal-answer-it-as-an-honest-browser-and-honour-every-robotstxt) | A challenge is not a refusal — answer it as an honest browser |
@@ -87,6 +88,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [52](#52-entry-47s-pin-only-half-existed-the-truncation-dropped-it) | Entry 47's pin only half existed |
 | [56](#56-the-vocabulary-asked-the-question-and-could-not-recognise-the-answer) | The vocabulary could not recognise the answer |
 | [61](#61-the-united-kingdoms-answer-was-five-deep-in-a-list-that-reserved-three) | **Five reserved places per role** — the United Kingdom went 0/8 → 4/4 |
+| [72](#72-a-post-named-in-the-host-was-no-post-at-all--and-the-fix-that-looked-obvious-was-wrong-twice) | **A post named in the host read as no post** — and the obvious fix broke 165 correct pages |
 | [62](#62-the-nationality-bonus-is-left-alone--four-fixes-four-disproofs-and-a-cost-of-027-places) | The nationality bonus is left alone — four fixes, four disproofs |
 
 ### The stores: corpus, corridors, freshness
@@ -119,6 +121,160 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 73. Cyprus and Slovakia were never refusing us — entry 70 read a challenge as a refusal
+**2026-08-25 · measured. Corrects entry 70 and known problem 11; TODO item 5 is now worth two countries**
+
+Entry 70, written earlier the same day, said `www.gov.cy` answers *"a plain `403` … with **no
+`cf-mitigated` header** — a real refusal, not France's challenge, so entry 41 does not apply"*. **That
+is wrong, and it was wrong because only the headers were read.**
+
+### What the four `403` hosts actually say
+
+Fetched with the project's own user agent, headers **and body**:
+
+| | what came back | what it is |
+| --- | --- | --- |
+| `www.gov.cy` | `403`, body: `<meta name="description" content="Azure WAF JS Challenge">` | **challenge** |
+| `www.mzv.sk` | `403`, `cf-mitigated: challenge`, *"Just a moment…"* — and `robots.txt` answers **`200`**, disallowing only `/*p_auth` | **challenge**, with permission stated |
+| `urm.lt` | `403`, `cf-mitigated: challenge`, *"Just a moment…"* | **challenge** |
+| `www.mfa.gr` | `403`, Akamai, *"You don't have permission to access…"*, no JS anywhere | **refusal** |
+
+**Azure does not set `cf-mitigated`; it declares the challenge in the body.** So a header-only test
+finds Cloudflare and misses Azure entirely, and entry 41's own line — *"the line is 'did the authority
+state anything', not 'which status came back'"* — is exactly the line a header-only test cannot draw.
+Cyprus stated nothing. It asked whether we could run JavaScript.
+
+Slovakia is the sharpest case in the whole registry: its `robots.txt` **answers, and permits us**. The
+authority's stated crawl policy is yes, and a WAF in front of it is testing for a browser.
+
+### Whether an honest client can answer them, measured
+
+The project's own `PlaywrightPageRenderer`, under the project's own user agent
+(`VisaResearchAgent/0.1 (personal visa research; contact repository owner)`) — no spoofing, nothing
+disguised:
+
+```
+https://www.gov.cy/mfa/   -> PASSED   70,977 chars   (?afd_azwaf_tok=… appended by the WAF)
+https://www.mzv.sk/en/    -> PASSED  377,224 chars
+https://www.urm.lt/en/    -> CHALLENGE STILL  (also at a 20s settle)
+https://www.mfa.gr/en/    -> Access Denied, 289 chars
+```
+
+So **two of the four countries that lose their entire trusted set to a "403" are answerable by an
+honest client**, and one is not answerable at all.
+
+**Lithuania is a third outcome and it must be named as one.** Cloudflare's managed challenge is
+fingerprinting past the user agent — headless Chromium, most likely. Getting through it would mean
+disguising the client, which is the deception entry 35 forbids in terms, and it is not being
+attempted. *"Challenged, and the challenge could not be answered honestly"* is neither a refusal nor a
+pass, and reporting it as either would be false.
+
+**Greece stays refused, and that is the rule working.** An Akamai `Access Denied` with no JS to run is
+an authority saying no. Entry 41 does not touch it and neither does this.
+
+### What follows, and what is deliberately not done yet
+
+The decision is already made — entry 41 decided a challenge may be answered by the renderer, and TODO
+item 5 has carried it as unimplemented since 2026-08-19. What this entry adds is a **price**: it is
+worth Cyprus and Slovakia outright, on top of France, and it needs a challenge test that reads the
+**body** as well as the headers.
+
+**Not implemented in this session**, and the reason is not doubt about the decision. It changes
+`render_mode`, which is committed reviewable policy, and it cannot be verified end to end right now
+because the search account hit its cap mid-session. Shipping a retrieval change verified only by unit
+tests is how this project has previously convinced itself of things that were not true. The
+measurement above is the part that was missing; the implementation is item 5.
+
+**And the interface still says the wrong thing.** A challenged authority is described to travellers as
+one that *"does not permit automated retrieval"*. That was untrue of France when entry 41 said so in
+August, and it is now untrue of Cyprus, Slovakia and Lithuania as well.
+
+---
+
+## 72. A post named in the host was no post at all — and the fix that looked obvious was wrong twice
+**2026-08-25 · measured, disproved twice, then implemented. Narrows known problem 9; TODO item 1**
+
+Entry 70 reported that for an Indian passport holder resident in Great Britain, Australia, Brazil and
+Slovenia all answered from their **New Delhi** post. **Two-thirds of that was wrong**, and running it
+rather than re-reading it is what showed the difference:
+
+- **Brazil was right.** Its checklist, route, fees and processing times all came from
+  `consulado-edimburgo` — the Edinburgh consulate, which serves a UK resident. Only the *decision*
+  came from New Delhi, and a visa decision is the same at every consulate.
+- **Australia** was not a ranking failure either: `uk.embassy.gov.au` *was* shortlisted and fetched,
+  and answered `HTTP 500`.
+- **Slovenia is real.** Its `general_entry` is `gov.si/assets/predstavnistva/new-delhi/…`, the common
+  information sheet *for applicants in India*, handed to someone in London.
+
+The mechanism, measured with `mission_affinity` rather than inferred:
+
+```
+india.embassy.gov.au/ndli/...            -> None      (should be "other")
+uk.embassy.gov.au/lhlh/...               -> own
+gov.br/.../embaixada-nova-delhi/...      -> other     path names the post
+gov.si/assets/predstavnistva/new-delhi/  -> None      bare segment, no marker prefix
+```
+
+Two gaps. **A post named in a host label** was never concluded as "other" — only "own" was ever read
+from a host — so `india.embassy.gov.au` competed as though it were a neutral ministry page. **A post
+named as a bare path segment** is missed too, because `mission_in_path` requires a `<marker>-<post>`
+shape like `consulado-edimburgo`.
+
+### The obvious fix, and the two measurements that killed it
+
+Treat any token claimed as a mission label by a country that is not the residence as another post.
+Over the 132 recorded corridors:
+
+```
+58,209 candidates flip to "other" — and 165 pages that had FILLED A ROLE would be penalised
+```
+
+Among the casualties: Estonia's *"List of supporting documents in the United Kingdom"*,
+`gov.pl/web/unitedkingdom`, `dirco.gov.za/uk`, `conslondra.esteri.it`. The fix would have broken
+precisely the corridors that were already correct.
+
+**Why**, and it is not what it looked like. The blamed tokens were `cz`, `be`, `hr`, `ch`, `in`, `id`,
+`lv`, `eg` — **every one the destination's own country code**, read out of its own hostname.
+`mzv.gov.cz` is not another post; it is Czechia. The rule was treating the destination as a foreign
+mission.
+
+Exempting the destination *and* skipping the registrable domain gives:
+
+```
+host subdomain labels only:  703 flip; ONE had filled a role — india.embassy.gov.au, the page
+                                       this exists to demote
+host labels and path too:  4,178 flip; three had filled a role
+```
+
+**The host-only rule is what shipped.** The path variant is more aggressive, two of its three
+role-page changes are corrections rather than harm, and it is the only thing that would catch
+Slovenia — but "would have been right twice out of three" is not a measurement, and the bare-segment
+gap is left open and written down rather than guessed at.
+
+### Which roles a post governs
+
+`fees` and `processing_times` join `document_checklist` and `application_route` in
+`POST_SPECIFIC_ROLES`. Measured cause: `brazil/US/US` took the **Edinburgh** fee page for a traveller
+in the United States. A fee is quoted in the post's currency; a processing time is that post's queue.
+
+**`visa_decision` is deliberately left out**, and this is the load-bearing part. Whether a passport
+needs a visa is set by the destination's law and is identical at every consulate, so demoting the page
+that states it would refuse corridors to buy nothing — and it is the one role whose absence refuses a
+corridor at all. `general_entry` is out for the same reason: Schengen entry conditions do not vary by
+where someone lodges. So the New Delhi decision pages entry 70 complained about **keep their places on
+purpose**; what changes is that they stop competing for the four roles where the post is the answer.
+
+### Verified how far
+
+Unit level, and no further. `india.embassy.gov.au` now reads "other", `mzv.gov.cz` and
+`vistos.mne.gov.pt` still read as no post, and three tests pin the behaviour including the
+destination-exemption that measurement forced. **Live verification is owed**: the search account hit
+its usage cap immediately afterwards, and the one corridor that did re-run (`australia/IN/GB`) changed
+its answer for an unrelated reason — `india.embassy.gov.au` timed out — which no affinity change could
+have caused, since affinity never touches `visa_decision`.
 
 ---
 
@@ -243,12 +399,15 @@ That closes the nationality dimension and **opens the residence one**, which is 
 authorities largely index on the other axis. Known problem 9 knew this from the other end — "for a
 consular checklist the **post** governs" — without connecting it to what a batch has to test.
 
-**And three destinations pick the post by nationality instead, which is the wrong page.** For an
-Indian passport holder resident in Great Britain, Australia answered from `india.embassy.gov.au`,
-Brazil from `embaixada-nova-delhi` and Slovenia from `embassy-new-delhi` — the post serving their
-*passport*, not the one they must lodge at. The visa *decision* may survive that (Australia's rule is
-nationality-based), but fees, lodging route and checklist do not. That is known problem 9's residual,
-now observed on three further countries; TODO item 1.
+**And three destinations answered the *decision* from the post serving the passport rather than the
+residence** — Australia from `india.embassy.gov.au`, Brazil from `embaixada-nova-delhi`, Slovenia from
+`embassy-new-delhi`, all for an Indian passport holder resident in Great Britain.
+
+> **Corrected by entry 72, which measured it rather than re-reading it.** Brazil's checklist, route,
+> fees and processing times all came from `consulado-edimburgo` — the *right* post — so Brazil is not
+> a wrong-post case at all, and Australia's London post was fetched and answered `HTTP 500`. What is
+> real is Slovenia's `general_entry`, and a Brazilian **fee** page from Edinburgh served to a
+> traveller in the United States. Entry 72 has the mechanism and the fix.
 
 **A page per nationality — entry 69's "the real risk" — was not the shape of a single one of the 41.**
 
@@ -326,10 +485,13 @@ mislaid both.
 
 ### Blocks, and one that finally qualified
 
-`www.gov.cy` and `www.mfa.gr` both answer a plain `403` with **no `cf-mitigated` header**, verified
-independently with `curl` — real refusals, not France's challenge, so entry 41 does not apply and the
-renderer may not be pointed at them. Across the run set 80 pages are `blocked` and 102 `disallowed`,
-against 0 and 23 before this stage.
+Across the run set 80 pages are `blocked` and 102 `disallowed`, against 0 and 23 before this stage.
+
+> **This entry originally called Cyprus's `403` a real refusal, on the strength of a missing
+> `cf-mitigated` header. That is wrong — see entry 73.** Azure declares its challenge in the *body*,
+> so a header-only test finds Cloudflare and misses Azure entirely. `www.gov.cy` and `www.mzv.sk` are
+> **challenges**, both answerable by our own renderer under our own user agent; `urm.lt` is a
+> challenge our renderer cannot honestly answer; only Greece's `www.mfa.gr` is a real refusal.
 
 **Malta and Thailand produced the first `resolved_decision_blocked` corridors ever recorded** — four
 of them. Entries 27, 32 and 57 have been live since August and had never fired on a real corridor:

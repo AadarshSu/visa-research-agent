@@ -12,6 +12,15 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally).
 
+**Blocked on search: `SEARCH_API_KEY` answers `402 Usage limit exceeded`** — `current_spend 25.01`
+against a `25.0` cap, checked with a single query, so it is the real thing and not the throttle below.
+Stage 3 needs ~1,792 searches and cannot start until the cap is raised.
+
+**Item 5 is now worth two countries, not just France** (entry 73): `www.gov.cy` and `www.mzv.sk` serve
+*challenges*, not refusals, and our own renderer reads both under our own user agent. The challenge
+test must read the response **body**, because Azure declares it there and sets no `cf-mitigated`
+header — which is how entry 70 came to call Cyprus a refusal for half a day.
+
 **Item 30's stage 2 is finished, and stage 3 is what is left of it.** All 41 never-run destinations
 ran on 2026-08-25 — 103 corridors — and every one resolved or refused for a verified reason; 32 of 41
 answered at least one passport. The sweep also found two defects no five-country corridor could
@@ -119,7 +128,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventeen rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.

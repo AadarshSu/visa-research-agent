@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-25 — update this line when you touch the handoff |
-| **Tests** | 487 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 490 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has seventeen rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has twenty rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -85,6 +85,11 @@ it cannot drift; this file deliberately does not copy it.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
+
+**Both providers are at their cap right now.** `SEARCH_API_KEY` answers `402 Usage limit exceeded`
+(`current_spend 25.01` against a `25.0` limit — genuine, not the throttle CLAUDE.md warns about;
+a single query was checked). Nothing that needs discovery can run until that is raised, stage 3
+included. OpenAI was topped up mid-session and is fine.
 
 **Stage 2 is done, and stage 3 is what remains of item 30.** All 41 never-run destinations ran on
 2026-08-25 — 103 corridors, two or three passports each, with `--from` deliberately different from
@@ -220,13 +225,19 @@ re-add the amendment history here.
    the adjudicator discards the wrong-post page, so the corridor throws away a checklist it fetched.
    TODO item 1.
 
-   **Observed on three further countries, 2026-08-25** (entry 70). For an Indian passport holder
-   resident in Great Britain, Australia answered from `india.embassy.gov.au`, Brazil from
-   `embaixada-nova-delhi` and Slovenia from `embassy-new-delhi` — the post serving their *passport*
-   rather than the one they must lodge at. South Africa, Poland, Estonia and Italy got the same
-   corridor right (`dirco.gov.za/uk`, `gov.pl/web/unitedkingdom`, a UK supporting-documents list,
-   `conslondra.esteri.it`), so this is a mis-pick rather than a missing capability. The visa
-   *decision* can survive it; fees, lodging route and checklist do not.
+   **Narrowed and half fixed, 2026-08-25** (entry 72). A post named in a **host label** —
+   `india.embassy.gov.au` — was never concluded to be *another* post, only ever "own" or nothing, so
+   it competed as a neutral ministry page. That is fixed, and `fees` and `processing_times` joined the
+   roles a foreign post loses points for, after `brazil/US/US` was measured taking Brazil's
+   **Edinburgh** fee page. `visa_decision` and `general_entry` are deliberately excluded — a visa rule
+   is the same at every consulate, and demoting the only page that states it would refuse corridors to
+   buy nothing.
+
+   **Still open: a post named as a bare path segment.** `gov.si/assets/predstavnistva/new-delhi/…` is
+   the common information sheet for applicants *in India*, served to someone in London, and
+   `mission_in_path` misses it because it requires a `consulado-edimburgo` shape. Measured at 4,178
+   flips and three role pages, two of them corrections — not enough to ship on. **And the fix is only
+   verified at unit level**: the search account capped out immediately afterwards.
 
 10. **The model decider is non-deterministic, and it is now the only variance left.** Isolated for the
    first time on 2026-08-23 (entry 53): with the candidate count and shortlist identical across runs,
@@ -242,10 +253,17 @@ re-add the amendment history here.
    answers `520` and `503` so nothing was requested — and **80 are `blocked`**, led by `www.mfa.gr`,
    `www.gov.cy`, `mzv.sk` and `urm.lt`. **An outright `403` has now cost corridors**, which the
    previous two readings of this number said it had not — Lithuania and Slovakia lose their *entire*
-   trusted set to one: `www.gov.cy`
-   answers `403` from Azure Front Door with **no `cf-mitigated` header**, so it is a real refusal and
-   entry 41's challenge exception does not apply; `www.police.gov.cy` `301`s into the same wall; and
-   `www.mip.gov.cy` presents a certificate that expired 2026-08-02 and is refused rather than bypassed.
+   trusted set to one, and Cyprus all three of its domains.
+
+   **But most of those `403`s are challenges, not refusals, and this entry said the opposite for
+   half a day** (entry 73). Azure declares a challenge in the response **body**, so a header-only
+   test finds Cloudflare and misses Azure: `www.gov.cy` is an *Azure WAF JS Challenge* and
+   `www.mzv.sk` a Cloudflare one whose `robots.txt` answers `200` and **permits us**. Both are read
+   successfully by our own renderer under our own user agent — 71,000 and 377,000 characters. `urm.lt`
+   is a challenge our renderer cannot answer honestly, which is a third outcome and not a refusal.
+   Only **Greece's `www.mfa.gr`** — Akamai, *"You don't have permission"*, no JS — is a real refusal.
+   Cyprus's `www.mip.gov.cy` is separate again: a certificate that expired 2026-08-02, refused rather
+   than bypassed.
    Both Cyprus corridors refuse, name the blocked hosts, and correctly do not claim
    `resolved_decision_blocked` — nothing was read, and entry 32 requires a source. Verified
    independently with `curl`; entry 70. **Greece's `www.mfa.gr` answers a plain `403` too**, verified
