@@ -18,6 +18,7 @@ from bs4.element import Tag
 from pydantic import AnyHttpUrl
 from pypdf import PdfReader
 
+from visa_research_agent.config.settings import settings
 from visa_research_agent.domain.models import (
     BLOCKING_STATUS_CODES,
     ConfiguredSource,
@@ -27,6 +28,7 @@ from visa_research_agent.domain.models import (
     RetrievalReport,
     SourceFailure,
     SourceReference,
+    is_challenge,
 )
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LiveSourceError
@@ -247,6 +249,7 @@ class LiveSourceFetcher:
         maximum_bytes: int = 12_000_000,
         renderer: PageRenderer | None = None,
         maximum_renders: int = 5,
+        challenge_settle_milliseconds: int = settings.render_challenge_settle_milliseconds,
         transport: httpx.AsyncBaseTransport | None = None,
         now: Callable[[], datetime] = _utc_now,
         robots: RobotsCache | None = None,
@@ -273,6 +276,7 @@ class LiveSourceFetcher:
         # The *limit* lives here because it is configuration; what a run has spent does not, and
         # a `RenderBudget` is built per `fetch` instead. See that class for why.
         self.maximum_renders = maximum_renders
+        self.challenge_settle_milliseconds = challenge_settle_milliseconds
         self.transport = transport
         self.now = now
         # Each host's own crawl policy. Built here rather than injected so retrieval cannot be
@@ -381,16 +385,48 @@ class LiveSourceFetcher:
             self.cache.store(revalidated)
             return self._build(configured_source, revalidated, from_cache=True, is_stale=False)
 
-        if response.status_code in BLOCKING_STATUS_CODES:
+        if response.status_code in BLOCKING_STATUS_CODES or response.status_code == 503:
+            # Establish *which* of the two this is before saying anything about the authority.
+            # A challenge is a capability test — the authority stated nothing — and answering it by
+            # running the page's own scripts under our own user agent misrepresents us to nobody
+            # (entries 41, 73). A refusal is the authority saying no, and is never worked around.
+            if is_challenge(response.status_code, response.headers, response.text):
+                rendered = await self._render(
+                    destination,
+                    str(response.url),
+                    budget,
+                    settle_milliseconds=self.challenge_settle_milliseconds,
+                    awaiting_challenge=True,
+                )
+                if rendered is not None and self._thin_reason(rendered[0]) is None:
+                    content, final_url = rendered
+                    return self._store_and_build(
+                        configured_source, response, content, final_url, now
+                    )
+                return self._serve_stale(
+                    configured_source,
+                    cached,
+                    now,
+                    (
+                        f"the authority asked this client to prove it is a browser (HTTP "
+                        f"{response.status_code}), and that challenge could not be answered here. "
+                        "It stated nothing about its guidance"
+                    ),
+                    "challenged",
+                    status=response.status_code,
+                )
+            if response.status_code == 503:
+                # Not a refusal and not a challenge: an ordinary fault.
+                return self._serve_stale(
+                    configured_source,
+                    cached,
+                    now,
+                    f"the source answered HTTP {response.status_code}",
+                    "unreachable",
+                    status=response.status_code,
+                )
             # Not a fault, and not evidence that the guidance is wrong or absent: the authority is
             # refusing this client. Say exactly that, and let the source be missing.
-            #
-            # But first establish that it *is* a refusal, which this does not yet do (entry 41).
-            # A `403` carrying `cf-mitigated: challenge` is Cloudflare asking whether we are a
-            # browser; `france-visas.gouv.fr` answers that for every path including `/robots.txt`.
-            # Note this branch returns **before** the render branch below, so a challenged page
-            # never reaches the renderer that would answer it — `render_mode: on_demand` today
-            # changes nothing for France. TODO item 5.
             return self._serve_stale(
                 configured_source,
                 cached,
@@ -465,6 +501,35 @@ class LiveSourceFetcher:
         self.cache.store(entry)
         return self._build(configured_source, entry, from_cache=False, is_stale=False)
 
+    def _store_and_build(
+        self,
+        configured_source: ConfiguredSource,
+        response: httpx.Response,
+        content: str,
+        final_url: str,
+        now: datetime,
+    ) -> FetchedSource:
+        """Cache text that arrived by answering a challenge, and hand it back as ordinary evidence.
+
+        The status recorded is the challenge's own — a `403` — because that is what the authority
+        put on the wire, and `CachedSource` records what happened rather than what we wish had. The
+        text is the page the challenge was guarding, read from the authority's own domain by the
+        authority's own scripts.
+        """
+
+        entry = CachedSource(
+            url=str(configured_source.url),
+            final_url=final_url,
+            fetched_at=now,
+            content=content,
+            content_hash=sha256(content.encode()).hexdigest(),
+            http_status=response.status_code,
+            etag=response.headers.get("etag"),
+            last_modified=response.headers.get("last-modified"),
+        )
+        self.cache.store(entry)
+        return self._build(configured_source, entry, from_cache=False, is_stale=False)
+
     def _thin_reason(self, content: str) -> str | None:
         """Why this text cannot be trusted as guidance, or None when it can.
 
@@ -479,7 +544,13 @@ class LiveSourceFetcher:
         return None
 
     async def _render(
-        self, destination: DestinationConfig, url: str, budget: RenderBudget
+        self,
+        destination: DestinationConfig,
+        url: str,
+        budget: RenderBudget,
+        *,
+        settle_milliseconds: int | None = None,
+        awaiting_challenge: bool = False,
     ) -> tuple[str, str] | None:
         """Re-read a page through the renderer, returning its text and where it landed.
 
@@ -489,7 +560,12 @@ class LiveSourceFetcher:
 
         if self.renderer is None or not budget.claim():
             return None
-        rendered = await self.renderer.render(url, destination)
+        rendered = await self.renderer.render(
+            url,
+            destination,
+            settle_milliseconds=settle_milliseconds,
+            awaiting_challenge=awaiting_challenge,
+        )
         if rendered is None:
             return None
 

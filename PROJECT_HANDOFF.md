@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-25 — update this line when you touch the handoff |
-| **Tests** | 495 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 499 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has twenty rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has twenty-one rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -61,7 +61,7 @@ destinations.
 | **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **32 of the 41 answered at least one passport**; nine refuse every passport with a diagnosis checked against what was seen — CY, DK, IN, LT, MA, MX, RO, SA, SK. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
-| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
+| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `destination_mode: automatic` |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
@@ -86,12 +86,19 @@ it cannot drift; this file deliberately does not copy it.
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
 
-**Search is at its cap right now.** `SEARCH_API_KEY` answers `402 Usage limit exceeded`
-(`current_spend 25.01` against a `25.0` limit). Stage 3's ~1,792 searches cannot start until that is
-raised, and the 43 countries with no corpus cannot be researched. OpenAI was topped up mid-session and
-is fine.
+**Both providers have credit again**, and the three things that were blocking stage 3 are fixed and
+confirmed live: search pacing and `402` classification (entry 74), the post-over-nationality
+mis-pick (entry 72), and the challenge (entry 75). **Stage 3 is clear to run.**
 
-**The ten countries with a corpus keep working through it** (entry 74). A search outage now falls back
+**Cyprus resolves and Greece still refuses** (entry 75). A challenge is now its own outcome,
+detected from headers **and body** because Azure declares it only in the body, and answered by the
+renderer under our own user agent — which took `render_mode` to `on_demand`. Cyprus went from refusing
+every passport to answering on its all-nationality list; Slovakia gets a checklist but spends its
+render budget before the decision; Greece's Akamai refusal is untouched and still reported as a
+refusal; Lithuania's challenge fingerprints past the user agent and stays `challenged`, which is
+neither a refusal nor a pass.
+
+**The ten countries with a corpus keep working through a search outage** (entry 74). A search outage now falls back
 to the stored corpus where one exists, says so in the plan's notes with the provider's own figures, and
 is deliberately **not** kept for reuse; with no corpus the refusal still stands. Confirmed live on the
 outage itself: all ten resolved or handed over a tool where every one of them previously died with

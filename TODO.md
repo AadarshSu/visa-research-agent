@@ -12,15 +12,17 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally).
 
-**Blocked on search: `SEARCH_API_KEY` answers `402 Usage limit exceeded`** — `current_spend 25.01`
-against a `25.0` cap. Stage 3 needs ~1,792 searches and cannot start until the cap is raised. The
-program now says this in those words rather than calling it "unavailable" (entry 74), and the ten
-countries that already have a corpus keep working while it lasts.
+**Search has credit again, and the three things that were gating stage 3 are fixed and confirmed
+live**: pacing and `402` classification (entry 74), the post mis-pick (entry 72, six of seven
+regression corridors correct), and the challenge (entry 75, Cyprus resolves). **Stage 3 is clear to
+run.** Build Cyprus's corpus *after* the challenge work, not before — its pages were unreadable until
+today, so a corpus built this morning would have been empty.
 
-**Item 5 is now worth two countries, not just France** (entry 73): `www.gov.cy` and `www.mzv.sk` serve
-*challenges*, not refusals, and our own renderer reads both under our own user agent. The challenge
-test must read the response **body**, because Azure declares it there and sets no `cf-mitigated`
-header — which is how entry 70 came to call Cyprus a refusal for half a day.
+**Item 5's challenge half is done** (entry 75): `challenged` is its own outcome, detected from headers
+**and body**, answered by the renderer under our own user agent, and `render_mode` is now `on_demand`.
+**Cyprus resolves.** Greece's genuine refusal is untouched. Two residuals worth knowing: Slovakia
+challenges every page and spends its render budget before reaching the decision, and Lithuania's
+challenge fingerprints past the user agent — recorded as `challenged`, and not worked around.
 
 **Item 30's stage 2 is finished, and stage 3 is what is left of it.** All 41 never-run destinations
 ran on 2026-08-25 — 103 corridors — and every one resolved or refused for a verified reason; 32 of 41
@@ -129,7 +131,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty-one rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.

@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose twenty rows are
+what has wasted the most time here — see the corrections table further down, whose twenty-one rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **Where it stands, as of 2026-08-24**, so the rest of this file reads in context. The pipeline works
@@ -265,6 +265,7 @@ cause, and only running the thing showed it.
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
 | a wider sweep only tests the countries it runs | breadth found two defects five countries never could (entry 71) |
+| a challenge just needs a longer settle | 9,000ms is *worse* than 2,500ms — it races the redirect (entry 75) |
 | Cyprus's `403` is a refusal, so entry 41 does not apply | Azure declares its challenge in the **body**; it is answerable (entry 73) |
 | three countries send a UK resident to their New Delhi post | Brazil sent them to Edinburgh; only one case was real (entry 72) |
 | treating another country's label as another post is the fix | it broke 165 correct pages — the destination's own code (entry 72) |

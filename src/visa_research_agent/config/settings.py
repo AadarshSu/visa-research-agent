@@ -47,6 +47,14 @@ class Settings(BaseSettings):
     # `config/runtime.yaml`, because it changes how government sites are contacted.
     render_timeout_seconds: float = 20.0
     render_settle_milliseconds: int = 2_500
+    render_challenge_settle_milliseconds: int = 20_000
+    """How long to wait when the render is answering a challenge rather than reading a thin page.
+
+    Measured 2026-08-25: `www.gov.cy` and `www.mzv.sk` both settle well inside this and neither
+    does at 2,500ms, which is why the first corridors run against them still reported the challenge
+    as unanswered. Cloudflare and Azure run a proof-of-work before replacing the interstitial, so
+    this is a property of the challenge rather than of the site. DECISIONS entry 75.
+    """
     # Separate allowances: discovery visits many more pages than retrieval, and a single shared
     # count let the crawl spend it all before the pages that become evidence were read.
     maximum_source_renders: int = 5

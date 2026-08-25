@@ -1,5 +1,6 @@
 """Strict domain models shared by the API and future research workflow."""
 
+from collections.abc import Mapping
 from datetime import date, datetime
 from typing import Literal
 
@@ -36,14 +37,55 @@ DestinationMode = Literal["configured", "automatic"]
 # is a rule about a path we never asked for, so it may be reported but must never resolve a
 # corridor the way a settled refusal can.
 #
-# MISSING, decided as DECISIONS entry 41 and not yet built: `challenged`. `blocked` currently claims
-# every `403` is an authority refusing us, and for `france-visas.gouv.fr` that is false — it answers
-# `cf-mitigated: challenge`, a Cloudflare interstitial saying "enable JavaScript and cookies to
-# continue", and answers it for `/robots.txt` too, so the authority stated nothing at all. That is a
-# capability test rather than a refusal, a real browser under our own user agent answers it, and it
-# must sit outside `blocked_urls()` and `persistent_refusals()` exactly as `disallowed` does. Until
-# then France's failures are reported in words that are not true of what was seen. See TODO item 5.
-FailureOutcome = Literal["untrusted", "unreachable", "unusable", "blocked", "disallowed"]
+# `challenged` is the third thing a `403` can be, and it is not a refusal. Cloudflare and Azure both
+# answer one when they want to know whether the client is a browser: `france-visas.gouv.fr` serves a
+# Cloudflare interstitial saying "enable JavaScript and cookies to continue" — for `/robots.txt` as
+# well — and `www.gov.cy` serves an Azure WAF JS Challenge. **The authority stated nothing** in
+# either case; it asked a question. So a challenge sits outside `blocked_urls()` and
+# `persistent_refusals()`
+# exactly as `disallowed` does, may never resolve a corridor, and may be answered by running the
+# page's own scripts in our own renderer under our own user agent, which misrepresents us to nobody.
+# DECISIONS entries 41 and 73.
+#
+# A challenge we cannot answer stays `challenged` rather than becoming `blocked`. "We could not
+# prove we were a browser" and "the authority refused us" are different statements, and only one of
+# them is about the authority.
+FailureOutcome = Literal[
+    "untrusted", "unreachable", "unusable", "blocked", "disallowed", "challenged"
+]
+
+
+# How a challenge announces itself. Cloudflare sets a header; **Azure declares it only in the
+# body**,
+# which is why a header-only test called Cyprus a refusal for half a day (DECISIONS entry 73).
+#
+# Deliberately narrow, and matched against markers rather than judged: Greece's `www.mfa.gr` answers
+# an Akamai "Access Denied" with no script to run and no question asked, and it must keep being read
+# as the refusal it is. Widening these strings until a refusal matches would quietly convert entry
+# 18's rule into its opposite.
+CHALLENGE_HEADER = "cf-mitigated"
+CHALLENGE_BODY_MARKERS = (
+    "azure waf js challenge",
+    "cdn-cgi/challenge-platform",
+    "_cf_chl_opt",
+)
+
+
+def is_challenge(status_code: int, headers: Mapping[str, str], body: str) -> bool:
+    """Whether a response is a capability test rather than a refusal.
+
+    Only `401`/`403`/`503` are considered at all — a challenge arrives wearing a refusal's status,
+    and looking for these markers on a `200` would let a page that merely mentions Cloudflare be
+    thrown away.
+    """
+
+    if status_code not in {401, 403, 503}:
+        return False
+    if headers.get(CHALLENGE_HEADER, "").strip().lower() == "challenge":
+        return True
+    haystack = body[:20_000].lower()
+    return any(marker in haystack for marker in CHALLENGE_BODY_MARKERS)
+
 
 # Statuses an authority returns to refuse an automated client rather than to report a fault.
 BLOCKING_STATUS_CODES = frozenset({401, 403, 429})

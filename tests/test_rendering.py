@@ -23,6 +23,7 @@ from visa_research_agent.domain.models import (
     FetchedSource,
     RuntimePolicy,
     SourceFailure,
+    is_challenge,
 )
 from visa_research_agent.research.live_sources import LiveSourceFetcher, looks_untranslated
 from visa_research_agent.research.rendering import (
@@ -129,9 +130,18 @@ class FakeRenderer:
         self.html = html
         self.final_url = final_url
         self.calls: list[str] = []
+        self.settles: list[int | None] = []
 
-    async def render(self, url: str, destination: DestinationConfig) -> RenderedPage | None:
+    async def render(
+        self,
+        url: str,
+        destination: DestinationConfig,
+        *,
+        settle_milliseconds: int | None = None,
+        awaiting_challenge: bool = False,
+    ) -> RenderedPage | None:
         self.calls.append(url)
+        self.settles.append(settle_milliseconds)
         if self.html is None:
             return None
         return RenderedPage(final_url=self.final_url, html=self.html)
@@ -464,10 +474,20 @@ def test_no_renderer_is_built_when_the_policy_says_never() -> None:
     assert build_page_renderer(policy("never")) is None
 
 
-def test_the_committed_policy_does_not_start_a_browser_by_default() -> None:
+def test_the_committed_policy_renders_on_demand_and_that_is_deliberate() -> None:
+    """The committed policy is a decision, so it is pinned in both directions.
+
+    It was `never` until 2026-08-25, when answering a **challenge** became the reason to start a
+    browser: a challenge is a capability test rather than a refusal, and Cyprus and Slovakia lose
+    their entire trusted sets to one. DECISIONS entries 41, 73 and 75.
+
+    `on_demand` still never renders a page that already works, and it is never pointed at a genuine
+    refusal — that distinction lives in `is_challenge`, not here.
+    """
+
     from visa_research_agent.config.loader import load_runtime_policy
 
-    assert load_runtime_policy().render_mode == "never"
+    assert load_runtime_policy().render_mode == "on_demand"
 
 
 # --- the one check that needs a real browser -----------------------------------------------
@@ -563,3 +583,55 @@ async def test_a_crawl_records_a_refusal_in_its_own_words() -> None:
 
     assert html is None
     assert "refused automated retrieval" in fetcher.failures[url]
+
+
+# --- telling a challenge apart from a refusal ------------------------------------------------
+
+
+AZURE_CHALLENGE = (
+    '<!doctype html><html><head><meta charset="utf-8"/>'
+    '<meta name="description" content="Azure WAF JS Challenge"/><title>Azure WAF</title>'
+)
+CLOUDFLARE_CHALLENGE = (
+    '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title>'
+    '<script src="/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"></script>'
+)
+AKAMAI_REFUSAL = (
+    "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> "
+    'You don&#39;t have permission to access "http://www.mfa.gr/" on this server.'
+)
+
+
+def test_cloudflare_declares_a_challenge_in_a_header() -> None:
+    assert is_challenge(403, {"cf-mitigated": "challenge"}, "")
+
+
+def test_azure_declares_a_challenge_only_in_the_body() -> None:
+    """The half a header-only test misses, which is how Cyprus was called a refusal for half a day.
+
+    `www.gov.cy` answers `403` from Azure Front Door and sets no `cf-mitigated` header at all.
+    DECISIONS entry 73.
+    """
+
+    assert is_challenge(403, {}, AZURE_CHALLENGE)
+    assert is_challenge(403, {}, CLOUDFLARE_CHALLENGE)
+
+
+def test_a_genuine_refusal_is_not_read_as_a_challenge() -> None:
+    """The line this must not cross.
+
+    Greece's `www.mfa.gr` answers an Akamai "Access Denied" with no script to run and no question
+    asked. It is an authority saying no, it stays `blocked`, and the renderer is never pointed at
+    it — widening the markers until this matched would turn DECISIONS entry 18 into its opposite.
+    """
+
+    assert not is_challenge(403, {}, AKAMAI_REFUSAL)
+    assert not is_challenge(403, {}, "")
+    assert not is_challenge(429, {"cf-mitigated": "challenge"}, "")
+
+
+def test_a_successful_page_is_never_a_challenge_however_it_reads() -> None:
+    """A page may discuss Cloudflare, or embed its script, and still be the guidance itself."""
+
+    assert not is_challenge(200, {"cf-mitigated": "challenge"}, CLOUDFLARE_CHALLENGE)
+    assert not is_challenge(404, {}, AZURE_CHALLENGE)

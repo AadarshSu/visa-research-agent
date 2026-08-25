@@ -18,6 +18,7 @@ import httpx
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
+from visa_research_agent.config.settings import settings
 from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
@@ -30,6 +31,7 @@ from visa_research_agent.domain.models import (
     PERSISTENT_REFUSAL_STATUS_CODES,
     DestinationConfig,
     FailureOutcome,
+    is_challenge,
 )
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.rendering import PageRenderer
@@ -173,6 +175,7 @@ class CrawlFetcher:
         renderer: PageRenderer | None = None,
         minimum_links: int = MINIMUM_CRAWL_LINKS,
         maximum_renders: int = MAXIMUM_CRAWL_RENDERS,
+        challenge_settle_milliseconds: int = settings.render_challenge_settle_milliseconds,
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         host_delay_seconds: float = 0.5,
@@ -194,6 +197,7 @@ class CrawlFetcher:
         # `lru_cache(maxsize=1)` instead and outlives every run, so its allowance is a per-call
         # `RenderBudget`. If this fetcher ever becomes long-lived, this counter has the same defect.
         self.maximum_renders = maximum_renders
+        self.challenge_settle_milliseconds = challenge_settle_milliseconds
         self.renders = 0
         self.transport = transport
         self.sleep = sleep
@@ -263,6 +267,17 @@ class CrawlFetcher:
         """
 
         return {url for url, outcome in self.outcomes.items() if outcome == "disallowed"}
+
+    def challenged_urls(self) -> set[str]:
+        """URLs that asked this client to prove it is a browser, and were not proved to.
+
+        Deliberately outside `blocked_urls()`, for the reason `disallowed_urls` is: nobody asked
+        the authority anything, so nothing here supports telling a traveller that an authority
+        withheld a page. A challenge is a question about the client, not a statement about the
+        guidance. DECISIONS entries 41 and 73.
+        """
+
+        return {url for url, outcome in self.outcomes.items() if outcome == "challenged"}
 
     def persistent_refusals(self) -> set[str]:
         """Refusals that waiting would not change, so the only ones a plan may be built around.
@@ -361,13 +376,24 @@ class CrawlFetcher:
                 )
                 return None
         if response.status_code in BLOCKING_STATUS_CODES:
+            # Which of the two this is decides what may be said about the authority. A challenge is
+            # a browser check and the authority stated nothing; a refusal is the authority saying
+            # no. Entries 41 and 73.
+            if is_challenge(response.status_code, response.headers, response.text):
+                answered = await self._answer_challenge(url, destination)
+                if answered is not None:
+                    return answered
+                self._record_failure(
+                    url,
+                    "challenged",
+                    f"it asked this client to prove it is a browser (HTTP "
+                    f"{response.status_code}), and that challenge could not be answered here. It "
+                    "stated nothing about its guidance",
+                    status=response.status_code,
+                )
+                return None
             # The authority is refusing this client, which says nothing about whether its guidance
             # is correct. Recorded in its own words so a refusal cannot read as "nothing found".
-            #
-            # Same gap as the retrieval path (entry 41): a `403` carrying `cf-mitigated: challenge`
-            # is a browser check rather than a refusal, and this branch returns before
-            # `_render_if_empty` below, so the renderer never sees it. Behind France's challenge at
-            # least one "blocked" URL turned out to be a plain 404. TODO item 5.
             self._record_failure(
                 url,
                 "blocked",
@@ -394,6 +420,33 @@ class CrawlFetcher:
             self._record_failure(url, "unusable", "it returned no content")
             return None
         return html
+
+    async def _answer_challenge(self, url: str, destination: DestinationConfig) -> str | None:
+        """Run the challenge page's own scripts and return the page it was guarding, or None.
+
+        Deliberately shares the render budget with `_render_if_empty`: a site that challenges every
+        page would otherwise spend an unbounded number of browser loads, and the budget is what
+        stops one host from consuming a whole crawl.
+        """
+
+        if self.renderer is None or self.renders >= self.maximum_renders:
+            return None
+        self.renders += 1
+        rendered = await self.renderer.render(
+            url,
+            destination,
+            settle_milliseconds=self.challenge_settle_milliseconds,
+            awaiting_challenge=True,
+        )
+        if rendered is None:
+            return None
+        if not destination.trusts_host(host_of(rendered.final_url)):
+            self._record_failure(
+                url, "untrusted", "answering its challenge navigated off the approved domains"
+            )
+            return None
+        self.final_urls[url] = rendered.final_url
+        return rendered.html
 
     async def _render_if_empty(
         self, html: str, url: str, destination: DestinationConfig

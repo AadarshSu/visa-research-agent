@@ -26,12 +26,17 @@ from types import TracebackType
 from typing import TYPE_CHECKING, Protocol
 
 from visa_research_agent.config.settings import settings
-from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy, StrictModel
+from visa_research_agent.domain.models import (
+    DestinationConfig,
+    RuntimePolicy,
+    StrictModel,
+    is_challenge,
+)
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import VisaResearchError
 
 if TYPE_CHECKING:  # pragma: no cover - imported for typing only, never at runtime.
-    from playwright.async_api import Browser, Playwright, Route
+    from playwright.async_api import Browser, Page, Playwright, Route
 
 
 class RenderConfigurationError(VisaResearchError):
@@ -48,8 +53,21 @@ class RenderedPage(StrictModel):
 
 
 class PageRenderer(Protocol):
-    async def render(self, url: str, destination: DestinationConfig) -> RenderedPage | None:
-        """Return the settled HTML for one URL, or None when it could not be rendered."""
+    async def render(
+        self,
+        url: str,
+        destination: DestinationConfig,
+        *,
+        settle_milliseconds: int | None = None,
+        awaiting_challenge: bool = False,
+    ) -> RenderedPage | None:
+        """Return the settled HTML for one URL, or None when it could not be rendered.
+
+        `settle_milliseconds` overrides the renderer's default wait for one call. Answering a
+        challenge needs several seconds more than reading a client-rendered page does — Cloudflare
+        and Azure both run a proof-of-work before they replace the interstitial — and raising the
+        default for every render would spend that on the pages that never needed it.
+        """
         ...
 
 
@@ -131,7 +149,47 @@ class PlaywrightPageRenderer:
             self._browser = await self._playwright.chromium.launch(headless=True)
         return self._browser
 
-    async def render(self, url: str, destination: DestinationConfig) -> RenderedPage | None:
+    @staticmethod
+    async def _wait_out_challenge(page: "Page", deadline_milliseconds: int) -> tuple[str, str]:
+        """Poll until the interstitial is replaced by the page it was guarding, or time runs out.
+
+        A fixed wait cannot do this, and measuring showed why rather than arguing it: at 2,500ms
+        `www.gov.cy` returns 12,724 characters of interstitial, at 9,000ms the read **fails
+        outright** because the challenge is mid-redirect when `content()` is called, and at
+        15,000ms it returns the real 70,976-character page. The variable is not how long to wait
+        but *what to wait for*, so this watches for the markers to disappear and tolerates the
+        navigation errors that happen while they do.
+
+        Returns whatever the page last held when the deadline passes. That is deliberately not an
+        error: the caller checks the result for challenge markers and reports it unanswered, which
+        keeps "we could not prove we are a browser" a statement about us rather than the authority.
+        """
+
+        from playwright.async_api import Error as PlaywrightError
+
+        html, final_url = "", page.url
+        waited = 0
+        step = 1_000
+        while waited <= deadline_milliseconds:
+            await page.wait_for_timeout(step)
+            waited += step
+            try:
+                html, final_url = await page.content(), page.url
+            except PlaywrightError:
+                # Navigating away mid-read is what a passing challenge looks like. Keep waiting.
+                continue
+            if not is_challenge(403, {}, html):
+                break
+        return html, final_url
+
+    async def render(
+        self,
+        url: str,
+        destination: DestinationConfig,
+        *,
+        settle_milliseconds: int | None = None,
+        awaiting_challenge: bool = False,
+    ) -> RenderedPage | None:
         from playwright.async_api import Error as PlaywrightError
 
         if not is_render_request_allowed(url, destination):
@@ -160,7 +218,7 @@ class PlaywrightPageRenderer:
             # Dialogs are left unhandled deliberately: Playwright dismisses them automatically
             # when nothing is listening, and a modal nobody answers would block the load forever.
             page = await context.new_page()
-            timeout_ms = self.timeout_seconds * 1_000
+            timeout_ms = max(self.timeout_seconds * 1_000, (settle_milliseconds or 0) + 5_000)
             try:
                 await page.goto(url, timeout=timeout_ms, wait_until="domcontentloaded")
                 try:
@@ -169,9 +227,15 @@ class PlaywrightPageRenderer:
                     # A page that polls never goes idle. Its content is usually already in
                     # place, so take what settled rather than discarding the whole render.
                     pass
-                await page.wait_for_timeout(self.settle_milliseconds)
-                html = await page.content()
-                final_url = page.url
+                settle = (
+                    self.settle_milliseconds if settle_milliseconds is None else settle_milliseconds
+                )
+                if awaiting_challenge:
+                    html, final_url = await self._wait_out_challenge(page, settle)
+                else:
+                    await page.wait_for_timeout(settle)
+                    html = await page.content()
+                    final_url = page.url
             except PlaywrightError:
                 return None
         finally:

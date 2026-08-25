@@ -13,14 +13,21 @@ extraction_mode: openai
 
 # Whether a headless browser may read pages that return nothing readable without one.
 #   never     — no browser is ever started. A client-rendered page is refused, honestly.
-#   on_demand — only after an ordinary fetch came back below the readable-text floor, or with
-#               translation placeholders instead of sentences. Pages that already work are
-#               never rendered.
+#   on_demand — only after an ordinary fetch came back below the readable-text floor, came back
+#               with translation placeholders instead of sentences, or came back as a **challenge**
+#               asking whether this client is a browser. Pages that already work are never rendered.
 # Rendering widens no trust: every request the page makes is aborted unless its host is already
 # approved, and where it lands is re-checked exactly as a redirect is.
 # Requires the optional extra: `pip install -e ".[render]"` then `playwright install chromium`.
 # Selecting on_demand without it is a loud error, not a silent fallback.
-render_mode: never
+#
+# **on_demand since 2026-08-25, and the challenge trigger is why** (DECISIONS entries 41, 73, 75).
+# A challenge is a capability test, not a refusal: the authority stated nothing, and answering it by
+# running the page's own scripts under our own user agent misrepresents us to nobody. It is worth
+# Cyprus and Slovakia outright, whose entire trusted sets answer one. A genuine refusal —
+# Greece's Akamai "Access Denied", with no script to run — is still never worked around, and the
+# renderer is never pointed at one.
+render_mode: on_demand
 
 # Which decider assigns roles at the end of discovery.
 #   heuristic — deterministic keyword scoring. Free, offline, explainable, and the regression

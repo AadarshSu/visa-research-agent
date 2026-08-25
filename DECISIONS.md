@@ -51,6 +51,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [73](#73-cyprus-and-slovakia-were-never-refusing-us--entry-70-read-a-challenge-as-a-refusal) | **A header-only test read a challenge as a refusal** — Cyprus and Slovakia are answerable |
 | [35](#35-the-posture-is-honest-client-not-anonymous-client--and-the-bar-that-decides-whether-this-is-a-product) | **Honest client, not anonymous client** — and the bar that decided the product question |
 | [36](#36-robotstxt-is-read-and-obeyed-and-a-page-skipped-for-it-is-its-own-outcome) | `robots.txt` is read and obeyed; a page skipped for it is its own outcome |
+| [75](#75-the-challenge-is-answered-cyprus-resolves-greece-still-refuses-and-the-wait-had-to-be-a-poll) | **The challenge is answered** — Cyprus resolves, Greece still refuses, and a fixed wait races the redirect |
 | [41](#41-a-challenge-is-not-a-refusal-answer-it-as-an-honest-browser-and-honour-every-robotstxt) | A challenge is not a refusal — answer it as an honest browser |
 | [49](#49-a-refusal-met-while-reading-the-shortlist-was-never-reported-at-all) | A refusal met while reading the shortlist must still be reported |
 | [54](#54-one-encrypted-pdf-took-a-whole-corridor-down-and-no-narrower-except-could-have-caught-it) | One encrypted PDF took a whole corridor down |
@@ -122,6 +123,76 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 75. The challenge is answered: Cyprus resolves, Greece still refuses, and the wait had to be a poll
+**2026-08-25 · implemented and confirmed live. Closes TODO item 5's challenge half; implements entries 41 and 73**
+
+Entry 41 decided in August that a challenge may be answered by the renderer. Entry 73 measured what
+that was worth and left it unbuilt. This builds it, and the shape of the fix was decided by
+measurement rather than by the design.
+
+### What was built
+
+- **`challenged` is a `FailureOutcome`**, beside `blocked` and `disallowed`. It sits outside
+  `blocked_urls()` and `persistent_refusals()`, so it can never resolve a corridor, can never reach
+  `inaccessible_domains`, and can never be handed to a traveller as a page an authority withheld.
+  Nobody asked the authority anything.
+- **`is_challenge` reads headers *and* body**, because Cloudflare sets `cf-mitigated` and **Azure
+  declares it only in the body**. It fires on `401`/`403`/`503` alone — the markers on a `200` would
+  throw away a page that merely embeds Cloudflare's script.
+- **Both paths answer one**: retrieval renders the challenged URL and, if the page behind it is
+  readable, caches and returns it as ordinary evidence; the crawl does the same and shares the render
+  budget, so a site that challenges every page cannot consume a whole crawl.
+- **`render_mode` is now `on_demand`**, which is the committed policy change this needed. Without it
+  nothing above ever runs.
+
+### The wait had to become a poll, and three numbers are why
+
+The first live attempt still reported *"that challenge could not be answered here"* on every Cyprus
+page, and the standalone probe had passed. The difference was the settle: 8,000ms in the probe,
+2,500ms in production. Raising it did not fix it either:
+
+```
+settle  2,500ms -> 12,724 chars, still the interstitial
+settle  9,000ms -> render returns None: content() read while the challenge was mid-redirect
+settle 15,000ms -> 70,976 chars, the real page
+```
+
+**So the variable is not how long to wait but what to wait for.** A challenge replaces itself by
+navigating, and a fixed wait races that navigation — the 9,000ms case is worse than the 2,500ms one,
+which no amount of tuning a constant would have revealed. `_wait_out_challenge` polls once a second
+until the markers are gone or a 20s deadline passes, and treats the navigation errors thrown while it
+happens as the signal they are rather than as failures.
+
+Returning whatever the page last held is deliberate: the caller re-checks it, and an unanswered
+challenge is reported as unanswered. *"We could not prove we are a browser"* stays a statement about
+us.
+
+### Live results
+
+**Cyprus resolves.** A country that refused every passport this morning now answers on
+`www.gov.cy/mfa/en/documents/countries-whose-nationals-are-required-to-hold-a-visa-to-enter-the-republic-of-cyprus`
+— the all-nationality list, which is exactly the right page. Its other two domains are unchanged and
+still honestly reported: `www.mip.gov.cy`'s certificate expired on 2026-08-02, and `police.gov.cy`
+publishes a `robots.txt` that excludes this client, which is obeyed.
+
+**Slovakia is better and not fixed.** `mzv.sk` challenges *every* page, so the render budget is spent
+before the decision page is reached: a `document_checklist` now comes back where nothing did before,
+and `visa_decision` is still unresolved. The budget is doing its job — one host may not consume a
+crawl — and raising it is a latency decision nobody has taken. Reported honestly in the meantime.
+
+**Greece still refuses, and that is the test that mattered.** `www.mfa.gr` answers an Akamai
+"Access Denied" with no script to run, `is_challenge` does not match it, the renderer is never pointed
+at it, and it appears under *"refused automated retrieval"* exactly as before. The markers are narrow
+on purpose: widening them until a refusal matched would turn entry 18 into its opposite.
+
+### What this does not change
+
+Lithuania stays refused. Its Cloudflare challenge fingerprints past the user agent, and the only way
+through is to disguise the client, which entry 35 forbids in terms and which is not attempted. It is
+recorded as `challenged` — neither a refusal nor a pass — which is the honest third answer.
 
 ---
 
@@ -343,14 +414,25 @@ corridor at all. `general_entry` is out for the same reason: Schengen entry cond
 where someone lodges. So the New Delhi decision pages entry 70 complained about **keep their places on
 purpose**; what changes is that they stop competing for the four roles where the post is the answer.
 
-### Verified how far
+### Verified live, on a regression set chosen to include what the rejected fix would have broken
 
-Unit level, and no further. `india.embassy.gov.au` now reads "other", `mzv.gov.cz` and
-`vistos.mne.gov.pt` still read as no post, and three tests pin the behaviour including the
-destination-exemption that measurement forced. **Live verification is owed**: the search account hit
-its usage cap immediately afterwards, and the one corridor that did re-run (`australia/IN/GB`) changed
-its answer for an unrelated reason — `india.embassy.gov.au` timed out — which no affinity change could
-have caused, since affinity never touches `visa_decision`.
+Seven corridors, 2026-08-25, after the search cap was raised:
+
+| | post-specific roles now come from | |
+| --- | --- | --- |
+| `slovenia/IN/GB` | `gov.si/en/representations/**embassy-london**` | **fixed** — was New Delhi, and the corridor went from four roles to six |
+| `brazil/IN/GB` | `consulado-**edimburgo**`, all four | unchanged, and it was already right |
+| `estonia/IN/GB` | *"List of supporting documents in the **United Kingdom**"* | unchanged — the page the rejected fix would have penalised |
+| `poland/IN/GB` | `gov.pl/web/**unitedkingdom**` | unchanged, likewise |
+| `czechia/IN/GB` | `mzv.gov.cz`, with `mzv.gov.cz/**london**` for the route | unchanged — the host the rejected fix read as a foreign post |
+| `australia/IN/GB` | — | no post-specific role filled either way |
+| `brazil/US/US` | `consulado-**edimburgo**` for `fees` | **not fixed** |
+
+**Six of seven, and the seventh is worth stating plainly.** Brazil still quotes an Edinburgh fee to a
+traveller in the United States. The page is now demoted rather than neutral, but the mission
+adjustment is a penalty and not a veto, and where nothing better is among the candidates the
+adjudicator still picks the best available. That is a recall problem, not a scoring one, and it is
+the residual this entry leaves open.
 
 ---
 
