@@ -55,6 +55,16 @@ BLOCKING_STATUS_CODES = frozenset({401, 403, 429})
 # `blocked`, because entry 18 requires a refusal never to read as "nothing found"; the distinction
 # governs only what may resolve a corridor or be named as guidance nobody was allowed to read.
 PERSISTENT_REFUSAL_STATUS_CODES = frozenset({401, 403})
+
+# The widest status a server can put on the wire, not the widest the standard defines. A status
+# line is three digits (RFC 9112), so anything from 100 to 999 arrives parsed and has to be
+# *recordable*; refusing to record one turns a strange server into a crashed corridor, which is
+# what `mofa.gov.sa` answering **HTTP 990** did to both Saudi Arabia corridors on 2026-08-25
+# (DECISIONS entry 71). Widening this cannot widen what a refusal may claim: everything that acts
+# on a status tests membership of `PERSISTENT_REFUSAL_STATUS_CODES` or `BLOCKING_STATUS_CODES`
+# above, and 990 is in neither.
+MINIMUM_HTTP_STATUS = 100
+MAXIMUM_HTTP_STATUS = 999
 PlanStatus = Literal["verified", "partial"]
 SourceKind = Literal[
     "immigration_authority",
@@ -428,7 +438,7 @@ class SourceFailure(StrictModel):
     final_url: AnyHttpUrl | None = None
     """Where the request actually landed, recorded when a redirect left the trusted domains."""
 
-    http_status: int | None = Field(default=None, ge=100, le=599)
+    http_status: int | None = Field(default=None, ge=MINIMUM_HTTP_STATUS, le=MAXIMUM_HTTP_STATUS)
     """The status the authority answered with, when there was one.
 
     `outcome` says a page was refused; this says whether waiting could change that. A `429` is a

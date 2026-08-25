@@ -32,6 +32,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
 | [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
+| [71](#71-two-defects-a-sweep-found-that-no-corridor-had-status-990-and-a-chain-morocco-does-not-send) | **Status `990` crashed a corridor; Morocco's chain is now bundled** — two defects only breadth found |
 | [69](#69-batch-1-bounds-destinations-never-nationalities--and-184-of-198-passports-have-no-demonym) | **Batch 1 bounds destinations, not nationalities** — and 184 of 198 passports have no demonym |
 | [68](#68-a-batch-is-done-in-three-stages-and-accuracy-is-measured-outside-the-codebase) | **A batch is done in three stages** — reachable, resolves, fast. Accuracy is verified outside the codebase |
 | [67](#67-the-registry-grows-in-batches-and-a-domain-can-be-confirmed-by-asking-wikidata-about-the-domain) | **Batch 1: EU/EEA, 41 → 53 researchable.** Confirm a domain by asking Wikidata about the domain |
@@ -117,6 +118,68 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 71. Two defects a sweep found that no corridor had: status 990, and a chain Morocco does not send
+**2026-08-25 · both fixed, one with a regression test. Found by TODO item 30, stage 2**
+
+Running 41 countries instead of five turned up two failures that twelve years of five-country
+corridors could not have, and they are opposite kinds of thing.
+
+### `mofa.gov.sa` answered `HTTP 990`, and the corridor died rather than reported it
+
+`SourceFailure.http_status` was `Field(ge=100, le=599)`. `www.sta.gov.sa` answered **990**, so
+building the failure raised a Pydantic `ValidationError` inside `_serve_stale`, which escaped
+`_fetch_source`'s `except httpx.HTTPError`, propagated out through `asyncio.gather`, and ended both
+Saudi Arabia corridors in a traceback with no output at all.
+
+**The bound was describing the standard where the field describes the wire.** A status line is three
+digits (RFC 9112), so anything from `100` to `999` arrives parsed and has to be *recordable* —
+refusing to record one converts a strange server into a crashed corridor, which is the opposite of
+this project's posture. The bound is now `100`–`999`, named once as `MINIMUM_HTTP_STATUS` /
+`MAXIMUM_HTTP_STATUS` so `SourceFailure` and `CachedSource` cannot drift apart.
+
+**Widening it cannot widen what a refusal may claim**, which is the property that had to survive.
+Everything acting on a status tests membership of `PERSISTENT_REFUSAL_STATUS_CODES` or
+`BLOCKING_STATUS_CODES`; `990` is in neither, so it reports as `unreachable` and can never resolve a
+corridor or be handed to a traveller as an authority's refusal. `tests/test_live_sources.py` pins
+both halves — the status is recorded, and it is in neither set.
+
+Saudi Arabia still refuses, and now says why: *"www.sta.gov.sa could not be read because it answered
+HTTP 990"*. That is the bar — a named reason true of what was seen — where before there was a stack
+trace.
+
+### Morocco sends a leaf and no intermediate, which is exactly what `tls_intermediates/` is for
+
+Every Morocco corridor failed with *"certificate verify failed: unable to get local issuer
+certificate"* on `diplomatie.ma`, `in.diplomatie.ma` and `uk.diplomatie.ma`. The site is genuine; it
+serves only its own certificate and omits **Sectigo Public Server Authentication CA DV R36**, which
+browsers fetch automatically and Python does not.
+
+Fetched from the leaf's own AIA URL and checked by the rule the directory's README already sets:
+
+```
+openssl verify -CAfile $(python -c 'import certifi;print(certifi.where())') r36.pem
+r36.pem: OK          # issued by Sectigo Public Server Authentication Root R46, already trusted
+```
+
+So it is added, and **verification stays fully on** — entry 12's whole point. `www.diplomatie.ma` now
+answers `200` where it answered a TLS error.
+
+**Morocco still refuses**, and that is the honest outcome rather than a disappointment: the pages come
+back with too little readable text to trust, because they are client-rendered and `render_mode` is
+`never`. The diagnosis moved from a defect on our side to a property of the site, which is the whole
+value of fixing it. Morocco is a candidate for the `on_demand` renderer, and that is a policy change
+to argue separately, not to slip in here.
+
+### What is general about the two
+
+Both were invisible at five destinations and unmissable at forty-one, and neither is a scoring or
+recall problem — the two things stage 2 was designed to look for. That is an argument for the breadth
+being the point, and against the reflex to widen a batch only after the current one is perfect: some
+defects are only reachable by volume. It does not overturn entry 68's staging, which is about not
+*trusting* untested rows; it qualifies what a stage-2 sweep is worth beyond its own countries.
 
 ---
 

@@ -24,3 +24,4 @@ exactly what verification is meant to reject.
 | File | Subject | Issued by | Needed for |
 | --- | --- | --- | --- |
 | `globalsign-rsa-ov-ssl-ca-2018.pem` | GlobalSign RSA OV SSL CA 2018 | GlobalSign Root CA - R3 | `evisa.gov.vn`, Vietnam's official e-visa portal, which serves an organisation-validated certificate issued to Cục Quản lý xuất nhập cảnh (the Vietnam Immigration Department) but omits this intermediate |
+| `sectigo-public-server-authentication-ca-dv-r36.pem` | Sectigo Public Server Authentication CA DV R36 | Sectigo Public Server Authentication Root R46 | `diplomatie.ma` and its missions (`in.diplomatie.ma`, `uk.diplomatie.ma`), Morocco's foreign ministry, which sends only its leaf certificate. Every Morocco corridor failed with *unable to get local issuer certificate* until this was added (DECISIONS entry 71) |

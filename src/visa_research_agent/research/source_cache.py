@@ -7,7 +7,11 @@ from typing import Literal
 
 from pydantic import Field, ValidationError, field_validator
 
-from visa_research_agent.domain.models import StrictModel
+from visa_research_agent.domain.models import (
+    MAXIMUM_HTTP_STATUS,
+    MINIMUM_HTTP_STATUS,
+    StrictModel,
+)
 from visa_research_agent.research.errors import LiveSourceError
 
 
@@ -20,7 +24,7 @@ class CachedSource(StrictModel):
     fetched_at: datetime
     content: str = Field(min_length=1)
     content_hash: str = Field(min_length=1)
-    http_status: int = Field(ge=100, le=599)
+    http_status: int = Field(ge=MINIMUM_HTTP_STATUS, le=MAXIMUM_HTTP_STATUS)
     etag: str | None = None
     last_modified: str | None = None
 

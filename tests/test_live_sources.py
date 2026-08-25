@@ -9,6 +9,8 @@ from pydantic import AnyHttpUrl
 from visa_research_agent.api.dependencies import build_source_fetcher
 from visa_research_agent.config.loader import load_runtime_policy
 from visa_research_agent.domain.models import (
+    BLOCKING_STATUS_CODES,
+    PERSISTENT_REFUSAL_STATUS_CODES,
     AppointedProvider,
     ConfiguredSource,
     DestinationConfig,
@@ -334,6 +336,29 @@ async def test_error_status_without_cached_evidence_is_reported_as_a_gap(tmp_pat
 
     assert failure.outcome == "unreachable"
     assert "HTTP 503" in failure.detail
+
+
+@pytest.mark.anyio
+async def test_a_status_outside_the_standard_range_is_reported_not_raised(tmp_path: Path) -> None:
+    """A server may answer any three-digit status, and recording one must not kill the corridor.
+
+    `mofa.gov.sa` answered **HTTP 990** on 2026-08-25 and `SourceFailure.http_status` was bounded
+    at 599, so building the failure raised a `ValidationError` out through `asyncio.gather` and
+    both Saudi Arabia corridors ended with a traceback instead of an answer (DECISIONS entry 71).
+    The status is still not a refusal — it is in neither `BLOCKING_STATUS_CODES` nor
+    `PERSISTENT_REFUSAL_STATUS_CODES` — which is the property that must survive the widening.
+    """
+
+    clock = Clock()
+    requests: list[httpx.Request] = []
+    fetcher = build_fetcher(tmp_path, clock, lambda _: httpx.Response(990), requests)
+
+    failure = await fetch_failure(fetcher)
+
+    assert failure.http_status == 990
+    assert failure.outcome == "unreachable"
+    assert failure.http_status not in BLOCKING_STATUS_CODES
+    assert failure.http_status not in PERSISTENT_REFUSAL_STATUS_CODES
 
 
 @pytest.mark.anyio
