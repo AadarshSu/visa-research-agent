@@ -175,10 +175,11 @@ seen. Entry 70 has the table, the shapes and the nine that refuse every passport
 
 - **Answered at least one passport (32):** AU, BE, BG, BR, CH, CN, CZ, EE, EG, ES, FI, GR, HR, HU, ID,
   IE, IT, KR, LU, LV, MT, MY, NZ, PH, PL, PT, SI, TH, TR, UY, VN, ZA
-- **Refused every passport, each for a verified reason (9):** CY, DK, IN, LT, MA, MX, RO, SA, SK — see
-  entry 70's table. These pass stage 2 and are **not** the same as working; several are one policy or
-  configuration change away (Morocco needs `render_mode: on_demand`, Romania a `robots.txt` that can
-  be read).
+- **Refused every passport (7, down from 9):** DK, LT, MA, MX, RO, SA, SK. **Cyprus and India were
+  recovered** the same day by the renderer (entry 75), India with all six roles. These seven pass
+  stage 2 and are **not** the same as working — and **no corpus will fix them** (entry 76): every one
+  fails at *retrieval*, so a corpus crawl meets the identical wall. Morocco was the one that looked
+  like it needed `render_mode: on_demand`; it has it now and still returns too little readable text.
 - **Corpus-routed (10):** AE, CA, DE, FR, GB, JP, NL, SE, SG, US. Everything else crawls.
 
 **Accuracy is not a stage** — whether a decision is *correct* is verified by the project owner outside

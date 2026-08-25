@@ -58,7 +58,7 @@ destinations.
 | --- | --- |
 | **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
-| **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **32 of the 41 answered at least one passport**; nine refuse every passport with a diagnosis checked against what was seen — CY, DK, IN, LT, MA, MX, RO, SA, SK. Item 30's remaining work is stage 3, the 43 corpora. |
+| **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **34 of the 41 answer at least one passport** — Cyprus and India were recovered by the renderer on the same day (entry 75), India with all six roles. **Seven refuse every passport** with a diagnosis checked against what was seen: DK, LT, MA, MX, RO, SA, SK. **No corpus will fix those seven** (entry 76) — every one fails at *retrieval*, and a corpus crawl meets the identical wall. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `destination_mode: automatic` |
@@ -104,6 +104,12 @@ is deliberately **not** kept for reuse; with no corpus the refusal still stands.
 outage itself: all ten resolved or handed over a tool where every one of them previously died with
 `Search is unavailable`. The provider also paces itself now, and a `402` is classified into a spend cap
 or a throttle instead of being reported as one thing.
+
+**What stage 3 buys, measured before paying for it** (entry 76): latency, recall stability across
+passports, and outage tolerance — **not coverage**. 34 of 41 already answer with no corpus at all, and
+search still supplies **30–67% of the pages a corridor actually reads** even in the ten best-built
+corpus countries. Corpus-only is not equivalent to a normal run either: on the real outage one of the
+ten (Netherlands) refused outright and four lost their checklist.
 
 **Stage 2 is done, and stage 3 is what remains of item 30.** All 41 never-run destinations ran on
 2026-08-25 — 103 corridors, two or three passports each, with `--from` deliberately different from
@@ -350,6 +356,10 @@ re-add the amendment history here.
    stage 1 of four, and only 9 destinations have ever been shown to answer a traveller (entry 68).
 
 24. **A thin corpus has no crawl behind it, and coverage varies enormously between countries.**
+   **The open count in this entry is now closed (entry 76):** search supplies **30–67% of the
+   shortlist a corridor actually reads** in the ten corpus countries, and on a real outage corpus-only
+   left the Netherlands refusing outright and four others without a checklist. A corpus keeps a
+   country working; it does not keep it working as well.
    Measured against the pages that actually filled roles on the crawl path: Singapore 6/6, United States
    3/3, Sweden 3/4, France 2/3, Netherlands 1/2, **Japan 1/6** — Japan's corpus holds 29 mission hosts
    and not the London embassy, where five of its six roles came from. It resolved anyway **because
