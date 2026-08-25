@@ -32,6 +32,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
 | [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
+| [68](#68-a-batch-is-not-done-when-it-is-reachable-and-accuracy-is-not-something-this-project-can-yet-measure) | **A batch is done at four stages, not one** — reachable, resolves, accurate, fast. Accuracy is unmeasured |
 | [67](#67-the-registry-grows-in-batches-and-a-domain-can-be-confirmed-by-asking-wikidata-about-the-domain) | **Batch 1: EU/EEA, 41 → 53 researchable.** Confirm a domain by asking Wikidata about the domain |
 | [66](#66-what-could-confirm-a-government-that-marks-no-hostname-tls-half-the-time-and-not-automatically) | **TLS names the authority for 9 of 16; RDAP for 1 and it is dropped.** The human job shrinks to seven |
 
@@ -118,6 +119,69 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 
 ---
 
+## 68. A batch is not done when it is reachable, and accuracy is not something this project can yet measure
+**2026-08-25 · direction, set by the project owner. Supersedes entry 67's "done"**
+
+Entry 67 called batch 1 done. It was not, and the correction is worth recording because it changes what
+every future batch costs.
+
+**What entry 67 actually achieved is *reachability*:** fourteen countries have registry rows, twelve
+carry a confirmed domain, and the trust rule accepts them. That is the first of four stages and the
+cheapest.
+
+### What "done" means for a batch, from now on
+
+| | stage | batch 1 today |
+| --- | --- | --- |
+| 1 | **Reachable** — a confirmed authority domain | **12 of 14** (IS and LI refuse) |
+| 2 | **Resolves** — a representative nationality set yields a visa decision, or refuses for a named reason that is *correct* | **1 of 12** (Norway) |
+| 3 | **Accurate** — the decision is checked against ground truth | **0 of 12 — and not currently measurable** |
+| 4 | **Fast** — served from a stored corpus rather than a live crawl | **0 of 12** |
+
+**No more countries are added until batch 1 clears all four.** Adding breadth on top of untested depth
+is how a registry of 198 rows becomes 198 unverified claims, and the cost of finding that out grows
+with every batch.
+
+### Stage 3 is the one that does not exist yet
+
+`ResolvedCorridor.is_usable` and `RefusalCause.resolved` both mean **an official page stated a
+decision**. Neither means the decision is *right*. Nothing in this repository grades correctness, and
+that gap has been visible twice already: entry 64 recorded that the control arm's answers were never
+graded, and the same sentence was true of ours the whole time and went unsaid.
+
+So stage 3 needs a **truth set**, and it needs the discipline `CountryAuthorities.reviewed` already
+uses: a row cites something independent and checkable, and **a corridor with no truth row yields no
+verdict, never a false one.**
+
+**For this batch that is unusually tractable, which is a reason to do it here first.** Short-stay visa
+requirements for the EU are set centrally rather than per member state, so one list covers most of the
+fourteen — the truth set is not fourteen research jobs. Check the exceptions rather than assuming
+uniformity: Cyprus is not in Schengen, and Bulgaria and Romania joined only partially.
+
+**The sharpest test is a nationality that needs a visa beside one that does not.** A pipeline that says
+"visa required" for everyone scores well on "did it confirm a decision" and is worthless. Stage 2's
+representative set must therefore contain both, per destination.
+
+### Stage 4 is latency, and it is already understood
+
+None of the fourteen has a corpus, so every one crawls in the request path. Entry 55 measured
+corpus-routing at **2.1×–5.2× faster** — Singapore 56.1s → 10.8s. So stage 4 is `visa-discover corpus`
+per country, and it is the expensive stage: ~49 searches and up to 1,200 page fetches each, against 4
+searches for a registry row.
+
+**Deliberately last.** A corpus built for a country whose corridors do not yet resolve is a corpus of
+unknown value, and known problem 24 already records how badly corpus coverage varies — Japan's holds 1
+of its 6 role pages. Build it where the corridors are known to work, so a thin one is visible as a
+regression rather than baked in as a baseline.
+
+### What this supersedes
+
+Entry 67's closing line and TODO item 2's batch note both read as though batch 1 were finished. They
+are corrected rather than deleted: what entry 67 records about *method* — confirming a domain by asking
+Wikidata about the domain — is unaffected and remains the way a batch's refusals are resolved.
+
+---
+
 ## 67. The registry grows in batches, and a domain can be confirmed by asking Wikidata about the domain
 **2026-08-25 · implemented, reviewed and confirmed live. TODO item 2, first batch**
 
@@ -177,6 +241,11 @@ entity claiming them and DV certificates naming nobody. That is the right outcom
 so nothing is asserted.
 
 **53 of 198 researchable, from 41.** The batch cost 56 searches, ~25 Wikidata lookups and one review.
+
+> **This is *reachability*, not a working batch — see entry 68, which supersedes the word "done"
+> here.** Twelve of the fourteen have a confirmed domain; one of the twelve has ever been run, none
+> has had its answer checked against ground truth, and none has a corpus. What this entry records
+> about *method* is unaffected.
 
 ### Three things the batch surfaced that are not about this batch
 

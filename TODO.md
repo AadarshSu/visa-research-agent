@@ -29,16 +29,21 @@ with no marker: a TLS certificate names the organisation for **9**, RDAP for 1 (
 nothing machine-readable**. So the rest is reviewed rows, not automation — but the review is nine
 certificate confirmations and seven pieces of research, one time.
 
-**Batch 1 is done (entry 67): the EU and EEA, 41 → 53 researchable.** The sweep runs **in batches**, so
-each is reviewed before the next is paid for. The method for a country the rule cannot confirm is now
-settled and cheap: ask Wikidata about the *domain* — `haswbstatement:P856=https://<domain>/` — and check
-`P17` against the country. It recovered 6 of the 8 refusals in batch 1 and guesses no names. TLS
-certificates managed only 2 of 8 here against entry 66's 9 of 16, because that measured each country's
-known-correct domain while this measures whatever search found.
+**Batch 1 is *reachable*, which is not the same as done — entry 68.** The EU and EEA went 41 → 53
+researchable, and that is stage 1 of four. **Item 30 is now first, and no further country is added until
+batch 1 clears all four stages**: reachable, resolves, accurate, fast. Only 1 of its 12 reachable
+countries has ever been run, none has been graded for accuracy, and none has a corpus.
 
-**What remains is the rest of the sweep.** 143 countries have no row at all — 4 searches each. Two things to know before spending it: **fix the search rate limiter first** (see
-*Smaller things* — a capped plan answers `402`, which reads as *out of credit* rather than *too fast*),
-and **the sweep does not build the corpus.** The corpus is a separate, far larger job and is a speed
+The method for a country the rule cannot confirm is settled and cheap: ask Wikidata about the *domain* —
+`haswbstatement:P856=https://<domain>/` — and check `P17` against the country. It recovered 6 of the 8
+refusals in batch 1 and guesses no names. TLS certificates managed only 2 of 8 here against entry 66's
+9 of 16, because that measured each country's known-correct domain while this measures whatever search
+found.
+
+**The rest of the sweep waits behind item 30.** 143 countries have no row at all — 4 searches each.
+Two things to know before spending it: **fix the search rate limiter first** (see *Smaller things* — a
+capped plan answers `402`, which reads as *out of credit* rather than *too fast*), and **the sweep does
+not build the corpus.** The corpus is a separate, far larger job and is a speed
 optimisation rather than a prerequisite; a country without one crawls in the request path exactly as it
 does today. The rule is also refusing correct authorities *inside* countries it accepts — a one-off
 control arm cited `india.diplo.de`, Germany's own mission, declined for want of a marker.
@@ -70,7 +75,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
+| **Now** | 30. Perfect batch 1 before adding a single further country | `next` |
+|  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 18. Build the offline corpus job, and run it on more destinations | `next` |
 |  | 19. Take search out of the request path too | `next` |
@@ -109,6 +115,67 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+### 30. Perfect batch 1 before adding a single further country — `next`
+
+**Why:** entry 68. A batch is done at **four** stages, and having a registry row is only the first.
+Adding breadth on top of untested depth turns a registry of 198 rows into 198 unverified claims, and
+the cost of discovering that grows with every batch.
+
+Batch 1 is the EU and EEA — BG, CY, EE, FI, IS, LI, LT, LU, LV, MT, NO, RO, SI, SK.
+
+| | stage | today |
+| --- | --- | --- |
+| 1 | Reachable — a confirmed authority domain | **12 of 14** (IS, LI refuse; nothing found, correctly) |
+| 2 | Resolves — a decision, or a refusal for a *correct* named reason | **1 of 12** — only `norway/IN/IN` |
+| 3 | Accurate — checked against ground truth | **0 of 12**, and see below |
+| 4 | Fast — corpus-routed rather than crawling | **0 of 12** |
+
+### Stage 2: run them
+
+Twelve destinations. Per destination, a nationality set that contains **one that needs a visa and one
+that does not** — a pipeline answering "visa required" for everyone scores full marks on "did it
+confirm a decision" and is worthless, and nothing currently catches that.
+
+Entry 58's lesson applies: destination decides the outcome far more often than nationality, so sample
+destinations broadly and nationalities narrowly. Two or three nationalities per destination is enough
+to expose the failure above without paying for twenty.
+
+**Watch two in particular** (entry 67): Estonia is confirmed on `e-resident.gov.ee`, the e-Residency
+programme rather than visa guidance, and Romania on `euraxess.gov.ro`, a researcher-mobility portal.
+Both may resolve against a trusted set that cannot hold the answer — known problem 2's quieter failure.
+If they refuse, the fix is a reviewed row for `vm.ee` and `mae.ro`, by entry 67's Wikidata method.
+
+### Stage 3: build the truth set — the part that does not exist
+
+`is_usable` and `RefusalCause.resolved` both mean *an official page stated a decision*. **Neither means
+the decision is right, and nothing in this repository grades correctness.** Entry 64 recorded that gap
+for the control arm and the same sentence was quietly true of this project's own arm.
+
+**Do:** a committed truth file, on `CountryAuthorities.reviewed`'s discipline — every row cites
+something independent and checkable, and **a corridor with no truth row yields no verdict, never a
+false one.** Then grade the stage-2 runs against it.
+
+**Cheaper here than anywhere else, which is why batch 1 is the right place to start.** EU short-stay
+visa requirements are set centrally rather than per member state, so one list covers most of the
+fourteen. **Check the exceptions rather than assuming uniformity:** Cyprus is not in Schengen, and
+Bulgaria and Romania joined only partially.
+
+### Stage 4: corpora, and deliberately last
+
+Entry 55 measured corpus-routing at **2.1×–5.2×** faster (Singapore 56.1s → 10.8s). None of the twelve
+has one, so all twelve crawl. It is also the expensive stage — ~49 searches and up to 1,200 page
+fetches per country, against 4 searches for a registry row.
+
+Last on purpose: a corpus built for a country whose corridors do not yet resolve has unknown value, and
+known problem 24 records how badly coverage varies — Japan's corpus holds 1 of its 6 role pages. Build
+where the corridors are known to work, so a thin corpus reads as a regression rather than a baseline.
+
+### Done when
+
+All twelve reachable countries resolve or refuse for a correct named reason, every decision is graded
+against a truth row, and the twelve are corpus-routed. **Then** batch 2.
+
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 

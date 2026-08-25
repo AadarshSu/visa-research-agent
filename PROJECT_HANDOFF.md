@@ -56,8 +56,9 @@ destinations.
 
 | | |
 | --- | --- |
-| **Researchable destinations** | **53 of 198.** The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. The registry grows **in batches**, each reviewed before the next is paid for — batch 1 completed the EU and EEA (entry 67). `visa-discover audit` prints the split. |
+| **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of four and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **31** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
+| **Verified working** | the 5 destinations of entry 58 plus Japan, Singapore, France, Sweden. **Batch 1's twelve are reachable and almost entirely unrun** — 1 of 12, none graded, none corpus-routed. Item 30. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
@@ -82,22 +83,27 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
 
-**Item 2 leads, and its cheap half landed on 2026-08-25 (entry 65).** Three markers the rule was
-missing — `gv`, `gub`, `canada.ca` — took coverage from **39 to 41 researchable** and emptied the "row
-with nothing confirmable" bucket. It also found a hole worth knowing about: `GOVERNMENT_NAMESPACE_LABELS`
+**Item 30 leads: perfect batch 1 before adding a single further country.** The registry now grows in
+batches, and **a batch is done at four stages, not one** (entry 68): *reachable* → *resolves* →
+*accurate* → *fast*. Batch 1 — the EU and EEA — is at stage 1. Twelve of its fourteen have a confirmed
+domain; **one has ever been run, none has been graded for accuracy, and none has a corpus**, so all
+twelve crawl on every request.
+
+**Stage 3 is the one that does not exist.** `is_usable` and `RefusalCause.resolved` both mean *an
+official page stated a decision* — neither means the decision is **right**, and nothing in this
+repository grades correctness. Entry 64 recorded that gap for the deleted control arm; the same
+sentence was quietly true of this project's own arm the whole time. Item 30 builds the truth set, and
+batch 1 is the cheapest place to do it because EU short-stay visa requirements are set centrally rather
+than per member state.
+
+**Item 2 is the trust rule and the rest of the sweep, and it waits behind item 30.** Its cheap half
+landed on 2026-08-25 (entry 65): three missing markers — `gv`, `gub`, `canada.ca` — plus batch 1 took
+reachable destinations 39 → 53. It also found a hole worth knowing about: `GOVERNMENT_NAMESPACE_LABELS`
 and `trust.SUFFIX_MARKER_LABELS` are two hand-maintained lists that must move together, or trusting one
 authority trusts its whole government. A test now asserts it.
 
-**The gating measurement is also done (entry 66), and it answered against the production goal.** Of the
-16 governments with no hostname marker, a TLS certificate names the organisation for **9** — eight of
-them the authority outright, Hungary naming a state IT operator instead — RDAP for **1**, and **7 have
-nothing machine-readable at all**. RDAP is dropped: 13 of 16 ccTLDs run no RDAP service. So the rest of
-item 2 is reviewed rows rather than automation, and the review is nine certificate confirmations plus
-seven pieces of research, once.
-
-**What is left is the sweep.** All 157 remaining refusals are countries nobody has run
-`visa-discover registry` for — unfinished data, not rigor. Entries 63–66; `visa-discover audit` prints
-the split.
+**The sweep itself** — 143 countries with no row at all — is unfinished data rather than rigor, and it
+is explicitly gated behind item 30. Entries 63–68; `visa-discover audit` prints the split.
 
 **Read entry 64 before arguing about relaxing anything, because it cuts both ways.** A one-off control
 arm — open-web search, no trust model, one model call — was built, run on three corridors and then
@@ -259,12 +265,13 @@ re-add the amendment history here.
 22. **Why a page was chosen for a role never leaves discovery.** `decided_by`, `score` and `signals`
    live in `ResolvedCorridor` and appear nowhere in the API response. TODO item 21.
 
-23. **The interface offers 198 destinations and can research 39.** `researchable_destinations()` lists
-   every country with `status="available"`, but 157 have no row in `authority_domains.yaml` and are
+23. **The interface offers 198 destinations and can reach 53.** `researchable_destinations()` lists
+   every country with `status="available"`, but 143 have no row in `authority_domains.yaml` and are
    refused with a `503`. The refusal is honest; the *offer* is not. Fix by marking unbuilt countries or
    by building the registry out (item 2) — not by loosening the refusal. **Countable now rather than
-   asserted**: `visa-discover audit` prints the split, and attributes it — every one of the 157 is a
-   job nobody has run, not the trust rule (entries 63 and 65).
+   asserted**: `visa-discover audit` prints the split, and attributes it — every one of the 143 is a
+   job nobody has run, not the trust rule (entries 63, 65, 67). **And 53 overstates it**: reachable is
+   stage 1 of four, and only 9 destinations have ever been shown to answer a traveller (entry 68).
 
 24. **A thin corpus has no crawl behind it, and coverage varies enormously between countries.**
    Measured against the pages that actually filled roles on the crawl path: Singapore 6/6, United States
@@ -274,6 +281,15 @@ re-add the amendment history here.
    net is thinner than it was: the crawl used to compensate for poor corpus recall, badly and
    nondeterministically, and now does not. **Nothing counts how often the corpus was the only source and
    came up short**, though `found_by="corpus"` in the recall log would make it countable.
+
+26. **Nothing grades whether a visa decision is *correct*.** `ResolvedCorridor.is_usable` and
+   `RefusalCause.resolved` both mean an official page **stated** a decision. Neither means it is right,
+   and there is no truth set anywhere in this repository — so every number this project quotes about
+   itself, including entry 58's 75%, measures *whether it answered* and not *whether the answer was
+   good*. Entry 64 recorded the gap for the control arm and the same sentence was true of this arm
+   unsaid. **It also makes one failure invisible:** a pipeline answering "visa required" for every
+   nationality would score full marks on every measure currently taken. Entry 68; TODO item 30, which
+   builds the truth set for batch 1 first because EU short-stay requirements are set centrally.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

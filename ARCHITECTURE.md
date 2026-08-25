@@ -373,9 +373,11 @@ this is automated while per-country trust is not.
 > domain and survives regeneration (entry 39). That is the hatch entry 33 said would be needed for the
 > governments that use no hostname marker; twelve countries required it.
 >
-> **40 of 198 countries have a row; 39 are researchable.** Austria's row carries no domain the rule
-> could confirm, so it refuses like the 158 countries with no row at all — correctly, and by design
-> (entry 39). The rest refuse with a message naming the command.
+> **55 of 198 countries have a row; 53 are reachable.** Iceland's and Liechtenstein's rows carry no
+> domain the rule could confirm, so they refuse like the 143 countries with no row at all — correctly,
+> and by design (entry 39). The rest refuse with a message naming the command. **Reachable is stage 1
+> of four** — see entry 68; a country with a row has not yet been shown to answer a traveller
+> correctly or quickly.
 
 ### The stages
 
@@ -614,7 +616,7 @@ smaller, which is what lost Canada its answer.
 > **Ten countries have a corpus** as of 2026-08-24 — Canada, UAE, Netherlands, United States, France,
 > Japan, Singapore, United Kingdom, Sweden, Germany — 16,375 pages between them (the count grows as
 > live runs write back what they found, entry 47). A country without one crawls exactly as before, and
-> **31 of the 41 researchable countries are in that position** — a corpus is a speed optimisation, not
+> **43 of the 53 reachable countries are in that position** — a corpus is a speed optimisation, not
 > a prerequisite.
 >
 > **One thing broke on the way, and it is fixed.** Removing the crawl left entry 27's

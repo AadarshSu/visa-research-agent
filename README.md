@@ -5,12 +5,16 @@ government domains have been confirmed. It reports what official government sour
 claim, and states plainly what it could not verify. It does not guarantee eligibility, completeness, or
 visa approval, and it never submits anything on anyone's behalf.
 
-**53 of 198 countries are currently researchable.** Which domains a country may be researched from is
+**53 of 198 countries are currently *reachable*.** Which domains a country may be researched from is
 generated offline, reviewed once, and committed in `config/authority_domains.yaml`; a country absent from
 it is refused rather than guessed at. The file holds **55 rows**; Iceland and Liechtenstein carry no
-domain that could be confirmed, so they refuse too. The registry is grown **in batches** rather than all
-at once, so each one is reviewed before the next is paid for — see `visa-discover registry --only`, and
-`visa-discover audit` for what is refused and why. Batch 1 completed the EU and EEA (entry 67).
+domain that could be confirmed, so they refuse too.
+
+**Reachable is not the same as working**, and the difference is deliberate (`DECISIONS.md` entry 68).
+The registry grows **in batches**, and a batch is done at four stages — *reachable*, then *resolves*,
+then *accurate against a truth set*, then *fast from a stored corpus*. No further country is added until
+the current batch clears all four. Batch 1 is the EU and EEA and is at stage 1. See
+`visa-discover registry --only` and `visa-discover audit`.
 
 > **Picking the project up?** Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) — current state,
 > open problems and what is next. Then [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built,
