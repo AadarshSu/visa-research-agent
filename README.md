@@ -11,10 +11,13 @@ it is refused rather than guessed at. The file holds **55 rows**; Iceland and Li
 domain that could be confirmed, so they refuse too.
 
 **Reachable is not the same as working**, and the difference is deliberate (`DECISIONS.md` entry 68).
-The registry grows **in batches**, and a batch is done at four stages — *reachable*, then *resolves*,
-then *accurate against a truth set*, then *fast from a stored corpus*. No further country is added until
-the current batch clears all four. Batch 1 is the EU and EEA and is at stage 1. See
-`visa-discover registry --only` and `visa-discover audit`.
+The registry grows **in batches**, and a batch is done in three stages — *reachable*, then *resolves*,
+then *fast from a stored corpus*. No further country is added until the current batch clears all three.
+Batch 1 is the EU and EEA and is at stage 1. See `visa-discover registry --only` and
+`visa-discover audit`.
+
+Whether a visa decision is **correct** is verified outside this repository; the codebase's own measures
+report whether a corridor answered, never whether the answer was right.
 
 > **Picking the project up?** Start with [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) — current state,
 > open problems and what is next. Then [ARCHITECTURE.md](ARCHITECTURE.md) for how it is built,

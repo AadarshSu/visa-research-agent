@@ -30,9 +30,11 @@ nothing machine-readable**. So the rest is reviewed rows, not automation — but
 certificate confirmations and seven pieces of research, one time.
 
 **Batch 1 is *reachable*, which is not the same as done — entry 68.** The EU and EEA went 41 → 53
-researchable, and that is stage 1 of four. **Item 30 is now first, and no further country is added until
-batch 1 clears all four stages**: reachable, resolves, accurate, fast. Only 1 of its 12 reachable
-countries has ever been run, none has been graded for accuracy, and none has a corpus.
+researchable, and that is stage 1 of three. **Item 30 is now first, and no further country is added
+until batch 1 clears all three stages**: reachable, resolves, fast. Only 1 of its 12 reachable countries
+has ever been run — the other 11 have never been tried, which is not the same as failing — and none has
+a corpus. **Accuracy is verified by the project owner outside this repository** and is deliberately not
+a stage; do not build a correctness grader here without asking.
 
 The method for a country the rule cannot confirm is settled and cheap: ask Wikidata about the *domain* —
 `haswbstatement:P856=https://<domain>/` — and check `P17` against the country. It recovered 6 of the 8
@@ -118,7 +120,7 @@ careful reading and were wrong.
 
 ### 30. Perfect batch 1 before adding a single further country — `next`
 
-**Why:** entry 68. A batch is done at **four** stages, and having a registry row is only the first.
+**Why:** entry 68. A batch is done at **three** stages, and having a registry row is only the first.
 Adding breadth on top of untested depth turns a registry of 198 rows into 198 unverified claims, and
 the cost of discovering that grows with every batch.
 
@@ -127,55 +129,48 @@ Batch 1 is the EU and EEA — BG, CY, EE, FI, IS, LI, LT, LU, LV, MT, NO, RO, SI
 | | stage | today |
 | --- | --- | --- |
 | 1 | Reachable — a confirmed authority domain | **12 of 14** (IS, LI refuse; nothing found, correctly) |
-| 2 | Resolves — a decision, or a refusal for a *correct* named reason | **1 of 12** — only `norway/IN/IN` |
-| 3 | Accurate — checked against ground truth | **0 of 12**, and see below |
-| 4 | Fast — corpus-routed rather than crawling | **0 of 12** |
+| 2 | Resolves — a decision, or a refusal for a *correct* named reason | **1 of 12** — `norway/IN/IN`. The other 11 have **never been run**, which is not the same as failing |
+| 3 | Fast — corpus-routed rather than crawling | **0 of 12** |
+
+**Accuracy is not a stage** — whether a decision is *correct* is verified by the project owner outside
+this repository (entry 68). Do not build a truth set, a correctness grader or an accuracy metric here
+without asking.
 
 ### Stage 2: run them
 
-Twelve destinations. Per destination, a nationality set that contains **one that needs a visa and one
-that does not** — a pipeline answering "visa required" for everyone scores full marks on "did it
-confirm a decision" and is worthless, and nothing currently catches that.
+Eleven destinations have never been tried. Per destination, two or three nationalities — entry 58's
+lesson is that destination decides the outcome far more often than nationality, so sample destinations
+broadly and nationalities narrowly.
 
-Entry 58's lesson applies: destination decides the outcome far more often than nationality, so sample
-destinations broadly and nationalities narrowly. Two or three nationalities per destination is enough
-to expose the failure above without paying for twenty.
+What the codebase is answerable for here is **resolve or refuse, and refuse for a reason that is true
+of what was seen** — the discipline entries 33, 36 and 63 already enforce. `visa-discover audit` buckets
+the results by cause, so a run set can be read rather than eyeballed.
 
 **Watch two in particular** (entry 67): Estonia is confirmed on `e-resident.gov.ee`, the e-Residency
 programme rather than visa guidance, and Romania on `euraxess.gov.ro`, a researcher-mobility portal.
 Both may resolve against a trusted set that cannot hold the answer — known problem 2's quieter failure.
 If they refuse, the fix is a reviewed row for `vm.ee` and `mae.ro`, by entry 67's Wikidata method.
 
-### Stage 3: build the truth set — the part that does not exist
+**Iceland and Liechtenstein are stage-1 failures and may stay that way.** `government.is`, `island.is`
+and `llv.li` all sit under their own top-level domain and carry no governmental marker; no Wikidata
+entity claims any of them as an official website, and all three serve DV certificates naming nobody.
+Nothing was found, so nothing is asserted. Reopening them means finding evidence, not loosening a rule.
 
-`is_usable` and `RefusalCause.resolved` both mean *an official page stated a decision*. **Neither means
-the decision is right, and nothing in this repository grades correctness.** Entry 64 recorded that gap
-for the control arm and the same sentence was quietly true of this project's own arm.
-
-**Do:** a committed truth file, on `CountryAuthorities.reviewed`'s discipline — every row cites
-something independent and checkable, and **a corridor with no truth row yields no verdict, never a
-false one.** Then grade the stage-2 runs against it.
-
-**Cheaper here than anywhere else, which is why batch 1 is the right place to start.** EU short-stay
-visa requirements are set centrally rather than per member state, so one list covers most of the
-fourteen. **Check the exceptions rather than assuming uniformity:** Cyprus is not in Schengen, and
-Bulgaria and Romania joined only partially.
-
-### Stage 4: corpora, and deliberately last
+### Stage 3: corpora, and deliberately after stage 2
 
 Entry 55 measured corpus-routing at **2.1×–5.2×** faster (Singapore 56.1s → 10.8s). None of the twelve
 has one, so all twelve crawl. It is also the expensive stage — ~49 searches and up to 1,200 page
 fetches per country, against 4 searches for a registry row.
 
-Last on purpose: a corpus built for a country whose corridors do not yet resolve has unknown value, and
-known problem 24 records how badly coverage varies — Japan's corpus holds 1 of its 6 role pages. Build
-where the corridors are known to work, so a thin corpus reads as a regression rather than a baseline.
+Second on purpose: a corpus built for a country whose corridors do not yet resolve has unknown value,
+and known problem 24 records how badly coverage varies — Japan's corpus holds 1 of its 6 role pages.
+Build where the corridors are known to work, so a thin corpus reads as a regression rather than a
+baseline.
 
 ### Done when
 
-All twelve reachable countries resolve or refuse for a correct named reason, every decision is graded
-against a truth row, and the twelve are corpus-routed. **Then** batch 2.
-
+All twelve reachable countries resolve, or refuse for a correct named reason, and the twelve are
+corpus-routed. **Then** batch 2.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 

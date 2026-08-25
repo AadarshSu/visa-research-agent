@@ -58,7 +58,7 @@ destinations.
 | --- | --- |
 | **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of four and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **31** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
-| **Verified working** | the 5 destinations of entry 58 plus Japan, Singapore, France, Sweden. **Batch 1's twelve are reachable and almost entirely unrun** — 1 of 12, none graded, none corpus-routed. Item 30. |
+| **Verified working** | the 5 destinations of entry 58 plus Japan, Singapore, France, Sweden. **Batch 1's twelve are reachable and almost entirely unrun** — 1 of 12, none corpus-routed. Item 30. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: never`, `discovery_decider: model`, `destination_mode: automatic` |
@@ -84,17 +84,16 @@ found. No human approves anything per request. Seven destinations are also hand-
 it cannot drift; this file deliberately does not copy it.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry now grows in
-batches, and **a batch is done at four stages, not one** (entry 68): *reachable* → *resolves* →
-*accurate* → *fast*. Batch 1 — the EU and EEA — is at stage 1. Twelve of its fourteen have a confirmed
-domain; **one has ever been run, none has been graded for accuracy, and none has a corpus**, so all
-twelve crawl on every request.
+batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*. Batch 1
+— the EU and EEA — is at stage 1. Twelve of its fourteen have a confirmed domain; **one has ever been
+run and none has a corpus**, so all twelve crawl on every request. The other eleven have never been
+tried, which is not the same as failing.
 
-**Stage 3 is the one that does not exist.** `is_usable` and `RefusalCause.resolved` both mean *an
-official page stated a decision* — neither means the decision is **right**, and nothing in this
-repository grades correctness. Entry 64 recorded that gap for the deleted control arm; the same
-sentence was quietly true of this project's own arm the whole time. Item 30 builds the truth set, and
-batch 1 is the cheapest place to do it because EU short-stay visa requirements are set centrally rather
-than per member state.
+**Accuracy is verified by the project owner, outside this repository, and is deliberately not a
+stage.** Do not build a truth set, a correctness grader or an accuracy metric here without asking
+(entry 68). What follows and must not be lost: `is_usable` and `RefusalCause.resolved` mean *an
+official page stated a decision*, never *the decision is right* — so every figure quoted about this
+project, entry 58's 75% included, measures whether it **answered**. Known problem 26.
 
 **Item 2 is the trust rule and the rest of the sweep, and it waits behind item 30.** Its cheap half
 landed on 2026-08-25 (entry 65): three missing markers — `gv`, `gub`, `canada.ca` — plus batch 1 took
@@ -116,10 +115,11 @@ mission, declined because `diplo.de` carries no governmental marker, which is kn
 cost attached.
 
 **The conclusion those two entries support, stated so it can be argued with:** the rigor is cheap and
-the backlog is expensive, and it has been easy to mistake the second for the first. The dimension never
-graded is correctness against a truth set — if a naive arm is right ~90% of the time the question
-becomes "accurate but unattributable versus accurate and attributable", which is harder than the one
-entry 64 answers. Three corridors is a pointer, not a rate, and the arm would have to be rebuilt to go
+the backlog is expensive, and it has been easy to mistake the second for the first. The dimension
+neither arm graded is **correctness** — if a naive arm is right ~90% of the time the question becomes
+"accurate but unattributable versus accurate and attributable", which is harder than the one entry 64
+answers. That comparison sits with the project owner, who verifies correctness outside this repository
+(entry 68); three corridors is a pointer, not a rate, and the arm would have to be rebuilt to go
 further.
 
 One thing worth knowing before choosing: item 7 is **deployment**, which entry 58 unblocked by
@@ -282,14 +282,15 @@ re-add the amendment history here.
    nondeterministically, and now does not. **Nothing counts how often the corpus was the only source and
    came up short**, though `found_by="corpus"` in the recall log would make it countable.
 
-26. **Nothing grades whether a visa decision is *correct*.** `ResolvedCorridor.is_usable` and
-   `RefusalCause.resolved` both mean an official page **stated** a decision. Neither means it is right,
-   and there is no truth set anywhere in this repository — so every number this project quotes about
-   itself, including entry 58's 75%, measures *whether it answered* and not *whether the answer was
-   good*. Entry 64 recorded the gap for the control arm and the same sentence was true of this arm
-   unsaid. **It also makes one failure invisible:** a pipeline answering "visa required" for every
-   nationality would score full marks on every measure currently taken. Entry 68; TODO item 30, which
-   builds the truth set for batch 1 first because EU short-stay requirements are set centrally.
+26. **Every number this project quotes about itself measures whether it *answered*, not whether the
+   answer was *right*.** `ResolvedCorridor.is_usable` and `RefusalCause.resolved` both mean an official
+   page **stated** a decision. Entry 58's 75% is a rate of answering, and a pipeline replying "visa
+   required" for every nationality would score full marks on it.
+
+   **This is a caveat on reading the numbers, not work queued here.** Correctness is verified by the
+   project owner outside this repository, deliberately (entry 68) — so do not build a truth set, a
+   correctness grader or an accuracy metric without asking. Listed because quoting 75% without this
+   sentence overstates what was measured.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source
