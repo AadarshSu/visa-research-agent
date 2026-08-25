@@ -203,7 +203,8 @@ capped plan, and `402` reads as *out of credit* rather than *too fast*.
 
 ### Done when
 
-All 53 resolve, or refuse for a correct named reason, and all 53 are corpus-routed. **Then** batch 2.
+All 53 resolve, or refuse for a correct named reason, **for any nationality**, and all 53 are
+corpus-routed. **Then** batch 2.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 
