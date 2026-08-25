@@ -25,7 +25,7 @@
 #
 # Editing `trusted` by hand is a trust decision. Do it deliberately, and say why in DECISIONS.md.
 schema_version: 1
-generated_at: '2026-08-25T00:48:10.308994+00:00'
+generated_at: '2026-08-25T13:35:21.585881+00:00'
 countries:
 - code: AE
   name: United Arab Emirates
@@ -66,6 +66,12 @@ countries:
     diplomatie.be: official website of the Belgian foreign ministry — Wikidata P856/P17, checked 2026-08-18
   unconfirmable:
   - belgium.be
+- code: BG
+  name: Bulgaria
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - mfa.bg
 - code: BR
   name: Brazil
   trusted:
@@ -102,6 +108,14 @@ countries:
   - www.gov.cn
   reviewed: {}
   unconfirmable: []
+- code: CY
+  name: Cyprus
+  trusted:
+  - www.gov.cy
+  - mip.gov.cy
+  - police.gov.cy
+  reviewed: {}
+  unconfirmable: []
 - code: CZ
   name: Czechia
   trusted:
@@ -128,6 +142,13 @@ countries:
   unconfirmable:
   - denmark.dk
   - nyidanmark.dk
+- code: EE
+  name: Estonia
+  trusted:
+  - e-resident.gov.ee
+  reviewed: {}
+  unconfirmable:
+  - vm.ee
 - code: EG
   name: Egypt
   trusted:
@@ -147,6 +168,15 @@ countries:
   - lamoncloa.gob.es
   reviewed: {}
   unconfirmable: []
+- code: FI
+  name: Finland
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - finlandabroad.fi
+  - finlandvisa.fi
+  - migri.fi
+  - um.fi
 - code: FR
   name: France
   trusted:
@@ -217,6 +247,13 @@ countries:
   - mha.gov.in
   reviewed: {}
   unconfirmable: []
+- code: IS
+  name: Iceland
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - government.is
+  - island.is
 - code: IT
   name: Italy
   trusted:
@@ -247,6 +284,36 @@ countries:
   - k-eta.go.kr
   reviewed: {}
   unconfirmable: []
+- code: LI
+  name: Liechtenstein
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - llv.li
+- code: LT
+  name: Lithuania
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - mfa.lt
+  - migracija.lt
+  - urm.lt
+  - vrm.lt
+- code: LU
+  name: Luxembourg
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - gouvernement.lu
+  - mae.lu
+  - public.lu
+- code: LV
+  name: Latvia
+  trusted:
+  - mfa.gov.lv
+  - pmlp.gov.lv
+  reviewed: {}
+  unconfirmable: []
 - code: MA
   name: Morocco
   trusted:
@@ -257,6 +324,16 @@ countries:
   unconfirmable:
   - acces-maroc.ma
   - consulat.ma
+- code: MT
+  name: Malta
+  trusted:
+  - foreign.gov.mt
+  - consularplus.gov.mt
+  - identita.gov.mt
+  - servizz.gov.mt
+  - homeaffairs.gov.mt
+  reviewed: {}
+  unconfirmable: []
 - code: MX
   name: Mexico
   trusted:
@@ -289,6 +366,14 @@ countries:
       guidance
   unconfirmable:
   - netherlandsandyou.nl
+- code: 'NO'
+  name: Norway
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - norway.no
+  - regjeringen.no
+  - udi.no
 - code: NZ
   name: New Zealand
   trusted:
@@ -329,6 +414,14 @@ countries:
     sef.pt: official website of the Serviço de Estrangeiros e Fronteiras, Portugal — Wikidata P856/P17,
       checked 2026-08-18
   unconfirmable: []
+- code: RO
+  name: Romania
+  trusted:
+  - euraxess.gov.ro
+  - mai.gov.ro
+  reviewed: {}
+  unconfirmable:
+  - mae.ro
 - code: SA
   name: Saudi Arabia
   trusted:
@@ -357,6 +450,21 @@ countries:
   - mha.gov.sg
   reviewed: {}
   unconfirmable: []
+- code: SI
+  name: Slovenia
+  trusted:
+  - www.gov.si
+  - e-uprava.gov.si
+  reviewed: {}
+  unconfirmable:
+  - policija.si
+- code: SK
+  name: Slovakia
+  trusted: []
+  reviewed: {}
+  unconfirmable:
+  - iom.sk
+  - mzv.sk
 - code: TH
   name: Thailand
   trusted:
