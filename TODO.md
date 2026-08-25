@@ -13,8 +13,9 @@ vocabulary could not recognise a page that *states* the visa answer, entry 56) a
 twenty-corridor measurement, entry 58, which passed marginally).
 
 **Blocked on search: `SEARCH_API_KEY` answers `402 Usage limit exceeded`** — `current_spend 25.01`
-against a `25.0` cap, checked with a single query, so it is the real thing and not the throttle below.
-Stage 3 needs ~1,792 searches and cannot start until the cap is raised.
+against a `25.0` cap. Stage 3 needs ~1,792 searches and cannot start until the cap is raised. The
+program now says this in those words rather than calling it "unavailable" (entry 74), and the ten
+countries that already have a corpus keep working while it lasts.
 
 **Item 5 is now worth two countries, not just France** (entry 73): `www.gov.cy` and `www.mzv.sk` serve
 *challenges*, not refusals, and our own renderer reads both under our own user agent. The challenge
@@ -254,8 +255,8 @@ country whose corridors do not resolve has unknown value — known problem 24 re
 varies, Japan's holding 1 of its 6 role pages. And stage 2 tells us which countries are worth 42
 searches each and which are refusing for a reason no corpus can fix.
 
-**Fix the search rate limiter before this stage** — see *Smaller things*. 1,792 searches will trip a
-capped plan, and `402` reads as *out of credit* rather than *too fast*.
+**The search rate limiter this stage was waiting on is done** (entry 74): the provider paces itself at
+1.3s and a `402` now says which kind it is. 1,792 searches still need a cap that allows them.
 
 ### Done when
 
@@ -980,27 +981,20 @@ which provider said what. Related: `429 credit_balance_exhausted` and a genuine 
 indistinguishable in the note the corridor prints, which is the same conflation the `402` item below
 describes for search.
 
-**The search client has no rate limiting, and a capped plan answers `HTTP 402`.** Found 2026-08-24.
-`BraveSearchProvider.search` paces nothing and `search_all` runs four queries at once, so a corpus
-build firing 70 queries fails outright on a plan capped near one query a second — and `402` is
-"payment required", so it reads as *out of credit* rather than *too fast*. It cost this session an
-hour of believing the account was empty when single queries were answering fine. A shared limiter at
-1.3s between calls, with backoff on `402`, ran the same 70 queries cleanly. Two things to fix
-together: pace the provider, and stop reporting a throttle as an exhausted account.
+**All three search defects recorded here are fixed — DECISIONS entry 74, 2026-08-25.** The provider
+now paces itself at 1.3s from one lock and one clock, so `search_all`'s concurrency cannot outrun it;
+a `402` is classified from `error.meta.current_spend` against `usage_limit` into `SearchQuotaExhausted`
+or `SearchThrottled` rather than reported as one thing; and a search outage falls back to the stored
+corpus where one exists, recorded on a typed `ran_without_search` field, said plainly in the notes,
+and **never stored for reuse**. With no corpus the refusal still stands, because *we could not look*
+must never become *there is nothing to find*.
 
-**A country with a complete corpus still cannot resolve when search is down.** Same day, same cause.
-`search_all` raises if any query fails and `_resolve` searches *before* it reads the corpus, so
-`canada/GB/GB/tourism` — 3,216 stored pages, resolving in 12s off a file — dies with a `SearchError`
-exactly like a country nobody has built. Entry 48 kept search for **recall**; it never considered
-search being *absent*, and entries 44–57 have quietly made it the only remaining single point of
-failure for a fully built destination.
+Confirmed live against a genuinely capped account: all ten corpus countries resolved or handed over a
+tool where every one of them previously raised. Canada answered in 31.7s from 2,450 stored pages.
 
-**Do not "fix" that by falling back silently.** Entry 44's rule is that a corpus miss refuses and
-flags the country rather than quietly substituting another source; the mirror applies here. A
-corridor answered from a narrower candidate set than usual, with nobody told, is the shape this
-project keeps rejecting. If it is worth doing, the corridor must record that it ran without search
-and say so in its notes — and it needs a decision entry first. What is **not** in doubt is that a
-`402` should not read as "this country has no pages".
+**What is still open here**: search remains required for the 43 countries with no corpus, and taking
+it out of the request path *by design* is item 19, which still wants the nationality dimension
+measured first.
 
 **Settled in part, 2026-08-24 — DECISIONS entry 57 moved the meaning question to the model, and left
 the ranking with the heuristic.** What follows is the evidence that produced that split, kept because

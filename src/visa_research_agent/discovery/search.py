@@ -8,6 +8,8 @@ never derived from fetched page content, so a page cannot influence what is sear
 """
 
 import asyncio
+import time
+from collections.abc import Awaitable, Callable
 from typing import Protocol
 
 import httpx
@@ -23,6 +25,45 @@ class SearchError(VisaResearchError):
     """Raised when the search provider cannot be reached or is misconfigured."""
 
 
+class SearchQuotaExhausted(SearchError):
+    """The account is out of credit, and waiting will not help.
+
+    Kept apart from a throttle because the two arrive as the **same status**. Brave answers `402`
+    both when a plan's spend cap is reached and when queries arrive too fast, and "payment
+    required" reads as *out of credit* either way — which cost one session an hour of believing an
+    account was empty while single queries answered fine. Retrying is right for one and pointless
+    for the other, so the difference has to be a type rather than a sentence.
+    """
+
+
+class SearchThrottled(SearchError):
+    """Queries arrived too fast. The same request later is expected to succeed."""
+
+
+# Brave reports a spend cap in the error body, and only there: `meta.current_spend` against
+# `meta.usage_limit`. Anything else behind a `402` is treated as a throttle, which is the safer
+# way round — a throttle retried is a delay, an exhausted account retried is noise.
+def classify_payment_required(payload: object) -> SearchError:
+    """Which kind of `402` this is, from the provider's own numbers rather than its prose."""
+
+    meta: object = None
+    if isinstance(payload, dict):
+        error = payload.get("error")
+        if isinstance(error, dict):
+            meta = error.get("meta")
+    if isinstance(meta, dict):
+        spend, limit = meta.get("current_spend"), meta.get("usage_limit")
+        if isinstance(spend, int | float) and isinstance(limit, int | float) and spend >= limit:
+            return SearchQuotaExhausted(
+                f"the search account has spent {spend} against its {limit} limit, so no further "
+                "queries will be answered until the cap is raised"
+            )
+    return SearchThrottled(
+        "the search provider answered HTTP 402. Its body carries no spend figures, so this is a "
+        "rate limit rather than an exhausted account, and the same query should succeed later"
+    )
+
+
 class SearchProvider(Protocol):
     async def search(self, query: str, *, count: int) -> list[SearchResult]:
         """Return ranked results for one query."""
@@ -34,6 +75,10 @@ class SearchProvider(Protocol):
 # seconds of a corridor. Kept modest rather than unbounded: a search API is someone else's rate
 # limit, and a burst that trips it turns a resolvable corridor into a refusal.
 DEFAULT_SEARCH_CONCURRENCY = 4
+
+# The pace one provider keeps, whatever the concurrency above asks for. Measured on a capped plan:
+# 70 queries fired four-at-a-time failed outright, and the same 70 at this interval ran cleanly.
+DEFAULT_QUERY_INTERVAL_SECONDS = 1.3
 
 
 async def search_all(
@@ -131,15 +176,34 @@ class BraveSearchProvider:
         *,
         timeout_seconds: float = 15.0,
         transport: httpx.AsyncBaseTransport | None = None,
+        minimum_interval_seconds: float = DEFAULT_QUERY_INTERVAL_SECONDS,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        now: Callable[[], float] = time.monotonic,
     ) -> None:
         if not api_key.strip():
             raise SearchError("A search API key is required for discovery")
         self.api_key = api_key
         self.timeout_seconds = timeout_seconds
         self.transport = transport
+        self.minimum_interval_seconds = max(0.0, minimum_interval_seconds)
+        self._sleep = sleep
+        self._now = now
+        # One lock and one clock for the whole provider, so `search_all`'s concurrency cannot
+        # outrun the pace. Without this, four queries left at once and a capped plan answered
+        # `402` to three of them — which then read as an exhausted account.
+        self._pace = asyncio.Lock()
+        self._last_started = float("-inf")
+
+    async def _wait_for_a_turn(self) -> None:
+        async with self._pace:
+            gap = self.minimum_interval_seconds - (self._now() - self._last_started)
+            if gap > 0:
+                await self._sleep(gap)
+            self._last_started = self._now()
 
     async def search(self, query: str, *, count: int) -> list[SearchResult]:
         headers = {"Accept": "application/json", "X-Subscription-Token": self.api_key}
+        await self._wait_for_a_turn()
         try:
             async with httpx.AsyncClient(
                 transport=self.transport,
@@ -147,6 +211,14 @@ class BraveSearchProvider:
                 headers=headers,
             ) as client:
                 response = await client.get(self.endpoint, params={"q": query, "count": count})
+                if response.status_code == httpx.codes.PAYMENT_REQUIRED:
+                    # Read the body before naming the cause: the status alone cannot tell an
+                    # exhausted plan from a query sent too soon.
+                    try:
+                        body: object = response.json()
+                    except ValueError:
+                        body = None
+                    raise classify_payment_required(body)
                 if response.status_code != httpx.codes.OK:
                     raise SearchError(f"The search provider answered HTTP {response.status_code}")
                 payload = response.json()

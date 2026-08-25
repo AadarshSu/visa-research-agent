@@ -300,6 +300,10 @@ corridor is kept for three weeks. **`var/corpus/` is deliberately not cleared be
 the store, not a cache, and rebuilding one costs search quota.
 
 **Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`
-when out; Brave answers **`HTTP 402`** both when out of credit *and* when queried too fast, so a `402`
-is not proof the account is empty — check a single query before believing it. `search_all` has no
-rate limiting (TODO, smaller things).
+when out; Brave answers **`HTTP 402`** both when out of credit *and* when queried too fast. The
+program now tells those apart from `error.meta.current_spend` against `usage_limit` and says which it
+is (`SearchQuotaExhausted` / `SearchThrottled`), and the provider paces itself at 1.3s from one lock
+so `search_all`'s concurrency cannot trip a capped plan — entry 74. **A search outage no longer kills
+a country that has a corpus**: it falls back to the stored pages, says so, and is never kept for
+reuse. With no corpus the refusal stands, because *we could not look* must never become *there is
+nothing to find*.

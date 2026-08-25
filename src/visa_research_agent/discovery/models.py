@@ -228,6 +228,20 @@ class ResolvedCorridor(StrictModel):
     sources: list[ResolvedSource] = Field(default_factory=list)
     unresolved_roles: list[DiscoveryRole] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+
+    ran_without_search: bool = False
+    """True when the search provider was unavailable and the stored corpus answered alone.
+
+    A **typed** field rather than a sentence in `notes`, for DECISIONS entry 36's reason: what acts
+    on a fact must read a recorded outcome, never parse the prose describing it, or rewording a
+    message silently changes behaviour. What acts on it is the corridor store, which must not keep
+    a narrower resolution for three weeks and serve it as an ordinary one.
+
+    A corridor may only run this way when a corpus exists to run from. With no corpus there is
+    nothing to fall back to and the refusal stands — a `402` must never read as "this country has
+    no pages" (entry 74).
+    """
+
     inaccessible_domains: list[str] = Field(default_factory=list)
     """Domains that refused automated retrieval.
 

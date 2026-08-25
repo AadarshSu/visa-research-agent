@@ -76,6 +76,7 @@ from visa_research_agent.discovery.scoring import (
     wrong_country,
 )
 from visa_research_agent.discovery.search import (
+    SearchError,
     SearchProvider,
     corridor_queries,
     resolve_corridor_countries,
@@ -452,7 +453,24 @@ class CorridorResolver:
         # Every query at once, but the results walked in the order the queries were asked. Which
         # page a corridor resolves to depends on the order candidates arrive, so it must not depend
         # on which query the engine answered first.
-        found = await search_all(self.provider, queries, count=self.results_per_query)
+        # A search outage does not have to end the corridor when the country's pages are already
+        # on disk — but it must never be invisible, and it must never happen where there is nothing
+        # to fall back to. DECISIONS entry 74.
+        searched_without_error = True
+        try:
+            found = await search_all(self.provider, queries, count=self.results_per_query)
+        except SearchError as exc:
+            if not self._corpus_links(destination):
+                # Nothing stored for this destination, so search was the only recall there was.
+                # Falling through here would turn "we could not look" into "there is nothing".
+                raise
+            searched_without_error = False
+            found = {query: [] for query in queries}
+            notes.append(
+                f"search was unavailable ({exc}), so this corridor was answered from "
+                f"{destination.display_name}'s stored page corpus alone. Nothing was substituted "
+                "for the pages search would have added, and this result is not kept for reuse."
+            )
         for query in queries:
             results = usable_results(found[query], destination)
             for result in results:
@@ -480,7 +498,11 @@ class CorridorResolver:
                     seeds.append(url)
 
         trace.seeds = seeds
-        if not seeds:
+        if not seeds and searched_without_error:
+            # Guarded, because with search unavailable this sentence would be false of what was
+            # seen: nothing was returned because nothing was asked. The note above already says so,
+            # and two notes describing one event as two different failures is how a reader ends up
+            # believing the corpus came up empty. Entries 33 and 36.
             notes.append("search returned nothing on an approved domain for this corridor")
 
         # 2. The country's known pages, which is what decides whether a crawl is worth running.
@@ -673,6 +695,7 @@ class CorridorResolver:
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
+            ran_without_search=not searched_without_error,
         )
 
     def _corpus_links(self, destination: DestinationConfig) -> list[tuple[PageLink, str]]:

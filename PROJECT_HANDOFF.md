@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-25 — update this line when you touch the handoff |
-| **Tests** | 490 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 495 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -86,10 +86,17 @@ it cannot drift; this file deliberately does not copy it.
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
 
-**Both providers are at their cap right now.** `SEARCH_API_KEY` answers `402 Usage limit exceeded`
-(`current_spend 25.01` against a `25.0` limit — genuine, not the throttle CLAUDE.md warns about;
-a single query was checked). Nothing that needs discovery can run until that is raised, stage 3
-included. OpenAI was topped up mid-session and is fine.
+**Search is at its cap right now.** `SEARCH_API_KEY` answers `402 Usage limit exceeded`
+(`current_spend 25.01` against a `25.0` limit). Stage 3's ~1,792 searches cannot start until that is
+raised, and the 43 countries with no corpus cannot be researched. OpenAI was topped up mid-session and
+is fine.
+
+**The ten countries with a corpus keep working through it** (entry 74). A search outage now falls back
+to the stored corpus where one exists, says so in the plan's notes with the provider's own figures, and
+is deliberately **not** kept for reuse; with no corpus the refusal still stands. Confirmed live on the
+outage itself: all ten resolved or handed over a tool where every one of them previously died with
+`Search is unavailable`. The provider also paces itself now, and a `402` is classified into a spend cap
+or a throttle instead of being reported as one thing.
 
 **Stage 2 is done, and stage 3 is what remains of item 30.** All 41 never-run destinations ran on
 2026-08-25 — 103 corridors, two or three passports each, with `--from` deliberately different from

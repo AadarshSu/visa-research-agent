@@ -83,6 +83,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [17](#17-france-and-china-the-decider-refuses-well-and-the-wall-is-now-access-not-ranking) | France and China: the wall is access, not ranking |
 | [40](#40-the-shortlist-is-a-recall-budget-and-ten-places-made-the-heuristic-the-real-decider) | The shortlist is a recall budget, not a ranking |
 | [42](#42-the-excerpt-is-the-second-recall-gate-and-a-flat-6000-made-truncation-the-decider) | The excerpt is the second recall gate |
+| [74](#74-search-a-spend-cap-is-not-a-throttle-a-burst-is-not-a-pace-and-a-corpus-may-answer-alone) | **A capped account killed every corpus country** — paced, classified, and a corpus may now answer alone |
 | [43](#43-write-down-what-a-corridor-considered-because-ranked-out-and-never-found-had-looked-identical) | Write down what a corridor considered |
 | [50](#50-the-routing-index-removes-the-wrong-cost-it-is-wrong_country-not-scoring) | The routing index removed the wrong cost |
 | [52](#52-entry-47s-pin-only-half-existed-the-truncation-dropped-it) | Entry 47's pin only half existed |
@@ -121,6 +122,81 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 74. Search: a spend cap is not a throttle, a burst is not a pace, and a corpus may answer alone
+**2026-08-25 · three fixes, tested offline and confirmed live against a genuinely capped account**
+
+Three defects in how this project uses search, all recorded under TODO *Smaller things* and none
+fixed until a real outage made the third one impossible to keep deferring.
+
+### A `402` was reported as one thing, and it is two
+
+Brave answers `402` both for a spend cap and for queries sent too fast, and *"payment required"*
+reads as *out of credit* either way. That cost an earlier session an hour of believing an account was
+empty while single queries answered fine.
+
+**Only the body separates them**, and it does so with numbers rather than prose:
+`error.meta.current_spend` against `error.meta.usage_limit`. So `SearchQuotaExhausted` and
+`SearchThrottled` are now distinct types under `SearchError`, decided by `classify_payment_required`
+from those figures — never by matching words in a message, which is entry 36's rule.
+
+**A `402` with no figures is treated as a throttle**, deliberately the safer way round: a throttle
+retried is a delay, an exhausted account retried is noise aimed at somebody else's service.
+
+### The concurrency outran the pace, because the pace lived nowhere
+
+`search_all` runs four queries at once and `BraveSearchProvider` paced nothing, so a capped plan met
+four simultaneous requests and refused three. The limiter is now **on the provider** — one lock, one
+monotonic clock, `DEFAULT_QUERY_INTERVAL_SECONDS = 1.3` — so it holds however many callers ask at
+once. Per-call pacing would not have: four calls each waiting their own interval still leave together.
+
+`sleep` and `now` are injectable, so the test asserts the pacing without spending 2.6 seconds.
+
+### A country with 2,450 stored pages could not answer while search was down
+
+The one that mattered. `_resolve` searched **before** reading the corpus and `search_all` raises if
+any query fails, so Canada — 1.7 MB of corpus, resolving in 12s off a file — died with
+`Search is unavailable: HTTP 402`. Every one of the ten corpus countries did. Entry 48 kept search
+for **recall**; nothing ever decided it should be the single point of failure for a fully built
+country, and entries 44–57 made it one by attrition.
+
+**A search failure now falls back to the corpus, and the fallback is loud, bounded and not kept:**
+
+- **Only where a corpus exists.** With nothing stored, search was the only recall there was, and
+  falling through would turn *we could not look* into *there is nothing to find* — the statement
+  entry 18 forbids outright. The refusal stands, and a test pins it.
+- **Recorded as a typed field**, `ResolvedCorridor.ran_without_search`, not as a sentence. What acts
+  on it is the corridor store.
+- **Never stored.** `AutomaticDestinationService` skips `store.store` for such a corridor. The store
+  keeps what it is given for three weeks, and serving a narrower resolution long after search came
+  back, with nobody told, is entry 44's rejected shape arriving by another route.
+- **Said plainly**, naming the real cause with its numbers: *"search was unavailable (the search
+  account has spent 25.01 against its 25.0 limit …), so this corridor was answered from Canada's
+  stored page corpus alone. Nothing was substituted … and this result is not kept for reuse."*
+
+**And one note had to be silenced to keep the rest true.** With search down, *"search returned
+nothing on an approved domain"* is false — nothing was returned because nothing was asked — and two
+notes describing one event as two failures is how a reader concludes the corpus came up empty.
+
+### Confirmed live, on the outage itself
+
+With the account genuinely capped, all ten corpus countries were run. **None died.** Canada resolved
+in 31.7s from 2,450 stored pages; Singapore filled five roles; Japan, Germany, the United States and
+the United Arab Emirates confirmed the decision; France, Sweden, the Netherlands and the United
+Kingdom handed over their questionnaires. Before this change every one of them raised.
+
+### What this does and does not buy
+
+It does **not** make search optional. A country with no corpus still needs it, which is 43 of the 53,
+and the corpus half of a built country is thinner than it looks — known problem 24 records Japan's
+holding 1 of its 6 role pages. What it buys is that **building a corpus now insulates that country
+from a search outage**, which it did not before, and that is a second reason for stage 3 beyond
+latency and beyond entry 70's recall-stability finding.
+
+TODO item 19 — taking search out of the request path *by design* rather than as a fallback — is
+untouched and still wants the nationality dimension measured first.
 
 ---
 

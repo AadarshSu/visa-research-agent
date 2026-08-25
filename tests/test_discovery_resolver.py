@@ -45,6 +45,7 @@ from visa_research_agent.discovery.resolver import (
     clean_title,
     derive_authority,
 )
+from visa_research_agent.discovery.search import SearchError, SearchQuotaExhausted
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.source_cache import FileSourceCache
@@ -68,10 +69,13 @@ class StubSearchProvider:
         self.urls = urls
         self.queries: list[str] = []
         self.title = ""
+        self.error: SearchError | None = None
 
     title: str = ""
 
     async def search(self, query: str, *, count: int) -> list[SearchResult]:
+        if self.error is not None:
+            raise self.error
         self.queries.append(query)
         return [
             SearchResult(url=url, title=self.title, snippet="", query=query, rank=rank)
@@ -795,6 +799,48 @@ async def test_a_destination_nobody_has_built_still_crawls(tmp_path: Path) -> No
     assert resolver.crawl_fetcher.requested, "with no corpus there is nothing else to go on"
     assert not any("the crawl was skipped" in note for note in resolved.notes), resolved.notes
     assert resolved.is_usable, f"unresolved: {resolved.unresolved_roles}"
+
+
+@pytest.mark.anyio
+async def test_a_search_outage_is_survived_by_a_country_whose_pages_are_stored(
+    tmp_path: Path,
+) -> None:
+    """Canada holds a 1.7 MB corpus and still died with `Search is unavailable: HTTP 402`.
+
+    Search left the request path for *recall* (entry 48); it was never meant to be the one thing a
+    fully-built country could not do without. The fallback is loud on purpose. DECISIONS entry 74.
+    """
+
+    requests: list[httpx.Request] = []
+    resolver, provider = build_resolver(tmp_path, requests, [INDEX])
+    resolver.corpus = corpus_of(padding=DEFAULT_CRAWL_PAGES + 1)
+    provider.error = SearchQuotaExhausted("the search account has spent 25.01 against its 25.0")
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert resolved.is_usable, f"unresolved: {resolved.unresolved_roles} notes={resolved.notes}"
+    assert resolved.ran_without_search
+    assert any("search was unavailable" in note for note in resolved.notes), resolved.notes
+    assert any("25.01" in note for note in resolved.notes), resolved.notes
+
+
+@pytest.mark.anyio
+async def test_a_search_outage_still_refuses_a_country_with_nothing_stored(
+    tmp_path: Path,
+) -> None:
+    """The half that must not be relaxed: with no corpus, search was the only recall there was.
+
+    Falling through here would turn *we could not look* into *there is nothing to find*, which is
+    the statement DECISIONS entry 18 exists to forbid.
+    """
+
+    requests: list[httpx.Request] = []
+    resolver, provider = build_resolver(tmp_path, requests, [INDEX])
+    resolver.corpus = None
+    provider.error = SearchQuotaExhausted("the search account has spent 25.01 against its 25.0")
+
+    with pytest.raises(SearchError):
+        await resolver.resolve(destination(), corridor())
 
 
 @pytest.mark.anyio

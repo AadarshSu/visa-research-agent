@@ -18,6 +18,8 @@ from visa_research_agent.discovery.models import Corridor, SearchResult
 from visa_research_agent.discovery.search import (
     BraveSearchProvider,
     SearchError,
+    SearchQuotaExhausted,
+    SearchThrottled,
     bootstrap_queries,
     corridor_queries,
     resolve_corridor_countries,
@@ -429,3 +431,81 @@ async def test_no_more_queries_are_in_flight_than_the_limit_allows() -> None:
     await search_all(Counting(), [f"q{index}" for index in range(12)], count=5, concurrency=4)
 
     assert highest == 4
+
+
+# --- telling a spend cap apart from a query sent too soon ------------------------------------
+
+
+EXHAUSTED = {
+    "type": "ErrorResponse",
+    "error": {
+        "id": "df56ac42",
+        "status": 402,
+        "detail": "Usage limit exceeded.",
+        "meta": {"plan": "Search", "current_spend": 25.01, "usage_limit": 25.0},
+    },
+}
+
+
+@pytest.mark.anyio
+async def test_a_spend_cap_is_reported_as_an_exhausted_account() -> None:
+    """Brave answers `402` for both causes, and only the body separates them.
+
+    Reported as one thing, it cost a session an hour of believing the account was empty while
+    single queries answered fine — so the difference is a type, not a sentence. DECISIONS entry 74.
+    """
+
+    provider = BraveSearchProvider(
+        "test-key",
+        transport=httpx.MockTransport(lambda _: httpx.Response(402, json=EXHAUSTED)),
+        minimum_interval_seconds=0.0,
+    )
+
+    with pytest.raises(SearchQuotaExhausted) as raised:
+        await provider.search("anything", count=5)
+
+    assert "25.01" in str(raised.value)
+    assert isinstance(raised.value, SearchError)
+
+
+@pytest.mark.anyio
+async def test_a_402_with_no_spend_figures_is_reported_as_a_throttle() -> None:
+    provider = BraveSearchProvider(
+        "test-key",
+        transport=httpx.MockTransport(lambda _: httpx.Response(402, json={"error": {}})),
+        minimum_interval_seconds=0.0,
+    )
+
+    with pytest.raises(SearchThrottled) as raised:
+        await provider.search("anything", count=5)
+
+    assert "rate limit" in str(raised.value)
+    assert not isinstance(raised.value, SearchQuotaExhausted)
+
+
+@pytest.mark.anyio
+async def test_queries_are_paced_even_when_several_are_asked_at_once() -> None:
+    """The pace is the provider's, not the caller's.
+
+    `search_all` runs four queries at a time, so a limiter that lived per-call would let four
+    leave together and trip exactly the cap it exists to respect.
+    """
+
+    slept: list[float] = []
+    clock = [0.0]
+
+    async def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        clock[0] += seconds
+
+    provider = BraveSearchProvider(
+        "test-key",
+        transport=httpx.MockTransport(lambda _: httpx.Response(200, json={"web": {"results": []}})),
+        minimum_interval_seconds=1.3,
+        sleep=sleep,
+        now=lambda: clock[0],
+    )
+
+    await search_all(provider, ["a", "b", "c"], count=5, concurrency=4)
+
+    assert slept == pytest.approx([1.3, 1.3])

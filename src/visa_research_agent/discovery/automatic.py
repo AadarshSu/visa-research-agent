@@ -412,7 +412,12 @@ class AutomaticDestinationService:
             )
 
         self._write_back(country, trusted, resolver, resolved)
-        self.store.store(corridor, resolved, trusted, withheld, self.now())
+        if not resolved.ran_without_search:
+            # A corridor answered from the corpus alone is a narrower resolution than usual, and
+            # the store keeps what it is given for three weeks. Keeping this one would serve a
+            # degraded answer long after search came back, with nobody told — the shape entry 44
+            # rejects, arriving by a different route. DECISIONS entry 74.
+            self.store.store(corridor, resolved, trusted, withheld, self.now())
         return DiscoveredDestination(
             config=resolved.to_destination_config(base),
             resolved=resolved,
