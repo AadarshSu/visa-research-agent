@@ -31,6 +31,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [34](#34-who-to-believe-becomes-committed-data-only-which-page-is-decided-live) | Who to believe becomes committed data; only which page is decided live |
 | [38](#38-the-trusted-domain-registry-is-generated-offline-and-committed-and-reviewing-it-found-what-running-it-could-not) | The trusted-domain registry is generated offline and committed |
 | [39](#39-a-person-may-override-the-trust-rule-in-committed-data-and-doing-it-showed-the-rule-was-not-the-only-thing-wrong) | A person may override the trust rule, in committed data |
+| [65](#65-three-missing-markers-and-the-second-list-nobody-remembered-was-there) | **Three missing markers** — 19 of 51 unreachable → 16, and a second list that had to move with it |
 
 ### Refusal, blocks, and how we behave as a client
 | | |
@@ -112,6 +113,91 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 65. Three missing markers, and the second list nobody remembered was there
+**2026-08-25 · implemented, rebuilt and confirmed live. TODO item 2, the corrections half**
+
+Item 2's "do first, separately" step: add `gv` and `gub` as governmental markers and name `canada.ca`
+beside `gc.ca`. These are **corrections inside the rule rather than relaxations of it** — Austria's
+ministry is `bmeia.gv.at` and Uruguay's government is `gub.uy`, both the same idea as `gov` spelled the
+way their own registry spells it, and Canada's immigration content had moved off the already-named
+`gc.ca` to `canada.ca` while the rule stayed put.
+
+**Trust-rule coverage: 19 of 51 unreachable → 16 of 51.** AT, CA and UY. The frozen tripwire in
+`tests/test_trust_coverage.py` named exactly those three and nothing else, which is what it is for.
+
+### The hole this would have opened, which neither file could see alone
+
+`trust.SUFFIX_MARKER_LABELS` is a **second** hand-maintained list, and it decides something different:
+not "is this a government namespace" but "is it too broad to trust whole". `gv` was missing from it.
+
+So with the marker added and that list untouched, `registrable_domain("bmeia.gv.at")` returned
+**`gv.at`** — trusting Austria's foreign ministry would have trusted **every Austrian public body**
+under the same namespace. That is precisely what refusing `gov.br` whole exists to prevent,
+reintroduced through the back door, and it was invisible from either file: `bootstrap.py` looked
+correct, `trust.py` looked correct, and the defect lived in the gap.
+
+The two lists now move together by construction — `GOVERNMENT_NAMESPACE_LABELS` is the source the
+namespace patterns are built from, and `tests/test_trust.py` asserts it is a subset of
+`SUFFIX_MARKER_LABELS` with an error message saying why. **The containment is one-directional**:
+`co`, `com` and `org` belong in the suffix list and are not governmental.
+
+`canada.ca` is the safer shape and is kept separate as `NAMED_GOVERNMENT_DOMAINS`: a single domain a
+government holds, like `admin.ch`, where a subdomain can only exist if that government made it.
+Reducing `ircc.canada.ca` to `canada.ca` is correct; reducing `bmeia.gv.at` to `gv.at` is not.
+
+**The adversarial probe is now a test.** TODO item 2 recorded it as run by hand on 2026-08-18, which
+meant nothing was holding it. Seventeen spoofs — `visa-gov.com`, `gv-at.com`, `mygub.uy`,
+`canada.ca.evil.example`, `notcanada.ca` — all rejected, because matching is anchored to a label
+boundary at the end.
+
+### The rule changing moved nothing on its own
+
+`visa-discover audit` immediately afterwards: still **39 researchable, Austria still refused.** The
+registry is committed data generated under the old rule (entry 38), and a rule change does not reach a
+traveller until the rows are rebuilt. Austria's row held only `gv.at` — the bare namespace, which the
+fix above now correctly refuses as a suffix — because search had found the namespace and never the
+ministry.
+
+`visa-discover registry --only AT,UY --rebuild`, 8 searches:
+
+| | before | after |
+| --- | --- | --- |
+| AT | `unconfirmable: [gv.at]`, nothing usable | `bmeia.gv.at`, `oesterreich.gv.at`, `migration.gv.at`, `wien.gv.at` |
+| UY | no row at all | `www.gub.uy` |
+
+**39 → 41 researchable, and the "row, no confirmable domain" bucket is now empty.**
+
+### A false statement found by reading the command's own output
+
+`run_registry` printed `41 countries written; 37 have a confirmed domain, 4 are refused`, and the four
+were **Belgium, Germany, Denmark and Sweden** — every one of them researchable, on a `reviewed`
+domain. It counted `row.trusted` and ignored `row.reviewed`, so the one command that *writes* reviewed
+rows reported them as failures, for the governments the reviewed mechanism exists for. Germany had
+confirmed the visa decision on 8 of 8 corridors (entry 58) while this line called it refused. Now
+counted from `row.domains`, the same property the resolver reads.
+
+### Austria live, and it qualifies entry 63
+
+`austria/IN/IN/tourism` now reaches its own government and refuses **for a different and far more
+honest reason**: `www.bmeia.gv.at` and `www.wien.gv.at` publish a `robots.txt` that does not permit
+this client, and the remaining domains returned too little readable text. The corridor correctly does
+not resolve — a `Disallow` may never resolve one (entry 36).
+
+**This is the first measured case where the posture actually costs a corridor.** Entry 63 reported 0 of
+15 unreadable pages `blocked`, and that literal statement still holds — there are still zero. But its
+implication, that the honest-client posture was costing nothing measurable, does not survive Austria:
+**23 pages `disallowed` across the run set, all Austrian, and they refuse the corridor outright.**
+Obeying `robots.txt` is the same posture, and `POSTURE_COST` already marks `disallowed` as a cost of
+it. The earlier reading was true of the two corridors it was drawn from and too broad as a conclusion.
+
+**A limitation this exposes in entry 63's taxonomy:** Austria buckets as `decision_not_found` — "no,
+recall or scoring" — when the decision was not found *because* the pages were disallowed. The cause
+describes the corridor's outcome and the `disallowed` count sits in a separate section, so a reader
+has to join them by hand. Not fixed here; recorded so the next person does not read that bucket as
+purely a recall problem.
 
 ---
 

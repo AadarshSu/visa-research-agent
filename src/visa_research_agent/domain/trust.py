@@ -10,6 +10,15 @@ from urllib.parse import urlsplit
 # Labels that appear as the second level of a public suffix. A two-label domain beginning with one
 # of these is a suffix such as "gov.sg" or "co.uk" rather than a registrable domain, and trusting
 # it would silently trust every site beneath it.
+#
+# **This list and `bootstrap.GOVERNMENT_NAMESPACE_LABELS` must move together, in one direction:
+# every government namespace has to appear here.** They answer different questions — that one asks
+# "is this a government namespace?", this one asks "is it too broad to trust whole?" — and a label
+# in the first but missing from the second is a hole rather than an omission. Adding `gv` on
+# 2026-08-25 found this the hard way: `bmeia.gv.at` reduced to `gv.at`, so trusting Austria's
+# ministry would have trusted every Austrian public body under the same namespace, which is what
+# refusing `gov.br` whole exists to prevent. `tests/test_trust.py` now asserts the containment
+# rather than leaving it to whoever edits one of the two lists.
 SUFFIX_MARKER_LABELS = frozenset(
     {
         "ac",
@@ -22,6 +31,8 @@ SUFFIX_MARKER_LABELS = frozenset(
         "gouv",
         "gov",
         "govt",
+        "gub",
+        "gv",
         "int",
         "mil",
         "net",

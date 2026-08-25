@@ -331,7 +331,13 @@ async def run_registry(args: argparse.Namespace, stream: TextIO) -> int:
     )
     write_registry(registry, destination)
 
-    confirmed = sum(1 for row in registry.countries if row.trusted)
+    # `domains`, not `trusted` — the same property the resolver reads, so this line reports what a
+    # traveller would actually get. Counting `trusted` alone called Belgium, Germany, Denmark and
+    # Sweden "refused" while every one of them was researchable on a reviewed domain, and Germany
+    # had confirmed the visa decision on 8 of 8 corridors (entry 58). A reviewed row is the whole
+    # mechanism for a government that marks no hostname, so the one command that writes those rows
+    # was the worst possible place to report them as failures.
+    confirmed = sum(1 for row in registry.countries if row.domains)
     print(
         f"\n{len(registry.countries)} countries written to {destination}; "
         f"{confirmed} have a confirmed domain, {len(registry.countries) - confirmed} are refused.",

@@ -57,7 +57,7 @@ AUTHORITIES: dict[str, Authority] = {
     "DK": Authority("nyidanmark.dk"),
     "FI": Authority("migri.fi"),
     "BE": Authority("dofi.ibz.be"),  # Belgium uses fgov.be — also unmarked
-    "AT": Authority("bmeia.gv.at"),  # `gv` is simply missing from the marker list
+    "AT": Authority("bmeia.gv.at"),  # reachable since 2026-08-25: `gv` added as a marker
     "IT": Authority("esteri.it", "interno.gov.it"),
     "IE": Authority("irishimmigration.ie", "gov.ie"),
     "PT": Authority("vistos.mne.pt", "gov.pt"),
@@ -72,14 +72,14 @@ AUTHORITIES: dict[str, Authority] = {
     "GB": Authority("gov.uk"),
     # --- The Americas -------------------------------------------------------------------------
     "US": Authority("travel.state.gov"),
-    "CA": Authority("canada.ca", "cic.gc.ca"),  # content moved off the special-cased gc.ca
+    "CA": Authority("canada.ca", "cic.gc.ca"),  # reachable since 2026-08-25: canada.ca named
     "BR": Authority("gov.br"),
     "MX": Authority("inm.gob.mx"),
     "AR": Authority("migraciones.gob.ar"),
     "CL": Authority("serviciomigraciones.cl", "gob.cl"),
     "CO": Authority("cancilleria.gov.co"),
     "PE": Authority("migraciones.gob.pe"),
-    "UY": Authority("gub.uy"),  # `gub` is simply missing from the marker list
+    "UY": Authority("gub.uy"),  # reachable since 2026-08-25: `gub` added as a marker
     # --- Asia-Pacific -------------------------------------------------------------------------
     "JP": Authority("mofa.go.jp"),
     "KR": Authority("immigration.go.kr"),
@@ -113,9 +113,7 @@ AUTHORITIES: dict[str, Authority] = {
 # governmental half. Removing a country from this set is progress and should be deliberate.
 UNREACHABLE_VISA_GUIDANCE = frozenset(
     {
-        "AT",
         "BE",
-        "CA",
         "CL",
         "CZ",
         "DE",
@@ -131,14 +129,13 @@ UNREACHABLE_VISA_GUIDANCE = frozenset(
         "RO",
         "RU",
         "SE",
-        "UY",
     }
 )
 
 # The subset with no reachable government domain at all, so the destination refuses outright with
 # "no domain belonging to X's own government could be identified". For the rest, bootstrap succeeds
 # and builds a trusted set that cannot contain the page holding the answer — the quieter failure.
-REFUSED_OUTRIGHT = frozenset({"AT", "BE", "DE", "DK", "FI", "NL", "NO", "SE", "UY"})
+REFUSED_OUTRIGHT = frozenset({"BE", "DE", "DK", "FI", "NL", "NO", "SE"})
 
 
 def proposal_for(domain: str, code: str) -> DomainProposal:
@@ -182,7 +179,7 @@ def test_the_trust_rule_reaches_exactly_the_countries_it_reaches_today() -> None
     # corridors are run, so asserting a total would fight the growth TODO item 1 asks for. The
     # "19 of 51" the documents quote is the original measurement; France was added afterwards and
     # passes the rule — it fails later, at HTTP, which is a different limit entirely.
-    assert len(unreachable) == len(UNREACHABLE_VISA_GUIDANCE) == 19
+    assert len(unreachable) == len(UNREACHABLE_VISA_GUIDANCE) == 16
 
 
 def test_every_unreachable_country_fails_on_the_governmental_half() -> None:
@@ -287,3 +284,62 @@ def test_a_supranational_authority_can_never_belong_to_a_member_state() -> None:
         country = get_country_registry().require(code)
         assert not belongs_to_destination("europa.eu", country.tlds), code
         assert not proposal_for("europa.eu", code).is_own_government, code
+
+
+# Hostnames an attacker would try if they wanted to be mistaken for a government. Probed by hand on
+# 2026-08-18 and recorded in TODO item 2; committed 2026-08-25 because that is when the pattern list
+# was widened, and a safety property checked by hand once is a property nothing is holding.
+SPOOFED_GOVERNMENT_HOSTNAMES = (
+    # The original probe: "gov" placed somewhere that is not a label boundary at the end.
+    "visa-gov.com",
+    "gov-uk.com",
+    "govuk.com",
+    "thegov.uk",
+    "gov.sg.evil.example",
+    "immigration.gov.in.attacker.net",
+    "esteri.it.visa-help.com",
+    # The three markers added 2026-08-25, attacked the same way.
+    "gv.at.attacker.net",
+    "bmeia-gv.at",
+    "gv-at.com",
+    "mygv.at",
+    "gub.uy.attacker.net",
+    "mygub.uy",
+    "canada.ca.evil.example",
+    "notcanada.ca",
+    "my-canada.ca",
+    "canada-ca.com",
+)
+
+# What the same three markers must still accept, or the widening bought nothing.
+MARKED_GOVERNMENT_HOSTNAMES = (
+    "bmeia.gv.at",
+    "www.bmeia.gv.at",
+    "gub.uy",
+    "www.gub.uy",
+    "canada.ca",
+    "www.canada.ca",
+    "ircc.canada.ca",
+    "gc.ca",
+)
+
+
+def test_a_marker_cannot_be_spoofed_by_putting_it_in_a_name() -> None:
+    """Why `looks_governmental` is sound as a *sufficient* test, held as a test rather than a claim.
+
+    The patterns match a marker only at a **label boundary anchored to the end**, so what they
+    really check is "sits inside a registry-controlled government namespace" — `gov.sg` and `gv.at`
+    cannot be bought — rather than "reads as official", which is what entry 2 forbids. That is an
+    unforgeable property and the reason the rule is worth keeping; it is also the property most
+    easily lost by a careless edit to a regex, which is what this holds in place.
+    """
+
+    for hostname in SPOOFED_GOVERNMENT_HOSTNAMES:
+        assert not looks_governmental(hostname), f"{hostname} passes as governmental"
+
+
+def test_the_markers_added_for_austria_uruguay_and_canada_still_accept_them() -> None:
+    """The other direction, so a tightening cannot silently undo the 2026-08-25 correction."""
+
+    for hostname in MARKED_GOVERNMENT_HOSTNAMES:
+        assert looks_governmental(hostname), f"{hostname} no longer reads as governmental"

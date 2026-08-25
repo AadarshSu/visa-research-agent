@@ -142,7 +142,7 @@ HEADER = """\
 #                   rather than widening the set. **Preserved when this file is regenerated.**
 #   unconfirmable — under the country's own top-level domain, but the hostname carries no marker
 #                   this rule recognises as governmental. A real immigration authority may well be
-#                   sitting here: 19 of 51 countries measured have theirs here, because no `gov.de`
+#                   sitting here: 16 of 51 countries measured have theirs here, because no `gov.de`
 #                   or `gov.nl` convention exists for one to be found under. Reported so a refusal
 #                   can name it. **Never trusted** — that would be "looks official", which is the
 #                   one thing the trust rule refuses to do.

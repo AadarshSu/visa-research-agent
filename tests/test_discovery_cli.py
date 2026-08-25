@@ -186,23 +186,28 @@ def test_a_destination_with_no_configured_domains_falls_back_to_the_registry() -
 
 
 def test_a_country_outside_the_registry_is_refused_with_the_same_words_as_the_api() -> None:
-    """Austria has a registry row with no confirmable domain, so it refuses — correctly (entry 39).
+    """Kenya has no registry row at all, so it refuses — correctly (entries 38 and 39).
 
     The message has to be the registry's own, not a second one written for the command: a country
     the CLI cannot research and a country the API cannot research are one fact.
+
+    **This asked about Austria until 2026-08-25**, which had a row and nothing confirmable under it.
+    Adding `gv` as a marker and rebuilding its row made Austria researchable, and no country is in
+    that state any more — so the example moved to the case that still exists, and is the common one
+    by a distance: 157 of 198 countries have no row.
     """
 
     wanted = Corridor(
-        destination_slug="austria",
+        destination_slug="kenya",
         passport_nationality="IN",
         applying_from="GB",
         purpose="tourism",
     )
     stream = io.StringIO()
 
-    assert corridor_destination("austria", wanted, stream) is None
+    assert corridor_destination("kenya", wanted, stream) is None
     message = stream.getvalue()
-    assert "No domain belonging to Austria's own government could be confirmed" in message
+    assert "Kenya is not in the reviewed authority registry" in message
     assert "Nothing was fetched" in message
 
 

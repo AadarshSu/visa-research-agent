@@ -172,7 +172,7 @@ def test_a_ministry_with_no_marker_is_not_called_a_non_government_domain() -> No
     Italy's real foreign ministry has no governmental marker in its hostname — there is no `gov.it`
     convention for one to be found under — so it fell through to "not a government domain for this
     destination", which is false, and in wording identical to what a commercial visa agency got. A
-    reviewer doing exactly what they were told would have believed it. Measured for 19 of 51
+    reviewer doing exactly what they were told would have believed it. Measured for 16 of 51
     countries; DECISIONS entry 33.
     """
 

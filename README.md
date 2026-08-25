@@ -88,10 +88,11 @@ cannot be skipped rather than graph nodes that could be reordered (entry 29).
 
 **A known coverage limit, measured 2026-08-18:** a destination is researchable only when its government
 publishes under a hostname this agent recognises as governmental (`gov`, `go.xx`, `gouv.xx`, and a few
-more). **19 of 51 countries checked do not** — Germany, Italy, the Netherlands, Sweden and Canada among
-them — so the rule alone refuses them. **A person may name the domain instead**, in the registry's
-`reviewed` field with the evidence for it; twelve countries have been corrected that way and Austria has
-not, because nothing independent confirmed it. See entries 33 and 39.
+more). **19 of 51 countries checked did not; 16 since 2026-08-25**, when the markers Austria, Uruguay
+and Canada actually use were added (entry 65). Germany, Italy, the Netherlands and Sweden are among
+those still refused by the rule alone. **A person may name the domain instead**, in the registry's
+`reviewed` field with the evidence for it; twelve countries have been corrected that way. See entries
+33, 39 and 65.
 
 ### Source discovery
 

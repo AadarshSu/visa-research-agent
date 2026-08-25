@@ -49,15 +49,48 @@ __all__ = [
 
 # Hostname shapes that governments use. A strong hint, never a decision: legitimate authorities sit
 # outside these patterns and spam imitates them.
+#
+# Two shapes, and they carry different risk.
+#
+# Second-level labels that name a **government namespace** under a country code — `gov.sg`, `go.jp`,
+# `gv.at`. What makes these worth trusting is not that they read as official but that the registry
+# restricts who may register beneath them: you cannot buy `foo.gv.at`. That is the unforgeable
+# property entry 2 is really asking for, and it is why matching is anchored to a label boundary at
+# the end — `visa-gov.com` and `gov-uk.com` do not match, and `tests/test_trust.py` holds that.
+#
+# **Every label here must also be in `trust.SUFFIX_MARKER_LABELS`**, or a domain inside the
+# namespace reduces to the namespace itself and trusting one authority trusts that whole
+# government. `tests/test_trust.py` asserts the containment; the note on that list records what
+# adding `gv` uncovered.
+GOVERNMENT_NAMESPACE_LABELS = ("gov", "go", "gouv", "gob", "gv", "gub", "govt")
+
+# Single domains that are a government's own, rather than a namespace anyone in that government may
+# register under. The safer of the two shapes — a subdomain can only be created by whoever holds the
+# domain — and the only way to recognise a government that marks its hostnames not at all.
+NAMED_GOVERNMENT_DOMAINS = ("gc.ca", "canada.ca", "admin.ch", "europa.eu")
+
+# `gv`, `gub` and `canada.ca` were added 2026-08-25, and they are **corrections inside this rule
+# rather than relaxations of it** — the distinction CLAUDE.md draws, and why they need no decision
+# entry. Austria's ministry is `bmeia.gv.at` and Uruguay's government is `gub.uy`: both are the same
+# idea as `gov`, spelled the way their own registry spells it, and neither was on the list. Canada's
+# immigration content had moved from the already-named `gc.ca` to `canada.ca` and the rule did not
+# follow, which is why entry 33 recorded Canada as a government that passes the rule while its
+# guidance sat where the trusted set could not reach.
+#
+# The namespace patterns are as general as `go`/`gob`/`gouv`/`govt` already were: they admit
+# `gv.<any ccTLD>`, and a country selling that namespace openly would be a hole here exactly as it
+# would be there. Nothing is *decided* by this list — a match still has to be paired with
+# `belongs_to_destination` — so the exposure is bounded by the same second half as the rest.
 GOVERNMENT_PATTERNS = (
+    # `gov` is the general case and is also its own top-level domain, so it allows a bare `.gov`
+    # and a suffix of any length: `nasa.gov` and `ica.gov.sg` both match.
     re.compile(r"(^|\.)gov(\.[a-z]{2,})?$"),
-    re.compile(r"(^|\.)go\.[a-z]{2}$"),
-    re.compile(r"(^|\.)gouv\.[a-z]{2}$"),
-    re.compile(r"(^|\.)gob\.[a-z]{2}$"),
-    re.compile(r"(^|\.)govt\.[a-z]{2}$"),
-    re.compile(r"(^|\.)gc\.ca$"),
-    re.compile(r"(^|\.)admin\.ch$"),
-    re.compile(r"(^|\.)europa\.eu$"),
+    *(
+        re.compile(rf"(^|\.){label}\.[a-z]{{2}}$")
+        for label in GOVERNMENT_NAMESPACE_LABELS
+        if label != "gov"
+    ),
+    *(re.compile(rf"(^|\.){re.escape(domain)}$") for domain in NAMED_GOVERNMENT_DOMAINS),
 )
 
 # Words in a hostname that suggest which kind of authority it is. Shown to the reviewer as a hint.

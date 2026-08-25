@@ -4,13 +4,20 @@ import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
 from visa_research_agent.config.loader import load_destination_registry
+from visa_research_agent.discovery.bootstrap import GOVERNMENT_NAMESPACE_LABELS
 from visa_research_agent.domain.models import (
     AppointedProvider,
     ConfiguredSource,
     DestinationConfig,
     UnreadableAuthority,
 )
-from visa_research_agent.domain.trust import host_is_within, host_of, is_bare_public_suffix
+from visa_research_agent.domain.trust import (
+    SUFFIX_MARKER_LABELS,
+    host_is_within,
+    host_of,
+    is_bare_public_suffix,
+    registrable_domain,
+)
 
 
 def source(source_id: str, url: str, kind: str = "immigration_authority") -> ConfiguredSource:
@@ -173,3 +180,50 @@ def test_a_page_offered_as_guidance_must_still_be_on_an_approved_domain() -> Non
                 )
             ],
         )
+
+
+def test_every_government_namespace_is_also_too_broad_to_trust_whole() -> None:
+    """The containment between two hand-maintained lists that answer different questions.
+
+    `GOVERNMENT_NAMESPACE_LABELS` asks "is this a government namespace?"; `SUFFIX_MARKER_LABELS`
+    asks "is it too broad to trust whole?". A label in the first and missing from the second is a
+    hole rather than an omission, and it is invisible from either file on its own.
+
+    Found by adding `gv` on 2026-08-25. `registrable_domain("bmeia.gv.at")` returned **`gv.at`**,
+    so trusting Austria's foreign ministry would have trusted every Austrian public body under the
+    same namespace — the thing refusing `gov.br` whole exists to prevent, reintroduced through the
+    other list. Neither file's own tests could see it.
+    """
+
+    missing = set(GOVERNMENT_NAMESPACE_LABELS) - SUFFIX_MARKER_LABELS
+    assert not missing, (
+        f"{sorted(missing)} name a government namespace but are not treated as a public suffix, so "
+        "a domain inside one reduces to the namespace and trusting an authority trusts everything "
+        "beneath it — add them to SUFFIX_MARKER_LABELS"
+    )
+
+
+def test_an_authority_inside_a_government_namespace_keeps_its_own_identity() -> None:
+    """The behaviour the containment above buys, checked rather than inferred from the lists."""
+
+    for authority, namespace in (
+        ("bmeia.gv.at", "gv.at"),
+        ("ica.gov.sg", "gov.sg"),
+        ("mofa.go.jp", "go.jp"),
+    ):
+        assert registrable_domain(authority) == authority, (
+            f"{authority} reduced past itself, so trusting it would trust all of {namespace}"
+        )
+        assert is_bare_public_suffix(namespace), namespace
+
+
+def test_a_named_government_domain_is_trusted_with_everything_beneath_it() -> None:
+    """The other shape, and why it is the safer one.
+
+    `canada.ca` and `admin.ch` are single domains a government holds, not namespaces its bodies
+    register under, so a subdomain can only exist if that government made it. Reducing to the domain
+    is correct here and would be wrong for `gv.at`.
+    """
+
+    assert registrable_domain("ircc.canada.ca") == "canada.ca"
+    assert not is_bare_public_suffix("canada.ca")

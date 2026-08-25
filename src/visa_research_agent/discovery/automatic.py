@@ -137,7 +137,7 @@ def auto_trusted_domains(
                     "describes another country's rules"
                 )
             elif proposal.belongs_to_destination:
-                # Not "not a government domain": nothing here establishes that, and for 19 of 51
+                # Not "not a government domain": nothing here establishes that, and for 16 of 51
                 # countries measured this is where the real immigration authority lands. The honest
                 # statement is about the limit of the rule rather than about the domain.
                 withheld[proposal.domain] = (
@@ -169,8 +169,9 @@ def unconfirmable_authorities(report: BootstrapReport) -> list[str]:
     These are the candidates the trust rule can neither accept nor honestly dismiss, and naming them
     is what turns *"no domain belonging to Germany's own government could be identified"* — which is
     false, and the wrong place to go looking — into a description of the actual gap. Measured
-    2026-08-18: 19 of 51 countries have their real immigration or foreign ministry here, because no
-    `gov.de`, `gov.nl` or `gov.se` convention exists for one to be found under.
+    2026-08-18, remeasured 2026-08-25 after entry 65: 16 of 51 countries have their real immigration
+    or foreign ministry here, because no `gov.de`, `gov.nl` or `gov.se` convention exists for one to
+    be found under.
 
     Deliberately **not** a route to trusting any of them. The rule refuses "looks like an
     authority", and this only reports what it refused. See DECISIONS entry 33.

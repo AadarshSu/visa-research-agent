@@ -12,13 +12,17 @@ confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 4
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally). Nothing is blocked on credit.
 
-**Item 2 leads, and the reason changed on 2026-08-24.** It was `soon` for weeks as a coverage
-complaint. Entries 63 and 64 measured what the coverage complaint is actually made of, and it is
-almost entirely this item: **158 of the 159 refused countries are a registry job nobody has run**, and
-the trust rule's own share is one country. The rule is also refusing correct authorities *inside*
-countries it accepts — a one-off control arm cited `india.diplo.de`, Germany's own mission, and the
-rule declines it for want of a marker. Biggest lever in the file, and it costs no rigor at
-all.
+**Item 2 leads, and its cheap half is done.** It was `soon` for weeks as a coverage complaint;
+entries 63 and 64 measured what that complaint is made of and it is almost entirely this item.
+**Entry 65 did the corrections half on 2026-08-25** — three missing markers, coverage 39 → 41
+researchable, and the "row with nothing confirmable" bucket emptied.
+
+**What remains is the measurement, and then the sweep.** All 157 remaining refusals are countries
+nobody has run the registry job for. Before spending that quota, do the coverage check this item asks
+for: of the 16 governments with no marker, how many are reachable by a published domain list, by RDAP
+registrant data, or by a TLS certificate organisation? That decides whether the rest is automatable or
+is 16 reviewed rows. The rule is also refusing correct authorities *inside* countries it accepts — a
+one-off control arm cited `india.diplo.de`, Germany's own mission, declined for want of a marker.
 
 **Then item 17, now that 24, 25 and 26 are settled.** Items 24 and 25 took the United Kingdom from
 refusing every corridor to resolving all four: a page that *asks* a question is named for the role it
@@ -89,9 +93,9 @@ careful reading and were wrong.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 
-**Why this is now first.** Measured 2026-08-24, entries 63 and 64. Of 198 countries offered, 159 are
-refused before a page is fetched and **158 of those have no registry row at all** — unfinished data,
-not rigor. And the rule does not only refuse whole countries: a one-off control arm — open-web search
+**Why this is now first.** Measured 2026-08-24, entries 63 and 64. Of 198 countries offered, 157 are
+refused before a page is fetched and **every one of them has no registry row at all** — unfinished
+data, not rigor. And the rule does not only refuse whole countries: a one-off control arm — open-web search
 with no trust model, run on three corridors and then deleted (entry 64) — cited `india.diplo.de`,
 which **is** Germany's own diplomatic mission giving guidance to exactly that traveller, and the rule
 declines it because `diplo.de` carries no governmental marker. That is this item, with a measured cost
@@ -119,7 +123,7 @@ exactly the kind of thing this project's trust model wants.
 | As a test of | Verdict |
 | --- | --- |
 | *this IS official* (sufficient) | **Sound.** Registry-backed, zero false positives in the probe above. |
-| *only these are official* (necessary) | **Wrong, measured 19 of 51.** Where a country has no government namespace there is no signal to find, so no regex can ever fix it. |
+| *only these are official* (necessary) | **Wrong, measured 19 of 51 — 16 after entry 65.** Where a country has no government namespace there is no signal to find, so no regex can ever fix the rest. |
 | *this is a **visa** authority* | **Does not try.** `nasa.gov` and `recreation.gov` pass as US own-government. Bounded by the cap and corroboration bar (entry 22), not by this rule. |
 
 That is why the fix is to **add other sufficient conditions, never to loosen this one** — and why
@@ -154,7 +158,7 @@ is 19 countries rather than 198.
 
 **Then the two problems the measurement is for:**
 
-- **19 of 51 governments have no governmental marker in their hostname.** The amendment is an authority
+- **16 of 51 governments have no governmental marker in their hostname** (19 before entry 65). The amendment is an authority
   domain named in the entry 34 registry, by whichever of the four mechanisms above survives measurement
   — **never a wider regex.** Adding `.de`, `.nl`, `.it` as markers would trust every commercial site in
   those countries, and `belongs_to_destination` cannot narrow it, because for exactly these countries the
@@ -168,9 +172,12 @@ is 19 countries rather than 198.
   amends the rule as stated in entry 19 and in `CLAUDE.md`, so **record a decision rather than
   patching.**
 
-**Do first, separately, because they are corrections inside the existing rule rather than relaxations
-of it:** add `gv` and `gub` as markers, and add `canada.ca` beside the `gc.ca` special case — Canada
-fails only because immigration content moved and the pattern did not.
+**~~Do first, separately~~ — done 2026-08-25, entry 65.** `gv`, `gub` and `canada.ca` are added, the
+registry rebuilt for AT and UY, and coverage went **39 → 41 researchable** with the "row, no confirmable
+domain" bucket now empty. Two things that came out of it and are worth knowing before touching this
+again: a marker added to `GOVERNMENT_NAMESPACE_LABELS` **must** also be in `trust.SUFFIX_MARKER_LABELS`
+or trusting one authority trusts its whole government (a test now asserts it), and **a rule change
+reaches nobody until the affected rows are rebuilt** — the registry is committed data.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 

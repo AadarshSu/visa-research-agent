@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-24 — update this line when you touch the handoff |
-| **Tests** | 481 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 486 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -56,7 +56,7 @@ destinations.
 
 | | |
 | --- | --- |
-| **Researchable destinations** | **39 of 198.** The binding limit is `config/authority_domains.yaml`, which holds 40 rows; a country with no row is refused, never bootstrapped live (entry 38). Austria has a row with no usable domain. |
+| **Researchable destinations** | **41 of 198.** The binding limit is `config/authority_domains.yaml`, which holds 41 rows; a country with no row is refused, never bootstrapped live (entry 38). Every row now carries a usable domain. `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,298 pages. These are served without crawling. The other 29 crawl in the request path. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
@@ -82,11 +82,18 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
 
-**Item 2 leads: build the authority registry out.** It sat at `soon` for weeks as a coverage
-complaint, and on 2026-08-24 it was measured rather than asserted. Of 198 countries offered, 159 are
-refused before a page is fetched and **158 of those simply have no registry row** — unfinished data,
-not rigor. The trust rule's own share of the refusals is one country. Biggest lever there is, and it
-costs no rigor at all. Entries 63 and 64; `visa-discover audit` prints the split.
+**Item 2 leads, and its cheap half landed on 2026-08-25 (entry 65).** Three markers the rule was
+missing — `gv`, `gub`, `canada.ca` — took coverage from **39 to 41 researchable** and emptied the "row
+with nothing confirmable" bucket. It also found a hole worth knowing about: `GOVERNMENT_NAMESPACE_LABELS`
+and `trust.SUFFIX_MARKER_LABELS` are two hand-maintained lists that must move together, or trusting one
+authority trusts its whole government. A test now asserts it.
+
+**What is left of item 2 is the measurement, then the sweep.** All 157 remaining refusals are countries
+nobody has run `visa-discover registry` for — unfinished data, not rigor. Before spending that quota,
+run the coverage check the item asks for: of the 16 governments with no hostname marker, how many are
+reachable via a published government domain list, RDAP registrant data, or a TLS certificate
+organisation? That decides whether the rest automates or is 16 reviewed rows. Entries 63, 64 and 65;
+`visa-discover audit` prints the split.
 
 **Read entry 64 before arguing about relaxing anything, because it cuts both ways.** A one-off control
 arm — open-web search, no trust model, one model call — was built, run on three corridors and then
@@ -120,13 +127,14 @@ Each entry says what is true now. *How* it was learned is in the DECISIONS entry
 re-add the amendment history here.
 
 2. **The trust rule refuses a fifth of the world, and the failing half is the governmental one.**
-   Measured offline: `is_own_government` fails for **19 of 51** countries, every one of them on
+   Measured offline: `is_own_government` failed for **19 of 51** countries, **16 since 2026-08-25**
+   (entry 65 added the markers Austria, Uruguay and Canada actually use), every one of them on
    `looks_governmental` rather than the own-TLD test. Most of Schengen is unreachable, and Schengen is
    additionally a definition problem — `europa.eu` can never pass `belongs_to_destination` for a member
-   state. **Two distinct failures, and the second is worse:** nine countries (AT, BE, DE, DK, FI, NL,
-   NO, SE, UY) have no marked domain and refuse safely; **ten (CA, CL, CZ, GR, HU, IE, IT, PT, RO, RU)
-   do have one**, so bootstrap *succeeds* against a trusted set that cannot contain the guidance, and
-   nothing reports it. Canada is sharpest: `gc.ca` passes, but the content moved to `canada.ca`. The fix
+   state. **Two distinct failures, and the second is worse:** seven countries (BE, DE, DK, FI, NL, NO,
+   SE) have no marked domain and refuse safely; **nine (CL, CZ, GR, HU, IE, IT, PT, RO, RU) do have
+   one**, so bootstrap *succeeds* against a trusted set that cannot contain the guidance, and nothing
+   reports it. Canada used to be the sharpest case of the second kind and is fixed (entry 65). The fix
    is reviewed data, never a wider regex. Frozen in `tests/test_trust_coverage.py`. **And it refuses
    correct authorities *inside* countries it accepts, not only whole countries**: a one-off control
    arm's Germany run cited `india.diplo.de`, Germany's own mission giving guidance to exactly that
@@ -238,11 +246,11 @@ re-add the amendment history here.
    live in `ResolvedCorridor` and appear nowhere in the API response. TODO item 21.
 
 23. **The interface offers 198 destinations and can research 39.** `researchable_destinations()` lists
-   every country with `status="available"`, but 158 have no row in `authority_domains.yaml` and are
-   refused with a `503`, and Austria has a row with nothing confirmable. The refusal is honest; the
-   *offer* is not. Fix by marking unbuilt countries or by building the registry out (item 2) — not by
-   loosening the refusal. **Countable now rather than asserted**: `visa-discover audit` prints the
-   split, and attributes it — 158 of the 159 are a job nobody has run, not the trust rule (entry 63).
+   every country with `status="available"`, but 157 have no row in `authority_domains.yaml` and are
+   refused with a `503`. The refusal is honest; the *offer* is not. Fix by marking unbuilt countries or
+   by building the registry out (item 2) — not by loosening the refusal. **Countable now rather than
+   asserted**: `visa-discover audit` prints the split, and attributes it — every one of the 157 is a
+   job nobody has run, not the trust rule (entries 63 and 65).
 
 24. **A thin corpus has no crawl behind it, and coverage varies enormously between countries.**
    Measured against the pages that actually filled roles on the crawl path: Singapore 6/6, United States

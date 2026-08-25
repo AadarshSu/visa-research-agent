@@ -68,9 +68,11 @@ produces a serious defect.
   would silently reintroduce the per-request variance the file exists to remove. The rule itself is
   unchanged — `auto_trusted_domains` still decides — so everything below still applies.
 
-  **Measured 2026-08-18: the governmental half fails for 19 of 51 countries** — Germany, Italy, the
-  Netherlands, Sweden, Canada and most of Schengen have no governmental marker in their hostnames, so
-  the whole government is refused (entry 33). **Do not fix this by widening `GOVERNMENT_PATTERNS`.**
+  **Measured 2026-08-18: the governmental half fails for 19 of 51 countries; 16 since 2026-08-25** —
+  Germany, Italy, the Netherlands, Sweden and most of Schengen have no governmental marker in their
+  hostnames, so the whole government is refused (entry 33). Austria, Canada and Uruguay came back when
+  the markers they actually use were added (entry 65). **Do not fix the rest by widening
+  `GOVERNMENT_PATTERNS`.**
   Adding `.de` or `.nl` would trust every commercial site in those countries, and for exactly these
   countries the own-TLD test is the only other signal. The fix is a reviewed authority domain per
   country in committed data (entry 34). Adding `gv`/`gub` as markers and `canada.ca` beside `gc.ca` are

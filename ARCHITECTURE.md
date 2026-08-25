@@ -18,9 +18,10 @@ low-scoring, which is a much stronger property than filtering.
 
 > **Measured limit, 2026-08-18.** "Own government" is implemented as *governmental* **and** *under the
 > country's own TLD*, and the first half is a list of hostname patterns (`gov`, `go.xx`, `gouv.xx`,
-> `gob.xx`, `govt.xx`, `gc.ca`, `admin.ch`, `europa.eu`). **19 of 51 countries checked have no such
-> marker** — Germany's `auswaertiges-amt.de`, Italy's `esteri.it`, the Netherlands' `ind.nl`, Canada's
-> `canada.ca` — so their entire government fails the rule and the destination refuses. The rule fails
+> `gob.xx`, `gv.xx`, `gub.xx`, `govt.xx`, `gc.ca`, `canada.ca`, `admin.ch`, `europa.eu`). **19 of 51
+> countries checked had no such marker; 16 since 2026-08-25**, when `gv`, `gub` and `canada.ca` were
+> added (entry 65) — Germany's `auswaertiges-amt.de`, Italy's `esteri.it` and the Netherlands' `ind.nl`
+> remain, so their entire government fails the rule and the destination refuses. The rule fails
 > *closed*, which is correct, but the diagnosis it reports is wrong. The amendment is a reviewed
 > authority domain per country, **never a wider pattern list**: adding `.de` or `.nl` as governmental
 > markers would trust every commercial site in those countries, and for exactly these countries the
