@@ -507,3 +507,37 @@ def test_a_link_that_cannot_be_parsed_is_skipped_rather_than_fatal() -> None:
 
     assert "https://good.gov.example/visa" in [link.url for link in links]
     assert "https://other.gov.example/apply" in [link.url for link in links]
+
+
+@pytest.mark.anyio
+async def test_a_crawl_hands_over_the_text_of_every_page_it_reads() -> None:
+    """The bytes were always there; before 2026-08-26 they went out of scope at `_expand`.
+
+    A page's own text is the only thing that can identify it when its anchor cannot — which is the
+    usual case, not the exception, since a crawl records a page from the words of the link pointing
+    at it. Nothing is fetched twice to get this.
+    """
+
+    kept: dict[str, tuple[str, str]] = {}
+    crawler = build_crawler(
+        [],
+        maximum_depth=1,
+        on_page=lambda url, title, text: kept.__setitem__(url, (title, text)),
+    )
+
+    await crawler.crawl(destination(), [MISSION_SPOUSE])
+
+    title, text = kept[MISSION_SPOUSE]
+    assert title == "Spouse visa"
+    assert "documents required for a spouse visa" in text.lower()
+
+
+@pytest.mark.anyio
+async def test_a_crawl_told_to_keep_nothing_keeps_nothing() -> None:
+    """The request path passes no reader and must be untouched by any of this."""
+
+    crawler = build_crawler([], maximum_depth=1)
+
+    await crawler.crawl(destination(), [MISSION_SPOUSE])
+
+    assert crawler.on_page is None

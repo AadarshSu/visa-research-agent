@@ -31,9 +31,13 @@ from typing import get_args
 from pydantic import Field
 
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus, merge
-from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
+from visa_research_agent.discovery.crawl import (
+    CrawlFetcher,
+    LinkCrawler,
+)
 from visa_research_agent.discovery.lexicon import Country, Lexicon, get_lexicon
 from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
+from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
 from visa_research_agent.discovery.search import SearchProvider, search_all, usable_results
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable
@@ -156,6 +160,14 @@ class CorpusBuild(StrictModel):
     is the field that makes it visible; retrying these on the next build is not yet built.
     """
 
+    indexed_text: int = 0
+    """Pages whose readable text was kept, for the text index (`discovery/page_text.py`).
+
+    Counted apart from `crawled` because the two differ and the difference is the interesting part:
+    a page can be fetched and still contribute no text — too short to rank, or a render that came
+    back empty. It is also **not** comparable to `found`, which counts discovered links rather than
+    pages read. Zero here with a non-zero `crawled` means the build was asked to keep nothing."""
+
     lost_host_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
     """The same hosts keyed to the typed outcome, so a count never rests on parsing prose.
 
@@ -257,8 +269,20 @@ async def build_country_corpus(
     maximum_depth: int = DEFAULT_CORPUS_DEPTH,
     maximum_pages_per_host: int = DEFAULT_CORPUS_PAGES_PER_HOST,
     results_per_query: int = 10,
+    page_text: PageTextStore | None = None,
 ) -> tuple[CountryCorpus, CorpusBuild]:
-    """Search, crawl and fold the result into the country's corpus, adding but never removing."""
+    """Search, crawl and fold the result into the country's corpus, adding but never removing.
+
+    With `page_text`, the readable text of every page the crawl reads is kept as well, and this is
+    the only place that ever costs nothing extra to do: the bytes are already in hand, already
+    parsed for links, and were previously dropped on the floor at `crawl._expand`. No additional
+    fetch, no additional search, no additional politeness delay.
+
+    Two stores, written together and deliberately not merged. The corpus answers *which pages
+    exist* and is read whole on every request; the index answers *what they say* and is queried
+    without being loaded. Putting the text in the corpus file would take Japan's from 1.4MB to
+    roughly 35MB and spend about a second of pydantic validation per corridor.
+    """
 
     words = lexicon or get_lexicon()
     destination = DestinationConfig(
@@ -284,6 +308,15 @@ async def build_country_corpus(
     def score(link: PageLink) -> RoleScores:
         return score_role_vocabulary(link, words)
 
+    # Buffered rather than written page by page: one transaction at the end of a crawl, against
+    # thousands mid-crawl. The cost is that a build killed halfway keeps no text, which is the
+    # corpus file's own behaviour and the same remedy — run it again.
+    kept: list[StoredPage] = []
+
+    def keep(url: str, title: str, text: str) -> None:
+        if text:
+            kept.append(StoredPage(url=url, fetched_at=now, body=text, title=title))
+
     crawler = LinkCrawler(
         crawl_fetcher,
         score,
@@ -291,8 +324,10 @@ async def build_country_corpus(
         maximum_depth=maximum_depth,
         maximum_pages=maximum_pages,
         maximum_pages_per_host=maximum_pages_per_host,
+        on_page=keep if page_text is not None else None,
     )
     crawled = await crawler.crawl(destination, seeds)
+    indexed_text = page_text.write(country.code, kept) if page_text is not None else 0
 
     entries = [
         _entry(candidate, crawler.titles, crawl_fetcher.failures, now) for candidate in crawled
@@ -322,6 +357,7 @@ async def build_country_corpus(
         by_depth=Counter(entry.depth for entry in entries),
         lost_hosts=lost_reasons,
         lost_host_outcomes=lost_outcomes,
+        indexed_text=indexed_text,
     )
 
 

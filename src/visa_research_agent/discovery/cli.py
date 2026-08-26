@@ -672,6 +672,8 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
     )
     depths = ", ".join(f"depth {d}: {n}" for d, n in sorted(build.by_depth.items()))
     print(f"      {depths}", file=stream)
+    if build.indexed_text:
+        print(f"      {build.indexed_text} pages kept their text for the index", file=stream)
     if build.lost_hosts:
         # Named, not counted. A host that contributed nothing leaves no entry and no `unreadable`
         # tally — a seed never becomes an entry — so before this the gap was invisible, and a
@@ -840,6 +842,9 @@ async def run_corpus(args: argparse.Namespace, stream: TextIO) -> int:
             now=datetime.now(UTC),
             maximum_pages=args.pages,
             maximum_depth=args.depth,
+            # On by default. The text is already fetched and already parsed, so keeping it costs a
+            # write and nothing on the network; `--no-text` exists for rebuilding the corpus alone.
+            page_text=None if args.no_text else PageTextStore(settings.page_text_directory),
         )
     finally:
         if isinstance(renderer, PlaywrightPageRenderer):
@@ -899,6 +904,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=DEFAULT_CORPUS_DEPTH,
         help="how many hops from a seed; the request path affords two, this is not that path",
+    )
+    corpus.add_argument(
+        "--no-text",
+        action="store_true",
+        help="do not keep the readable text of pages read; the corpus alone is rebuilt",
     )
 
     page_text = commands.add_parser(

@@ -30,6 +30,12 @@ MISSION_CHECKLIST_PDF = f"https://{MISSION}/files/checklist.pdf"
 MISSION_SPOUSE = f"https://{MISSION}/visa/spouse.html"
 OFF_DOMAIN = "https://cheap-visas.example/apply-now"
 
+# A page long enough to be worth indexing, which most of the pages above deliberately are not.
+# `MINIMUM_INDEXABLE_CHARS` exists so a nav-only shell does not enter a ranking index, and the
+# fixture needs one page on each side of that line. Linked from nothing, so only a test that seeds
+# it ever reaches it.
+FULL_CHECKLIST = f"https://{MISSION}/visa/tourism-checklist.html"
+
 # A single-page application, as Vietnam's e-visa portal is: the served HTML is an empty mount
 # point, and every link only exists once the scripts have run. It is deliberately not linked from
 # any other page, so it is only ever reached by a test that seeds it.
@@ -122,6 +128,17 @@ def site_pages() -> dict[str, str]:
             + link(MISSION_CHECKLIST, "Tourism"),
         ),
         SPA_PORTAL: spa_shell(),
+        FULL_CHECKLIST: page(
+            "Checklist: Temporary Visitor Visa for tourism",
+            "<h1>Documents required</h1>"
+            "<p>Every applicant for a temporary visitor visa for tourism must submit the "
+            "following. A passport valid for the whole stay. One recent photograph meeting the "
+            "published specification. A completed application form, signed and dated. A bank "
+            "statement covering the last three months as proof of funds. An itinerary of the "
+            "stay, including a hotel booking or other proof of accommodation. A return ticket "
+            "or onward ticket. Where the visit is at the invitation of a resident, a letter of "
+            "invitation and the inviter's certificate of employment.</p>",
+        ),
         MISSION_CHECKLIST: forwarding_shell(MISSION_CHECKLIST_PDF),
         MISSION_SPOUSE: page(
             "Visa: Spouse Visa Documents Required",

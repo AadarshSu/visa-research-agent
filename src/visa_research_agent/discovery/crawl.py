@@ -34,6 +34,7 @@ from visa_research_agent.domain.models import (
     is_challenge,
 )
 from visa_research_agent.domain.trust import host_of
+from visa_research_agent.research.live_sources import clean_source_html
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
 from visa_research_agent.research.tls import build_ssl_context
@@ -52,6 +53,15 @@ MINIMUM_CRAWL_LINKS = 3
 # How many pages one crawl may render. A site that is unreadable throughout would otherwise
 # render every page it visits, and each render costs seconds rather than milliseconds.
 MAXIMUM_CRAWL_RENDERS = 12
+
+
+# What a page contributes to a text index, matching `maximum_source_characters` in settings. The
+# same bound the evidence path applies, for the same reason: past this a page is a document dump
+# rather than guidance, and BM25 only loses by having more of it.
+DEFAULT_KEPT_TEXT_CHARACTERS = 50_000
+
+PageReader = Callable[[str, str, str], None]
+"""Called with (url, title, readable text) for every page a crawl actually read."""
 
 
 def host_does_not_resolve(error: httpx.HTTPError) -> bool:
@@ -503,6 +513,8 @@ class LinkCrawler:
         maximum_pages_per_host: int = 20,
         expansion_threshold: float = 10.0,
         maximum_concurrent_hosts: int = 4,
+        on_page: PageReader | None = None,
+        maximum_text_characters: int = DEFAULT_KEPT_TEXT_CHARACTERS,
     ) -> None:
         self.fetcher = fetcher
         self.score_link = score_link
@@ -522,6 +534,12 @@ class LinkCrawler:
         # A page's own <title> is only knowable once it is fetched, so it is recorded here
         # rather than guessed from the link that pointed at it.
         self.titles: dict[str, str] = {}
+        # Handed each page's readable text as it is read, for a caller that wants to keep it.
+        # A callback rather than a dict: the offline corpus build reads thousands of pages, and
+        # accumulating every body here would hold tens of megabytes for the length of a crawl to
+        # hand it over once at the end. The request path passes nothing and is unaffected.
+        self.on_page = on_page
+        self.maximum_text_characters = maximum_text_characters
 
     async def crawl(
         self,
@@ -663,6 +681,18 @@ class LinkCrawler:
         page_title = page_title_of(html)
         if page_title:
             self.titles[url] = page_title
+        # **The line this whole module used to lose.** `html` goes out of scope at the end of this
+        # method, so before 2026-08-26 every byte a crawl fetched was read for its links and its
+        # title and then dropped — leaving a corpus that could rank a page only by the anchor that
+        # pointed at it. Measured on the page that fills `document_checklist` for japan/IN/GB:
+        # from its anchor it scores for the wrong role entirely and is not a candidate for the
+        # right one at any shortlist depth; from its own text it is the answer.
+        if self.on_page is not None:
+            self.on_page(
+                url,
+                page_title,
+                clean_source_html(html, maximum_characters=self.maximum_text_characters),
+            )
 
         if depth >= self.maximum_depth:
             return

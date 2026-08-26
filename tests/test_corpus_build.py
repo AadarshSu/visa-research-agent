@@ -6,6 +6,7 @@ would break exactly them. See DECISIONS entry 44.
 """
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import httpx
 import pytest
@@ -14,6 +15,7 @@ from discovery_site import (
     AUTHORITY,
     DETAIL_CHINA,
     DETAIL_INDIA,
+    FULL_CHECKLIST,
     INDEX,
     MISSION,
     MISSION_INDEX,
@@ -29,6 +31,7 @@ from visa_research_agent.discovery.corpus_build import (
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.lexicon import Country
 from visa_research_agent.discovery.models import SearchResult
+from visa_research_agent.discovery.page_text import PageTextStore
 
 NOW = datetime(2026, 8, 22, 9, 0, tzinfo=UTC)
 TRUSTED = ["immigration.gov.example", "uk.embassy.gov.example"]
@@ -285,3 +288,49 @@ async def test_a_host_that_gives_the_build_nothing_is_named() -> None:
     assert "403" in report.lost_hosts[MISSION]
     # A host the build did read is not "lost", however many of its individual pages failed.
     assert AUTHORITY not in report.lost_hosts
+
+
+@pytest.mark.anyio
+async def test_a_build_keeps_the_text_of_the_pages_it_read(tmp_path: Path) -> None:
+    """Two stores written from one crawl, and the text costs no extra request.
+
+    The corpus answers *which pages exist*; the index answers *what they say*. The assertion that
+    matters is the last one: no page was fetched twice to fill the second store.
+    """
+
+    requests: list[httpx.Request] = []
+    index = PageTextStore(tmp_path)
+
+    _corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX, FULL_CHECKLIST]),
+        fetcher(requests),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+        page_text=index,
+    )
+
+    assert report.indexed_text > 0
+    assert index.count("XX") == report.indexed_text
+    fetched = [str(request.url) for request in requests if "robots.txt" not in str(request.url)]
+    assert len(fetched) == len(set(fetched))
+
+
+@pytest.mark.anyio
+async def test_a_build_given_no_index_writes_none(tmp_path: Path) -> None:
+    """The corpus must still be buildable alone, and nothing may be created on the side."""
+
+    _corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX]),
+        fetcher([]),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+    )
+
+    assert report.indexed_text == 0
+    assert list(tmp_path.iterdir()) == []
