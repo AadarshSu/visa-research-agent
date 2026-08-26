@@ -587,6 +587,38 @@ remember", so they are also worth reading in one place.
 | Corridor resolution | full corridor | 3 weeks | **Yes** — it is what a warm request serves | `var/corridors/`, `discovery/corridor_store.py` |
 | Recall log | corridor | overwritten each run | **No** — deleting it costs a question | `var/recall/`, `discovery/recall_log.py` |
 | **Page corpus** | **country** | **additive, never pruned** | **Yes** — the candidate source | `var/corpus/`, `discovery/corpus.py` |
+| **Page text** | **country** | **additive; replaced per URL** | Not yet — nothing reads it in the request path | `var/pagetext/`, `discovery/page_text.py` |
+
+### The corpus stores the link; the index stores the page
+
+The corpus records that a page **exists** and what linked to it — `url`, `title`, `link_text`,
+`heading` — and until 2026-08-26 `crawl._expand` read each page's HTML, took the title and the links,
+and let the body go out of scope. Measured then: **93% of Japan's corpus entries have no title at all,
+and the median description is 29 characters** against a median body of 3,602. So a corridor ranked
+three thousand pages on an anchor and a URL slug while a search engine ranked the same pages on their
+full text — which is what "a crawl reaches pages by following links; search reaches them directly"
+(entry 77) actually meant.
+
+`discovery/page_text.py` keeps that text: one SQLite/FTS5 database per country, filled by
+`visa-discover corpus` as it crawls and by `pagetext --backfill` from the retrieval cache. It is
+**deliberately not in the corpus JSON** — that file is read whole and validated through pydantic on
+every request, and text would take Japan's from 1.4MB to ~35MB.
+
+> **It ranks; it never speaks.** `rank` returns URLs and scores, there is no accessor for a body, and
+> `TextMatch` has no field to hold one — the same discipline as `build_blocked_packet`. Stored text is
+> older than the freshness rules governing what a traveller may be told, so a quote from it would be
+> guidance served outside `source_maximum_stale_hours`. A page it ranks is still fetched through
+> `LiveSourceFetcher` before a word reaches a plan. Entry 78.
+>
+> **`rank` is FTS5 for recall and `score_body` for precision**, reusing that function rather than
+> copying its rules. Which named the defect underneath: `score_body` was already the right scorer,
+> called at `resolver.py:1113` on pages that have **already been fetched** — after the gate it should
+> be part of. A page anchor text ranked out is never fetched, so its text is never scored.
+>
+> **Nothing reads the index in the request path yet**, and text ranking is not a replacement for
+> `score_link`: `score_body` takes nationality and no residence, so it has none of the post logic
+> (`mission_host_bonus`, `other_mission_penalty`) that entry 70 established is the dimension that
+> actually varies. The two are complementary.
 
 **The corpus is read in the request path** (entry 47): a corridor's candidates are `corpus ∪ live
 discovery`, pages that already filled a role for that corridor keep their shortlist places, and what a

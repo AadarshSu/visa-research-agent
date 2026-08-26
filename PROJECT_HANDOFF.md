@@ -7,8 +7,8 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-25 — update this line when you touch the handoff |
-| **Tests** | 499 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Last updated** | 2026-08-26 — update this line when you touch the handoff |
+| **Tests** | 513 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -61,6 +61,7 @@ destinations.
 | **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **34 of the 41 answer at least one passport** — Cyprus and India were recovered by the renderer on the same day (entry 75), India with all six roles. **Seven refuse every passport** with a diagnosis checked against what was seen: DK, LT, MA, MX, RO, SA, SK. **No corpus will fix those seven** (entry 76) — every one fails at *retrieval*, and a corpus crawl meets the identical wall. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
+| **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Nothing reads it in the request path yet** — that is TODO item 31, and until it is done every claim about it is offline. Entry 78. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `destination_mode: automatic` |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
@@ -70,6 +71,15 @@ named for whatever role it settles and the plan offers it beside that question (
 Getting those pages in front of the model needed the shortlist to reserve five candidates per role
 rather than three, which took **the United Kingdom from 0 of 8 corridor runs resolving to 4 of 4**
 (entry 61).
+
+**The corpus stored the link and threw away the page, and that was the ranking limit** (entry 78).
+`crawl._expand` read each page's HTML, kept the title and links, and let the body go out of scope, so
+**93% of Japan's corpus entries have no title and the median description is 29 characters** against a
+median body of 3,602. The page that fills `document_checklist` for `japan/IN/GB` was in the corpus all
+along and scored 22.0 as **`visa_decision`** — the wrong role, unrecoverable at any shortlist depth.
+Body text is now kept in a separate index that **ranks and never speaks**, and two request-path gates
+that were deciding what a corpus build ever read — a score threshold 91% of links never cleared, and
+PDFs never being followed — are lifted for the offline job.
 
 **Discovery runs in the request path** for a destination nobody configured: the country's own
 government domains are read from committed data, the corridor resolved, the plan built from what was
@@ -356,6 +366,16 @@ re-add the amendment history here.
    stage 1 of four, and only 9 destinations have ever been shown to answer a traveller (entry 68).
 
 24. **A corpus build stops at its seeds, and that is the defect stage 3 would freeze.**
+   **Largely answered 2026-08-26 by entry 78 — read that first, then this for what remains.** The
+   build no longer stops at its seeds: `expansion_threshold` was a *request-path* compromise that
+   **91% of Japan's entries never cleared**, so the crawl fetched its seeds because almost nothing else
+   was eligible. Dropped for the offline job, the same `--pages 1500` took depth beyond 1 from **4% to
+   ~50%**. And the two "different misses" below are one thing, diagnosed wrong: `visaonline.html` was
+   **already in the corpus**, at depth 1. `found_by` records which *description* of a URL won a score
+   comparison, not which store held it — so "3 of 5 from the corpus" measured description quality.
+   Of 35 shortlisted candidates only **6** were genuinely absent from the corpus. What is left of this
+   problem is the last paragraph: a host lost to a transient failure. That is still unfixed.
+
    **Rewritten 2026-08-26 after three wrong diagnoses, entry 77.** What this entry used to say —
    Japan's corpus holds 29 mission hosts and not the London embassy, "where five of its six roles came
    from" — is **stale and was misleading**. Measured: search *does* seed

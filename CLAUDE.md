@@ -204,6 +204,18 @@ produces a serious defect.
   Deciding a corridor from that day's search after the store came up short would restore the
   per-request lottery for exactly the corridors that need it not to be one.
 
+  **What is stored of a page is now its *text* as well, and that text ranks — it never speaks
+  (entry 78).** The corpus stored `url`, `title`, `link_text`, `heading` and threw the body away at
+  `crawl._expand`, so a corridor ranked three thousand pages on a **median of 29 characters** against
+  a median body of 3,602. `discovery/page_text.py` keeps the body in a per-country SQLite/FTS5 index.
+  **It is ranking input and never evidence, and the type is what enforces that**: `rank` returns URLs
+  and scores, there is no accessor for a body, and `TextMatch` has no field to hold one — exactly as
+  `build_blocked_packet` has no parameter for page text. Stored text is older than the rules governing
+  what a traveller may be told, so a quote from it would be guidance served outside
+  `source_maximum_stale_hours` with nothing to say how old it was. A page it ranks is still fetched
+  through `LiveSourceFetcher` before a word reaches a plan. **Do not add a `snippet()`, a body field,
+  or a "just for debugging" accessor.**
+
   **Read that as the constraint it is, not as a description of today.** Entry 44 wrote it as "a miss
   refuses and flags the country", and entry 47 chose a different shape that satisfies the same
   constraint: the candidate set is **`corpus ∪ live search`**, with search running on *every* corridor
@@ -261,6 +273,10 @@ cause, and only running the thing showed it.
 | a wider shortlist is the cheap fix for bad ranking | widening alone does nothing; the *per-role depth* is the gate (entry 61) |
 | the scorer rewards *naming* a country, not being about one | it is token-based already; the page really is about India (entry 62) |
 | a floor-only role score is safe to withhold bonuses from | a terse per-nationality decision page is floor-only too (entry 62) |
+| the corpus ranks the answering page too low | it files it under the **wrong role**; no shortlist depth recovers it (entry 78) |
+| junk anchors like "click here" are what lose the page | 2% of entries; the real case is a *good* 40-char label (entry 78) |
+| a bigger page budget bought nothing, so depth is not the issue | 91% of links never cleared the *request path's* score threshold (entry 78) |
+| BM25 is a safe way to pick what the real scorer sees | the answering page is 116th of 122 by BM25 (entry 78) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
@@ -293,6 +309,7 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 
 ```bash
 .venv/bin/visa-discover corpus --country CA     # build a country's offline page corpus
+.venv/bin/visa-discover pagetext --backfill    # index the text the retrieval cache already holds
 ```
 
 Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US). A country
@@ -300,8 +317,12 @@ without one crawls in the request path, exactly as before.
 
 Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
 change — either one will serve a pre-change result and make a fix appear not to work. A stored
-corridor is kept for three weeks. **`var/corpus/` is deliberately not cleared between runs**; it is
-the store, not a cache, and rebuilding one costs search quota.
+corridor is kept for three weeks. **`var/corpus/` and `var/pagetext/` are deliberately not cleared
+between runs**; they are stores, not caches, and rebuilding one costs search quota.
+
+`var/pagetext/` holds the body text of pages already fetched, one SQLite/FTS5 file per country, and
+is filled two ways: `visa-discover corpus` keeps what it reads, and `pagetext --backfill` indexes the
+retrieval cache for nothing. It is **ranking input only** — see the rule above, and entry 78.
 
 **Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`
 when out; Brave answers **`HTTP 402`** both when out of credit *and* when queried too fast. The

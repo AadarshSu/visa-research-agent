@@ -271,6 +271,13 @@ latency cache — both paths are supposed to find the right page, and the corpus
 does not re-fetch for 50+ seconds. Measured on `japan/IN/GB` right after a rebuild: **3 of 5 role
 pages came from the corpus**; the checklist and the route came from live search.
 
+> **That 3-of-5 does not mean what it was read to mean (entry 78).** `found_by` records which
+> *description* of a URL won a score comparison in `resolver.py`, not which store held the page —
+> search and the corpus describe the same URL from different evidence and the higher score wins. Both
+> pages attributed to search were **in the corpus already**: `visaonline.html` at depth 1, and the
+> checklist PDF. Of 35 shortlisted candidates on that run, only **6** were genuinely absent from the
+> corpus, three of them on post hosts. The corpus's problem was never that it lacked the page.
+
 So before building 43, fix the two things that cause a miss:
 
 1. ~~**Pages the crawl never reached on a host the corpus does hold.**~~ **Tried and it does not
@@ -283,10 +290,20 @@ So before building 43, fix the two things that cause a miss:
    lost list, because search's seed set varies between runs (known problem 19). Retrying named hosts
    on the next build is still unbuilt.
 
-3. **The structural one, which is neither of the above.** `corpus_queries` carries no nationality or
-   residence and must not (entry 44), while `corridor_queries` does. Pages only a corridor-specific
-   query surfaces can therefore never be stored — and the document checklist is one. **This is why
-   corpus-only runs lose checklists, and no corpus setting will change it.**
+3. ~~**The structural one:** pages only a corridor-specific query surfaces can never be stored, and
+   the document checklist is one.~~ **Wrong, and measured wrong (entry 78).** The checklist page
+   `mofa.go.jp/files/000121327.pdf` **was in the corpus all along**. It could not be *found* there: the
+   corpus stored `link_text="Single Entry Visas (PDF)"` and threw the body away, and from that anchor
+   it scores 22.0 as **`visa_decision`** — the wrong role entirely, so no shortlist depth recovers it.
+   From its own text it is the answer. `corpus_queries` staying traveller-free is still right and still
+   entry 44's rule; it was not what lost the checklists.
+
+4. **What actually lost them, now fixed** (entry 78): the body was discarded at `crawl._expand`, and
+   two request-path gates decided what a corpus build ever read — `expansion_threshold = 10.0`, which
+   **91% of Japan's entries never cleared**, and PDFs never being followed, which is **26%** of them.
+   `discovery/page_text.py` keeps the text; the offline job drops the threshold and reads PDFs in a
+   second pass. Japan rebuilt on the same budget: depth beyond 1 from 4% to ~50%, index 209 → 684
+   pages, 17 → 94 PDFs.
 
 Then build **one** country, run a corridor against it, and check how many role pages came back
 `found_by="corpus"` before paying for the other 42.
@@ -295,6 +312,45 @@ Then build **one** country, run a corridor against it, and check how many role p
 
 All 53 resolve, or refuse for a correct named reason, **for any nationality** — **done, 2026-08-25** —
 and all 53 are corpus-routed, which is stage 3 and untouched. **Then** batch 2.
+
+### 31. Rank a candidate by what the page says, not only by the link to it — `next`
+
+**Why:** entry 78 built the index and stopped one step short of using it. `discovery/page_text.py`
+holds the body text of 684 Japanese pages and nothing in the request path reads it. Every measurement
+in that entry is offline; **the end-to-end claim — that a corpus-only run keeps its checklist — is
+unmeasured.**
+
+**What to build, and the shape matters.** Not "replace `score_link` with `score_body`". The top of
+Japan's text ranking for `document_checklist` is Calgary and Houston consulate pages: real checklists,
+for the wrong post. `score_body` takes a nationality and **no residence**, so it has none of
+`mission_host_bonus` or `other_mission_penalty` — and entry 70 established that the post is the
+dimension that actually varies. The link score knows about posts, depth and host kind; the body score
+knows what the page *is*. So: keep `score_link` as the ranker, and add the body score for candidates
+whose text is held, combining rather than replacing.
+
+**The measurement that decides it** is the one entry 76 already ran: the ten corpus countries,
+corpus-only, and whether Canada, Japan, Germany and the United States keep the checklist they lost.
+Search does not need to be down to run it — the resolver can be asked for a corpus-only candidate set.
+
+**Do not let a cheap ranker gate the good one.** Entry 78 made this mistake inside `rank` itself and
+caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
+absolute bound and must not become a multiple of the shortlist size.
+
+### 32. Raise the corpus page budget, because now it binds something — `next`
+
+**Why:** text coverage is **13% of corpus entries** (Japan, 605 of 4,803). The bound is the per-host
+budget: `1500 // 48 seed hosts` ≈ 31 fetches against `mofa.go.jp`'s thousands of pages, which is why
+`visaonline.html` — depth 1, on a host the corpus holds hundreds of pages of — still has no crawled
+text and is in the index only because a live corridor cached it.
+
+**This is not entry 77's disproved proposal.** That measured a bigger budget buying no improvement in
+*entry* hit rate, and it was right: more discovered links is not more readable pages while 91% of them
+are excluded from being fetched. With `CORPUS_EXPANSION_THRESHOLD = 0.0` the budget binds text coverage
+directly — every extra fetch is an extra indexed page. Measure it on one country before the other 42.
+
+**And watch `unreadable`**, which went 28 → 721 on Japan's rebuild. The crawl now tries links it used
+to skip and many are dead or non-HTML. Nothing is wrong; the number is honest. But a build report that
+says "721 unreadable" without saying why invites someone to fix a problem that is not there.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 

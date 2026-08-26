@@ -15,7 +15,8 @@ Newest first. Add an entry when a decision is made, not afterwards.
 each is restated in [CLAUDE.md](CLAUDE.md): **2** (trust the domain, never the prose), **5** (refusing
 is a correct output), **18** + **35** + **41** (never work around a block; honest client, not anonymous
 client), **12** (never disable TLS verification), **27** + **32** (what a block may hand over),
-**60** (a questionnaire is an answer, not a blockade), **44** (a page may be stored, an answer may not).
+**60** (a questionnaire is an answer, not a blockade), **44** + **78** (a page may be stored, an answer may
+not — and stored text ranks, it never speaks).
 
 ### Trust: who may be believed at all
 | | |
@@ -97,6 +98,7 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [78](#78-the-corpus-stored-the-link-not-the-page--and-91-of-a-country-was-never-read-at-all) | **The corpus stored the link, not the page** — 29 characters of anchor against 3,602 of body, and 91% never read |
 | [77](#77-does-the-corpus-inherit-searchs-weaknesses-three-diagnoses-all-wrong-and-one-real-defect) | **A corpus build stops at its seeds** — and Japan's missing embassy was a `403`, not recall |
 | [76](#76-what-a-corpus-can-and-cannot-buy-measured--and-the-seven-that-no-corpus-will-fix) | **A corpus buys speed, stability and outage tolerance — not coverage.** Seven refusals no crawl can fix |
 | [44](#44-a-countrys-page-corpus-is-persisted-and-search-leaves-the-request-path) | **A page may be stored; an answer may not.** The corpus is the unit |
@@ -125,6 +127,174 @@ client), **12** (never disable TLS verification), **27** + **32** (what a block 
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 78. The corpus stored the link, not the page — and 91% of a country was never read at all
+**2026-08-26 · implemented and measured. Answers the architecture question behind entries 44, 76 and 77**
+
+The question asked was whether the corpus is worth having at all, given that visa guidance varies by
+passport and residence and a corpus can carry neither. The answer is that the premise is half wrong
+and the half that is right was never the problem.
+
+**Nationality costs the corpus nothing.** Entry 70 measured it across 41 destinations: not one
+published a page per passport. A passport changes the answer read *off* a page, not which page
+exists. **Residence is real**, and entry 70 named its shape — the **post** — which is a bounded,
+enumerable list per destination (Japan's corpus holds 48 mission hosts), not a 198-valued dimension.
+
+So the corpus can cover what matters. What it could not do was **find** anything in itself.
+
+### What the corpus actually stored
+
+`CorpusEntry` holds `url`, `title`, `link_text`, `heading`, `depth`. `crawl._expand` read each page's
+HTML, took the title and the links, and let `html` go out of scope. Every byte of every body a crawl
+fetched was discarded at that line.
+
+| | |
+| --- | --- |
+| JP corpus entries with no title at all | **93%** (CA 92%, US 95%) |
+| median description per entry | **29 characters** |
+| median body of a page in `var/cache/` | **3,602 characters** |
+
+So a corridor ranked three thousand pages on a median of 29 characters — an anchor, a heading, and
+whatever words were in the URL — while a search engine ranked the same pages on their full text.
+**That asymmetry, not crawl depth, is what entries 76 and 77 were measuring.** "A crawl reaches pages
+by following links; search reaches them directly" (entry 77) is true, and the reason is that Brave
+indexes bodies and this project indexed slugs.
+
+### The case, and it is worse than "ranked out"
+
+`mofa.go.jp/files/000121327.pdf` fills `document_checklist` for `japan/IN/GB`. The corpus knows it as
+`link_text="Single Entry Visas (PDF)"` under `heading="Application Procedures for"`, at a URL of pure
+digits. Its first two hundred characters read *"Checklist for Single-Entry Short-Term Stay Visa, for
+all nationalities except China, Russia... Purpose of Visit... Tourism... Documents to be submitted"*.
+
+```
+ANCHOR, document_checklist, over 3,029 JP corpus entries
+  pages scoring for the role at all : 166
+  position of the checklist PDF     : NOT SCORED FOR THIS ROLE AT ALL   (it scores 22.0 as visa_decision)
+```
+
+It is not ranked low. It is filed under a **different role**, so entry 61's fix — reserving more
+shortlist places per role — could never have recovered it at any depth. The anchor is not junk
+either: "Single Entry Visas (PDF)" is a good short label. **A 40-character label can name a page's
+subject; it cannot name the roles it fills or the populations it covers.** Literal junk anchors
+("here", "PDF") are 19% of Japan's entries and 0.7% of Canada's — never the failure mode.
+
+Across the 32 pages held in both a corpus and the new index, anchor and body **agree on the role 9
+times out of 32**. The largest disagreement class is `visa_decision → document_checklist`, 6 pages —
+which is exactly the role entry 76 measured corpus-only runs losing in four of ten countries.
+
+### What was built
+
+**`discovery/page_text.py`** — one SQLite/FTS5 database per country, mirroring `FileCorpusStore`.
+Not in the corpus JSON, and that is the point: that file is read whole and validated through pydantic
+on every request (51ms for Japan's 1.4MB), and text would take it to ~35MB and about a second of
+parsing per corridor, on a pipeline whose entire justification is latency.
+
+**It is ranking, never evidence, and the type says so.** `rank` returns URLs and scores; there is no
+accessor for a body and `TextMatch` has no field to hold one, for the same reason `build_blocked_packet`
+has no parameter for page text (entry 57). Stored text is older than the rules governing what a
+traveller may be told, so a quote from it would be guidance served outside `source_maximum_stale_hours`
+with nothing to say how old it was. A page this index ranks is still fetched through `LiveSourceFetcher`
+before a word reaches a plan; the worst a stale row does is win a shortlist place for a page that has
+changed, which is a wasted fetch and not a wrong answer.
+
+**Two ways in, complementary.** `visa-discover pagetext --backfill` indexes every body the retrieval
+cache already holds — no fetch, no search, 154 pages across 11 countries on the first run. And
+`visa-discover corpus` now keeps the text and title of every page it reads, streamed through an
+`on_page` callback rather than accumulated, since an offline crawl reads thousands.
+
+### `rank` reuses `score_body`, and the first version proved why
+
+The first `rank` scored the text itself and gave a page 40 points for naming the traveller's
+nationality anywhere in its body. The comment above `written_for_nationality` in `scoring.py` records
+that exact mistake already made and measured: **Japan's ministry-wide checklist names India once,
+inside a table of nationality exceptions, and that alone made it beat the UK post's own checklist.**
+`score_body` reads nationality from the title and URL for that reason.
+
+So FTS5 does **recall** — narrowing to pages whose text carries the role vocabulary at all, the thing
+anchor text cannot do — and `score_body` does **precision**, unchanged and uncopied. Which surfaced
+the finding underneath: **`score_body` was already the right scorer, running after the gate it should
+be part of.** It is called at `resolver.py:1113`, on pages that have already been fetched. A page that
+anchor text ranked out is never fetched, so its text is never scored. The index is what lets the same
+judgement run *before* the shortlist instead of after it.
+
+### Two gates were deciding what got read, and both were the request path's
+
+Keeping the text exposed how little a corpus build actually reads. On Japan, of 3,103 entries:
+
+| gate | cost |
+| --- | --- |
+| `expansion_threshold = 10.0` — a link is followed only if its **anchor score** clears 10 | **2,834 of 3,103 (91%)** never qualify |
+| PDFs are never followed — `_expand` will not queue one | **795 of 3,103 (26%)** |
+
+The threshold is a latency compromise for a sixty-second corridor, and this job has no such bound.
+The PDF rule is correct as far as it goes — a PDF is a destination, not a signpost, and fetching one
+to look for links it cannot have is waste — but authorities publish checklists as PDFs, which is what
+`pdf_checklist_bonus` exists for. So `CORPUS_EXPANSION_THRESHOLD = 0.0` for the offline job (the page
+and per-host budgets still bound it, and the frontier is still best-first, so this only decides what
+fills the remainder), and PDFs are read in a **second pass, for text only**, best-scoring first.
+
+**Every guard survives.** `fetch_pdf_text` and `fetch_html` share one `_get`: the same `robots.txt`
+verdict, the same politeness delay, the same trust re-check on the landing URL after a redirect, the
+same challenge-versus-refusal reading of a blocking status. A second retrieval path that checked less
+would be the hole all three checkpoints exist to close. A challenge answered by the renderer returns
+HTML whatever the URL's extension said, so `fetch_pdf_text` refuses it rather than reading a rendered
+page as a document.
+
+### Measured: Japan rebuilt, same 70 queries, same `--pages 1500`
+
+```
+                     before          after
+crawled               1,890          3,682
+corpus entries        3,103          4,803    (+1,700)
+depth                 d1 1805        d1 1819  d2 814  d3 1049
+                      d2   85        depth_is_exercised: 4% -> ~50%, warning gone
+text kept               176            650    including 101 PDFs
+index                 209 pages      684 pages    39 -> 48 hosts
+                       17 PDFs        94 PDFs    176 -> 574 titled
+disk                   3.6 MB         7.3 MB
+```
+
+Entry 77 found that a 2.4× page budget bought nothing on the measure that mattered. It bought nothing
+because more *entries* is not more *readable* pages: the threshold was excluding 91% of them from ever
+being fetched. The same budget, with the threshold dropped, took the build from "fetched its seeds and
+stopped" to genuine depth 3.
+
+### A third instance of the same defect, made by this entry
+
+After the rebuild the checklist PDF vanished from the results. `rank` had been taking the BM25 top
+`limit × 8` and handing only those to `score_body` — **a cheap ranker gating the good one, which is
+the defect this entry is about.** The checklist sits at **BM25 position 116 of 122**: a 15,000-character
+document that says "checklist" once is what BM25 punishes and what `names_documents` rewards. Asking
+for six results silently narrowed recall to 48.
+
+Every page matching the role vocabulary is now scored — 121 of 684 for Japan's widest role, so the
+MATCH was always the real filter. `MAXIMUM_SCORED_MATCHES` is an absolute safety bound and deliberately
+not a multiple of `limit`. Result:
+
+```
+  8. 73.5  https://www.mofa.go.jp/files/000121327.pdf         <- of 121 scored
+ 11. 73.5  https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+```
+
+### What this does not do, stated so it is not oversold
+
+- **Nothing reads the index yet.** No resolver wiring; the corpus path is untouched. The end-to-end
+  claim — that a corpus-only run keeps its checklist — is **unmeasured**.
+- **Text ranking is not a replacement for `score_link`, and must not become one.** The top of Japan's
+  checklist ranking is Calgary and Houston consulate pages: genuinely good checklists, for the wrong
+  post. `score_body` takes nationality and no residence, so it has none of `score_link`'s
+  `mission_host_bonus` or `other_mission_penalty`. The link score knows about posts, depth and host
+  kind; the body score knows what the page *is*. Combining them is the next step; swapping one for
+  the other would lose the residence dimension that entry 70 established is the real one.
+- **Text coverage is 13% of corpus entries** (605 of 4,803), up from 7%. The remaining bound is the
+  per-host budget: `1500 // 48 hosts` ≈ 31 fetches against `mofa.go.jp`'s thousands of pages. Unlike
+  entry 77's finding, `--pages` binds this directly — every extra fetch is an extra indexed page.
+- **`unreadable` went 28 → 721.** The crawl now tries links it used to skip and many are dead or
+  non-HTML. That is honest reporting of what was always there, but a reader of the build output
+  should know why the number moved.
 
 ---
 
