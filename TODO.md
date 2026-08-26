@@ -321,6 +321,11 @@ and all 53 are corpus-routed, which is stage 3 and untouched. **Then** batch 2.
 > helps, so it stays off as the conservative default. **The next step is a measurement with no
 > adjudicator in it: grade the shortlist, not the plan.**
 >
+> **And there is now a country where it could be tested.** The UK rebuild (entry 82) left a 1,598-page
+> text index, and over a real corridor **85% of the candidates in contention have text** — against
+> 13% for Japan. If entry 81 is right that the bar's denominator should be candidates that can
+> actually be shortlisted rather than all of them, the United Kingdom is the first country above it.
+>
 > ~~**Measured 2026-08-26 and it regressed, so it is gated off (entry 80).**~~ Twelve runs on
 > `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
 > time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
@@ -363,7 +368,22 @@ Search does not need to be down to run it — the resolver can be asked for a co
 caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
 absolute bound and must not become a multiple of the shortlist size.
 
-### 32. ~~Raise the corpus page budget~~ — `closed unbuilt, entry 81`
+### 32. ~~Raise the corpus page budget~~ / ~~fix the budget split~~ — `closed, entry 82`
+
+> **Reframed, built, measured and closed 2026-08-26 (entry 82).** The reframing was: the problem is
+> not the *total* budget but the *even split* — `maximum_pages // seed_hosts` caps every host at the
+> same share, and the United Kingdom's fee tables (one path per nationality) stopped at 15 of ~198
+> where Canada's `?country=XX` reached 213. `HostBudget` was built to give each host a floor and let
+> the rest compete for a surplus. **It is tested, it works, and it is defaulted off, because the
+> reframing was wrong too.** A UK rebuild at `--pages 3000` moved `visa-fees.homeoffice.gov.uk` from
+> 91 pages to 113 and 15 nationalities to **20**. It was never budget-limited: **zero** of its pages
+> were reached from another nationality's page, because the country selector is a form. Canada's 425
+> came from a page listing every country as a link. The difference is what the authority published.
+>
+> **And the change cost something**: with no cap the surplus goes to whichever host offers the most
+> links, which for the UK is `www.gov.uk` — the whole government site. Its corpus went 922 entries
+> to 4,530, **4,252 of them on gov.uk**. See entry 82 before turning `DEFAULT_CORPUS_HOST_FLOOR`
+> back on; the floor half is worth revisiting on its own, the surplus half is what inflated it.
 
 > **Measured and closed 2026-08-26 without building it (entry 81).** The 13% counts a denominator
 > that is 90% inert: 1,073 of Japan's 1,189 candidates score zero for every role and can never be

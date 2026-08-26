@@ -286,6 +286,9 @@ cause, and only running the thing showed it.
 | ...so the lift cost japan two roles | six runs of *identical* code give 4,4,4,4,5,6 — it is inside the noise (entry 81) |
 | role count measures a ranking change | it grades the adjudicator; the pages were shortlisted in every arm (entry 81) |
 | raising the page budget will lift text coverage past the bar | 90% of candidates score zero and can never be shortlisted (entry 81) |
+| ...so it is the even *split*, not the total, that starves a host | the UK's fee host went 15 → 20 nationalities; it was never budget-limited (entry 82) |
+| a per-nationality URL space is crawlable, canada proves it | canada published a link index; the UK published a **form** (entry 82) |
+| letting a productive host spend more is a clean win | the surplus goes to the *largest* host — gov.uk took 4,252 entries (entry 82) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |

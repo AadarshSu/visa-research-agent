@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [82](#82-the-nationality-dimension-is-not-a-budget-problem-canada-published-links-the-uk-published-a-form) | **Canada published links, the UK published a form** — the crawl gap is a questionnaire, not a budget |
 | [81](#81-item-32s-premise-is-false-and-so-was-entry-80s-the-metric-could-not-see-what-it-claimed) | **The metric could not see what it claimed** — role count swings ±2 on identical input; entry 80 withdrawn |
 | [80](#80-entry-79-shipped-a-regression-and-twelve-runs-found-it-stored-text-may-not-rank-a-set-it-barely-covers) | **Stored text may not rank a set it barely covers** — the lift ranked by who was crawled, and cost two roles |
 | [79](#79-the-body-score-moves-in-front-of-the-shortlist-and-stored-text-may-lift-but-never-sink) | **The body score moves in front of the shortlist** — stored text lifts and never sinks |
@@ -130,6 +131,95 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 82. The nationality dimension is not a budget problem: Canada published links, the UK published a form
+**2026-08-26 · built, measured, defaulted off. Closes item 32 and corrects entry 81's own reframing**
+
+Item 32 was reframed twice and both framings were wrong. This records what the crawl is actually
+limited by, because the answer is not about the crawler at all.
+
+### The reframing, which was a real improvement on the first version
+
+Entry 81 closed "raise the total budget" by showing 90% of a candidate set can never be shortlisted.
+The obvious successor: the problem is not the *total* but the **even split**. `host_budget` is
+`maximum_pages // seed_hosts`, the same cap for every host regardless of what each holds — and the
+comparison looked decisive:
+
+```
+Canada  ircc.canada.ca ?country=XX     425 pages over 213 country values
+UK      visa-fees.homeoffice.gov.uk     91 pages over  15 country values
+```
+
+Same code, same rule. So `HostBudget` was built: a **floor** every seeded host is guaranteed, a
+**surplus** the rest compete for on score, and a **ceiling** of half the crawl so the surplus cannot
+become the old problem in reverse. It is tested, it does what it says, and the United Kingdom was
+rebuilt at `--pages 3000` to prove it.
+
+### It moved almost nothing, and the reason ends the line of enquiry
+
+```
+visa-fees.homeoffice.gov.uk     91 -> 113 pages     15 -> 20 nationalities
+```
+
+It was never budget-limited. Measured on the rebuilt corpus:
+
+> **Zero of its 86 fee pages were reached from a *different* nationality's page.** Seventy-eight came
+> from within the same nationality's subtree; the eight entry points came from search seeds that
+> happened to name a country.
+
+The country selector on that service is a **form**. There are no links between nationalities, so a
+crawl holds exactly the nationalities search seeded and no budget changes that. Canada's 425 pages,
+checked the same way, came from **outside** the `?country=` space entirely — a page on `canada.ca`
+that lists every country as an ordinary link.
+
+**So the difference between 213 and 15 is what the authority published, not what the crawler was
+allowed to spend.** That is entry 59's wall — the answer behind a questionnaire — one layer down,
+and it is the same wall whether a corridor meets it live or a corpus meets it offline.
+
+### And removing the cap cost something, which is why the default is off
+
+With no even cap the surplus goes to whichever host offers the most links. For the United Kingdom
+that is `www.gov.uk`, the whole government website:
+
+```
+UK corpus   922 entries, 12 hosts  ->  4,530 entries, 25 hosts
+                                       4,252 of them on www.gov.uk
+```
+
+Most of that is not visa guidance. `DEFAULT_CORPUS_HOST_FLOOR` is therefore **0** — the even split
+stays, and `HostBudget` keeps it as a named special case rather than an accident of arithmetic. The
+mechanism is kept because the two halves are separable and only one misbehaved: the **floor** is a
+guarantee that a small mission host is never starved, which is known problem 24's failure mode, and
+it is the **surplus** that inflated the corpus. Revisit the floor on its own, with a measurement.
+
+### What the rebuild did leave, and it is the useful part
+
+```
+GB text index   0 -> 1,598 pages
+UK corridor     3,784 candidates, 34% with text overall
+                705 in contention, 602 with text -> 85%
+```
+
+Japan is at 13% either way. **If entry 81 is right that the coverage bar should count candidates that
+can actually be shortlisted rather than all of them, the United Kingdom is the first country above
+it** — and the first place item 31's lift could be tested on something other than a country where it
+is inert. That is a lead, not a result: one UK corridor after the rebuild filled two roles and refused
+the decision, which is inside entry 81's ±2 noise band and cannot be read either way without the
+adjudicator-free measurement item 31 now calls for.
+
+### What this says about the original question
+
+The question behind items 19, 31 and 32 was whether a corpus can serve a corridor without live
+search. Measured across 30 corridors into the ten corpus countries: **18 had zero misses, and of the
+67 pages missed in total, none were on a host the corpus lacks.** Site-level recall is solved. What
+remains is one page-level gap with two different causes, and only one of them is ours:
+
+1. **Deep pages on covered hosts** — ordinary crawlable links the budget did not reach. Fixable.
+2. **Spaces behind a form** — the UK's per-nationality fee tables. **Not fixable by crawling**, at
+   any budget, by any allocation. It is the questionnaire outcome (entries 59 and 60) appearing as a
+   corpus gap rather than as a corridor one, and the honest response is the same: name the tool.
 
 ---
 

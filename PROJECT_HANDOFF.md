@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-26 — update this line when you touch the handoff |
-| **Tests** | 523 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 528 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -80,6 +80,15 @@ along and scored 22.0 as **`visa_decision`** — the wrong role, unrecoverable a
 Body text is now kept in a separate index that **ranks and never speaks**, and two request-path gates
 that were deciding what a corpus build ever read — a score threshold 91% of links never cleared, and
 PDFs never being followed — are lifted for the offline job.
+
+**Can a corpus serve a corridor without live search? Site-level recall is already solved** (entry
+82). Across 30 corridors into the ten corpus countries, 18 had **zero** misses, and of the 67 pages
+missed in total **none were on a host the corpus lacks**. What remains is page-level and has two
+causes: ordinary deep pages the budget did not reach, and spaces behind a **form** — the UK publishes
+its per-nationality fee tables through a country selector with no links between nationalities, so a
+crawl holds only what search seeded, at any budget. Canada's equivalent reached 213 values because
+Canada published a page listing every country as a link. That second cause is the questionnaire
+outcome (entries 59 and 60) appearing as a corpus gap, and the honest response is the same one.
 
 **Discovery runs in the request path** for a destination nobody configured: the country's own
 government domains are read from committed data, the corridor resolved, the plan built from what was
