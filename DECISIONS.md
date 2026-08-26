@@ -168,6 +168,36 @@ Rebuilding Japan: **70 queries, 276 seeds, 1,918 crawled** — and the job's own
 
 `DEFAULT_CORPUS_PAGES` is **1,200** against **7%** measured, where `MINIMUM_DEEP_SHARE` wants 10%.
 
+> **The framing here was corrected by the project owner, and the correction matters more than the
+> finding.** A corpus is not for reaching depth the request path cannot; **both paths are supposed to
+> find the right page.** The corpus exists because a live corridor took 50+ seconds and *which pages
+> exist* does not change per traveller — entry 44's own words, and entry 55's 2.1×–5.2×. Depth is a
+> means, never the point, and `depth_is_exercised` is a **proxy** for cache completeness, not a goal.
+>
+> **So the acceptance test for a corpus is its hit rate on the pages that actually fill roles.**
+> Measured on `japan/IN/GB` with search up, immediately after a rebuild:
+>
+> ```
+> visa_decision      corpus
+> document_checklist search   <- www.uk.emb-japan.go.jp, a host the corpus does not hold at all
+> application_route  search   <- mofa.go.jp/j_info/visit/visa/visaonline.html, a host it holds 200+ pages of
+> fees               corpus
+> processing_times   corpus
+>                    -------  3 of 5
+> ```
+>
+> That single number explains the outage result exactly: corpus-only cost Canada, Japan, Germany and
+> the United States their document checklist, because the checklist is disproportionately the role
+> live search was supplying.
+>
+> **And the two misses have different causes and different fixes.** `visaonline.html` sits on a host
+> the corpus covers heavily — that is a page the crawl never reached, and a bigger `--pages` is the
+> fix. `www.uk.emb-japan.go.jp` is missing **entirely**: it answered a transient Akamai `403` during
+> the build (the build reported "3 unreadable" and named nothing), so the corpus silently lacks the
+> host and, being additive and rebuilt rarely, will lack it indefinitely. **A corpus build that loses
+> a host to a transient failure never notices**, and nothing reports it. That is the more serious of
+> the two and it is unfixed.
+
 **Corrected arithmetic, 2026-08-26:** this entry first said "four pages per host", dividing 1,200 by
 the 276 *seeds*. `host_budget` divides by seed **hosts** — `min(400, max(4, 1200 // 50))` = **24 pages
 per host**. The number was wrong; the conclusion is not, and it never rested on it. `depth_is_exercised`

@@ -136,7 +136,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty-three rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty-four rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -266,13 +266,23 @@ searches each and which are refusing for a reason no corpus can fix.
 **The search rate limiter this stage was waiting on is done** (entry 74): the provider paces itself at
 1.3s and a `402` now says which kind it is. 1,792 searches still need a cap that allows them.
 
-**Do not run this stage at the default `--pages`** (entry 77). Rebuilding Japan produced **276 seeds
-across ~50 hosts**, which at the 1,200-page default is 24 pages per host, and the job's own
-`depth_is_exercised` check **fails**: *"only 7% of what it found lies beyond depth 1 — this crawl
-fetched its seeds and stopped"*, against a 10% bar. A corpus in that state is barely more than the
-search results that seeded it, and stage 3 would freeze that shape into 43 countries. `host_budget` is
-`maximum_pages // seed_hosts`, so **size `--pages` from the seed-host count** — ~5,000 gives a 50-host
-country 100 pages each — build **one**, read its depth line, and only then pay for the other 42.
+**Judge a corpus by its hit rate on role-filling pages, not by depth** (entry 77). The corpus is a
+latency cache — both paths are supposed to find the right page, and the corpus exists so the live one
+does not re-fetch for 50+ seconds. Measured on `japan/IN/GB` right after a rebuild: **3 of 5 role
+pages came from the corpus**; the checklist and the route came from live search.
+
+So before building 43, fix the two things that cause a miss:
+
+1. **Pages the crawl never reached on a host the corpus does hold.** `host_budget` is
+   `maximum_pages // seed_hosts`, so the 1,200 default gives a 50-host country 24 pages each. Size
+   `--pages` per country — ~5,000 gives 100 each. Costs fetches, not searches.
+2. **Hosts lost to a transient failure at build time, which nothing reports.** Japan's London embassy
+   answered a `403` during the build, was counted as one of "3 unreadable", named nowhere, and is
+   absent from the corpus for good. **This is unbuilt**: the build should name the hosts it lost and a
+   rebuild should retry them.
+
+Then build **one** country, run a corridor against it, and check how many role pages came back
+`found_by="corpus"` before paying for the other 42.
 
 ### Done when
 
