@@ -103,6 +103,14 @@ from visa_research_agent.domain.models import (
 from visa_research_agent.domain.trust import host_is_within, host_of, registrable_domain
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 
+DEFAULT_TEXT_COVERAGE_BAR = 0.5
+"""What share of a corridor's candidates must have stored text before it may rank them.
+
+A majority, and a statement rather than a tuned number — see `_text_scoring_is_fair`. Exposed as a
+constructor argument only so the rule can be tested and measured against, never so a caller can
+lower it to get more pages through.
+"""
+
 MINIMUM_ROLE_SCORE = 20.0
 # How many pages the adjudicator gets to choose from. **This is a recall budget, not a precision
 # one**, and reading it the other way is what kept it at ten for so long.
@@ -359,6 +367,7 @@ class CorridorResolver:
         recall_log: RecallLog | None = None,
         corpus: CountryCorpus | None = None,
         page_text: PageTextStore | None = None,
+        text_scoring_coverage_bar: float = DEFAULT_TEXT_COVERAGE_BAR,
         pinned: list[str] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
@@ -388,6 +397,7 @@ class CorridorResolver:
         # ranked by what its page says rather than only by the link pointing at it. Optional, and a
         # country with no index behaves exactly as it did before one existed (entry 78).
         self.page_text = page_text
+        self.text_scoring_coverage_bar = text_scoring_coverage_bar
         # URLs that already filled a role for this corridor. They keep their shortlist places
         # whatever the ranking says; see `_shortlist`.
         self.pinned = list(pinned or [])
@@ -721,6 +731,32 @@ class CorridorResolver:
             ran_without_search=not searched_without_error,
         )
 
+    def _text_scoring_is_fair(self, scored: int, candidates: int) -> bool:
+        """Whether the index covers enough of *this* candidate set to rank it.
+
+        **A signal only some candidates carry cannot order them against each other**, and measured
+        2026-08-26 that is not a theoretical worry — it cost `japan/IN/GB` two roles. The index held
+        text for 115 of 860 candidates, spread by whatever hosts the crawl happened to reach: 90% of
+        `evisa.mofa.go.jp`, 5% of `www.mofa.go.jp`, and **0% of `www.uk.emb-japan.go.jp`, the post
+        that actually serves a traveller applying from Britain.** Every one of the eleven pages the
+        lift added to the shortlist had index text; the eleven it displaced included the UK post's
+        own fee and checklist pages. Corpus-only, three runs each way: with the lift Japan filled
+        four roles every time and never `document_checklist` or `fees`; without it, four to six and
+        always both.
+
+        `combined` already refuses to let stored text *lower* a score. That protects the score and
+        not the place — a shortlist is finite, so lifting some candidates displaces others, and the
+        ones that cannot be lifted are the ones nobody crawled rather than the ones nobody needs.
+
+        The bar is a majority, and it is a statement rather than a tuned number: below half,
+        presence in the index predicts rank better than anything the page says, which is ranking by
+        crawl coverage. Above it the minority is the exception rather than the rule. It is not a
+        threshold to nudge — the fix for a country under it is to cover it ([TODO.md](TODO.md) item
+        32), not to lower this.
+        """
+
+        return candidates > 0 and scored >= candidates * self.text_scoring_coverage_bar
+
     def _score_from_text(
         self,
         destination: DestinationConfig,
@@ -750,6 +786,8 @@ class CorridorResolver:
             nationality=nationality,
             lexicon=self.lexicon,
         )
+        if not self._text_scoring_is_fair(len(scored), len(candidates)):
+            return 0
         for url, scores in scored.items():
             candidate = candidates.get(url)
             if candidate is not None:

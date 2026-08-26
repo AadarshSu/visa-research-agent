@@ -1163,3 +1163,23 @@ async def test_an_empty_account_is_not_retried(tmp_path: Path) -> None:
 
     assert adjudicator.calls == 1, "the second call is billed and cannot succeed"
     assert not resolved.is_usable
+
+
+def test_stored_text_may_not_rank_a_set_it_barely_covers() -> None:
+    """A signal only some candidates carry orders them by who has it, not by what it says.
+
+    Measured on `japan/IN/GB`: the index held text for 115 of 860 candidates, spread by whatever
+    hosts the crawl reached — 90% of `evisa.mofa.go.jp`, 5% of `www.mofa.go.jp`, and **0% of
+    `www.uk.emb-japan.go.jp`, the post serving a traveller applying from Britain**. All eleven
+    pages the lift added to the shortlist had index text; the eleven displaced included that post's
+    own fee and checklist pages. Corpus-only, three runs each way, it cost two roles every time.
+
+    `combined` already refuses to let stored text lower a score. That protects the score and not the
+    place: a shortlist is finite, so lifting some candidates displaces others.
+    """
+
+    resolver = _shortlist_only_resolver(shortlist_size=2, shortlist_role_depth=1)
+
+    assert not resolver._text_scoring_is_fair(115, 860)
+    assert resolver._text_scoring_is_fair(500, 860)
+    assert not resolver._text_scoring_is_fair(0, 0), "an empty candidate set is not full coverage"
