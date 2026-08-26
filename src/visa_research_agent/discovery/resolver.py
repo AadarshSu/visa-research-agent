@@ -86,6 +86,14 @@ from visa_research_agent.discovery.search import (
     search_all,
     usable_results,
 )
+from visa_research_agent.discovery.selection import (
+    CandidateSelector,
+    SelectionError,
+    build_selection_packet,
+    load_selection_prompt,
+    selected_candidates,
+    validated_selection,
+)
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
     is_crawlable,
@@ -368,6 +376,7 @@ class CorridorResolver:
         corpus: CountryCorpus | None = None,
         page_text: PageTextStore | None = None,
         text_scoring_coverage_bar: float = DEFAULT_TEXT_COVERAGE_BAR,
+        selector: CandidateSelector | None = None,
         pinned: list[str] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
@@ -398,6 +407,13 @@ class CorridorResolver:
         # country with no index behaves exactly as it did before one existed (entry 78).
         self.page_text = page_text
         self.text_scoring_coverage_bar = text_scoring_coverage_bar
+        # Chooses what to fetch by reading stored page text, replacing `_shortlist` as the recall
+        # gate. Optional and off unless one is supplied: without it the corridor behaves exactly as
+        # it did before, which keeps the heuristic path as the regression baseline.
+        self.selector = selector
+        # Counted so a corridor's reported cost is its whole cost. A selection call that is not
+        # counted is a call nobody is deciding whether to keep paying for.
+        self.selection_calls = 0
         # URLs that already filled a role for this corridor. They keep their shortlist places
         # whatever the ranking says; see `_shortlist`.
         self.pinned = list(pinned or [])
@@ -659,8 +675,8 @@ class CorridorResolver:
                 "link to it, from the stored page-text index"
             )
 
-        # 4. Fetch the shortlist through the ordinary retrieval path.
-        shortlist = self._shortlist(list(candidates.values()))
+        # 4. Choose what to read, then fetch it through the ordinary retrieval path.
+        shortlist = await self._choose_what_to_read(destination, corridor, candidates, notes)
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
         trace.fetched = {candidate.link.url for candidate in fetched.candidates}
@@ -714,6 +730,7 @@ class CorridorResolver:
                 corridor, refused, candidates, notes
             )
             model_calls += blocked_calls
+        model_calls += self.selection_calls
 
         return ResolvedCorridor(
             corridor=corridor,
@@ -730,6 +747,76 @@ class CorridorResolver:
             model_calls=model_calls,
             ran_without_search=not searched_without_error,
         )
+
+    async def _choose_what_to_read(
+        self,
+        destination: DestinationConfig,
+        corridor: Corridor,
+        candidates: dict[str, CandidatePage],
+        notes: list[str],
+    ) -> list[CandidatePage]:
+        """Pick the pages to fetch — by model where one is configured, by the heuristic otherwise.
+
+        The heuristic path is unchanged and is what runs today. The model path exists because the
+        heuristic is the **recall gate**: measured over 135 recall logs it decides in 100 of them,
+        with a median of 72 candidates in contention for 35 places, and a page it ranks out is never
+        fetched and never judged (entry 40).
+
+        Falling back is deliberate and **reported, never silent** — a country with no stored text
+        would otherwise have its selection made from anchors alone, which is the weak version of
+        this idea wearing the strong version's name.
+        """
+
+        pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
+        if self.selector is None or self.page_text is None or not pool:
+            return self._shortlist(list(candidates.values()))
+
+        code = self._destination_code(destination)
+        held = (
+            self.page_text.text_for_selection(code, [c.link.url for c in pool])
+            if code is not None
+            else {}
+        )
+        if not held:
+            notes.append(
+                "no stored page text was held for this destination, so the pages to read were "
+                "chosen by the heuristic ranking rather than by reading them"
+            )
+            return self._shortlist(list(candidates.values()))
+
+        taken: set[str] = set()
+        by_id: dict[str, CandidatePage] = {}
+        text_by_id: dict[str, str] = {}
+        for candidate in pool:
+            source_id = build_source_id(destination.slug, candidate.link.url, taken)
+            by_id[source_id] = candidate
+            if candidate.link.url in held:
+                text_by_id[source_id] = held[candidate.link.url]
+
+        packet = build_selection_packet(corridor, by_id, text_by_id)
+        try:
+            self.selection_calls += 1
+            selection = await self.selector.select(load_selection_prompt(), packet)
+        except SelectionError as exc:
+            # A failed selection is not a failed corridor: the heuristic still ranks, and saying so
+            # is honest about which decider produced the answer. This is not entry 31's forbidden
+            # fallback — that one substitutes a worse *decider of the visa answer*; this substitutes
+            # a worse chooser of what to read, and the adjudicator still decides.
+            notes.append(f"candidate selection failed ({exc}); the heuristic ranking chose instead")
+            return self._shortlist(list(candidates.values()))
+
+        chosen, discarded = validated_selection(selection, by_id)
+        notes.extend(discarded)
+        if not chosen:
+            notes.append(
+                "candidate selection named no page, so the heuristic ranking chose instead"
+            )
+            return self._shortlist(list(candidates.values()))
+        notes.append(
+            f"{len(chosen)} of {len(pool)} candidates were chosen to read by a model shown what "
+            f"{len(text_by_id)} of them say, rather than by ranking the links to them"
+        )
+        return self._readable_only(selected_candidates(chosen, by_id))
 
     def _text_scoring_is_fair(self, scored: int, candidates: int) -> bool:
         """Whether the index covers enough of *this* candidate set to rank it.

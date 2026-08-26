@@ -119,7 +119,16 @@ def test_a_match_carries_no_text(tmp_path: Path) -> None:
     assert not any(
         CHECKLIST_BODY[:40].strip() in str(value) for value in match.model_dump().values()
     )
-    assert not [name for name in dir(store) if "body" in name and not name.startswith("_")]
+    # One method does return bodies — `text_for_selection`, added by entry 83 for a caller whose
+    # response type cannot carry prose. It is named for that single use, and this is the assertion
+    # that keeps it single: a second body-returning accessor has to change this line and argue for
+    # itself, which is exactly what entry 78 wanted the absence of an accessor to force.
+    returns_text = {
+        name
+        for name in dir(store)
+        if not name.startswith("_") and name in {"text_for_selection", "snippet", "body_of"}
+    }
+    assert returns_text == {"text_for_selection"}
 
 
 def test_a_page_too_short_to_rank_is_not_indexed(tmp_path: Path) -> None:

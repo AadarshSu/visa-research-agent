@@ -274,6 +274,41 @@ class PageTextStore:
         matches.sort(key=lambda match: (-match.score, match.url))
         return matches[:limit]
 
+    def text_for_selection(self, code: str, urls: Iterable[str]) -> dict[str, str]:
+        """The stored text of these pages, **for choosing what to fetch and for nothing else.**
+
+        This is an amendment to the rule at the top of this module, made deliberately and recorded
+        in DECISIONS entry 83 rather than slipped in. That rule said there is no accessor for a body
+        and named `snippet()` as the thing not to add. The reason was never that reading stored text
+        is wrong — `rank` reads it — it was that a **sentence written from it must never reach a
+        traveller**, because stored text is older than `source_maximum_stale_hours` and carries
+        nothing to say how old it is.
+
+        `discovery/selection.py` reads bodies and returns `Selection`, which holds source ids and
+        has no field for prose. So the chain is body → packet → model → ids, and no word of stored
+        text can leave it. That property lives in `Selection`, not here, which is why this method is
+        named for its single caller: a second caller wanting text for any other purpose is the
+        change this docstring exists to make someone argue for.
+
+        **It is still not evidence.** A page chosen here is fetched through `LiveSourceFetcher`
+        before a word of it is quoted, exactly as before.
+        """
+
+        wanted = list(dict.fromkeys(urls))
+        if not wanted or not self.has(code):
+            return {}
+        held: dict[str, str] = {}
+        with self._connect(code, create=False) as connection:
+            for start in range(0, len(wanted), _URLS_PER_QUERY):
+                chunk = wanted[start : start + _URLS_PER_QUERY]
+                placeholders = ",".join("?" * len(chunk))
+                rows = connection.execute(
+                    f"SELECT url, body FROM page_text WHERE url IN ({placeholders})",  # noqa: S608
+                    chunk,
+                ).fetchall()
+                held.update({str(url): str(body) for url, body in rows})
+        return held
+
     def score_held(
         self,
         code: str,

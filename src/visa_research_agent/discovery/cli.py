@@ -91,6 +91,10 @@ from visa_research_agent.discovery.registry_build import (
 )
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
+from visa_research_agent.discovery.selection import (
+    CandidateSelector,
+    LangChainCandidateSelector,
+)
 from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
 from visa_research_agent.domain.trust import host_is_within
 from visa_research_agent.research.errors import LLMConfigurationError, VisaResearchError
@@ -122,6 +126,28 @@ def build_role_adjudicator(policy: RuntimePolicy) -> RoleAdjudicator | None:
     if settings.openai_model is None or not settings.openai_model.strip():
         raise LLMConfigurationError("OPENAI_MODEL is required for model role adjudication")
     return LangChainRoleAdjudicator(
+        api_key=settings.openai_api_key.get_secret_value(),
+        model_name=settings.openai_model,
+        request_timeout_seconds=settings.openai_request_timeout_seconds,
+        max_output_tokens=settings.openai_max_output_tokens,
+        reasoning_effort=settings.openai_reasoning_effort,
+    )
+
+
+def build_candidate_selector(policy: RuntimePolicy) -> CandidateSelector | None:
+    """Build the model that chooses what to read, or none when nothing asks for it.
+
+    Off unless `discovery_selector` says otherwise, so the heuristic shortlist stays the default and
+    the regression baseline. DECISIONS entry 83.
+    """
+
+    if policy.discovery_selector != "model":
+        return None
+    if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
+        raise LLMConfigurationError("OPENAI_API_KEY is required for model candidate selection")
+    if settings.openai_model is None or not settings.openai_model.strip():
+        raise LLMConfigurationError("OPENAI_MODEL is required for model candidate selection")
+    return LangChainCandidateSelector(
         api_key=settings.openai_api_key.get_secret_value(),
         model_name=settings.openai_model,
         request_timeout_seconds=settings.openai_request_timeout_seconds,
@@ -173,6 +199,7 @@ def build_resolver(
         # behaviour. One line wires both the command and the API, which reaches a resolver only
         # through this function.
         page_text=PageTextStore(settings.page_text_directory),
+        selector=build_candidate_selector(get_runtime_policy()),
         pinned=pinned,
     )
 

@@ -18,6 +18,7 @@ RenderMode = Literal["never", "on_demand"]
 # Which decider assigns roles during discovery. `heuristic` is deterministic, free and offline;
 # `model` asks one bounded question over pages already fetched and trusted.
 DiscoveryDecider = Literal["heuristic", "model"]
+DiscoverySelector = Literal["heuristic", "model"]
 # Where a destination's sources come from.
 #   configured — only destinations hand-written in destinations.yaml can produce a plan.
 #   automatic  — an unconfigured destination is resolved by discovery at request time, trusting
@@ -431,6 +432,13 @@ class RuntimePolicy(StrictModel):
     extraction_mode: ExtractionMode
     render_mode: RenderMode = "never"
     discovery_decider: DiscoveryDecider = "heuristic"
+    discovery_selector: DiscoverySelector = "heuristic"
+    """Who chooses which pages get fetched: the heuristic shortlist, or a model reading stored text.
+
+    Default `heuristic`, which is the behaviour every measurement so far describes. `model` is
+    DECISIONS entry 83's prototype, and it changes the *recall gate* rather than the decider — the
+    adjudicator still decides, on text fetched in this run.
+    """
     destination_mode: DestinationMode = "configured"
     source_cache_ttl_hours: float = Field(gt=0)
     source_maximum_stale_hours: float = Field(gt=0)
