@@ -190,7 +190,35 @@ Rebuilding Japan: **70 queries, 276 seeds, 1,918 crawled** — and the job's own
 > the United States their document checklist, because the checklist is disproportionately the role
 > live search was supplying.
 >
-> **And the two misses have different causes and different fixes.** `visaonline.html` sits on a host
+> **Rebuilt at `--pages 5000`, with lost hosts now named — and the hit rate did not improve.**
+>
+> ```
+> entries   1,977 -> 3,029      hosts 50 -> 68      beyond depth 1  7% -> 36%
+> candidates this corridor saw: 837 corpus, 23 search   (the crawl was skipped entirely)
+> corpus hit rate on role pages: 2 of 4      (it was 3 of 5)
+> ```
+>
+> A 2.4× bigger page budget bought 1,052 new entries, 18 new mission hosts and five times the depth,
+> and **bought nothing at all on the measure that matters.** The same two roles still came from live
+> search — and `visaonline.html` sits on `mofa.go.jp`, of which the corpus now holds hundreds of
+> pages. A crawl reaches pages by following links; search reaches them directly.
+>
+> **The structural reason, which no budget can fix:** `corridor_queries` carries the traveller's
+> nationality and residence, and `corpus_queries` deliberately carries neither — entry 44 forbids it,
+> because a corpus built for one nationality is not a corpus. So the pages that only a
+> corridor-specific query surfaces can never be in the store, **by design**, and the document
+> checklist is exactly such a page. That is why corpus-only runs lose checklists.
+>
+> Small sample — one country, two runs, and the second filled four roles where the first filled five,
+> which is known problem 10. The direction agrees with entry 76's 30–67% across ten countries.
+>
+> **And the lost-host report, now built, did not explain London either.** `www.uk.emb-japan.go.jp` is
+> absent from the rebuild *and* absent from the lost list — so it was never seeded at all this time,
+> where a probe an hour earlier had search returning it. Search's seed set varies between runs
+> (known problem 19), and a host that was never seeded cannot be reported as lost. The report catches
+> hosts that **failed**; it cannot catch hosts that were never **asked for**.
+>
+> **And the two failure kinds have different causes and different fixes.** `visaonline.html` sits on a host
 > the corpus covers heavily — that is a page the crawl never reached, and a bigger `--pages` is the
 > fix. `www.uk.emb-japan.go.jp` is missing **entirely**: it answered a transient Akamai `403` during
 > the build (the build reported "3 unreadable" and named nothing), so the corpus silently lacks the

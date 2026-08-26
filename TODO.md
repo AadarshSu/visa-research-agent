@@ -273,13 +273,20 @@ pages came from the corpus**; the checklist and the route came from live search.
 
 So before building 43, fix the two things that cause a miss:
 
-1. **Pages the crawl never reached on a host the corpus does hold.** `host_budget` is
-   `maximum_pages // seed_hosts`, so the 1,200 default gives a 50-host country 24 pages each. Size
-   `--pages` per country — ~5,000 gives 100 each. Costs fetches, not searches.
-2. **Hosts lost to a transient failure at build time, which nothing reports.** Japan's London embassy
-   answered a `403` during the build, was counted as one of "3 unreadable", named nowhere, and is
-   absent from the corpus for good. **This is unbuilt**: the build should name the hosts it lost and a
-   rebuild should retry them.
+1. ~~**Pages the crawl never reached on a host the corpus does hold.**~~ **Tried and it does not
+   work.** Japan rebuilt at `--pages 5000`: entries 1,977 → 3,029, hosts 50 → 68, depth beyond 1
+   from 7% to 36% — and the corpus hit rate on role pages went **3/5 to 2/4**. A bigger budget buys
+   volume and depth, not the pages a corridor needs. Do **not** size stage 3 on this.
+2. **Hosts lost at build time. Half built** — the build now **names** every host it got nothing from,
+   with the typed outcome beside the reason, and Japan's rebuild named five. What it still cannot
+   catch is a host that was never *seeded*: London was absent from the rebuild and absent from the
+   lost list, because search's seed set varies between runs (known problem 19). Retrying named hosts
+   on the next build is still unbuilt.
+
+3. **The structural one, which is neither of the above.** `corpus_queries` carries no nationality or
+   residence and must not (entry 44), while `corridor_queries` does. Pages only a corridor-specific
+   query surfaces can therefore never be stored — and the document checklist is one. **This is why
+   corpus-only runs lose checklists, and no corpus setting will change it.**
 
 Then build **one** country, run a corridor against it, and check how many role pages came back
 `found_by="corpus"` before paying for the other 42.
