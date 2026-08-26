@@ -34,7 +34,8 @@ from visa_research_agent.domain.models import (
     is_challenge,
 )
 from visa_research_agent.domain.trust import host_of
-from visa_research_agent.research.live_sources import clean_source_html
+from visa_research_agent.research.errors import LiveSourceError
+from visa_research_agent.research.live_sources import clean_source_html, extract_pdf_text
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
 from visa_research_agent.research.tls import build_ssl_context
@@ -59,6 +60,12 @@ MAXIMUM_CRAWL_RENDERS = 12
 # same bound the evidence path applies, for the same reason: past this a page is a document dump
 # rather than guidance, and BM25 only loses by having more of it.
 DEFAULT_KEPT_TEXT_CHARACTERS = 50_000
+
+# What `_get` hands back. A `Response` is the ordinary case; a `str` means the URL answered a
+# browser challenge and the renderer ran the page's own scripts to reach what it was guarding, so
+# what came back is **HTML**, whatever the URL's extension said. Only an HTML caller can use that,
+# which is why the distinction is in the type rather than left to a comment.
+FetchResult = httpx.Response | str
 
 PageReader = Callable[[str, str, str], None]
 """Called with (url, title, readable text) for every page a crawl actually read."""
@@ -333,6 +340,89 @@ class CrawlFetcher:
 
         if not is_crawlable(url, destination) or is_pdf_url(url):
             return None
+        result = await self._get(client, url, destination)
+        if result is None:
+            return None
+        if isinstance(result, str):
+            # A challenge answered by the renderer, which returns the guarded page directly.
+            return result
+        response = result
+        if "html" not in response.headers.get("content-type", "text/html").lower():
+            self._record_failure(url, "unusable", "it is not an HTML page")
+            return None
+        # An empty body is not a separate failure from a shell that renders to nothing: it is the
+        # same page, one step further along. So it goes to the renderer too, and only becomes a
+        # failure once rendering has had its turn.
+        html = await self._render_if_empty(response.text, url, destination)
+        if html is not None and not html.strip():
+            self._record_failure(url, "unusable", "it returned no content")
+            return None
+        return html
+
+    async def fetch_pdf_text(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        destination: DestinationConfig,
+        *,
+        maximum_characters: int,
+    ) -> str | None:
+        """Return a PDF's readable text, or None when it cannot or should not be read.
+
+        A PDF is a **destination, never a signpost** — `_expand` will not follow one, because it
+        holds no links worth crawling — and that is why `fetch_html` refuses them outright. But
+        authorities publish checklists as PDFs, which is what `pdf_checklist_bonus` exists for, and
+        the offline job wants their text. Measured on Japan, 26% of a 3,103-entry corpus is PDFs.
+
+        Every guard `fetch_html` applies runs here too, because they all live in `_get`: the same
+        `robots.txt` verdict, the same politeness delay, the same trust re-check on the landing URL
+        after a redirect, the same challenge-versus-refusal reading of a blocking status. This must
+        stay true — a second retrieval path that quietly checked less would be the hole all three
+        checkpoints exist to close.
+        """
+
+        if not is_crawlable(url, destination):
+            return None
+        result = await self._get(client, url, destination)
+        if result is None:
+            return None
+        if isinstance(result, str):
+            # The renderer answered a challenge and handed back the page it was guarding, as HTML.
+            # That is not this PDF, and reading it as one would be inventing the document's content.
+            self._record_failure(
+                url, "unusable", "a browser challenge answered with a page, not a PDF"
+            )
+            return None
+        response = result
+        if "pdf" not in response.headers.get("content-type", "").lower():
+            self._record_failure(url, "unusable", "it is not a PDF")
+            return None
+        try:
+            text = extract_pdf_text(response.content, maximum_characters=maximum_characters)
+        except LiveSourceError as exc:
+            # An encrypted or malformed PDF is one unreadable page, never a failed build. Entry 54
+            # is what a bare `except` around this cost the first time.
+            self._record_failure(url, "unusable", str(exc)[:120])
+            return None
+        if not text.strip():
+            self._record_failure(url, "unusable", "its text layer is empty")
+            return None
+        return text
+
+    async def _get(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        destination: DestinationConfig,
+    ) -> FetchResult | None:
+        """Fetch one URL under every rule this client obeys, or record why it could not.
+
+        Extracted from `fetch_html` unchanged so that PDFs can be read through the *same* guards
+        rather than a second, laxer path. Nothing about the sequence moved: policy first, then the
+        delay, then the request, then the landing host re-checked against both trust and policy,
+        then the status read. What each caller does with the response differs; what is checked
+        before they get one does not.
+        """
 
         self.requested.append(url)
         try:
@@ -418,18 +508,8 @@ class CrawlFetcher:
         if len(response.content) > self.maximum_bytes:
             self._record_failure(url, "unusable", "it is larger than the size limit")
             return None
-        if "html" not in response.headers.get("content-type", "text/html").lower():
-            self._record_failure(url, "unusable", "it is not an HTML page")
-            return None
-        # An empty body is not a separate failure from a shell that renders to nothing: it is the
-        # same page, one step further along. So it goes to the renderer too, and only becomes a
-        # failure once rendering has had its turn.
         self.final_urls[url] = final_url
-        html = await self._render_if_empty(response.text, url, destination)
-        if html is not None and not html.strip():
-            self._record_failure(url, "unusable", "it returned no content")
-            return None
-        return html
+        return response
 
     async def _answer_challenge(self, url: str, destination: DestinationConfig) -> str | None:
         """Run the challenge page's own scripts and return the page it was guarding, or None.

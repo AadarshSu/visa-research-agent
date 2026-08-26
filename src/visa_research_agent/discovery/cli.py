@@ -673,7 +673,11 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
     depths = ", ".join(f"depth {d}: {n}" for d, n in sorted(build.by_depth.items()))
     print(f"      {depths}", file=stream)
     if build.indexed_text:
-        print(f"      {build.indexed_text} pages kept their text for the index", file=stream)
+        print(
+            f"      {build.indexed_text} pages kept their text for the index"
+            + (f", including {build.pdfs_read} PDFs read for text only" if build.pdfs_read else ""),
+            file=stream,
+        )
     if build.lost_hosts:
         # Named, not counted. A host that contributed nothing leaves no entry and no `unreadable`
         # tally — a seed never becomes an entry — so before this the gap was invisible, and a

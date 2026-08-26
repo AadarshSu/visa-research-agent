@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 import httpx
 import pytest
+from discovery_site import minimal_pdf
 from pypdf.errors import DependencyError
 from test_live_sources import Clock, build_fetcher, destination
 
@@ -26,35 +27,6 @@ CHECKLIST_LINES = [
     "Documents that are not in English must be accompanied by a certified translation.",
     "Additional documents may be requested on a case-by-case basis after submission.",
 ]
-
-
-def minimal_pdf(lines: list[str], *, encrypted: bool = False) -> bytes:
-    """Build a small valid PDF containing the given lines of text."""
-
-    text_operations = "\n".join(f"({line}) Tj T*" for line in lines)
-    stream = f"BT /F1 12 Tf 20 700 Td 14 TL\n{text_operations}\nET"
-    objects = [
-        "<</Type/Catalog/Pages 2 0 R>>",
-        "<</Type/Pages/Kids[3 0 R]/Count 1>>",
-        "<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R"
-        "/Resources<</Font<</F1 5 0 R>>>>>>",
-        f"<</Length {len(stream)}>>stream\n{stream}\nendstream",
-        "<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
-    ]
-    document = bytearray(b"%PDF-1.4\n")
-    offsets: list[int] = []
-    for index, body in enumerate(objects, start=1):
-        offsets.append(len(document))
-        document += f"{index} 0 obj\n{body}\nendobj\n".encode("latin-1")
-    xref_at = len(document)
-    document += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
-    for offset in offsets:
-        document += f"{offset:010d} 00000 n \n".encode()
-    encrypt = "/Encrypt 6 0 R" if encrypted else ""
-    document += (
-        f"trailer\n<</Size {len(objects) + 1}/Root 1 0 R{encrypt}>>\nstartxref\n{xref_at}\n%%EOF\n"
-    ).encode()
-    return bytes(document)
 
 
 def forwarding_shell(target: str) -> str:

@@ -36,6 +36,11 @@ OFF_DOMAIN = "https://cheap-visas.example/apply-now"
 # it ever reaches it.
 FULL_CHECKLIST = f"https://{MISSION}/visa/tourism-checklist.html"
 
+# A PDF that is actually served, unlike `MISSION_CHECKLIST_PDF` — whose `404` is load-bearing for
+# the tests about a shortlisted page that fails, and must stay a `404`. Linked only from
+# `FULL_CHECKLIST`, so only a test that seeds that page ever reaches it.
+TOURISM_CHECKLIST_PDF = f"https://{MISSION}/files/tourism-checklist.pdf"
+
 # A single-page application, as Vietnam's e-visa portal is: the served HTML is an empty mount
 # point, and every link only exists once the scripts have run. It is deliberately not linked from
 # any other page, so it is only ever reached by a test that seeds it.
@@ -137,7 +142,14 @@ def site_pages() -> dict[str, str]:
             "statement covering the last three months as proof of funds. An itinerary of the "
             "stay, including a hotel booking or other proof of accommodation. A return ticket "
             "or onward ticket. Where the visit is at the invitation of a resident, a letter of "
-            "invitation and the inviter's certificate of employment.</p>",
+            "invitation and the inviter's certificate of employment.</p>"
+            # The anchor Japan's real checklist PDF is linked by, word for word: it names the
+            # page's subject and none of the roles it fills, which is the whole case for reading
+            # the document rather than the link to it. Hung off this page rather than a linked one
+            # so that only a test which seeds `FULL_CHECKLIST` ever meets it — a good PDF changes
+            # what a corridor resolves to, and two resolver tests are written against the shape
+            # without one.
+            + link(TOURISM_CHECKLIST_PDF, "Single Entry Visas (PDF)"),
         ),
         MISSION_CHECKLIST: forwarding_shell(MISSION_CHECKLIST_PDF),
         MISSION_SPOUSE: page(
@@ -145,6 +157,47 @@ def site_pages() -> dict[str, str]:
             "<h1>Spouse visa</h1><p>Documents required for a spouse visa application.</p>",
         ),
     }
+
+
+def minimal_pdf(lines: list[str], *, encrypted: bool = False) -> bytes:
+    """Build a small valid PDF containing the given lines of text."""
+
+    text_operations = "\n".join(f"({line}) Tj T*" for line in lines)
+    stream = f"BT /F1 12 Tf 20 700 Td 14 TL\n{text_operations}\nET"
+    objects = [
+        "<</Type/Catalog/Pages 2 0 R>>",
+        "<</Type/Pages/Kids[3 0 R]/Count 1>>",
+        "<</Type/Page/Parent 2 0 R/MediaBox[0 0 612 792]/Contents 4 0 R"
+        "/Resources<</Font<</F1 5 0 R>>>>>>",
+        f"<</Length {len(stream)}>>stream\n{stream}\nendstream",
+        "<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>",
+    ]
+    document = bytearray(b"%PDF-1.4\n")
+    offsets: list[int] = []
+    for index, body in enumerate(objects, start=1):
+        offsets.append(len(document))
+        document += f"{index} 0 obj\n{body}\nendobj\n".encode("latin-1")
+    xref_at = len(document)
+    document += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode()
+    for offset in offsets:
+        document += f"{offset:010d} 00000 n \n".encode()
+    encrypt = "/Encrypt 6 0 R" if encrypted else ""
+    document += (
+        f"trailer\n<</Size {len(objects) + 1}/Root 1 0 R{encrypt}>>\nstartxref\n{xref_at}\n%%EOF\n"
+    ).encode()
+    return bytes(document)
+
+
+CHECKLIST_PDF_LINES = [
+    "Checklist: Temporary Visitor Visa for tourism",
+    "Documents required from every applicant:",
+    "A passport valid for the whole of the intended stay.",
+    "One recent photograph meeting the published specification.",
+    "A completed application form, signed and dated.",
+    "A bank statement for the last three months as proof of funds.",
+    "An itinerary of the stay, with a hotel booking or other proof of accommodation.",
+    "A return ticket or onward ticket.",
+]
 
 
 def handler(requests: list[httpx.Request], *, robots: dict[str, str] | None = None) -> object:
@@ -167,6 +220,14 @@ def handler(requests: list[httpx.Request], *, robots: dict[str, str] | None = No
             return httpx.Response(200, text=published, headers={"Content-Type": "text/plain"})
         requests.append(request)
         url = str(request.url).rstrip("/")
+        if url == TOURISM_CHECKLIST_PDF:
+            # Served as real bytes, because the point of reading a PDF at all is that its text is
+            # the only thing identifying it: nothing links to it with words a scorer can use.
+            return httpx.Response(
+                200,
+                content=minimal_pdf(CHECKLIST_PDF_LINES),
+                headers={"Content-Type": "application/pdf"},
+            )
         if url in pages:
             return httpx.Response(
                 200, text=pages[url], headers={"Content-Type": "text/html; charset=utf-8"}

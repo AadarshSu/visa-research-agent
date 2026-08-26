@@ -20,17 +20,19 @@ from discovery_site import (
     MISSION,
     MISSION_INDEX,
     OFF_DOMAIN,
+    TOURISM_CHECKLIST_PDF,
     handler,
 )
 
 from visa_research_agent.discovery.corpus import CountryCorpus
 from visa_research_agent.discovery.corpus_build import (
+    CORPUS_EXPANSION_THRESHOLD,
     all_corpus_queries,
     build_country_corpus,
 )
-from visa_research_agent.discovery.crawl import CrawlFetcher
-from visa_research_agent.discovery.lexicon import Country
-from visa_research_agent.discovery.models import SearchResult
+from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
+from visa_research_agent.discovery.lexicon import Country, get_country_registry, get_lexicon
+from visa_research_agent.discovery.models import Corridor, RoleScores, SearchResult
 from visa_research_agent.discovery.page_text import PageTextStore
 
 NOW = datetime(2026, 8, 22, 9, 0, tzinfo=UTC)
@@ -334,3 +336,55 @@ async def test_a_build_given_no_index_writes_none(tmp_path: Path) -> None:
 
     assert report.indexed_text == 0
     assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.anyio
+async def test_a_build_reads_the_pdfs_a_crawl_will_not_follow(tmp_path: Path) -> None:
+    """A PDF is a destination, so the crawl skips it — and authorities publish checklists as PDFs.
+
+    26% of Japan's corpus is PDFs, and the page that fills `document_checklist` for japan/IN/GB is
+    one. The second pass reads them for text only; nothing follows a link out of one.
+    """
+
+    index = PageTextStore(tmp_path)
+
+    _corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX, FULL_CHECKLIST]),
+        fetcher([]),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+        page_text=index,
+    )
+
+    assert report.pdfs_read == 1
+    matches = index.rank(
+        "XX",
+        role="document_checklist",
+        corridor=Corridor(
+            destination_slug="example",
+            passport_nationality="IN",
+            applying_from="GB",
+            purpose="tourism",
+        ),
+        nationality=get_country_registry().require("IN"),
+        lexicon=get_lexicon(),
+    )
+    assert TOURISM_CHECKLIST_PDF in [match.url for match in matches]
+
+
+@pytest.mark.anyio
+async def test_a_build_follows_links_the_request_path_would_not() -> None:
+    """`expansion_threshold` is a latency compromise, and this job has no latency budget.
+
+    At the request path's 10.0 it excluded 91% of Japan's corpus from ever being read, so their
+    text could never enter the index. The budgets still bound the crawl and the frontier is still
+    best-first; this only decides what fills the remainder.
+    """
+
+    assert (
+        CORPUS_EXPANSION_THRESHOLD
+        < LinkCrawler(fetcher([]), lambda _: RoleScores()).expansion_threshold
+    )

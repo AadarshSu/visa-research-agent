@@ -28,10 +28,12 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import get_args
 
+import httpx
 from pydantic import Field
 
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus, merge
 from visa_research_agent.discovery.crawl import (
+    DEFAULT_KEPT_TEXT_CHARACTERS,
     CrawlFetcher,
     LinkCrawler,
 )
@@ -40,7 +42,7 @@ from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleSc
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
 from visa_research_agent.discovery.search import SearchProvider, search_all, usable_results
-from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable
+from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
 from visa_research_agent.domain.models import (
     DestinationConfig,
     FailureOutcome,
@@ -48,6 +50,7 @@ from visa_research_agent.domain.models import (
     TravelPurpose,
 )
 from visa_research_agent.domain.trust import host_of
+from visa_research_agent.research.tls import build_ssl_context
 
 # Far above the request path's forty, and **it has to exceed the seed count or the crawl never
 # crawls**. Measured 2026-08-22: Canada produced 203 seeds against a 200-page budget, so the whole
@@ -66,6 +69,22 @@ DEFAULT_CORPUS_PAGES_PER_HOST = 400
 # stopped. Not a failure — the entries are still real — but it must be reported, because a build
 # that quietly behaves like the request path has not done the thing it exists to do.
 MINIMUM_DEEP_SHARE = 0.10
+# The request path follows a link only when its anchor scores at least 10, because a sixty-second
+# corridor cannot afford to read a page that probably says nothing. **This job has no such bound and
+# the threshold was costing it most of the country.** Measured on Japan 2026-08-26: 2,834 of 3,103
+# corpus entries — 91% — score below 10 from their anchor, so they were discovered and never read,
+# and their text could never enter the index. The gate that decides what gets *read* was the same
+# anchor scorer that cannot read, which is the defect one level up from the one the index fixes.
+#
+# Zero rather than a smaller number: the page budget and the per-host budget already bound the
+# crawl, and the frontier is best-first, so the high-scoring links are still fetched *first*. This
+# only decides what fills the remaining budget — noise, or nothing at all.
+CORPUS_EXPANSION_THRESHOLD = 0.0
+# PDFs are never followed by a crawl — `_expand` will not queue one, correctly, because a PDF holds
+# no links worth walking. But authorities publish checklists as PDFs, which is what the lexicon's
+# `pdf_checklist_bonus` exists for, and 26% of Japan's corpus is PDFs. So they are read in a second
+# pass, for their text only, best-scoring first.
+DEFAULT_CORPUS_PDFS = 400
 
 
 def corpus_queries(
@@ -159,6 +178,10 @@ class CorpusBuild(StrictModel):
     A corpus is additive and rebuilt rarely, so a hole opened by a moment's failure stays open. This
     is the field that makes it visible; retrying these on the next build is not yet built.
     """
+
+    pdfs_read: int = 0
+    """PDFs read in the second pass, for their text only. Counted apart from `crawled` because they
+    were never crawled: `_expand` will not follow a PDF, so these are fetched deliberately."""
 
     indexed_text: int = 0
     """Pages whose readable text was kept, for the text index (`discovery/page_text.py`).
@@ -256,6 +279,57 @@ def _lost_hosts(
     return reasons, outcomes
 
 
+async def _read_pdfs(
+    crawled: list[CandidatePage],
+    destination: DestinationConfig,
+    crawl_fetcher: CrawlFetcher,
+    keep: Callable[[str, str, str], None],
+    *,
+    maximum_pdfs: int,
+) -> int:
+    """Read the PDFs a crawl found, for their text alone, best-scoring first.
+
+    A second pass rather than part of the crawl, because a PDF is a destination and the crawl walks
+    signposts — queuing one on the frontier would mean fetching it to look for links it cannot have.
+    Ordered by the anchor score anyway: the budget is finite and a PDF whose link said "Checklist"
+    is worth more than one whose link said "Form 12", even though the anchor is exactly the signal
+    this whole exercise distrusts. It is what there is *before* the text is in hand.
+
+    No title: a PDF has no `<title>`, and inventing one from the anchor would put the crawl's guess
+    where `score_body` reads a page's own claim about itself.
+    """
+
+    ordered = sorted(
+        (page for page in crawled if is_pdf_url(page.link.url)),
+        key=lambda page: -page.link_scores.best()[1],
+    )[:maximum_pdfs]
+    if not ordered:
+        return 0
+
+    read = 0
+    async with httpx.AsyncClient(
+        transport=crawl_fetcher.transport,
+        timeout=crawl_fetcher.timeout_seconds,
+        follow_redirects=True,
+        verify=build_ssl_context(),
+        headers={
+            "User-Agent": crawl_fetcher.user_agent,
+            "Accept": "application/pdf",
+        },
+    ) as client:
+        for page in ordered:
+            text = await crawl_fetcher.fetch_pdf_text(
+                client,
+                page.link.url,
+                destination,
+                maximum_characters=DEFAULT_KEPT_TEXT_CHARACTERS,
+            )
+            if text:
+                keep(page.link.url, "", text)
+                read += 1
+    return read
+
+
 async def build_country_corpus(
     country: Country,
     trusted: list[str],
@@ -270,6 +344,7 @@ async def build_country_corpus(
     maximum_pages_per_host: int = DEFAULT_CORPUS_PAGES_PER_HOST,
     results_per_query: int = 10,
     page_text: PageTextStore | None = None,
+    maximum_pdfs: int = DEFAULT_CORPUS_PDFS,
 ) -> tuple[CountryCorpus, CorpusBuild]:
     """Search, crawl and fold the result into the country's corpus, adding but never removing.
 
@@ -324,9 +399,15 @@ async def build_country_corpus(
         maximum_depth=maximum_depth,
         maximum_pages=maximum_pages,
         maximum_pages_per_host=maximum_pages_per_host,
+        expansion_threshold=CORPUS_EXPANSION_THRESHOLD,
         on_page=keep if page_text is not None else None,
     )
     crawled = await crawler.crawl(destination, seeds)
+    pdfs_read = 0
+    if page_text is not None:
+        pdfs_read = await _read_pdfs(
+            crawled, destination, crawl_fetcher, keep, maximum_pdfs=maximum_pdfs
+        )
     indexed_text = page_text.write(country.code, kept) if page_text is not None else 0
 
     entries = [
@@ -358,6 +439,7 @@ async def build_country_corpus(
         lost_hosts=lost_reasons,
         lost_host_outcomes=lost_outcomes,
         indexed_text=indexed_text,
+        pdfs_read=pdfs_read,
     )
 
 
