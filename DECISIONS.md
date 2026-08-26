@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [79](#79-the-body-score-moves-in-front-of-the-shortlist-and-stored-text-may-lift-but-never-sink) | **The body score moves in front of the shortlist** — stored text lifts and never sinks |
 | [78](#78-the-corpus-stored-the-link-not-the-page--and-91-of-a-country-was-never-read-at-all) | **The corpus stored the link, not the page** — 29 characters of anchor against 3,602 of body, and 91% never read |
 | [77](#77-does-the-corpus-inherit-searchs-weaknesses-three-diagnoses-all-wrong-and-one-real-defect) | **A corpus build stops at its seeds** — and Japan's missing embassy was a `403`, not recall |
 | [76](#76-what-a-corpus-can-and-cannot-buy-measured--and-the-seven-that-no-corpus-will-fix) | **A corpus buys speed, stability and outage tolerance — not coverage.** Seven refusals no crawl can fix |
@@ -127,6 +128,97 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 79. The body score moves in front of the shortlist, and stored text may lift but never sink
+**2026-08-26 · implemented. TODO item 31; the measurement that would settle it is blocked on credit**
+
+Entry 78 built the index and stopped one step short. This wires it into `resolver.py`.
+
+### Where it goes, and the order is the whole point
+
+`score_body` has existed all along and has always run at step 5, on pages already fetched
+(`resolver.py:1113`). A page the anchor scorer filed under the wrong role was never shortlisted,
+never fetched, and so never had its text read at all — **the right scorer, running after the gate it
+should be part of**. The new step 3b scores every candidate whose text the index holds, before
+`_shortlist`, and the corridor's notes say how many.
+
+Every candidate is offered, never a promising subset. Narrowing first would put the link scorer back
+in front of the text scorer, which is the defect being removed and the one `MAXIMUM_SCORED_MATCHES`
+records being made inside `rank` itself.
+
+### `text_scores` is a second field, and the asymmetry is why
+
+`CandidatePage.combined` already blended link and body at 0.4/0.6. Assigning index text to
+`body_scores` would have reused it for free and been wrong.
+
+> After a fetch, a zero for a role is a **fact**: we read the page and it does not answer this.
+> Before one, a zero can just as easily be a stale row or a PDF whose text layer came out badly. Run
+> through the blend, that page drops to 0.4× its link score — **beneath a page nobody has any text
+> for at all.** Holding a page's text would cost it its shortlist place, and entry 40 says a page
+> ranked out is never fetched and never recovers.
+
+So stored text may **raise** a candidate and never lower one: `max(link, 0.4·link + 0.6·text)`. A
+fetched `body_scores` still governs in both directions and takes precedence.
+
+`best_combined()` replaces `link_scores.best()` throughout `_shortlist`. It had to: the per-role pass
+ranks on `combined`, so without it a page could be reserved a place for the text it holds and then be
+cut by an ordering that could not see that text. **Reserved-then-cut is worse than never reserved,
+because it looks like the protection worked.**
+
+### Live, `japan/IN/GB`, search up
+
+**All six roles filled**, 115 candidates ranked on text as well as link, crawl skipped, 35 pages read,
+one model call. The checklist came from the UK post — `uk.emb-japan.go.jp/itpr_en/sightseeing.html`,
+*"ITEMS REQUIRED FOR TEMPORARY VISITOR VISA APPLICATION (For sightseeing)"* — and the route from
+`visaonline.html`, the page entry 77 wrongly called unreachable.
+
+### The corpus-only comparison is **not** settled, and the reason is not the one expected
+
+One run of each arm, search disabled:
+
+```
+without the index   visa_decision  document_checklist  fees            general_entry
+with the index      visa_decision  application_route   processing_times general_entry
+```
+
+Four roles either way, a different four. That looks like a regression on the checklist, and reading
+the recall log says it is not a recall result at all: **both contested pages were shortlisted and
+fetched in both arms.** `edinburgh.../00_000203.html` was fetched at 92.4 with `fees` as its best
+role, and `fees` still went unfilled. The difference is downstream of everything this entry changed —
+known problem 10, adjudication variance, which entry 58 already says one run cannot see through.
+
+**So the honest position is that item 31's measurement has not been taken.** Repeating each arm three
+times was the plan and it stopped at the second run: the OpenAI account ran out of credit. The
+corridor refused rather than degrading, which is entry 31 working.
+
+### A reporting defect that cost an hour, found by hitting it
+
+Diagnosing that took a hand-written API call, because every adjudication failure arrived as the same
+sentence: *"The role adjudication request failed"*. The cause was in hand at
+`adjudication.py:441` and thrown away.
+
+This is **entry 74's finding on the other provider**, and it is now fixed the same way.
+`AdjudicationQuotaExhausted` is its own type, told from ordinary rate limiting by the body's
+`insufficient_quota` / `credit_balance_exhausted` rather than by the status — OpenAI answers `429`
+for both, and waiting is the remedy for one and useless for the other. Every other failure now
+carries its cause instead of replacing it.
+
+**And it is not retried.** `_adjudicate_with_one_retry` exists for momentary failures; a second call
+against an empty account cannot succeed and is billed the same as the first. A classification no
+caller acts on is worth nothing, which is the half of entry 74 that was easy to miss.
+
+### What is left
+
+Item 31 is code-complete and **unmeasured**. When there is credit: three runs of each arm on the ten
+corpus countries, which is entry 76's test. Until then the only claim supported is the one above —
+all six roles, once, with search up.
+
+And text ranking is still not a replacement for `score_link`. `score_body` takes a nationality and no
+residence, so it carries none of the post logic (`mission_host_bonus`, `other_mission_penalty`) that
+entry 70 established is the dimension that actually varies. The blend is what keeps that: the link
+score knows about posts, the body score knows what the page is.
 
 ---
 

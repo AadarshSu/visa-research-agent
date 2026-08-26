@@ -313,7 +313,20 @@ Then build **one** country, run a corridor against it, and check how many role p
 All 53 resolve, or refuse for a correct named reason, **for any nationality** — **done, 2026-08-25** —
 and all 53 are corpus-routed, which is stage 3 and untouched. **Then** batch 2.
 
-### 31. Rank a candidate by what the page says, not only by the link to it — `next`
+### 31. Rank a candidate by what the page says, not only by the link to it — `code-complete, unmeasured`
+
+> **Built 2026-08-26 (entry 79), and the measurement below has still not been taken.** Step 3b of
+> `_resolve` scores every candidate whose text the index holds, before `_shortlist`; `text_scores`
+> is its own field so stored text may lift a candidate and never sink one; `best_combined()`
+> replaces `link_scores.best()` throughout the shortlist so a page reserved for its text cannot then
+> be cut by an ordering blind to it. Live on `japan/IN/GB` with search up: **all six roles**, 115
+> candidates ranked on text.
+>
+> **What is not done is the A/B.** One corpus-only run of each arm gave four roles either way, a
+> different four — and the recall log says both contested pages were shortlisted *and fetched* in
+> both arms, so the difference is adjudication variance (known problem 10), not ranking. The repeat
+> runs stopped when the OpenAI account ran out of credit. **Three runs of each arm, over the ten
+> corpus countries, is what settles it.**
 
 **Why:** entry 78 built the index and stopped one step short of using it. `discovery/page_text.py`
 holds the body text of 684 Japanese pages and nothing in the request path reads it. Every measurement

@@ -615,10 +615,17 @@ every request, and text would take Japan's from 1.4MB to ~35MB.
 > called at `resolver.py:1113` on pages that have **already been fetched** — after the gate it should
 > be part of. A page anchor text ranked out is never fetched, so its text is never scored.
 >
-> **Nothing reads the index in the request path yet**, and text ranking is not a replacement for
-> `score_link`: `score_body` takes nationality and no residence, so it has none of the post logic
-> (`mission_host_bonus`, `other_mission_penalty`) that entry 70 established is the dimension that
-> actually varies. The two are complementary.
+> **Step 3b of `_resolve` reads it, before the shortlist** (entry 79). Every candidate whose text
+> the index holds gets `text_scores`, and the corridor's notes say how many. Stored text may **lift**
+> a candidate and never sink one — `max(link, 0.4·link + 0.6·text)` — because before a fetch a zero
+> can be a stale row or a bad PDF extraction as easily as a fact about the page, and sinking would
+> mean *holding* a page's text costs it its place. A `body_scores` from this run's own fetch still
+> governs in both directions.
+>
+> **Text ranking is not a replacement for `score_link`.** `score_body` takes nationality and no
+> residence, so it has none of the post logic (`mission_host_bonus`, `other_mission_penalty`) that
+> entry 70 established is the dimension that actually varies. The blend is what keeps both: the link
+> score knows about posts, the body score knows what the page is.
 
 **The corpus is read in the request path** (entry 47): a corridor's candidates are `corpus ∪ live
 discovery`, pages that already filled a role for that corridor keep their shortlist places, and what a

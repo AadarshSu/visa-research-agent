@@ -277,6 +277,8 @@ cause, and only running the thing showed it.
 | junk anchors like "click here" are what lose the page | 2% of entries; the real case is a *good* 40-char label (entry 78) |
 | a bigger page budget bought nothing, so depth is not the issue | 91% of links never cleared the *request path's* score threshold (entry 78) |
 | BM25 is a safe way to pick what the real scorer sees | the answering page is 116th of 122 by BM25 (entry 78) |
+| index text can just be assigned to `body_scores` | a zero would then *sink* a page for holding its text (entry 79) |
+| the corpus-only arm lost its checklist to ranking | both pages were shortlisted **and fetched**; it is adjudication variance (entry 79) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
@@ -325,7 +327,10 @@ is filled two ways: `visa-discover corpus` keeps what it reads, and `pagetext --
 retrieval cache for nothing. It is **ranking input only** — see the rule above, and entry 78.
 
 **Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`
-when out; Brave answers **`HTTP 402`** both when out of credit *and* when queried too fast. The
+when out — now raised as `AdjudicationQuotaExhausted`, told apart from ordinary `429` rate limiting
+by the body rather than the status, and **not retried**, because a second call against an empty
+account cannot succeed and is billed the same (entry 79). Brave answers **`HTTP 402`** both when out
+of credit *and* when queried too fast. The
 program now tells those apart from `error.meta.current_spend` against `usage_limit` and says which it
 is (`SearchQuotaExhausted` / `SearchThrottled`), and the provider paces itself at 1.3s from one lock
 so `search_all`'s concurrency cannot trip a capped plan — entry 74. **A search outage no longer kills
