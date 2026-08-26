@@ -664,6 +664,18 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
     )
     depths = ", ".join(f"depth {d}: {n}" for d, n in sorted(build.by_depth.items()))
     print(f"      {depths}", file=stream)
+    if build.lost_hosts:
+        # Named, not counted. A host that contributed nothing leaves no entry and no `unreadable`
+        # tally — a seed never becomes an entry — so before this the gap was invisible, and a
+        # corpus only ever grows, which makes it permanent. DECISIONS entry 77.
+        print(
+            f"      {len(build.lost_hosts)} hosts gave this build nothing and are absent from the "
+            "corpus:",
+            file=stream,
+        )
+        for host, reason in sorted(build.lost_hosts.items()):
+            outcome = build.lost_host_outcomes.get(host, "unknown")
+            print(f"        {host:<42} {outcome:<12} {reason}", file=stream)
     if not build.depth_is_exercised:
         # The one thing this job exists to do better than the request path. Said out loud, because
         # on 2026-08-22 it silently did not happen: 203 seeds against a 200-page budget meant the

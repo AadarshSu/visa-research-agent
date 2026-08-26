@@ -37,7 +37,13 @@ from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleSc
 from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
 from visa_research_agent.discovery.search import SearchProvider, search_all, usable_results
 from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable
-from visa_research_agent.domain.models import DestinationConfig, StrictModel, TravelPurpose
+from visa_research_agent.domain.models import (
+    DestinationConfig,
+    FailureOutcome,
+    StrictModel,
+    TravelPurpose,
+)
+from visa_research_agent.domain.trust import host_of
 
 # Far above the request path's forty, and **it has to exceed the seed count or the crawl never
 # crawls**. Measured 2026-08-22: Canada produced 203 seeds against a 200-page budget, so the whole
@@ -133,7 +139,28 @@ class CorpusBuild(StrictModel):
 
     unreadable: int = 0
     by_depth: dict[int, int] = Field(default_factory=dict)
-    """How far this crawl actually reached, which is the job's whole reason for existing."""
+    """How far this crawl reached. A means rather than the point: the corpus exists so a live
+    corridor does not re-fetch for 50+ seconds, and *which pages exist* does not vary by traveller
+    (DECISIONS entry 44). Depth matters only where the pages a corridor needs lie deeper."""
+
+    lost_hosts: dict[str, str] = Field(default_factory=dict)
+    """Hosts that failed and contributed **nothing**, with the reason, worst kind of gap first.
+
+    A seed never becomes a corpus entry — only the links found *on* a fetched page do — so a seeded
+    host whose own fetch fails leaves no trace whatever: not an entry, not an `unreadable` count,
+    nothing. Japan's London embassy went missing exactly that way, through a transient Akamai `403`
+    during a build, and the corpus has lacked the host ever since while live search returns it and
+    the live path reads a document checklist from it (DECISIONS entry 77).
+
+    A corpus is additive and rebuilt rarely, so a hole opened by a moment's failure stays open. This
+    is the field that makes it visible; retrying these on the next build is not yet built.
+    """
+
+    lost_host_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
+    """The same hosts keyed to the typed outcome, so a count never rests on parsing prose.
+
+    DECISIONS entry 36's rule: `lost_hosts` carries what a person reads, this carries what may be
+    counted, and rewording a message must never change what an audit reports."""
 
     @property
     def deep_share(self) -> float:
@@ -191,6 +218,30 @@ def _entry(
         status="unreadable" if reason else "unknown",
         detail=reason or "",
     )
+
+
+def _lost_hosts(
+    entries: list[CorpusEntry], crawl_fetcher: CrawlFetcher
+) -> tuple[dict[str, str], dict[str, FailureOutcome]]:
+    """Hosts this build failed on and got *nothing* from, which is the gap nobody could see.
+
+    A host with some pages read and some failed is not lost — the corpus holds it and a later build
+    can deepen it. A host that contributed no entry at all is a hole, and because a corpus only ever
+    grows, it is a permanent one until someone rebuilds and the same host happens to answer.
+    """
+
+    covered = {host_of(entry.url) for entry in entries}
+    reasons: dict[str, str] = {}
+    outcomes: dict[str, FailureOutcome] = {}
+    for url, reason in crawl_fetcher.failures.items():
+        host = host_of(url)
+        if host in covered:
+            continue
+        reasons.setdefault(host, reason)
+        outcome = crawl_fetcher.outcomes.get(url)
+        if outcome is not None:
+            outcomes.setdefault(host, outcome)
+    return reasons, outcomes
 
 
 async def build_country_corpus(
@@ -253,6 +304,7 @@ async def build_country_corpus(
         built_at=now,
         entries=[],
     )
+    lost_reasons, lost_outcomes = _lost_hosts(entries, crawl_fetcher)
     known = {entry.url for entry in before.entries}
     # The domains are refreshed to what the registry says now, so the file records the set actually
     # used. The entries are not filtered by it: `entries_within` applies trust when the corpus is
@@ -268,6 +320,8 @@ async def build_country_corpus(
         total=len(after.entries),
         unreadable=sum(1 for entry in entries if entry.status == "unreadable"),
         by_depth=Counter(entry.depth for entry in entries),
+        lost_hosts=lost_reasons,
+        lost_host_outcomes=lost_outcomes,
     )
 
 

@@ -15,6 +15,7 @@ from discovery_site import (
     DETAIL_CHINA,
     DETAIL_INDIA,
     INDEX,
+    MISSION,
     MISSION_INDEX,
     OFF_DOMAIN,
     handler,
@@ -241,3 +242,46 @@ async def test_china_and_india_pages_both_survive_a_rebuild() -> None:
     assert DETAIL_INDIA in urls
     assert DETAIL_CHINA in urls
     assert second.find("detail/india")[0].times_seen == 2
+
+
+@pytest.mark.anyio
+async def test_a_host_that_gives_the_build_nothing_is_named() -> None:
+    """The gap that was invisible, and stayed invisible because nothing could see it.
+
+    A seed never becomes a corpus entry — only the links found *on* a fetched page do — so a seeded
+    host whose own fetch fails leaves no entry, no `unreadable` count and no trace of any kind.
+    Japan's London embassy went missing through a transient `403` during a build, and the corpus has
+    lacked the whole host ever since while live search returns it and a live corridor reads a
+    document checklist from it. DECISIONS entry 77.
+    """
+
+    requests: list[httpx.Request] = []
+    site = handler(requests)
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        if request.url.host == MISSION and request.url.path != "/robots.txt":
+            return httpx.Response(403, text="Access Denied")
+        response: httpx.Response = site(request)  # type: ignore[operator]
+        return response
+
+    _corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX, MISSION_INDEX]),
+        CrawlFetcher(
+            transport=httpx.MockTransport(handle),
+            host_delay_seconds=0.0,
+            sleep=sleep_none,
+        ),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+    )
+
+    assert report.total, "the readable host still produced a corpus"
+    assert MISSION in report.lost_hosts
+    assert report.lost_host_outcomes[MISSION] == "blocked"
+    # The typed outcome is what a count may rest on; the sentence is only ever repeated.
+    assert "403" in report.lost_hosts[MISSION]
+    # A host the build did read is not "lost", however many of its individual pages failed.
+    assert AUTHORITY not in report.lost_hosts
