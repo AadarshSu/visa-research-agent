@@ -162,6 +162,17 @@ class CandidatePage(StrictModel):
     link: PageLink
     link_scores: RoleScores = Field(default_factory=RoleScores)
     body_scores: RoleScores | None = None
+    """Scored from text **this run fetched**, through `LiveSourceFetcher` and its freshness
+    rules."""
+
+    text_scores: RoleScores | None = None
+    """Scored from text the page-text index already held, before anything was fetched.
+
+    Kept apart from `body_scores` because the two are not equally trustworthy and `combined` treats
+    them differently. A fetched body is definitely this page and definitely current. Stored text may
+    be weeks old, may be a poor extraction from a PDF, and may describe a page that has since
+    changed — so it is allowed to *raise* a candidate and never to lower one. See `combined`.
+    """
     title: str | None = None
     content_hash: str | None = None
     found_by: Literal["search", "crawl", "corpus"] = "crawl"
@@ -173,12 +184,42 @@ class CandidatePage(StrictModel):
     """
 
     def combined(self, role: DiscoveryRole) -> float:
-        """Blend link and body evidence, weighting the page's own text more heavily."""
+        """Blend link and body evidence, weighting the page's own text more heavily.
+
+        **Stored text lifts and never sinks, and that asymmetry is the whole of why `text_scores`
+        is a second field rather than an early assignment to `body_scores`.** After a fetch, a zero
+        for a role is a fact: we read the page and it does not answer this. Before one, a zero can
+        just as easily be a stale row or a PDF whose text layer came out badly — and the blend
+        below would then drop the page beneath one nobody has any text for at all, which would mean
+        *holding* a page's text costs it its shortlist place. Entry 40's asymmetry decides it: a
+        page ranked out is never fetched and never recovers, so an uncertain signal may add and must
+        not subtract.
+        """
 
         link_score = self.link_scores.score_for(role)
-        if self.body_scores is None:
-            return link_score
-        return 0.4 * link_score + 0.6 * self.body_scores.score_for(role)
+        if self.body_scores is not None:
+            return 0.4 * link_score + 0.6 * self.body_scores.score_for(role)
+        if self.text_scores is not None:
+            return max(link_score, 0.4 * link_score + 0.6 * self.text_scores.score_for(role))
+        return link_score
+
+    def best_combined(self) -> tuple[DiscoveryRole, float]:
+        """The highest-scoring role once text evidence is folded in, ties broken by `ROLE_ORDER`.
+
+        `link_scores.best()` is the same question asked of the link alone, and the shortlist used
+        it everywhere until the index existed. It could not stay: the per-role pass ranks on
+        `combined`, so a page could be reserved a place for the text it holds and then be cut by an
+        ordering that could not see that text. Reserved-then-cut is worse than never reserved,
+        because it looks like the protection worked.
+        """
+
+        best_role: DiscoveryRole = "irrelevant"
+        best_score = 0.0
+        for role in ROLE_ORDER:
+            score = self.combined(role)
+            if score > best_score:
+                best_role, best_score = role, score
+        return best_role, best_score
 
 
 class ResolvedSource(StrictModel):

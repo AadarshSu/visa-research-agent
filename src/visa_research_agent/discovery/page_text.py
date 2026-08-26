@@ -40,7 +40,7 @@ from pathlib import Path
 from pydantic import Field, ValidationError
 
 from visa_research_agent.discovery.lexicon import Country, Lexicon, RoleTerms
-from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.discovery.models import Corridor, RoleScores
 from visa_research_agent.discovery.scoring import score_body
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.domain.trust import host_of
@@ -72,6 +72,10 @@ MINIMUM_INDEXABLE_CHARS = 200
 # So every page matching the role vocabulary is scored. That set is small — 122 of 684 indexed
 # pages for Japan's widest role — because the MATCH is already the filter.
 MAXIMUM_SCORED_MATCHES = 2_000
+
+# How many URLs one `IN (...)` may name. SQLite's default parameter ceiling is far higher on
+# modern builds and was 999 on older ones; chunking costs nothing and does not depend on which.
+_URLS_PER_QUERY = 500
 
 
 class PageTextError(VisaResearchError):
@@ -269,6 +273,52 @@ class PageTextStore:
 
         matches.sort(key=lambda match: (-match.score, match.url))
         return matches[:limit]
+
+    def score_held(
+        self,
+        code: str,
+        urls: Iterable[str],
+        *,
+        corridor: Corridor,
+        nationality: Country,
+        lexicon: Lexicon,
+    ) -> dict[str, RoleScores]:
+        """Score, by their own text, whichever of these candidates the index holds.
+
+        The shortlist's counterpart to `rank`. `rank` asks the index *which pages answer this role*
+        and is how a person interrogates it; this asks *what do these particular pages say*, which
+        is what a corridor needs — the candidate set is already assembled and the question is only
+        how to order it.
+
+        One `score_body` per page rather than one query per role: that call returns every role at
+        once, so six roles cost one pass over the text instead of six.
+
+        Silent on a country with no index, deliberately, unlike `count` and `rank`. Those are asked
+        *about* the index and an absence is the answer; this is asked in the middle of resolving a
+        corridor, where no index means exactly what it meant before there were any — rank on the
+        link alone.
+        """
+
+        wanted = list(dict.fromkeys(urls))
+        if not wanted or not self.has(code):
+            return {}
+
+        scored: dict[str, RoleScores] = {}
+        with self._connect(code, create=False) as connection:
+            for start in range(0, len(wanted), _URLS_PER_QUERY):
+                chunk = wanted[start : start + _URLS_PER_QUERY]
+                placeholders = ",".join("?" * len(chunk))
+                rows = connection.execute(
+                    f"SELECT page_text.url, page_text.body, coalesce(pages.title, '') "  # noqa: S608
+                    f"FROM page_text LEFT JOIN pages ON pages.url = page_text.url "
+                    f"WHERE page_text.url IN ({placeholders})",
+                    chunk,
+                ).fetchall()
+                for url, body, title in rows:
+                    scored[str(url)] = score_body(
+                        str(body), str(title), corridor, lexicon, nationality, url=str(url)
+                    )
+        return scored
 
 
 def _create_schema(connection: sqlite3.Connection) -> None:

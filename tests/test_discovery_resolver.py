@@ -1081,3 +1081,62 @@ async def test_a_tool_is_dropped_when_a_page_states_the_decision(tmp_path: Path)
     assert resolved.interactive_tools == []
     assert not resolved.decision_is_unverified
     assert any("was not carried" in note for note in resolved.notes), resolved.notes
+
+
+def _shortlist_only_resolver(*, shortlist_size: int, shortlist_role_depth: int) -> CorridorResolver:
+    """A resolver built only far enough to call `_shortlist`, which asks the crawl what it already
+    proved unreadable."""
+
+    return CorridorResolver(
+        None,  # type: ignore[arg-type]
+        CrawlFetcher(transport=httpx.MockTransport(lambda _: httpx.Response(404))),
+        None,  # type: ignore[arg-type]
+        shortlist_size=shortlist_size,
+        shortlist_role_depth=shortlist_role_depth,
+    )
+
+
+def _candidate(
+    url: str, link: dict[str, float], text: dict[str, float] | None = None
+) -> CandidatePage:
+    return CandidatePage(
+        link=PageLink(url=url, text="", heading="", depth=1, discovered_from="seed"),
+        link_scores=RoleScores(scores=link),
+        text_scores=RoleScores(scores=text) if text is not None else None,
+    )
+
+
+def test_stored_text_wins_a_shortlist_place_the_link_alone_would_not() -> None:
+    """The point of the index, as a shortlist assertion.
+
+    The checklist page's anchor scores for the wrong role — which is the real shape, measured on
+    `mofa.go.jp/files/000121327.pdf`: 22.0 as `visa_decision`, nothing at all for
+    `document_checklist`. With only its link to go on it loses every place to pages the anchor
+    scorer likes better, and a page never shortlisted is never fetched and never recovers
+    (entry 40).
+    """
+
+    resolver = _shortlist_only_resolver(shortlist_size=2, shortlist_role_depth=1)
+    loud = _candidate("https://a.gov.example/1", {"visa_decision": 50.0})
+    also_loud = _candidate("https://a.gov.example/2", {"visa_decision": 40.0})
+    checklist = _candidate("https://a.gov.example/checklist.pdf", {"visa_decision": 5.0})
+
+    without_text = {c.link.url for c in resolver._shortlist([loud, also_loud, checklist])}
+    assert checklist.link.url not in without_text
+
+    checklist.text_scores = RoleScores(scores={"document_checklist": 80.0})
+    with_text = {c.link.url for c in resolver._shortlist([loud, also_loud, checklist])}
+    assert checklist.link.url in with_text
+
+
+def test_a_page_the_index_is_silent_about_keeps_its_place() -> None:
+    """Holding a page's text must never cost it a place — `combined` lifts and never sinks."""
+
+    resolver = _shortlist_only_resolver(shortlist_size=1, shortlist_role_depth=1)
+    strong = _candidate("https://a.gov.example/1", {"visa_decision": 50.0})
+    rival = _candidate("https://a.gov.example/2", {"visa_decision": 40.0})
+
+    strong.text_scores = RoleScores(scores={})
+    chosen = {c.link.url for c in resolver._shortlist([strong, rival])}
+
+    assert chosen == {strong.link.url}

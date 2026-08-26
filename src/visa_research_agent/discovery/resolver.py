@@ -42,6 +42,7 @@ from visa_research_agent.discovery.crawl import (
     LinkCrawler,
 )
 from visa_research_agent.discovery.lexicon import (
+    Country,
     CountryRegistry,
     Lexicon,
     get_country_registry,
@@ -60,6 +61,7 @@ from visa_research_agent.discovery.models import (
     ResolvedTool,
     RoleScores,
 )
+from visa_research_agent.discovery.page_text import PageTextStore
 from visa_research_agent.discovery.recall_log import (
     RecallLog,
     RecallRecord,
@@ -355,6 +357,7 @@ class CorridorResolver:
         excerpt_window_characters: int = DEFAULT_EXCERPT_WINDOW_CHARACTERS,
         recall_log: RecallLog | None = None,
         corpus: CountryCorpus | None = None,
+        page_text: PageTextStore | None = None,
         pinned: list[str] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
     ) -> None:
@@ -380,6 +383,10 @@ class CorridorResolver:
         # The country's known pages, seeded alongside search rather than instead of it. Optional, so
         # a resolver built without one behaves exactly as it did before the corpus existed.
         self.corpus = corpus
+        # The body text of pages already fetched, read before the shortlist so a candidate can be
+        # ranked by what its page says rather than only by the link pointing at it. Optional, and a
+        # country with no index behaves exactly as it did before one existed (entry 78).
+        self.page_text = page_text
         # URLs that already filled a role for this corridor. They keep their shortlist places
         # whatever the ranking says; see `_shortlist`.
         self.pinned = list(pinned or [])
@@ -626,6 +633,21 @@ class CorridorResolver:
             trace.refusal_cause = "no_candidates"
             return self._refused(corridor, queries, notes, "no candidate pages were found")
 
+        # 3b. Score whatever the text index already holds, before anything is ranked.
+        #
+        # **Order is the point.** `score_body` has always existed and has always run at step 5, on
+        # pages that were already fetched — after the gate it should be part of. A page the anchor
+        # scorer filed under the wrong role was never shortlisted, never fetched, and so never had
+        # its text read at all. Measured on Japan: the page that fills `document_checklist` for
+        # `japan/IN/GB` scores 22.0 as `visa_decision` from its anchor and is not a candidate for
+        # the right role at any shortlist depth. Entry 78.
+        scored_from_text = self._score_from_text(destination, corridor, nationality, candidates)
+        if scored_from_text:
+            notes.append(
+                f"{scored_from_text} candidates were ranked on the text of the page as well as the "
+                "link to it, from the stored page-text index"
+            )
+
         # 4. Fetch the shortlist through the ordinary retrieval path.
         shortlist = self._shortlist(list(candidates.values()))
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
@@ -697,6 +719,41 @@ class CorridorResolver:
             model_calls=model_calls,
             ran_without_search=not searched_without_error,
         )
+
+    def _score_from_text(
+        self,
+        destination: DestinationConfig,
+        corridor: Corridor,
+        nationality: Country,
+        candidates: dict[str, CandidatePage],
+    ) -> int:
+        """Attach `text_scores` to every candidate whose page text the index holds.
+
+        Returns how many were scored, for the corridor's notes — a traveller-facing count of how
+        much of this ranking rested on reading pages rather than reading links.
+
+        **Every candidate is offered, not a promising subset.** Narrowing first would put the link
+        scorer back in front of the text scorer, which is the defect this exists to remove, and the
+        same one `MAXIMUM_SCORED_MATCHES` records being made inside `rank` itself.
+        """
+
+        if self.page_text is None:
+            return 0
+        code = self._destination_code(destination)
+        if code is None:
+            return 0
+        scored = self.page_text.score_held(
+            code,
+            candidates.keys(),
+            corridor=corridor,
+            nationality=nationality,
+            lexicon=self.lexicon,
+        )
+        for url, scores in scored.items():
+            candidate = candidates.get(url)
+            if candidate is not None:
+                candidate.text_scores = scores
+        return len(scored)
 
     def _corpus_links(self, destination: DestinationConfig) -> list[tuple[PageLink, str]]:
         """The country's known pages and their titles, filtered by the domains trusted *now*.
@@ -944,12 +1001,12 @@ class CorridorResolver:
             for candidate, _ in rank_for_role(candidates, role)[: self.shortlist_role_depth]:
                 chosen.setdefault(candidate.link.url, candidate)
 
-        by_score = sorted(candidates, key=lambda c: (-c.link_scores.best()[1], c.link.url))
+        by_score = sorted(candidates, key=lambda c: (-c.best_combined()[1], c.link.url))
         for candidate in by_score:
             if len(chosen) >= self.shortlist_size:
                 break
             # Only pages that scored for something. A candidate no role wants is not worth a fetch.
-            if candidate.link_scores.best()[1] > 0:
+            if candidate.best_combined()[1] > 0:
                 chosen.setdefault(candidate.link.url, candidate)
 
         # Reserved from every candidate rather than from those already chosen: a domain's best page
@@ -958,7 +1015,7 @@ class CorridorResolver:
         for candidate in reserved:
             chosen.setdefault(candidate.link.url, candidate)
 
-        ordered = sorted(chosen.values(), key=lambda c: (-c.link_scores.best()[1], c.link.url))
+        ordered = sorted(chosen.values(), key=lambda c: (-c.best_combined()[1], c.link.url))
         if len(ordered) <= self.shortlist_size:
             return ordered
 
@@ -991,7 +1048,7 @@ class CorridorResolver:
                 break
             if candidate.link.url not in held:
                 kept.append(candidate)
-        return sorted(kept, key=lambda c: (-c.link_scores.best()[1], c.link.url))
+        return sorted(kept, key=lambda c: (-c.best_combined()[1], c.link.url))
 
     def _readable_only(self, candidates: list[CandidatePage]) -> list[CandidatePage]:
         """Drop candidates the crawl already found it could not read.
@@ -1043,7 +1100,7 @@ class CorridorResolver:
         reserved: list[CandidatePage] = []
         per_domain: dict[str, int] = {}
         for candidate in by_score:
-            if candidate.link_scores.best()[1] <= 0:
+            if candidate.best_combined()[1] <= 0:
                 continue
             domain = registrable_domain(host_of(candidate.link.url))
             if per_domain.get(domain, 0) >= self.shortlist_domain_floor:

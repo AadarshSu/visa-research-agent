@@ -11,7 +11,7 @@ import pytest
 
 from visa_research_agent.discovery.corpus import CorpusEntry
 from visa_research_agent.discovery.lexicon import Country, get_country_registry, get_lexicon
-from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.page_text import (
     MINIMUM_INDEXABLE_CHARS,
     PageTextError,
@@ -196,3 +196,71 @@ def test_backfill_counts_pages_too_short_to_rank_separately(tmp_path: Path) -> N
 
     assert report.indexed == {}
     assert report.skipped_short == 1
+
+
+def test_stored_text_lifts_a_candidate_and_never_sinks_one() -> None:
+    """The asymmetry that makes `text_scores` a second field rather than an early `body_scores`.
+
+    A fetched body scoring zero for a role is a fact about the page. Stored text scoring zero can
+    equally be a stale row or a bad PDF extraction — and if that could lower a candidate, *holding*
+    a page's text would cost it its shortlist place. Entry 40: a page ranked out is never fetched.
+    """
+
+    link = PageLink(
+        url="https://x.gov.example/a", text="", heading="", depth=1, discovered_from="s"
+    )
+    strong_link = RoleScores(scores={"document_checklist": 60.0})
+
+    silent_text = CandidatePage(
+        link=link, link_scores=strong_link, text_scores=RoleScores(scores={})
+    )
+    assert silent_text.combined("document_checklist") == 60.0
+
+    helpful_text = CandidatePage(
+        link=link,
+        link_scores=RoleScores(scores={"document_checklist": 10.0}),
+        text_scores=RoleScores(scores={"document_checklist": 70.0}),
+    )
+    assert helpful_text.combined("document_checklist") > 10.0
+
+    # A body this run fetched is trusted in both directions, and takes precedence over stored text.
+    fetched = CandidatePage(
+        link=link,
+        link_scores=strong_link,
+        text_scores=RoleScores(scores={"document_checklist": 90.0}),
+        body_scores=RoleScores(scores={}),
+    )
+    assert fetched.combined("document_checklist") == pytest.approx(24.0)
+
+
+def test_score_held_scores_only_the_pages_the_index_holds(tmp_path: Path) -> None:
+    store = PageTextStore(tmp_path)
+    store.write("JP", [page(CHECKLIST_URL, CHECKLIST_BODY)])
+
+    scored = store.score_held(
+        "JP",
+        [CHECKLIST_URL, "https://www.mofa.go.jp/never-indexed.html"],
+        corridor=corridor(),
+        nationality=nationality(),
+        lexicon=get_lexicon(),
+    )
+
+    assert list(scored) == [CHECKLIST_URL]
+    assert scored[CHECKLIST_URL].score_for("document_checklist") > 0
+
+
+def test_score_held_is_silent_for_a_country_with_no_index(tmp_path: Path) -> None:
+    """Asked mid-corridor, not about the index — so no index means what it meant before there
+    were any: rank on the link alone. `count` and `rank` raise instead, being asked a different
+    question."""
+
+    assert (
+        PageTextStore(tmp_path).score_held(
+            "JP",
+            [CHECKLIST_URL],
+            corridor=corridor(),
+            nationality=nationality(),
+            lexicon=get_lexicon(),
+        )
+        == {}
+    )

@@ -168,6 +168,11 @@ def build_resolver(
         # the run that had it, and the run that had it is over by the time anyone asks.
         recall_log=FileRecallLog(settings.recall_log_directory),
         corpus=corpus,
+        # Passed unconditionally, like the recall log and unlike the corpus: this is a directory
+        # rather than one country's data, and a country with nothing in it is silently the old
+        # behaviour. One line wires both the command and the API, which reaches a resolver only
+        # through this function.
+        page_text=PageTextStore(settings.page_text_directory),
         pinned=pinned,
     )
 
