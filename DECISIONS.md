@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [80](#80-entry-79-shipped-a-regression-and-twelve-runs-found-it-stored-text-may-not-rank-a-set-it-barely-covers) | **Stored text may not rank a set it barely covers** — the lift ranked by who was crawled, and cost two roles |
 | [79](#79-the-body-score-moves-in-front-of-the-shortlist-and-stored-text-may-lift-but-never-sink) | **The body score moves in front of the shortlist** — stored text lifts and never sinks |
 | [78](#78-the-corpus-stored-the-link-not-the-page--and-91-of-a-country-was-never-read-at-all) | **The corpus stored the link, not the page** — 29 characters of anchor against 3,602 of body, and 91% never read |
 | [77](#77-does-the-corpus-inherit-searchs-weaknesses-three-diagnoses-all-wrong-and-one-real-defect) | **A corpus build stops at its seeds** — and Japan's missing embassy was a `403`, not recall |
@@ -128,6 +129,95 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 80. Entry 79 shipped a regression, and twelve runs found it: stored text may not rank a set it barely covers
+**2026-08-26 · measured, and it corrects entry 79 rather than extending it**
+
+Entry 79 wired the body score in front of the shortlist and said the corpus-only comparison was
+inconclusive because both contested pages had been shortlisted and fetched in either arm, so the
+difference must be adjudication variance. **Credit was restored and the runs were repeated. That was
+wrong, and the mechanism was one entry 79 had already named and then failed to apply to itself.**
+
+### The result, `japan/IN/GB`, corpus-only, three runs each way
+
+```
+with the lift      4  4  4 roles   never document_checklist, never fees
+without it         4  6  5 roles   always both
+```
+
+**The with-lift arm is identical three times out of three**, which rules out adjudication variance
+outright: it is not noise, it is a stable, worse answer. Entry 58's rule about needing two runs of a
+corridor caught this; one run of each arm had not.
+
+### Why, and it is the dimension entry 79 predicted and then did not guard
+
+`combined` refuses to let stored text *lower* a score. **That protects the score and not the place.**
+A shortlist is finite, so lifting some candidates displaces others — and which candidates *can* be
+lifted is decided by whichever hosts the crawl happened to reach:
+
+```
+index coverage over this corridor's 860 candidates
+   90%  www.evisa.mofa.go.jp
+   61%  www.ezairyu.mofa.go.jp
+   34%  www.edinburgh.uk.emb-japan.go.jp
+   13%  www.anzen.mofa.go.jp
+    5%  www.mofa.go.jp
+    0%  www.uk.emb-japan.go.jp      <- the post serving a traveller applying from Britain
+```
+
+**All eleven pages the lift added to the shortlist had index text. The eleven it displaced included
+the UK post's own fee and checklist pages.** 115 of 860 candidates carried the signal, so the lift
+was not ranking pages by what they say; it was ranking them by whether anyone had crawled them.
+
+This is entry 62's finding in a new place — a bonus only some candidates can earn ranks by
+eligibility — and it is the **post** dimension again, which entry 70 established is the one that
+actually varies and entry 79's own closing section warned `score_body` cannot see.
+
+### The rule, and it is a statement rather than a threshold
+
+`_text_scoring_is_fair`: stored text may rank a candidate set only when it covers **at least half**
+of it. Below that, presence in the index predicts rank better than anything a page says. Above it
+the uncovered pages are the exception rather than the rule.
+
+`DEFAULT_TEXT_COVERAGE_BAR` is a constructor argument **so the rule can be measured against, never
+so a caller can lower it to get more pages through**. A country under the bar is fixed by covering
+it ([TODO.md](TODO.md) item 32), not by moving the bar.
+
+### And the search-up path says the same thing, where one run had suggested otherwise
+
+Entry 79 quoted a single search-up run filling all six roles with 115 candidates lifted. Repeated:
+
+```
+gate on  (no lift)   4  5  5 roles   always document_checklist
+gate off (lift)      3  5  5 roles   lost document_checklist once
+```
+
+So the six-role run was an outlier. **Across twelve runs on both paths the lift never helped and
+sometimes hurt.** With the gate, Japan's corridors are byte-for-byte what they were before entry 79 —
+which is the correct outcome for a country at 13% coverage, and the honest description of what the
+index currently contributes to ranking: **nothing, and that is now enforced rather than hoped.**
+
+### What is actually settled, and what entry 79 over-claimed
+
+- **Entry 78 stands.** The corpus really did store 29 characters of anchor against 3,602 of body, and
+  the checklist page really is filed under the wrong role by its anchor. Keeping the text is right.
+- **Entry 79's plumbing stands** — `text_scores`, `best_combined`, step 3b. What it lacked was a
+  precondition.
+- **Entry 79's "all six roles" is withdrawn** as evidence. It was one run, and three runs of the same
+  configuration produce three, five and five.
+- **The index has not yet been shown to improve ranking at all.** It cannot be, until a country is
+  covered past the bar. That makes item 32 the prerequisite for item 31 rather than a follow-up to it,
+  which is the reverse of the order entry 79 left them in.
+
+### The method note, because this is the fifth time
+
+The corrections table in [CLAUDE.md](CLAUDE.md) exists because a written-down diagnosis keeps naming
+the wrong cause. This entry adds two rows and both are *mine, from yesterday's session and from four
+hours ago*. The one that would have saved the most: **"both pages were shortlisted, so the difference
+is downstream" is not a finding, it is a hypothesis** — and the run that would have tested it cost six
+model calls.
 
 ---
 

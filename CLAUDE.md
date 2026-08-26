@@ -205,7 +205,7 @@ produces a serious defect.
   per-request lottery for exactly the corridors that need it not to be one.
 
   **What is stored of a page is now its *text* as well, and that text ranks — it never speaks
-  (entry 78).** The corpus stored `url`, `title`, `link_text`, `heading` and threw the body away at
+  (entry 78), and only where the index covers at least half the candidate set (entry 80).** The corpus stored `url`, `title`, `link_text`, `heading` and threw the body away at
   `crawl._expand`, so a corridor ranked three thousand pages on a **median of 29 characters** against
   a median body of 3,602. `discovery/page_text.py` keeps the body in a per-country SQLite/FTS5 index.
   **It is ranking input and never evidence, and the type is what enforces that**: `rank` returns URLs
@@ -279,6 +279,9 @@ cause, and only running the thing showed it.
 | BM25 is a safe way to pick what the real scorer sees | the answering page is 116th of 122 by BM25 (entry 78) |
 | index text can just be assigned to `body_scores` | a zero would then *sink* a page for holding its text (entry 79) |
 | the corpus-only arm lost its checklist to ranking | both pages were shortlisted **and fetched**; it is adjudication variance (entry 79) |
+| ...so the checklist loss was adjudication noise | 3 of 3 identical runs: a stable *worse* answer, not noise (entry 80) |
+| a lift that never lowers a score is safe | it protects the score, not the **place** — a shortlist is finite (entry 80) |
+| the index made japan fill all six roles | one run; three of the same configuration give 3, 5, 5 (entry 80) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
@@ -325,6 +328,12 @@ between runs**; they are stores, not caches, and rebuilding one costs search quo
 `var/pagetext/` holds the body text of pages already fetched, one SQLite/FTS5 file per country, and
 is filled two ways: `visa-discover corpus` keeps what it reads, and `pagetext --backfill` indexes the
 retrieval cache for nothing. It is **ranking input only** — see the rule above, and entry 78.
+
+**It may only rank a candidate set it covers past `DEFAULT_TEXT_COVERAGE_BAR` (half), and today no
+country does** — Japan, the best covered, reaches 13%. A signal only some candidates carry ranks them
+by who has it: measured, the lift added eleven pages that all had index text and displaced the UK
+post's own fee and checklist pages, costing two roles on every one of three runs. **The bar is not a
+number to nudge** — a country below it is fixed by covering it (item 32). Entry 80.
 
 **Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`
 when out — now raised as `AdjudicationQuotaExhausted`, told apart from ordinary `429` rate limiting

@@ -313,9 +313,17 @@ Then build **one** country, run a corridor against it, and check how many role p
 All 53 resolve, or refuse for a correct named reason, **for any nationality** — **done, 2026-08-25** —
 and all 53 are corpus-routed, which is stage 3 and untouched. **Then** batch 2.
 
-### 31. Rank a candidate by what the page says, not only by the link to it — `code-complete, unmeasured`
+### 31. Rank a candidate by what the page says, not only by the link to it — `built, gated off, blocked on item 32`
 
-> **Built 2026-08-26 (entry 79), and the measurement below has still not been taken.** Step 3b of
+> **Measured 2026-08-26 and it regressed, so it is gated off (entry 80).** Twelve runs on
+> `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
+> time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
+> only 115 of 860 candidates carried index text — 90% of `evisa.mofa.go.jp`, **0% of the UK post** —
+> so the lift ranked pages by who had been crawled. `_text_scoring_is_fair` now requires the index to
+> cover half a candidate set before it may rank it, and **no country is close**, so this is inert
+> until item 32 lands. **Item 32 is therefore the prerequisite for this, not the follow-up.**
+>
+> **Built 2026-08-26 (entry 79), and the measurement below has now been taken.** Step 3b of
 > `_resolve` scores every candidate whose text the index holds, before `_shortlist`; `text_scores`
 > is its own field so stored text may lift a candidate and never sink one; `best_combined()`
 > replaces `link_scores.best()` throughout the shortlist so a page reserved for its text cannot then
@@ -349,7 +357,7 @@ Search does not need to be down to run it — the resolver can be asked for a co
 caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
 absolute bound and must not become a multiple of the shortlist size.
 
-### 32. Raise the corpus page budget, because now it binds something — `next`
+### 32. Raise the corpus page budget, because now it binds something — `next` — **and item 31 waits on it**
 
 **Why:** text coverage is **13% of corpus entries** (Japan, 605 of 4,803). The bound is the per-host
 budget: `1500 // 48 seed hosts` ≈ 31 fetches against `mofa.go.jp`'s thousands of pages, which is why
