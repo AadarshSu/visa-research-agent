@@ -199,7 +199,13 @@ class CandidatePage(StrictModel):
         link_score = self.link_scores.score_for(role)
         if self.body_scores is not None:
             return 0.4 * link_score + 0.6 * self.body_scores.score_for(role)
-        if self.text_scores is not None:
+        # **Stored text may re-file a page across roles; it may not create a candidate from one the
+        # link scorer rejected outright.** The condition is the *best* link score, not this role's:
+        # the case this exists for is a page the anchor scores well and files wrongly — Japan's
+        # checklist PDF, 22.0 as `visa_decision` and nothing for `document_checklist` — which is a
+        # re-filing. A page scoring zero for every role is a different claim, and letting text
+        # override it is what `0.6 * text` does when `link_score` is 0.
+        if self.text_scores is not None and self.link_scores.best()[1] > 0:
             return max(link_score, 0.4 * link_score + 0.6 * self.text_scores.score_for(role))
         return link_score
 

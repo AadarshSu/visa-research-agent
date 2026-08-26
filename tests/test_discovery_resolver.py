@@ -1183,3 +1183,29 @@ def test_stored_text_may_not_rank_a_set_it_barely_covers() -> None:
     assert not resolver._text_scoring_is_fair(115, 860)
     assert resolver._text_scoring_is_fair(500, 860)
     assert not resolver._text_scoring_is_fair(0, 0), "an empty candidate set is not full coverage"
+
+
+def test_stored_text_may_refile_a_page_but_never_rescue_an_irrelevant_one() -> None:
+    """Text re-files a page across roles; it does not create a candidate from one the link rejected.
+
+    The case this exists for is Japan's checklist PDF: 22.0 as `visa_decision`, nothing at all for
+    `document_checklist`, and its body says "Checklist ... Documents to be submitted". That is a
+    re-filing, and the link scorer had already judged the page relevant.
+
+    A page scoring zero for *every* role is a different claim, and `0.6 * text` overrides it
+    outright when the link score is zero. Measured on `japan/IN/GB`, that lifted MOFA's long-stay
+    category pages — Professor, Student, Cultural activities — into a tourism shortlist at +39,
+    because a long-stay page also says "necessary documents".
+    """
+
+    misfiled = _candidate(
+        "https://a.gov.example/checklist.pdf",
+        {"visa_decision": 22.0},
+        {"document_checklist": 73.5},
+    )
+    assert misfiled.combined("document_checklist") > 0
+
+    irrelevant = _candidate(
+        "https://a.gov.example/long/professor.html", {}, {"document_checklist": 65.0}
+    )
+    assert irrelevant.combined("document_checklist") == 0.0
