@@ -16,6 +16,8 @@ from discovery_site import DETAIL_INDIA, MISSION_CHECKLIST, destination, handler
 from visa_research_agent.discovery.adjudication import (
     EXCERPT_GAP_MARKER,
     AdjudicationError,
+    AdjudicationQuotaExhausted,
+    LangChainRoleAdjudicator,
     RoleAdjudication,
     RoleChoice,
     RoleTool,
@@ -635,3 +637,57 @@ def test_the_prompt_keeps_not_found_and_behind_a_tool_apart() -> None:
     assert "not a way to soften a refusal" in prompt
     # Naming a tool must never read as filling the role it is named for.
     assert "does **not** fill" in prompt
+
+
+class _RaisingModel:
+    """Stands in for the structured model, failing the way the provider does."""
+
+    def __init__(self, error: Exception) -> None:
+        self.error = error
+
+    async def ainvoke(self, _: object) -> object:
+        raise self.error
+
+
+def _adjudicator_raising(error: Exception) -> LangChainRoleAdjudicator:
+    """A real adjudicator whose model call fails, built without touching the network.
+
+    `__new__` rather than the constructor because that one builds a `ChatOpenAI`, and the suite is
+    blocked from the network (entry 45). What is under test is the error handling around the call,
+    which is the part that had been throwing its cause away.
+    """
+
+    adjudicator = LangChainRoleAdjudicator.__new__(LangChainRoleAdjudicator)
+    adjudicator._structured_model = _RaisingModel(error)  # type: ignore[assignment]
+    return adjudicator
+
+
+@pytest.mark.anyio
+async def test_an_empty_account_is_named_rather_than_reported_as_a_generic_failure() -> None:
+    """Entry 74's argument on the other provider: a cause worth acting on must be a type.
+
+    A corridor whose adjudication fails refuses either way, and that is correct (entry 31). But
+    "top up the account" and "try again in a minute" are different instructions, and OpenAI answers
+    `429` for both — so the status cannot decide it and the body has to.
+    """
+
+    adjudicator = _adjudicator_raising(
+        RuntimeError(
+            "Error code: 429 - {'error': {'message': 'You have no credits remaining.', "
+            "'type': 'insufficient_quota', 'code': 'credit_balance_exhausted'}}"
+        )
+    )
+
+    with pytest.raises(AdjudicationQuotaExhausted):
+        await adjudicator.adjudicate("prompt", "packet")
+
+
+@pytest.mark.anyio
+async def test_any_other_failure_carries_its_cause_instead_of_hiding_it() -> None:
+    """A timeout, a revoked key and a malformed request need different fixes. Saying only that the
+    request failed sends the next reader to the API by hand to find out which it was."""
+
+    adjudicator = _adjudicator_raising(RuntimeError("Connection timed out"))
+
+    with pytest.raises(AdjudicationError, match="Connection timed out"):
+        await adjudicator.adjudicate("prompt", "packet")

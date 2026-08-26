@@ -45,6 +45,25 @@ class AdjudicationError(VisaResearchError):
     """Raised when role adjudication cannot produce a usable, validated answer."""
 
 
+class AdjudicationQuotaExhausted(AdjudicationError):
+    """The OpenAI account is out of credit, and retrying will not help.
+
+    Entry 74's argument, on the other provider. A corridor whose adjudication fails refuses, which
+    is correct (entry 31) — but *why* it failed decides whether anyone should try again, and until
+    2026-08-26 every cause arrived as the same sentence: "The role adjudication request failed".
+    Diagnosing an empty account then meant calling the API by hand to read the error the program had
+    already been given and thrown away.
+
+    `429` alone does not mean this. OpenAI answers `429` for ordinary rate limiting too, where
+    waiting *is* the remedy, so the two are told apart by the body's `insufficient_quota` /
+    `credit_balance_exhausted` rather than by the status.
+    """
+
+
+# What OpenAI puts in the body of a `429` when the account is empty rather than merely too fast.
+_EXHAUSTED_MARKERS = ("insufficient_quota", "credit_balance_exhausted", "no credits remaining")
+
+
 class RoleChoice(StrictModel):
     """One role, and the candidate the model says fills it."""
 
@@ -438,7 +457,20 @@ class LangChainRoleAdjudicator:
         except (ValidationError, ValueError, TypeError) as exc:
             raise AdjudicationError("The model returned invalid structured output") from exc
         except Exception as exc:
-            raise AdjudicationError("The role adjudication request failed") from exc
+            detail = str(exc).strip()
+            if any(marker in detail.lower() for marker in _EXHAUSTED_MARKERS):
+                raise AdjudicationQuotaExhausted(
+                    "The OpenAI account is out of credit, so no corridor can be adjudicated until "
+                    "it is topped up"
+                ) from exc
+            # The cause carried through rather than replaced. A timeout, a revoked key and a
+            # malformed request are different problems with different fixes, and a message that
+            # describes none of them sends the next reader to the API by hand.
+            raise AdjudicationError(
+                f"The role adjudication request failed: {detail[:200]}"
+                if detail
+                else "The role adjudication request failed"
+            ) from exc
 
 
 def validated_choices(

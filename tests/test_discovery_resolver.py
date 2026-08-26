@@ -24,6 +24,7 @@ from discovery_site import (
 
 from visa_research_agent.discovery.adjudication import (
     AdjudicationError,
+    AdjudicationQuotaExhausted,
     RoleAdjudication,
     RoleChoice,
     RoleTool,
@@ -1140,3 +1141,25 @@ def test_a_page_the_index_is_silent_about_keeps_its_place() -> None:
     chosen = {c.link.url for c in resolver._shortlist([strong, rival])}
 
     assert chosen == {strong.link.url}
+
+
+@pytest.mark.anyio
+async def test_an_empty_account_is_not_retried(tmp_path: Path) -> None:
+    """A retry exists for momentary failures. A second billed call cannot fix an empty account."""
+
+    class OutOfCredit:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+            self.calls += 1
+            raise AdjudicationQuotaExhausted("The OpenAI account is out of credit")
+
+    adjudicator = OutOfCredit()
+    resolver, _ = build_resolver(tmp_path, [], [INDEX])
+    resolver.adjudicator = adjudicator
+
+    resolved = await resolver.resolve(destination(), corridor())
+
+    assert adjudicator.calls == 1, "the second call is billed and cannot succeed"
+    assert not resolved.is_usable

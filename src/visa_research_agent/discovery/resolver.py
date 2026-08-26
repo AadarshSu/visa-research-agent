@@ -25,6 +25,7 @@ from pydantic import Field
 from visa_research_agent.discovery.adjudication import (
     MAXIMUM_BLOCKED_JUDGED,
     AdjudicationError,
+    AdjudicationQuotaExhausted,
     RoleAdjudication,
     RoleAdjudicator,
     build_blocked_packet,
@@ -1261,6 +1262,12 @@ class CorridorResolver:
         honest answer rather than reaching for a decider known to be wrong with confidence. The
         attempt count is returned either way, because a refusal that cost two calls still cost
         them.
+
+        **An empty account is not a momentary failure and is not retried.** The sentence above says
+        what a retry is for, and "the account has no credit" is the one cause that fails that test
+        outright: the second call cannot succeed, and it is billed the same as the first. This is
+        entry 74's point about a `402` reaching the place where the retry decision is made — the
+        classification is worth nothing if every caller retries anyway.
         """
 
         attempts = 0
@@ -1271,6 +1278,8 @@ class CorridorResolver:
                 return await self.adjudicator.adjudicate(  # type: ignore[union-attr]
                     load_adjudication_prompt(), packet
                 ), attempts
+            except AdjudicationQuotaExhausted as exc:
+                raise AdjudicationRefusal(attempts, str(exc)) from exc
             except AdjudicationError as exc:
                 last = exc
                 if attempts < ADJUDICATION_ATTEMPTS:
