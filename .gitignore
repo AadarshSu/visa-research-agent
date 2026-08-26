@@ -23,6 +23,8 @@ var/recall/*
 !var/recall/.gitkeep
 var/corpus/*
 !var/corpus/.gitkeep
+var/pagetext/*
+!var/pagetext/.gitkeep
 
 # Machine-local tool settings. The shared launch configuration is tracked.
 .claude/settings.local.json

@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     # The page corpus (DECISIONS entry 44). Kept beside the other stores, but note the contract is
     # different: this one is depended on, so losing it costs coverage rather than a question.
     corpus_directory: Path = Path("var/corpus")
+    # The body text of pages already fetched, indexed for ranking only and never quoted. Separate
+    # from `cache_directory`, which holds the same text as *evidence* under its own freshness
+    # rules: these two must not be conflated, because a body served from here would be guidance
+    # with nothing to say how old it is. See `discovery/page_text.py`.
+    page_text_directory: Path = Path("var/pagetext")
     # What each corridor considered, for diagnosing a refusal afterwards. One file per corridor,
     # overwritten by the newest run, read by nobody: deleting the directory costs a question, never
     # an answer.

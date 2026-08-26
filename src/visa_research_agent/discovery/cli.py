@@ -60,11 +60,18 @@ from visa_research_agent.discovery.corpus_build import (
 )
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.lexicon import (
+    Country,
     CountryRegistry,
     get_country_registry,
     get_denylist,
+    get_lexicon,
 )
 from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
+from visa_research_agent.discovery.page_text import (
+    BackfillReport,
+    PageTextStore,
+    backfill_from_cache,
+)
 from visa_research_agent.discovery.proposal import render_corridor_yaml
 from visa_research_agent.discovery.recall_log import (
     FileRecallLog,
@@ -85,6 +92,7 @@ from visa_research_agent.discovery.registry_build import (
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
 from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
+from visa_research_agent.domain.trust import host_is_within
 from visa_research_agent.research.errors import LLMConfigurationError, VisaResearchError
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.rendering import (
@@ -688,6 +696,91 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
         )
 
 
+def country_of_host_from_registry() -> Callable[[str], str | None]:
+    """Which country's authority a host belongs to, or none.
+
+    The live registry rather than whatever was true when the page was cached, exactly as
+    `CountryCorpus.entries_within` applies trust at read time. A host under no country's approved
+    domains maps to nothing and is skipped: guessing here would put a page into a candidate set
+    that the trust rules had already refused.
+    """
+
+    registry = get_authority_registry()
+    pairs = [(domain, country.code) for country in registry.countries for domain in country.domains]
+
+    def country_of(host: str) -> str | None:
+        return next((code for domain, code in pairs if host_is_within(host, [domain])), None)
+
+    return country_of
+
+
+def print_backfill(report: BackfillReport, stream: TextIO) -> None:
+    print(f"  indexed {report.total} pages across {len(report.indexed)} countries", file=stream)
+    for code, count in sorted(report.indexed.items(), key=lambda item: (-item[1], item[0])):
+        print(f"    {code}  {count}", file=stream)
+    # Said even when zero. An empty index and an empty cache are different situations with
+    # different fixes, and a bare page count cannot tell them apart.
+    print(
+        f"  skipped: {report.skipped_unmapped} on no trusted domain, "
+        f"{report.skipped_short} too short to rank, {report.unreadable} unreadable",
+        file=stream,
+    )
+
+
+def _country(registry: CountryRegistry, code: str) -> Country | None:
+    wanted = code.strip().upper()
+    return next((c for c in registry.countries if c.code == wanted), None) if wanted else None
+
+
+def run_page_text(args: argparse.Namespace, stream: TextIO) -> int:
+    """Backfill or query the page-text index (`discovery/page_text.py`).
+
+    Backfilling costs no fetch and no search: the retrieval cache already holds the text of every
+    page a corridor has read, and this only stops throwing it away.
+    """
+
+    store = PageTextStore(settings.page_text_directory)
+    if args.backfill:
+        report = backfill_from_cache(
+            store, settings.cache_directory, country_of_host=country_of_host_from_registry()
+        )
+        print_backfill(report, stream)
+        return 0
+
+    countries = get_country_registry()
+    code = args.country.upper()
+    if not store.has(code):
+        print(f"There is no page-text index for {code}. Run --backfill first.", file=stream)
+        return 3
+    nationality = _country(countries, args.nationality)
+    destination = _country(countries, code)
+    if nationality is None or destination is None:
+        print("--nationality and --country must both be known ISO codes.", file=stream)
+        return 3
+    corridor = Corridor(
+        destination_slug=destination.slug,
+        passport_nationality=nationality.code,
+        applying_from=(_country(countries, getattr(args, "from")) or nationality).code,
+        purpose=args.purpose,
+    )
+    matches = store.rank(
+        code,
+        role=args.role,
+        corridor=corridor,
+        nationality=nationality,
+        lexicon=get_lexicon(),
+        limit=args.limit,
+    )
+    print(
+        f"  {code}: {store.count(code)} pages indexed, {len(matches)} matched {args.role}",
+        file=stream,
+    )
+    for position, match in enumerate(matches, start=1):
+        print(f"  {position:>2}. {match.score:>7.1f}  {match.url}", file=stream)
+        print(f"        {' '.join(match.signals)}", file=stream)
+    return 0
+
+
 async def run_corpus(args: argparse.Namespace, stream: TextIO) -> int:
     """Build one country's page corpus, offline and deliberately (DECISIONS entry 44).
 
@@ -808,6 +901,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="how many hops from a seed; the request path affords two, this is not that path",
     )
 
+    page_text = commands.add_parser(
+        "pagetext",
+        help="index the body text of pages already fetched, and rank by it",
+    )
+    page_text.add_argument(
+        "--backfill",
+        action="store_true",
+        help="index every body the retrieval cache already holds; no fetch, no search",
+    )
+    page_text.add_argument("--country", default="", help="ISO code to rank within, e.g. JP")
+    page_text.add_argument("--role", default="document_checklist", help="which role to rank for")
+    page_text.add_argument("--nationality", default="", help="ISO code, e.g. IN")
+    page_text.add_argument("--from", default="", help="ISO code of where they apply, e.g. GB")
+    page_text.add_argument(
+        "--purpose", default="tourism", choices=["tourism", "business", "study", "transit"]
+    )
+    page_text.add_argument("--limit", type=int, default=10)
+
     audit = commands.add_parser(
         "audit",
         help="count why travellers go unanswered: reachability from data, causes from runs",
@@ -850,6 +961,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return asyncio.run(run_registry(args, sys.stderr))
         if args.command == "corpus":
             return asyncio.run(run_corpus(args, sys.stderr))
+        if args.command == "pagetext":
+            return run_page_text(args, sys.stderr)
         if args.command == "audit":
             return run_audit(args, sys.stderr)
         return asyncio.run(run_corridor(args, sys.stderr))
