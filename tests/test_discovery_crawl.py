@@ -541,3 +541,63 @@ async def test_a_crawl_told_to_keep_nothing_keeps_nothing() -> None:
     await crawler.crawl(destination(), [MISSION_SPOUSE])
 
     assert crawler.on_page is None
+
+
+def test_a_host_with_more_to_read_may_spend_past_an_even_share() -> None:
+    """The measurement that forced this: an even split starves whichever host has the most to give.
+
+    The United Kingdom's fee tables are one crawlable path per nationality on a single host. Its
+    corpus stopped at 15 of ~198 because that host hit an even share of 100 while smaller hosts left
+    theirs unspent; Canada's equivalent `?country=XX` pages reached **213 values** on the same code,
+    purely because its allowance happened to be enough.
+    """
+
+    crawler = build_crawler([], maximum_pages=1200, maximum_pages_per_host=400, host_floor=10)
+    budget = crawler._budget_for(12)
+    taken = {"visa-fees.gov.example": 100}
+
+    assert budget.allows("visa-fees.gov.example", taken), "an even share is no longer the cap"
+    assert budget.ceiling > 100
+
+
+def test_a_small_host_is_still_guaranteed_its_floor() -> None:
+    """What the even split was protecting, and it must survive: a portal linking to hundreds of
+    pages must not spend the whole allowance before a mission site is reached at all."""
+
+    crawler = build_crawler([], maximum_pages=1200, maximum_pages_per_host=400, host_floor=10)
+    budget = crawler._budget_for(12)
+    # The surplus is gone: one host has taken everything above the floors.
+    exhausted = {"portal.gov.example": budget.floor + budget.surplus}
+
+    assert budget.allows("mission.gov.example", exhausted), "the floor is a guarantee, not a share"
+    assert not budget.allows("portal.gov.example", exhausted), "and the greedy host is now capped"
+
+
+def test_no_host_may_take_more_than_half_the_crawl() -> None:
+    """Otherwise the surplus recreates the original problem in reverse."""
+
+    crawler = build_crawler([], maximum_pages=1200, maximum_pages_per_host=4000, host_floor=10)
+    budget = crawler._budget_for(12)
+
+    assert budget.ceiling == 600
+    assert not budget.allows("portal.gov.example", {"portal.gov.example": 600})
+
+
+def test_a_floor_that_cannot_be_honoured_is_not_promised() -> None:
+    """With more hosts than pages, promising ten each would let the first few spend everything."""
+
+    crawler = build_crawler([], maximum_pages=20, maximum_pages_per_host=400, host_floor=10)
+    budget = crawler._budget_for(40)
+
+    assert budget.floor == 1
+    assert budget.surplus == 0
+
+
+def test_the_request_path_keeps_the_even_split() -> None:
+    """It runs under a stopwatch against a shortlist it will mostly skip (entry 51), so
+    predictability is worth more there than reach. `host_floor` defaults to off."""
+
+    crawler = build_crawler([], maximum_pages=40, maximum_pages_per_host=20)
+    budget = crawler._budget_for(4)
+
+    assert (budget.floor, budget.ceiling, budget.surplus) == (10, 10, 0)

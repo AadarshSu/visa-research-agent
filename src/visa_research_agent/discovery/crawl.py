@@ -67,6 +67,54 @@ DEFAULT_KEPT_TEXT_CHARACTERS = 50_000
 # which is why the distinction is in the type rather than left to a comment.
 FetchResult = httpx.Response | str
 
+
+class HostBudget:
+    """How many pages each host may take, and why one number for all of them was wrong.
+
+    The even split — `maximum_pages // seed_hosts` — protected small sites from a large portal, and
+    it did that by starving whichever host had the most worth reading. Measured 2026-08-26 on the
+    pages a corridor actually read but its corpus lacked: **every one sat on a host the corpus
+    already covered**, and the clearest case is the United Kingdom's fee tables. Those live at
+    `visa-fees.homeoffice.gov.uk/y/<country>/<currency>/...`, one path per nationality, and they are
+    ordinary crawlable links — Canada's equivalent `?country=XX` pages are in its corpus **213
+    values deep**. The United Kingdom's stopped at **15 of ~198**, because its host hit an even
+    share of 100 while smaller hosts left theirs unspent.
+
+    So the allowance is now in two parts, and each protects a different thing:
+
+    - a **floor** every seeded host is guaranteed, which is what stops a portal starving a mission;
+    - a **surplus** the rest compete for on score, which is what lets the host with a 198-way
+      nationality fan-out actually spend what it needs.
+
+    A **ceiling** of half the crawl stops the surplus becoming the old problem in reverse: whatever
+    one host does, the others always have half the budget between them.
+    """
+
+    def __init__(self, *, floor: int, ceiling: int, surplus: int) -> None:
+        self.floor = floor
+        self.ceiling = ceiling
+        self.surplus = surplus
+
+    @classmethod
+    def even(cls, *, per_host: int) -> "HostBudget":
+        """The old allocation: the same hard cap for every host, and no surplus to compete for.
+
+        Kept as a constructor rather than deleted because the request path still wants it. That
+        crawl runs under a stopwatch against a shortlist it will mostly skip anyway (entry 51), so
+        predictability is worth more there than reach.
+        """
+
+        return cls(floor=per_host, ceiling=per_host, surplus=0)
+
+    def allows(self, host: str, taken: dict[str, int]) -> bool:
+        spent = taken.get(host, 0)
+        if spent < self.floor:
+            return True
+        if spent >= self.ceiling:
+            return False
+        return sum(max(0, n - self.floor) for n in taken.values()) < self.surplus
+
+
 PageReader = Callable[[str, str, str], None]
 """Called with (url, title, readable text) for every page a crawl actually read."""
 
@@ -591,6 +639,7 @@ class LinkCrawler:
         maximum_depth: int = 2,
         maximum_pages: int = DEFAULT_CRAWL_PAGES,
         maximum_pages_per_host: int = 20,
+        host_floor: int = 0,
         expansion_threshold: float = 10.0,
         maximum_concurrent_hosts: int = 4,
         on_page: PageReader | None = None,
@@ -605,6 +654,9 @@ class LinkCrawler:
         self.maximum_depth = maximum_depth
         self.maximum_pages = maximum_pages
         self.maximum_pages_per_host = maximum_pages_per_host
+        # Above zero, hosts are given a guaranteed floor and then compete for what is left, rather
+        # than each being capped at an even share. See `HostBudget`.
+        self.host_floor = host_floor
         self.expansion_threshold = expansion_threshold
         # One request per host at a time, several hosts at once. A corridor usually spans two to
         # four sites, and walking them one page at a time meant each site's politeness delay was
@@ -663,9 +715,7 @@ class LinkCrawler:
         counters = [counter]
 
         seed_hosts = {host_of(link.url) for link in seed_links}
-        host_budget = self.maximum_pages_per_host
-        if len(seed_hosts) > 1:
-            host_budget = min(host_budget, max(4, self.maximum_pages // len(seed_hosts)))
+        host_budget = self._budget_for(len(seed_hosts))
 
         async with httpx.AsyncClient(
             transport=self.fetcher.transport,
@@ -705,12 +755,29 @@ class LinkCrawler:
 
         return list(candidates.values())
 
+    def _budget_for(self, seed_hosts: int) -> HostBudget:
+        """Split this crawl's page allowance between the hosts it seeded."""
+
+        if self.host_floor <= 0 or seed_hosts <= 1:
+            per_host = self.maximum_pages_per_host
+            if seed_hosts > 1:
+                per_host = min(per_host, max(4, self.maximum_pages // seed_hosts))
+            return HostBudget.even(per_host=per_host)
+        # A floor that cannot be honoured is not a floor: with more hosts than pages, promising ten
+        # each would let the first few spend everything and call it a guarantee.
+        floor = min(self.host_floor, max(1, self.maximum_pages // seed_hosts))
+        return HostBudget(
+            floor=floor,
+            ceiling=max(floor, self.maximum_pages // 2),
+            surplus=max(0, self.maximum_pages - floor * seed_hosts),
+        )
+
     def _next_wave(
         self,
         frontier: list[tuple[float, int, str, int, PageLink]],
         visited: set[str],
         per_host: dict[str, int],
-        host_budget: int,
+        host_budget: HostBudget,
     ) -> list[tuple[int, str, PageLink]]:
         """The next few pages to fetch together: the best links, one per host.
 
@@ -733,7 +800,7 @@ class LinkCrawler:
             host = host_of(url)
             # Over its share of the budget: dropped rather than deferred, exactly as before, or a
             # large portal would keep its links circulating forever.
-            if per_host.get(host, 0) >= host_budget:
+            if not host_budget.allows(host, per_host):
                 continue
             if host in hosts:
                 deferred.append(entry)

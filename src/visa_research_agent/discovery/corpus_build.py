@@ -85,6 +85,28 @@ CORPUS_EXPANSION_THRESHOLD = 0.0
 # `pdf_checklist_bonus` exists for, and 26% of Japan's corpus is PDFs. So they are read in a second
 # pass, for their text only, best-scoring first.
 DEFAULT_CORPUS_PDFS = 400
+# **Zero, which means the even split stays — the mechanism below is built, tested and off.**
+#
+# Item 32 said the United Kingdom's fee tables stopped at 15 of ~198 nationalities because an even
+# per-host share starved the host holding them, where Canada's equivalent `?country=XX` pages
+# reached 213 on the same code. `HostBudget` was built to fix exactly that, and a rebuild at
+# `--pages 3000` disproved the premise: `visa-fees.homeoffice.gov.uk` went **91 pages to 113, and
+# 15 nationalities to 20**. It was never budget-limited.
+#
+# What it is limited by, measured: **zero** of its 86 pages were reached from a *different*
+# nationality's page. The country selector is a form, so the space has no links to walk and a crawl
+# only ever holds the nationalities search happened to seed. Canada's 425 pages came from a page
+# that lists every country as a link — the difference is what the authority published, not what the
+# crawler was allowed to spend. That is entry 59's wall, one layer down.
+#
+# And removing the cap cost something: the surplus goes to whichever host offers the most links,
+# which for the United Kingdom is `www.gov.uk` — the whole government website. Its corpus went 922
+# entries to 4,530 with **4,252 of them on gov.uk**, most about anything but visas.
+#
+# Raise this only with a measurement behind it. The floor half is the part worth revisiting: it
+# guarantees a small mission host its pages, which is known problem 24's failure, and it is only
+# the surplus half that inflated the corpus.
+DEFAULT_CORPUS_HOST_FLOOR = 0
 
 
 def corpus_queries(
@@ -342,6 +364,7 @@ async def build_country_corpus(
     maximum_pages: int = DEFAULT_CORPUS_PAGES,
     maximum_depth: int = DEFAULT_CORPUS_DEPTH,
     maximum_pages_per_host: int = DEFAULT_CORPUS_PAGES_PER_HOST,
+    host_floor: int = DEFAULT_CORPUS_HOST_FLOOR,
     results_per_query: int = 10,
     page_text: PageTextStore | None = None,
     maximum_pdfs: int = DEFAULT_CORPUS_PDFS,
@@ -399,6 +422,7 @@ async def build_country_corpus(
         maximum_depth=maximum_depth,
         maximum_pages=maximum_pages,
         maximum_pages_per_host=maximum_pages_per_host,
+        host_floor=host_floor,
         expansion_threshold=CORPUS_EXPANSION_THRESHOLD,
         on_page=keep if page_text is not None else None,
     )
