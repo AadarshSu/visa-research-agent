@@ -315,7 +315,13 @@ and all 53 are corpus-routed, which is stage 3 and untouched. **Then** batch 2.
 
 ### 31. Rank a candidate by what the page says, not only by the link to it — `built, gated off, blocked on item 32`
 
-> **Measured 2026-08-26 and it regressed, so it is gated off (entry 80).** Twelve runs on
+> **Superseded by entry 81 — the regression below is withdrawn.** Six runs of identical code give
+> 4, 4, 4, 4, 5 and 6 roles, so every A/B here sat inside the metric's noise. The pages that fill
+> roles are shortlisted and fetched in every arm, making the lift recall-neutral; nothing shows it
+> helps, so it stays off as the conservative default. **The next step is a measurement with no
+> adjudicator in it: grade the shortlist, not the plan.**
+>
+> ~~**Measured 2026-08-26 and it regressed, so it is gated off (entry 80).**~~ Twelve runs on
 > `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
 > time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
 > only 115 of 860 candidates carried index text — 90% of `evisa.mofa.go.jp`, **0% of the UK post** —
@@ -357,9 +363,15 @@ Search does not need to be down to run it — the resolver can be asked for a co
 caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
 absolute bound and must not become a multiple of the shortlist size.
 
-### 32. Raise the corpus page budget, because now it binds something — `next` — **and item 31 waits on it**
+### 32. ~~Raise the corpus page budget~~ — `closed unbuilt, entry 81`
 
-**Why:** text coverage is **13% of corpus entries** (Japan, 605 of 4,803). The bound is the per-host
+> **Measured and closed 2026-08-26 without building it (entry 81).** The 13% counts a denominator
+> that is 90% inert: 1,073 of Japan's 1,189 candidates score zero for every role and can never be
+> shortlisted, so they cannot distort a ranking. Among candidates actually in contention coverage is
+> **50%**, and among those shortlisted it is **100%**. A bigger crawl would raise a number, not an
+> answer. What blocks item 31 is not coverage — see entry 81 for what it is.
+
+**Why (as originally written):** text coverage is **13% of corpus entries** (Japan, 605 of 4,803). The bound is the per-host
 budget: `1500 // 48 seed hosts` ≈ 31 fetches against `mofa.go.jp`'s thousands of pages, which is why
 `visaonline.html` — depth 1, on a host the corpus holds hundreds of pages of — still has no crawled
 text and is in the index only because a live corridor cached it.

@@ -282,6 +282,10 @@ cause, and only running the thing showed it.
 | ...so the checklist loss was adjudication noise | 3 of 3 identical runs: a stable *worse* answer, not noise (entry 80) |
 | a lift that never lowers a score is safe | it protects the score, not the **place** — a shortlist is finite (entry 80) |
 | the index made japan fill all six roles | one run; three of the same configuration give 3, 5, 5 (entry 80) |
+| the lift ranked by who was crawled | the no-lift shortlist was **already 94% indexed** (entry 81) |
+| ...so the lift cost japan two roles | six runs of *identical* code give 4,4,4,4,5,6 — it is inside the noise (entry 81) |
+| role count measures a ranking change | it grades the adjudicator; the pages were shortlisted in every arm (entry 81) |
+| raising the page budget will lift text coverage past the bar | 90% of candidates score zero and can never be shortlisted (entry 81) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
@@ -330,10 +334,12 @@ is filled two ways: `visa-discover corpus` keeps what it reads, and `pagetext --
 retrieval cache for nothing. It is **ranking input only** — see the rule above, and entry 78.
 
 **It may only rank a candidate set it covers past `DEFAULT_TEXT_COVERAGE_BAR` (half), and today no
-country does** — Japan, the best covered, reaches 13%. A signal only some candidates carry ranks them
-by who has it: measured, the lift added eleven pages that all had index text and displaced the UK
-post's own fee and checklist pages, costing two roles on every one of three runs. **The bar is not a
-number to nudge** — a country below it is fixed by covering it (item 32). Entry 80.
+country does**, so the lift is **off everywhere**. That is a conservative default, not a measured
+harm: entry 80 claimed the lift cost Japan two roles and **entry 81 withdraws it** — six runs of
+identical code give 4, 4, 4, 4, 5 and 6 roles, so the A/Bs were inside the metric's own noise. What
+*is* established is that the role-filling pages are shortlisted and fetched in every arm, so the lift
+is recall-neutral and nothing shows it helps. **Do not turn it on without a measurement that has no
+adjudicator in it** — grade the shortlist, not the plan (entry 81).
 
 **Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`
 when out — now raised as `AdjudicationQuotaExhausted`, told apart from ordinary `429` rate limiting

@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [81](#81-item-32s-premise-is-false-and-so-was-entry-80s-the-metric-could-not-see-what-it-claimed) | **The metric could not see what it claimed** — role count swings ±2 on identical input; entry 80 withdrawn |
 | [80](#80-entry-79-shipped-a-regression-and-twelve-runs-found-it-stored-text-may-not-rank-a-set-it-barely-covers) | **Stored text may not rank a set it barely covers** — the lift ranked by who was crawled, and cost two roles |
 | [79](#79-the-body-score-moves-in-front-of-the-shortlist-and-stored-text-may-lift-but-never-sink) | **The body score moves in front of the shortlist** — stored text lifts and never sinks |
 | [78](#78-the-corpus-stored-the-link-not-the-page--and-91-of-a-country-was-never-read-at-all) | **The corpus stored the link, not the page** — 29 characters of anchor against 3,602 of body, and 91% never read |
@@ -129,6 +130,107 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 81. Item 32's premise is false, and so was entry 80's: the metric could not see what it claimed
+**2026-08-26 · measured. Withdraws entry 80's mechanism and its regression; closes item 32 unbuilt**
+
+Item 32 said: text coverage is 13%, the coverage bar needs half, so raise the corpus page budget.
+Measuring the proposal before implementing it — which is what [CLAUDE.md](CLAUDE.md) requires and
+what entry 77 records the cost of skipping — killed it, and took entry 80 with it.
+
+### 90% of a candidate set can never be shortlisted, so the bar counts the wrong thing
+
+```
+japan/IN/GB, 1,189 candidates            with text   share
+  every candidate                          113/1189     10%
+  scores for some role at all              58/116       50%
+  scores >= 20                             45/64        70%
+  actually shortlisted                     35/35       100%
+```
+
+**1,073 of 1,189 candidates score zero for every role.** They cannot be shortlisted, so the lift can
+neither promote them nor be distorted by them. Entry 80's bar counts them all, which is why Japan
+reads as 13% covered while the pages that actually compete are 50–100% covered. A bigger crawl would
+have spent hours raising a number whose denominator is inert.
+
+### And entry 80's mechanism was wrong
+
+Entry 80 said the lift "ranked by who was crawled": all eleven pages it added had index text, so the
+uncovered ones — the UK post among them — could never be lifted. The check that entry did not run:
+
+```
+with-index shortlist    35/35 have index text   (100%)
+without-index shortlist 33/35 have index text   ( 94%)
+```
+
+**The shortlist was already 94% indexed without the lift.** There was no coverage skew to find. What
+the lift actually did was different again: five of the eleven pages it promoted had a link score of
+**0.0** — MOFA's long-stay category pages for Professor, Student and Cultural activities — lifted to
++39 on a tourism corridor because a long-stay page also says "necessary documents". With
+`link_score` at zero, `max(link, 0.4·link + 0.6·text)` is just `0.6·text`: the text was not refining a
+link score, it was creating one.
+
+That is fixed and kept — `combined` now applies stored text only to a page the link scorer scored for
+*something*, so text may **re-file** a page across roles (Japan's checklist PDF: 22.0 as
+`visa_decision`, nothing for `document_checklist`) and never rescue one the link rejected outright.
+
+**But fixing it changed nothing measurable, which is the actual finding.**
+
+### The metric cannot resolve the question, and six runs of one configuration prove it
+
+With the lift disabled in both arms — **identical code, identical inputs** — six corpus-only runs of
+`japan/IN/GB`:
+
+```
+roles filled   4  4  4  4  5  6
+```
+
+and *which* roles fill moves too: one run gave `application_route, fees, processing_times`, the next
+`document_checklist, general_entry, fees`. **The noise floor is ±2 roles and the role identity is
+unstable.** Every A/B in entries 79 and 80 was three runs an arm inside that band.
+
+So entry 80's "the lift cost two roles on every one of three runs" is **withdrawn**. 4/4/4 against
+4/6/5 is not a regression; it is two samples from the same distribution. Entry 79's "all six roles"
+was withdrawn for the same reason one entry earlier, and I did not apply the lesson to the entry
+doing the withdrawing.
+
+### What the right metric is, and by it the lift is neutral
+
+Role count is measured *after* adjudication, so it grades the model, not the ranking. The question a
+ranking change actually asks is whether the pages that fill roles reach the shortlist. Checked
+directly, under every configuration tried:
+
+> The Edinburgh fees page (92.4), the MOFA checklist PDF and the Edinburgh checklist PDF are
+> **shortlisted and fetched in every arm.** The lift never lost them. It changed which eleven *other*
+> pages shared the packet, and the model answered differently.
+
+So the lift is recall-neutral on this corridor, and its effect on role counts is an artifact of
+packet composition reaching a model that is sensitive to it. Neither harm nor benefit is established.
+
+### What ships, and why it is the conservative choice
+
+The lift stays **off**. Not because it was shown harmful — that claim is withdrawn — but because
+nothing shows it helps, and this project does not ship an unproven change to the layer that decides
+what a traveller is told. The coverage bar is what holds it off; its *stated reason* in entry 80 was
+wrong and is corrected here, and the bar itself is now doing a job it was not designed for.
+
+**Item 32 is closed unbuilt.** Coverage is not what limits this, so ~70 searches and a multi-hour
+crawl would buy a number, not an answer.
+
+### What would actually settle it
+
+Not more runs of this corridor. Either:
+
+1. **Grade the shortlist, not the plan** — for a set of corridors with known role-filling pages,
+   count how often each reaches the shortlist, with no model in the loop. Deterministic, free of
+   adjudication noise, and answerable from recall logs already on disk.
+2. **Enough corridors that ±2 roles averages out** — entry 58's twenty-corridor harness, both arms.
+   That is the expensive option and it should come second.
+
+Known problem 10 has said adjudication varies between runs since it was written. This is the first
+time it was measured, and it is larger than anything built on top of it assumed.
 
 ---
 
