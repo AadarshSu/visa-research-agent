@@ -267,7 +267,7 @@ cause, and only running the thing showed it.
 | a wider sweep only tests the countries it runs | breadth found two defects five countries never could (entry 71) |
 | a challenge just needs a longer settle | 9,000ms is *worse* than 2,500ms — it races the redirect (entry 75) |
 | japan's corpus misses the london embassy on recall | that host answers a genuine `403`; nothing can fetch it (entry 77) |
-| a corpus inherits search's recall gaps | it inherits search's *shape* — 4 pages per host at the default budget (entry 77) |
+| a corpus inherits search's recall gaps | it inherits search's *shape* — the default budget fails the job's own depth check (entry 77) |
 | Cyprus's `403` is a refusal, so entry 41 does not apply | Azure declares its challenge in the **body**; it is answerable (entry 73) |
 | three countries send a UK resident to their New Delhi post | Brazil sent them to Edinburgh; only one case was real (entry 72) |
 | treating another country's label as another post is the fix | it broke 165 correct pages — the destination's own code (entry 72) |

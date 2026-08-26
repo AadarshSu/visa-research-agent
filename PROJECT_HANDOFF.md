@@ -363,13 +363,13 @@ re-add the amendment history here.
    signature as Greece's `www.mfa.gr`, so nothing can fetch it. And Japan does not need it — its
    latest run filled all six roles from `mofa.go.jp` alone, from the corpus, with search down.
 
-   **The real defect, from rebuilding Japan:** 70 queries produced **276 seeds** against a
-   `DEFAULT_CORPUS_PAGES` of **1,200**, so `host_budget` collapses to `max(4, 1200 // 276)` = **four
-   pages per host**, and the job reports it itself — *"only 7% of what it found lies beyond depth 1 —
-   this crawl fetched its seeds and stopped, which is the request path's behaviour, not this job's."*
-   A corpus built that way is a list of search results with one hop, which is most of what search
-   would have returned anyway. **Raise `--pages` well above the seed count before building 43 of
-   them.**
+   **The real defect, from rebuilding Japan:** 70 queries produced **276 seeds across ~50 hosts**,
+   and at `DEFAULT_CORPUS_PAGES` of 1,200 that is `1200 // 50` = **24 pages per host**. The job's own
+   check fails — *"only 7% of what it found lies beyond depth 1 — this crawl fetched its seeds and
+   stopped, which is the request path's behaviour, not this job's"* — against a `MINIMUM_DEEP_SHARE`
+   of 10%. A corpus in that state is a list of search results with one hop. **Size `--pages` per
+   country from the seed-host count before building 43 of them**; the constant was already raised once
+   (200 → 1,200) after Canada showed the same symptom.
 
    **What is settled (entry 76):** search supplies **30–67% of the shortlist a corridor actually
    reads** in the ten corpus countries, and on a real outage corpus-only left the Netherlands refusing

@@ -267,11 +267,12 @@ searches each and which are refusing for a reason no corpus can fix.
 1.3s and a `402` now says which kind it is. 1,792 searches still need a cap that allows them.
 
 **Do not run this stage at the default `--pages`** (entry 77). Rebuilding Japan produced **276 seeds
-against a 1,200-page budget**, which is four pages per host, and the job says so itself: *"only 7% of
-what it found lies beyond depth 1 — this crawl fetched its seeds and stopped."* A corpus built that
-way is barely more than the search results that seeded it, and stage 3 would freeze that shape into 43
-countries. Size `--pages` from the seed count — Japan wants several thousand — and check
-`depth_is_exercised` in the output of the first one before paying for the rest.
+across ~50 hosts**, which at the 1,200-page default is 24 pages per host, and the job's own
+`depth_is_exercised` check **fails**: *"only 7% of what it found lies beyond depth 1 — this crawl
+fetched its seeds and stopped"*, against a 10% bar. A corpus in that state is barely more than the
+search results that seeded it, and stage 3 would freeze that shape into 43 countries. `host_budget` is
+`maximum_pages // seed_hosts`, so **size `--pages` from the seed-host count** — ~5,000 gives a 50-host
+country 100 pages each — build **one**, read its depth line, and only then pay for the other 42.
 
 ### Done when
 

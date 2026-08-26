@@ -166,10 +166,19 @@ Rebuilding Japan: **70 queries, 276 seeds, 1,918 crawled** — and the job's own
 > *only 7% of what it found lies beyond depth 1 — this crawl fetched its seeds and stopped, which is
 > the request path's behaviour, not this job's. Raise --pages well above the seed count.*
 
-`DEFAULT_CORPUS_PAGES` is **1,200**, and `host_budget = min(400, max(4, 1200 // 276))` = **four pages
-per host**. A corpus built at that budget is little more than its search results plus one hop — which
-is precisely the thing the question was worried about, arriving by a different route. **The store would
-not be inheriting search's *recall*; it would be inheriting search's *shape*.**
+`DEFAULT_CORPUS_PAGES` is **1,200** against **7%** measured, where `MINIMUM_DEEP_SHARE` wants 10%.
+
+**Corrected arithmetic, 2026-08-26:** this entry first said "four pages per host", dividing 1,200 by
+the 276 *seeds*. `host_budget` divides by seed **hosts** — `min(400, max(4, 1200 // 50))` = **24 pages
+per host**. The number was wrong; the conclusion is not, and it never rested on it. `depth_is_exercised`
+is the tool's own designed check and it **fails**: 7% of entries lie beyond depth 1 against a 10% bar,
+so by the job's own definition this build "fetched its seeds and stopped". A corpus in that state is
+little more than its search results plus one hop — **the store would not be inheriting search's
+*recall*; it would be inheriting search's *shape*.**
+
+**And this is the same defect recurring.** `DEFAULT_CORPUS_PAGES` was already raised once, from 200 to
+1,200, after Canada's build put 1,032 of 1,071 entries at depth 1. Japan at 276 seeds has outgrown
+1,200 the same way. The constant is not the fix; sizing it per country from the seed count is.
 
 So the ordering instinct behind the question is right and the reason is not. **Size `--pages` from the
 seed count before building 43 of them**, and read `depth_is_exercised` on the first before paying for
