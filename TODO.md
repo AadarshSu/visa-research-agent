@@ -405,6 +405,27 @@ directly — every extra fetch is an extra indexed page. Measure it on one count
 to skip and many are dead or non-HTML. Nothing is wrong; the number is honest. But a build report that
 says "721 unreadable" without saying why invites someone to fix a problem that is not there.
 
+### 33. Measure the model candidate selector, by grading the selection and not the plan — `next`
+
+**Why:** entry 83 built it and ran it once. `discovery_selector: model` reads stored page text for
+every candidate in contention and picks ~7 to fetch, where the heuristic ranks links and fetches 35.
+It is off by default and the first run filled *fewer* roles, so it is a prototype and a hypothesis.
+
+**The measurement, and it must not be role counts.** Entry 81 measured that metric swinging ±2 roles
+on identical input. Grade the **selection**: for corridors whose role-filling pages are known from
+the recall logs already on disk, count how often the selection contains them. Deterministic, no
+adjudicator, no model variance. Role counts come second and only across many corridors.
+
+**Two hypotheses the first run named, neither tested.** The model chose
+`gov.uk/government/publications/visitor-visa-guide-to-supporting-documents` — a publication landing
+page — where the heuristic used its content child, which is where the checklist actually is. So:
+(1) `DEFAULT_SELECTION_SIZE` is 10 and the model used 7 because the prompt says "prefer fewer";
+fetching is cheap next to being wrong, and that advice may be worth withdrawing. (2) A landing page
+and its child look alike in an excerpt of the head.
+
+**Where it can run at all:** the United Kingdom (82% of its contention set has stored text) and Japan
+(50%). Everywhere else falls back to the heuristic and says so in the corridor's notes.
+
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
 
 **Why this is now first.** Measured 2026-08-24, entries 63 and 64. Of 198 countries offered, 157 are

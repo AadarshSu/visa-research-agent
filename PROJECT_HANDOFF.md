@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-26 — update this line when you touch the handoff |
-| **Tests** | 528 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 538 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -62,7 +62,8 @@ destinations.
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Read at step 3b of `_resolve`, before the shortlist — and currently inert, on purpose** (entry 80). The A/B was taken and **it could not answer the question**: six runs of identical code give 4, 4, 4, 4, 5 and 6 roles, so role count cannot see a ranking change on one corridor (entry 81, which withdraws entry 80's regression). What is established is that the role-filling pages are shortlisted and fetched in every arm — the lift is recall-neutral, nothing shows it helps, and it stays off. Entries 78–81. |
-| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `destination_mode: automatic` |
+| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: heuristic`, `destination_mode: automatic` |
+| **Model candidate selection** | **Built, off by default** (entry 83). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. One run of `united-kingdom/IN/GB`: 7 pages read, and *fewer* roles filled — it chose a publication landing page over the content child holding the checklist. A prototype and a hypothesis, not a result; TODO item 33 says how to measure it. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged

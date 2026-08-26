@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [83](#83-a-model-chooses-what-to-read-and-the-stored-text-barrier-moves-from-an-absence-to-a-type) | **A model chooses what to read** — 7 pages instead of 35; the stored-text barrier becomes a type |
 | [82](#82-the-nationality-dimension-is-not-a-budget-problem-canada-published-links-the-uk-published-a-form) | **Canada published links, the UK published a form** — the crawl gap is a questionnaire, not a budget |
 | [81](#81-item-32s-premise-is-false-and-so-was-entry-80s-the-metric-could-not-see-what-it-claimed) | **The metric could not see what it claimed** — role count swings ±2 on identical input; entry 80 withdrawn |
 | [80](#80-entry-79-shipped-a-regression-and-twelve-runs-found-it-stored-text-may-not-rank-a-set-it-barely-covers) | **Stored text may not rank a set it barely covers** — the lift ranked by who was crawled, and cost two roles |
@@ -131,6 +132,95 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 83. A model chooses what to read, and the stored-text barrier moves from an absence to a type
+**2026-08-26 · prototype, off by default. Amends entry 78's rule deliberately**
+
+The heuristic shortlist is the **recall gate**: measured over 135 recall logs it decides in 100 of
+them, with a median of 72 candidates in contention for 35 places, and a page it ranks out is never
+fetched and never judged (entry 40). This replaces that gate with a model call over stored page text
+and moves the fetch *after* the choice.
+
+```
+today     score_link -> 35 fetches -> model over 35 fetched pages -> pick 6
+prototype model over stored text of every in-contention candidate -> pick ~7 -> fetch those
+```
+
+### Two calls, because one would break entry 78
+
+`Selection` carries source ids and **has no field for prose**. Stored text is older than
+`source_maximum_stale_hours` and carries nothing to say how old it is, so a sentence written from it
+and shown to a traveller is guidance served outside the freshness rules. Splitting the work keeps
+that impossible rather than discouraged:
+
+| | reads | may produce |
+| --- | --- | --- |
+| selection | stored text | source ids, nothing else |
+| adjudication | text fetched **this run** | every word a traveller sees |
+
+Naming a questionnaire stays in the second call, on fetched text, so entry 60 is untouched —
+selection can route a suspected wizard into the fetch set and never describe one.
+
+**And the barrier moved rather than went away.** Entry 78 said there is no accessor for a stored
+body and named `snippet()` as the thing not to add. `text_for_selection` is now exactly that
+accessor. The amendment is deliberate: the reason for that rule was never that reading stored text is
+wrong — `rank` reads it — but that a *sentence written from it* must not reach a traveller. That
+property now lives in `Selection`'s shape instead of in the absence of a method, and
+`test_a_selection_cannot_carry_a_word_of_stored_text` is where it is enforced. The method is named
+for its single caller so a second one has to argue for itself.
+
+### Why a model and not a better score, which entry 80 answered by failing
+
+Stored text covers some candidates and not others. Entry 80 folded that into `combined` as a numeric
+lift and it went wrong for a reason worth stating once more: **a scalar cannot represent "nothing is
+known about this page".** Absent text scores zero, zero is a number, and a number competes. The
+packet says it in words — `no_stored_text`, with the prompt told explicitly that this is an absence
+of evidence and not evidence of absence — and the candidate is still offered. **No candidate is ever
+dropped for want of room**: a wide field shortens excerpts instead, down to 200 characters.
+
+### First run, `united-kingdom/IN/GB`, and it is one run
+
+```
+                    read   roles filled                                    cost
+heuristic             35   document_checklist, processing_times            1 call
+model selection        7   general_entry                                   2 calls
+both                       visa_decision handed over as gov.uk/check-uk-visa
+```
+
+329 candidates in contention, 269 with stored text, 7 chosen. **The fetch saving is real — 7 pages
+against 35** — and the questionnaire was spotted by both.
+
+**It filled fewer roles, and the visible cause is precise.** The model chose
+`gov.uk/government/publications/visitor-visa-guide-to-supporting-documents`, the publication landing
+page; the heuristic used its content child
+`.../guide-to-supporting-documents-visiting-the-uk`, which is where the checklist actually is. The
+model picked the right *document* and the wrong *URL for it*, and at seven pages there was no
+redundancy to absorb the near-miss. Thirty-five places buy exactly that redundancy.
+
+Two suspects, neither measured: `DEFAULT_SELECTION_SIZE` is 10 and the model used 7, so the prompt's
+"prefer fewer" may be advice worth withdrawing — fetching is cheap next to being wrong. And a landing
+page and its child are hard to tell apart from a stored excerpt of the head.
+
+**This is n=1 per arm against a metric entry 81 measured swinging ±2 roles, so none of it is a
+result.** It is a working prototype and a specific hypothesis.
+
+### What is deliberately not claimed
+
+- Not that this is better. One run, noisy metric, and it filled fewer roles.
+- Not that it is cheaper. Two calls against one; the selection packet was ~270 excerpts. Fewer
+  fetches, more tokens.
+- Not that the coverage problem is solved. The United Kingdom has 82% of its contention set stored
+  because entry 82's rebuild left a 1,598-page index. Japan has 50%. **Everywhere else falls back to
+  the heuristic and says so** — reported in the corridor's notes, never silent, because a selection
+  made from anchors alone is the weak version of this idea wearing the strong version's name.
+
+### How to measure it, when it is measured
+
+Entry 81's rule: **grade the selection, not the plan.** For corridors with known role-filling pages,
+count how often the selection contains them, with no adjudicator in the loop. That is deterministic,
+free of the ±2 noise, and answerable from recall logs already on disk. Role counts come second.
 
 ---
 
