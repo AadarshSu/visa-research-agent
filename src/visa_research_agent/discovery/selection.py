@@ -60,7 +60,7 @@ MINIMUM_EXCERPT_CHARACTERS = 200
 # How many pages the selection may ask for. Above the six roles so a role can be offered more than
 # one candidate, far below the 35 the heuristic shortlist fetches today — the saving that pays for
 # the extra call.
-DEFAULT_SELECTION_SIZE = 10
+DEFAULT_SELECTION_SIZE = 20
 
 
 class SelectionError(VisaResearchError):
