@@ -43,7 +43,7 @@ discovery_decider: model
 # describes; `model` is DECISIONS entry 83's prototype, which reads stored page text and picks ~10
 # pages instead of ranking links and fetching 35. It changes the recall gate, never the decider —
 # the adjudicator above still decides, on text fetched in this run.
-discovery_selector: heuristic
+discovery_selector: model
 
 # Where a destination's sources come from.
 #   configured — only the destinations hand-written in destinations.yaml can produce a plan.
