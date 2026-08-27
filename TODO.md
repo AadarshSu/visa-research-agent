@@ -7,6 +7,12 @@ picked up cold.
 **Later** is real but not urgent; **Done** keeps finished work because what building it found is usually
 why the item after it exists; **Smaller things** are one-paragraph defects with no owner yet.
 
+**The goal this list serves.** A country is built offline — corpus plus page-text index — and a
+corridor answers from that store. Live search is acceptable where genuinely unavoidable, not as the
+ordinary source of recall. **Item 19 is that goal as a work item**; items 30, 33 and 34 feed it, and
+entry 82 measured how close it already is: 18 of 30 corridors had zero corpus misses, and none of the
+67 misses were on a host the corpus lacks.
+
 **Where the list stands, 2026-08-25.** The three items that used to gate everything are finished and
 confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 49–53), **item 23** (the
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
@@ -144,6 +150,45 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+### 34. Build an oracle that neither selector helped make — `next`, **start here**
+
+**Why:** every selection measurement in entries 84–86 is graded against a set the two arms built
+between them. A page is "proven to fill a role" only if some arm *read* it, so a page neither read
+can never enter the oracle, and both selectors are scored on ground truth they jointly created. The
+matched-budget result (86% against 45%, entry 86) is large enough that the direction is not in doubt;
+the **numbers** are not trustworthy and no further selector work should lean on them.
+
+**What is already on disk and needs no network.** `var/recall/*.json` holds, per corridor, every
+candidate with its URL, per-role scores, and whether it was shortlisted and fetched. The ten graded
+corridors are in the scratchpad layout described in entry 85, but they are reproducible from the
+recall logs alone.
+
+**Two ways to fix it. They are not equivalent and the choice matters.**
+
+1. **Fetch-everything oracle — automatable, and the caveat is real.** For a handful of corridors,
+   fetch *every* in-contention candidate (median 72, max 705) and adjudicate the lot, taking the union
+   of roles filled as the oracle. No selector touches it. **The caveat:** the adjudicator's packet
+   cannot hold 700 excerpts, so it must be batched — and a page judged inside a batch of 20 is judged
+   without the other 680, so it can "fill a role" that it would lose in the full set. That makes the
+   oracle *generous* rather than biased toward a selector, which is the better failure, but it must be
+   said out loud in whatever entry reports it.
+2. **A curated fixture — smaller, slower to make, and durable.** Name by hand, per corridor, the page
+   that actually answers each role. Ten corridors is an afternoon. It never needs rebuilding, it is a
+   regression set as well as an oracle, and it is the only version with no model in it anywhere. Entry
+   68 already puts accuracy verification outside the codebase, so this is consistent with how the
+   project treats ground truth.
+
+   **Recommended.** Do (2) for the ten corpus countries, and use (1) only if a wider sample is wanted
+   later.
+
+**Then re-run entry 86's matched-budget comparison against it**, and report both numbers — against
+the independent oracle and against the old jointly-built one — so the size of the bias is on the
+record rather than merely acknowledged.
+
+**Do not grade on roles filled.** Entry 81 measured that metric swinging ±2 on identical input, and
+entries 79–81 are three consecutive entries that were wrong because they leaned on it.
+
 
 ### 30. Perfect batch 1 before adding a single further country — `next`
 
@@ -687,7 +732,29 @@ refused the corridor on 2026-08-21 is now durable, which is the thing this was b
 > closed it was write-back — after one corridor run through the new path, **24 of 24** pages that run
 > fetched are held. The candidate set is now `corpus ∪ live`, pinned by what already filled a role.
 
-### 19. Take search out of the request path too — `next`
+### 19. Take search out of the request path too — `next`, **and this is the project's goal**
+
+> **Updated 2026-08-26.** This item *is* the goal: a country built offline answers its corridors from
+> the store, with live search only where it is genuinely unavoidable. Three things moved under it
+> today and none of them closes it.
+>
+> **The nationality measurement this was always gated on now exists** (entry 82). It is not the
+> 198-valued risk the item feared. Across 30 corridors into the ten corpus countries, 18 had **zero**
+> misses and **none of the 67 misses were on a host the corpus lacks**. Half the misses are URLs
+> naming a nationality — and the crawl reaches those where the authority published a country index
+> (Canada: 213 values) and cannot where it published a form (the UK: 15, and a rebuild moved it only
+> to 20). So the residual risk of dropping search is **concentrated in form-gated spaces**, which is
+> a nameable, bounded thing rather than an unmeasured dimension.
+>
+> **What is still missing before switching it off.** Nobody has run a corridor set corpus-only and
+> compared it to the same set with search, on a metric that is not roles-filled — entry 81 measured
+> that metric at ±2 noise, and entry 76's "corpus-only costs 4 of 10 their checklist" predates both
+> the rebuilds and the noise measurement, so it should not be quoted as current. **Item 34's oracle is
+> what makes that comparison meaningful**, which is why 34 comes first.
+>
+> **And search is no longer the single point of failure it was**: entry 74 gave a corpus country a
+> fallback when search is down, and it is reported rather than silent.
+
 
 **Why:** the crawl half of this is done (entry 51) and search is what remains. It is now the largest
 live component of a corridor — roughly 3s and **three queries per trusted domain** — and, since entries

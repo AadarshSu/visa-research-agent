@@ -42,6 +42,13 @@ source, and the traveller is told plainly when something could not be verified. 
 scope: submitting applications, booking appointments, filling forms, driving an authority's
 questionnaire, or claiming approval is guaranteed.
 
+**The goal for the work in front of us, stated 2026-08-26.** A country is built **offline** — its
+corpus and its page-text index — and a corridor answers from that store. **Live search is acceptable
+where it is genuinely unavoidable; it is not acceptable as the ordinary source of recall.** The corpus
+has to be useful, and useful means a number: how often a corridor finds what it needs without
+searching. [TODO.md](TODO.md) **item 19** is that goal as a work item. **Item 34 comes first**,
+because the measurement that would judge item 19 is not yet trustworthy — see below.
+
 **It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
 twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar
 ≥70%) and **50% yield a document checklist** (bar ≥50%). It passes — by one corridor on the first
@@ -102,6 +109,13 @@ found. No human approves anything per request. Seven destinations are also hand-
 
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
+
+**Start at item 34: build an oracle neither selector helped make.** Every selection measurement in
+entries 84–86 grades both arms against a set the two arms built between them — a page is "proven to
+fill a role" only if some arm read it, so a page neither read can never enter it. The matched-budget
+gap (86% against 45%, entry 86) is too large for the *direction* to be in doubt, but the numbers are
+not trustworthy and no further selector or corpus-versus-search work should lean on them. Item 34 has
+two ways to fix it and recommends the curated one.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
@@ -448,6 +462,16 @@ re-add the amendment history here.
    mechanism, not as queued work. Method limit: the URL half of the match is exact, the text half
    approximate (entry 62's fidelity note), so twelve is a lower bound — which makes the noise finding
    stronger, not weaker. Entries 69, 70; TODO item 30.
+
+28. **Every selection measurement is graded against ground truth the two arms built between
+   them.** Entries 84–86 score the heuristic and the model on "pages proven to fill a role", where
+   *proven* means some arm read the page and the adjudicator used it — so a page **neither** arm read
+   can never enter the oracle, and both selectors are judged on a set they jointly created. The
+   matched-budget gap is 86% against 45% (entry 86), far too large for the direction to be in doubt,
+   but the numbers are not trustworthy and nothing further should lean on them. **This is TODO item
+   34 and it is the next thing to do.** It also blocks item 19, because "can the corpus answer without
+   search" is the same measurement with the same broken oracle.
+
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

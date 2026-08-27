@@ -19,25 +19,36 @@ Each fact has one home. When one of these files summarises another, the two drif
 what has wasted the most time here — see the corrections table further down, whose twenty-four rows are
 mostly a written-down diagnosis that a run then contradicted.
 
-**Where it stands, as of 2026-08-24**, so the rest of this file reads in context. The pipeline works
-end to end and has been measured against a bar committed in advance (entry 35): over twenty
-high-volume corridors run twice each, **75% confirm the visa decision** (bar ≥70%) and **50% yield a
-document checklist** (bar ≥50%) — a pass, by one corridor and by nothing at all. Corridors are served
-from **stored per-country page corpora** rather than a live crawl, at a median 27.4s. The largest
-coverage limit is **not** bot-blocking: it is authorities that put the answer inside an interactive
-tool, which cost every United Kingdom corridor its entire plan. **A questionnaire is now treated as an
-answer rather than a blockade** — a page read and judged to *ask* a question is named for the role it
-settles, for any role, and the plan offers it beside that question (entries 59 and 60). Getting those
-pages in front of the model needed the shortlist to reserve five candidates per role rather than
-three, which took **the United Kingdom from 0 of 8 runs resolving to 4 of 4** (entry 61). Entries
-44–62.
+**The goal, stated so everything below reads against it.** A country is built **offline** — its
+corpus and its page-text index — and a corridor answers from that store. Live search is acceptable
+where it is genuinely unavoidable; it is not acceptable as the ordinary source of recall. The corpus
+has to be *useful*, and "useful" has a number: how often a corridor finds what it needs without
+searching. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34 feed it.
 
-**Stage 2 of batch 1 is done** (entry 70): all 41 never-run destinations ran on 2026-08-25 — 103
-corridors — and every one resolved or refused for a reason verified against what was seen; 32 of 41
-answered at least one passport. Two things it found that change how the rest is read: authorities
-mostly publish **per diplomatic post**, keyed by where the traveller applies from rather than by their
-passport, and the missing-demonym defect costs **nothing** measurable, so do not write 184 demonym
-lists. What remains of batch 1 is stage 3, the 43 corpora.
+**Where it stands, as of 2026-08-26.** The pipeline works end to end and passed a bar committed in
+advance (entry 35, measured in entry 58): over twenty corridors, **75% confirm the visa decision** and
+**50% yield a document checklist** — a marginal pass. Corridors are served from stored per-country
+corpora at a median 27.4s. All 53 reachable destinations have been run at least once (entry 70); ten
+have a corpus **and now a page-text index** (entry 85). A questionnaire is treated as an answer rather
+than a blockade — named for the role it settles, offered beside that question (entries 59, 60).
+
+**How close the corpus is to the goal, measured** (entry 82). Across 30 corridors into the ten corpus
+countries, **18 had zero misses**, and of the 67 pages missed in total **none were on a host the
+corpus lacks**. Site-level recall is solved. What remains is page-level and has two causes: ordinary
+deep pages a bigger crawl reaches, and **spaces behind a form** — the United Kingdom publishes its
+per-nationality fee tables through a country selector with no links between nationalities, so no
+crawl reaches them at any budget, while Canada's equivalent reached 213 values because Canada
+published a page listing every country as a link. The second cause is the questionnaire outcome
+wearing a different hat, and the answer is the same: name the tool.
+
+**What chooses which pages to read is now a model, not the ranking** (entries 83–86). It reads stored
+page text for every candidate in contention and picks up to 20 pages to fetch, where the heuristic
+ranked links and fetched 35. Graded on selection recall at **matched budget** it reaches **86% against
+the heuristic's 45%**, and still beats the heuristic's 79% when that is allowed 2.4× the pages. It
+costs a second model call per corridor. `discovery_selector: model`.
+
+**Read entries 78–86 before touching discovery ranking.** Four of them correct the three before them,
+and the corrections table below carries the specific traps.
 
 ## Rules that must not be broken
 
