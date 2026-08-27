@@ -405,9 +405,19 @@ directly — every extra fetch is an extra indexed page. Measure it on one count
 to skip and many are dead or non-HTML. Nothing is wrong; the number is honest. But a build report that
 says "721 unreadable" without saying why invites someone to fix a problem that is not there.
 
-### 33. ~~Measure the model candidate selector~~ — `measured, entry 84; the default is the open question`
+### 33. ~~Measure the model candidate selector~~ — `done and turned on, entry 85`
 
-> **Measured 2026-08-26 (entry 84), and it wins.** Graded on selection recall over 33 pages proven
+> **Re-measured across all ten corpus countries and turned on (entry 85).** Eight text indexes
+> built (~420 searches, ~3 hours of crawling). Selection recall **86% against 79%, reading 112 pages
+> against 274** — wins or ties 8 of 10, loses the UAE and the United States. `discovery_selector:
+> model`. Entry 84's +30 points was a sample artefact: four of its five corridors were the UK, and
+> over ten countries the gain is **+7**.
+>
+> **What is left is variance, not direction.** One run per corridor per arm, one corridor per country,
+> all `IN/GB` — nationality and residence are not varied at all. And nobody has timed the fetch
+> saving. See entry 85's closing section.
+
+> ~~**Measured 2026-08-26 (entry 84), and it wins.**~~ Graded on selection recall over 33 pages proven
 > to fill a role: **model at 85% reading 73 pages, heuristic at 55% reading 143.** Both named
 > hypotheses were right — "prefer fewer" had the trade backwards, and `DEFAULT_SELECTION_SIZE` is now
 > 20. Twelve of the oracle's pages were found *only* by the wider selection, so ranking 35 links never

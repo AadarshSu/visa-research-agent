@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [85](#85-ten-countries-ten-text-indexes-the-selector-wins-by-seven-points-and-reads-59-fewer-pages) | **Ten countries: +7 points, 59% fewer pages read.** The selector goes on; entry 84's +30 was a sample artefact |
 | [84](#84-graded-on-the-selection-instead-of-the-plan-the-model-reads-half-as-much-and-finds-30-points-more) | **Graded on the selection, not the plan** — 85% against 55%, reading half as many pages |
 | [83](#83-a-model-chooses-what-to-read-and-the-stored-text-barrier-moves-from-an-absence-to-a-type) | **A model chooses what to read** — 7 pages instead of 35; the stored-text barrier becomes a type |
 | [82](#82-the-nationality-dimension-is-not-a-budget-problem-canada-published-links-the-uk-published-a-form) | **Canada published links, the UK published a form** — the crawl gap is a questionnaire, not a budget |
@@ -133,6 +134,78 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 85. Ten countries, ten text indexes: the selector wins by seven points and reads 59% fewer pages
+**2026-08-26 · measured across all ten corpus countries. Turns `discovery_selector: model` on**
+
+Entry 84 measured the selector on five corridors, four of them the United Kingdom, and found +30
+points of selection recall. This is the same measurement across all ten corpus countries, after
+building the eight text indexes that were missing.
+
+### The eight builds
+
+```
+      corpus    text            corpus    text
+  AE    4,151     755      NL    4,571   1,099
+  CA    9,655   1,406      SE    2,246     819
+  DE    1,565     389      SG    2,107   1,321
+  FR    5,317   1,227      US    2,811     467
+  GB      922   1,598      JP    4,803     689
+```
+
+~420 searches and about three hours of crawling. Every country now has stored text; coverage of a
+corridor's *contention set* ranges from 10% (France) to 82% (the United Kingdom).
+
+### The result, one corridor per country, `IN/GB` throughout
+
+```
+SELECTION RECALL over 29 pages proven to fill a role in either arm
+  heuristic   23/29   79%   reading 274 pages   11.9 per proven page
+  model       25/29   86%   reading 112 pages    4.5 per proven page
+```
+
+The model wins or ties **8 of 10** and reads **59% fewer pages**. It loses two: the United Arab
+Emirates 2/3 against 3/3, and the United States 2/4 against 4/4.
+
+Roles filled — 22 against 20 — is inside entry 81's ±2 band and settles nothing either way, which is
+why it is not the headline.
+
+### Entry 84's +30 points was a sample artefact, and saying so is the point
+
+Four of those five corridors were the United Kingdom, the country with 82% coverage because entry
+82's rebuild happened to leave it there. Widened to ten countries the gain is **+7 points**, not +30.
+The direction held; the magnitude did not. Any future claim from this harness should say how many
+countries it rests on.
+
+### What the two losses look like
+
+The United States has the **lowest text coverage of the ten at 21%**, and the model read 8 pages
+against the heuristic's 24 — it chose narrowly on thin evidence and missed two proven pages. That is
+the shape entry 80 warned about, arriving in a form the coverage bar cannot see, because here the
+model is *told* what it does not know and still chose to read few.
+
+But coverage does not cleanly predict it: France sits at **10%** and the model won there, 3/3 against
+2/3. So "low coverage hurts" is a hypothesis this data is too small to test — one corridor per
+country — and it is the obvious next measurement.
+
+### The default is flipped, and what it costs
+
+`discovery_selector: model`. Better recall, 2.4× fewer fetches, and the fallback for a country with
+no stored text is the heuristic, reported in the corridor's notes rather than silent.
+
+**It costs a second model call per corridor.** That is the honest price: roughly double the
+adjudication spend, against a large fetch saving in latency, politeness delay and bandwidth. One line
+in `runtime.yaml` reverts it.
+
+### What is still not established
+
+- **One run per corridor per arm.** The selection is deterministic at temperature 0, but the oracle —
+  which pages "fill a role" — comes from the adjudicator, and that is the noisy part.
+- **One corridor per country, all `IN/GB`.** Nationality and residence are not varied at all here.
+- **No latency measurement.** 112 fetches against 274 should be a real saving on a step entry 55
+  measured at roughly 40% of a corridor, but nobody has timed it.
 
 ---
 

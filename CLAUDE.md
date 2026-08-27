@@ -299,6 +299,7 @@ cause, and only running the thing showed it.
 | letting a productive host spend more is a clean win | the surplus goes to the *largest* host — gov.uk took 4,252 entries (entry 82) |
 | a model picking 7 pages beats a heuristic picking 35 | it picked a landing page over its content child, with no redundancy left (entry 83) |
 | ...so a model selector is worse than ranking | let it pick 20 and it finds 85% against 55%, reading half as many (entry 84) |
+| ...and that +30 points is what it buys | four of those five corridors were the UK; over ten it is **+7** (entry 85) |
 | "prefer fewer" is sensible advice for a page budget | a fetch is cheap and a missed role is not — it had the trade backwards (entry 84) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
@@ -335,8 +336,9 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 .venv/bin/visa-discover pagetext --backfill    # index the text the retrieval cache already holds
 ```
 
-Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US). A country
-without one crawls in the request path, exactly as before.
+Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
+now have a text index in `var/pagetext/` (entry 85). A country without either crawls in the request
+path and has its pages chosen by the heuristic, exactly as before.
 
 Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
 change — either one will serve a pre-change result and make a fix appear not to work. A stored
@@ -346,6 +348,13 @@ between runs**; they are stores, not caches, and rebuilding one costs search quo
 `var/pagetext/` holds the body text of pages already fetched, one SQLite/FTS5 file per country, and
 is filled two ways: `visa-discover corpus` keeps what it reads, and `pagetext --backfill` indexes the
 retrieval cache for nothing. It is **ranking input only** — see the rule above, and entry 78.
+
+**Two different things read this index and only one of them is on.** `discovery_selector: model`
+**is on** (entry 85): a model reads stored text for every candidate in contention and picks up to 20
+pages to fetch, replacing the shortlist as the recall gate — measured over ten countries at 86%
+selection recall against the heuristic's 79%, reading 59% fewer pages, at the cost of a second model
+call per corridor. A country with no stored text falls back to the heuristic and **says so in the
+corridor's notes**. The *numeric* text lift in `combined` is a separate thing and stays off:
 
 **It may only rank a candidate set it covers past `DEFAULT_TEXT_COVERAGE_BAR` (half), and today no
 country does**, so the lift is **off everywhere**. That is a conservative default, not a measured

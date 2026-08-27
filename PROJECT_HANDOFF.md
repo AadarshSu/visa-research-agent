@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-26 — update this line when you touch the handoff |
-| **Tests** | 538 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 539 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -62,8 +62,8 @@ destinations.
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Read at step 3b of `_resolve`, before the shortlist — and currently inert, on purpose** (entry 80). The A/B was taken and **it could not answer the question**: six runs of identical code give 4, 4, 4, 4, 5 and 6 roles, so role count cannot see a ranking change on one corridor (entry 81, which withdraws entry 80's regression). What is established is that the role-filling pages are shortlisted and fetched in every arm — the lift is recall-neutral, nothing shows it helps, and it stays off. Entries 78–81. |
-| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: heuristic`, `destination_mode: automatic` |
-| **Model candidate selection** | **Built, off by default** (entry 83). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **Measured on the metric entry 81 asked for** (entry 84): graded on selection recall over 33 pages proven to fill a role, the model reaches **85% reading 73 pages against the heuristic's 55% reading 143** — and twelve of those pages were found only by it. Still off by default: five corridors, two countries, and it runs only where stored text exists (UK 82%, Japan 50%). |
+| **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
+| **Model candidate selection** | **Built, off by default** (entry 83). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded on selection recall over ten countries: **86% against the heuristic's 79%, reading 112 pages against 274** — wins or ties 8 of 10, loses the UAE and the United States. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Caveats in entry 85: one run per corridor, one corridor per country, all `IN/GB`. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
