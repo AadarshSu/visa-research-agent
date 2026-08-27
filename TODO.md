@@ -405,9 +405,19 @@ directly — every extra fetch is an extra indexed page. Measure it on one count
 to skip and many are dead or non-HTML. Nothing is wrong; the number is honest. But a build report that
 says "721 unreadable" without saying why invites someone to fix a problem that is not there.
 
-### 33. Measure the model candidate selector, by grading the selection and not the plan — `next`
+### 33. ~~Measure the model candidate selector~~ — `measured, entry 84; the default is the open question`
 
-**Why:** entry 83 built it and ran it once. `discovery_selector: model` reads stored page text for
+> **Measured 2026-08-26 (entry 84), and it wins.** Graded on selection recall over 33 pages proven
+> to fill a role: **model at 85% reading 73 pages, heuristic at 55% reading 143.** Both named
+> hypotheses were right — "prefer fewer" had the trade backwards, and `DEFAULT_SELECTION_SIZE` is now
+> 20. Twelve of the oracle's pages were found *only* by the wider selection, so ranking 35 links never
+> reached them.
+>
+> **What is left is the default.** `discovery_selector: heuristic` still. Five corridors in two
+> countries, four of them the UK, and the oracle is adjudicator-derived. Widen to the ten corpus
+> countries — which needs text indexes for the eight without one — then flip it.
+
+**Why (as originally written):** entry 83 built it and ran it once. `discovery_selector: model` reads stored page text for
 every candidate in contention and picks ~7 to fetch, where the heuristic ranks links and fetches 35.
 It is off by default and the first run filled *fewer* roles, so it is a prototype and a hypothesis.
 

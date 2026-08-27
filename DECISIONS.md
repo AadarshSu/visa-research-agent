@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [84](#84-graded-on-the-selection-instead-of-the-plan-the-model-reads-half-as-much-and-finds-30-points-more) | **Graded on the selection, not the plan** — 85% against 55%, reading half as many pages |
 | [83](#83-a-model-chooses-what-to-read-and-the-stored-text-barrier-moves-from-an-absence-to-a-type) | **A model chooses what to read** — 7 pages instead of 35; the stored-text barrier becomes a type |
 | [82](#82-the-nationality-dimension-is-not-a-budget-problem-canada-published-links-the-uk-published-a-form) | **Canada published links, the UK published a form** — the crawl gap is a questionnaire, not a budget |
 | [81](#81-item-32s-premise-is-false-and-so-was-entry-80s-the-metric-could-not-see-what-it-claimed) | **The metric could not see what it claimed** — role count swings ±2 on identical input; entry 80 withdrawn |
@@ -132,6 +133,71 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 84. Graded on the selection instead of the plan, the model reads half as much and finds 30 points more
+**2026-08-26 · measured, five corridors, both arms. Answers TODO item 33; still off by default**
+
+Entry 83 shipped the selector as a prototype with n=1 and one named suspect: the prompt said "prefer
+fewer" and the model used 7 of an allowed 10, choosing a publication landing page over the content
+child that held the checklist. Entry 81 said how to measure it — **grade the selection, not the
+plan** — and this is that measurement.
+
+### The metric
+
+For five corridors, run every arm and pool the pages that filled a role in **any** of them. That
+pooled set is the oracle. Then ask the only question a ranking change is really about: *did this arm
+choose to read them?* Role counts are reported second because entry 81 measured that metric swinging
+±2 on identical input.
+
+### The result
+
+```
+SELECTION RECALL over 33 pages proven to fill a role in some arm
+  heuristic (35 places)      18/33   55%   reading 143 pages   7.9 read per proven page
+  model, choose <=10         15/33   45%   reading  30 pages   2.0
+  model, choose <=20         28/33   85%   reading  73 pages   2.6
+```
+
+**The wider selection beats the heuristic by thirty points while reading half as many pages.** Per
+corridor it wins or ties everywhere: 5/6 against 2/6, 6/8 against 4/8, 6/7 against 4/7, 7/8 against
+4/8, and 4/4 against 4/4 on Japan.
+
+**Read the heuristic's 55% carefully — it is not a fall.** Its absolute hits never moved, at 18. The
+denominator grew from 21 to 33 because the wider selection *proved twelve more pages fill roles*,
+pages the heuristic's 35 places never read. That is the finding stated most plainly: **a model
+choosing 15 pages from stored text found role-filling pages that ranking 35 links did not reach.**
+
+Roles filled, secondary and noisy: 24, 16 and 10 across the five corridors, in the same order.
+
+### So "prefer fewer" was the defect, and it is worth naming why
+
+Reading a page is cheap; being wrong is not. The instruction traded a fetch against a role and got
+the exchange rate backwards. It now says to take a second candidate wherever the first might be a
+landing page, an index, or the wrong post — the three shapes entry 83 watched it get caught by —
+and `DEFAULT_SELECTION_SIZE` is 20. At 2.6 pages per proven page it is still three times more
+economical than the heuristic's 7.9.
+
+### What this does not settle
+
+- **The oracle is adjudicator-derived.** Which pages "fill a role" comes from the noisy call, so the
+  denominator carries some of that noise even though the recall question does not. A thirty-point gap
+  is far outside entry 81's ±2 band, but it is not a clean measurement, and pretending otherwise is
+  how entry 80 happened.
+- **Five corridors, one run each, two countries.** The United Kingdom is four of the five.
+- **It only runs where stored text exists** — the UK at 82% of its contention set, Japan at 50%.
+  Everywhere else falls back to the heuristic and says so in the corridor's notes.
+- **It costs two model calls against one**, and a selection packet of a few hundred excerpts. Fewer
+  fetches, more tokens.
+
+### Still off by default, and what would change that
+
+`discovery_selector: heuristic`. The measurement is favourable and the fallback is safe and reported,
+so the case for turning it on is real — but it rests on five corridors in two countries, and the one
+country with good coverage got there through entry 82's rebuild, which was itself a mistake being
+undone. Widen it to the ten corpus countries before flipping the default, and build text indexes for
+the eight that have none.
 
 ---
 
