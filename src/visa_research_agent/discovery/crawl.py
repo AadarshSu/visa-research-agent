@@ -34,7 +34,6 @@ from visa_research_agent.domain.models import (
     is_challenge,
 )
 from visa_research_agent.domain.trust import host_of
-from visa_research_agent.research.errors import LiveSourceError
 from visa_research_agent.research.live_sources import clean_source_html, extract_pdf_text
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
@@ -447,10 +446,18 @@ class CrawlFetcher:
             return None
         try:
             text = extract_pdf_text(response.content, maximum_characters=maximum_characters)
-        except LiveSourceError as exc:
-            # An encrypted or malformed PDF is one unreadable page, never a failed build. Entry 54
-            # is what a bare `except` around this cost the first time.
-            self._record_failure(url, "unusable", str(exc)[:120])
+        except Exception as exc:
+            # **`ValueError`, not `LiveSourceError`, and the narrow version cost a whole build.**
+            # `extract_pdf_text` raises a bare `ValueError` for an encrypted PDF, and pypdf raises
+            # its own types for a malformed one — so a narrow `except` here let a single encrypted
+            # Canadian PDF kill `visa-discover corpus --country CA` outright on 2026-08-26. That is
+            # entry 54's defect exactly, reintroduced by writing the `except` from memory of the
+            # entry rather than from what the function raises. The evidence path guards the same
+            # call and catches `ValueError` there for the same reason.
+            #
+            # Broad on purpose: one unreadable document is one page this crawl does not index, and
+            # nothing about a corpus build is worth failing a country for.
+            self._record_failure(url, "unusable", str(exc)[:120] or type(exc).__name__)
             return None
         if not text.strip():
             self._record_failure(url, "unusable", "its text layer is empty")

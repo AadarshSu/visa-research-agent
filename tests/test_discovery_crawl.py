@@ -601,3 +601,32 @@ def test_the_request_path_keeps_the_even_split() -> None:
     budget = crawler._budget_for(4)
 
     assert (budget.floor, budget.ceiling, budget.surplus) == (10, 10, 0)
+
+
+@pytest.mark.anyio
+async def test_an_unreadable_pdf_costs_one_page_and_not_the_build() -> None:
+    """Entry 54's defect, reintroduced on 2026-08-26 and caught by a real build dying.
+
+    `extract_pdf_text` raises a bare `ValueError` for an encrypted PDF and pypdf raises its own
+    types for a malformed one, so an `except LiveSourceError` here caught neither — and one
+    encrypted Canadian PDF killed `visa-discover corpus --country CA` outright. Nothing about a
+    corpus build is worth failing a country for.
+    """
+
+    pdf_url = f"https://{AUTHORITY}/files/encrypted.pdf"
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404, text="not found")
+        return httpx.Response(
+            200, content=b"%PDF-1.4 not really a pdf", headers={"Content-Type": "application/pdf"}
+        )
+
+    fetcher = CrawlFetcher(transport=httpx.MockTransport(respond), host_delay_seconds=0.0)
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        text = await fetcher.fetch_pdf_text(
+            client, pdf_url, destination(), maximum_characters=50_000
+        )
+
+    assert text is None
+    assert pdf_url in fetcher.failures
