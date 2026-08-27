@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
 | [86](#86-matched-budget-the-selector-is-not-7-points-better-than-ranking-it-is-41) | **Matched budget: +41 points, not +7** — entry 85 compared configurations, not selectors |
 | [85](#85-ten-countries-ten-text-indexes-the-selector-wins-by-seven-points-and-reads-59-fewer-pages) | **Ten countries: +7 points, 59% fewer pages read.** The selector goes on; entry 84's +30 was a sample artefact |
 | [84](#84-graded-on-the-selection-instead-of-the-plan-the-model-reads-half-as-much-and-finds-30-points-more) | **Graded on the selection, not the plan** — 85% against 55%, reading half as many pages |
@@ -135,6 +136,126 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 87. An oracle neither selector built: entry 86's +41 is +30, and the direction holds
+**2026-08-27 · TODO item 34. Ten corridors curated by hand; both numbers reported side by side**
+
+Entries 84 to 86 were all graded against a set the two arms constructed between them. A page counted
+as answering a role only if some arm had fetched it *and* the adjudicator had credited it, so a page
+neither arm read could never enter the oracle. Entry 86 said so and could not do anything about it
+from its own data. This is the independent version, and it is now committed:
+`oracle/selection_oracle.yaml`, ten corridors, every role named by hand from the corridor's **whole**
+contention set — 77 to 552 candidates each — read out of the page-text index, which is filled by the
+corpus crawl and the retrieval cache and is indifferent to what either selector picked.
+
+### The result, both columns
+
+```
+                             ROLES (independent)   JOINT (entries 85-86)   read
+  heuristic, matched budget    33/47    70%          13/29    45%           112
+  model                        47/47   100%          25/29    86%           112
+  heuristic, shipped budget    43/47    91%          23/29    79%           350
+```
+
+**The joint column reproduces entry 86 exactly** — 13, 25 and 23 of 29 — which is the check that says
+the replay is the same replay. Against ground truth neither selector helped build, the same three
+arms land somewhere else:
+
+- **The selector's margin at matched budget is +30 points, not +41.** Entry 86's headline was
+  inflated by eleven points by its own oracle. The decision it justified is untouched; the number
+  is not the number.
+- **Against the heuristic at its shipped 35 places the margin is +9, where the joint oracle said
+  +7** — so the bias did not run one way. It exaggerated the comparison that flattered the model and
+  understated the one that did not.
+- The heuristic given 35 places reaches **91%**. The practical gap between the two shipped
+  configurations is 100% against 91%, at **3.1× the fetches** — a cost argument at least as much as
+  a recall one, which is not how entries 85 and 86 read.
+
+Robustness: matching on the model's 127 *selections* rather than its 112 successful fetches moves
+the heuristic to 34/47 and the model not at all, so +30 is +28 under the least favourable framing.
+
+### Where the joint oracle was actually wrong: it scored address luck
+
+Singapore's matched-budget heuristic scores **6/6 roles and 0/1 joint**. Both numbers are about the
+same document. ICA publishes its India page at three path generations —
+`/enter-depart/entry_requirements/…`, `/enter-transit-depart/entering-singapore/…` (byte-identical
+text, 4,655 characters each) and `/enter-depart/arriving/overview/…`, which the index never read —
+and the joint oracle held whichever one the arm that built it happened to fetch. Canada carries three addresses for "What you
+need to enter Canada", three for "How to apply for a visitor visa" and two each for Guide 5256 and
+the fee list; GOV.UK serves three chapter URLs of one guide with the same bytes, and publishes its
+processing-times guidance under both its old and its new slug. **Fifteen of the fixture's 71 pages
+entered it as aliases**, filling 23 role rows, added by a mechanical rule — identical stored body,
+same document, same target — because the alternative is a curator's choice of address deciding a
+selector's score.
+
+That is a different failure from the one entry 86 named. It expected the joint oracle to be too
+*small*; it was also, in places, keyed on the wrong copy.
+
+### The metric changed too, and the reason is the same one
+
+**Role recall, not pages hit.** Entry 86 counted pages, and one page often answers five roles: the
+United Arab Emirates corridor is answered end to end by a single GDRFA service page, so an arm
+finding it scores 1 there against a five-page denominator elsewhere. The question a selection change
+is about is *did this arm choose to read something that answers this question*, so a role several
+pages answer is one target. Roles filled stays out entirely — entry 81 measured it swinging ±2 on
+identical input, and it grades the adjudicator.
+
+### What the fixture records that no metric does
+
+Thirteen of the sixty roles have **no** answer in their contention set, and saying so is half the
+value of the file. France cannot state its decision, its checklist, its fee or its processing time
+anywhere readable — all four live behind the Visa Wizard. The United States decision is not
+establishable from disk: the Visa Waiver Program page's country list did not extract into stored
+text, which is the corridor's own `decision_not_found` seen from the other side. The Netherlands
+publishes its UK consular fee at a page holding no text at all.
+
+Two rows are corrections to earlier entries, and both are recorded in the fixture with the rule that
+made them:
+
+- **The United Kingdom's per-nationality fee table is keyed on the wrong dimension for this
+  corridor.** Entry 82 treated those tables as the UK's unreachable answer. Its first question is
+  "Select the country you are **making your application from**" — India — so the ₹18,322 it returns
+  is for applying in India. This traveller applies from Britain and pays the £135 on gov.uk. A fee
+  table behind a form is still the finding; *which* traveller it answers for is not what entry 82
+  assumed.
+- **Canada's `imm5484.html` is not a checklist**, despite being titled "Document Checklist:
+  Temporary Resident Visa". Its whole text explains how to open Acrobat Reader. Rule 4 of
+  `adjudicate_roles.txt` excludes exactly that, and the model arm read it.
+
+### How honest this is, stated plainly
+
+- **The bound is what could be read.** A role can only be answered by a page somebody could read,
+  and coverage runs from 21 of 206 candidates in France to 269 of 329 in the United Kingdom. 108 of
+  113 curated rows were judged from the page's own stored text; 3 through a byte-identical mirror at
+  another address, which is the only way the United States corridor could be judged at all; 2 from
+  the address and label alone.
+- **There is one residual bias, and it is much weaker than the one it replaces.** After scanning
+  each contention set, every page any of the three arms read was reviewed a second time as a
+  completeness check, and five real answers were added that the first pass missed — IRCC's fee list
+  states "$100" for a visitor visa and the first pass did not open it. That pass covered all three
+  arms equally, so it does not favour one; what it does favour is pages *some* arm read over pages
+  *no* arm read. Entry 85's oracle could not contain the latter at all; this one can and does.
+- **The model at 47/47 should be read with that caveat**, not as proof it is perfect.
+- Still one run per corridor, one corridor per country, all `IN/GB/tourism`. Nationality and
+  residence are still not varied, which is now the largest untested dimension in the whole harness.
+
+### What is committed
+
+`visa-discover selection-recall` grades any directory of recall logs against the fixture and prints
+both columns every time, so the bias entry 86 acknowledged in prose is a number on every run. The
+ranking moved out of `CorridorResolver` into a module-level `shortlist()` to make that possible:
+replaying it at budgets nobody ran must not require a fetcher, a search provider and a model client.
+`_readable_only` stays a method, because it asks the crawl what it saw this run. Fifteen tests, no
+network, no model — entries 84 to 86 cost quota to produce and could never be checked twice.
+
+### The method note
+
+Item 34 offered two ways to build this and recommended the slower one. That was right for a reason
+neither option statement gave: **the fetch-everything oracle would have inherited the alias bug**,
+because it would still have been a set of URLs somebody fetched, and the three ICA addresses would
+still have been three different pages to it. Curating by hand is what surfaced that they are one.
 
 ---
 

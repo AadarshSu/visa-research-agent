@@ -89,11 +89,19 @@ from visa_research_agent.discovery.registry_build import (
     build_authority_registry,
     write_registry,
 )
-from visa_research_agent.discovery.resolver import CorridorResolver
+from visa_research_agent.discovery.resolver import DEFAULT_SHORTLIST_SIZE, CorridorResolver
 from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
 from visa_research_agent.discovery.selection import (
     CandidateSelector,
     LangChainCandidateSelector,
+)
+from visa_research_agent.discovery.selection_recall import (
+    DEFAULT_ORACLE_PATH,
+    Grading,
+    arms_from_logs,
+    grade,
+    load_oracle,
+    read_recall_logs,
 )
 from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
 from visa_research_agent.domain.trust import host_is_within
@@ -581,6 +589,75 @@ def run_audit(args: argparse.Namespace, stream: TextIO) -> int:
     return 1 if refused or report.unrecorded else 0
 
 
+def print_selection_recall(grading: Grading, stream: TextIO) -> None:
+    """Both numbers, always, and the independent one first.
+
+    Entry 86 acknowledged that its oracle was built by the two arms it was grading and could not do
+    anything about it from its own data. Printing the joint column beside the independent one is how
+    that acknowledgement stops being a sentence: the gap between the two columns is the bias, in
+    points, on every run of this command.
+    """
+
+    print(f"\nSelection recall over {len(grading.graded)} corridors", file=stream)
+    if not grading.graded:
+        print("  no recall log matched a corridor in the oracle. Run one first.", file=stream)
+        return
+    print(
+        f"\n  {'arm':<26} {'roles':>9} {'':>5}   {'joint':>7} {'':>5}   {'read':>5}  {'tools':>6}",
+        file=stream,
+    )
+    for arm in grading.arms:
+        print(
+            f"  {arm.name:<26} {f'{arm.roles_hit}/{arm.roles_total}':>9} "
+            f"{arm.role_recall:>5.0%}   {f'{arm.joint_hit}/{arm.joint_total}':>7} "
+            f"{arm.joint_recall:>5.0%}   {arm.pages_read:>5}  "
+            f"{f'{arm.tools_hit}/{arm.tools_total}':>6}",
+            file=stream,
+        )
+    print(
+        "\n  roles: pages that answer a role, in an oracle neither selector helped build.\n"
+        "  joint: the pages entries 85 and 86 graded against, which both arms did help build.\n"
+        "  tools: an official questionnaire holding a role's answer. Naming one never fills it.",
+        file=stream,
+    )
+    for arm in grading.arms:
+        if arm.unverifiable_read:
+            print(
+                f"  {arm.name} also read {arm.unverifiable_read} page(s) nobody could judge; "
+                "they are neither credited nor counted against it.",
+                file=stream,
+            )
+    for name, rows in grading.rows.items():
+        print(f"\n  {name}, by corridor:", file=stream)
+        for row in rows:
+            print(
+                f"    {row.corridor:<38} {row.roles_hit}/{row.roles_total} roles   "
+                f"{row.joint_hit}/{row.joint_total} joint   {row.picks} read",
+                file=stream,
+            )
+    if grading.skipped:
+        print(
+            f"\n  {len(grading.skipped)} corridor(s) in the oracle had no recall log written by a "
+            "model-selector\n  run, so no arm could be replayed for them: "
+            f"{', '.join(grading.skipped)}",
+            file=stream,
+        )
+
+
+def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
+    """Grade what was chosen to read. Reads two directories and calls nothing."""
+
+    oracle = load_oracle(Path(args.oracle))
+    directory = Path(args.recall)
+    if not directory.is_dir():
+        print(f"No recall logs at {directory}; there is nothing to grade.", file=stream)
+        return 1
+    arms = arms_from_logs(oracle, read_recall_logs(directory), full_size=args.shipped_size)
+    grading = grade(oracle, arms)
+    print_selection_recall(grading, stream)
+    return 0 if grading.graded else 1
+
+
 # One cold resolution of a corridor. Named so `run_corridor` can take a fake in tests.
 Resolve = Callable[[DestinationConfig, Corridor, RuntimePolicy], Awaitable[ResolvedCorridor]]
 
@@ -976,6 +1053,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="a directory of recall logs; the reachability half needs no runs and is always shown",
     )
 
+    selection = commands.add_parser(
+        "selection-recall",
+        help="grade what a selector chose to read against ground truth it did not help build",
+    )
+    selection.add_argument(
+        "--oracle",
+        default=str(DEFAULT_ORACLE_PATH),
+        help="the hand-curated fixture naming the page that answers each role",
+    )
+    selection.add_argument(
+        "--recall",
+        default="var/recall",
+        help="a directory of recall logs; only corridors named in the oracle are graded",
+    )
+    selection.add_argument(
+        "--shipped-size",
+        type=int,
+        default=DEFAULT_SHORTLIST_SIZE,
+        help="the second heuristic budget, for reference; the first is always the model's own",
+    )
+
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
@@ -1011,6 +1109,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return run_page_text(args, sys.stderr)
         if args.command == "audit":
             return run_audit(args, sys.stderr)
+        if args.command == "selection-recall":
+            return run_selection_recall(args, sys.stderr)
         return asyncio.run(run_corridor(args, sys.stderr))
     except SearchError as exc:
         print(f"Search is unavailable: {exc}", file=sys.stderr)

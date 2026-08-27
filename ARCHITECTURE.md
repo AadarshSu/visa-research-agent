@@ -480,8 +480,15 @@ where the two disagreed.
 with their scores, whether each was shortlisted and fetched, the queries, the seeds, and each unreadable
 URL, to `var/recall/<corridor>.json`, on refusals too. It exists because a refusal cannot otherwise be
 told apart from a mis-ranking — Canada considered **470** candidates and the page that answers it was
-fifteenth, which no other output said. It is a diagnostic: nothing reads it back, no decision depends on
-it, and a write failure is swallowed rather than costing the corridor an answer.
+fifteenth, which no other output said. It is a diagnostic: nothing reads it back *in a request*, no
+decision depends on it, and a write failure is swallowed rather than costing the corridor an answer.
+
+**It is also what makes a ranking change measurable after the fact, and that has now been used twice.**
+The recorded scores are exact input to `resolver.shortlist`, so the ranking can be replayed at any
+budget with no fetcher and no model client — which is how entry 86 held the budget fixed for free, and
+how `visa-discover selection-recall` grades a selector against `oracle/selection_oracle.yaml` (entry
+87). When two things differ between two arms, the recall log usually makes holding one of them fixed
+free.
 
 **Two of its fields are typed so a run set can be counted rather than read** (entry 63). `cause` is a
 `RefusalCause` derived from the result by `ResolvedCorridor.outcome_cause`, because the prose in
@@ -587,7 +594,8 @@ remember", so they are also worth reading in one place.
 | Corridor resolution | full corridor | 3 weeks | **Yes** — it is what a warm request serves | `var/corridors/`, `discovery/corridor_store.py` |
 | Recall log | corridor | overwritten each run | **No** — deleting it costs a question | `var/recall/`, `discovery/recall_log.py` |
 | **Page corpus** | **country** | **additive, never pruned** | **Yes** — the candidate source | `var/corpus/`, `discovery/corpus.py` |
-| **Page text** | **country** | **additive; replaced per URL** | Not yet — nothing reads it in the request path | `var/pagetext/`, `discovery/page_text.py` |
+| **Page text** | **country** | **additive; replaced per URL** | **Yes** — the model selector reads it to choose what to fetch | `var/pagetext/`, `discovery/page_text.py` |
+| **Selection oracle** | corridor | committed, hand-edited | **No** — it grades runs, it never serves one | `oracle/selection_oracle.yaml`, `discovery/selection_recall.py` |
 
 ### The corpus stores the link; the index stores the page
 

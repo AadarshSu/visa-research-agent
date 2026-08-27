@@ -1,0 +1,752 @@
+# What a selector should have chosen to read, for ten corridors, named by hand.
+#
+# **Neither selector helped make this file, and that is its whole point.** Every measurement in
+# DECISIONS entries 84 to 86 was graded against a set the two arms built between them: a page filled
+# a role only if some arm had read it, so a page neither read could never enter the oracle. This one
+# was built from each corridor's *whole* contention set — every candidate that scored above zero,
+# 77 to 552 of them — read out of the page-text index, which is filled by the corpus crawl and the
+# retrieval cache and is indifferent to what either selector picked.
+#
+# What "answers a role" means here is what `prompts/adjudicate_roles.txt` says it means, applied by
+# hand: rule 4 for a checklist that names documents rather than mentioning them, rule 5 for the post
+# serving the traveller's residence, rule 6 for the purpose and the passport. Where the two rules
+# disagree with what looks like the obvious page, `excluded:` says so and why.
+#
+# It records what could NOT be established as carefully as what could:
+#
+#   answers       role -> the pages that answer it, with `seen:` and the sentence that decided it
+#   tools         role -> an official questionnaire that works the answer out, per entries 59-60.
+#                 Naming one never fills a role; it is graded on its own line
+#   unanswered    role -> why nothing in the contention set answers it
+#   unverifiable  candidates that plausibly answer a role and hold no stored text, so nobody could
+#                 judge them. Neither credited nor dismissed
+#   excluded      a page that looks like an answer and is not, with the rule that excludes it
+#   joint         the 29 pages entries 85 and 86 graded against, kept so the bias they acknowledged
+#                 stays measurable from committed data rather than from a scratchpad
+#
+# `seen:` is how the page was read. `text` is its own stored body. `title_only` is its address and
+# label alone, where the index holds no body and the address is unambiguous. `mirror` is the same
+# document read at a second address the index does hold — the United States publishes its whole
+# /content/travel/en/ tree under several subdomains.
+#
+# The bound on all of it: a role can only be answered by a page someone could read. Coverage runs
+# from 21 of 206 candidates in France, where the portal answers a Cloudflare challenge, to 269 of
+# 329 in the United Kingdom. `text_held` on each corridor says which.
+#
+# Ten corridors, one nationality and one residence: an Indian passport, applying from Britain, for
+# tourism. Built 2026-08-27, DECISIONS entry 87.
+
+corridors:
+  - corridor: united-arab-emirates/IN/GB/tourism
+    contention: 417
+    text_held: 295
+    answers:
+      visa_decision:
+        - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+          seen: text
+          why: >-
+            "Visa on arrival for citizens of the Republic of India residing in (America, Britain,
+            European Union countries)" — this exact corridor, nationality and residence together,
+            granting 14 days
+        - url: https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen
+          seen: text
+          why: >-
+            "Republic of India Visa Required" in the ministry's per-country table — true of the
+            passport, but blind to the residence, which is what turns this corridor into a visa on
+            arrival
+        - url: https://www.mofa.gov.ae/Visa-Exemptions-For-Non-Citizen
+          seen: text
+          why: the same document at another address — byte-identical stored text, 11,974 characters
+      document_checklist:
+        - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+          seen: text
+          why: >-
+            "Requirements: 1. A valid passport ... 2. residence visa issued by UK ... 3. Personal
+            photo (white background)"
+        - url: https://www.gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            "Requirements: 1. One personal photo. 2. Copy of the passport" for the single-entry
+            tourist visa, the other route into the UAE for this traveller
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: the same document at another address — byte-identical stored text, 5,885 characters
+      application_route:
+        - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+          seen: text
+          why: >-
+            "Service Steps: Log in to https://smart.gdrfad.gov.ae, register, choose the service,
+            fill in the data, pay the due fees"
+        - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Types-of-visas/tourist-visa
+          seen: text
+          why: >-
+            "You can apply for a tourist visa online through the Federal Authority ... or the
+            General Directorate of Identity and Foreigners Affairs – Dubai. You can also apply
+            through airlines, licensed travel agents, or hotels"
+        - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Apply-and-track-visa/where-to-apply-for-entry-permits-or-visas
+          seen: text
+          why: the online channels and the typing centres, named
+        - url: https://www.gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            the smart-services steps for the single-entry tourist visa, where a tourism
+            establishment sponsors the visit
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: the same document at another address — byte-identical stored text, 5,885 characters
+      fees:
+        - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+          seen: text
+          why: '"Fees 253" for this service'
+        - url: https://www.gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            "30-day tourist visa fee: AED 252 ... 60-day tourist visa fee: AED 352", plus 5% value
+            added tax
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: the same document at another address — byte-identical stored text, 5,885 characters
+      processing_times:
+        - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+          seen: text
+          why: '"Expected Completion Time 48.0 Hour(s)"'
+      general_entry:
+        - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+          seen: text
+          why: >-
+            "Terms And Conditions: The traveller should not have any restrictions that prevent him
+            from entering the country. The validity of the passport ... no less than 6 months"
+        - url: https://u.ae/en/information-and-services/passports-and-traveling/customs-regulations
+          seen: text
+          why: what may be brought in at the border, which is not part of the visa application
+    unverifiable:
+      - https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
+      - https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae/visa-on-arrival
+    excluded:
+      - url: https://www.mofa.gov.ae/en/Missions/Stockholm/Services/Visas
+        why: >-
+          states the same rule — "Indian passports holding an EU / British residence permits valid
+          for at least 6 months" — but from the mission in Stockholm. Rule 5 prefers the post
+          serving the traveller's residence, and this one serves Sweden.
+    note: >-
+      one page answers every role here, and it is the sharpest case in the fixture for why residence
+      is not a detail: the UAE publishes a service keyed on Indian nationality *and* UK residence
+      together, and it is the only candidate that answers the decision correctly for this traveller.
+    joint:
+      - https://u.ae/en/information-and-services/visa-and-emirates-id/Types-of-visas/tourist-visa
+      - https://www.mofa.gov.ae/Visa-Exemptions-For-Non-Citizen
+      - https://www.mofa.gov.ae/en/Visa-Exemptions-For-Non-Citizen
+  - corridor: canada/IN/GB/tourism
+    contention: 552
+    text_held: 255
+    answers:
+      visa_decision:
+        - url: https://cic.gc.ca/English/visit/visas-all.asp
+          seen: text
+          why: >-
+            "If you're a citizen of any of the countries or territories listed below, you need a
+            valid visitor visa and a valid passport" — India is on that list
+        - url: http://www.cic.gc.ca/english/visit/visas-all.asp
+          seen: text
+          why: the same 16,465-character page over http
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
+          seen: text
+          why: the same document at another address — byte-identical stored text, 16,465 characters
+      document_checklist:
+        - url: https://ircc.canada.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            "Gather your required documents. All applicants need to include a digital copy of your
+            valid passport ... valid for at least 6 months", with the pages to copy named
+        - url: http://www.cic.gc.ca/english/visit/apply-how.asp
+          seen: text
+          why: the same page over http on the older host
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: >-
+            Guide 5256, the full instruction guide for the visitor visa, with the document list in
+            it
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/guide-5256-applying-visitor-visa-temporary-resident-visa.html
+          seen: text
+          why: the same guide on canada.ca
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+          seen: text
+          why: the same document at another address — byte-identical stored text, 14,765 characters
+      application_route:
+        - url: https://ircc.canada.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            "How to apply for a visitor visa" — the steps, and how they change with the reason for
+            travel
+        - url: http://www.cic.gc.ca/english/visit/apply-how.asp
+          seen: text
+          why: the same page over http on the older host
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html
+          seen: text
+          why: where to go in person to give biometrics and submit
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+          seen: text
+          why: the same document at another address — byte-identical stored text, 14,765 characters
+      fees:
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: '"Visitor visa - per person ... $100", with $500 as the family maximum'
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/guide-5256-applying-visitor-visa-temporary-resident-visa.html
+          seen: text
+          why: the same fee table on canada.ca
+        - url: https://ircc.canada.ca/english/information/fees/fees.asp
+          seen: text
+          why: IRCC's fee list — '"Visitor visa - per person ... 100.00"'
+        - url: https://www.ircc.canada.ca/english/information/fees/fees.asp
+          seen: text
+          why: the same document at another address — byte-identical stored text, 14,834 characters
+      general_entry:
+        - url: https://cic.gc.ca/English/visit/visas-all.asp
+          seen: text
+          why: >-
+            "What you need to travel to Canada will depend on your citizenship and nationality, how
+            you're travelling (by air, land or sea), what documents you're travelling with"
+        - url: https://cic.gc.ca/english/visit/visa-exempt.asp
+          seen: text
+          why: >-
+            "You must meet some basic requirements" — a valid travel document, good health, no
+            convictions, ties that take you home, enough money for the stay
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/prepare-arrival.html
+          seen: text
+          why: >-
+            "Prepare for your arrival ... When you enter Canada" — what to have in hand at the
+            border rather than in the application
+        - url: http://www.cic.gc.ca/english/visit/visas-all.asp
+          seen: text
+          why: the same document at another address — byte-identical stored text, 16,465 characters
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
+          seen: text
+          why: the same document at another address — byte-identical stored text, 16,465 characters
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/eligibility.html
+          seen: text
+          why: the same document at another address — byte-identical stored text, 1,860 characters
+    tools:
+      processing_times: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html
+    unanswered:
+      processing_times: >-
+        no candidate states a figure. IRCC publishes times through "Select your application type to
+        get an idea of how long it'll take us", which computes rather than states.
+    excluded:
+      - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/imm5484.html
+        why: >-
+          titled "Document Checklist: Temporary Resident Visa (Visitor Visa) outside of Canada", and
+          it is a download page for a PDF, not a checklist. Its whole text explains how to open
+          Acrobat Reader. Rule 4 of the adjudication prompt excludes a page that says "documents
+          required" without naming any.
+    joint:
+      - https://ircc.canada.ca/english/information/fees/fees.asp
+      - https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
+      - https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/prepare-arrival.html
+  - corridor: germany/IN/GB/tourism
+    contention: 87
+    text_held: 45
+    answers:
+      visa_decision:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+          seen: text
+          why: >-
+            "Overview of visa requirements/exemptions for entry into the Federal Republic of
+            Germany" — the table reads "India yes"
+      application_route:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/-/215870
+          seen: text
+          why: >-
+            "responsibility ... lies with the mission responsible for the area in which you have
+            your ordinary residence", plus the Consular Services Portal and the appointment step
+        - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+          seen: text
+          why: the same page at a second address — byte-identical stored text, 17,678 characters
+      fees:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/-/215870
+          seen: text
+          why: '"The processing fee for a Schengen visa is normally EUR 90"'
+        - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+          seen: text
+          why: the same page at a second address
+      processing_times:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/-/215870
+          seen: text
+          why: >-
+            "missions require up to 15 calendar days to reach a decision on a correct application"
+        - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+          seen: text
+          why: the same page at a second address
+    unanswered:
+      document_checklist: >-
+        no candidate names a document. The nearest, 215870, says only to "consult the requirements
+        well in advance" — rule 4 of the adjudication prompt excludes exactly that. Germany's whole
+        mission network (india.diplo.de, uk.diplo.de), where the checklist lives, is outside the
+        trusted set by entry 33's governmental-marker gap.
+      general_entry: >-
+        nothing in the contention set states entry conditions; a search of all 45 stored bodies for
+        travel insurance, the EUR 30,000 cover or sufficient funds returns nothing.
+    joint:
+      - https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+  - corridor: france/IN/GB/tourism
+    contention: 206
+    text_held: 21
+    answers:
+      application_route:
+        - url: https://uk.diplomatie.gouv.fr/en/applying-for-a-visa
+          seen: text
+          why: >-
+            the four steps as the post serving a UK resident states them — wizard, online
+            application, submit to the local visa centre, track
+        - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa
+          seen: text
+          why: the same steps stated by the ministry
+        - url: https://france-visas.gouv.fr/en
+          seen: text
+          why: '"To obtain a visa via France-Visas, you need to follow five steps"'
+      general_entry:
+        - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa
+          seen: text
+          why: >-
+            "All foreign nationals wishing to enter France must be able to submit statutory
+            documents at the border concerning the reasons for their stay, their means of support
+            and accommodation arrangements"
+        - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/ees-the-new-european-border-entryexit-system-goes-live-on-10-april-2026
+          seen: text
+          why: >-
+            the Entry/Exit System and ETIAS at the border, from 10 April 2026 — an entry condition
+            that is not part of the visa application
+    tools:
+      visa_decision: https://france-visas.gouv.fr/en/assistant-visa
+      document_checklist: https://france-visas.gouv.fr/en/assistant-visa
+      fees: https://france-visas.gouv.fr/en/assistant-visa
+    unanswered:
+      visa_decision: >-
+        no readable candidate states whether an Indian national needs a visa. Every page defers to
+        the Visa Wizard, which is why the corridor resolves as resolved_decision_tool. The highest-
+        scoring candidate naming India, in.diplomatie.gouv.fr's "France lifts airport transit visa
+        requirements for Indian nationals" at 164.0, is about airport transit and not about tourism.
+      document_checklist: >-
+        the wizard "will also tell you what documents must be attached"; no page lists them
+      fees: >-
+        the wizard states "the relevant fee"; the only euro figures in the readable set are the EUR
+        877.50 student income threshold and the EUR 20 ETIAS charge
+      processing_times: >-
+        no readable candidate gives a figure; every page says waiting times vary by country and
+        season
+    unverifiable:
+      - https://france-visas.gouv.fr/en/royaume-uni
+      - https://france-visas.gouv.fr/en/web/france-visas/inde
+      - https://france-visas.gouv.fr/en/visa-de-court-sejour
+      - https://france-visas.gouv.fr/en/lieu-de-depot
+    note: >-
+      the index holds text for 21 of 206 candidates — the lowest coverage of the ten — because
+      france-visas.gouv.fr answers a Cloudflare challenge (entry 41) and stores nothing. The four
+      unverifiable pages above are addressed as if they answer a role (the UK post, the India page,
+      the short-stay category, where to apply) and no one has read them, so they are recorded rather
+      than credited or dismissed.
+    joint:
+      - https://uk.diplomatie.gouv.fr/en/applying-for-a-visa
+      - https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/ees-the-new-european-border-entryexit-system-goes-live-on-10-april-2026
+      - https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa
+  - corridor: united-kingdom/IN/GB/tourism
+    contention: 329
+    text_held: 269
+    answers:
+      document_checklist:
+        - url: https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents/guide-to-supporting-documents-visiting-the-uk
+          seen: text
+          why: >-
+            "Visiting the UK: guide to supporting documents" — a numbered list beginning with the
+            travel document, then evidence of personal circumstances, funds and accommodation, with
+            the translation rules
+      application_route:
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+          seen: text
+          why: >-
+            "you must apply online before you travel to the UK and attend an appointment at a visa
+            application centre. The earliest you can apply is 3 months before you travel"
+        - url: https://www.gov.uk/apply-to-come-to-the-uk
+          seen: text
+          why: the same route as a step-by-step guide
+        - url: https://www.gov.uk/apply-to-come-to-the-uk/getting-a-decision-on-your-application
+          seen: text
+          why: the same document at another address — byte-identical stored text, 2,692 characters
+        - url: https://www.gov.uk/apply-to-come-to-the-uk/prove-your-identity
+          seen: text
+          why: the same document at another address — byte-identical stored text, 2,692 characters
+      fees:
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+          seen: text
+          why: >-
+            "Standard Visitor visa £135, 6 months" — the sterling fee, which is what a traveller
+            applying from Britain pays
+      processing_times:
+        - url: https://www.gov.uk/guidance/visa-processing-times-applications-outside-the-uk
+          seen: text
+          why: '"Visit visas / Standard Visitor / 3 weeks"'
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+          seen: text
+          why: >-
+            "you'll usually get a decision on your visa within 3 weeks"
+        - url: https://www.gov.uk/guidance/visa-decision-waiting-times-applications-outside-the-uk
+          seen: text
+          why: the same document at another address — byte-identical stored text, 7,003 characters
+        - url: https://www.gov.uk/guidance/visa-decision-waiting-times-applications-outside-the-uk?step-by-step-nav=cafcc40a-c1ff-4997-adb4-2fef47af194d
+          seen: text
+          why: the same document at another address — byte-identical stored text, 7,003 characters
+      general_entry:
+        - url: https://www.gov.uk/apply-to-come-to-the-uk/travelling-to-the-uk
+          seen: text
+          why: >-
+            "You must not travel to the UK before your visa application is approved", and the eVisa
+            and vignette checks before travelling
+        - url: https://www.gov.uk/evisa/travel-with-evisa
+          seen: text
+          why: what to carry and show at the border with an eVisa
+    tools:
+      visa_decision: https://www.gov.uk/check-uk-visa
+    unanswered:
+      visa_decision: >-
+        no candidate states whether an Indian national needs a visa. gov.uk/standard-visitor says
+        only "Depending on your nationality, you may not need a visa"; the answer is behind
+        gov.uk/check-uk-visa, which is entries 59 and 60's questionnaire.
+    excluded:
+      - url: https://visa-fees.homeoffice.gov.uk/y/india/inr/visit/standard-visitor-visa---for-uk-isle-of-man-jersey-and-guernsey/all
+        why: >-
+          this is the wrong page for this corridor, and it is worth saying why because it looks like
+          the right one. Its first question is "Select the country you are making your application
+          from" — India — so the INR 18,322 it gives is the fee for applying in India. This
+          traveller applies from Britain and pays the GBP 135 on gov.uk. Entry 82 treated the per-
+          nationality fee tables as the UK's missing answer; for a corridor whose residence is not
+          the passport country they are keyed on the wrong dimension.
+    joint:
+      - https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents/guide-to-supporting-documents-visiting-the-uk
+      - https://www.gov.uk/guidance/immigration-rules/immigration-rules-appendix-visitor-visa-national-list
+      - https://www.gov.uk/guidance/visa-processing-times-applications-outside-the-uk
+      - https://www.gov.uk/standard-visitor
+  - corridor: japan/IN/GB/tourism
+    contention: 132
+    text_held: 66
+    answers:
+      visa_decision:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+          seen: text
+          why: >-
+            the 74 countries with visa exemption arrangements; India is not among them, so an Indian
+            passport needs a visa
+        - url: http://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+          seen: text
+          why: the same page over http — a separate candidate carrying the same 5,730 characters
+      document_checklist:
+        - url: https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+          seen: text
+          why: >-
+            "CHECKLIST FOR TEMPORARY VISITOR VISA: Tourism" at the post serving a UK resident —
+            passport, form, 35x45mm photo, UK share code, employer letter, schedule of stay, three
+            months of bank statements
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000194.html
+          seen: text
+          why: the Edinburgh consulate's eight numbered tourism requirements, the same list
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/files/100603545.pdf
+          seen: text
+          why: >-
+            "CHECKLIST FOR TEMPORARY VISITOR - JAPAN eVISA (Tourism)" — the same documents for the
+            online route
+      application_route:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/note.html
+          seen: text
+          why: >-
+            "An application for visa is made by the applicant him/herself at the Japanese Embassy /
+            Consulate General with jurisdiction over the area in which the applicant lives"
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/files/100603564.pdf
+          seen: text
+          why: >-
+            eligibility for the eVISA from the UK — not a British citizen, permission to reside in
+            the UK, tourism, under 90 days — and its four steps
+        - url: https://www.evisa.mofa.go.jp/index
+          seen: text
+          why: the eVISA system's own five-step flow, from verification to issuance
+      fees:
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000203.html
+          seen: text
+          why: >-
+            "Single Entry Visa / Indian national £4.00" — per nationality, in the currency the
+            traveller pays, at the post serving them
+        - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/pagewe_000001_00391.html
+          seen: text
+          why: '"approximately 15,000 yen for a single-entry visa" from 1 July 2026'
+      processing_times:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/day.html
+          seen: text
+          why: '"5 working days from the day following the date of receipt of the application"'
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/files/100603564.pdf
+          seen: text
+          why: '"Visa processing normally takes at least 5 working days"'
+      general_entry:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/index.html
+          seen: text
+          why: >-
+            "landing permission is granted by an immigration officer at the port of entry when a
+            foreigner meets the requirement for entry into Japan" — the conditions after the visa,
+            not the application
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000196.html
+          seen: text
+          why: >-
+            what to carry for immigration inspection at the airport — return ticket, host details,
+            evidence of funds
+    joint:
+      - https://www.mofa.go.jp/j_info/visit/visa/faq.html
+      - https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+      - https://www.mofa.go.jp/j_info/visit/visa/visaonline.html
+      - https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+  - corridor: netherlands/IN/GB/tourism
+    contention: 443
+    text_held: 190
+    answers:
+      document_checklist:
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom
+          seen: text
+          why: >-
+            "Checklist: Applying for a Schengen visa in the United Kingdom for tourism" — this
+            corridor exactly: application form with its unique code, travel document under ten years
+            old with two empty pages, a 35x45mm photo, and proof of legal residence such as a
+            British residence permit or a UKVI eVisa share code
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism
+          seen: text
+          why: the same checklist without the country step
+      application_route:
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-united-kingdom
+          seen: text
+          why: >-
+            "go to the VFS Global application centre in Birmingham, Edinburgh, London or Manchester.
+            You can only submit an application there if you live in the United Kingdom"
+      processing_times:
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/waiting-time-after-visa-application
+          seen: text
+          why: >-
+            the table of calendar days per visa type — '"How long does it take to get a visa for the
+            Netherlands?"'
+    tools:
+      visa_decision: https://www.government.nl/themes/migration-and-travel/holidays-and-travels/check-visa-netherlands
+    unanswered:
+      visa_decision: >-
+        no candidate states it for an Indian passport. Every page defers — government.nl says
+        "whether you need a visa depends on your nationality", and the UK application page says only
+        that British passport holders do not.
+      fees: >-
+        the right page is netherlandsworldwide.nl/consular-fees/united-kingdom and it holds no
+        stored text. The consular-fee pages that are readable — the Czech Republic at EUR 90, the
+        Palestinian Territories at EUR 90 — are other countries' posts, which rule 5 excludes.
+      general_entry: >-
+        the only entry-condition page in the set is the ETIAS one, and ETIAS is for travellers who
+        do not need a visa, so it does not apply to this traveller.
+    unverifiable:
+      - https://www.netherlandsworldwide.nl/consular-fees/united-kingdom
+      - https://www.netherlandsworldwide.nl/travel-netherlands/how-long-can-i-visit-the-netherlands-for
+    note: >-
+      443 candidates, and 190 of the stored bodies are business.gov.nl pages about permits, customs
+      and company registration — the Dutch set is the noisiest of the ten, which is worth knowing
+      when reading a selector's score on it.
+    joint:
+      - https://www.netherlandsworldwide.nl/consular-fees/united-kingdom
+      - https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom
+      - https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-united-kingdom
+      - https://www.netherlandsworldwide.nl/visa-the-netherlands/waiting-time-after-visa-application
+  - corridor: sweden/IN/GB/tourism
+    contention: 77
+    text_held: 61
+    answers:
+      visa_decision:
+        - url: https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden
+          seen: title_only
+          why: >-
+            the Annex I list of nationalities that must hold a visa; the only candidate that answers
+            for an Indian passport rather than deferring to a list
+      document_checklist:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: >-
+            "Prepare this before you apply" names a valid passport, form 119031, medical insurance
+            covering EUR 30,000, SEK 700 a day of subsistence, a passport photograph and an
+            invitation (241011)
+      application_route:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: >-
+            states that applications go through VFS Global or a Swedish embassy, and carries the
+            residence selector that names which
+      fees:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: '"People 12 years of age or older: 90 Euros"'
+      processing_times:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: '"You will usually receive a decision within two weeks"'
+      general_entry:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: >-
+            the border-police conditions — passport valid three months past departure, return
+            ticket, invitation or hotel booking, SEK 700 a day
+    joint:
+      - https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden
+      - https://www.migrationsverket.se/en/you-have-received-a-decision/visiting-sweden/your-application-for-an-entry-visa-has-been-approved.html
+  - corridor: singapore/IN/GB/tourism
+    contention: 172
+    text_held: 89
+    answers:
+      visa_decision:
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements/visa_requirements/visa-detail-page/india
+          seen: text
+          why: >-
+            "You will need a visa to enter Singapore if you are holding a travel document issued by
+            this country" — the per-nationality page, stated for India
+        - url: https://ica.gov.sg/enter-depart/arriving/overview/visa_requirements/visa-detail-page/india
+          seen: title_only
+          why: >-
+            the same India page at ICA's older path; no stored text, but the address is the same
+            document
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
+          seen: text
+          why: the same document at another address — byte-identical stored text, 4,736 characters
+      document_checklist:
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements/visa_requirements/visa-detail-page/india
+          seen: text
+          why: >-
+            "To apply for an entry visa for business or social visits, you will need" — Form 14A, a
+            photograph taken within three months, a photocopy of the passport biodata page, Form
+            V39A where required
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
+          seen: text
+          why: the same document at another address — byte-identical stored text, 4,736 characters
+      application_route:
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements/visa_requirements/visa-detail-page/india
+          seen: text
+          why: >-
+            the Procedure section — online through a strategic partner or local contact, or at a
+            Singapore Overseas Mission
+        - url: https://london.mfa.gov.sg/visa-information
+          seen: text
+          why: >-
+            the route for a UK resident specifically — VFS Global at 66 Wilson Street, London, since
+            the High Commission no longer accepts submissions
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
+          seen: text
+          why: the same document at another address — byte-identical stored text, 4,736 characters
+      fees:
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements/visa_requirements/visa-detail-page/india
+          seen: text
+          why: '"A S$30 non-refundable processing fee is payable online"'
+        - url: https://london.mfa.gov.sg/visa-information
+          seen: text
+          why: >-
+            "The visa application fee remains at £19. VFS processing fee is £13.50" — what this
+            traveller actually pays
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
+          seen: text
+          why: the same document at another address — byte-identical stored text, 4,736 characters
+      processing_times:
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements/visa_requirements/visa-detail-page/india
+          seen: text
+          why: '"processed within three working days (excluding the day of submission)"'
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
+          seen: text
+          why: the same document at another address — byte-identical stored text, 4,736 characters
+      general_entry:
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements
+          seen: text
+          why: >-
+            "General Entry Requirements" — six months of passport validity, the SG Arrival Card
+            within three days, biometrics, yellow fever, sufficient cash and onward travel
+        - url: https://mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa
+          seen: text
+          why: >-
+            "All visitors to Singapore must meet the following entry requirements" — the same
+            conditions, stated by the ministry
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore
+          seen: text
+          why: the same document at another address — byte-identical stored text, 4,791 characters
+        - url: https://www.mfa.gov.sg/Services/Visitors/Visa-Information
+          seen: text
+          why: the same document at another address — byte-identical stored text, 1,952 characters
+        - url: https://www.mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa
+          seen: text
+          why: the same document at another address — byte-identical stored text, 1,952 characters
+    note: >-
+      the mission pages for Chennai, Mumbai and New Delhi state their own fees and times, and are
+      deliberately excluded: rule 5 of the adjudication prompt prefers the post serving the
+      traveller's residence, and this traveller lives in Britain.
+    joint:
+      - https://www.ica.gov.sg/enter-transit-depart/entering-singapore
+  - corridor: united-states/IN/GB/tourism
+    contention: 306
+    text_held: 63
+    answers:
+      document_checklist:
+        - url: https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            "Gather Required Documentation" — a passport valid six months beyond the stay, the
+            DS-160 confirmation page, the fee payment receipt and a photograph. Read through the
+            byte-identical adoption.state.gov mirror of the same /content/travel/en/ path, which the
+            index does hold
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: text
+          why: >-
+            the same page, served under a second State Department subdomain and a candidate in its
+            own right
+      application_route:
+        - url: https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            "How to Apply" — complete Form DS-160, schedule an interview at the embassy in the
+            country where you live, attend it
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: text
+          why: the same page under a second subdomain
+      fees:
+        - url: https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: '"$185" for the non-refundable application fee, with issuance fees by nationality'
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: text
+          why: the same page under a second subdomain
+        - url: https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html
+          seen: text
+          why: >-
+            the fee schedule itself — '"Nonimmigrant visa application processing fee (non-
+            refundable) for all categories below $185.00"'
+      general_entry:
+        - url: https://www.dhs.gov/visit-united-states
+          seen: text
+          why: >-
+            "The visa allows a foreign citizen to travel to the United States port of entry and
+            request permission of the U.S. immigration inspector to enter" — with OBIM biometrics;
+            the conditions after the visa rather than the application
+    tools:
+      processing_times: https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/wait-times.html
+    unanswered:
+      visa_decision: >-
+        nothing readable states it for an Indian passport. The nearest is the Visa Waiver Program
+        page, whose whole subject is who may travel without a visa — but its list of participating
+        countries did not extract into stored text, so whether India's absence is legible there
+        cannot be checked from disk. The corridor's own outcome, decision_not_found, agrees.
+      processing_times: >-
+        no candidate states a figure. Wait times are published as a per-post lookup, which is a tool
+        rather than a page stating an answer.
+    unverifiable:
+      - https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html
+      - https://travel.state.gov/content/travel/en/us-visas/Visa-Reciprocity-and-Civil-Documents-by-Country/India.html
+      - https://uk.usembassy.gov/niv-applying-for-the-visa
+      - https://uk.usembassy.gov/visas
+    note: >-
+      every uk.usembassy.gov page in this set answered 403 to this client and holds no stored text,
+      so the post serving a UK resident could not be judged at all. The index holds text for 63 of
+      306 candidates, and most of what it does hold is the adoption.state.gov mirror of
+      travel.state.gov.
+    joint:
+      - https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html
+      - https://www.dhs.gov/visa-waiver-program
+      - https://www.dhs.gov/visit-united-states
+      - https://www.usa.gov/tourist-visa

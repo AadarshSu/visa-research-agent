@@ -15,7 +15,7 @@ happen is a checklist appearing without a source behind it, which `VisaPlan` ref
 """
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from urllib.parse import urlsplit
@@ -1090,91 +1090,22 @@ class CorridorResolver:
         return country.code if country else None
 
     def _shortlist(self, candidates: list[CandidatePage]) -> list[CandidatePage]:
-        """The best few candidates per role, so only a handful of pages are ever fetched.
+        """This resolver's settings applied to the module-level `shortlist`.
 
-        Per-role first, so no role is crowded out by another's strong results, then the budget is
-        filled with the next best overall. Filling it matters: taking three per role left four of
-        Vietnam's ten places empty while every readable `evisa.gov.vn` page sat just outside the
-        per-role cut, so the site that needed rendering most was never read.
-
-        Then each domain's own best page is reserved a place, because the places are what decide
-        what is read at all: an authority whose pages all fall below another's is never fetched, so
-        it can never fill a role, so the corridor refuses with the answer sitting one place outside
-        the cut. That is how a United States corridor refused while the mission serving the
-        traveller went unread and eight federal domains competed for ten places.
-
-        Pages the crawl already proved unreadable are dropped before any of that. A place spent on
-        one buys nothing, and the United States was spending half of them that way.
-
-        **Pinned pages take their places first, before any of the ranking runs.** A page that has
-        already filled a role for *this* corridor should never have to win the ranking again — and
-        it would increasingly have to, because seeding from the corpus grows the pool a great deal
-        (Canada: 471 crawled candidates against roughly 3,000 held). Entry 40's asymmetry says a
-        page ranked out is unrecoverable, so a larger pool means more pages lost to it. Pinning
-        keeps the corpus from making the scorer *more* load-bearing rather than less.
+        The ranking is deliberately not a method any more: grading it against
+        `oracle/selection_oracle.yaml` means replaying it from recorded scores at budgets nobody
+        ran, and a resolver cannot be built for that without a fetcher, a search provider and a
+        model client. What stays here is the one part that needs this run's state — dropping the
+        candidates the crawl already proved unreadable.
         """
 
-        candidates = self._readable_only(candidates)
-        chosen: dict[str, CandidatePage] = {}
-        pinned_urls: set[str] = set()
-        if self.pinned:
-            wanted = {canonical_key(url) for url in self.pinned}
-            for candidate in candidates:
-                if canonical_key(candidate.link.url) in wanted:
-                    chosen.setdefault(candidate.link.url, candidate)
-                    pinned_urls.add(candidate.link.url)
-        for role in ROLE_ORDER:
-            for candidate, _ in rank_for_role(candidates, role)[: self.shortlist_role_depth]:
-                chosen.setdefault(candidate.link.url, candidate)
-
-        by_score = sorted(candidates, key=lambda c: (-c.best_combined()[1], c.link.url))
-        for candidate in by_score:
-            if len(chosen) >= self.shortlist_size:
-                break
-            # Only pages that scored for something. A candidate no role wants is not worth a fetch.
-            if candidate.best_combined()[1] > 0:
-                chosen.setdefault(candidate.link.url, candidate)
-
-        # Reserved from every candidate rather than from those already chosen: a domain's best page
-        # can be fourth for its role, which is exactly where the per-role cut leaves it.
-        reserved = self._reserved_per_domain(by_score)
-        for candidate in reserved:
-            chosen.setdefault(candidate.link.url, candidate)
-
-        ordered = sorted(chosen.values(), key=lambda c: (-c.best_combined()[1], c.link.url))
-        if len(ordered) <= self.shortlist_size:
-            return ordered
-
-        # The truncation is where crowding out happens, so this is where both protections have to be
-        # honoured. Anything held back earlier would simply be cut here instead.
-        #
-        # **Pins go first, and until 2026-08-23 they were not honoured here at all.** Entry 47 says
-        # a page that already filled a role for this corridor "keeps its shortlist place regardless
-        # of ranking", and it kept it only as far as `chosen`: `ordered` sorts by score and the tail
-        # was cut without consulting `pinned_urls`, so a low-scoring pin was dropped — exactly
-        # the pin that matters, since a high-scoring one never needed pinning. Measured on Canada,
-        # `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` is `proven`, scores **0.0** on role
-        # vocabulary, and was cut here with the pin naming it.
-        reserved_urls = {candidate.link.url for candidate in reserved}
-        # Pinned before reserved, and score order preserved inside each group because the sort is
-        # stable: if the two protections together overflow the budget, a page that has answered this
-        # corridor outranks a domain that merely has not been read yet.
-        kept = sorted(
-            (
-                candidate
-                for candidate in ordered
-                if candidate.link.url in pinned_urls or candidate.link.url in reserved_urls
-            ),
-            key=lambda c: c.link.url not in pinned_urls,
+        return shortlist(
+            self._readable_only(candidates),
+            size=self.shortlist_size,
+            role_depth=self.shortlist_role_depth,
+            domain_floor=self.shortlist_domain_floor,
+            pinned=self.pinned,
         )
-        del kept[self.shortlist_size :]
-        held = {candidate.link.url for candidate in kept}
-        for candidate in ordered:
-            if len(kept) >= self.shortlist_size:
-                break
-            if candidate.link.url not in held:
-                kept.append(candidate)
-        return sorted(kept, key=lambda c: (-c.best_combined()[1], c.link.url))
 
     def _readable_only(self, candidates: list[CandidatePage]) -> list[CandidatePage]:
         """Drop candidates the crawl already found it could not read.
@@ -1210,30 +1141,6 @@ class CorridorResolver:
             for candidate in candidates
             if candidate.link.url not in blocked and host_of(candidate.link.url) not in unresolvable
         ]
-
-    def _reserved_per_domain(self, by_score: list[CandidatePage]) -> list[CandidatePage]:
-        """Each trusted domain's best-scoring pages, up to the floor.
-
-        Keyed on the registrable domain rather than the host, which is the unit trust is granted in.
-        A mission network gives every post its own subdomain, so a per-host floor would let one
-        authority reserve every place and recreate the crowding this exists to prevent. That is a
-        deliberate difference from the crawl's per-host budget, which is about not hammering one
-        site rather than about one site starving another.
-
-        A page no role scored for is still not worth fetching, so the floor cannot admit one.
-        """
-
-        reserved: list[CandidatePage] = []
-        per_domain: dict[str, int] = {}
-        for candidate in by_score:
-            if candidate.best_combined()[1] <= 0:
-                continue
-            domain = registrable_domain(host_of(candidate.link.url))
-            if per_domain.get(domain, 0) >= self.shortlist_domain_floor:
-                continue
-            per_domain[domain] = per_domain.get(domain, 0) + 1
-            reserved.append(candidate)
-        return reserved
 
     async def _fetch_bodies(
         self,
@@ -1612,3 +1519,124 @@ class CorridorResolver:
             queries=queries,
             model_calls=model_calls,
         )
+
+
+def shortlist(
+    candidates: list[CandidatePage],
+    *,
+    size: int = DEFAULT_SHORTLIST_SIZE,
+    role_depth: int = DEFAULT_SHORTLIST_ROLE_DEPTH,
+    domain_floor: int = DEFAULT_SHORTLIST_DOMAIN_FLOOR,
+    pinned: Collection[str] = (),
+) -> list[CandidatePage]:
+    """The best few candidates per role, so only a handful of pages are ever fetched.
+
+    Per-role first, so no role is crowded out by another's strong results, then the budget is
+    filled with the next best overall. Filling it matters: taking three per role left four of
+    Vietnam's ten places empty while every readable `evisa.gov.vn` page sat just outside the
+    per-role cut, so the site that needed rendering most was never read.
+
+    Then each domain's own best page is reserved a place, because the places are what decide
+    what is read at all: an authority whose pages all fall below another's is never fetched, so
+    it can never fill a role, so the corridor refuses with the answer sitting one place outside
+    the cut. That is how a United States corridor refused while the mission serving the
+    traveller went unread and eight federal domains competed for ten places.
+
+    Pages the crawl already proved unreadable are dropped **by the caller**, before any of this.
+    That step is `CorridorResolver._readable_only`, which stays a method because it asks the crawl
+    fetcher what it observed this run. Everything below is pure, and that is what lets
+    `discovery/selection_recall.py` replay the ranking from a recall log at budgets nobody ran.
+
+    **Pinned pages take their places first, before any of the ranking runs.** A page that has
+    already filled a role for *this* corridor should never have to win the ranking again — and
+    it would increasingly have to, because seeding from the corpus grows the pool a great deal
+    (Canada: 471 crawled candidates against roughly 3,000 held). Entry 40's asymmetry says a
+    page ranked out is unrecoverable, so a larger pool means more pages lost to it. Pinning
+    keeps the corpus from making the scorer *more* load-bearing rather than less.
+    """
+
+    chosen: dict[str, CandidatePage] = {}
+    pinned_urls: set[str] = set()
+    if pinned:
+        wanted = {canonical_key(url) for url in pinned}
+        for candidate in candidates:
+            if canonical_key(candidate.link.url) in wanted:
+                chosen.setdefault(candidate.link.url, candidate)
+                pinned_urls.add(candidate.link.url)
+    for role in ROLE_ORDER:
+        for candidate, _ in rank_for_role(candidates, role)[:role_depth]:
+            chosen.setdefault(candidate.link.url, candidate)
+
+    by_score = sorted(candidates, key=lambda c: (-c.best_combined()[1], c.link.url))
+    for candidate in by_score:
+        if len(chosen) >= size:
+            break
+        # Only pages that scored for something. A candidate no role wants is not worth a fetch.
+        if candidate.best_combined()[1] > 0:
+            chosen.setdefault(candidate.link.url, candidate)
+
+    # Reserved from every candidate rather than from those already chosen: a domain's best page
+    # can be fourth for its role, which is exactly where the per-role cut leaves it.
+    reserved = _reserved_per_domain(by_score, domain_floor)
+    for candidate in reserved:
+        chosen.setdefault(candidate.link.url, candidate)
+
+    ordered = sorted(chosen.values(), key=lambda c: (-c.best_combined()[1], c.link.url))
+    if len(ordered) <= size:
+        return ordered
+
+    # The truncation is where crowding out happens, so this is where both protections have to be
+    # honoured. Anything held back earlier would simply be cut here instead.
+    #
+    # **Pins go first, and until 2026-08-23 they were not honoured here at all.** Entry 47 says
+    # a page that already filled a role for this corridor "keeps its shortlist place regardless
+    # of ranking", and it kept it only as far as `chosen`: `ordered` sorts by score and the tail
+    # was cut without consulting `pinned_urls`, so a low-scoring pin was dropped — exactly
+    # the pin that matters, since a high-scoring one never needed pinning. Measured on Canada,
+    # `cbsa-asfc.gc.ca/travel-voyage/td-dv-eng.html` is `proven`, scores **0.0** on role
+    # vocabulary, and was cut here with the pin naming it.
+    reserved_urls = {candidate.link.url for candidate in reserved}
+    # Pinned before reserved, and score order preserved inside each group because the sort is
+    # stable: if the two protections together overflow the budget, a page that has answered this
+    # corridor outranks a domain that merely has not been read yet.
+    kept = sorted(
+        (
+            candidate
+            for candidate in ordered
+            if candidate.link.url in pinned_urls or candidate.link.url in reserved_urls
+        ),
+        key=lambda c: c.link.url not in pinned_urls,
+    )
+    del kept[size:]
+    held = {candidate.link.url for candidate in kept}
+    for candidate in ordered:
+        if len(kept) >= size:
+            break
+        if candidate.link.url not in held:
+            kept.append(candidate)
+    return sorted(kept, key=lambda c: (-c.best_combined()[1], c.link.url))
+
+
+def _reserved_per_domain(by_score: list[CandidatePage], floor: int) -> list[CandidatePage]:
+    """Each trusted domain's best-scoring pages, up to the floor.
+
+    Keyed on the registrable domain rather than the host, which is the unit trust is granted in.
+    A mission network gives every post its own subdomain, so a per-host floor would let one
+    authority reserve every place and recreate the crowding this exists to prevent. That is a
+    deliberate difference from the crawl's per-host budget, which is about not hammering one
+    site rather than about one site starving another.
+
+    A page no role scored for is still not worth fetching, so the floor cannot admit one.
+    """
+
+    reserved: list[CandidatePage] = []
+    per_domain: dict[str, int] = {}
+    for candidate in by_score:
+        if candidate.best_combined()[1] <= 0:
+            continue
+        domain = registrable_domain(host_of(candidate.link.url))
+        if per_domain.get(domain, 0) >= floor:
+            continue
+        per_domain[domain] = per_domain.get(domain, 0) + 1
+        reserved.append(candidate)
+    return reserved

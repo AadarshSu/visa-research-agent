@@ -7,8 +7,8 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-26 — update this line when you touch the handoff |
-| **Tests** | 539 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Last updated** | 2026-08-27 — update this line when you touch the handoff |
+| **Tests** | 554 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has twenty-four rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has fifty-one rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -46,8 +46,9 @@ questionnaire, or claiming approval is guaranteed.
 corpus and its page-text index — and a corridor answers from that store. **Live search is acceptable
 where it is genuinely unavoidable; it is not acceptable as the ordinary source of recall.** The corpus
 has to be useful, and useful means a number: how often a corridor finds what it needs without
-searching. [TODO.md](TODO.md) **item 19** is that goal as a work item. **Item 34 comes first**,
-because the measurement that would judge item 19 is not yet trustworthy — see below.
+searching. [TODO.md](TODO.md) **item 19** is that goal as a work item. **Item 34 is done** (entry
+87): selector work now has ground truth it did not build, so a measurement of item 19 can be
+believed.
 
 **It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
 twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar
@@ -70,7 +71,8 @@ destinations.
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Read at step 3b of `_resolve`, before the shortlist — and currently inert, on purpose** (entry 80). The A/B was taken and **it could not answer the question**: six runs of identical code give 4, 4, 4, 4, 5 and 6 roles, so role count cannot see a ranking change on one corridor (entry 81, which withdraws entry 80's regression). What is established is that the role-filling pages are shortlisted and fetched in every arm — the lift is recall-neutral, nothing shows it helps, and it stays off. Entries 78–81. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
-| **Model candidate selection** | **Built, off by default** (entry 83). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded on selection recall over ten countries **at matched budget**: **86% against the heuristic's 45%** given the same 112 picks, and still ahead of its 79% when the heuristic is allowed 274 pages. Wins seven, ties three, loses none (entry 86 — entry 85's "losses" on the UAE and the US were budget, not judgement). It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Caveats in entry 85: one run per corridor, one corridor per country, all `IN/GB`. |
+| **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
+| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed** — ten corridors, 47 answered roles over 71 pages, named by hand from each corridor's whole contention set (entry 87). It also records what could *not* be established: **13 of 60 roles have no readable answer**, 7 live behind a questionnaire, 12 candidates hold no stored text and could not be judged. `visa-discover selection-recall` grades any directory of recall logs against it and prints entries 85–86's joint oracle beside it, so the bias is a number on every run. No network, no model. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
@@ -110,12 +112,11 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings, so
 it cannot drift; this file deliberately does not copy it.
 
-**Start at item 34: build an oracle neither selector helped make.** Every selection measurement in
-entries 84–86 grades both arms against a set the two arms built between them — a page is "proven to
-fill a role" only if some arm read it, so a page neither read can never enter it. The matched-budget
-gap (86% against 45%, entry 86) is too large for the *direction* to be in doubt, but the numbers are
-not trustworthy and no further selector or corpus-versus-search work should lean on them. Item 34 has
-two ways to fix it and recommends the curated one.
+**Item 34 is finished** (entry 87). `oracle/selection_oracle.yaml` is ground truth neither selector
+helped build, and `visa-discover selection-recall` grades against it and against entries 85–86's
+jointly-built oracle side by side. **Entry 86's +41 points is +30**; the direction held. Two things
+it hands forward: thirteen of sixty roles have no readable answer at all, and the fixture is one
+nationality and one residence — known problems 29 and 30.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
@@ -463,20 +464,28 @@ re-add the amendment history here.
    approximate (entry 62's fidelity note), so twelve is a lower bound — which makes the noise finding
    stronger, not weaker. Entries 69, 70; TODO item 30.
 
-28. **Every selection measurement is graded against ground truth the two arms built between
-   them.** Entries 84–86 score the heuristic and the model on "pages proven to fill a role", where
-   *proven* means some arm read the page and the adjudicator used it — so a page **neither** arm read
-   can never enter the oracle, and both selectors are judged on a set they jointly created. The
-   matched-budget gap is 86% against 45% (entry 86), far too large for the direction to be in doubt,
-   but the numbers are not trustworthy and nothing further should lean on them. **This is TODO item
-   34 and it is the next thing to do.** It also blocks item 19, because "can the corpus answer without
-   search" is the same measurement with the same broken oracle.
+29. **The selection fixture is one nationality and one residence.** All ten corridors in
+   `oracle/selection_oracle.yaml` are `IN/GB/tourism`, so entry 87's numbers say nothing about how a
+   selector behaves when the passport and the residence come apart differently, or at all about
+   business, study or transit. Every finding in it that turned on residence — the UAE's visa on
+   arrival for Indians living in Britain, the UK fee table keyed on the application country, the
+   Netherlands' UK-specific checklist — is a reason to expect that dimension to matter, and none of
+   them would have been visible in an `IN/IN` corridor. Widening it is the natural next measurement,
+   and it is the same question as the nationality dimension entry 48 left open.
+
+30. **The fixture cannot name an answer nobody could read.** Thirteen of its sixty roles are recorded
+   `unanswered`, and twelve candidates are recorded `unverifiable` — plausible answers with no stored
+   text. Both are honest, and both mean the denominator is a floor rather than the truth: France sits
+   at 21 readable candidates of 206 because its portal answers a Cloudflare challenge, so an arm that
+   picks the right France page gets no credit for it. A recall number computed on it is therefore
+   "recall over what is legible", and item 5 moves the bound rather than the metric.
 
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source
 plan never run live — entries 56, 57), **18** (the excerpt silently deciding corridors — entry 42),
-**25** (entry 27's exception not firing on the corpus path — entries 56, 57). Also removed as fixed: a
+**25** (entry 27's exception not firing on the corpus path — entries 56, 57), **28** (selection graded
+against an oracle the arms built — entry 87 replaces it with a curated one). Also removed as fixed: a
 block resolving a corridor it had nothing to do with (entry 32), the unverified `conflicts` field
 (entry 30), and a failed model call substituting the heuristic (entry 31).
 

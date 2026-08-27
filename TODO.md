@@ -9,14 +9,20 @@ why the item after it exists; **Smaller things** are one-paragraph defects with 
 
 **The goal this list serves.** A country is built offline — corpus plus page-text index — and a
 corridor answers from that store. Live search is acceptable where genuinely unavoidable, not as the
-ordinary source of recall. **Item 19 is that goal as a work item**; items 30, 33 and 34 feed it, and
-entry 82 measured how close it already is: 18 of 30 corridors had zero corpus misses, and none of the
-67 misses were on a host the corpus lacks.
+ordinary source of recall. **Item 19 is that goal as a work item**; items 30 and 33 fed it, item 34
+is done (entry 87), and entry 82 measured how close it already is: 18 of 30 corridors had zero corpus
+misses, and none of the 67 misses were on a host the corpus lacks.
 
-**Where the list stands, 2026-08-25.** The three items that used to gate everything are finished and
+**Where the list stands, 2026-08-27.** The three items that used to gate everything are finished and
 confirmed by live runs — **item 22** (the corpus replaces the crawl, entries 49–53), **item 23** (the
 vocabulary could not recognise a page that *states* the visa answer, entry 56) and **item 3** (the
 twenty-corridor measurement, entry 58, which passed marginally).
+
+**Selector work now has ground truth it did not build** (item 34, entry 87). The measurement harness
+that produced entries 84–86 was grading both arms on a set they made between them; the independent
+version is committed at `oracle/selection_oracle.yaml` and says entry 86's +41 points is **+30**. The
+direction held. Two things it hands to the items below: thirteen of sixty roles have no readable
+answer at all, and the fixture is still one nationality and one residence.
 
 **Search has credit again, and the three things that were gating stage 3 are fixed and confirmed
 live**: pacing and `402` classification (entry 74), the post mis-pick (entry 72, six of seven
@@ -142,7 +148,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has twenty-four rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has fifty-one rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -151,43 +157,30 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 34. Build an oracle that neither selector helped make — `next`, **start here**
+### 34. ~~Build an oracle that neither selector helped make~~ — `done, entry 87`
 
-**Why:** every selection measurement in entries 84–86 is graded against a set the two arms built
-between them. A page is "proven to fill a role" only if some arm *read* it, so a page neither read
-can never enter the oracle, and both selectors are scored on ground truth they jointly created. The
-matched-budget result (86% against 45%, entry 86) is large enough that the direction is not in doubt;
-the **numbers** are not trustworthy and no further selector work should lean on them.
+**Done 2026-08-27.** `oracle/selection_oracle.yaml` names, by hand, the page answering each role for
+the ten corpus corridors, built from each corridor's whole contention set rather than from what
+either arm fetched. `visa-discover selection-recall` grades any directory of recall logs against it
+and prints entries 85–86's joint oracle beside it, so the bias is a number on every run rather than
+a sentence in an entry.
 
-**What is already on disk and needs no network.** `var/recall/*.json` holds, per corridor, every
-candidate with its URL, per-role scores, and whether it was shortlisted and fetched. The ten graded
-corridors are in the scratchpad layout described in entry 85, but they are reproducible from the
-recall logs alone.
+**Entry 86's +41 points is +30**, and the direction held. Against the heuristic at its shipped 35
+places the margin is **+9 where the joint oracle said +7** — the bias ran both ways. The recommended
+option (2) was the right one for a reason neither option statement gave: a fetch-everything oracle
+would have inherited the alias bug that turned out to be the joint oracle's sharpest fault, because
+it would still have been a set of URLs somebody fetched.
 
-**Two ways to fix it. They are not equivalent and the choice matters.**
+**What it left open, in the order it matters.**
 
-1. **Fetch-everything oracle — automatable, and the caveat is real.** For a handful of corridors,
-   fetch *every* in-contention candidate (median 72, max 705) and adjudicate the lot, taking the union
-   of roles filled as the oracle. No selector touches it. **The caveat:** the adjudicator's packet
-   cannot hold 700 excerpts, so it must be batched — and a page judged inside a batch of 20 is judged
-   without the other 680, so it can "fill a role" that it would lose in the full set. That makes the
-   oracle *generous* rather than biased toward a selector, which is the better failure, but it must be
-   said out loud in whatever entry reports it.
-2. **A curated fixture — smaller, slower to make, and durable.** Name by hand, per corridor, the page
-   that actually answers each role. Ten corridors is an afternoon. It never needs rebuilding, it is a
-   regression set as well as an oracle, and it is the only version with no model in it anywhere. Entry
-   68 already puts accuracy verification outside the codebase, so this is consistent with how the
-   project treats ground truth.
-
-   **Recommended.** Do (2) for the ten corpus countries, and use (1) only if a wider sample is wanted
-   later.
-
-**Then re-run entry 86's matched-budget comparison against it**, and report both numbers — against
-the independent oracle and against the old jointly-built one — so the size of the bias is on the
-record rather than merely acknowledged.
-
-**Do not grade on roles filled.** Entry 81 measured that metric swinging ±2 on identical input, and
-entries 79–81 are three consecutive entries that were wrong because they leaned on it.
+- **Thirteen of the sixty roles have no answer anyone could read**, and that is where the remaining
+  coverage lives — France's four behind the Visa Wizard (item 5), the Netherlands' UK consular fee
+  page holding no text, the United States' Visa Waiver country list not extracting.
+- **Still one nationality and one residence, `IN/GB`, across all ten.** That is now the largest
+  untested dimension in the whole harness, and item 48's nationality question is the same question.
+- **The heuristic at 35 places reaches 91% against the model's 100%**, so the shipped comparison is
+  a cost argument — 3.1× the fetches — at least as much as a recall one. Any future selector work
+  should quote both.
 
 
 ### 30. Perfect batch 1 before adding a single further country — `next`

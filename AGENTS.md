@@ -40,15 +40,23 @@ the CLI does not offer it.
   their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
   the trusted set is checked before blaming ranking for anything.
 - **To see the shortlist** — 35 places since entry 61, five reserved per role — wrap
-  `CorridorResolver._shortlist`, print each candidate's score, role, link text, inherited heading and
-  `link_scores.signals`, and return the list unchanged. Nothing else exposes it. Wrapping
-  `_fetch_bodies` instead also shows which were *readable*.
+  `resolver.shortlist`, print each candidate's score, role, link text, inherited heading and
+  `link_scores.signals`, and return the list unchanged. Nothing else exposes it. **With
+  `discovery_selector: model` the shortlist is no longer what gets read**, so wrap
+  `CorridorResolver._choose_what_to_read` to see the actual selection, or `_fetch_bodies` to see
+  which of it was *readable*.
 - **To replay a past corridor offline, join the corpus, not the recall log.** Every run writes
   `var/recall/<corridor>.json` with all candidates and their scores. Rebuilding a `PageLink` from that
   file's `title` reproduces only 70% of recorded scores; joining `var/corpus/<CC>.json`, which stores
-  `link_text`, `heading` and `depth` as the crawl found them, reproduces 99% (entry 62). Binding the
-  real `CorridorResolver._shortlist` to a stub reproduces 26 of 26 recorded shortlists exactly — a
-  reimplementation of it did not, and disagreed with an observed run (entry 61).
+  `link_text`, `heading` and `depth` as the crawl found them, reproduces 99% (entry 62).
+- **To replay the *ranking* at a budget nobody ran, call `resolver.shortlist()` on the recall log's
+  own scores.** It is a module-level function precisely so this needs no resolver, no fetcher and no
+  model client (entry 87), and the recorded scores are exact input to it because the numeric text
+  lift is off everywhere. Never reimplement it: a reimplementation disagreed with an observed run,
+  while binding the real thing reproduced 26 of 26 recorded shortlists (entry 61).
+- **`visa-discover selection-recall`** grades what a selector chose to read against
+  `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it. Reads
+  two files, calls nothing.
 - **Clear `var/cache/` when testing a retrieval change and `var/corridors/` when testing a discovery
   change**, or a pre-change result is served and the fix appears not to work. **`var/corpus/` is
   deliberately not cleared** — it is the store, not a cache, and rebuilding one costs search quota.

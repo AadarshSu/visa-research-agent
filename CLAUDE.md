@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose twenty-four rows are
+what has wasted the most time here — see the corrections table further down, whose fifty-one rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -41,13 +41,20 @@ crawl reaches them at any budget, while Canada's equivalent reached 213 values b
 published a page listing every country as a link. The second cause is the questionnaire outcome
 wearing a different hat, and the answer is the same: name the tool.
 
-**What chooses which pages to read is now a model, not the ranking** (entries 83–86). It reads stored
+**What chooses which pages to read is now a model, not the ranking** (entries 83–87). It reads stored
 page text for every candidate in contention and picks up to 20 pages to fetch, where the heuristic
-ranked links and fetched 35. Graded on selection recall at **matched budget** it reaches **86% against
-the heuristic's 45%**, and still beats the heuristic's 79% when that is allowed 2.4× the pages. It
-costs a second model call per corridor. `discovery_selector: model`.
+ranked links and fetched 35. It costs a second model call per corridor. `discovery_selector: model`.
 
-**Read entries 78–86 before touching discovery ranking.** Four of them correct the three before them,
+**And selector work finally has ground truth it did not build** (entry 87, TODO item 34).
+`oracle/selection_oracle.yaml` names, by hand, the page answering each role for ten corridors, from
+each corridor's whole contention set rather than from what any arm fetched. Against it the model
+reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the heuristic is
+allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used,
+the same arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the
+shipped heuristic is +9. `visa-discover selection-recall` prints both columns on every run, so the
+bias is a number rather than a caveat.
+
+**Read entries 78–87 before touching discovery ranking.** Five of them correct the ones before them,
 and the corrections table below carries the specific traps.
 
 ## Rules that must not be broken
@@ -314,6 +321,11 @@ cause, and only running the thing showed it.
 | ...and +7 is the selector's margin | that compared 35 picks against 11; at matched budget it is **+41** (entry 86) |
 | the model lost the UAE and the US on thin text | at matched budget it wins the UAE and ties the US — it was the budget (entry 86) |
 | "prefer fewer" is sensible advice for a page budget | a fetch is cheap and a missed role is not — it had the trade backwards (entry 84) |
+| ...and +41 is the selector's margin | on an oracle neither arm built it is **+30**; both arms made the old one (entry 87) |
+| a page proven to fill a role is one page | ICA publishes the same page at three addresses; the old oracle held one (entry 87) |
+| the UK's per-nationality fee table is the answer it hides | it is keyed on the country you *apply from*, not the passport (entry 87) |
+| a page titled "Document Checklist" is a checklist | `imm5484.html` is a download page whose text explains Acrobat Reader (entry 87) |
+| a fetch-everything oracle is the automatable version of the same thing | it would still be URLs somebody fetched, so it inherits the alias bug (entry 87) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
@@ -347,6 +359,7 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 ```bash
 .venv/bin/visa-discover corpus --country CA     # build a country's offline page corpus
 .venv/bin/visa-discover pagetext --backfill    # index the text the retrieval cache already holds
+.venv/bin/visa-discover selection-recall       # grade what was chosen to read; no network, no model
 ```
 
 Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
@@ -364,11 +377,13 @@ retrieval cache for nothing. It is **ranking input only** — see the rule above
 
 **Two different things read this index and only one of them is on.** `discovery_selector: model`
 **is on** (entry 85): a model reads stored text for every candidate in contention and picks up to 20
-pages to fetch, replacing the shortlist as the recall gate — measured over ten countries at 86%
-selection recall against the heuristic's **45% given the same number of picks** (79% when the
-heuristic is allowed its full 35 places, reading 2.4× more), at the cost of a second model call per
-corridor — entries 85 and 86. A country with no stored text falls back to the heuristic and **says so in the
-corridor's notes**. The *numeric* text lift in `combined` is a separate thing and stays off:
+pages to fetch, replacing the shortlist as the recall gate, at the cost of a second model call per
+corridor. Graded against `oracle/selection_oracle.yaml` — ground truth neither selector helped build
+— it reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the
+heuristic is allowed its shipped 35 places and 3.1× the fetches (entry 87; entries 85 and 86 read
+86%, 45% and 79% on an oracle both arms made). A country with no stored text falls back to the
+heuristic and **says so in the corridor's notes**. The *numeric* text lift in `combined` is a
+separate thing and stays off:
 
 **It may only rank a candidate set it covers past `DEFAULT_TEXT_COVERAGE_BAR` (half), and today no
 country does**, so the lift is **off everywhere**. That is a conservative default, not a measured
