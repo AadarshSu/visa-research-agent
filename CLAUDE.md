@@ -300,6 +300,8 @@ cause, and only running the thing showed it.
 | a model picking 7 pages beats a heuristic picking 35 | it picked a landing page over its content child, with no redundancy left (entry 83) |
 | ...so a model selector is worse than ranking | let it pick 20 and it finds 85% against 55%, reading half as many (entry 84) |
 | ...and that +30 points is what it buys | four of those five corridors were the UK; over ten it is **+7** (entry 85) |
+| ...and +7 is the selector's margin | that compared 35 picks against 11; at matched budget it is **+41** (entry 86) |
+| the model lost the UAE and the US on thin text | at matched budget it wins the UAE and ties the US — it was the budget (entry 86) |
 | "prefer fewer" is sensible advice for a page budget | a fetch is cheap and a missed role is not — it had the trade backwards (entry 84) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
@@ -352,8 +354,9 @@ retrieval cache for nothing. It is **ranking input only** — see the rule above
 **Two different things read this index and only one of them is on.** `discovery_selector: model`
 **is on** (entry 85): a model reads stored text for every candidate in contention and picks up to 20
 pages to fetch, replacing the shortlist as the recall gate — measured over ten countries at 86%
-selection recall against the heuristic's 79%, reading 59% fewer pages, at the cost of a second model
-call per corridor. A country with no stored text falls back to the heuristic and **says so in the
+selection recall against the heuristic's **45% given the same number of picks** (79% when the
+heuristic is allowed its full 35 places, reading 2.4× more), at the cost of a second model call per
+corridor — entries 85 and 86. A country with no stored text falls back to the heuristic and **says so in the
 corridor's notes**. The *numeric* text lift in `combined` is a separate thing and stays off:
 
 **It may only rank a candidate set it covers past `DEFAULT_TEXT_COVERAGE_BAR` (half), and today no

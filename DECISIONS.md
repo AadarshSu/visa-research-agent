@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [86](#86-matched-budget-the-selector-is-not-7-points-better-than-ranking-it-is-41) | **Matched budget: +41 points, not +7** — entry 85 compared configurations, not selectors |
 | [85](#85-ten-countries-ten-text-indexes-the-selector-wins-by-seven-points-and-reads-59-fewer-pages) | **Ten countries: +7 points, 59% fewer pages read.** The selector goes on; entry 84's +30 was a sample artefact |
 | [84](#84-graded-on-the-selection-instead-of-the-plan-the-model-reads-half-as-much-and-finds-30-points-more) | **Graded on the selection, not the plan** — 85% against 55%, reading half as many pages |
 | [83](#83-a-model-chooses-what-to-read-and-the-stored-text-barrier-moves-from-an-absence-to-a-type) | **A model chooses what to read** — 7 pages instead of 35; the stored-text barrier becomes a type |
@@ -134,6 +135,74 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 86. Matched-budget: the selector is not 7 points better than ranking, it is 41
+**2026-08-26 · re-analysis of entry 85's runs, at no cost. Corrects entry 85's headline and its two "losses"**
+
+Entry 85 compared the heuristic reading **35** pages against the model reading **11**, and reported
+the difference as the selector's. **It is not**: two things varied — who chooses, and how many they
+choose — so the number measured a *configuration*, not a selector. The project owner said so, and
+the controlled version was free, because the recall logs hold every candidate and its scores and
+`_shortlist` can be re-run at any size.
+
+### Give both the same number of picks
+
+```
+MATCHED BUDGET — both selectors given the same 112 picks
+  heuristic @K   13/29   45%
+  model          25/29   86%
+
+for reference, heuristic at its shipped 35 places (274 pages)   23/29   79%
+```
+
+**+41 points, not +7.** At matched budget the model wins seven corridors, ties three and **loses
+none**. The heuristic needs 2.4× the budget to reach 79%, still short of what the model gets from 112
+picks.
+
+The confound ran *against* the model, which is why entry 85's number was too small rather than too
+large — but "conservative" is not a defence of a design that cannot separate its variables.
+
+### Entry 85's two "losses" were budget, not judgement
+
+It named the United Arab Emirates and the United States as corridors the model lost. At matched
+budget:
+
+| | heuristic @K | model | at 35 places |
+| --- | --- | --- | --- |
+| United Arab Emirates | 1/3 | **2/3** | 3/3 |
+| United States | 2/4 | **2/4** | 4/4 |
+
+The UAE flips — the model is better per pick and only lost because it took eleven. The United States
+ties. **Neither is evidence that the selector judges worse on thin text coverage**, which is what
+entry 85 speculated the US result meant. That speculation is withdrawn.
+
+### The sharpest single row
+
+The Netherlands: the heuristic's top six contain **none** of the four proven pages, where the model's
+six contain all four. Singapore's top eleven contain none of its one. A ranking that fills its budget
+in score order is not merely coarser than a model reading the pages — for a small budget it can be
+uninformative.
+
+### What this changes, and what it does not
+
+- **The decision stands.** `discovery_selector: model` was already turned on; this says the margin is
+  far larger than the number that justified it.
+- **What it costs is unchanged**: a second model call per corridor, against 2.4× fewer fetches.
+- **The oracle is still jointly constructed** from what the two arms read, so a page neither read can
+  never enter it. Both arms are graded on a set they made together, and that is the remaining
+  weakness of this harness.
+- **`_shortlist` was re-run from the recorded scores**, with no pins and an empty crawl-failure set.
+  The ordering is exact given those scores; the two omissions could only help the heuristic.
+- Still one run per corridor, one corridor per country, all `IN/GB`.
+
+### The method note
+
+Entry 85 was pushed with a headline that a five-minute re-analysis of data already on disk shows was
+wrong by a factor of six. Nothing new had to be run and no quota was spent. **When two things differ
+between arms, hold one fixed before reporting the other** — and the recall log usually makes that
+free after the fact.
 
 ---
 
