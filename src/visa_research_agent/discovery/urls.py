@@ -171,3 +171,52 @@ def is_crawlable(url: str, destination: DestinationConfig) -> bool:
     if is_machine_endpoint(url):
         return False
     return not SKIPPED_PATH_PATTERN.search(path)
+
+
+# A country token has to be at least this long to be believed. Two-letter tokens are the problem:
+# `in`, `is`, `at`, `no` and `de` are all country slugs and all ordinary URL words, so a shorter
+# bound would find a "family" in every site's path structure.
+FAMILY_TOKEN_MINIMUM = 3
+
+
+def country_family_keys(url: str, slugs: frozenset[str]) -> list[str]:
+    """Every family this address could belong to, one key per country token it carries.
+
+    Two addresses share a key when they differ **only** by which country they are about, which is
+    what makes them a *per-traveller family*: one page published once per traveller. The Netherlands
+    publishes 219 of them at `…/schengen-visa/apply-{country}`, and opening any one yields that
+    country's checklist for every purpose plus its consular fee page.
+
+    Why this exists at all is a scoring failure, not a crawling one. A member's anchor text is a
+    bare country name — "Anguilla" — and `score_role_vocabulary` has nothing to say about that, so
+    all 219 score **8.0** while the index listing them scores 17.6 and the leaf each one leads to
+    would score 25.0. That is DECISIONS entry 78's defect in a new place: a page ranked by an anchor
+    carrying no information about it. Lifting the score is not enough on its own — 764 unopened
+    Dutch pages already score above the index — so the family is given reserved budget instead, in
+    `LinkCrawler`.
+
+    **Every match is returned, not the first, and that is the whole reason this is a list.** Built
+    returning the first, it found no Dutch family at all: the destination's own name sits in its own
+    addresses — `…/visa-the-netherlands/schengen-visa/apply-india` — so blanking the earliest token
+    gave every one of the 219 a different key. A country appearing in its own URLs is the ordinary
+    case, not a Dutch quirk, so the caller groups by all of them and keeps whichever grouping
+    actually forms a family.
+
+    Matching is deliberately greedy about position and strict about boundaries: a token may be a
+    whole path segment (`/consular-fees/india`), the tail of one (`/apply-united-kingdom`), or a
+    query value (`?country=india`), and it must end at a separator. A scan that consumed its matches
+    would see `apply-united-kingdom` and stop, never trying `united-kingdom`, which undercounted the
+    Dutch family to zero the first time this was measured.
+    """
+
+    if not slugs:
+        return []
+    lowered = url.lower()
+    keys: list[str] = []
+    for match in re.finditer(r"(?=[/=&?-]([a-z][a-z-]{2,40})(?=[/?&#]|$))", lowered):
+        token = match.group(1)
+        if len(token) < FAMILY_TOKEN_MINIMUM or token not in slugs:
+            continue
+        start = match.end() + 1
+        keys.append(lowered[:start] + "{}" + lowered[start + len(token) :])
+    return keys

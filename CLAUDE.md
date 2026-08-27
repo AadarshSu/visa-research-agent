@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose fifty-one rows are
+what has wasted the most time here — see the corrections table further down, whose fifty-seven rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -326,6 +326,12 @@ cause, and only running the thing showed it.
 | the UK's per-nationality fee table is the answer it hides | it is keyed on the country you *apply from*, not the passport (entry 87) |
 | a page titled "Document Checklist" is a checklist | `imm5484.html` is a download page whose text explains Acrobat Reader (entry 87) |
 | a fetch-everything oracle is the automatable version of the same thing | it would still be URLs somebody fetched, so it inherits the alias bug (entry 87) |
+| a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
+| the corpus is thin because the crawl did not go deep enough | it opened 3–15% of what it recorded; the rest are addresses (entry 88) |
+| reserving budget for a family is enough to reach it | one pool is score-ordered, so the fee family took all of it (entry 88) |
+| a family key can blank the first country it finds | the destination is named in its own path; all 219 got different keys (entry 88) |
+| opening the gateway buys a checklist per residence | 113 of 185 link nothing — the checklist is on VFS Global (entry 88) |
+| the biggest country-shaped family is the one worth crawling | Canada's is 176 travel advisories, Japan's 141 country pages (entry 88) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
@@ -365,6 +371,15 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
 now have a text index in `var/pagetext/` (entry 85). A country without either crawls in the request
 path and has its pages chosen by the heuristic, exactly as before.
+
+**A corpus records far more than it reads — 3 to 15% of its entries were ever opened — and the page
+answering a *specific* traveller is usually one hop below something it recorded and never opened**
+(entry 88). An unopened address is still a usable candidate; its children do not exist in any form.
+A **per-traveller family** — one page published once per country, `…/schengen-visa/apply-{country}` —
+therefore gets a reserved share of an offline build's budget, one queue per family taken in turn, and
+**zero on the request path**, where a corridor has one traveller. Only the Netherlands has been
+rebuilt this way. The ceiling it hit is not the crawler's: for most residences the Netherlands
+publishes its checklist on **VFS Global**, which the trust rule refuses — see TODO items 35 and 36.
 
 Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
 change — either one will serve a pre-change result and make a fix appear not to work. A stored

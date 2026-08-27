@@ -10,9 +10,11 @@ made, and the final host is checked again after redirects.
 
 import asyncio
 import heapq
+import re
 import socket
 import time
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, field
 
 import httpx
 from bs4 import BeautifulSoup
@@ -22,6 +24,7 @@ from visa_research_agent.config.settings import settings
 from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
+    country_family_keys,
     is_crawlable,
     is_pdf_url,
     strip_invisible,
@@ -634,6 +637,67 @@ class CrawlFetcher:
 DEFAULT_CRAWL_PAGES = 40
 
 
+# How many country-siblings one page must yield before they are treated as a family. Below this a
+# run of country-named links is a region menu or a footer, not a page published per traveller.
+DEFAULT_FAMILY_MINIMUM = 8
+
+
+@dataclass
+class FamilyQueues:
+    """The reserved queue for per-traveller families, **one queue per family and taken in turn.**
+
+    A single reserved heap does not work, and that is measured rather than assumed. Built that way
+    and run against the Netherlands on 2026-08-27, the reservation read **131 `consular-fees/{}`
+    pages and zero `apply-{}` pages** — because the queue was score-ordered and a fee page's anchor
+    scores 12.0 against an apply page's 8.0, so a 214-member family took every reserved slot for the
+    whole crawl. That is exactly the crowding-out `_reserved_per_domain` exists to prevent in the
+    shortlist, reproduced one level in, and the fix is the same one: reserve per unit, not per pool.
+
+    Only `apply-{}` is a gateway — opening a member yields that country's checklist for every
+    purpose — and nothing distinguishes a gateway from a leaf before one is opened. Round-robin does
+    not need to know: it gives every family its turn, so the gateway gets its share whatever it
+    scores.
+    """
+
+    minimum: int
+    allowance: int
+    queues: dict[str, list[tuple[float, int, str, int, PageLink]]] = field(default_factory=dict)
+    order: list[str] = field(default_factory=list)
+    turn: int = 0
+    spent: int = 0
+
+    def add(self, key: str, entry: tuple[float, int, str, int, PageLink]) -> None:
+        if key not in self.queues:
+            self.queues[key] = []
+            self.order.append(key)
+        heapq.heappush(self.queues[key], entry)
+
+    def take(self) -> tuple[str, tuple[float, int, str, int, PageLink]] | None:
+        """The next member and its family, from whichever family's turn it is."""
+
+        if self.spent >= self.allowance or not self.order:
+            return None
+        for _ in range(len(self.order)):
+            key = self.order[self.turn % len(self.order)]
+            self.turn += 1
+            if self.queues.get(key):
+                return key, heapq.heappop(self.queues[key])
+        return None
+
+    def put_back(self, key: str, entry: tuple[float, int, str, int, PageLink]) -> None:
+        """Return a member unread **and give its family its turn back.**
+
+        The rewind is the whole of this method. A wave holds one page per host and a family lives
+        on one host, so the second family drawn in any wave is always turned away for a collision —
+        and without the rewind that turned-away family loses its place, the rotation resets to the
+        same family every wave, and the round-robin silently degenerates into the score-ordered
+        pool it was built to replace. Caught by a test rather than by a second Netherlands rebuild.
+        """
+
+        heapq.heappush(self.queues[key], entry)
+        self.turn -= 1
+
+
 class LinkCrawler:
     """Walk outward from seed pages, best-first, staying inside the approved domains."""
 
@@ -649,6 +713,10 @@ class LinkCrawler:
         host_floor: int = 0,
         expansion_threshold: float = 10.0,
         maximum_concurrent_hosts: int = 4,
+        family_slugs: frozenset[str] = frozenset(),
+        family_share: float = 0.0,
+        family_minimum: int = DEFAULT_FAMILY_MINIMUM,
+        family_pattern: re.Pattern[str] | None = None,
         on_page: PageReader | None = None,
         maximum_text_characters: int = DEFAULT_KEPT_TEXT_CHARACTERS,
     ) -> None:
@@ -669,6 +737,25 @@ class LinkCrawler:
         # four sites, and walking them one page at a time meant each site's politeness delay was
         # also paid by every other site.
         self.maximum_concurrent_hosts = maximum_concurrent_hosts
+        # **Per-traveller families, and why they are off unless a caller asks.** One page published
+        # once per country — `…/apply-{country}` — is worth a reserved slice of an *offline* budget,
+        # because a corpus serves every traveller and the leaf below each member is the only place
+        # that traveller's checklist exists. It is worth nothing on the request path: a corridor has
+        # one traveller, and opening 218 other countries' pages is the definition of a wasted fetch.
+        # So the share defaults to zero and only `corpus_build` raises it. Empty slugs disable the
+        # detection entirely, which is the request path's configuration.
+        self.family_slugs = family_slugs
+        self.family_share = family_share
+        self.family_minimum = family_minimum
+        # **Which families are worth reserving budget for, and why this cannot be a score.** The
+        # members score at the floor by construction — that is the whole defect — so nothing about
+        # the *members* separates a visa family from a travel-advisory one. The shared address does:
+        # `…/schengen-visa/apply-{}` against `travel.gc.ca/destinations/{}`.
+        #
+        # Measured across the ten corpora before this was added: Canada's largest country family is
+        # 176 travel-advisory pages and Japan's are 141 country-relations pages, none of them visa
+        # guidance. Without a gate, a rebuild of either would hand 40% of its budget to those.
+        self.family_pattern = family_pattern
         self.rejected: dict[str, str] = {}
         # A page's own <title> is only knowable once it is fetched, so it is recorded here
         # rather than guessed from the link that pointed at it.
@@ -701,6 +788,14 @@ class LinkCrawler:
         # the best links. The sequence number is load-bearing: without it two equally scored
         # links tie all the way down and heapq tries to compare PageLink objects, which raises.
         frontier: list[tuple[float, int, str, int, PageLink]] = []
+        # Members of a per-traveller family queue here instead, and `_next_wave` draws from them
+        # first while the reserved share lasts. Reserved rather than score-boosted because a boost
+        # is not enough: measured on the Netherlands, lifting the 219 `apply-{country}` links from
+        # 8.0 to the 17.6 their index scores still leaves 764 unopened pages above them.
+        families = FamilyQueues(
+            minimum=self.family_minimum,
+            allowance=int(self.maximum_pages * self.family_share),
+        )
         counter = 0
 
         seed_links: list[PageLink] = []
@@ -736,7 +831,7 @@ class LinkCrawler:
             },
         ) as client:
             while frontier and len(visited) < self.maximum_pages:
-                wave = self._next_wave(frontier, visited, per_host, host_budget)
+                wave = self._next_wave(frontier, visited, per_host, host_budget, families)
                 if not wave:
                     break
                 for _depth, url, _link in wave:
@@ -757,7 +852,15 @@ class LinkCrawler:
                     if html is None:
                         continue
                     self._expand(
-                        url, html, depth, destination, candidates, visited, frontier, counters
+                        url,
+                        html,
+                        depth,
+                        destination,
+                        candidates,
+                        visited,
+                        frontier,
+                        counters,
+                        families,
                     )
 
         return list(candidates.values())
@@ -785,12 +888,18 @@ class LinkCrawler:
         visited: set[str],
         per_host: dict[str, int],
         host_budget: HostBudget,
+        families: FamilyQueues | None = None,
     ) -> list[tuple[int, str, PageLink]]:
         """The next few pages to fetch together: the best links, one per host.
 
         One page per host keeps each site's spacing intact — the delay is what makes this polite,
         and it is only owed per host. Entries for a host already in the wave go back to the
         frontier rather than being dropped, so nothing is lost by being second in its queue.
+
+        **Half of each wave may come from the reserved family queue, while the share lasts.** Half
+        rather than all: a family that filled every wave would starve the ordinary crawl for as long
+        as it ran, and the point is to stop one kind of page being unreachable, not to make another
+        kind unreachable instead.
         """
 
         remaining = self.maximum_pages - len(visited)
@@ -798,6 +907,28 @@ class LinkCrawler:
         wave: list[tuple[int, str, PageLink]] = []
         hosts: set[str] = set()
         deferred: list[tuple[float, int, str, int, PageLink]] = []
+
+        if families is not None:
+            reserved = max(1, wanted // 2)
+            while len(wave) < reserved:
+                taken = families.take()
+                if taken is None:
+                    break
+                key, entry = taken
+                _, depth, url, _sequence, link = entry
+                if url in visited:
+                    continue
+                host = host_of(url)
+                # The host budget still binds. A family lives on one host by construction, so
+                # exempting it would hand that host the whole crawl through the side door.
+                if not host_budget.allows(host, per_host):
+                    continue
+                if host in hosts:
+                    families.put_back(key, entry)
+                    break
+                hosts.add(host)
+                families.spent += 1
+                wave.append((depth, url, link))
 
         while frontier and len(wave) < wanted:
             entry = heapq.heappop(frontier)
@@ -829,6 +960,7 @@ class LinkCrawler:
         visited: set[str],
         frontier: list[tuple[float, int, str, int, PageLink]],
         counters: list[int],
+        families: FamilyQueues | None = None,
     ) -> None:
         """Record what a fetched page said, and queue the links worth following."""
 
@@ -854,6 +986,10 @@ class LinkCrawler:
         # Resolve relative links against where the request landed, not where it was
         # aimed. They differ after a redirect, and again after a render.
         base = self.fetcher.final_urls.get(url, url)
+        # Collected rather than pushed as they are found: whether a link belongs to a per-traveller
+        # family is a fact about its siblings on *this* page, so it is not knowable until they have
+        # all been seen.
+        queued: list[tuple[float, int, str, int, PageLink]] = []
         for found in extract_links(html, base):
             if found.url in visited or not is_crawlable(found.url, destination):
                 continue
@@ -877,4 +1013,55 @@ class LinkCrawler:
             # follow a PDF: it is a destination, not a signpost.
             if best >= self.expansion_threshold and not is_pdf_url(child.url):
                 counters[0] += 1
-                heapq.heappush(frontier, (-best, depth + 1, child.url, counters[0], child))
+                queued.append((-best, depth + 1, child.url, counters[0], child))
+
+        self._queue(queued, frontier, families)
+
+    def _queue(
+        self,
+        queued: list[tuple[float, int, str, int, PageLink]],
+        frontier: list[tuple[float, int, str, int, PageLink]],
+        families: FamilyQueues | None,
+    ) -> None:
+        """Split one page's followable links between the ordinary frontier and the reserved one.
+
+        **Grouping is per page, deliberately.** A per-traveller family is a list an authority
+        published in one place — 219 links on one Dutch index — so siblings found on the same page
+        are the evidence. Grouping across the whole crawl would collect coincidences: three country
+        pages on three unrelated sites are not a family anybody published.
+
+        Members keep their own score inside the reserved queue, so the ordering within a family is
+        unchanged. What changes is only which queue they wait in.
+        """
+
+        if families is None or not self.family_slugs or families.allowance <= 0:
+            for entry in queued:
+                heapq.heappush(frontier, entry)
+            return
+
+        # Grouped by *every* key each address could carry, then kept only where a grouping is
+        # big enough to be a family. A URL usually offers two candidate keys — one of them blanking
+        # the destination's own name out of its own path — and only one of them groups.
+        grouped: dict[str, list[tuple[float, int, str, int, PageLink]]] = {}
+        for entry in queued:
+            for key in country_family_keys(entry[2], self.family_slugs):
+                if self.family_pattern is not None and not self.family_pattern.search(key):
+                    continue
+                grouped.setdefault(key, []).append(entry)
+
+        reserved: dict[int, tuple[int, str]] = {}
+        for key, members in grouped.items():
+            if len(members) < families.minimum:
+                continue
+            for entry in members:
+                # The largest qualifying grouping wins, so a page that belongs to two families is
+                # queued under the one more of its siblings agree on.
+                if reserved.get(id(entry), (0, ""))[0] < len(members):
+                    reserved[id(entry)] = (len(members), key)
+
+        for entry in queued:
+            chosen = reserved.get(id(entry))
+            if chosen is None:
+                heapq.heappush(frontier, entry)
+            else:
+                families.add(chosen[1], entry)

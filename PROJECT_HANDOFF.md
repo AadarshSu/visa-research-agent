@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-27 — update this line when you touch the handoff |
-| **Tests** | 554 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 567 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has fifty-one rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has fifty-seven rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -65,7 +65,7 @@ destinations.
 | | |
 | --- | --- |
 | **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
-| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; 16,375 pages. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
+| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; ~16,600 pages. **A build opens 3–15% of what it records** (entry 88), and the page answering a specific traveller is usually one hop below something it recorded and never opened. The Netherlands is rebuilt with a reserved share for per-traveller families and is the only one so far; item 35. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
 | **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **34 of the 41 answer at least one passport** — Cyprus and India were recovered by the renderer on the same day (entry 75), India with all six roles. **Seven refuse every passport** with a diagnosis checked against what was seen: DK, LT, MA, MX, RO, SA, SK. **No corpus will fix those seven** (entry 76) — every one fails at *retrieval*, and a corpus crawl meets the identical wall. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
@@ -117,6 +117,14 @@ helped build, and `visa-discover selection-recall` grades against it and against
 jointly-built oracle side by side. **Entry 86's +41 points is +30**; the direction held. Two things
 it hands forward: thirteen of sixty roles have no readable answer at all, and the fixture is one
 nationality and one residence — known problems 29 and 30.
+
+**Start at item 35.** Entry 88 asked whether a corpus built once serves every traveller and found it
+does not: a build reads 3–15% of what it records, and the answering page for a specific traveller is
+one hop below something recorded and never opened. Fixed and proved on the Netherlands — gateway
+pages read 0 → 185, tourism checklists held 5 → 14, and `netherlands/PH/PH` now answers four of six
+roles from the corpus. Nine countries are untested and the gate makes six of them no-ops, so the work
+is small. **Item 36 is what it exposed and is the bigger finding**: for most residences the
+Netherlands publishes its checklist on VFS Global, which the trust rule refuses.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
@@ -480,6 +488,22 @@ re-add the amendment history here.
    picks the right France page gets no credit for it. A recall number computed on it is therefore
    "recall over what is legible", and item 5 moves the bound rather than the metric.
 
+
+31. **A corpus serves the travellers whose pages an authority publishes, and no more.** Entry 88
+   fixed the crawl-side half — a per-traveller family now gets reserved budget, so the Netherlands
+   went from 5 tourism checklists to 14 — and in doing so measured the half that cannot be fixed
+   here: **of 185 Dutch `apply-{country}` pages read, 113 link nothing and 58 link only language
+   forks**, because for most residences the checklist is published on `vfsglobal.com`. Nigeria is
+   handled by Belgium's TLScontact. The guidance is official and current and sits on a domain the
+   trust rule refuses, correctly. This is entry 82's form and entry 59's questionnaire in a third
+   shape, and the widest of the three. TODO item 36; the other nine countries are uncounted.
+
+32. **Nine of the ten corpora have never been rebuilt with the family reservation.** Entry 88 proved
+   it on the Netherlands only. The gate makes it inert where there is no qualifying family — CA, JP
+   and GB have zero — so the untested surface is mostly Singapore, whose per-nationality page fills
+   five roles and whose store holds 34 of 198. Note before rebuilding it: 33 of those 34 came from a
+   *mission* page rather than from ICA, so ICA's own list may be a form, which no budget reaches.
+   TODO item 35.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
 | [86](#86-matched-budget-the-selector-is-not-7-points-better-than-ranking-it-is-41) | **Matched budget: +41 points, not +7** — entry 85 compared configurations, not selectors |
 | [85](#85-ten-countries-ten-text-indexes-the-selector-wins-by-seven-points-and-reads-59-fewer-pages) | **Ten countries: +7 points, 59% fewer pages read.** The selector goes on; entry 84's +30 was a sample artefact |
@@ -136,6 +137,116 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 88. The corpus does not generalise across travellers, and the ceiling is not the crawler
+**2026-08-27 · asked, measured offline, fixed, and proved on one country. Three bugs found by running it**
+
+The question was whether entry 87's result holds across traveller profiles, asked in order to get the
+corpus build right before building the remaining forty-three. Entry 87's *selector* numbers are still
+`IN/GB/tourism` × 10 and this does not touch them. What it answers is the half that gates the corpus:
+**does a store built once serve every traveller?** It does not, and the reason is precise.
+
+### Only 3 to 15% of each corpus was ever opened
+
+`discovered_from` names the page a link was found on, so its distinct values are exactly the pages a
+crawl read. Across the ten: AE 265, CA 692, DE 238, FR 646, GB 72, JP 340, NL 262, SE 323, SG 69,
+US 139 — against 922 to 9,655 entries each. Of the children of indexes with 30 or more links, **85 to
+96% were never opened.**
+
+**That is not itself the defect, and saying why matters.** An unopened URL is still a candidate: it
+has an address, and a selector can pick it and fetch it live. The defect is one level down — *a page
+whose parent nobody opened does not exist in any form.*
+
+### The Netherlands is the clean case, because one host shows both outcomes
+
+| family | held before |
+| --- | --- |
+| `schengen-visa/apply-{country}` | **219** — the index linked every one |
+| `consular-fees/{country}` | **214** |
+| `checklist-schengen-visa-tourism/{country}` | **5** |
+
+217 of the 219 were never opened, and opening one yields that country's checklist for every purpose
+plus its fee page. So for 193 of 198 residences the store held **no tourism checklist at all**, and
+that page is the whole of the Netherlands' `document_checklist` answer in
+`oracle/selection_oracle.yaml`. Japan looks better and is not: 215 mission hosts, of which **160 are
+a single landing-page URL**, 27 ever opened, and seven checklist-shaped leaves in the whole network.
+
+### The cause is a scoring failure, and entry 78 already named it
+
+A family member's anchor text is a bare country name. `score_role_vocabulary` has nothing to say
+about "Anguilla", so every one of the 219 scores **8.0**, the index listing them scores 17.6, and the
+checklist each one leads to would score **25.0** — a page ranked by an anchor that carries no
+information about it, which is entry 78 in a new place.
+
+**Lifting the score does not reach them, and that was measured before anything was built:** 764
+unopened Dutch pages already score above the index. So the family is given reserved budget instead —
+`DEFAULT_CORPUS_FAMILY_SHARE = 0.4`, **zero on the request path**, where a corridor has one traveller
+and opening 218 other countries' pages is the definition of a wasted fetch.
+
+**This is not entry 82's proposal.** That closed "raise the total" and "split the total unevenly
+between hosts", both by measurement. This changes neither the total nor the split — it changes what
+the budget is spent on, within one host.
+
+### Three bugs, none of them visible from reading the code
+
+1. **One reserved pool is not a reservation.** Score-ordered, so the 214-member `consular-fees/{}`
+   family (anchors at 12.0) took every slot from `apply-{}` (8.0). The first rebuild read **131 fee
+   pages and zero gateway pages**. Only the gateway leads anywhere, and nothing distinguishes a
+   gateway from a leaf before one is opened — so it is one queue per family, taken in turn, which is
+   `_reserved_per_domain`'s design at a different granularity.
+2. **A turned-away family lost its place.** A wave holds one page per host and a family lives on one
+   host, so the second family drawn each wave is always refused — and without rewinding the rotation
+   it reset to the same family every wave and degenerated back into the pool it replaced. Caught by
+   writing the regression test for (1), not by a rebuild.
+3. **The destination is named in its own addresses.** `country_family_key` blanked the first country
+   token, and `…/visa-the-netherlands/schengen-visa/apply-india` carries two — so all 219 got
+   distinct keys, no family formed, and the second rebuild read **zero** gateway pages while passing
+   every test. A country named in its own URLs is the ordinary case; `country_family_keys` now
+   returns all of them and the caller keeps whichever grouping is largest.
+
+### What the third rebuild did
+
+```
+gateway pages read           0  ->  185
+tourism checklists held      5  ->   14
+checklists, all purposes    40  ->   84
+corpus entries           4,571  ->  4,841        indexed page text  1,099 -> 1,771
+```
+
+End to end, `netherlands/PH/PH/tourism` — a profile the store could not serve at all — now fills
+**four of six roles from the corpus with the crawl skipped, reading nine pages**. Of the four pages
+it used, three were already held as unopened candidates and exactly one was absent before: the
+Philippines tourism checklist. That is the layer this change adds, isolated.
+
+### The prediction was wrong, and the correction is the useful part
+
+Before building it, this entry's author predicted ~438 pages would take the Netherlands from 5
+residences to ~219. **It bought 14.** Of the 185 gateway pages read, 14 link a checklist, 58 link
+only Spanish and French forks of themselves, and 113 link nothing — because for most residences *the
+Netherlands does not publish a checklist on a government domain at all.* Kenya, Pakistan and Egypt
+all say it outright: "On the **VFS Global** website you'll find a checklist with the documents you
+need." Nigeria is handled by Belgium's TLScontact.
+
+**So the ceiling on the residence dimension is the authority's publishing choice, not the crawl.**
+That is entry 82's form and entry 59's questionnaire in a third shape, and the sharpest of the three:
+the guidance exists, is official, and sits on a commercial contractor's domain that the trust rule
+refuses — correctly, because `vfsglobal.com` is not a government.
+
+### What is safe to roll out, and what is not
+
+The reservation is gated on the family's shared address (`CORPUS_FAMILY_PATTERN`), because members
+cannot be told apart by score — scoring at the floor is the defect — and because the largest country
+family on several sites is not guidance: **Canada's is 176 travel-advisory pages and Japan's are 141
+country-relations pages.** Without the gate a rebuild of either would spend 40% of its budget on
+those. With it, qualifying families are **NL 9, SG 1, and zero for CA, JP and GB**, so the change is
+inert for six of the ten — which is the intended outcome, not a shortfall.
+
+- **Proved on one country.** The other nine are untested, and Singapore is the one to do next: its
+  per-nationality page fills five roles and the store holds 34 of 198.
+- **Entry 87's selector numbers are untouched** and still rest on one nationality and one residence.
+- Three rebuilds of one country cost roughly 126 searches and two hours of crawling.
 
 ---
 

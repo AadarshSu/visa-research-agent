@@ -24,6 +24,13 @@ version is committed at `oracle/selection_oracle.yaml` and says entry 86's +41 p
 direction held. Two things it hands to the items below: thirteen of sixty roles have no readable
 answer at all, and the fixture is still one nationality and one residence.
 
+**And the corpus does not generalise across travellers** (entry 88). A build reads 3–15% of what it
+records, and the page answering a *specific* traveller sits one hop below something it recorded and
+never opened — the Netherlands held 219 `apply-{country}` pages and **five** tourism checklists. That
+is fixed and proved on one country (item 35), and it exposed a wider limit that is not the crawler's:
+for most residences the Netherlands publishes its checklist on **VFS Global**, which the trust rule
+refuses (item 36).
+
 **Search has credit again, and the three things that were gating stage 3 are fixed and confirmed
 live**: pacing and `402` classification (entry 74), the post mis-pick (entry 72, six of seven
 regression corridors correct), and the challenge (entry 75, Cyprus and India recovered — 41 - 9 - 2 =
@@ -116,7 +123,9 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 30. Perfect batch 1 before adding a single further country | `next` |
+| **Now** | 35. Roll the per-traveller family reservation across the other nine | `next` |
+|  | 36. Decide what to do about guidance published on a commercial contractor | `next` |
+|  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 18. Build the offline corpus job, and run it on more destinations | `next` |
@@ -148,7 +157,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has fifty-one rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has fifty-seven rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -181,6 +190,48 @@ it would still have been a set of URLs somebody fetched.
 - **The heuristic at 35 places reaches 91% against the model's 100%**, so the shipped comparison is
   a cost argument — 3.1× the fetches — at least as much as a recall one. Any future selector work
   should quote both.
+
+
+### 35. Roll the per-traveller family reservation across the other nine — `next`, **start here**
+
+**Why:** entry 88. A corpus crawl reads 3–15% of what it records, and the page that answers a
+*specific* traveller is almost always one hop below something it recorded and never opened. Proved
+and fixed on the Netherlands: gateway pages read went 0 → 185, tourism checklists held 5 → 14, and
+`netherlands/PH/PH` — a profile the store could not serve at all — now fills four of six roles from
+the corpus with the crawl skipped.
+
+**Nine countries are untested, and the gate makes most of them no-ops.** Qualifying families today:
+**NL 9, SG 1, and zero for CA, JP and GB** (AE, DE, FR, SE, US likewise). So the work is small and
+the order is obvious:
+
+1. **Singapore first.** Its per-nationality page fills *five* roles and the store holds 34 of 198.
+   Note what entry 88 did not resolve: 33 of those 34 were found from `new-delhi.mfa.gov.sg`, not
+   from ICA, so ICA's own list may be a form — entry 82's case. Check that before assuming a rebuild
+   helps.
+2. **Rebuild the remaining eight and diff the qualifying families**, which is free to check before
+   spending a crawl: the census is in entry 88 and reproducible offline from `var/corpus/`.
+
+**Do not raise the share to reach further.** The Dutch ceiling is not the budget: of 185 gateway
+pages read, 113 link nothing and 58 link only language forks, because for most residences the
+Netherlands publishes its checklist on **VFS Global**. See item 36.
+
+
+### 36. Decide what to do about guidance published on a commercial contractor — `next`
+
+**Why:** entry 88 found the third form of entry 59's wall, and it is the widest. Kenya, Pakistan and
+Egypt's Dutch application pages all say "On the **VFS Global** website you'll find a checklist with
+the documents you need". The guidance is official, is current, and sits on `vfsglobal.com`, which the
+trust rule refuses — correctly, because it is not a government.
+
+This is **not** a proposal to trust it. The rule holds: officialness is a property of who controls
+the domain. What needs deciding is what a traveller is told, and there is a shape that already exists
+for exactly this: entries 59 and 60 name a questionnaire without driving it or citing it. A page an
+authority *delegates* to is the same problem — the answer is somewhere specific, we may not read it,
+and saying so is more use than silence.
+
+**Measure first, and it is free:** count how many of the ten corpus countries' residence dimensions
+end at a contractor. The Netherlands is 124 of 185 gateway pages mentioning VFS or TLScontact, and
+nobody has looked at the other nine.
 
 
 ### 30. Perfect batch 1 before adding a single further country — `next`

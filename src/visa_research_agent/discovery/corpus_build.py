@@ -23,6 +23,7 @@ found. A crawl that finds less than last time is ordinary, and treating that as 
 rebuild the exact failure the corpus exists to prevent.
 """
 
+import re
 from collections import Counter
 from collections.abc import Callable
 from datetime import datetime
@@ -37,7 +38,13 @@ from visa_research_agent.discovery.crawl import (
     CrawlFetcher,
     LinkCrawler,
 )
-from visa_research_agent.discovery.lexicon import Country, Lexicon, get_lexicon
+from visa_research_agent.discovery.lexicon import (
+    Country,
+    CountryRegistry,
+    Lexicon,
+    get_country_registry,
+    get_lexicon,
+)
 from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
@@ -107,6 +114,35 @@ DEFAULT_CORPUS_PDFS = 400
 # guarantees a small mission host its pages, which is known problem 24's failure, and it is only
 # the surplus half that inflated the corpus.
 DEFAULT_CORPUS_HOST_FLOOR = 0
+
+# How much of an offline build may be spent opening per-traveller families — one page published once
+# per country, `…/apply-{country}`. It is reserved rather than competed for, because the members
+# cannot win a competition: their anchor text is a bare country name, so `score_role_vocabulary`
+# gives every one of the Netherlands' 219 the same **8.0** while the index listing them scores 17.6
+# and the checklist each one leads to would score 25.0. Entry 78's defect, in a new place.
+#
+# **This is not entry 82's proposal and must not be read as one.** That closed "raise the total"
+# and "split the total unevenly between hosts", and measurement closed both. This changes neither
+# the total nor the split: it changes what the budget is spent on, within one host.
+#
+# Measured before it was built: lifting the family's *score* to its index's 17.6 is not enough,
+# because 764 unopened Dutch pages already score above that. Reservation is the only thing that
+# reaches them.
+#
+# **Zero on the request path, and that is not an oversight.** A corridor has one traveller; opening
+# 218 other countries' pages is the definition of a wasted fetch. Only this job serves everybody.
+DEFAULT_CORPUS_FAMILY_SHARE = 0.4
+
+# Which per-traveller families the share is spent on, matched against the family's shared address.
+# A gate is needed because the members cannot be told apart by score — scoring at the floor is the
+# defect being fixed — and because the largest country family on several sites is not guidance at
+# all. Measured over the ten corpora: Canada's biggest is `travel.gc.ca/destinations/{}` at 176
+# members and Japan's are `mofa.go.jp/region/{area}/{}` at 141, and reserving budget for those would
+# spend 40% of a build on travel advisories. With this gate, six of the ten countries have no
+# qualifying family and the reservation is inert for them, which is the intended outcome.
+CORPUS_FAMILY_PATTERN = re.compile(
+    r"visa|permit|entry|checklist|consular|appointment|apply|immigrat|fees", re.IGNORECASE
+)
 
 
 def corpus_queries(
@@ -361,6 +397,7 @@ async def build_country_corpus(
     existing: CountryCorpus | None,
     now: datetime,
     lexicon: Lexicon | None = None,
+    registry: CountryRegistry | None = None,
     maximum_pages: int = DEFAULT_CORPUS_PAGES,
     maximum_depth: int = DEFAULT_CORPUS_DEPTH,
     maximum_pages_per_host: int = DEFAULT_CORPUS_PAGES_PER_HOST,
@@ -368,6 +405,7 @@ async def build_country_corpus(
     results_per_query: int = 10,
     page_text: PageTextStore | None = None,
     maximum_pdfs: int = DEFAULT_CORPUS_PDFS,
+    family_share: float = DEFAULT_CORPUS_FAMILY_SHARE,
 ) -> tuple[CountryCorpus, CorpusBuild]:
     """Search, crawl and fold the result into the country's corpus, adding but never removing.
 
@@ -383,6 +421,9 @@ async def build_country_corpus(
     """
 
     words = lexicon or get_lexicon()
+    # Every country's slug, so a run of sibling links that differ only by which country they
+    # are about can be recognised as one page published per traveller.
+    every_country = registry or get_country_registry()
     destination = DestinationConfig(
         slug=country.slug,
         display_name=country.name,
@@ -425,6 +466,9 @@ async def build_country_corpus(
         host_floor=host_floor,
         expansion_threshold=CORPUS_EXPANSION_THRESHOLD,
         on_page=keep if page_text is not None else None,
+        family_slugs=frozenset(other.slug for other in every_country.countries),
+        family_share=family_share,
+        family_pattern=CORPUS_FAMILY_PATTERN,
     )
     crawled = await crawler.crawl(destination, seeds)
     pdfs_read = 0
