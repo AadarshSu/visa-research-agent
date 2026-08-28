@@ -99,6 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
+| [95](#95-a-visa-free-plan-is-an-entry-plan-not-an-empty-application) | **A visa-free plan is an entry plan** — decided, specified, and not yet built |
 | [94](#94-no-visa-required-is-a-complete-answer-and-four-of-singapores-six-questions-stop-existing) | **"No visa required" is a complete answer** — four of Singapore's six questions stop existing |
 | [93](#93-a-tool-mediated-answer-is-an-answer-and-the-metric-was-the-only-thing-saying-otherwise) | **A tool-mediated answer is an answer** — the product always said so; only the metric did not |
 | [92](#92-the-corpus-build-always-rendered-twelve-renders-is-what-left-france-unreadable) | **The corpus build always rendered** — the budget was twelve, and France met 64 challenges |
@@ -143,6 +144,84 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 95. A visa-free plan is an entry plan, not an empty application
+**2026-08-28 · decided by the project owner, specified here, and deliberately NOT implemented**
+
+Entry 94 built the measurement half of TODO item 39 and left one question open: when the answer is
+"no visa required", does the plan render as an application with nothing in it, or as a different
+shape whose steps are *entry* steps? **The owner chose entry steps.** This entry records the
+decision and what it commits to; the code is item 39 and will be written in a later session.
+
+### The shape
+
+A plan whose `visa_required` is `False` still has to be *useful*, and what a visa-free traveller
+needs is not a thinner version of an application — it is a different list. Singapore asks such a
+traveller for three things and none of them is an application: submit the SG Arrival Card within
+three days of arrival, hold a passport valid past the stay, and be able to show onward travel. Those
+are `application_steps` in the model's vocabulary and **entry steps** in the traveller's, and the
+gap between those two readings is the whole of this decision.
+
+So a visa-free plan carries:
+
+| field | value |
+| --- | --- |
+| `visa_required` | `False`, from a page that says so |
+| `decision_source_ids` | that page. Still `min_length=1`, unchanged |
+| `requirements` / `application_document_source_ids` | **empty** — there are no application documents |
+| `where_to_apply` | `None` — there is nowhere to apply |
+| `application_steps` | the **entry** steps, each `link_target: "source"` or `"none"` |
+| `status` | `verified` is available; a stated decision is a stated decision |
+
+### The three validators that stand in the way, named so nobody has to rediscover them
+
+1. **`application_steps: Field(min_length=4, max_length=8)`** — twice, on `VisaPlan` and
+   `VisaPlanDraft`. Singapore's honest entry list is three. The floor exists so an application is
+   not described in one line, and it should not be removed for everybody; the visa-free shape needs
+   its own bound, and picking it is part of the work.
+2. **`validate_requirement_sources`** — *"application-route step links require an application
+   location"*. It fires when `where_to_apply is None` and any step has
+   `link_target == "application_route"`. That rule is **correct and stays**: a visa-free plan has no
+   route, so no step may link to one. It is named here because it will look like an obstacle and is
+   actually the guard doing its job.
+3. **`validate_absent_checklist`** — must keep forbidding a requirement while
+   `application_document_source_ids` is empty. Unchanged, and the reason is unchanged: entry 60.
+
+### The guard, which is the reason this is a decision and not a refactor
+
+**A wrong "no visa required" that then suppresses four questions is worse than a wrong one that
+leaves them visible**, because the traveller has nothing left to notice the error with. So the entry
+shape may only be produced where `visa_required is False` is **stated by a source** — never on a
+tool, never on a blocked page, never with `decision_is_unverified` set. Where the decision could not
+be confirmed, the plan keeps the application shape and says the decision is unverified, exactly as
+it does today.
+
+`load_oracle` already enforces the fixture's half of that rule — a row may not call a role
+`not_applicable` without a page answering `visa_decision` — and it is the model for the plan's.
+
+### What else has to move, in the order a session will meet it
+
+- **`prompts/extract_visa_plan.txt`** has to be told the shape exists, and told not to invent an
+  application when the decision is no. It is the one place a model could reintroduce the failure.
+- **`static/app.js`** renders the documents panel and today names three reasons a checklist is
+  absent (entry 89): behind a questionnaire, contracted out, or both. A fourth is needed and it is
+  not a variant of the others — *this traveller needs no checklist because they need no visa*. The
+  panel currently reads "Extracted from the designated official application-document source", which
+  is wrong for a plan that designates none.
+- **The "where to apply" panel** must say there is nowhere to apply rather than rendering empty.
+
+### What was rejected
+
+- **An application with zero steps.** It satisfies the type system and misdescribes the world: the
+  traveller is not making an application badly, they are not making one at all. It also leaves
+  `min_length=4` to be satisfied with filler, which is how a model is invited to invent.
+- **A separate `EntryPlan` model.** One plan type keeps one renderer, one validator set and one
+  contract; `visa_required` already distinguishes the two cases and every consumer reads it.
+- **Deciding it in discovery.** The adjudicator assigns pages to roles and never reads the decision
+  out of them — `visa_required` is known at extraction. Suppressing anything earlier would put the
+  suppression before the evidence that licenses it.
 
 ---
 

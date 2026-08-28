@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 605 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 621 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -126,13 +126,21 @@ on every page and held stored text for none; it now holds **863**, its visa-requ
 readable, and Sweden's Philippine row went **2 of 6 to 6 of 6**. The United States, at 19, is what
 remains and its hosts are application portals rather than guidance.
 
+**Start at TODO item 39: build the visa-free plan as an entry plan.** The direction is decided
+(entry 95) and the code is not written. When the answer is "no visa required" the traveller still
+has things to do — Singapore asks for the SG Arrival Card, a passport valid past the stay, and
+onward travel — and none of them is an application, so `application_steps` should carry **entry**
+steps, `where_to_apply` should be `None`, and `requirements` should be empty. Entry 95 names the
+three validators in the way and which of them is a guard rather than an obstacle. **The guard that
+matters:** the entry shape may only be produced where `visa_required is False` is stated by a
+source — never a tool, never a blocked page, never with `decision_is_unverified`.
+
 **"No visa required" is a complete answer, and the metric now says so** (entry 94). Singapore's
 Philippine row read two of six while resolving perfectly: no visa means no application, so four of
 the six questions do not arise. The oracle has a fourth outcome, guarded so it can only be claimed
 where a page answers `visa_decision` — "we could not find the checklist" must never become "there is
-no checklist". **The product half is not built**: `VisaPlan` cannot say a question does not arise,
-and `application_steps` is `min_length=4`, so a visa-free plan needs a shape decision rather than a
-field. TODO item 39, now reduced to that.
+no checklist". **The product half is not built**, and its shape is now decided rather than open: entry 95, TODO
+item 39, first in the queue.
 
 **A tool-mediated answer is an answer, and only the coverage metric said otherwise** (entry 93).
 The product has treated `resolved_decision_tool` as *resolved* since entry 63 — "the authority

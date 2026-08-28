@@ -33,6 +33,12 @@ have a corpus **and now a page-text index** (entry 85). A questionnaire is treat
 than a blockade — named for the role it settles, offered beside that question (entries 59, 60), and
 guidance an authority contracts out to a company is named the same way (entry 89).
 
+**The next thing to build is decided and unwritten: the visa-free plan as an entry plan** (entry
+95, [TODO.md](TODO.md) item 39). A traveller who needs no visa still has duties and none of them is
+an application, so `application_steps` becomes the entry steps, `where_to_apply` becomes `None`, and
+`requirements` empties — only ever on a decision a source **stated**. Entry 95 names the three
+validators in the way and which of them is a guard rather than an obstacle.
+
 **The gate is built and it is the promotion rule for stage 3** (entry 90, [TODO.md](TODO.md) item
 37). Its first half now reports four columns — roles answered **by a page**, roles **settled by an
 official tool**, roles that **do not arise**, and roles open — and never merges them (entries 93,
@@ -305,6 +311,14 @@ produces a serious defect.
   and both are easy to lose in a migration — a schema that collapses `retrieved_at` and `row_written_at`
   starts lying about how current its guidance is. A content-hash change **marks** a source and may never
   auto-swap a role-bearing one: that is the wrong-checklist failure with the human removed.
+- **A visa-free plan is an entry plan, and it may only be built on a *stated* decision (entry 95,
+  decided and not yet built).** When `visa_required` is `False`, `application_steps` carries the
+  **entry** steps — an arrival card, a passport-validity rule, onward travel — `where_to_apply` is
+  `None`, and `requirements` is empty. It must never be produced from a tool, a blocked page, or a
+  plan with `decision_is_unverified`: a wrong "no visa required" that suppresses four questions is
+  worse than a wrong one that leaves them visible, because the traveller has nothing left to notice
+  the error with. `validate_absent_checklist` is untouched by it, and the rule forbidding a step to
+  link to an application route with no `where_to_apply` is a guard rather than an obstacle.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Never show a traveller an unverified claim that would alarm them if wrong.** The rule from entry 6,

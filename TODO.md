@@ -137,8 +137,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
-|  | 39. Let a plan say a question does not arise | `next` |
+| **Now** | 39. Build the visa-free plan as an entry plan | `next` |
+|  | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
 |  | 40. Let curation fetch one page the index does not hold | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
@@ -249,7 +249,57 @@ it would still have been a set of URLs somebody fetched.
   should quote both.
 
 
-### 38. Re-run the twenty oracle corridors so a selector can be graded again — `next`, **start here**
+### 39. Build the visa-free plan as an entry plan — `next`, **start here**
+
+**The direction is decided (entry 95): entry steps, not an empty application.** The measurement half
+is done (entry 94) and this is the product half. Read entry 95 first; it is the spec and this is the
+order of work.
+
+**Why:** when the answer is "no visa required", the traveller still has things to do — Singapore asks
+for the SG Arrival Card within three days of arrival, a passport valid past the stay, and evidence of
+onward travel — and none of them is an application. Today `VisaPlan` can only describe an
+application, so a correct, complete answer has to be rendered as a broken one.
+
+**The shape**, from entry 95: `visa_required: False` from a page that states it,
+`decision_source_ids` unchanged, `requirements` and `application_document_source_ids` **empty**,
+`where_to_apply: None`, and `application_steps` holding the **entry** steps with `link_target` of
+`"source"` or `"none"`. `verified` stays available — a stated decision is a stated decision.
+
+**The three validators, already located so nobody has to hunt:**
+
+1. `application_steps: Field(min_length=4, max_length=8)` — on **both** `VisaPlan` and
+   `VisaPlanDraft`. Singapore's honest entry list is three. Do not drop the floor for everybody; the
+   visa-free shape needs its own bound and choosing it is part of this item.
+2. `validate_requirement_sources` — "application-route step links require an application location".
+   **Correct, and it stays.** A visa-free plan has no route, so no step may link to one. It will look
+   like an obstacle; it is the guard working.
+3. `validate_absent_checklist` — unchanged. An empty `application_document_source_ids` still forbids
+   listing a single requirement (entry 60).
+
+**Then the two places a model and a reader meet it:**
+
+- `prompts/extract_visa_plan.txt` — teach it the shape and tell it not to invent an application when
+  the decision is no. This is the one place the failure can be reintroduced.
+- `static/app.js` — the documents panel names three reasons a checklist is absent (entry 89) and
+  needs a fourth that is not a variant of them: *this traveller needs no checklist because they need
+  no visa*. It currently reads "Extracted from the designated official application-document source",
+  which is wrong for a plan that designates none. The "where to apply" panel needs the same
+  treatment rather than rendering empty.
+
+**Careful, and this is the whole risk:** a wrong "no visa required" that then suppresses four
+questions is worse than a wrong one that leaves them visible, because the traveller has nothing left
+to notice the error with. The entry shape may only be produced where `visa_required is False` is
+**stated by a source** — never a tool, never a blocked page, never with `decision_is_unverified`.
+Where the decision could not be confirmed the plan keeps the application shape and says so.
+`load_oracle` already enforces the fixture's half of exactly this rule and is the model to copy.
+
+**How to know it works:** `singapore/PH/PH/tourism` is the corridor this is for, and the oracle
+already records what a correct answer looks like — two roles answered, four that do not arise. A
+plan for it should render the arrival card, the passport rule and onward travel, designate no
+checklist, and offer nowhere to apply.
+
+
+### 38. Re-run the twenty oracle corridors so a selector can be graded again — `next`
 
 **Why:** entry 91 widened the oracle to a second traveller and, in doing so, found that
 `arms_from_logs` could not tell a model run from a heuristic one — a run's fetched URLs are read as
@@ -274,36 +324,6 @@ widened oracle and a number.
 
 **Careful:** clear nothing. `var/corpus/` and `var/pagetext/` are stores; `var/recall/` is where the
 output lands and the old logs are harmless now that they are refused rather than mis-graded.
-
-
-### 39. Let a plan say a question does not arise — `next`
-
-**Half done (entry 94): the measurement half is built, the product half is not.**
-
-Singapore's Philippine row read two of six while resolving perfectly — a Filipino needs no visa, so
-there is no application, and with no application there is no checklist, route, fee or processing
-time. The oracle now has a fourth outcome, `not_applicable`, guarded so it can only be claimed where
-a page answers `visa_decision`; `visa-discover coverage` counts it in its own column, and Singapore
-is 6 of 6 accounted for. `PH/PH` overall reads **50 of 60**.
-
-**What is left is the plan, and it is more than a field.** `VisaPlan` has no way to say a question
-does not arise, and the shape assumes an application that a visa-free traveller never makes:
-`application_steps` is `min_length=4`, and `where_to_apply` and `requirements` are built for one.
-There is no no-visa path anywhere in `research/`.
-
-**The question to decide first**, before any code: does a visa-free plan render as an application
-with nothing in it, or as a different shape whose steps are *entry* steps — submit the arrival card,
-carry an onward ticket, hold six months of passport validity? The second is almost certainly right,
-and it is a design change rather than a rename. Argue it in a decision entry.
-
-**Careful, and this is the whole risk:** a wrong "no visa required" that then suppresses four
-questions is worse than a wrong one that leaves them visible, because the traveller has nothing left
-to notice the error with. It may only key on `visa_required is False` **stated by a source** — never
-a tool, never a blocked page, never `decision_is_unverified`. The oracle's validator already enforces
-the fixture's half of that and is the model for the plan's.
-
-**Then the interface**, whose empty-checklist panel names three reasons today (entry 89) and needs a
-fourth: not that we failed to find a checklist, but that this traveller needs none.
 
 
 ### 40. Let curation fetch one page the index does not hold — `next`

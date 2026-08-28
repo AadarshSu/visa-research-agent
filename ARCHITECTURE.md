@@ -524,6 +524,12 @@ rather than graded. `arms_from_logs` reads a run's fetched URLs as the model's p
 run scored that way lands in the arm named `model` and is compared with itself — which is what
 widening the oracle exposed. `RecallRecord.cause`'s rule, applied to a second field.
 
+**A visa-free plan will be an entry plan** (entry 95, decided and not yet built). `VisaPlan` today
+can only describe an application: `application_steps` is `min_length=4`, `where_to_apply` is shaped
+for a place to apply, and `requirements` for documents to bring. A traveller who needs no visa still
+has duties — an arrival card, a passport-validity rule, onward travel — so those become the steps,
+`where_to_apply` becomes `None`, and `requirements` empties. Only ever on a decision a source stated.
+
 **A role can also fail to arise** (entry 94). A visa-free traveller makes no application, so
 `document_checklist`, `application_route`, `fees` and `processing_times` have nothing to answer —
 Singapore's Philippine corridor. The fixture records `not_applicable` and `load_oracle` refuses it

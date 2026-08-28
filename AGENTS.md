@@ -65,6 +65,10 @@ the CLI does not offer it.
   holds the answer is **`visa-discover coverage`**; whether the *corridor* then finds it is selection
   recall, below. A single number covering both would hide which half failed, which is the mistake
   `visa-discover audit` exists not to make.
+- **A visa-free plan is an entry plan** (entry 95 — decided, not yet built, TODO item 39). The
+  traveller still has duties; they are just not an application. Expect `application_steps` to hold
+  entry steps, `where_to_apply` to be `None` and `requirements` to be empty — and expect it only
+  where a source *states* `visa_required is False`.
 - **A role can fail to arise, and that is not a gap** (entry 94). No visa means no application, so
   a visa-free corridor has no checklist, route, fee or processing time to find — Singapore's
   Philippine row is 2 answered and 4 that do not arise, against the Indian row's 6 answered, because
