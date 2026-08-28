@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose sixty-seven rows are
+what has wasted the most time here — see the corrections table further down, whose seventy-one rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -60,9 +60,12 @@ ignores it.
 page text for every candidate in contention and picks up to 20 pages to fetch, where the heuristic
 ranked links and fetched 35. It costs a second model call per corridor. `discovery_selector: model`.
 
-**And selector work finally has ground truth it did not build** (entry 87, TODO item 34).
-`oracle/selection_oracle.yaml` names, by hand, the page answering each role for ten corridors, from
-each corridor's whole contention set rather than from what any arm fetched. Against it the model
+**And selector work finally has ground truth it did not build** (entry 87, TODO item 34), **now for
+two travellers** (entry 91). `oracle/selection_oracle.yaml` names, by hand, the page answering each
+role for **twenty** corridors — `IN/GB/tourism` and `PH/PH/tourism` over the same ten countries —
+from each corridor's whole contention set rather than from what any arm fetched. Both read 100%
+*held* and the denominators are the finding: the same stores answer **47 of 60 roles for one
+traveller and 24 of 60 for the other**. Against it the model
 reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the heuristic is
 allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used,
 the same arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the
@@ -366,6 +369,10 @@ cause, and only running the thing showed it.
 | the UK's per-nationality fee table is the answer it hides | it is keyed on the country you *apply from*, not the passport (entry 87) |
 | a page titled "Document Checklist" is a checklist | `imm5484.html` is a download page whose text explains Acrobat Reader (entry 87) |
 | a fetch-everything oracle is the automatable version of the same thing | it would still be URLs somebody fetched, so it inherits the alias bug (entry 87) |
+| one oracle row per country is enough, the pages are the pages | the same store answers 47 of 60 roles for one traveller and 24 for another (entry 91) |
+| a 100% held means the corpus is ready for that traveller | it is 100% of what *can* be answered; the denominator is the finding (entry 91) |
+| a corridor with no answers can be skipped when totalling | dropping France and Sweden read 24 of **48** instead of 24 of 60 (entry 91) |
+| the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
 | the netherlands is the covered case, entry 88 finished it | three complete families were never opened; it reads `incomplete` (entry 90) |
@@ -417,6 +424,7 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 .venv/bin/visa-discover pagetext --backfill    # index the text the retrieval cache already holds
 .venv/bin/visa-discover selection-recall       # grade what was chosen to read; no network, no model
 .venv/bin/visa-discover coverage --country NL  # is a country's corpus good enough? no network, no model
+.venv/bin/visa-discover contention --destination netherlands --nationality PH --from PH  # curate an oracle row
 ```
 
 **Two different questions, two different commands, and they must not be merged.** `coverage` asks

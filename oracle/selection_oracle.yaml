@@ -750,3 +750,408 @@ corridors:
       - https://www.dhs.gov/visa-waiver-program
       - https://www.dhs.gov/visit-united-states
       - https://www.usa.gov/tourist-visa
+
+  # ---------------------------------------------------------------------------------------------
+  # A second traveller: a Philippine passport, applying in the Philippines, for tourism.
+  #
+  # Chosen so both halves of the corridor move at once. `IN/GB` has the passport and the residence
+  # apart, and every finding in it that turned on residence — the UAE's visa on arrival, the UK fee
+  # table keyed on the application country, the Netherlands' UK checklist — would be invisible in a
+  # row where they coincide. `PH/PH` is also the profile entry 88's rebuild was proved on, so it is
+  # the one place a corpus change can be seen at all.
+  #
+  # **These rows' contention is corpus-only** — rebuilt by `visa-discover contention` rather than
+  # read out of a live run, because nobody has run these corridors. The sets come out close to the
+  # recorded ones above (365 against 417 for the UAE, 539 against 552 for Canada) and they are not
+  # the same set: a role whose only answer live search would have surfaced cannot be curated from
+  # here. DECISIONS entry 91.
+  # ---------------------------------------------------------------------------------------------
+
+  - corridor: united-arab-emirates/PH/PH/tourism
+    contention: 365
+    text_held: 264
+    answers:
+      visa_decision:
+        - url: https://www.mofa.gov.ae/Visa-Exemptions-For-Non-Citizen
+          seen: text
+          why: >-
+            "Republic of the Philippines — Visa Required" in the ministry's per-country table. Stated
+            outright rather than inferred, which is what the same corridor's Indian row could not
+            get: there the answer turned on residence and this one does not.
+        - url: https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen
+          seen: text
+          why: the same table at the address the English site links
+    unanswered:
+      document_checklist: >-
+        every gdrfad.gov.ae service page in contention scores identically at 36.0 and describes a
+        service — extending a tourist visa, a cruise-ship permit, a job-exploration visit — rather
+        than naming what a Filipino tourist must bring.
+      application_route: >-
+        nothing states where a Filipino resident applies. The corridor's Indian row is answered by a
+        visa-on-arrival page, which does not apply here.
+      fees: nothing in the set prices a tourist entry permit for this nationality.
+      processing_times: nothing states a processing time for a visit visa.
+      general_entry: >-
+        no page states entry conditions for a visa-required traveller; the travel-updates page is
+        about Emiratis travelling abroad.
+    note: >-
+      the mirror of the Indian row, and the more informative half of the pair. There the UAE
+      publishes a service keyed on nationality *and* residence and answers six roles from one page;
+      here the same country answers exactly one, because a Filipino resident in the Philippines
+      falls outside every keyed service and lands on the plain per-country table.
+
+  - corridor: canada/PH/PH/tourism
+    contention: 539
+    text_held: 247
+    answers:
+      visa_decision:
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
+          seen: text
+          why: >-
+            "Philippines (Some citizens of the Philippines may be eligible for an eTA if they meet
+            certain requirements.)" — named in the visa-required list, with the one exception spelled
+            out, which is a statement about this passport rather than an omission from a list
+      document_checklist:
+        - url: https://ircc.canada.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            the documents a visitor visa application must contain, listed. The same page answers the
+            Indian row, because Canada publishes this once for everybody
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: >-
+            "Guide 5256 — Applying for a visitor visa (temporary resident visa)", whose "Step 1.
+            Gather documents" is the checklist. Named here for the same reason the Indian row names
+            it, and it is a guide index rather than the list itself
+      application_route:
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+          seen: text
+          why: the visitor visa application steps, from outside Canada
+      processing_times:
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html
+          seen: text
+          why: the current processing times tool's own page, giving times per application type
+      fees:
+        - url: https://ircc.canada.ca/english/information/fees/fees.asp
+          seen: text
+          why: the immigration application fee schedule, which carries the visitor visa fee
+    unanswered:
+      general_entry: >-
+        the entry-condition pages in the set are about importing a vehicle and about customs on
+        return, neither of which states what this traveller must satisfy at the border.
+    unverifiable:
+      - https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5484/01-05-2026/imm5484e.pdf
+    excluded:
+      - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/business/checklists.html
+        why: >-
+          outranks the answer at 65.0, and is the checklist for business visitors attending meetings,
+          events and conferences. Rule 6 excludes it on purpose, not on audience.
+      - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/supporting-documents.html/1000.html
+        why: >-
+          scores 64.0 for `document_checklist`, is titled "Visitor visa: Supporting documents for
+          visitor visa applicant", holds stored text — and the stored text is Canada.ca's **404
+          page**. The corpus recorded a broken link and the index kept its error page, so the URL
+          and the title both promise the answer and the body is "Page not found". This row was
+          curated wrongly the first time and `visa-discover coverage` caught it.
+      - url: https://travel.gc.ca/travelling/publications/travellers-checklist
+        why: >-
+          the traveller's checklist for Canadians travelling *outside* Canada. Wrong audience, and it
+          is third for the role.
+    note: >-
+      Canada answers five of six for this traveller and five for the Indian one, on almost entirely
+      the same pages — the corridor's answer is centralised, so the traveller barely moves it. That
+      is the control case in this half of the fixture and it is why `visa-discover coverage` reports
+      Canada as having no per-traveller dimension.
+
+  - corridor: germany/PH/PH/tourism
+    contention: 83
+    text_held: 41
+    answers:
+      visa_decision:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+          seen: text
+          why: >-
+            the Federal Foreign Office's "Overview of visa requirements/exemptions for entry into the
+            Federal Republic of Germany" — the row reads "Philippines / yes"
+    unanswered:
+      document_checklist: >-
+        the only checklist-scoring page in the set is a child-abduction consular page, which is not
+        one.
+      application_route: nothing states where or how a Filipino resident applies.
+      fees: no page in the set prices a Schengen visa.
+      processing_times: nothing states one.
+      general_entry: nothing states entry conditions.
+    note: >-
+      83 candidates against the ten-corridor median of 200, and the German corpus is 1,565 entries.
+      Both rows for Germany answer one role, which is a statement about how little of Germany has
+      been crawled rather than about either traveller.
+
+  - corridor: france/PH/PH/tourism
+    contention: 201
+    text_held: 18
+    unanswered:
+      visa_decision: >-
+        france-visas.gouv.fr answers a Cloudflare challenge, so 183 of the 201 candidates hold no
+        stored text and the decision is not in the 18 that do.
+      document_checklist: as above.
+      application_route: as above.
+      fees: as above.
+      processing_times: as above.
+      general_entry: >-
+        the EES page is in the set and readable, and it describes the new border system rather than
+        the conditions this traveller must satisfy.
+    unverifiable:
+      - https://www.france-visas.gouv.fr/en/short-stay-visa
+      - https://www.diplomatie.gouv.fr/fr/services-aux-francais/preparer-son-expatriation/dossiers-pays-de-l-expatriation/philippines
+    excluded:
+      - url: https://ph.diplomatie.gouv.fr/en/visiting-france
+        why: >-
+          the top-scoring candidate for both `document_checklist` and `application_route`, on the
+          embassy in Manila — the post serving this traveller — and it is tourism marketing:
+          "France is a multi-faceted destination... check out France.fr". The scorer is reading
+          "Visiting France" on the right host and there is nothing about a visa on the page.
+    note: >-
+      the sharpest instance of known problem 30 in the fixture: France is bounded at 18 readable
+      candidates of 201, so an arm that picks the right France page earns no credit for it. That is
+      a limit on the metric, not on the arm, and item 5 moves the bound rather than the metric.
+
+  - corridor: united-kingdom/PH/PH/tourism
+    contention: 260
+    text_held: 210
+    answers:
+      document_checklist:
+        - url: https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents
+          seen: text
+          why: >-
+            "Visit visa: guide to supporting documents" — what a Standard Visitor must provide, which
+            is the checklist for this route
+      application_route:
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+          seen: text
+          why: >-
+            "Visit the UK as a Standard Visitor" and how to apply, which is the route for tourism
+      fees:
+        - url: https://www.gov.uk/visa-fees
+          seen: text
+          why: >-
+            the published fee schedule for every visa type, which is keyed on the visa rather than on
+            the passport and so answers this traveller as it does any other
+      processing_times:
+        - url: https://www.gov.uk/guidance/visa-processing-times-applications-outside-the-uk
+          seen: text
+          why: >-
+            "Visa processing times: applications outside the UK", which is where this traveller
+            applies
+      general_entry:
+        - url: https://www.gov.uk/entering-staying-uk/visit-and-transit-visas
+          seen: text
+          why: the entry conditions for a visitor, collected on one page
+    tools:
+      visa_decision: https://www.gov.uk/check-uk-visa
+    unanswered:
+      visa_decision: >-
+        no page states it for a Philippine passport. The checker works it out, which is entries 59
+        and 60's outcome and is the same one the Indian row reaches.
+    excluded:
+      - url: https://www.gov.uk/government/publications/uk-visa-requirements-list-for-carriers
+        why: >-
+          the top candidate for `visa_decision` at 114.0 and it does not contain the list. The
+          publication page carries a cookie banner and a description; the country data is in an
+          attachment. A selector that reads it has spent a fetch and learned nothing.
+    note: >-
+      five of six roles, and the missing one is the load-bearing one — the same shape as the Indian
+      row. The United Kingdom is the fixture's standing case that answering five roles and refusing
+      is a worse outcome than it looks.
+
+  - corridor: japan/PH/PH/tourism
+    contention: 99
+    text_held: 42
+    answers:
+      visa_decision:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+          seen: text
+          why: >-
+            the countries with visa exemption arrangements; the Philippines is not among them, so a
+            Philippine passport needs a visa — the same reading the Indian row makes of the same page
+      document_checklist:
+        - url: https://www.mofa.go.jp/files/000121323.pdf
+          seen: text
+          why: >-
+            "Checklist for 'Single-Entry Short-Term Stay Visa' for nationals of the Philippines
+            applying in the Philippines" — nationality and residence together in the document's own
+            title, which no other page in the fixture states so exactly
+        - url: https://www.mofa.go.jp/files/000433548.pdf
+          seen: text
+          why: >-
+            "Application Procedures for Multiple Visa for Nationals of Indonesia, the Philippines,
+            and Viet Nam" — the same traveller, for the multiple-entry variant
+      application_route:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/visaonline.html
+          seen: text
+          why: the eVISA route and who may use it
+      fees:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/pagewe_000001_00391.html
+          seen: text
+          why: >-
+            the ministry's fee table for each visa type, which is the same page the Indian row names
+            as its second `fees` answer
+      processing_times:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/day.html
+          seen: text
+          why: the standard number of working days from application to issuance
+    unanswered:
+      general_entry: >-
+        no candidate scored above zero for it at all, which is true of the Indian row as well.
+    unverifiable:
+      - https://www.mofa.go.jp/j_info/visit/visa/short/philippine.html
+    excluded:
+      - url: https://www.mofa.go.jp/files/000433641.pdf
+        why: >-
+          outranks the answer — 46.0 against 36.0 — and is the "Checklist for 'Single-Entry
+          Short-Term Stay Visa' for nationals of CIS Countries, Ukraine, and Georgia". Rule 6
+          excludes it on audience. It is the clearest trap in this half of the fixture: two documents
+          with byte-identical titles at the same path depth, one of which is for this traveller.
+    note: >-
+      the row that most repays having been built. Japan answers five roles for a Filipino applying
+      at home against six for an Indian applying from Britain, and it answers them from
+      `mofa.go.jp` alone rather than from the London and Edinburgh posts the Indian row leans on.
+
+  - corridor: netherlands/PH/PH/tourism
+    contention: 452
+    text_held: 201
+    answers:
+      document_checklist:
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/philippines
+          seen: title_only
+          why: >-
+            "Checklist: tourism" under `checklist-schengen-visa-tourism/philippines` — the per-
+            residence leaf entry 88's rebuild reached. The index holds no body for it, so it is named
+            from its address and label; the address leaves no room for another reading.
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism
+          seen: text
+          why: the same checklist without the country step
+      application_route:
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-philippines
+          seen: text
+          why: >-
+            "If you will be visiting the Netherlands for a maximum of 90 days... follow the steps
+            below to apply in the Philippines"
+      fees:
+        - url: https://www.netherlandsworldwide.nl/consular-fees/philippines
+          seen: text
+          why: >-
+            "Schengen visa normal fee €90.00" on the Manila post's own fee list, payable in Philippine
+            pesos at the embassy. The Indian row records the equivalent page as unverifiable because
+            the index held no text for it; this one is readable.
+      processing_times:
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/waiting-time-after-visa-application
+          seen: text
+          why: the table of calendar days per visa type
+    tools:
+      visa_decision: https://www.government.nl/themes/migration-and-travel/holidays-and-travels/check-visa-netherlands
+    unanswered:
+      visa_decision: >-
+        no candidate states it for a Philippine passport; every page defers to the checker, exactly
+        as it does for the Indian one.
+      general_entry: >-
+        the entry-condition pages in the set are about the ETIAS, which is for travellers who do not
+        need a visa.
+    excluded:
+      - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/entry-visa/apply-philippines
+        why: >-
+          the top-scoring `visa_decision` candidate at 57.0, on the right host and naming the right
+          country, and it is for someone whose Dutch residence permit was lost, stolen or expired.
+          The page says so itself: "If you live outside the Netherlands and need a visa for a short
+          visit to the Netherlands, apply for a Schengen visa instead."
+    note: >-
+      four roles against the Indian row's three, and the extra one is `fees` — the Manila fee page
+      holds stored text where the London one does not. That difference is entry 88's rebuild showing
+      up in a measurement for the first time, which the `IN/GB` row is structurally unable to see.
+
+  - corridor: sweden/PH/PH/tourism
+    contention: 73
+    text_held: 57
+    unanswered:
+      visa_decision: >-
+        the list of nationalities requiring a visa is in the set and holds no stored text.
+      document_checklist: >-
+        the checklist-scoring pages are about attesting delayed doctoral and bachelor studies.
+      application_route: nothing states where a Filipino resident applies.
+      fees: no candidate scored above zero for it.
+      processing_times: no candidate scored above zero for it.
+      general_entry: >-
+        the two candidates are a list of acts and ordinances entering into force, which is a
+        different sense of the word.
+    unverifiable:
+      - https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden/
+    note: >-
+      Sweden answers six roles for the Indian traveller and none for this one. The whole difference
+      is which pages hold stored text: `migrationsverket.se` covers extending and appealing a visa,
+      and the page that would state the decision is on `government.se` with no body indexed.
+
+  - corridor: singapore/PH/PH/tourism
+    contention: 140
+    text_held: 66
+    answers:
+      visa_decision:
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements
+          seen: text
+          why: >-
+            "If your travel document is issued by one of the countries/ places listed below, you will
+            require a valid visa to enter Singapore" over a complete list that does not include the
+            Philippines — so no visa. The rule and the list are both on the page, which is what makes
+            this a statement rather than an absence
+      general_entry:
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/sg-arrival-card
+          seen: text
+          why: >-
+            the SG Arrival Card and health declaration every visitor must submit, which is the entry
+            condition that actually binds a visa-free traveller
+    unanswered:
+      document_checklist: >-
+        nothing names documents for a visa-free visitor, which is the honest outcome — there is no
+        application to bring documents to.
+      application_route: >-
+        the same. `visa_decision` is "no visa", so there is no route to state.
+      fees: no candidate scored above zero for it.
+      processing_times: >-
+        the only candidate is the ICA site root at 10.5, which states nothing.
+    excluded:
+      - url: https://www.mfa.gov.sg/newsroom/press-statements-transcripts-and-photos/20250910-lkyef-visit-by-senator-of-the-philippines-loren-legarda
+        why: >-
+          the top `document_checklist` and second `application_route` candidate at 66.0, and it is a
+          press statement about a Philippine senator visiting a fellowship programme. The country
+          token is doing all the work; nothing else on the page is about this corridor.
+    note: >-
+      the answer is "no visa", and three of the six roles are unanswerable *because* of it rather
+      than in spite of it. Worth keeping in mind when reading any roles-filled number: a corridor
+      that resolves correctly can leave most roles empty.
+
+  - corridor: united-states/PH/PH/tourism
+    contention: 270
+    text_held: 60
+    answers:
+      visa_decision:
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html
+          seen: mirror
+          why: >-
+            "You must be a citizen or national of the following countries to be eligible to travel to
+            the United States under the VWP" over the designated list, which does not include the
+            Philippines — so a Filipino needs a visitor visa. travel.state.gov stores nothing and
+            publishes the same tree under adoption.state.gov, which is the only reason this is
+            readable at all
+    unanswered:
+      document_checklist: >-
+        the candidates are 2000s-era travel.state.gov paths with no stored text and a USCIS
+        office-finder.
+      application_route: >-
+        the top candidates are a green card application and the J-1 exchange visitor programme,
+        neither of which is a tourism route.
+      fees: >-
+        the readable fee page is the adoption mirror's fee index; nothing prices a B-2.
+      processing_times: nothing states one for a visitor visa.
+      general_entry: nothing states entry conditions for this traveller.
+    note: >-
+      the Visa Waiver country list is recorded as unreadable in the Indian row, and it reads here —
+      because the mirror was found. The same page, the same fixture, and the difference is which
+      address somebody thought to look at.

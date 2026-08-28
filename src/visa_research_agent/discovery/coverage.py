@@ -41,6 +41,7 @@ from typing import Literal
 from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
 from visa_research_agent.discovery.corpus_build import CORPUS_FAMILY_PATTERN
 from visa_research_agent.discovery.crawl import DEFAULT_FAMILY_MINIMUM
+from visa_research_agent.discovery.models import ROLE_ORDER
 from visa_research_agent.discovery.selection_recall import SelectionOracle
 from visa_research_agent.discovery.urls import country_family_keys
 
@@ -92,8 +93,26 @@ class KnownAnswer:
     corridor: str
     held: int
     answerable: int
+    """How many of this corridor's six roles a human could name **any** answer for.
+
+    The number that actually moved when the oracle gained a second traveller, and the reason half
+    one is reported as two figures rather than one. `held/answerable` came back 100% for both
+    travellers; `answerable` itself is 47 of 60 for `IN/GB` and 24 of 60 for `PH/PH`. So the corpus
+    holds what can be answered, and far less can be answered for the second traveller — which is
+    invisible in a percentage whose denominator is itself the finding."""
+
     missing: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Role to the URLs the oracle named for it, where the corpus holds none of them."""
+
+    roles: int = len(ROLE_ORDER)
+    """Every role a corridor has, so `answerable` has a denominator that does not move."""
+
+    @property
+    def traveller(self) -> str:
+        """`PH/PH/tourism` — the corridor without its destination, which is what a row is grouped
+        by now that a country carries more than one."""
+
+        return "/".join(self.corridor.split("/")[1:])
 
     aliased: tuple[str, ...] = ()
     """Roles held only under a different host or scheme — `www.gdrfad.gov.ae` against
@@ -229,38 +248,50 @@ class CoverageReport:
     apart."""
 
 
-def known_answer_coverage(oracle: SelectionOracle, corpus: CountryCorpus, slug: str) -> KnownAnswer:
+def known_answers(oracle: SelectionOracle, corpus: CountryCorpus, slug: str) -> list[KnownAnswer]:
     """Half one for one country: how many of the oracle's named answers the corpus already holds.
+
+    **One row per curated traveller, not one per country**, which it was until the oracle had a
+    second traveller in it. Taking the first corridor for a slug would have reported the Netherlands
+    on `IN/GB` alone and silently dropped the `PH/PH` row — reproducing, inside the gate built to
+    detect it, exactly the blindness known problem 33 describes.
 
     Compared on `canonical_key`, which folds scheme, case and a leading `www.` — never on the raw
     string. `www.gdrfad.gov.ae/en/services/727c…` and `gdrfad.gov.ae/en/services/727c…` are one
     page, and the first run of this reported 46 of 47 by treating them as two.
     """
 
-    corridor = next((row for row in oracle.corridors if row.slug == slug), None)
-    if corridor is None:
-        return KnownAnswer(corridor=f"{slug}/—", held=0, answerable=0)
-
     keys = {canonical_key(entry.url) for entry in corpus.entries}
     exact = {entry.url for entry in corpus.entries}
-    held = 0
-    missing: dict[str, tuple[str, ...]] = {}
-    aliased: list[str] = []
-    for role, pages in corridor.answers.items():
-        urls = tuple(page.url for page in pages)
-        if not any(canonical_key(url) in keys for url in urls):
-            missing[role] = urls
+    rows: list[KnownAnswer] = []
+    for corridor in oracle.corridors:
+        # A corridor with **no** answers is kept, not skipped. France and Sweden answer none of
+        # their six roles for the Philippine traveller, and dropping them took `answerable` from
+        # 24 of 60 to 24 of 48 — a denominator error that flatters exactly the traveller the second
+        # half of this fixture exists to be honest about.
+        if corridor.slug != slug:
             continue
-        held += 1
-        if not any(url in exact for url in urls):
-            aliased.append(role)
-    return KnownAnswer(
-        corridor=corridor.corridor,
-        held=held,
-        answerable=len(corridor.answers),
-        missing=missing,
-        aliased=tuple(aliased),
-    )
+        held = 0
+        missing: dict[str, tuple[str, ...]] = {}
+        aliased: list[str] = []
+        for role, pages in corridor.answers.items():
+            urls = tuple(page.url for page in pages)
+            if not any(canonical_key(url) in keys for url in urls):
+                missing[role] = urls
+                continue
+            held += 1
+            if not any(url in exact for url in urls):
+                aliased.append(role)
+        rows.append(
+            KnownAnswer(
+                corridor=corridor.corridor,
+                held=held,
+                answerable=len(corridor.answers),
+                missing=missing,
+                aliased=tuple(aliased),
+            )
+        )
+    return rows
 
 
 def families_in(
@@ -344,7 +375,6 @@ def coverage(
 ) -> CountryCoverage:
     """Both halves for one country, from the store alone."""
 
-    known = known_answer_coverage(oracle, corpus, slug)
     return CountryCoverage(
         code=corpus.country_code,
         entries=len(corpus.entries),
@@ -353,7 +383,7 @@ def coverage(
         ),
         delegations=len(corpus.delegations),
         families=tuple(families_in(corpus, slugs, countries=countries, indexed=indexed)),
-        known=(known,) if known.answerable else (),
+        known=tuple(known_answers(oracle, corpus, slug)),
     )
 
 

@@ -505,6 +505,16 @@ halves that are deliberately never added together: **reachability**, computed fr
 from the runs that happened. A country refused for want of a registry row leaves no recall log at all,
 so merging the two would let the larger failure hide inside the smaller one.
 
+**`visa-discover contention`** rebuilds a corridor's candidate set from the store so an oracle row
+can be curated for a corridor nobody has run — the resolver's own `score_link` and `reject`, no
+search, no model, no fetch (entry 91). It is what took the fixture from one curated traveller to two,
+and the set it rebuilds is **corpus-only** where the first ten rows saw `corpus ∪ search`.
+
+**A recall log now records which selector fetched its pages**, and one that cannot say is refused
+rather than graded. `arms_from_logs` reads a run's fetched URLs as the model's picks, so a heuristic
+run scored that way lands in the arm named `model` and is compared with itself — which is what
+widening the oracle exposed. `RecallRecord.cause`'s rule, applied to a second field.
+
 **`visa-discover coverage`** asks the other half of the same question and is deliberately a separate
 command (entry 90). `audit` and `selection-recall` both grade *runs*; this grades the **store**, so it
 reads only `var/corpus/`, `var/pagetext/` and `oracle/selection_oracle.yaml`, and has no model, no

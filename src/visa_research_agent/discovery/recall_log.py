@@ -71,6 +71,18 @@ class RecallRecord(StrictModel):
     the sentence is the habit that produced two wrong entries in `CLAUDE.md`'s corrections table.
     """
 
+    selector: Literal["model", "heuristic"] | None = None
+    """Which selector chose what to read, recorded because nothing else in the file can say.
+
+    `None` means *this log predates the field*, exactly as it does for `cause`, and it is graded as
+    unattributable rather than assumed. `selection_recall.arms_from_logs` reads a run's fetched URLs
+    as "the model's picks", so a heuristic run graded that way puts the heuristic into the arm
+    labelled model and compares it with itself. That went unnoticed while the only oracle corridors
+    with logs happened to be model runs; the second traveller added in entry 91 brought in six logs
+    from before entry 85 turned the model selector on, and the mixed number came out six points
+    lower without anything saying why.
+    """
+
     unresolved_roles: list[DiscoveryRole] = Field(default_factory=list)
     """Which reported roles went unfilled, as values rather than inside the `outcome` sentence.
 

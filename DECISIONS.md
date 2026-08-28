@@ -99,6 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
+| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-40-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 40% for the other |
 | [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
@@ -139,6 +140,120 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 40% for the other
+**2026-08-28 · known problem 29, closed by curation. It found a defect in the grader on the way through**
+
+Every recall number this project quoted rested on the same ten corridors, all `IN/GB/tourism`:
+`visa-discover coverage`'s 47 of 47, `selection-recall`'s 100% against 70%, and entry 90's whole
+second half. Known problem 29 called that "the largest untested dimension in the whole harness".
+`oracle/selection_oracle.yaml` now holds **twenty** corridors — the same ten countries for a
+Philippine passport applying in the Philippines.
+
+**Why `PH/PH`.** `IN/GB` has the passport and the residence apart, and its three sharpest findings all
+turn on residence — the UAE's visa on arrival for Indians living in Britain, the UK fee table keyed on
+the application country, the Netherlands' UK-specific checklist. A second row where the two coincide
+tests the opposite arrangement. It is also the profile entry 88's rebuild was proved on, so it is the
+one place a corpus change can be seen at all.
+
+### The headline: both travellers read 100% held, and that was never the number
+
+```
+IN/GB/tourism   47/47 of its answers held (100%)   47/60 roles answerable at all (78%)
+PH/PH/tourism   24/24 of its answers held (100%)   24/60 roles answerable at all (40%)
+```
+
+The corpus holds every page a human could name, for both. What moves is **how much can be answered at
+all**: the same ten stores answer 47 of 60 roles for one traveller and 24 of 60 for the other. That is
+the traveller dimension, and a percentage whose denominator is itself the finding could not show it —
+so `visa-discover coverage` now prints both figures per traveller and `KnownAnswer` carries `roles`
+so the denominator cannot move.
+
+**The zero-answer corridors are counted.** France and Sweden answer *none* of their six roles for this
+traveller, and skipping them — which the first implementation did, by filtering on `not
+corridor.answers` — read 24 of **48**, flattering exactly the traveller the row exists to be honest
+about.
+
+### Where the 23 lost roles went, which is four different things
+
+- **Residence-keyed services stop applying.** The UAE answers six roles for the Indian row from one
+  page keyed on Indian nationality *and* UK residence. A Filipino resident in the Philippines falls
+  outside every keyed service and lands on the plain per-country table: **six roles to one.**
+- **Stored text runs out.** Sweden answers six and then none. `migrationsverket.se` covers extending
+  and appealing a visa; the page that states the decision is on `government.se` with no body indexed.
+  France is bounded at **18 readable candidates of 201** by its Cloudflare challenge.
+- **The corpus is thin.** Germany answers one role for either traveller, out of 83 candidates and a
+  1,565-entry corpus. That is a statement about the crawl, not about either passport.
+- **The answer is "no visa", and three roles then have nothing to answer.** Singapore: there is no
+  application, so no route, no checklist and no fee. A corridor that resolves correctly can leave
+  most roles empty, which is worth knowing before reading any roles-filled number.
+
+Two roles moved the *other* way. The Netherlands answers four against three, because the Manila fee
+page holds stored text where the London one does not — **entry 88's rebuild appearing in a
+measurement for the first time**, which the `IN/GB` row is structurally unable to see. And the United
+States' Visa Waiver country list, recorded as unreadable in the Indian row, reads here because the
+`adoption.state.gov` mirror was found.
+
+### `visa-discover contention` — the set is rebuilt offline, not run
+
+Entry 87 curated the first ten rows out of live runs in a throwaway script, which is what item 34
+objected to one level up. Curating a corridor nobody has run needs its contention set, so that is now
+a command: the resolver's own `score_link` and `reject` over the stored corpus, no search, no model,
+no fetch. Rebuilt sets come out close to the recorded ones — 365 against 417 for the UAE, 539 against
+552 for Canada, 83 against 87 for Germany.
+
+**It is corpus-only, and the first ten rows were not.** Those saw `corpus ∪ search`, so a role whose
+only answer live search would have surfaced cannot be curated from here. It biases a row toward the
+corpus and biases both graded arms equally; entry 90 measured the corpus as holding the answering
+page for all 47 curated roles, which is what makes the approximation good enough to use and not good
+enough to leave unsaid.
+
+Reading a candidate to judge it needs its stored text, so `PageTextStore.body_for_review` is the third
+amendment to entry 78's rule and is argued rather than slipped in. The rule is that no sentence
+written from stored text reaches a **traveller**; `rank` and `score_body` already read it, and entry
+87 read it by hand. This chain ends at a terminal a curator is looking at — one URL, named on the
+command line — and there is no caller in `research/`, none in `api/`, and none on the request path.
+
+### The defect it found: the grader could not tell which selector ran
+
+`arms_from_logs` reads a run's fetched URLs as *the model's picks*, and nothing in `RecallRecord`
+said which selector fetched them. That was harmless only by accident — the ten oracle corridors all
+had logs from the model runs behind entries 85 to 87. The second traveller brought in **six logs
+written before entry 85 turned the model selector on**, and grading them put the heuristic into the
+arm labelled `model` and compared it against itself. The printed figure moved from 100% to 92% with
+nothing in the output to say why.
+
+`RecallRecord.selector` now records it, and a log that cannot name its selector is **not graded** —
+`cause`'s rule applied to a second field, from entry 63: a record written before the field existed is
+reported as unrecorded, never inferred. It is reported apart from `skipped`, because the two need
+different reading: a skipped corridor was never run, while one of these was run and the file cannot
+say by what.
+
+**The cost is that `selection-recall` grades nothing today**, and the honest statement of entry 87's
+numbers is that they stand as recorded and are **not currently reproducible from disk**. Re-running
+the ten `IN/GB` corridors restores them and grades the ten new ones for the first time. That is the
+next measurement, and it is the first one that will say anything about a selector on more than one
+traveller.
+
+### What was rejected
+
+- **Grading the six unattributable logs anyway.** They are real runs of real corridors and the arm
+  labels would have been wrong. A wrong label on a published number is the single most repeated
+  failure in this project's corrections table.
+- **Dating the cutoff from `recorded_at`.** Entry 85 turned the model selector on at a known moment,
+  so a date test would work today and rot silently. The file should say what it is.
+- **A third traveller.** Two is what makes a number a comparison; the next question is *purpose*,
+  where all twenty rows are still `tourism`.
+
+### What it does not answer
+
+- **Still one purpose.** Twenty corridors, `tourism` throughout. Business, study and transit are
+  untested and the roles most likely to move are `document_checklist` and `application_route`.
+- **The `PH/PH` rows have no selector grade yet**, and cannot until those corridors are run.
+- **Correctness, as always.** These rows say a page *answers* a role; whether the guidance is right
+  is verified outside this repository (entry 68, known problem 26).
 
 ---
 

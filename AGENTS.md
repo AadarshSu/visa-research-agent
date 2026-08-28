@@ -75,7 +75,16 @@ the CLI does not offer it.
   keep it that way, because entry 81 is what grading this on roles filled would cost.
 - **`visa-discover selection-recall`** grades what a selector chose to read against
   `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it. Reads
-  two files, calls nothing.
+  two files, calls nothing. **A recall log that cannot say which selector fetched its pages is
+  refused, not graded** (entry 91): a run's fetched URLs are read as the model's picks, so grading a
+  heuristic run that way puts the heuristic in the model's own arm. Every log written before
+  `RecallRecord.selector` existed is in that state, so this currently grades nothing — re-run the
+  corridors rather than loosening the check.
+- **`visa-discover contention`** rebuilds a corridor's candidate set from the store — the resolver's
+  own `score_link` and `reject`, no search, no model, no fetch — so an oracle row can be curated for
+  a corridor nobody has run. `--role` ranks within one role, `--show <url>` prints that candidate's
+  stored text, which is how a role is judged. The set is **corpus-only** and the first ten oracle
+  rows were curated from `corpus ∪ search`; see entry 91 for what that costs.
 - **Clear `var/cache/` when testing a retrieval change and `var/corridors/` when testing a discovery
   change**, or a pre-change result is served and the fix appears not to work. **`var/corpus/` is
   deliberately not cleared** — it is the store, not a cache, and rebuilding one costs search quota.

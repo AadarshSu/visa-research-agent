@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import yaml
@@ -179,9 +179,21 @@ class Grading:
     rows: dict[str, list[CorridorScore]]
     graded: list[str]
     skipped: list[str]
+    unattributed: list[str] = field(default_factory=list)
+    """Corridors whose log exists and does not say which selector fetched its pages.
+
+    Reported apart from `skipped` because the two need different actions: a skipped corridor has
+    never been run, while one of these has a log that simply predates `RecallRecord.selector`. Both
+    are fixed by running the corridor; only the second would otherwise look like a working
+    measurement (entry 91)."""
 
 
-def grade(oracle: SelectionOracle, arms_by_corridor: Mapping[str, Sequence[Arm]]) -> Grading:
+def grade(
+    oracle: SelectionOracle,
+    arms_by_corridor: Mapping[str, Sequence[Arm]],
+    *,
+    unattributed: Sequence[str] = (),
+) -> Grading:
     """Score each arm on role recall, tools found, and entries 85-86's joint page set."""
 
     totals: dict[str, ArmScore] = {}
@@ -221,7 +233,13 @@ def grade(oracle: SelectionOracle, arms_by_corridor: Mapping[str, Sequence[Arm]]
                     joint_total=len(joint),
                 )
             )
-    return Grading(arms=list(totals.values()), rows=rows, graded=graded, skipped=skipped)
+    return Grading(
+        arms=list(totals.values()),
+        rows=rows,
+        graded=graded,
+        skipped=[key for key in skipped if key not in set(unattributed)],
+        unattributed=list(unattributed),
+    )
 
 
 # --- reading the arms back out of recall logs ------------------------------------------------
@@ -255,8 +273,22 @@ def candidates_of(record: dict[str, object]) -> list[CandidatePage]:
 
 
 def model_picks(record: dict[str, object]) -> tuple[str, ...]:
-    """What the run actually read. Empty for a log written by a heuristic run's twin."""
+    """What the run actually read — **only when the run says a model chose it.**
 
+    A log's fetched URLs are what the selector picked, and until entry 91 nothing in the file said
+    *which* selector. That was harmless only by accident: the ten corridors in the oracle all had
+    logs from the model runs behind entries 85 to 87. Adding a second traveller brought in six logs
+    written before entry 85 turned the model selector on, and grading them here put the heuristic
+    into the arm labelled `model` and compared it against itself — moving a published figure by six
+    points with nothing in the output to say so.
+
+    So an unattributable log yields no picks, and the caller counts it rather than guessing. That is
+    `RecallRecord.cause`'s rule applied to a second field: a record written before the field existed
+    is reported as unrecorded, never inferred.
+    """
+
+    if record.get("selector") != "model":
+        return ()
     rows = record.get("candidates")
     if not isinstance(rows, list):
         return ()
@@ -280,6 +312,16 @@ def read_recall_logs(directory: Path) -> dict[str, dict[str, object]]:
 MATCHED = "heuristic, matched budget"
 FULL = "heuristic, shipped budget"
 MODEL = "model"
+
+
+def unattributed_logs(oracle: SelectionOracle, logs: dict[str, dict[str, object]]) -> list[str]:
+    """Oracle corridors whose log exists and cannot say which selector chose what it read."""
+
+    return [
+        corridor.corridor
+        for corridor in oracle.corridors
+        if corridor.corridor in logs and logs[corridor.corridor].get("selector") != "model"
+    ]
 
 
 def arms_from_logs(
@@ -311,6 +353,9 @@ def arms_from_logs(
             continue
         chosen = model_picks(record)
         if not chosen:
+            # Either nothing was fetched or the log cannot say which selector fetched it. Both are
+            # "no arm can be replayed here", and neither is graded silently — `Grading.skipped`
+            # carries them to the report.
             continue
         candidates = candidates_of(record)
         by_corridor[corridor.corridor] = [

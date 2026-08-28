@@ -51,6 +51,11 @@ from visa_research_agent.discovery.bootstrap import (
     bootstrap_destination,
     entry_point_for,
 )
+from visa_research_agent.discovery.contention import (
+    Contention,
+    contention_for,
+    ranked_for_role,
+)
 from visa_research_agent.discovery.corpus import CountryCorpus, FileCorpusStore
 from visa_research_agent.discovery.corpus_build import (
     DEFAULT_CORPUS_DEPTH,
@@ -62,6 +67,7 @@ from visa_research_agent.discovery.coverage import (
     VERDICT_MEANING,
     CountryCoverage,
     CoverageReport,
+    KnownAnswer,
     coverage,
 )
 from visa_research_agent.discovery.coverage import (
@@ -111,6 +117,7 @@ from visa_research_agent.discovery.selection_recall import (
     grade,
     load_oracle,
     read_recall_logs,
+    unattributed_logs,
 )
 from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
 from visa_research_agent.domain.trust import host_is_within
@@ -618,8 +625,22 @@ def print_selection_recall(grading: Grading, stream: TextIO) -> None:
     """
 
     print(f"\nSelection recall over {len(grading.graded)} corridors", file=stream)
+    if grading.unattributed:
+        print(
+            f"\n  {len(grading.unattributed)} corridor(s) have a log that does not say which\n"
+            "  selector fetched its pages, so no arm can be replayed. A log written before\n"
+            "  `RecallRecord.selector` existed cannot be told from a heuristic run, and\n"
+            "  grading one as the model puts the heuristic in the model's own arm (entry 91).\n"
+            "  Re-run these corridors to grade them:\n"
+            f"  {', '.join(grading.unattributed)}",
+            file=stream,
+        )
     if not grading.graded:
-        print("  no recall log matched a corridor in the oracle. Run one first.", file=stream)
+        print(
+            "\n  Nothing could be graded. Every arm here is replayed from a recall log, so a\n"
+            "  corridor has to have been run by a model-selector build before it can be scored.",
+            file=stream,
+        )
         return
     print(
         f"\n  {'arm':<26} {'roles':>9} {'':>5}   {'joint':>7} {'':>5}   {'read':>5}  {'tools':>6}",
@@ -671,8 +692,9 @@ def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
     if not directory.is_dir():
         print(f"No recall logs at {directory}; there is nothing to grade.", file=stream)
         return 1
-    arms = arms_from_logs(oracle, read_recall_logs(directory), full_size=args.shipped_size)
-    grading = grade(oracle, arms)
+    logs = read_recall_logs(directory)
+    arms = arms_from_logs(oracle, logs, full_size=args.shipped_size)
+    grading = grade(oracle, arms, unattributed=unattributed_logs(oracle, logs))
     print_selection_recall(grading, stream)
     return 0 if grading.graded else 1
 
@@ -930,26 +952,41 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
     the family half beside it, even for a country that has no families.
     """
 
-    print("\nCorpus coverage, half 1: the answers a human named, over one traveller", file=stream)
+    print("\nCorpus coverage, half 1: the answers a human named, per traveller", file=stream)
     known = [row for country in report.countries for row in country.known]
     if not known:
         print("  no country asked about appears in the oracle.", file=stream)
     else:
-        held = sum(row.held for row in known)
-        answerable = sum(row.answerable for row in known)
+        by_traveller: dict[str, list[KnownAnswer]] = {}
         for row in known:
-            flag = "" if row.held == row.answerable else "   <-- MISS"
-            alias = f"   ({len(row.aliased)} under a host alias)" if row.aliased else ""
+            by_traveller.setdefault(row.traveller, []).append(row)
+        for traveller, rows in sorted(by_traveller.items()):
+            held = sum(row.held for row in rows)
+            answerable = sum(row.answerable for row in rows)
+            roles = sum(row.roles for row in rows)
             print(
-                f"  {row.corridor:<40} {row.held}/{row.answerable} roles held{alias}{flag}",
+                f"\n  {traveller:<18} {held}/{answerable} of its answers held "
+                f"({held / answerable if answerable else 0:.0%})   "
+                f"{answerable}/{roles} roles answerable at all "
+                f"({answerable / roles if roles else 0:.0%})",
                 file=stream,
             )
-            for role, urls in sorted(row.missing.items()):
-                print(f"      {role:<22} {urls[0]}", file=stream)
-        print(f"\n  {held}/{answerable} answerable roles already in the corpus.", file=stream)
+            for row in rows:
+                flag = "" if row.held == row.answerable else "   <-- MISS"
+                alias = f"   ({len(row.aliased)} under a host alias)" if row.aliased else ""
+                print(
+                    f"      {row.corridor:<40} {row.held}/{row.answerable} held, "
+                    f"{row.answerable}/{row.roles} answerable{alias}{flag}",
+                    file=stream,
+                )
+                for role, urls in sorted(row.missing.items()):
+                    print(f"          {role:<22} {urls[0]}", file=stream)
         print(
-            "  This is the regression half and it should stay at 100%. Every oracle corridor is\n"
-            "  IN/GB/tourism, so it says nothing about any other traveller — known problem 33.",
+            "\n  held: of the roles a human could answer, how many the corpus holds a page for.\n"
+            "        This is the regression half and should stay at 100% for every traveller.\n"
+            "  answerable: how many of the six roles anyone could answer from this store at all.\n"
+            "        **This is the column that moves with the traveller**, and it is the one a\n"
+            "        single-traveller oracle could not show — known problem 33.",
             file=stream,
         )
 
@@ -1037,6 +1074,88 @@ def run_coverage(args: argparse.Namespace, stream: TextIO) -> int:
         row.verdict == "incomplete" or any(k.missing for k in row.known) for row in built.countries
     )
     return 1 if short else 0
+
+
+def print_contention(
+    contention: Contention, role: str, limit: int, indexed: set[str], stream: TextIO
+) -> None:
+    """One role's ranked candidates, with whether anybody could read each one.
+
+    Built for the person curating `oracle/selection_oracle.yaml`, so it prints the two things a
+    curation decision needs and nothing else: what the ranking thinks, and whether there is a body
+    to check it against. `text` is the bound on the row — a role can only be curated from a page
+    somebody could read.
+    """
+
+    print(
+        f"\n{contention.key}: {len(contention.candidates)} in contention, "
+        f"{contention.text_held} with stored text ({contention.rejected} rejected before scoring)",
+        file=stream,
+    )
+    ranked = ranked_for_role(contention, role, limit=limit)  # type: ignore[arg-type]
+    print(f"\n  best {len(ranked)} for {role}:", file=stream)
+    for position, (candidate, score) in enumerate(ranked, start=1):
+        readable = "text" if candidate.link.url in indexed else "  --"
+        print(f"  {position:>3}. {score:>7.1f}  {readable}  {candidate.link.url}", file=stream)
+        label = candidate.title or candidate.link.text
+        if label:
+            print(f"           {label[:96]}", file=stream)
+    print(
+        "\n  --show <url> prints that page's stored text, which is how a role is judged.\n"
+        "  A page named in the oracle is still fetched live before a word of it is ever quoted.",
+        file=stream,
+    )
+
+
+def run_contention(args: argparse.Namespace, stream: TextIO) -> int:
+    """Rebuild a corridor's contention set from the store, for curating an oracle row.
+
+    No search, no model, no fetch — the whole point is a set the next session can reproduce. See
+    `discovery/contention.py` for why it is corpus-only and what that costs.
+    """
+
+    countries = get_country_registry()
+    destination = countries.by_slug(args.destination)
+    if destination is None:
+        print(f"Unknown destination slug: {args.destination}", file=stream)
+        return 3
+    corridor = Corridor(
+        destination_slug=args.destination,
+        passport_nationality=args.nationality.upper(),
+        applying_from=getattr(args, "from").upper(),
+        purpose=args.purpose,
+    )
+    config = corridor_destination(args.destination, corridor, stream)
+    if config is None:
+        return 3
+    corpus = FileCorpusStore(settings.corpus_directory).load(destination.code)
+    if corpus is None:
+        print(f"There is no corpus for {destination.code}; build one first.", file=stream)
+        return 3
+
+    text = PageTextStore(settings.page_text_directory)
+    if args.show:
+        body = text.body_for_review(destination.code, args.show)
+        if body is None:
+            print(f"The index holds no text for {args.show}", file=stream)
+            return 1
+        print(body, file=stream)
+        return 0
+
+    held = text.indexed(
+        destination.code, [entry.url for entry in corpus.entries_within(config.trusted_domains)]
+    )
+    contention = contention_for(
+        corpus,
+        config,
+        corridor,
+        countries=countries,
+        lexicon=get_lexicon(),
+        destination_code=destination.code,
+        indexed=frozenset(held),
+    )
+    print_contention(contention, args.role, args.limit, held, stream)
+    return 0
 
 
 async def run_corpus(args: argparse.Namespace, stream: TextIO) -> int:
@@ -1232,6 +1351,24 @@ def build_parser() -> argparse.ArgumentParser:
         help="the hand-curated fixture, for the regression half only",
     )
 
+    contend = commands.add_parser(
+        "contention",
+        help="rebuild a corridor's candidate set from the store, for curating an oracle row",
+    )
+    contend.add_argument("--destination", required=True, help="destination slug, e.g. netherlands")
+    contend.add_argument("--nationality", required=True, help="ISO code, e.g. PH")
+    contend.add_argument("--from", required=True, help="ISO code of where they apply, e.g. PH")
+    contend.add_argument(
+        "--purpose", default="tourism", choices=["tourism", "business", "study", "transit"]
+    )
+    contend.add_argument("--role", default="visa_decision", help="which role to rank for")
+    contend.add_argument("--limit", type=int, default=20)
+    contend.add_argument(
+        "--show",
+        default="",
+        help="print this candidate's stored text instead, which is how a role is judged",
+    )
+
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
@@ -1271,6 +1408,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return run_selection_recall(args, sys.stderr)
         if args.command == "coverage":
             return run_coverage(args, sys.stderr)
+        if args.command == "contention":
+            return run_contention(args, sys.stderr)
         return asyncio.run(run_corridor(args, sys.stderr))
     except SearchError as exc:
         print(f"Search is unavailable: {exc}", file=sys.stderr)

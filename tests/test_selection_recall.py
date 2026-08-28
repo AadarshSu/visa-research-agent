@@ -24,6 +24,7 @@ from visa_research_agent.discovery.selection_recall import (
     load_oracle,
     model_picks,
     read_recall_logs,
+    unattributed_logs,
 )
 
 REPOSITORY = Path(__file__).resolve().parent.parent
@@ -72,9 +73,13 @@ def test_the_committed_oracle_loads_and_says_what_it_claims() -> None:
 
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
 
-    assert len(oracle.corridors) == 10
+    assert len(oracle.corridors) == 20
+    travellers = {"/".join(c.corridor.split("/")[1:]) for c in oracle.corridors}
+    # Two curated travellers over the same ten countries. The second is what makes any number from
+    # this fixture a statement about more than one profile — known problem 29, entry 91.
+    assert travellers == {"IN/GB/tourism", "PH/PH/tourism"}
+    assert len({c.corridor for c in oracle.corridors}) == 20
     for corridor in oracle.corridors:
-        assert corridor.corridor.endswith("/IN/GB/tourism")
         assert corridor.text_held <= corridor.contention
         for role in [*corridor.answers, *corridor.tools, *corridor.unanswered]:
             assert role in ROLE_ORDER
@@ -199,10 +204,22 @@ def test_a_corridor_with_no_recall_log_is_reported_rather_than_scored_as_zero(
     assert scored.arms == []
 
 
-def recall_log(directory: Path, *, key: str, rows: list[dict[str, object]]) -> None:
+def recall_log(
+    directory: Path, *, key: str, rows: list[dict[str, object]], selector: str | None = "model"
+) -> None:
+    """A recall log. `selector` defaults to "model" because that is what these arms replay;
+    pass None for a log written before `RecallRecord.selector` existed."""
+
     directory.mkdir(parents=True, exist_ok=True)
     (directory / f"{abs(hash(key))}.json").write_text(
-        json.dumps({"schema_version": 1, "corridor_key": key, "candidates": rows}),
+        json.dumps(
+            {
+                "schema_version": 1,
+                "corridor_key": key,
+                "selector": selector,
+                "candidates": rows,
+            }
+        ),
         encoding="utf-8",
     )
 
@@ -220,6 +237,42 @@ def candidate(url: str, score: float, *, fetched: bool = False) -> dict[str, obj
         "shortlisted": fetched,
         "fetched": fetched,
     }
+
+
+def test_a_log_that_cannot_name_its_selector_is_not_graded_as_the_model(tmp_path: Path) -> None:
+    """The defect entry 91 found by widening the oracle. A run's fetched URLs are read as the
+    model's picks, and until `RecallRecord.selector` existed nothing said which selector fetched
+    them — so a heuristic run was scored in the arm named `model` and compared against itself. It
+    went unnoticed while every oracle corridor with a log happened to be a model run."""
+
+    rows = [
+        candidate("https://a.go.jp/decision", 90.0, fetched=True),
+        candidate("https://b.go.jp/fees", 80.0),
+    ]
+    recall_log(tmp_path, key="japan/IN/GB/tourism", rows=rows, selector=None)
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    logs = read_recall_logs(tmp_path)
+
+    assert arms_from_logs(oracle, logs) == {}
+    assert unattributed_logs(oracle, logs) == ["japan/IN/GB/tourism"]
+
+    scored = grade(oracle, {}, unattributed=unattributed_logs(oracle, logs))
+    assert scored.graded == []
+    assert scored.unattributed == ["japan/IN/GB/tourism"]
+    # Not also in `skipped`: the two need different reading. A skipped corridor was never run; this
+    # one was run and the file cannot say by what.
+    assert scored.skipped == []
+
+
+def test_a_heuristic_run_is_refused_as_firmly_as_an_unrecorded_one(tmp_path: Path) -> None:
+    recall_log(
+        tmp_path,
+        key="japan/IN/GB/tourism",
+        rows=[candidate("https://a.go.jp/decision", 90.0, fetched=True)],
+        selector="heuristic",
+    )
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    assert arms_from_logs(oracle, read_recall_logs(tmp_path)) == {}
 
 
 def test_the_ranking_is_replayed_at_the_budget_the_model_actually_spent(tmp_path: Path) -> None:

@@ -21,7 +21,7 @@ from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.coverage import (
     coverage,
     families_in,
-    known_answer_coverage,
+    known_answers,
     report,
 )
 from visa_research_agent.discovery.selection_recall import DEFAULT_ORACLE_PATH, load_oracle
@@ -268,14 +268,18 @@ def test_a_host_alias_is_not_a_miss() -> None:
         if named.startswith("https://www.")
         else named.replace("https://", "https://www.", 1)
     )
-    held = known_answer_coverage(oracle, corpus_of([entry(aliased)], code="JP"), "japan")
+    held = known_answers(oracle, corpus_of([entry(aliased)], code="JP"), "japan")[0]
     assert held.held == 1
     assert held.aliased
 
 
 def test_a_missing_answer_names_the_role_and_the_page() -> None:
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
-    empty = known_answer_coverage(oracle, corpus_of([], code="JP"), "japan")
+    empty = next(
+        r
+        for r in known_answers(oracle, corpus_of([], code="JP"), "japan")
+        if r.corridor.endswith("IN/GB/tourism")
+    )
     assert empty.held == 0
     assert empty.answerable == len(
         next(row for row in oracle.corridors if row.slug == "japan").answers
@@ -290,15 +294,14 @@ def test_a_country_outside_the_oracle_reports_nothing_rather_than_zero() -> None
     must not be reported as 0 of 0 held, which reads as a failure."""
 
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
-    row = known_answer_coverage(oracle, corpus_of([], code="XX"), "atlantis")
-    assert row.answerable == 0
-    assert row.missing == {}
+    assert known_answers(oracle, corpus_of([], code="XX"), "atlantis") == []
 
 
-def test_the_committed_oracle_still_reads_100_percent_against_the_committed_corpora() -> None:
-    """The regression half, run for real. It is the one number in this file that touches
-    `var/corpus/`, and it is skipped rather than failed where those stores are not present — they
-    are built by a job that spends search quota, not by the test suite."""
+def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
+    """The regression half, run for real, and **per traveller** — one number per curated profile
+    rather than one for the fixture. It is the only test here that touches `var/corpus/`, and it is
+    skipped rather than failed where those stores are absent: they are built by a job that spends
+    search quota, not by the test suite."""
 
     from visa_research_agent.discovery.corpus import FileCorpusStore
     from visa_research_agent.discovery.lexicon import get_country_registry
@@ -308,16 +311,54 @@ def test_the_committed_oracle_still_reads_100_percent_against_the_committed_corp
         pytest.skip("no corpus is built in this checkout")
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
     registry = get_country_registry()
-    held = answerable = 0
+    totals: dict[str, list[int]] = {}
     for code in store.countries():
         corpus = store.load(code)
         country = registry.get(code)
         assert corpus is not None and country is not None
-        row = known_answer_coverage(oracle, corpus, country.slug)
-        held += row.held
-        answerable += row.answerable
-    assert answerable == 47
-    assert held == answerable
+        for row in known_answers(oracle, corpus, country.slug):
+            running = totals.setdefault(row.traveller, [0, 0, 0])
+            running[0] += row.held
+            running[1] += row.answerable
+            running[2] += row.roles
+    assert set(totals) == {"IN/GB/tourism", "PH/PH/tourism"}
+    for traveller, (held, answerable, _) in totals.items():
+        assert held == answerable, f"{traveller} lost an answer the corpus used to hold"
+    assert totals["IN/GB/tourism"][1] == 47
+    assert totals["PH/PH/tourism"][1] == 24
+
+
+def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> None:
+    """Both travellers read 100% *held*, and that is not the finding — the denominators are. The
+    same ten corpora answer 47 of 60 roles for the curated Indian traveller and 24 of 60 for the
+    Filipino one, which is the dimension a single-traveller oracle could not show at all."""
+
+    from visa_research_agent.discovery.corpus import FileCorpusStore
+    from visa_research_agent.discovery.lexicon import get_country_registry
+
+    store = FileCorpusStore(REPOSITORY / "var" / "corpus")
+    if not store.countries():
+        pytest.skip("no corpus is built in this checkout")
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    registry = get_country_registry()
+    answerable: dict[str, int] = {}
+    for code in store.countries():
+        country = registry.get(code)
+        corpus = store.load(code)
+        assert corpus is not None and country is not None
+        for row in known_answers(oracle, corpus, country.slug):
+            answerable[row.traveller] = answerable.get(row.traveller, 0) + row.answerable
+    assert answerable["IN/GB/tourism"] > answerable["PH/PH/tourism"]
+
+
+def test_a_corridor_answering_nothing_still_counts_in_the_denominator() -> None:
+    """France and Sweden answer none of their six roles for the Philippine traveller. Skipping such
+    a corridor took `answerable` from 24 of 60 to 24 of 48 — a denominator error flattering exactly
+    the traveller this half of the fixture exists to be honest about."""
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    rows = {row.corridor for row in known_answers(oracle, corpus_of([], code="FR"), "france")}
+    assert "france/PH/PH/tourism" in rows
 
 
 # --- the report ---------------------------------------------------------------------------------

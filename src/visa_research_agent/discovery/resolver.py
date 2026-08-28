@@ -1553,6 +1553,7 @@ class CorridorResolver:
                     recorded_at=self.now(),
                     outcome=outcome,
                     cause=cause,
+                    selector="model" if self.selector is not None else "heuristic",
                     unresolved_roles=list(resolved.unresolved_roles) if resolved else [],
                     queries=trace.queries,
                     seeds=trace.seeds,

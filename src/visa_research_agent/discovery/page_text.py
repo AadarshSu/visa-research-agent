@@ -309,6 +309,31 @@ class PageTextStore:
                 held.update({str(url): str(body) for url, body in rows})
         return held
 
+    def body_for_review(self, code: str, url: str) -> str | None:
+        """One page's stored text, **for a person curating ground truth and for nothing else.**
+
+        The third and last amendment to the rule at the top of this module, argued rather than
+        slipped in (entries 83 and 91). The rule is that no sentence written from stored text may
+        reach a traveller, because this text is older than `source_maximum_stale_hours` and carries
+        nothing to say how old it is. It has never been that reading stored text is wrong: `rank`
+        reads it, `score_body` reads it, and `oracle/selection_oracle.yaml` was curated by reading
+        it — entry 87 says so outright, and did the reading in a throwaway script.
+
+        That script is what this replaces. The chain here ends at a terminal a curator is looking
+        at: one URL at a time, named on the command line, printed by `visa-discover contention
+        --show`. There is no caller in `research/`, none in `api/`, and none on the request path,
+        which is the property to check before adding a second one.
+
+        **It is still not evidence.** A page curated from here is fetched through
+        `LiveSourceFetcher` before a word of it is quoted to anybody, exactly as before.
+        """
+
+        if not self.has(code):
+            return None
+        with self._connect(code, create=False) as connection:
+            row = connection.execute("SELECT body FROM page_text WHERE url = ?", (url,)).fetchone()
+        return str(row[0]) if row else None
+
     def indexed(self, code: str, urls: Iterable[str]) -> set[str]:
         """Which of these pages the index holds a body for. **URLs only — no body comes back.**
 

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 594 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 605 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has sixty-seven rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has seventy-one rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -72,7 +72,7 @@ destinations.
 | **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Read at step 3b of `_resolve`, before the shortlist — and currently inert, on purpose** (entry 80). The A/B was taken and **it could not answer the question**: six runs of identical code give 4, 4, 4, 4, 5 and 6 roles, so role count cannot see a ranking change on one corridor (entry 81, which withdraws entry 80's regression). What is established is that the role-filling pages are shortlisted and fetched in every arm — the lift is recall-neutral, nothing shows it helps, and it stays off. Entries 78–81. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
 | **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
-| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed** — ten corridors, 47 answered roles over 71 pages, named by hand from each corridor's whole contention set (entry 87). It also records what could *not* be established: **13 of 60 roles have no readable answer**, 7 live behind a questionnaire, 12 candidates hold no stored text and could not be judged. `visa-discover selection-recall` grades any directory of recall logs against it and prints entries 85–86's joint oracle beside it, so the bias is a number on every run. No network, no model. |
+| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 24 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
 | **Corpus sufficiency** | **`visa-discover coverage`, committed** (entry 90) — the promotion rule for stage 3. Two halves, never added: 47 of 47 known answers (**one traveller**, a regression check) and every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
@@ -130,7 +130,15 @@ the children are themselves per-traveller; and **the United Kingdom has a per-tr
 entry 88 counted none**, its fee wizard, because the crawler groups links found on one page and this
 groups across the store.
 
-**Start at item 35, and the first job is the Netherlands rather than the other nine.** Entry 88
+**Start at item 38: re-run the twenty oracle corridors.** Widening the oracle (entry 91) found that
+`arms_from_logs` could not tell a model run from a heuristic one — a run's fetched URLs are read as
+the model's picks and nothing recorded which selector fetched them. `RecallRecord.selector` now does,
+and an unattributable log is refused rather than mis-graded, so **`selection-recall` grades nothing
+today**: entry 87's figures stand as recorded and are not reproducible from disk until those
+corridors are run again. Twenty runs restores them and produces the first selector number for a
+second traveller.
+
+**Then item 35, and its first job is the Netherlands rather than the other nine.** Entry 88
 proved the mechanism there and did not finish the country: the schengen gateway sits at 71 of 184
 opened and three *complete* families have never been opened at all — `making-appointment/{}` at 188
 held, `caribbean-visa/short-stay/apply-{}` at 185, `passport-id-card/abroad/apply-{}` at 184.
@@ -486,14 +494,13 @@ re-add the amendment history here.
    approximate (entry 62's fidelity note), so twelve is a lower bound — which makes the noise finding
    stronger, not weaker. Entries 69, 70; TODO item 30.
 
-29. **The selection fixture is one nationality and one residence.** All ten corridors in
-   `oracle/selection_oracle.yaml` are `IN/GB/tourism`, so entry 87's numbers say nothing about how a
-   selector behaves when the passport and the residence come apart differently, or at all about
-   business, study or transit. Every finding in it that turned on residence — the UAE's visa on
-   arrival for Indians living in Britain, the UK fee table keyed on the application country, the
-   Netherlands' UK-specific checklist — is a reason to expect that dimension to matter, and none of
-   them would have been visible in an `IN/IN` corridor. Widening it is the natural next measurement,
-   and it is the same question as the nationality dimension entry 48 left open.
+29. **The selection fixture has two travellers and one purpose.** `oracle/selection_oracle.yaml` is
+   now twenty corridors — `IN/GB/tourism` and `PH/PH/tourism` over the same ten countries (entry
+   91) — so the nationality-and-residence half of this is answered, and the answer is large: the
+   same stores answer **47 of 60 roles for one traveller and 24 of 60 for the other**. What is left
+   is **purpose**: every one of the twenty rows is `tourism`, and the roles most likely to move are
+   `document_checklist` and `application_route`. Note also that the `PH/PH` rows have **no selector
+   grade yet** — that needs item 38's runs.
 
 30. **The fixture cannot name an answer nobody could read.** Thirteen of its sixty roles are recorded
    `unanswered`, and twelve candidates are recorded `unverifiable` — plausible answers with no stored
@@ -527,7 +534,10 @@ re-add the amendment history here.
    rebuild there buys stored text for the selector (5 of 34 have any today), not coverage. TODO
    item 35.
 
-33. **The 47 of 47 is one traveller, and it is now labelled as such rather than fixed.** Against
+33. **The 47 of 47 is one traveller, and there is now a second one beside it.** Entry 91 curated
+   `PH/PH/tourism` across the same ten countries: **24 of 60 roles answerable against 47 of 60**,
+   both at 100% held. So the gate is no longer blind to the traveller, and two profiles is still
+   two. Every row is `tourism` — known problem 29. What follows is the original entry. Against
    `oracle/selection_oracle.yaml` every answerable role's page is already in the corpus, and that
    oracle is `IN/GB/tourism` for all ten countries. The Netherlands' three answers were held before
    entry 88's rebuild and after it, so it cannot see the thing entry 88 fixed. **Do not quote the
@@ -536,6 +546,22 @@ re-add the amendment history here.
    nothing in the tooling can make that mistake — but a person reading the first half of its output
    still can. What stays open is the oracle itself: widening it past one nationality and one
    residence is known problem 29.
+
+34. **A recall log older than 2026-08-28 cannot say which selector wrote it, so it is not graded.**
+   `RecallRecord.selector` was added by entry 91 after the grader was found reading a heuristic
+   run's fetches as the model's picks. Every log on disk predates it, so `visa-discover
+   selection-recall` currently grades **nothing** and says so; entry 87's numbers stand as recorded
+   and are not reproducible from disk. Fixed by running the corridors again — TODO item 38 — not by
+   loosening the check, which would restore exactly the mislabelling it was added to stop.
+
+35. **The corpus-coverage gate can only see families the corpus recorded.** `visa-discover
+   coverage` reads the store, so a country whose crawl never reached a per-traveller family reports
+   *no per-traveller dimension* — indistinguishable, in the output, from a country that genuinely
+   publishes its guidance centrally. The verdicts resting on the thinnest stores are the ones to
+   doubt: **Germany at 1,565 entries and the United Kingdom at 922**, against Canada's 9,655. A
+   rebuild could turn either over. Entry 90 chose the conservative reading deliberately — the gate
+   says what the store contains, never what the authority publishes — and the fix is to rebuild the
+   thin corpora, not to soften the verdict.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

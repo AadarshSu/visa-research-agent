@@ -31,6 +31,11 @@ is fixed and proved on one country (item 35), and it exposed a wider limit that 
 for most residences the Netherlands publishes its checklist on **VFS Global**, which the trust rule
 refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
+**And the oracle now has a second traveller** (entry 91). Twenty corridors, `IN/GB/tourism` and
+`PH/PH/tourism` over the same ten countries. Both read 100% *held* and the denominators are the
+finding: the same stores answer **47 of 60 roles for one traveller and 24 of 60 for the other**.
+Building it exposed a defect in the grader — see item 38, which is now the first thing to do.
+
 **The gate is built and it is now the promotion rule for stage 3** (item 37, entry 90).
 `visa-discover coverage` reports two halves that are never added: the 47 of 47 known answers, which
 is one traveller and stays as a regression check, and the per-traveller family, which is the
@@ -132,7 +137,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
+| **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
+|  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
@@ -165,7 +171,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has sixty-seven rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventy-one rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -241,7 +247,34 @@ it would still have been a set of URLs somebody fetched.
   should quote both.
 
 
-### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **start here**
+### 38. Re-run the twenty oracle corridors so a selector can be graded again — `next`, **start here**
+
+**Why:** entry 91 widened the oracle to a second traveller and, in doing so, found that
+`arms_from_logs` could not tell a model run from a heuristic one — a run's fetched URLs are read as
+*the model's picks* and nothing in `RecallRecord` said which selector fetched them. Six of the new
+traveller's logs predate entry 85, so grading them put the heuristic into the arm labelled `model`
+and moved the printed figure from 100% to 92% with nothing saying why.
+
+`RecallRecord.selector` now records it and an unattributable log is **not graded**, which is
+`cause`'s rule from entry 63 applied to a second field. **The cost is that `selection-recall` grades
+nothing today.** Entry 87's numbers stand as recorded and are not currently reproducible from disk.
+
+**Do:** run the ten `IN/GB` corridors and the ten `PH/PH` ones with `discovery_selector: model`, then
+`visa-discover selection-recall`. Two things come out of it and only the first is a repeat:
+
+- entry 87's 100% / 91% / 70%, reproduced from logs that say who chose;
+- **the first selector number for a second traveller**, which nothing has ever measured. Expect it to
+  be worse: the `PH/PH` half of the fixture answers 24 of 60 roles against 47 of 60, so there is less
+  to find and the pages that answer are thinner.
+
+Twenty corridors of search and model quota. Cheap, and it is the only thing standing between the
+widened oracle and a number.
+
+**Careful:** clear nothing. `var/corpus/` and `var/pagetext/` are stores; `var/recall/` is where the
+output lands and the old logs are harmless now that they are refused rather than mis-graded.
+
+
+### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`
 
 **The gate now says what to do, which it could not when this item was written** (item 37, entry 90).
 `visa-discover coverage` reads:
