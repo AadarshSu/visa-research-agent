@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has sixty rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has sixty-one rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -505,10 +505,11 @@ re-add the amendment history here.
 
 32. **Nine of the ten corpora have never been rebuilt with the family reservation.** Entry 88 proved
    it on the Netherlands only. The gate makes it inert where there is no qualifying family — CA, JP
-   and GB have zero — so the untested surface is mostly Singapore, whose per-nationality page fills
-   five roles and whose store holds 34 of 198. Note before rebuilding it: 33 of those 34 came from a
-   *mission* page rather than from ICA, so ICA's own list may be a form, which no budget reaches.
-   TODO item 35.
+   and GB have zero. **Singapore was checked on 2026-08-28 and is not a second Netherlands**: its
+   per-nationality page is a leaf rather than a gateway, and ICA's own index yields 6 children
+   rather than 198, so the missing 164 nationalities are behind a selector — entry 82's wall. A
+   rebuild there buys stored text for the selector (5 of 34 have any today), not coverage. TODO
+   item 35.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

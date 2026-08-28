@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose sixty rows are
+what has wasted the most time here — see the corrections table further down, whose sixty-one rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -360,6 +360,7 @@ cause, and only running the thing showed it.
 | a contractor's checklist is a ceiling on what we can offer | it is a ceiling on *reading*; naming it was always allowed (entry 89) |
 | the authority's own page linking it is warrant enough | the link comes out of HTML, which is untrusted content (entry 89) |
 | most contractor links are the guidance | 44 of 236 are "track your application"; 30 are documents (entry 89) |
+| singapore is the next family reservation win, it fills five roles | its page is a leaf, and ICA's index yields 6 children not 198 |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |

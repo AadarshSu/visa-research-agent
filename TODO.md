@@ -156,7 +156,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has sixty rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has sixty-one rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -200,15 +200,29 @@ and fixed on the Netherlands: gateway pages read went 0 → 185, tourism checkli
 the corpus with the crawl skipped.
 
 **Nine countries are untested, and the gate makes most of them no-ops.** Qualifying families today:
-**NL 9, SG 1, and zero for CA, JP and GB** (AE, DE, FR, SE, US likewise). So the work is small and
-the order is obvious:
+**NL 9, SG 1, and zero for CA, JP and GB** (AE, DE, FR, SE, US likewise). So the work is small.
 
-1. **Singapore first.** Its per-nationality page fills *five* roles and the store holds 34 of 198.
-   Note what entry 88 did not resolve: 33 of those 34 were found from `new-delhi.mfa.gov.sg`, not
-   from ICA, so ICA's own list may be a form — entry 82's case. Check that before assuming a rebuild
-   helps.
-2. **Rebuild the remaining eight and diff the qualifying families**, which is free to check before
-   spending a crawl: the census is in entry 88 and reproducible offline from `var/corpus/`.
+**Singapore is not the Netherlands, and this was checked rather than assumed (2026-08-28).** An
+earlier draft of this item said to do it first because its per-nationality page fills five roles.
+That was the wrong reason:
+
+- Singapore's `visa-detail-page/{country}` is a **leaf**, not a gateway. Opening the 34 held yields
+  two children in total, against the Dutch gateway's six apiece — and an unopened URL is already a
+  usable candidate, so the 34 already work.
+- Its coverage gap is a **form wall**, not a budget one. `ica.gov.sg/.../visa_requirements` yields
+  **6 children, not 198**; the 34 held all came from mission pages (33 New Delhi, 1 Chennai). That
+  is entry 82's UK fee table, and no reservation reaches the other 164.
+- What a rebuild *would* buy is narrower and real: **only 5 of the 34 have stored text**, and stored
+  text is what the model selector reads. It improves selection for other nationalities, not
+  coverage. Worth doing, worth not overselling.
+- **The thing that might actually help is invisible to this mechanism.** Sixteen mission
+  `visa-information` pages are in the store and **none has ever been opened**. They sit on sixteen
+  hosts and carry no country token, so they never group into a family. Whether any lists
+  nationalities the way New Delhi's does is untested — London's, which has been read, does not.
+
+So: rebuild the eight remaining countries and diff the qualifying families, which is free to check
+offline before spending a crawl. Expect selection gains, not coverage, anywhere the authority
+publishes its list behind a selector.
 
 **Do not raise the share to reach further.** The Dutch ceiling is not the budget: of 185 gateway
 pages read, 113 link nothing and 58 link only language forks, because for most residences the
