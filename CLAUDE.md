@@ -370,7 +370,7 @@ cause, and only running the thing showed it.
 | the UK's per-nationality fee table is the answer it hides | it is keyed on the country you *apply from*, not the passport (entry 87) |
 | a page titled "Document Checklist" is a checklist | `imm5484.html` is a download page whose text explains Acrobat Reader (entry 87) |
 | a fetch-everything oracle is the automatable version of the same thing | it would still be URLs somebody fetched, so it inherits the alias bug (entry 87) |
-| one oracle row per country is enough, the pages are the pages | the same store answers 47 of 60 roles for one traveller and 36 for another (entry 91) |
+| one oracle row per country is enough, the pages are the pages | the same store answers 47 of 60 roles for one traveller and 37 for another (entry 91) |
 | a 100% held means the corpus is ready for that traveller | it is 100% of what *can* be answered; the denominator is the finding (entry 91) |
 | ...and that 100% held is a finding for both travellers | curating from the corpus makes it circular; only `IN/GB` was curated wider (entry 91) |
 | a keyed service not applying means the country cannot answer | one UAE page answers five roles for anybody; the row was three candidates deep (entry 91) |

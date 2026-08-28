@@ -325,12 +325,12 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     for traveller, (held, answerable, _) in totals.items():
         assert held == answerable, f"{traveller} lost an answer the corpus used to hold"
     assert totals["IN/GB/tourism"][1] == 47
-    assert totals["PH/PH/tourism"][1] == 36
+    assert totals["PH/PH/tourism"][1] == 37
 
 
 def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> None:
     """Both travellers read 100% *held*, and that is not the finding — the denominators are. The
-    same ten corpora answer 47 of 60 roles for the curated Indian traveller and 36 of 60 for the
+    same ten corpora answer 47 of 60 roles for the curated Indian traveller and 37 of 60 for the
     Filipino one, which is the dimension a single-traveller oracle could not show at all.
 
     **Held is a weak number for the `PH/PH` half and this test does not lean on it.** Those rows

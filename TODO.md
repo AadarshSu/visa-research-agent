@@ -33,7 +33,7 @@ refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
 **And the oracle now has a second traveller** (entry 91). Twenty corridors, `IN/GB/tourism` and
 `PH/PH/tourism` over the same ten countries. Both read 100% *held* and the denominators are the
-finding: the same stores answer **47 of 60 roles for one traveller and 36 of 60 for the other**.
+finding: the same stores answer **47 of 60 roles for one traveller and 37 of 60 for the other**.
 Building it exposed a defect in the grader — see item 38, which is now the first thing to do.
 
 **The gate is built and it is now the promotion rule for stage 3** (item 37, entry 90).
@@ -140,7 +140,6 @@ one-paragraph defects rather than items.
 | **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
 |  | 39. Stop asking five more questions once the answer is "no visa required" | `next` |
 |  | 40. Let curation fetch one page the index does not hold | `next` |
-|  | 5b. Answer France's challenge in the corpus build, not only the request path | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -267,7 +266,7 @@ nothing today.** Entry 87's numbers stand as recorded and are not currently repr
 
 - entry 87's 100% / 91% / 70%, reproduced from logs that say who chose;
 - **the first selector number for a second traveller**, which nothing has ever measured. Expect it to
-  be worse: the `PH/PH` half of the fixture answers 36 of 60 roles against 47 of 60, so there is less
+  be worse: the `PH/PH` half of the fixture answers 37 of 60 roles against 47 of 60, so there is less
   to find and the pages that answer are thinner.
 
 Twenty corridors of search and model quota. Cheap, and it is the only thing standing between the
@@ -326,26 +325,28 @@ person typed, never a set; it never writes to the corpus or the index; and a pag
 fetched again by the product before a word of it reaches a traveller.
 
 
-### 5b. Answer France's challenge in the *corpus build*, not only the request path — `next`
+### 5b. ~~Answer France's challenge in the corpus build~~ — `done, entry 92`
 
-**Why:** entry 91 measured France at **18 readable candidates of 201**, which is the worst text
-coverage in the fixture and the reason France answers one role for either traveller. Entry 41 settled
-the principle — a Cloudflare challenge is not a refusal, it states no policy, and answering it by
-running the page's own JavaScript in our own renderer **under our own user agent** misrepresents
-nothing — and entry 75 built it, taking `render_mode` to `on_demand` and recovering Cyprus.
+**Done 2026-08-28, and the item's own premise was wrong.** The corpus build always passed the
+renderer and always called `_answer_challenge`; what it passed with it was
+`settings.maximum_crawl_renders` — **12** — against France's **64** challenged pages. So most were
+recorded "that challenge could not be answered here", which was true of that crawl and false of the
+authority.
 
-**What was missed is that the corpus build does not do it.** The request path renders a challenged
-page; the offline crawl that fills `var/corpus/` and `var/pagetext/` does not, so France's portal is
-recorded as pages with no text and every later measurement inherits the gap.
+`DEFAULT_CORPUS_RENDERS = 400` for the offline job, bounded a second way by
+`CHALLENGE_FAILURES_PER_HOST = 3` so a host nobody can answer — `urm.lt` fingerprints past our user
+agent — costs three renders rather than two hours. Entry 41's line is unmoved and now has tests on
+the crawl path: a bare `403`, a `401` and a `429` never reach the renderer.
 
-**This is not a relaxation of anything** and must not be written as one. Spoofing a user agent,
-retrying past a rate limit and rendering past a **refusal** all stay forbidden; `www.mfa.gr`'s Akamai
-`403` and `urm.lt`'s unanswerable challenge are untouched. The line is entry 41's: did the authority
-state anything.
+**The rebuild bought less than the mechanism suggests.** `france-visas.gouv.fr` went from 12 pages
+with stored text to **104**, and that bought **one role** — the arrival page's entry conditions, for
+both travellers. France's other four gaps are inside the **Visa Wizard**, which is a tool rather than
+a page, and no crawl reaches those. France is still the weakest row in the fixture and item 5's
+remaining half is what would change that.
 
-**Do:** give the corpus crawler the renderer on the same terms the request path has it, with a
-budget, and rebuild France. Then re-run `visa-discover coverage --country FR` and re-curate France's
-two oracle rows, which are currently the fixture's weakest.
+**Worth doing for the other nine corpora**, cheaply and offline-checkable first: count each corpus's
+`challenge, unanswered` entries before spending a crawl. France had 64; a country with none gains
+nothing from a rebuild.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`

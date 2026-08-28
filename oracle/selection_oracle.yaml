@@ -304,6 +304,13 @@ corridors:
           seen: text
           why: '"To obtain a visa via France-Visas, you need to follow five steps"'
       general_entry:
+        - url: https://france-visas.gouv.fr/en/votre-arrivee-en-france
+          seen: text
+          why: >-
+            "Documents to be presented on arrival in France... A valid passport issued less than 10
+            years before and valid for at least 3 months after the envisaged departure date."
+            Added after entry 92's rebuild made france-visas.gouv.fr readable; this row's
+            `contention` and `text_held` predate that and are left as entry 87 measured them
         - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa
           seen: text
           why: >-
@@ -939,8 +946,8 @@ corridors:
       *body* text instead, which is what `page_text.rank` is for.
 
   - corridor: france/PH/PH/tourism
-    contention: 201
-    text_held: 18
+    contention: 523
+    text_held: 33
     answers:
       application_route:
         - url: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
@@ -949,6 +956,15 @@ corridors:
             the embassy in Manila — the post serving this traveller — setting out the main steps:
             check the Visa Wizard, "create an account and complete your application online on the
             portal", then submit it to the visa application centre
+      general_entry:
+        - url: https://france-visas.gouv.fr/en/votre-arrivee-en-france
+          seen: text
+          why: >-
+            "Documents to be presented on arrival in France... A valid passport issued less than 10
+            years before and valid for at least 3 months after the envisaged departure date. A valid
+            visa, if required. Proof of accommodation covering the whole duration of the stay."
+            **Readable for the first time after entry 92's rebuild** — this page is on
+            france-visas.gouv.fr, which held stored text for 12 pages before it and 104 after
     tools:
       visa_decision: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
       document_checklist: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
@@ -963,9 +979,6 @@ corridors:
       fees: >-
         the same sentence, "along with the relevant fee". No candidate prices a short-stay visa.
       processing_times: nothing states one.
-      general_entry: >-
-        the EES page is in the set and readable, and it describes the new border system rather than
-        the conditions this traveller must satisfy.
     unverifiable:
       - https://www.france-visas.gouv.fr/en/short-stay-visa
       - https://www.diplomatie.gouv.fr/fr/services-aux-francais/preparer-son-expatriation/dossiers-pays-de-l-expatriation/philippines
@@ -977,9 +990,11 @@ corridors:
           a multi-faceted destination... check out France.fr". The page that actually answers,
           `applying-for-a-visa`, is 20 points below it.
     note: >-
-      one answer and three tools, which is the same shape as the Indian row and reached by the same
-      route: France publishes the traveller-specific part inside the Visa Wizard, and the portal
-      that hosts it answers a Cloudflare challenge, leaving 18 readable candidates of 201.
+      **re-measured after entry 92's rebuild**, which answered the challenges the previous build had
+      no render budget for: `france-visas.gouv.fr` went from 12 pages with stored text to 104, and
+      this row from one answer to two. It is still the weakest of the twenty — 33 readable of 523 —
+      because the pages that would answer the other four roles are inside the Visa Wizard, which is
+      a tool rather than a page, and because the FAQ's stored text is its cookie panel.
 
   - corridor: united-kingdom/PH/PH/tourism
     contention: 260

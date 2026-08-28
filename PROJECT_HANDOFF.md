@@ -65,14 +65,14 @@ destinations.
 | | |
 | --- | --- |
 | **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
-| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; ~16,600 pages. **A build opens 3–15% of what it records** (entry 88), and the page answering a specific traveller is usually one hop below something it recorded and never opened. The Netherlands is rebuilt with a reserved share for per-traveller families and is the only one so far; item 35. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
+| **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; ~17,600 pages. France was rebuilt on 2026-08-28 with a render budget that can answer a challenge (entry 92): 5,317 → 6,277 entries, and `france-visas.gouv.fr` 12 → 104 pages of stored text. **A build opens 3–15% of what it records** (entry 88), and the page answering a specific traveller is usually one hop below something it recorded and never opened. The Netherlands is rebuilt with a reserved share for per-traveller families and is the only one so far; item 35. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
 | **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **34 of the 41 answer at least one passport** — Cyprus and India were recovered by the renderer on the same day (entry 75), India with all six roles. **Seven refuse every passport** with a diagnosis checked against what was seen: DK, LT, MA, MX, RO, SA, SK. **No corpus will fix those seven** (entry 76) — every one fails at *retrieval*, and a corpus crawl meets the identical wall. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
 | **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Read at step 3b of `_resolve`, before the shortlist — and currently inert, on purpose** (entry 80). The A/B was taken and **it could not answer the question**: six runs of identical code give 4, 4, 4, 4, 5 and 6 roles, so role count cannot see a ranking change on one corridor (entry 81, which withdraws entry 80's regression). What is established is that the role-filling pages are shortlisted and fetched in every arm — the lift is recall-neutral, nothing shows it helps, and it stays off. Entries 78–81. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
 | **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
-| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 36 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
+| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 37 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
 | **Corpus sufficiency** | **`visa-discover coverage`, committed** (entry 90) — the promotion rule for stage 3. Two halves, never added: 47 of 47 known answers (**one traveller**, a regression check) and every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
@@ -118,6 +118,13 @@ helped build, and `visa-discover selection-recall` grades against it and against
 jointly-built oracle side by side. **Entry 86's +41 points is +30**; the direction held. Two things
 it hands forward: thirteen of sixty roles have no readable answer at all, and the fixture is one
 nationality and one residence — known problems 29 and 30.
+
+**France's corpus is rebuilt and it is still the fixture's weakest row** (entry 92). The offline
+build always answered browser challenges — it had **12** renders against France's **64** challenged
+pages, which is why the previous build recorded them unanswerable. With 400 renders and a per-host
+give-up, `france-visas.gouv.fr` went from 12 pages of stored text to **104**, and that bought exactly
+**one** role: the arrival page's entry conditions. France's other four gaps are inside the Visa
+Wizard, which is a tool rather than a page, and no crawl reaches those.
 
 **Item 37 is done** (entry 90). `visa-discover coverage` is the gate: offline, no model, no search,
 two halves that are never added, and the verdict computed from the second alone so the first cannot
@@ -497,7 +504,7 @@ re-add the amendment history here.
 29. **The selection fixture has two travellers and one purpose.** `oracle/selection_oracle.yaml` is
    now twenty corridors — `IN/GB/tourism` and `PH/PH/tourism` over the same ten countries (entry
    91) — so the nationality-and-residence half of this is answered, and the answer is large: the
-   same stores answer **47 of 60 roles for one traveller and 36 of 60 for the other**. Read the
+   same stores answer **47 of 60 roles for one traveller and 37 of 60 for the other**. Read the
    `held` column with care: it is a finding for `IN/GB`, curated from the page-text index, and
    near-circular for `PH/PH`, curated from the corpus itself. What is left
    is **purpose**: every one of the twenty rows is `tourism`, and the roles most likely to move are
@@ -537,7 +544,7 @@ re-add the amendment history here.
    item 35.
 
 33. **The 47 of 47 is one traveller, and there is now a second one beside it.** Entry 91 curated
-   `PH/PH/tourism` across the same ten countries: **36 of 60 roles answerable against 47 of 60**,
+   `PH/PH/tourism` across the same ten countries: **37 of 60 roles answerable against 47 of 60**,
    both at 100% held. So the gate is no longer blind to the traveller, and two profiles is still
    two. Every row is `tourism` — known problem 29. What follows is the original entry. Against
    `oracle/selection_oracle.yaml` every answerable role's page is already in the corpus, and that
