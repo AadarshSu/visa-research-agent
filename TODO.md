@@ -33,7 +33,7 @@ refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
 **And the oracle now has a second traveller** (entry 91). Twenty corridors, `IN/GB/tourism` and
 `PH/PH/tourism` over the same ten countries. Both read 100% *held* and the denominators are the
-finding: the same stores answer **47 of 60 roles for one traveller and 37 of 60 for the other**.
+finding: the same stores answer **47 of 60 roles for one traveller and 41 of 60 for the other**.
 Building it exposed a defect in the grader — see item 38, which is now the first thing to do.
 
 **The gate is built and it is now the promotion rule for stage 3** (item 37, entry 90).
@@ -173,7 +173,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventy-eight rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has eighty rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -266,7 +266,7 @@ nothing today.** Entry 87's numbers stand as recorded and are not currently repr
 
 - entry 87's 100% / 91% / 70%, reproduced from logs that say who chose;
 - **the first selector number for a second traveller**, which nothing has ever measured. Expect it to
-  be worse: the `PH/PH` half of the fixture answers 37 of 60 roles against 47 of 60, so there is less
+  be worse: the `PH/PH` half of the fixture answers 41 of 60 roles against 47 of 60, so there is less
   to find and the pages that answer are thinner.
 
 Twenty corridors of search and model quota. Cheap, and it is the only thing standing between the
@@ -344,9 +344,16 @@ both travellers. France's other four gaps are inside the **Visa Wizard**, which 
 a page, and no crawl reaches those. France is still the weakest row in the fixture and item 5's
 remaining half is what would change that.
 
-**Worth doing for the other nine corpora**, cheaply and offline-checkable first: count each corpus's
-`challenge, unanswered` entries before spending a crawl. France had 64; a country with none gains
-nothing from a rebuild.
+**Sweden was rebuilt on the same day and is where the change actually paid.** Counting each corpus's
+`challenge, unanswered` entries offline first — **FR 66, SE 216, US 19, zero for the other seven** —
+showed Sweden, not France, was losing the most to the render budget. `government.se` answered a
+challenge on every page and so held stored text for none; after the rebuild it holds **863**, and its
+visa-requirement list — which both Sweden rows recorded unverifiable or title-only — now names "India
+**)" and "The Philippines *)" outright. **Sweden's Philippine row went 2 of 6 to 6 of 6.**
+
+**What is left: the United States, at 19.** `egov.uscis.gov` and `ceac.state.gov` are application
+portals rather than guidance, so expect little; the other seven corpora have none and a rebuild for
+this reason would buy them nothing. Count before crawling — that is the transferable part.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`

@@ -565,7 +565,7 @@ corridors:
     answers:
       visa_decision:
         - url: https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden
-          seen: title_only
+          seen: text
           why: >-
             the Annex I list of nationalities that must hold a visa; the only candidate that answers
             for an Indian passport rather than deferring to a list
@@ -1150,9 +1150,24 @@ corridors:
       up in a measurement for the first time, which the `IN/GB` row is structurally unable to see.
 
   - corridor: sweden/PH/PH/tourism
-    contention: 73
-    text_held: 57
+    contention: 105
+    text_held: 79
     answers:
+      visa_decision:
+        - url: https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden
+          seen: text
+          why: >-
+            "List of third countries whose nationals must be in possession of visas when entering
+            Sweden" — "The Philippines *)" is on it. **Readable for the first time after entry 92's
+            rebuild**: `government.se` answered a challenge on every page and held stored text for
+            none, which is why both Sweden rows recorded this page unverifiable or title-only.
+      document_checklist:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: >-
+            "You need to prepare: A valid passport... valid for at least three months after the entry
+            visa's expiration date, issued within the past ten years, and have at least two blank
+            pages. A completed Schengen visa form... individual medical travel insurance"
       application_route:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
@@ -1160,29 +1175,27 @@ corridors:
             "In some countries, you must submit your application to a Swedish embassy or
             consulate-general. In a number of countries, Sweden is represented by another Schengen
             country" — the route stated, with the per-residence detail behind a country selector
+      fees:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: '"People 12 years of age or older: 90 Euros. Children aged 6-11: 45 Euros."'
+      processing_times:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: '"It normally takes 15 days to receive a decision about an application."'
       general_entry:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
           why: >-
             "Sweden requires that you have SEK 700 for each day of your visit", and medical travel
             insurance covering at least EUR 30,000 valid in all Schengen countries
-    unanswered:
-      visa_decision: >-
-        the apply page defers — "if you come from a country whose citizens need an entry visa" over
-        an external link — and the list of those countries is on government.se with no stored text.
-      document_checklist: >-
-        deferred in the page's own words: "The documents you must submit depend on the country in
-        which you are applying... it is therefore important that you check on the website of the
-        correct embassy to find out which documents you should prepare."
-      fees: no candidate scored above zero for it.
-      processing_times: no candidate scored above zero for it.
-    unverifiable:
-      - https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden/
     note: >-
-      also re-curated after the first pass read three candidates deep and found the page for
-      *extending* a visa rather than the one for applying. Two of the four remaining gaps are the
-      authority deferring in its own words, which is a different thing from the corpus lacking a
-      page and is worth keeping apart from it.
+      **the row that moved most, and twice.** The first pass read three candidates deep, found the
+      page for *extending* a visa rather than applying, and recorded none of the six. The re-check
+      found the apply page and credited two. Then entry 92's rebuild made `government.se` readable
+      and the Indian row — which had already credited the apply page with five roles — showed the
+      other three. Six of six now, on the same two pages the Indian row uses, which is what a country
+      that publishes its guidance once for everybody should look like.
 
   - corridor: singapore/PH/PH/tourism
     contention: 140

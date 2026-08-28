@@ -100,7 +100,7 @@ not — and stored text ranks, it never speaks).
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
 | [92](#92-the-corpus-build-always-rendered-twelve-renders-is-what-left-france-unreadable) | **The corpus build always rendered** — the budget was twelve, and France met 64 challenges |
-| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-62-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 62% for the other |
+| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-68-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 68% for the other |
 | [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
@@ -219,8 +219,7 @@ france-visas.gouv.fr with text       12  ->    104
 pages it gave up answers a role for both curated travellers: `france-visas.gouv.fr/en/
 votre-arrivee-en-france` — *"a valid passport issued less than 10 years before and valid for at least
 3 months after the envisaged departure date... proof of accommodation covering the whole duration of
-the stay"*. France goes from one answered role to two for the Philippine traveller, and `PH/PH`
-overall from 36 of 60 to **37 of 60**.
+the stay"*. France goes from one answered role to two for the Philippine traveller.
 
 **One role, from ninety-two newly readable pages, and that ratio is the finding.** France's remaining
 four gaps are not a text-coverage problem and a bigger crawl will not touch them: the decision, the
@@ -237,6 +236,32 @@ So the mechanism is settled — the renderer was never the missing piece, the bu
 unanswerable host now costs three renders instead of the job — and **France stays the weakest row in
 the fixture for a reason no crawl fixes.**
 
+### Sweden is where the same change paid, and it was found by counting before crawling
+
+Which corpora are worth rebuilding is answerable offline for nothing: count each one's
+`challenge, unanswered` entries. Across the ten — **FR 66, SE 216, US 19, and zero for the other
+seven.** So Sweden, not France, was where the render budget was costing the most, and it took one
+query to know it rather than nine crawls to find out.
+
+```
+corpus entries              2,246  ->  3,586
+pages with stored text        819  ->  1,325
+government.se with text         0  ->    863
+```
+
+`government.se` answered a challenge on **every** page, so it held stored text for none — which is
+exactly why both Sweden rows recorded its visa-requirement list as `unverifiable` or `title_only`.
+It now reads *"List of third countries whose nationals must be in possession of visas when entering
+Sweden"*, with **"India \*\*)"** and **"The Philippines \*)"** both on it. The Indian row's
+`seen: title_only` becomes `seen: text`, and the Philippine row gains a stated visa decision.
+
+**Sweden's row went 2 of 6 to 6 of 6**, and only one of those four came from the rebuild. The other
+three came from noticing that the Indian row already credited
+`migrationsverket.se/…/visiting-sweden-for-up-to-90-days-entry-visa.html` with five roles where the
+Philippine row credited it with two — the page states EUR 90, fifteen days and the document list, and
+a shallow re-check had missed all three. **`PH/PH` overall: 24 of 60 when this session started,
+now 41 of 60.** Seventeen of those roles were always answerable and nobody had looked properly.
+
 ### What was rejected
 
 - **Raising `settings.maximum_crawl_renders`.** That is the request path's number and a corridor has
@@ -250,7 +275,7 @@ the fixture for a reason no crawl fixes.**
 
 ---
 
-## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 62% for the other
+## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 68% for the other
 **2026-08-28 · known problem 29, closed by curation. It found a defect in the grader on the way through**
 
 Every recall number this project quoted rested on the same ten corridors, all `IN/GB/tourism`:
@@ -269,11 +294,11 @@ one place a corpus change can be seen at all.
 
 ```
 IN/GB/tourism   47/47 of its answers held (100%)   47/60 roles answerable at all (78%)
-PH/PH/tourism   37/37 of its answers held (100%)   37/60 roles answerable at all (62%)
+PH/PH/tourism   41/41 of its answers held (100%)   41/60 roles answerable at all (68%)
 ```
 
 The corpus holds every page a human could name, for both. What moves is **how much can be answered at
-all**: the same ten stores answer 47 of 60 roles for one traveller and 37 of 60 for the other. That is
+all**: the same ten stores answer 47 of 60 roles for one traveller and 41 of 60 for the other. That is
 the traveller dimension, and a percentage whose denominator is itself the finding could not show it —
 so `visa-discover coverage` now prints both figures per traveller and `KnownAnswer` carries `roles`
 so the denominator cannot move.
@@ -286,7 +311,7 @@ curated with `visa-discover contention`, whose set is built *from* the corpus, s
 there is held by construction. The only way to score below 100% was to mistype a URL, which happened
 once — Canada, where the corpus holds `…/supporting-documents.html/1000.html` and the store's copy of
 it is Canada.ca's 404 page. So `PH/PH`'s held column measures transcription; **its finding is
-entirely the 37 of 60.**
+entirely the 41 of 60.**
 
 **The zero-answer corridors are counted.** France and Sweden answer *none* of their six roles for this
 traveller, and skipping them — which the first implementation did, by filtering on `not
