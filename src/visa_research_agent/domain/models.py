@@ -1,6 +1,6 @@
 """Strict domain models shared by the API and future research workflow."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import date, datetime
 from typing import Literal
 
@@ -662,6 +662,48 @@ class ApplicationStep(StrictModel):
         return self
 
 
+APPLICATION_STEP_FLOOR = 4
+"""How many steps an *application* must be described in before it is worth serving.
+
+One line is not a plan for a process with a form, an appointment and a fee, so a model that
+summarised the route away is refused rather than rendered. It is a floor on describing something
+known to be multi-step, and that is the whole of its warrant — see `_check_step_count` for why an
+entry plan is not held to it.
+"""
+
+
+def _check_step_count(visa_required: bool | None, steps: Sequence[ApplicationStep]) -> None:
+    """The four-step floor holds for an application and is withheld from an entry plan.
+
+    A traveller who needs no visa still has duties — Singapore asks for the SG Arrival Card, a
+    passport valid past the stay and evidence of onward travel — and none of them is an application,
+    so those duties are `application_steps` in this vocabulary and *entry* steps in the traveller's
+    (DECISIONS entry 95). They are also however many the authority happens to state: three for
+    Singapore, five for Japan, seven for the United Kingdom, whose visa-free visitors must still
+    hold an ETA. The range has no natural floor and its low end is already under four, so a floor
+    here would be a quota, and a quota on a list with no evidence left to draw from is an invitation
+    to invent an entry duty. Inventing one is the alarming-wrong-answer class this project refuses
+    outright, so the entry shape carries whatever the sources state and no minimum at all.
+
+    **The short shape is therefore available only to a plan whose decision a page stated.** That is
+    this check read from the other side, and it is the guard entry 95 is a decision for: a wrong
+    "no visa required" that then suppresses the four remaining questions is worse than a wrong one
+    that leaves them visible, because the traveller has nothing left to notice the error with.
+    `visa_required` can only be `False` on a final plan when a page said so — extraction overrides
+    it to `None` whenever `decision_is_unverified`, and `validate_tools_leave_their_questions_open`
+    refuses a stated decision beside a questionnaire that settles it — so a blocked page and a tool
+    are both already excluded, and neither can reach this shape.
+    """
+
+    if visa_required is False:
+        return
+    if len(steps) < APPLICATION_STEP_FLOOR:
+        raise ValueError(
+            f"a plan describing an application needs at least {APPLICATION_STEP_FLOOR} steps; "
+            "only a plan stating that no visa is required may carry fewer"
+        )
+
+
 class VisaPlanDraft(StrictModel):
     """Structured extraction result before trusted source metadata is attached."""
 
@@ -672,8 +714,13 @@ class VisaPlanDraft(StrictModel):
     decision_source_ids: list[str] = Field(min_length=1)
     where_to_apply: ApplicationLocationDraft | None
     requirements: list[VisaRequirement]
-    application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
+    application_steps: list[ApplicationStep] = Field(max_length=8)
     unresolved_questions: list[str]
+
+    @model_validator(mode="after")
+    def validate_step_count(self) -> "VisaPlanDraft":
+        _check_step_count(self.visa_required, self.application_steps)
+        return self
 
 
 class VisaPlan(StrictModel):
@@ -688,7 +735,9 @@ class VisaPlan(StrictModel):
     requirements: list[VisaRequirement]
     application_document_source_ids: list[str]
     """May be empty: some authorities publish no checklist. See `validate_absent_checklist`."""
-    application_steps: list[ApplicationStep] = Field(min_length=4, max_length=8)
+    application_steps: list[ApplicationStep] = Field(max_length=8)
+    """The route, or — where no visa is required — the entry steps. See `_check_step_count`."""
+
     sources: list[SourceReference]
     unresolved_questions: list[str]
     """Also where a disagreement between official sources goes.
@@ -801,10 +850,24 @@ class VisaPlan(StrictModel):
             raise ValueError(
                 "a plan with no document checklist source cannot list document requirements"
             )
+        if self.visa_required is False:
+            # Nothing failed to be answered here: with no visa there is no application, so there
+            # are no application documents to look for and no gap to report. Demanding a question
+            # anyway is what made Singapore's corridor read as two of six while resolving perfectly
+            # (DECISIONS entries 94 and 95) — the sentence a model would write to satisfy it, "no
+            # official checklist was published", describes a search that failed rather than a
+            # question that does not arise. The clause above is untouched and is the one that
+            # matters: a plan with no document source still may not list a single requirement.
+            return self
         if not self.unresolved_questions:
             raise ValueError(
                 "a plan with no document checklist source must record what could not be answered"
             )
+        return self
+
+    @model_validator(mode="after")
+    def validate_step_count(self) -> "VisaPlan":
+        _check_step_count(self.visa_required, self.application_steps)
         return self
 
     @model_validator(mode="after")

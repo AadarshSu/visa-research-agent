@@ -184,3 +184,38 @@ async def test_refusal_when_the_run_produced_no_usable_evidence_at_all() -> None
 
     with pytest.raises(Exception, match="at least one source"):
         await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, empty)
+
+
+def test_a_stated_no_is_verified_without_a_checklist_source() -> None:
+    """The missing checklist that is not missing.
+
+    Entry 14 grades a checklist-less plan `partial` because a traveller would expect a complete plan
+    to rest on one. A visa-free traveller expects no such thing: there is no application, so there
+    are no application documents. Grading it `partial` for ever would call its evidence incomplete
+    when every page it rests on was read cleanly (DECISIONS entries 94, 95)."""
+
+    assert (
+        resolve_plan_status(RetrievalReport(), has_checklist_source=False, no_visa_required=True)
+        == "verified"
+    )
+
+
+def test_an_unverified_decision_outranks_a_no_that_nobody_stated() -> None:
+    """The exception rests entirely on a page having said no, so a caller that passed both flags is
+    refused the label rather than trusted. Extraction cannot produce this pair — it forces the
+    decision to null whenever it is unverified — and the ordering here is what makes that a belt
+    rather than the only strap."""
+
+    assert (
+        resolve_plan_status(
+            RetrievalReport(),
+            has_checklist_source=False,
+            decision_is_unverified=True,
+            no_visa_required=True,
+        )
+        == "partial"
+    )
+
+
+def test_a_missing_checklist_is_still_partial_where_a_visa_is_needed() -> None:
+    assert resolve_plan_status(RetrievalReport(), has_checklist_source=False) == "partial"

@@ -8,6 +8,7 @@ from visa_research_agent.domain.models import (
     InteractiveTool,
     SourceReference,
     VisaPlan,
+    VisaPlanDraft,
     VisaRequirement,
 )
 
@@ -383,3 +384,154 @@ def test_a_tool_for_another_topic_leaves_the_visa_decision_alone() -> None:
 
     assert plan.visa_required is True
     assert plan.decision_tools == []
+
+
+# --- a decision that is a stated "no" ------------------------------------------------------------
+
+
+def entry_payload(**overrides: object) -> dict[str, object]:
+    """Singapore's shape for a Filipino traveller: no visa, and three duties that are not one.
+
+    Three is not a chosen number. Curating the entry duties three visa-free corridors state gives
+    three for Singapore, five for Japan and seven for the United Kingdom, whose visa-free visitors
+    must still hold an ETA — so the honest list has no floor, and this fixture sits under the
+    application's (DECISIONS entry 95).
+    """
+
+    checked_at = datetime(2026, 8, 5, tzinfo=UTC)
+    duties = [
+        ("Submit the arrival card", "Submit the SG Arrival Card.", "Within three days of arrival."),
+        ("Check your passport", "Hold a passport valid past the stay.", "Before travel."),
+        ("Carry onward travel", "Be able to show onward travel.", "At the border."),
+    ]
+    payload: dict[str, object] = {
+        "destination": "Singapore",
+        "visa_required": False,
+        "visa_type": None,
+        "explanation": "The authority lists the passports needing a visa and this is not one.",
+        "decision_source_ids": ["official-source"],
+        "where_to_apply": None,
+        "requirements": [],
+        "application_document_source_ids": [],
+        "application_steps": [
+            {
+                "title": title,
+                "action": action,
+                "timing": timing,
+                "source_ids": ["official-source"],
+                "link_target": "source",
+                "link_source_id": "official-source",
+            }
+            for title, action, timing in duties
+        ],
+        "sources": [
+            {
+                "source_id": "official-source",
+                "title": "Official source",
+                "url": "https://example.gov/visas",
+                "authority": "Example authority",
+                "retrieved_at": checked_at,
+            }
+        ],
+        "unresolved_questions": [],
+        "last_checked": checked_at,
+        "status": "verified",
+    }
+    payload.update(overrides)
+    return payload
+
+
+def test_an_entry_plan_carries_the_duties_the_sources_state_and_no_filler() -> None:
+    """Three entry steps, no checklist question, and still verified.
+
+    Every relaxation here is one the application shape refuses, and each would otherwise force the
+    model to write something it has no evidence for: a fourth duty, or a sentence saying no
+    checklist was found when none was ever missing."""
+
+    plan = VisaPlan.model_validate(entry_payload())
+
+    assert plan.visa_required is False
+    assert len(plan.application_steps) == 3
+    assert plan.requirements == []
+    assert plan.where_to_apply is None
+    assert plan.unresolved_questions == []
+    assert plan.status == "verified"
+
+
+def test_an_entry_plan_may_state_the_decision_and_nothing_else() -> None:
+    """No duty stated is an empty list, never an invented one. The decision still stands alone."""
+
+    plan = VisaPlan.model_validate(entry_payload(application_steps=[]))
+
+    assert plan.application_steps == []
+    assert plan.decision_source_ids == ["official-source"]
+
+
+@pytest.mark.parametrize("decision", [True, None])
+def test_only_a_stated_no_may_use_fewer_than_four_steps(decision: bool | None) -> None:
+    """The guard, read from the side a wrong answer would come in by.
+
+    A plan that needs a visa is a process with a form and a fee, and one that could not confirm the
+    decision has to leave every question visible. Neither may borrow the short shape — a three-line
+    application would misdescribe the first, and suppressing the route would leave the second with
+    nothing for the traveller to notice the error with."""
+
+    payload = entry_payload(visa_required=decision, status="partial")
+    payload["unresolved_questions"] = ["Which documents the application needs."]
+
+    with pytest.raises(ValidationError, match="at least 4 steps"):
+        VisaPlan.model_validate(payload)
+
+
+def test_an_entry_plan_still_cannot_list_a_single_document() -> None:
+    """`validate_absent_checklist` loses its unresolved-question clause and keeps the one that
+    matters. With no designated document source there is still nothing a requirement could cite."""
+
+    payload = entry_payload(
+        requirements=[
+            {
+                "name": "Passport",
+                "description": "A passport is requested.",
+                "reason_it_applies": "Stated on the entry page.",
+                "source_ids": ["official-source"],
+            }
+        ]
+    )
+
+    with pytest.raises(ValidationError, match="cannot list document requirements"):
+        VisaPlan.model_validate(payload)
+
+
+def test_a_plan_that_could_not_find_a_checklist_must_still_say_so() -> None:
+    """The carve-out is for a question that does not arise, never for one that went unanswered."""
+
+    payload = entry_payload(
+        visa_required=True,
+        status="partial",
+        application_steps=[step.model_dump() for step in application_steps()],
+    )
+
+    with pytest.raises(ValidationError, match="must record what could not be answered"):
+        VisaPlan.model_validate(payload)
+
+
+def test_the_draft_holds_the_same_line_before_the_app_sees_it() -> None:
+    """The floor is on `VisaPlanDraft` too, so a model that summarised a route away is refused at
+    the point it answered rather than after the plan is assembled."""
+
+    draft = {
+        "destination": "Singapore",
+        "visa_required": False,
+        "visa_type": None,
+        "explanation": "No visa is required for this passport.",
+        "decision_source_ids": ["official-source"],
+        "where_to_apply": None,
+        "requirements": [],
+        "application_steps": entry_payload()["application_steps"],
+        "unresolved_questions": [],
+    }
+
+    assert len(VisaPlanDraft.model_validate(draft).application_steps) == 3
+
+    with pytest.raises(ValidationError, match="at least 4 steps"):
+        VisaPlanDraft.model_validate({**draft, "visa_required": True})

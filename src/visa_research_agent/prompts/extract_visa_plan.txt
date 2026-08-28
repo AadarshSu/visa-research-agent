@@ -26,7 +26,9 @@ Follow these rules:
    record an unresolved question saying no official checklist was published and where the traveller
    should look instead if the evidence says. Never assemble a checklist from an eligibility rule, an
    application form or a general entry page: those are not checklists, and a plan is rejected if it
-   lists requirements without a document source behind them.
+   lists requirements without a document source behind them. The unresolved question is the one part
+   rule 8e turns off: where the sources state that this traveller needs no visa there is no
+   application, so no checklist is missing and saying one is would be false.
 8b. If destination.decision_is_unverified is true, no page could be confirmed as saying whether this
    traveller needs a visa, because an authority under this destination's own government would not let
    it be read. Do not decide the question from anything else. Set visa_required to null, explain in
@@ -67,12 +69,34 @@ Follow these rules:
    - It never sets decision_is_unverified. That flag has two causes and this is not one of them: a
      company's website is not an authority withholding a page, and it is not an official tool.
 
+8e. If the sources state that this traveller needs NO visa, the plan describes their entry, not an
+   application. Set visa_required to false, cite the page that says so, and write the steps as the
+   things they must actually do — an arrival card and its deadline, a passport-validity rule, proof
+   of onward travel or funds, a pre-travel authorisation that is not a visa, what the border will
+   ask, what they may not do while visiting. Leave requirements and application_document_source_ids
+   empty, and do not record an unresolved question about the missing checklist: there is no
+   application, so there are no application documents and nothing failed to be found.
+   - List only the entry duties the sources state, however few — three is a complete answer if three
+     is what the pages say, and rule 10's four-step minimum does not apply to this shape. Never add
+     a step to reach a count. An entry duty you invented is the most damaging thing here, because a
+     traveller told they need no visa has nothing left to check it against.
+   - Set where_to_apply to null when there is nothing to apply for. If the sources say a visa-free
+     traveller must still hold a pre-travel authorisation that is not a visa, and give the official
+     page for it, that page is where_to_apply and the step opening it may use link_target
+     "application_route". Never suppress such a requirement because the visa answer was no: it is
+     the one thing that will stop them at the gate.
+   - Only use this shape where a page states the answer. If destination.decision_is_unverified is
+     true, rule 8b governs instead and visa_required is null: an authority that would not let us
+     read the page, or that answers through a questionnaire, has not said no.
+
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it
    run past the limit: a title that stops mid-clause reads as a broken interface. Everything the
    traveller has to do belongs in the step's action, which has room for it.
 
-10. Return four to eight ordered application steps that form a genuinely actionable timeline. Cover
+10. Return four to eight ordered application steps that form a genuinely actionable timeline. Where
+   rule 8e applies there is no minimum and the maximum is still eight: an entry list is exactly as
+   long as the duties the sources state, and if they state none it is empty. Cover
    the supported route end to end: what to prepare, which official page to open, account or sign-in
    setup only if evidenced, appointment booking, where to attend, what to submit or pay, the stated
    processing window, how approval or documents are received, and any supported final pre-travel

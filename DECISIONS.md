@@ -75,6 +75,7 @@ not — and stored text ranks, it never speaks).
 | [28](#28-four-fixes-from-reading-the-interface-as-a-traveller) | Four fixes from reading the interface as a traveller |
 | [30](#30-conflicts-is-deleted-by-entry-6s-own-rule) | `conflicts` is deleted, by entry 6's own rule |
 | [31](#31-a-failed-adjudication-refuses-rather-than-falling-back-to-the-heuristic) | A failed adjudication refuses rather than falling back — **amends 16** |
+| [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 
 ### Finding the right page: ranking, recall, judgement
 | | |
@@ -99,7 +100,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
-| [95](#95-a-visa-free-plan-is-an-entry-plan-not-an-empty-application) | **A visa-free plan is an entry plan** — decided, specified, and not yet built |
+| [95](#95-a-visa-free-plan-is-an-entry-plan-not-an-empty-application) | **A visa-free plan is an entry plan** — the spec; built in [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) |
 | [94](#94-no-visa-required-is-a-complete-answer-and-four-of-singapores-six-questions-stop-existing) | **"No visa required" is a complete answer** — four of Singapore's six questions stop existing |
 | [93](#93-a-tool-mediated-answer-is-an-answer-and-the-metric-was-the-only-thing-saying-otherwise) | **A tool-mediated answer is an answer** — the product always said so; only the metric did not |
 | [92](#92-the-corpus-build-always-rendered-twelve-renders-is-what-left-france-unreadable) | **The corpus build always rendered** — the budget was twelve, and France met 64 challenges |
@@ -147,13 +148,107 @@ not — and stored text ranks, it never speaks).
 
 ---
 
+## 96. The entry plan is built, and the floor it needed was not a number
+
+**2026-08-28 · builds entry 95, TODO item 39**
+
+Entry 95 decided the shape and left one sub-decision open: `application_steps` carries
+`Field(min_length=4, max_length=8)`, Singapore's honest entry list is three, and "the visa-free
+shape needs its own bound, and picking it is part of the work". Singapore was a sample of one, so
+two more visa-free corridors were curated from the committed stores before anything was written —
+offline, no network, no model, with `visa-discover contention` and the page-text index.
+
+### The measurement, and what it says about a floor
+
+| corridor | what the store states | entry duties stated |
+| --- | --- | --- |
+| `singapore/PH/PH` | ICA's visa-requirement list does not name the Philippines | **3** — SG Arrival Card within three days, passport valid past the stay, onward travel |
+| `japan/GB/GB` | MOFA's `novisa.html`: the United Kingdom is one of 74, under Note 8 | **~5** — ICAO-compliant passport, landing permission granted at the port and not by the exemption, no remunerative activity, insurance "highly recommended", an extension applied for past 90 days |
+| `united-kingdom/US/US` | GOV.UK's ETA nationality list plus `standard-visitor` | **~7** — hold an ETA, passport valid for the whole stay, show you will leave, show you can support yourself, show you can pay the return journey, permitted activities only, expect border questions |
+
+Three, five, seven. The range fits inside `max_length=8` and its low end is already under four, so
+"lower the floor to three" would be fitting a number to the smallest of three samples, and nothing
+says a fourth country cannot state two duties or one.
+
+**The stronger reason is that the floor's warrant does not transfer.** Four exists because an
+application is *known* to be multi-step — a form, an appointment, a fee, a wait — so a model that
+summarised it into one line has produced a worse description of a process we know the shape of.
+An entry list has no known shape: it is exactly as long as the duties the authority states. A floor
+there is a quota, and a quota on a list with no evidence left to draw from is an invitation to
+invent an entry duty — which entry 95 already identified as the failure mode of the zero-step
+option it rejected, and which is the alarming-wrong-answer class of entry 6.
+
+**So the answer to "what number" is that there is no number.** `_check_step_count` keeps four for
+an application and withholds it entirely from an entry plan, including the empty case: a page that
+states the decision and nothing else yields a plan with no steps, and the interface drops the panel
+rather than filling it. The cost is a recall risk — a lazy model returns nothing where the sources
+did state duties — and that is the trade this project takes everywhere: an omission is recoverable
+and a fabricated entry duty is not.
+
+**And it is the guard, read from the other side.** "Fewer than four steps requires
+`visa_required is False`" is the same check as "only a stated no may use the short shape", so one
+validator does both jobs. `visa_required` can only be `False` on a final plan when a page said so —
+extraction overrides it to `None` whenever `decision_is_unverified`, and
+`validate_tools_leave_their_questions_open` refuses a stated decision beside a questionnaire that
+settles it — so a blocked page and a tool are already excluded by code that predates this entry.
+Entry 95's guard turned out to be mostly built.
+
+### Two more things stood in the way, and entry 95 named neither
+
+**`validate_absent_checklist`'s third clause.** Entry 95 says this validator is unchanged, and its
+first clause is — with no document source a plan still may not list one requirement, which is the
+rule this project exists to enforce. But its third clause requires such a plan to *record what could
+not be answered*, and for a visa-free traveller nothing failed to be answered. The sentence a model
+would write to satisfy it — "no official checklist was published" — describes a search that failed,
+which is entry 93's defect exactly, in the product half rather than the metric. The clause is now
+skipped where `visa_required is False`, and only that clause.
+
+**`resolve_plan_status`.** It grades every checklist-less plan `partial`, so a visa-free plan could
+never have been `verified` however cleanly its pages were read — which contradicts entry 95's own
+table. Entry 14's reason for that rule is that a traveller would expect a complete plan to rest on a
+checklist; a visa-free traveller expects no such thing. `no_visa_required` now lifts it, and
+`decision_is_unverified` is checked **first**, so a caller that passed both flags is refused the
+label rather than trusted.
+
+### What the United Kingdom changed in the spec, and it is worth stating plainly
+
+Entry 95's table says `where_to_apply` is `None` because "there is nowhere to apply". That is true
+of Singapore and **false of the United Kingdom**: a visa-free American must still hold an ETA, which
+is applied for online, costs money and takes days. Forcing `None` would suppress the one thing that
+stops that traveller at the gate — the same harm the entry shape's guard exists to prevent, arriving
+by the opposite route.
+
+So `where_to_apply` is **permitted** to be `None` rather than **required** to be. The spec's three
+operative commitments are untouched: the checklist stays empty, the steps are entry steps, and the
+shape needs a stated decision. `validate_requirement_sources` is what makes this safe and it is
+unchanged — a step may link to an application route only where there is one, so a Singapore plan
+still cannot link to a route it does not have, and a United Kingdom plan may link to the ETA it
+does. Entry 95 called that validator "the guard working"; it works in both directions.
+
+### What was rejected
+
+- **A floor of three.** The smallest of three samples is not a bound, and a country stating two
+  duties would be forced to invent a third.
+- **A floor of one.** It looks harmless and is the same quota at a smaller size: the filler that
+  satisfies it — "check the authority's page before you travel" — is a step no source stated.
+- **A separate minimum on the draft only.** The floor is on `VisaPlanDraft` *and* `VisaPlan`, as it
+  was before, so a model that summarises a route away is refused where it answered.
+- **Forcing `where_to_apply` to `None` in code when the decision is no.** See above: it would have
+  deleted the ETA.
+
+---
+
 ## 95. A visa-free plan is an entry plan, not an empty application
-**2026-08-28 · decided by the project owner, specified here, and deliberately NOT implemented**
+**2026-08-28 · decided by the project owner, specified here, and built the same day in entry 96**
 
 Entry 94 built the measurement half of TODO item 39 and left one question open: when the answer is
 "no visa required", does the plan render as an application with nothing in it, or as a different
 shape whose steps are *entry* steps? **The owner chose entry steps.** This entry records the
-decision and what it commits to; the code is item 39 and will be written in a later session.
+decision and what it commits to; the code is item 39 and **is now written — entry 96**, which
+corrects two things below. There were **five** validators in the way, not three:
+`validate_absent_checklist`'s unresolved-question clause and `resolve_plan_status` are the two this
+entry missed. And `where_to_apply` is *permitted* to be `None`, not required to be — a visa-free
+American still needs a UK ETA, and forcing `None` would have deleted it.
 
 ### The shape
 
@@ -180,7 +275,9 @@ So a visa-free plan carries:
 1. **`application_steps: Field(min_length=4, max_length=8)`** — twice, on `VisaPlan` and
    `VisaPlanDraft`. Singapore's honest entry list is three. The floor exists so an application is
    not described in one line, and it should not be removed for everybody; the visa-free shape needs
-   its own bound, and picking it is part of the work.
+   its own bound, and picking it is part of the work. **Entry 96 picked no bound at all**: three
+   visa-free corridors state 3, 5 and 7 entry duties, so a floor here is a quota rather than a
+   sanity check.
 2. **`validate_requirement_sources`** — *"application-route step links require an application
    location"*. It fires when `where_to_apply is None` and any step has
    `link_target == "application_route"`. That rule is **correct and stays**: a visa-free plan has no

@@ -246,6 +246,13 @@ class OpenAIVisaPlanExtractor:
         if application_source_ids and not requirements:
             raise LLMExtractionError("Model output contains no source-backed application documents")
 
+        # Not the model's to decide when nothing confirmed it. Asked for in the prompt and enforced
+        # here, because a wrong yes or no is the most damaging thing this can say. Computed before
+        # the plan is built because it is also what licenses the entry shape: everything that shape
+        # relaxes — no checklist question, fewer than four steps, a status that may still be
+        # verified — is allowed only where this is `False`, which this line makes reachable only
+        # from a page (DECISIONS entry 95).
+        visa_required = None if destination.decision_is_unverified else draft.visa_required
         try:
             where_to_apply = (
                 ApplicationLocation.model_validate(draft.where_to_apply.model_dump())
@@ -254,9 +261,7 @@ class OpenAIVisaPlanExtractor:
             )
             return VisaPlan(
                 destination=draft.destination,
-                # Not the model's to decide when nothing confirmed it. Asked for in the prompt and
-                # enforced here, because a wrong yes or no is the most damaging thing this can say.
-                visa_required=None if destination.decision_is_unverified else draft.visa_required,
+                visa_required=visa_required,
                 visa_type=draft.visa_type,
                 explanation=draft.explanation,
                 decision_source_ids=draft.decision_source_ids,
@@ -271,6 +276,7 @@ class OpenAIVisaPlanExtractor:
                     report,
                     has_checklist_source=bool(application_source_ids),
                     decision_is_unverified=destination.decision_is_unverified,
+                    no_visa_required=visa_required is False,
                 ),
                 unavailable_sources=[*report.failures, *refused],
                 # Straight from the configuration, never from the draft: the traveller is being

@@ -66,6 +66,7 @@ def resolve_plan_status(
     *,
     has_checklist_source: bool = True,
     decision_is_unverified: bool = False,
+    no_visa_required: bool = False,
 ) -> PlanStatus:
     """Grade a run: verified only when every source was retrieved and is current.
 
@@ -75,11 +76,25 @@ def resolve_plan_status(
     it — and "verified" beside an empty document list is the one label that would make that
     invisible. It stays honest without refusing, which is what DECISIONS entry 14 chose.
 
+    **Unless a page stated that this traveller needs no visa.** Then there is no application, so
+    there are no application documents, and the missing checklist is not missing — the question
+    does not arise (DECISIONS entries 94 and 95). Entry 14's reason is that a traveller would
+    expect a complete plan to rest on a checklist, and a visa-free traveller expects no such thing.
+    Grading such a plan `partial` for ever would say its evidence was incomplete when every page it
+    rests on was read cleanly, which is the same defect entry 93 fixed in the coverage metric.
+
+    The exception is safe only because `no_visa_required` means a page *said so*: extraction passes
+    the decision it is about to put on the plan, which is `None` rather than `False` whenever
+    `decision_is_unverified`. A blocked page and a questionnaire both stay `partial`, and the clause
+    below is checked first so a caller that got both wrong still refuses the label.
+
     A plan whose visa decision could not be confirmed is never verified either, for the same reason
     and more strongly: it is the one thing a traveller most needs to be right.
     """
 
-    if not has_checklist_source or decision_is_unverified:
+    if decision_is_unverified:
+        return "partial"
+    if not has_checklist_source and not no_visa_required:
         return "partial"
     if report.failures:
         return "partial"

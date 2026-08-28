@@ -230,6 +230,15 @@ function appendTools(container, plan, topic, seen) {
   });
 }
 
+// A plan whose decision is a stated "no" describes an entry, not an application: no route, no
+// checklist, and steps that are duties on arrival rather than stages of a submission. Three panels
+// below would otherwise describe an application that does not exist — see DECISIONS entry 95.
+// Keyed on false rather than "not true" on purpose: an unverified decision is null, and null keeps
+// the application shape so the four questions stay visible for the traveller to notice.
+function needsNoVisa(plan) {
+  return plan.visa_required === false;
+}
+
 function renderDecision(plan, ctx) {
   const { container, header } = panel(plan.destination, "Visa decision");
   const decision = plan.visa_required === null ? "Uncertain" : plan.visa_required ? "Visa required" : "No visa required";
@@ -251,7 +260,12 @@ function renderDecision(plan, ctx) {
       ),
     );
   }
-  container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
+  // "Visa type unresolved" is a gap where a visa is needed and noise where none is: nothing failed
+  // to resolve, there is simply no visa to have a type.
+  const lead = needsNoVisa(plan)
+    ? plan.explanation
+    : `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`;
+  container.append(element("p", "lead", lead));
   appendTools(container, plan, "visa_decision");
   appendDelegates(container, plan, "visa_decision");
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
@@ -262,7 +276,17 @@ function renderApplicationLocation(plan, ctx) {
   const { container } = panel("Where to apply", "Application route");
   const location = plan.where_to_apply;
   if (!location) {
-    container.append(element("p", "lead", "The application location remains unresolved."));
+    // "Unresolved" is a claim about a search that failed, and it is false when the traveller needs
+    // no visa: there is nowhere to apply because the question does not arise.
+    container.append(
+      element(
+        "p",
+        "lead",
+        needsNoVisa(plan)
+          ? "There is nowhere to apply \u2014 this traveller needs no visa, so there is no application to make."
+          : "The application location remains unresolved.",
+      ),
+    );
     appendTools(container, plan, "application_route");
     appendDelegates(container, plan, "application_route");
     return container;
@@ -300,14 +324,31 @@ function renderRequirements(plan, ctx) {
   // questions, which the plan is structurally required to carry when there is no checklist source.
   // Unless the authority publishes its list through a questionnaire — then there is somewhere to
   // send the traveller, and that is worth a panel even with nothing to list.
-  if (!plan.requirements.length && !checklistTools.length) return null;
+  // A traveller who needs no visa is owed the panel even with nothing in it, because "no documents"
+  // is the answer to the question they came with rather than a gap. The other empty case stays
+  // dropped: a heading over nothing states an absence the unresolved questions already carry.
+  if (!plan.requirements.length && !checklistTools.length && !needsNoVisa(plan)) return null;
 
   const { container } = panel("Visa application documents", "Official checklist");
 
   if (!plan.requirements.length) {
-    // Three different reasons end up here and the sentence has to be true of the one that applies.
+    // Four different reasons end up here and the sentence has to be true of the one that applies.
     // Saying "through its own questionnaire" when the authority actually contracted the work out
     // would misdescribe who published the checklist, which is the thing the reader has to judge.
+    // The fourth is not a variant of the other three: nobody withheld this list and nobody
+    // contracted it out — there is no application, so there is no list to publish.
+    if (needsNoVisa(plan)) {
+      container.append(
+        element(
+          "p",
+          "lead",
+          "There are no application documents to gather \u2014 this traveller needs no visa. What they must carry and do on arrival is under Before you travel below.",
+        ),
+      );
+      appendTools(container, plan, "document_checklist");
+      appendDelegates(container, plan, "document_checklist");
+      return container;
+    }
     const viaTool = toolsFor(plan, "document_checklist").length > 0;
     const viaDelegate = delegatesFor(plan, "document_checklist").length > 0;
     let why = "No official page lists the documents for this application.";
@@ -350,7 +391,15 @@ function renderRequirements(plan, ctx) {
 }
 
 function renderSteps(plan, ctx) {
-  const { container } = panel("Application timeline", "Actionable sequence");
+  // The steps of a visa-free plan are entry duties, not stages of a submission, and calling them a
+  // timeline would describe an application the traveller is not making. Nothing about the list
+  // changes; the heading is what has to be true. An entry list may also be empty, where the pages
+  // stated the decision and no duty beyond it — the panel is dropped rather than filled.
+  const entry = needsNoVisa(plan);
+  if (entry && !plan.application_steps.length) return null;
+  const { container } = entry
+    ? panel("Before you travel", "Entry requirements")
+    : panel("Application timeline", "Actionable sequence");
   const list = element("ol", "steps");
   plan.application_steps.forEach((step) => {
     const item = element("li");
@@ -414,11 +463,16 @@ function renderReliability(plan) {
     appendDelegates(container, plan, topic, shown);
   });
   container.append(issueBlock("Unresolved questions", plan.unresolved_questions));
+  // The standing caveat is about an application, and half of it is false where there is none: there
+  // is nothing to apply for and no visa to be approved. What still holds is the part that matters
+  // most to a visa-free traveller — the rules change, and the border decides.
   container.append(
     element(
       "p",
       "disclaimer",
-      `Requirements can change. Confirm the current rules, fees, documents and appointment instructions with ${authoritiesSentence(plan)} before applying. A visa does not guarantee approval or entry.`,
+      needsNoVisa(plan)
+        ? `Entry rules can change, including which passports need a visa. Confirm the current rules with ${authoritiesSentence(plan)} before you travel. Meeting them does not guarantee entry, which is decided at the border.`
+        : `Requirements can change. Confirm the current rules, fees, documents and appointment instructions with ${authoritiesSentence(plan)} before applying. A visa does not guarantee approval or entry.`,
     ),
   );
   return container;

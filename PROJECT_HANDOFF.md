@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 621 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 631 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has eighty-five rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has eighty-eight rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -126,14 +126,26 @@ on every page and held stored text for none; it now holds **863**, its visa-requ
 readable, and Sweden's Philippine row went **2 of 6 to 6 of 6**. The United States, at 19, is what
 remains and its hosts are application portals rather than guidance.
 
-**Start at TODO item 39: build the visa-free plan as an entry plan.** The direction is decided
-(entry 95) and the code is not written. When the answer is "no visa required" the traveller still
-has things to do — Singapore asks for the SG Arrival Card, a passport valid past the stay, and
-onward travel — and none of them is an application, so `application_steps` should carry **entry**
-steps, `where_to_apply` should be `None`, and `requirements` should be empty. Entry 95 names the
-three validators in the way and which of them is a guard rather than an obstacle. **The guard that
-matters:** the entry shape may only be produced where `visa_required is False` is stated by a
-source — never a tool, never a blocked page, never with `decision_is_unverified`.
+**The visa-free plan is an entry plan, and it is built** (entry 96, item 39). A traveller who needs
+no visa now gets their **entry** duties rather than an application with nothing in it: the documents
+panel says there is nothing to gather and why, the route panel says there is nowhere to apply, the
+timeline becomes *Before you travel*, and the plan may still be `verified`. The guard holds and is
+mostly older code — `visa_required` can only be `False` on a final plan when a page said so, because
+extraction forces it to `None` whenever `decision_is_unverified`.
+
+**The open sub-decision was the step floor and the answer is no number.** Curating two more
+visa-free corridors offline before writing anything — no network, no model — gives **3** entry
+duties for `singapore/PH/PH`, **~5** for `japan/GB/GB` and **~7** for `united-kingdom/US/US`. A floor
+under a list with no known shape is a quota, and a quota is how a model is invited to invent an entry
+duty. Four stays for an application and is withheld from an entry plan entirely. Two validators the
+spec never named were also in the way — `validate_absent_checklist`'s unresolved-question clause and
+`resolve_plan_status`, which would have made a visa-free plan `partial` for ever — and one part of
+the spec was wrong: `where_to_apply` is permitted to be `None`, not required, because a visa-free
+American still needs a UK ETA.
+
+**Start at TODO item 38**, and add `singapore/PH/PH/tourism` to the run: the renderer was verified
+against a hand-built entry plan, but the model has never been asked to produce one, so rule 8e of
+`extract_visa_plan.txt` is the one part of item 39 still unexercised.
 
 **"No visa required" is a complete answer, and the metric now says so** (entry 94). Singapore's
 Philippine row read two of six while resolving perfectly: no visa means no application, so four of

@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose eighty-five rows are
+what has wasted the most time here — see the corrections table further down, whose eighty-eight rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -33,11 +33,11 @@ have a corpus **and now a page-text index** (entry 85). A questionnaire is treat
 than a blockade — named for the role it settles, offered beside that question (entries 59, 60), and
 guidance an authority contracts out to a company is named the same way (entry 89).
 
-**The next thing to build is decided and unwritten: the visa-free plan as an entry plan** (entry
-95, [TODO.md](TODO.md) item 39). A traveller who needs no visa still has duties and none of them is
-an application, so `application_steps` becomes the entry steps, `where_to_apply` becomes `None`, and
-`requirements` empties — only ever on a decision a source **stated**. Entry 95 names the three
-validators in the way and which of them is a guard rather than an obstacle.
+**The visa-free plan is an entry plan and it is built** (entries 95–96, [TODO.md](TODO.md) item 39,
+done). A traveller who needs no visa gets their entry duties, no checklist and a route panel that
+says there is nowhere to apply — only ever on a decision a source **stated**. The floor entry 95 left
+open turned out not to be a number: three visa-free corridors state 3, ~5 and ~7 duties. Rule 8e of
+`extract_visa_plan.txt` is the one part never exercised by a model — item 38 is where that happens.
 
 **The gate is built and it is the promotion rule for stage 3** (entry 90, [TODO.md](TODO.md) item
 37). Its first half now reports four columns — roles answered **by a page**, roles **settled by an
@@ -311,14 +311,36 @@ produces a serious defect.
   and both are easy to lose in a migration — a schema that collapses `retrieved_at` and `row_written_at`
   starts lying about how current its guidance is. A content-hash change **marks** a source and may never
   auto-swap a role-bearing one: that is the wrong-checklist failure with the human removed.
-- **A visa-free plan is an entry plan, and it may only be built on a *stated* decision (entry 95,
-  decided and not yet built).** When `visa_required` is `False`, `application_steps` carries the
-  **entry** steps — an arrival card, a passport-validity rule, onward travel — `where_to_apply` is
-  `None`, and `requirements` is empty. It must never be produced from a tool, a blocked page, or a
-  plan with `decision_is_unverified`: a wrong "no visa required" that suppresses four questions is
-  worse than a wrong one that leaves them visible, because the traveller has nothing left to notice
-  the error with. `validate_absent_checklist` is untouched by it, and the rule forbidding a step to
-  link to an application route with no `where_to_apply` is a guard rather than an obstacle.
+- **A visa-free plan is an entry plan, and it may only be built on a *stated* decision (entries 95
+  and 96).** When `visa_required` is `False`, `application_steps` carries the **entry** steps — an
+  arrival card, a passport-validity rule, onward travel — and `requirements` is empty. It must never
+  be produced from a tool, a blocked page, or a plan with `decision_is_unverified`: a wrong "no visa
+  required" that suppresses four questions is worse than a wrong one that leaves them visible,
+  because the traveller has nothing left to notice the error with. That guard is mostly older code —
+  extraction forces `visa_required` to `None` whenever `decision_is_unverified`, so `False` on a
+  final plan already means a page said so.
+
+  **The entry-step floor is no floor, and that is a decision rather than an omission (entry 96).**
+  Three visa-free corridors state **3**, **~5** and **~7** entry duties, so the honest list has no
+  natural minimum and its low end is already under the application's four. A floor there would be a
+  quota, and a quota on a list with no evidence left to draw from invites a model to invent an entry
+  duty — the alarming-wrong-answer class. `_check_step_count` keeps four for an application, withholds
+  it entirely from an entry plan, and is *also* the guard: "fewer than four steps" and "only a stated
+  no" are the same check read from two sides. **Do not add a minimum back "so the panel is not
+  empty"** — an empty entry list means the pages stated a decision and no duty, and the interface
+  drops the panel.
+
+  **`where_to_apply` is permitted to be `None`, never forced to it (entry 96 corrects entry 95).** A
+  visa-free American still needs a UK **ETA** — applied for, paid for, waited on — and forcing `None`
+  would delete the one thing that stops them at the gate. Singapore is the case where nothing arises;
+  the United Kingdom is not. `validate_requirement_sources` is what keeps this safe and is unchanged:
+  a step may link to an application route only where there is one.
+
+  **Two validators the spec did not name are conditioned on a stated no, and one clause never
+  moves.** `validate_absent_checklist` no longer demands "what could not be answered" from a plan
+  where nothing failed to be answered, and `resolve_plan_status` no longer grades such a plan
+  `partial` for ever. Its first clause is untouched and is the one this project exists to enforce:
+  with no designated document source, a plan may not list a single requirement.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Never show a traveller an unverified claim that would alarm them if wrong.** The rule from entry 6,
@@ -397,6 +419,9 @@ cause, and only running the thing showed it.
 | re-check a shallow row by ranking its unanswered roles again | that ranking filters on the link score, so a 0.0 page still cannot appear (entry 91) |
 | the whole fixture needs redoing, the method was too shallow | the `IN/GB` rows already named the pages; only the new curation was thin (entry 91) |
 | a corridor with no answers can be skipped when totalling | dropping the two that answered none read 24 of **48**, not 24 of 60 (entry 91) |
+| singapore's three entry duties say what a visa-free list looks like | japan states ~5 and the UK ~7 — the range has no floor to pick (entry 96) |
+| a visa-free plan has nowhere to apply, so force `where_to_apply` to null | a visa-free american still needs a UK ETA; forcing null deletes it (entry 96) |
+| entry 95 named the three validators in the way | there were five — the checklist's third clause and the status grade (entry 96) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
