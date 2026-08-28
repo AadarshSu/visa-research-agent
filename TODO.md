@@ -173,7 +173,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has eighty-two rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has eighty-four rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -277,6 +277,13 @@ output lands and the old logs are harmless now that they are refused rather than
 
 
 ### 39. Stop asking five more questions once the answer is "no visa required" — `next`
+
+**Sharpened by entry 93, which fixed the other instance of this defect.** A role settled by an
+official tool is now counted and credited — France's Philippine row reads 5 of 6 rather than 2,
+because the Wizard *is* the answer the authority published. Singapore is the last case of the same
+shape: three of its four gaps are gaps **because** the answer is "no visa", and the metric still
+scores a correct, complete corridor as a thin one. The fix here is the same in spirit and different
+in mechanism — there the role is settled elsewhere, here it does not exist.
 
 **Why:** Singapore's `PH/PH` row records `document_checklist`, `application_route` and `fees` as
 unanswered, and every one of them is unanswered **because the corridor resolved correctly**. A

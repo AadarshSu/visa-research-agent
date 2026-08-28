@@ -99,6 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
+| [93](#93-a-tool-mediated-answer-is-an-answer-and-the-metric-was-the-only-thing-saying-otherwise) | **A tool-mediated answer is an answer** — the product always said so; only the metric did not |
 | [92](#92-the-corpus-build-always-rendered-twelve-renders-is-what-left-france-unreadable) | **The corpus build always rendered** — the budget was twelve, and France met 64 challenges |
 | [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-68-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 68% for the other |
 | [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
@@ -141,6 +142,82 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 93. A tool-mediated answer is an answer, and the metric was the only thing saying otherwise
+**2026-08-28 · a correction from the project owner, and the code already agreed with them**
+
+Asked whether France's Visa Wizard could be credited with the three roles France-Visas' own FAQ says
+it settles, entry 92 answered "named, never filled" and was **half wrong**. The owner drew the
+distinction that the entry had blurred:
+
+> **Direct answer** — "Filipino citizens residing in the Philippines need a visa."
+> **Tool-mediated answer** — "France-Visas' official Visa Wizard determines whether you need a visa.
+> Use it here."
+>
+> The second is still a legitimate answer from the agent because it gives the traveller the
+> authoritative path to resolve the question without fabricating missing information.
+
+**That is entry 60's own position**, whose heading reads *"a questionnaire is an answer, and may be
+named, never driven"*, and whose text says a questionnaire "is not a blockade in front of the
+guidance; it is the form the authority published the guidance in". What entry 60 forbids is **filling
+the role's content** — inventing what the Wizard would say. It never said the corridor goes
+unanswered.
+
+**The product had it right all along.** `audit.py` has put `resolved_decision_tool` in the *resolved*
+group since entry 63, with the posture-cost column reading "no — the authority publishes it only as
+a tool". A plan that names a decision tool resolves. Only `visa-discover coverage`, written on
+2026-08-28, treated a tool as a gap — and it was the newest thing in the repository, disagreeing with
+the oldest.
+
+### What it was costing
+
+France's Philippine row read **two of six**. A traveller using it gets an authoritative path for
+**five** — two roles from pages, three from the Wizard the authority publishes them in. Reported as
+2/6, France looked like the fixture's failure; reported honestly it is a country that publishes
+per-traveller guidance through a form, which is entry 82's wall seen from the traveller's side rather
+than the crawler's.
+
+Half one of `coverage` now reports three columns and a total:
+
+```
+IN/GB/tourism   47 answered by a page,  7 settled by an official tool,  6 open  ->  54/60 (90%)
+PH/PH/tourism   41 answered by a page,  5 settled by an official tool, 14 open  ->  46/60 (77%)
+```
+
+### What is kept apart, and why the columns are not merged
+
+`settled` is **never added into `held` or `answerable`**, for the reason `audit.py` keeps its two
+halves apart: the difference between them is what a reader has to be able to see.
+
+- A page answer is **citable**. The plan quotes it, `SourceReference` carries its URL, and the
+  freshness rules govern it.
+- A tool is **not**. Nothing about it may be quoted, `application_document_source_ids` stays empty
+  so `validate_absent_checklist` still forbids listing one requirement, and a `VisaPlan` naming a
+  decision tool can never be `verified`.
+
+Merging them would let "we hold the answer" and "we hold the address of the machine that computes
+the answer" become one number, which is precisely the confusion this entry is correcting in the
+other direction.
+
+A role a page answers is **not** also counted as settled, so the two can never double-count. The
+page wins, because it is the one this project can cite.
+
+### What has not changed
+
+Driving the Wizard is still out of scope, and entry 92's measurement is why rather than a rule:
+step one requires **travel-document type, age, marriage to a French national, and whether the
+traveller is joining an EU-citizen relative.** A corridor holds none of those and two of them change
+the answer. Handing the traveller the form is the honest act precisely *because* we cannot fill it
+in. If it is ever revisited, the route is a wider traveller profile as **corridor input**, so the
+answers come from the traveller — never from us.
+
+### The same defect has one instance left
+
+Singapore's Philippine row reads two of six, and three of the four gaps are gaps *because the answer
+is "no visa"* — there is no application, so no route, no checklist, no fee. That is the same shape:
+a correct, complete outcome scored as a thin one. TODO item 39, now the last of these.
 
 ---
 

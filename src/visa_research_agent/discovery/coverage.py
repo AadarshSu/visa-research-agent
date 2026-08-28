@@ -114,6 +114,22 @@ class KnownAnswer:
 
         return "/".join(self.corridor.split("/")[1:])
 
+    settled: tuple[str, ...] = ()
+    """Roles no page states and an official questionnaire settles, per entries 59 and 60.
+
+    **Counted, and counted apart.** This column was missing until 2026-08-28 and its absence made
+    the metric say the opposite of what the product does. `audit.py` has always put
+    `resolved_decision_tool` in the *resolved* group — "the authority publishes it only as a tool",
+    no cost to our posture — because handing a traveller the authority's own mechanism is an
+    outcome, not a gap. Entry 60's heading is "a questionnaire **is** an answer"; what it forbids
+    is filling the role's *content* from one, which is a different claim and still holds: a
+    tool-settled `document_checklist` still means `application_document_source_ids` stays empty and
+    not one requirement may be listed.
+
+    So it is never added into `held` or `answerable`. France reads two roles answered and three
+    settled: a traveller gets an authoritative path for five of six, and this project may still not
+    write down what the Wizard would say."""
+
     aliased: tuple[str, ...] = ()
     """Roles held only under a different host or scheme — `www.gdrfad.gov.ae` against
     `gdrfad.gov.ae`. Not a miss, and reported because the first run of this measurement counted one
@@ -288,6 +304,9 @@ def known_answers(oracle: SelectionOracle, corpus: CountryCorpus, slug: str) -> 
                 held=held,
                 answerable=len(corridor.answers),
                 missing=missing,
+                # A role a page answers is answered, whatever else names it. Only a role with no
+                # page answer is credited to its tool, so the two columns can never double-count.
+                settled=tuple(role for role in corridor.tools if role not in corridor.answers),
                 aliased=tuple(aliased),
             )
         )

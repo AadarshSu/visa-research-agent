@@ -964,30 +964,40 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
         for traveller, rows in sorted(by_traveller.items()):
             held = sum(row.held for row in rows)
             answerable = sum(row.answerable for row in rows)
+            settled = sum(len(row.settled) for row in rows)
             roles = sum(row.roles for row in rows)
             print(
                 f"\n  {traveller:<18} {held}/{answerable} of its answers held "
-                f"({held / answerable if answerable else 0:.0%})   "
-                f"{answerable}/{roles} roles answerable at all "
-                f"({answerable / roles if roles else 0:.0%})",
+                f"({held / answerable if answerable else 0:.0%})",
+                file=stream,
+            )
+            print(
+                f"  {'':<18} {answerable} roles answered by a page, {settled} settled by an "
+                f"official tool, {roles - answerable - settled} open\n"
+                f"  {'':<18} -> {answerable + settled}/{roles} the traveller can act on "
+                f"({(answerable + settled) / roles if roles else 0:.0%})",
                 file=stream,
             )
             for row in rows:
                 flag = "" if row.held == row.answerable else "   <-- MISS"
                 alias = f"   ({len(row.aliased)} under a host alias)" if row.aliased else ""
+                tool = f", {len(row.settled)} by tool" if row.settled else ""
                 print(
                     f"      {row.corridor:<40} {row.held}/{row.answerable} held, "
-                    f"{row.answerable}/{row.roles} answerable{alias}{flag}",
+                    f"{row.answerable}/{row.roles} by a page{tool}{alias}{flag}",
                     file=stream,
                 )
                 for role, urls in sorted(row.missing.items()):
                     print(f"          {role:<22} {urls[0]}", file=stream)
         print(
-            "\n  held: of the roles a human could answer, how many the corpus holds a page for.\n"
+            "\n  held: of the roles a page answers, how many the corpus holds that page for.\n"
             "        This is the regression half and should stay at 100% for every traveller.\n"
-            "  answerable: how many of the six roles anyone could answer from this store at all.\n"
-            "        **This is the column that moves with the traveller**, and it is the one a\n"
-            "        single-traveller oracle could not show — known problem 33.",
+            "  by a page vs by an official tool: **counted apart and never added into `held`.**\n"
+            "        A questionnaire the authority publishes *is* an answer — the plan names it\n"
+            "        beside the question and the traveller acts on it — but nothing about it is\n"
+            "        citable, and a tool-settled checklist lists no requirement (entry 60).\n"
+            "  open: no page and no tool. This is the column that moves with the traveller, and\n"
+            "        the one a single-traveller oracle could not show — known problem 33.",
             file=stream,
         )
 

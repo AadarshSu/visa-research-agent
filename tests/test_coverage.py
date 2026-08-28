@@ -356,6 +356,59 @@ def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> No
     assert answerable["IN/GB/tourism"] > answerable["PH/PH/tourism"]
 
 
+def test_a_role_an_official_tool_settles_is_credited_and_kept_apart() -> None:
+    """The product has always treated this as resolved — `audit.py` puts `resolved_decision_tool` in
+    the *resolved* group, "the authority publishes it only as a tool". The coverage metric did not,
+    and so reported France as answering two of six when a traveller gets an authoritative path for
+    five. Entry 60's heading is "a questionnaire **is** an answer"; what it forbids is filling the
+    role's content from one, which is a different claim.
+
+    Credited, and never added into `held` or `answerable` — a tool-settled `document_checklist`
+    still means not one requirement may be listed.
+    """
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    france = next(row for row in oracle.corridors if row.corridor == "france/PH/PH/tourism")
+    row = next(
+        r
+        for r in known_answers(oracle, corpus_of([], code="FR"), "france")
+        if r.corridor == france.corridor
+    )
+    assert set(row.settled) == set(france.tools)
+    assert row.answerable == len(france.answers)
+    assert row.held + len(row.settled) <= row.roles
+
+
+def test_a_role_a_page_answers_is_not_also_counted_as_settled() -> None:
+    """The two columns are reported side by side, so a role in both would inflate the total. A page
+    answer wins: it is citable and a tool never is."""
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    for corridor in oracle.corridors:
+        rows = known_answers(oracle, corpus_of([], code="XX"), corridor.slug)
+        row = next(r for r in rows if r.corridor == corridor.corridor)
+        assert not set(row.settled) & set(corridor.answers)
+
+
+def test_the_report_shows_what_the_traveller_can_act_on_without_merging_the_columns() -> None:
+    from visa_research_agent.discovery.cli import print_coverage
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    stream = io.StringIO()
+    print_coverage(
+        report(
+            [coverage(corpus_of([], code="FR"), oracle, slug="france", slugs=SLUGS, countries=11)]
+        ),
+        stream,
+    )
+    printed = stream.getvalue()
+    assert "settled by an official tool" in printed
+    assert "the traveller can act on" in printed
+    # The two are still separable in the output — merging them is what would hide the difference
+    # between a page this project can cite and a form only the traveller can fill in.
+    assert "by a page" in printed
+
+
 def test_a_corridor_answering_nothing_still_counts_in_the_denominator() -> None:
     """France and Sweden answer none of their six roles for the Philippine traveller. Skipping such
     a corridor took `answerable` from 24 of 60 to 24 of 48 — a denominator error flattering exactly

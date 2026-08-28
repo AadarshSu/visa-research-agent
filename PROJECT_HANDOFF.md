@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has eighty-two rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has eighty-four rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -73,7 +73,7 @@ destinations.
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
 | **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
 | **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 41 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
-| **Corpus sufficiency** | **`visa-discover coverage`, committed** (entry 90) — the promotion rule for stage 3. Two halves, never added: 47 of 47 known answers (**one traveller**, a regression check) and every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. |
+| **Corpus sufficiency** | **`visa-discover coverage`, committed** (entries 90, 93) — the promotion rule for stage 3. Two halves, never added. Half one reports three columns per traveller — answered **by a page**, settled **by an official tool**, open — and never merges the first two: **IN/GB 47 + 7 = 54/60 actionable, PH/PH 41 + 5 = 46/60**. Half two is every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
@@ -125,6 +125,13 @@ seven — cost one query and pointed at Sweden rather than France. `government.s
 on every page and held stored text for none; it now holds **863**, its visa-requirement list is
 readable, and Sweden's Philippine row went **2 of 6 to 6 of 6**. The United States, at 19, is what
 remains and its hosts are application portals rather than guidance.
+
+**A tool-mediated answer is an answer, and only the coverage metric said otherwise** (entry 93).
+The product has treated `resolved_decision_tool` as *resolved* since entry 63 — "the authority
+publishes it only as a tool" — and `visa-discover coverage`, written the same week, counted it as a
+gap. Half one now reports three columns and never merges them: **IN/GB 47 by a page + 7 by a tool =
+54/60 the traveller can act on; PH/PH 41 + 5 = 46/60.** France's Philippine row is **5 of 6**, not 2.
+`settled` is never added into `held`, because a page is citable and a tool is not.
 
 **France's Wizard was checked against the fixture and confirms it — three roles, named not filled**
 (entry 92). France-Visas' own FAQ says the Wizard "instantly informs you of the type of visa

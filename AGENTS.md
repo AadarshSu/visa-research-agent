@@ -65,6 +65,12 @@ the CLI does not offer it.
   holds the answer is **`visa-discover coverage`**; whether the *corridor* then finds it is selection
   recall, below. A single number covering both would hide which half failed, which is the mistake
   `visa-discover audit` exists not to make.
+- **A role an official questionnaire settles is answered, and is counted apart** (entry 93). The
+  distinction is *direct* answer — "Filipino citizens residing in the Philippines need a visa" —
+  against *tool-mediated* — "France-Visas' Visa Wizard determines whether you need a visa; use it
+  here". Both give the traveller an authoritative path; only the first is citable. So `coverage`
+  reports them in separate columns and never merges them, a plan naming a decision tool still
+  resolves, and a tool-settled checklist still lists no requirement.
 - **`visa-discover coverage`** answers "is this country's corpus good enough to serve a corridor" in
   two halves that are never added, and it is the promotion rule for stage 3 (entry 90). Half one is
   the 47 of 47 answers a human named in `oracle/selection_oracle.yaml` — **one traveller, `IN/GB`,

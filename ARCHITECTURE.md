@@ -524,6 +524,13 @@ rather than graded. `arms_from_logs` reads a run's fetched URLs as the model's p
 run scored that way lands in the arm named `model` and is compared with itself — which is what
 widening the oracle exposed. `RecallRecord.cause`'s rule, applied to a second field.
 
+**A role settled by an official tool is credited and kept apart** (entry 93). `audit.py` has put
+`resolved_decision_tool` in the *resolved* group since entry 63, and `coverage` now agrees: half one
+reports roles answered by a page, roles settled by a questionnaire, and roles open. They are never
+merged, because a page answer is citable and a tool is not — the plan names the tool beside the
+question, quotes nothing from it, and a tool-settled `document_checklist` still leaves
+`application_document_source_ids` empty.
+
 **`visa-discover coverage`** asks the other half of the same question and is deliberately a separate
 command (entry 90). `audit` and `selection-recall` both grade *runs*; this grades the **store**, so it
 reads only `var/corpus/`, `var/pagetext/` and `oracle/selection_oracle.yaml`, and has no model, no
