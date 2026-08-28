@@ -350,7 +350,12 @@ corridors:
       france-visas.gouv.fr answers a Cloudflare challenge (entry 41) and stores nothing. The four
       unverifiable pages above are addressed as if they answer a role (the UK post, the India page,
       the short-stay category, where to apply) and no one has read them, so they are recorded rather
-      than credited or dismissed.
+      than credited or dismissed. **The three tools are the authority's own account of what the
+      Wizard settles** — France-Visas' FAQ says it "instantly informs you of the type of visa
+      required, the supporting documents to be provided and the amount to be paid", which is exactly
+      these three roles. Naming them is entry 60; filling them would mean answering four fields a
+      corridor does not contain, two of which change the answer. Entry 92's rebuild made
+      france-visas.gouv.fr readable, so the 21-of-206 above is entry 87's figure and predates it.
     joint:
       - https://uk.diplomatie.gouv.fr/en/applying-for-a-visa
       - https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/ees-the-new-european-border-entryexit-system-goes-live-on-10-april-2026
@@ -966,9 +971,9 @@ corridors:
             **Readable for the first time after entry 92's rebuild** — this page is on
             france-visas.gouv.fr, which held stored text for 12 pages before it and 104 after
     tools:
-      visa_decision: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
-      document_checklist: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
-      fees: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
+      visa_decision: https://france-visas.gouv.fr/en/assistant-visa
+      document_checklist: https://france-visas.gouv.fr/en/assistant-visa
+      fees: https://france-visas.gouv.fr/en/assistant-visa
     unanswered:
       visa_decision: >-
         the Manila post names the France-Visas Visa Wizard and states nothing itself; france-visas.gouv.fr
@@ -990,7 +995,16 @@ corridors:
           a multi-faceted destination... check out France.fr". The page that actually answers,
           `applying-for-a-visa`, is 20 points below it.
     note: >-
-      **re-measured after entry 92's rebuild**, which answered the challenges the previous build had
+      **the three tool rows are the authority's own account of what the Wizard settles**, checked
+      against France-Visas' FAQ on 2026-08-28 and corroborated independently by the project owner:
+      the Visa Wizard "instantly informs you of the type of visa required, the supporting documents
+      to be provided and the amount to be paid". Those are exactly `visa_decision`,
+      `document_checklist` and `fees`, and they are named rather than filled — entry 60. Driving it
+      is not available: its first step alone requires four fields a corridor does not contain —
+      travel-document type, age, marriage to a French national, and whether the traveller is joining
+      an EU-citizen relative — and the last two change the answer. The tools pointed at the Manila
+      post's page until this was checked; they now name the Wizard itself.
+      **Re-measured after entry 92's rebuild**, which answered the challenges the previous build had
       no render budget for: `france-visas.gouv.fr` went from 12 pages with stored text to 104, and
       this row from one answer to two. It is still the weakest of the twenty — 33 readable of 523 —
       because the pages that would answer the other four roles are inside the Visa Wizard, which is

@@ -24,7 +24,7 @@ from discovery_site import (
     handler,
 )
 
-from visa_research_agent.discovery.corpus import CountryCorpus
+from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.corpus_build import (
     CORPUS_EXPANSION_THRESHOLD,
     all_corpus_queries,
@@ -142,6 +142,56 @@ async def test_a_build_records_the_pages_it_reached_with_how_it_got_there() -> N
     assert india, "a page two hops in was not recorded"
     assert india[0].depth >= 1
     assert india[0].discovered_from, "how a page was reached is what a later crawl follows"
+
+
+@pytest.mark.anyio
+async def test_a_page_the_crawl_opened_is_recorded_readable_not_unknown() -> None:
+    """`readable` was a documented retention tier that no build ever assigned (entry 92).
+
+    It matters because `merge` moves a status up and never down and `unknown` ranks *below*
+    `unreadable`, so a page that failed in one build and was read in the next kept the old failure's
+    sentence for ever. Twelve France entries claimed a browser challenge "could not be answered
+    here" while the page-text index held their bodies — a reason untrue of what was seen.
+    """
+
+    # A budget of two so the crawl opens some pages and only records the addresses of others.
+    corpus, _ = await build([INDEX], pages=2)
+
+    opened = [entry for entry in corpus.entries if entry.status == "readable"]
+    assert opened, "a crawl that opened a page must record that it did"
+    assert all(not entry.detail for entry in opened)
+    # A page it only saw a link to still says so — an unopened address is a usable candidate and
+    # must stay distinguishable from a page somebody read.
+    assert any(entry.status == "unknown" for entry in corpus.entries)
+
+
+@pytest.mark.anyio
+async def test_a_later_build_clears_a_failure_the_page_no_longer_has() -> None:
+    """The whole point of the tier. A corpus that could never record a success could never correct
+    a failure either, because `merge` keeps the higher rank and `unknown` is not one."""
+
+    from datetime import timedelta
+
+    read_this_time = "https://immigration.gov.example/visa/detail/india.html"
+    stale = CountryCorpus(
+        country_code="XX",
+        country_name="Xxland",
+        built_at=NOW - timedelta(days=1),
+        entries=[
+            CorpusEntry(
+                url=read_this_time,
+                first_seen=NOW - timedelta(days=1),
+                last_seen=NOW - timedelta(days=1),
+                status="unreadable",
+                detail="it asked this client to prove it is a browser (HTTP 403)",
+            )
+        ],
+    )
+    corpus, _ = await build([INDEX], existing=stale)
+
+    entry = next(entry for entry in corpus.entries if entry.url == read_this_time)
+    assert entry.status == "readable"
+    assert entry.detail == ""
 
 
 @pytest.mark.anyio

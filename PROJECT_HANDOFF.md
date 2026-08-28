@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has eighty rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has eighty-two rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -125,6 +125,15 @@ seven — cost one query and pointed at Sweden rather than France. `government.s
 on every page and held stored text for none; it now holds **863**, its visa-requirement list is
 readable, and Sweden's Philippine row went **2 of 6 to 6 of 6**. The United States, at 19, is what
 remains and its hosts are application portals rather than guidance.
+
+**France's Wizard was checked against the fixture and confirms it — three roles, named not filled**
+(entry 92). France-Visas' own FAQ says the Wizard "instantly informs you of the type of visa
+required, the supporting documents to be provided and the amount to be paid", which is exactly the
+three roles both France rows already attribute to it. Reading its form settles why they stay named:
+step one requires **age, marriage to a French national, and whether the traveller is joining an
+EU-citizen relative**, none of which is in a corridor and two of which change the answer. Entry 59's
+bar, failed more clearly than GOV.UK failed it. `application_route` is already answered by real
+pages; France's one genuinely open role is `processing_times`.
 
 **France's corpus is rebuilt and it is still the fixture's weakest row** (entry 92). The offline
 build always answered browser challenges — it had **12** renders against France's **64** challenged
@@ -591,6 +600,15 @@ re-add the amendment history here.
    cannot be judged — Sweden's decision list, the Netherlands' Philippine checklist. The product
    would simply fetch those pages. So the fixture understates what is answerable, which is known
    problem 30 read from the other side. TODO item 40.
+
+38. **A corpus entry's failure reason could never be cleared, and twelve were false.** `_entry`
+   wrote only `unreadable` or `unknown`, so `readable` was a documented retention tier no build ever
+   assigned — and because `merge` only moves a status up, with `unknown` below `unreadable`, a page
+   that failed once kept the old sentence for ever. Twelve France entries claimed a browser
+   challenge "could not be answered here" while the index held their text. **Fixed** in entry 92:
+   the crawler records what it opened. The stale reasons clear on each country's next build, so any
+   corpus not rebuilt since 2026-08-28 still carries them — FR and SE are clean, the other eight are
+   not.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

@@ -805,6 +805,8 @@ class LinkCrawler:
         # commercial URL somebody found somewhere.
         self.delegations: dict[str, Delegation] = {}
         self.rejected: dict[str, str] = {}
+        # URLs this crawl opened and read. See `crawl` for why an entry needs it.
+        self.read: set[str] = set()
         # A page's own <title> is only knowable once it is fetched, so it is recorded here
         # rather than guessed from the link that pointed at it.
         self.titles: dict[str, str] = {}
@@ -899,6 +901,13 @@ class LinkCrawler:
                 for (depth, url, _link), html in zip(wave, pages, strict=True):
                     if html is None:
                         continue
+                    # What this crawl actually opened, as opposed to what it merely queued. Recorded
+                    # because a corpus entry could not otherwise say a page was read: `_entry` wrote
+                    # only `unreadable` or `unknown`, so a page that failed in one build and was
+                    # read in the next kept the old failure's reason for ever — France's Visa
+                    # Wizard said "that challenge could not be answered here" while the index held
+                    # 15,000 characters of it. Entry 92.
+                    self.read.add(url)
                     self._expand(
                         url,
                         html,

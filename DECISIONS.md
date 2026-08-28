@@ -262,6 +262,49 @@ Philippine row credited it with two — the page states EUR 90, fifteen days and
 a shallow re-check had missed all three. **`PH/PH` overall: 24 of 60 when this session started,
 now 41 of 60.** Seventeen of those roles were always answerable and nobody had looked properly.
 
+### What the rebuild let us check, and the answer is still "name it"
+
+Reading the Wizard was the point of rebuilding France, and it is now readable. The project owner
+checked the current France-Visas material independently and found the FAQ sentence, which the index
+now holds too:
+
+> the visa wizard "instantly informs you of the type of visa required, the supporting documents to
+> be provided and the amount to be paid, depending on the elements you have filled in"
+
+**That is the authority's own account, and it names exactly the three roles both France rows already
+attribute to it** — `visa_decision`, `document_checklist`, `fees`. Independent corroboration of a
+curation made from the other side, which is worth more than either half alone. Both rows now point
+those tools at the Wizard itself rather than at a post's page that mentions it.
+
+**It does not make them answered, and reading the form is what settles that.** Step one alone —
+"All fields below are required" — asks for **nationality, official supporting document, age, whether
+the traveller is married to a French national, and whether they are joining a close relative who is
+an EU, EEA, Swiss or protected-UK citizen.** A corridor contains the first and none of the other
+four. The last two are not colour: marrying a French national or joining an EU relative moves the
+traveller to a different regime, and age moves the fee — children 6 to 11 pay 45 euros and under-6s
+nothing. So filling these roles from the Wizard means inventing traveller input on the questions
+that decide the answer, which is entry 59's bar failed more clearly than GOV.UK failed it. Entry 60
+stands: named, offered beside the question, never filled.
+
+The fourth role the owner asked about, `application_route`, is **already answered** in both rows and
+not by the Wizard — `ph.diplomatie.gouv.fr/en/applying-for-a-visa` for the Philippine traveller and
+`uk.diplomatie.gouv.fr/en/applying-for-a-visa` for the Indian one. France's genuinely open role is
+`processing_times`, which the Wizard does not claim to give and its Manila page explicitly declines:
+"waiting times... will vary depending on your country and the time of year".
+
+### A corpus build could never record a success, so it could never correct a failure
+
+Checking the Wizard turned up something the rebuild should have fixed and had not: twelve France
+entries still read *"it asked this client to prove it is a browser (HTTP 403), and that challenge
+could not be answered here"* **while the page-text index held their bodies.** A reason untrue of
+what was seen is the one thing this project's failure text may never be.
+
+The cause is one line. `_entry` wrote `"unreadable" if reason else "unknown"` — so `readable`, a
+documented retention tier, was **assigned by no build ever**. And `merge` moves a status up and never
+down, with `unknown` ranking *below* `unreadable`: a page that failed in one build and was read in
+the next kept the old failure and its sentence for ever. `LinkCrawler` now records what it actually
+opened and `_entry` reads it, so a later build clears a failure the page no longer has.
+
 ### What was rejected
 
 - **Raising `settings.maximum_crawl_renders`.** That is the request path's number and a corridor has

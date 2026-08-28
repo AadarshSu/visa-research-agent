@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose eighty rows are
+what has wasted the most time here — see the corrections table further down, whose eighty-two rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -396,6 +396,8 @@ cause, and only running the thing showed it.
 | the corpus build does not answer a browser challenge, unlike the request path | it always did; the budget was **12** renders against France's 64 challenges (entry 92) |
 | france is the corpus the render budget cost most | sweden lost 216 pages to it against france's 66 — count before crawling (entry 92) |
 | rebuilding france fixes its two weak oracle rows | 92 newly readable pages bought **one** role; the rest is behind the wizard (entry 92) |
+| the wizard states the 3 roles, so reading it would answer them | its first step needs 4 fields a corridor lacks; 2 of them change the answer (entry 92) |
+| a corpus build records whether it could read a page | it wrote only `unreadable` or `unknown`, so a stale failure never cleared (entry 92) |
 | raising the render budget is the whole fix | an unanswerable host would then spend 400 renders proving it — cap per host (entry 92) |
 | the corpus is not yet good enough to serve a corridor alone | for `IN/GB` it holds 47 of 47 answerable roles, and did before entry 88 |
 | so a corpus-sufficiency number settles it | that one is blind to the traveller dimension; 100% and uninformative |

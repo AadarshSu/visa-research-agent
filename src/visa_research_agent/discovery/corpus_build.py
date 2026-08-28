@@ -319,7 +319,22 @@ def _entry(
     titles: dict[str, str],
     failures: dict[str, str],
     now: datetime,
+    read: set[str] = frozenset(),  # type: ignore[assignment]
 ) -> CorpusEntry:
+    """One corpus entry, and **whether the crawl actually opened the page**.
+
+    `read` was added by entry 92 after a measurement nobody had made: this function wrote only
+    `unreadable` or `unknown`, so `readable` was a documented retention tier that no build ever
+    assigned. Two things followed, and the second is the one that matters.
+
+    `merge` moves a status up and never down, and `unknown` ranks *below* `unreadable`. So a page
+    that failed in one build and was read in the next kept the old failure and its sentence for
+    ever. Twelve France entries said "it asked this client to prove it is a browser... and that
+    challenge could not be answered here" while the page-text index held their bodies — a reason
+    that is not true of what was seen, which is the one thing this project's failure text may never
+    be.
+    """
+
     url = candidate.link.url
     reason = failures.get(url)
     return CorpusEntry(
@@ -331,7 +346,7 @@ def _entry(
         discovered_from=candidate.link.discovered_from,
         first_seen=now,
         last_seen=now,
-        status="unreadable" if reason else "unknown",
+        status="unreadable" if reason else ("readable" if url in read else "unknown"),
         detail=reason or "",
     )
 
@@ -504,7 +519,8 @@ async def build_country_corpus(
     indexed_text = page_text.write(country.code, kept) if page_text is not None else 0
 
     entries = [
-        _entry(candidate, crawler.titles, crawl_fetcher.failures, now) for candidate in crawled
+        _entry(candidate, crawler.titles, crawl_fetcher.failures, now, crawler.read)
+        for candidate in crawled
     ]
     before = existing or CountryCorpus(
         country_code=country.code,
