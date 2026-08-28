@@ -2137,6 +2137,12 @@ evidence that a country works.
 | 3 | **Fast** — served from a stored corpus rather than a live crawl | **10 of 53** |
 
 Fully done: AE, CA, DE, FR, GB, JP, NL, SE, SG, US — ten. Austria and Norway resolve but crawl.
+
+**Amended 2026-08-28: stage 3 has no test, and that is now a known gap.** A country counts as
+*fast* because a corpus file exists, not because anything measured whether that corpus can answer
+a corridor. The one measurement that exists — 47 of 47 answerable roles held, against
+`oracle/selection_oracle.yaml` — covers a single traveller and is blind to the dimension entry 88
+found failing. [TODO.md](TODO.md) item 37 is the gate that should decide stage 3 instead.
 Everything else is a row nobody has tried: AU, BE, BG, BR, CH, CN, CY, CZ, DK, EE, EG, ES, FI, GR, HR,
 HU, ID, IE, IN, IT, KR, LT, LU, LV, MA, MT, MX, MY, NZ, PH, PL, PT, RO, SA, SI, SK, TH, TR, UY, VN, ZA.
 

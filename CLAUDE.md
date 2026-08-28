@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose sixty-one rows are
+what has wasted the most time here — see the corrections table further down, whose sixty-three rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -25,12 +25,17 @@ where it is genuinely unavoidable; it is not acceptable as the ordinary source o
 has to be *useful*, and "useful" has a number: how often a corridor finds what it needs without
 searching. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34 feed it.
 
-**Where it stands, as of 2026-08-26.** The pipeline works end to end and passed a bar committed in
+**Where it stands, as of 2026-08-28.** The pipeline works end to end and passed a bar committed in
 advance (entry 35, measured in entry 58): over twenty corridors, **75% confirm the visa decision** and
 **50% yield a document checklist** — a marginal pass. Corridors are served from stored per-country
 corpora at a median 27.4s. All 53 reachable destinations have been run at least once (entry 70); ten
 have a corpus **and now a page-text index** (entry 85). A questionnaire is treated as an answer rather
-than a blockade — named for the role it settles, offered beside that question (entries 59, 60).
+than a blockade — named for the role it settles, offered beside that question (entries 59, 60), and
+guidance an authority contracts out to a company is named the same way (entry 89).
+
+**The next thing to build is a gate, not a feature** ([TODO.md](TODO.md) item 37). Nothing today can
+answer "is this country's corpus good enough to serve a corridor" for any traveller but `IN/GB`, so
+promoting a country to stage 3 is currently a judgement rather than a number.
 
 **How close the corpus is to the goal, measured** (entry 82). Across 30 corridors into the ten corpus
 countries, **18 had zero misses**, and of the 67 pages missed in total **none were on a host the
@@ -40,6 +45,13 @@ per-nationality fee tables through a country selector with no links between nati
 crawl reaches them at any budget, while Canada's equivalent reached 213 values because Canada
 published a page listing every country as a link. The second cause is the questionnaire outcome
 wearing a different hat, and the answer is the same: name the tool.
+
+**And measured a second way on 2026-08-28: 47 of 47 answerable roles already have their answering
+page in the corpus — for one traveller.** `oracle/selection_oracle.yaml` is `IN/GB/tourism` for all
+ten countries, and the Netherlands' answers were held both before and after entry 88's rebuild, so
+this measurement is blind to the thing that rebuild fixed. **Never quote the 100% as evidence a
+corpus is ready.** The dimension that varies is the traveller, and the gate that measures it is
+[TODO.md](TODO.md) item 37, which is the next thing to build.
 
 **What chooses which pages to read is now a model, not the ranking** (entries 83–87). It reads stored
 page text for every candidate in contention and picks up to 20 pages to fetch, where the heuristic
@@ -361,6 +373,8 @@ cause, and only running the thing showed it.
 | the authority's own page linking it is warrant enough | the link comes out of HTML, which is untrusted content (entry 89) |
 | most contractor links are the guidance | 44 of 236 are "track your application"; 30 are documents (entry 89) |
 | singapore is the next family reservation win, it fills five roles | its page is a leaf, and ICA's index yields 6 children not 198 |
+| the corpus is not yet good enough to serve a corridor alone | for `IN/GB` it holds 47 of 47 answerable roles, and did before entry 88 |
+| so a corpus-sufficiency number settles it | that one is blind to the traveller dimension; 100% and uninformative |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |

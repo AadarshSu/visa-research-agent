@@ -31,6 +31,13 @@ is fixed and proved on one country (item 35), and it exposed a wider limit that 
 for most residences the Netherlands publishes its checklist on **VFS Global**, which the trust rule
 refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
+**The corpus is measurably sufficient for the one traveller we have ground truth for, and unmeasured
+for every other** (2026-08-28). Against `oracle/selection_oracle.yaml`, **47 of 47** answerable roles
+already have their answering page in the corpus — and all three Dutch answers were held *before*
+entry 88's rebuild, so that fix improved `IN/GB` by nothing and improved other residences instead.
+**Item 37 exists because the obvious version of this measurement returns 100% and says nothing**, and
+it is what should gate promoting a country to stage 3.
+
 **Search has credit again, and the three things that were gating stage 3 are fixed and confirmed
 live**: pacing and `402` classification (entry 74), the post mis-pick (entry 72, six of seven
 regression corridors correct), and the challenge (entry 75, Cyprus and India recovered — 41 - 9 - 2 =
@@ -123,7 +130,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 35. Roll the per-traveller family reservation across the other nine | `next` |
+| **Now** | 37. Build the gate that says whether a country's corpus is good enough | `next` |
+|  | 35. Roll the per-traveller family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
@@ -156,7 +164,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has sixty-one rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has sixty-three rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -164,6 +172,88 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+### 37. Build the gate that says whether a country's corpus is good enough — `next`, **start here**
+
+**Why, and read this part before the spec, because the obvious version of this measurement returns
+100% and tells you nothing.**
+
+The question that gates batch 1 is "if we build a corpus for country X, can a corridor into X be
+answered from it?" On 2026-08-28 that was measured for the first time, against
+`oracle/selection_oracle.yaml`, and the answer was:
+
+```
+47/47 answerable roles have their answering page already in the corpus   (100%)
+```
+
+**That number is real and it is nearly useless**, for one reason: the oracle is a single traveller —
+`IN/GB/tourism` — for all ten countries. Checked against the pre-rebuild Netherlands corpus, all
+three of its oracle answers were *already* held, so entry 88's family fix improved `IN/GB` by
+**nothing**. What it improved was Philippine, Pakistani and Chinese residents, whom no measurement
+covers.
+
+So the corpus has been good enough for the traveller we can measure for some time, and is unmeasured
+for every other traveller. **A gate that only reproduces the 100% is not a gate.** What is needed is
+a number over the dimension that actually varies.
+
+**What to build.** `visa-discover coverage --country NL`, offline, no model, no search, reading only
+`var/corpus/`, `var/pagetext/` and the committed oracle. Two halves, reported separately and never
+added together — the same discipline `visa-discover audit` uses:
+
+1. **Known-answer coverage.** For each role the oracle says is answerable, is an answering page in
+   this country's corpus? Exists already as fifteen lines; it is the 47/47 above. Only meaningful
+   for the ten oracle corridors, and it is the regression half — it should stay at 100%.
+2. **Per-traveller coverage, which is the new half and the point.** For each per-traveller family
+   the corpus holds — a run of addresses differing only by country, `…/schengen-visa/apply-{}` —
+   report members held, members opened, and **whether the family is a gateway or a leaf**.
+
+**The traps, each of which cost time this session. Do not rediscover them.**
+
+- **Normalise `www.` and the scheme before comparing URLs.** The first run of half 1 reported 46/47;
+  the "miss" was `www.gdrfad.gov.ae` against `gdrfad.gov.ae`, the same page. A corpus-coverage number
+  that treats those as different is wrong in the direction that looks like a finding.
+- **An unopened URL is still a usable candidate.** Do not count "opened" as coverage. What does not
+  exist is the *child* of a page nobody opened.
+- **Gateway and leaf are different and the report must say which.** Opening a Dutch `apply-{country}`
+  yields ~6 leaves including that residence's checklist; opening a Singaporean
+  `visa-detail-page/{country}` yields ~nothing, because it *is* the answer. So a rebuild buys
+  coverage for the first and only stored text — that is, better *selection* — for the second.
+  Detect it by counting children of the opened members, not by guessing from the path.
+- **Detect the form wall, because no budget crosses it.** Compare the family's size to the number of
+  children its index page actually yielded. Singapore's `ica.gov.sg/.../visa_requirements` yields
+  **6, not 198**, so its 34 held members came from mission pages and the other 164 are behind a
+  selector. That is entry 82's UK fee table and it is a property of the authority. A country in this
+  state should be reported as *bounded*, not as *incomplete*.
+- **A destination is usually named in its own URLs.** `…/visa-the-netherlands/schengen-visa/apply-india`
+  carries two country tokens. Use `country_family_keys`, which returns all of them, and group by
+  whichever grouping is largest — blanking only the first found no Dutch family at all.
+- **Do not grade on roles filled.** Entry 81 measured it swinging ±2 on identical input, and entries
+  79–81 are three consecutive entries that were wrong because they leaned on it. This command must
+  have no model in it anywhere.
+
+**What the report should let somebody say.** For each country, one of three verdicts, with the
+numbers behind it:
+
+- *no per-traveller dimension* — the guidance is centralised, so `IN/GB` coverage settles it. Six of
+  the ten looked like this on 2026-08-27 (AE, CA, DE, FR, SE, US by the family test; JP and GB too).
+- *covered* — the families exist and the corpus holds most of their members. The Netherlands after
+  entry 88's rebuild: 14 tourism checklists of the 14 that exist.
+- *bounded by the authority* — the family exists and cannot be crawled, so say so and stop. Singapore
+  at 34 of 198; the United Kingdom's fee tables.
+
+**Then use it as the promotion rule for stage 3.** Entry 68 defines a batch as done at three stages
+and stage 3 is "served from a stored corpus". A country should not be called stage 3 until this
+command reports one of those three verdicts, rather than because a corpus file exists.
+
+**What is already on disk to build from.** `var/corpus/*.json` now carries `delegations` as well as
+entries; `discovered_from` is exactly the set of pages a crawl opened; `var/pagetext/*.sqlite3` says
+which have stored text. The prototypes for both halves were written on 2026-08-28 and thrown away
+deliberately — they were scratch, and this item exists so the real one is committed and testable.
+
+**Scope note.** This measures whether the *store* holds the answer. Whether the *corridor* then finds
+it is a different question with its own committed answer — `visa-discover selection-recall`, entry
+87 — and the two should stay apart. Item 19 needs both.
+
 
 ### 34. ~~Build an oracle that neither selector helped make~~ — `done, entry 87`
 
@@ -191,7 +281,7 @@ it would still have been a set of URLs somebody fetched.
   should quote both.
 
 
-### 35. Roll the per-traveller family reservation across the other nine — `next`, **start here**
+### 35. Roll the per-traveller family reservation across the other nine — `next`
 
 **Why:** entry 88. A corpus crawl reads 3–15% of what it records, and the page that answers a
 *specific* traveller is almost always one hop below something it recorded and never opened. Proved

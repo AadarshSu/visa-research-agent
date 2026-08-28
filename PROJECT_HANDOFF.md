@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-27 — update this line when you touch the handoff |
+| **Last updated** | 2026-08-28 — update this line when you touch the handoff |
 | **Tests** | 578 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has sixty-one rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has sixty-three rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -118,7 +118,16 @@ jointly-built oracle side by side. **Entry 86's +41 points is +30**; the directi
 it hands forward: thirteen of sixty roles have no readable answer at all, and the fixture is one
 nationality and one residence — known problems 29 and 30.
 
-**Start at item 35.** Entry 88 asked whether a corpus built once serves every traveller and found it
+**Start at item 37: build the gate.** On 2026-08-28 the corpus-sufficiency question was measured for
+the first time and came back **47 of 47 answerable roles already in the corpus (100%)** — against an
+oracle that is a single traveller, `IN/GB/tourism`, for all ten countries. Checked against the
+pre-rebuild Netherlands corpus, all three of its answers were already held, so entry 88's fix
+improved `IN/GB` by nothing and improved other residences instead. **So the corpus has been good
+enough for the traveller we can measure, and is unmeasured for every other one**, and a gate that
+reproduces that 100% is not a gate. Item 37 specifies the version that measures the dimension which
+actually varies, offline and with no model.
+
+**Then item 35.** Entry 88 asked whether a corpus built once serves every traveller and found it
 does not: a build reads 3–15% of what it records, and the answering page for a specific traveller is
 one hop below something recorded and never opened. Fixed and proved on the Netherlands — gateway
 pages read 0 → 185, tourism checklists held 5 → 14, and `netherlands/PH/PH` now answers four of six
@@ -510,6 +519,14 @@ re-add the amendment history here.
    rather than 198, so the missing 164 nationalities are behind a selector — entry 82's wall. A
    rebuild there buys stored text for the selector (5 of 34 have any today), not coverage. TODO
    item 35.
+
+33. **"Is the corpus good enough" has one measurement and it covers one traveller.** Against
+   `oracle/selection_oracle.yaml` the answer is 47 of 47 answerable roles already in the corpus, and
+   that oracle is `IN/GB/tourism` for all ten countries. The Netherlands' three answers were held
+   before entry 88's rebuild and after it, so the measurement cannot see the thing entry 88 fixed —
+   it improved Philippine, Pakistani and Chinese residents, whom nothing measures. **Do not quote
+   the 100% as evidence a corpus is ready**; it is the regression half of a gate whose other half
+   does not exist yet. TODO item 37.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

@@ -61,6 +61,10 @@ the CLI does not offer it.
   approved government page linked it, and its registrable domain is in
   `config/service_providers.yaml`. The model picks by `delegate_id` from what we recorded and can
   never supply a URL. Entry 89.
+- **Two different questions, two different commands, and do not merge them.** Whether the *store*
+  holds the answer is corpus coverage — [TODO.md](TODO.md) item 37, not built yet. Whether the
+  *corridor* then finds it is selection recall, below. A single number covering both would hide which
+  half failed, which is the mistake `visa-discover audit` exists not to make.
 - **`visa-discover selection-recall`** grades what a selector chose to read against
   `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it. Reads
   two files, calls nothing.
