@@ -21,7 +21,12 @@ from bs4 import BeautifulSoup
 from bs4.element import Tag
 
 from visa_research_agent.config.settings import settings
-from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
+from visa_research_agent.discovery.models import (
+    CandidatePage,
+    Delegation,
+    PageLink,
+    RoleScores,
+)
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
     country_family_keys,
@@ -36,7 +41,7 @@ from visa_research_agent.domain.models import (
     FailureOutcome,
     is_challenge,
 )
-from visa_research_agent.domain.trust import host_of
+from visa_research_agent.domain.trust import host_of, registrable_domain
 from visa_research_agent.research.live_sources import clean_source_html, extract_pdf_text
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
@@ -717,6 +722,7 @@ class LinkCrawler:
         family_share: float = 0.0,
         family_minimum: int = DEFAULT_FAMILY_MINIMUM,
         family_pattern: re.Pattern[str] | None = None,
+        provider_domains: frozenset[str] = frozenset(),
         on_page: PageReader | None = None,
         maximum_text_characters: int = DEFAULT_KEPT_TEXT_CHARACTERS,
     ) -> None:
@@ -756,6 +762,16 @@ class LinkCrawler:
         # 176 travel-advisory pages and Japan's are 141 country-relations pages, none of them visa
         # guidance. Without a gate, a rebuild of either would hand 40% of its budget to those.
         self.family_pattern = family_pattern
+        # Companies a government delegates its guidance to. A link from a trusted page to one of
+        # these is **recorded and never followed** — `is_crawlable` still refuses it, as it must,
+        # and `delegations` is not a candidate list. It exists because dropping the link silently,
+        # which is what happened until 2026-08-28, throws away the only record of where an authority
+        # said its own guidance lives. Empty disables the recording entirely.
+        self.provider_domains = provider_domains
+        # Where an approved page pointed a traveller, keyed by the delegate's URL. The value is the
+        # trusted page that named it: the warrant, kept because without it the entry is just a
+        # commercial URL somebody found somewhere.
+        self.delegations: dict[str, Delegation] = {}
         self.rejected: dict[str, str] = {}
         # A page's own <title> is only knowable once it is fetched, so it is recorded here
         # rather than guessed from the link that pointed at it.
@@ -992,6 +1008,12 @@ class LinkCrawler:
         queued: list[tuple[float, int, str, int, PageLink]] = []
         for found in extract_links(html, base):
             if found.url in visited or not is_crawlable(found.url, destination):
+                # An off-domain link is still refused, and that is not weakened here. It is only
+                # *written down* when it points at a reviewed delegate, because a government page
+                # saying "your checklist is on VFS Global" is a fact about the authority worth
+                # keeping — and it is the only record of it, since the text of these pages usually
+                # does not repeat the address (292 Dutch pages name a contractor; none print a URL).
+                self._record_delegation(url, found)
                 continue
             child = found.model_copy(update={"depth": depth + 1})
 
@@ -1016,6 +1038,26 @@ class LinkCrawler:
                 queued.append((-best, depth + 1, child.url, counters[0], child))
 
         self._queue(queued, frontier, families)
+
+    def _record_delegation(self, named_on: str, link: PageLink) -> None:
+        """Keep a link from a trusted page to a reviewed delegate. Never a candidate, never fetched.
+
+        Two independent things have to hold, exactly as `auto_trusted_domains` requires two: the
+        page doing the naming is on an approved government domain — guaranteed, because this crawl
+        cannot be on any other — and the registrable domain of the target is on the committed
+        provider list. Either alone would be a page's own markup deciding who a traveller is sent
+        to, and markup is untrusted content.
+        """
+
+        if not self.provider_domains:
+            return
+        host = host_of(link.url)
+        if not host or registrable_domain(host) not in self.provider_domains:
+            return
+        self.delegations.setdefault(
+            link.url,
+            Delegation(url=link.url, named_on=named_on, link_text=link.text[:300]),
+        )
 
     def _queue(
         self,

@@ -217,6 +217,34 @@ GuidanceTopic = Literal[
 ]
 
 
+class DelegatedService(StrictModel):
+    """A commercial company the destination's own page sends the traveller to for its guidance.
+
+    The Netherlands is why this exists. For most residences its application page says, in as many
+    words, "on the VFS Global website you'll find a checklist with the documents you need" — so the
+    guidance is official, is current, and is not on any government domain. Measured 2026-08-27: of
+    185 Dutch pages published one per residence, 113 link no checklist of their own (DECISIONS
+    entries 88 and 89).
+
+    **It is not a source and there is nowhere here to make it one.** No `content`, no excerpt, no
+    `source_id`: the page is never fetched, so a claim about what it says could not be grounded in
+    anything. It is the third member of a family — `UnreadableAuthority` for a page an authority
+    refused (entry 27) and `InteractiveTool` for one that asks questions instead of answering
+    (entries 59, 60) — and the family's rule is the same: **a next step the traveller can take and
+    this program may not.**
+
+    `appointed_by` is the warrant, and the reason it is required rather than optional. Without it
+    this is a commercial URL; with it, it is a record that the destination's own government said
+    this is where its guidance lives. A traveller shown one must be able to see who sent them.
+    """
+
+    topic: GuidanceTopic
+    url: AnyHttpUrl
+    provider: str = Field(min_length=1)
+    appointed_by: str = Field(min_length=1)
+    """The approved government page that linked it."""
+
+
 class InteractiveTool(StrictModel):
     """An official page that *works out* an answer by questioning the traveller, not stating it.
 
@@ -267,6 +295,10 @@ class DestinationConfig(StrictModel):
 
     official_tools: list[InteractiveTool] = Field(default_factory=list)
     """Official questionnaires that answer a question this destination publishes no page for."""
+
+    delegated_services: list[DelegatedService] = Field(default_factory=list)
+    """Companies this destination's own pages send the traveller to for a role it publishes no page
+    for. Named, never read, never cited — see `DelegatedService`."""
 
     decision_is_unverified: bool = False
     """True when no page could be confirmed as saying whether a visa is needed, *and* the reason is
@@ -387,6 +419,49 @@ class DestinationConfig(StrictModel):
             listed = ", ".join(untrusted)
             raise ValueError(f"configured sources are not on a trusted domain: {listed}")
         return self
+
+
+class ServiceProvider(StrictModel):
+    """A commercial company a government delegates visa services to.
+
+    **It is not an authority and this type must never be mistaken for one.** Nothing here may be
+    fetched, read, quoted, cited, or counted as a source. The single thing a provider may do is be
+    *named* to a traveller as a next step, and only when a page on the destination's own approved
+    government domain linked it — which is DECISIONS entry 27's rule for a refused page and entries
+    59 and 60's for a questionnaire, applied to guidance an authority publishes by delegation.
+    """
+
+    domain: str = Field(min_length=3)
+    name: str = Field(min_length=1)
+    note: str = ""
+
+
+class ServiceProviderRegistry(StrictModel):
+    """The reviewed list of delegates, from `config/service_providers.yaml`."""
+
+    schema_version: Literal[1]
+    providers: list[ServiceProvider] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _domains_are_registrable_and_unique(self) -> "ServiceProviderRegistry":
+        seen: set[str] = set()
+        for provider in self.providers:
+            domain = provider.domain.lower().strip(".")
+            if domain != provider.domain:
+                raise ValueError(f"{provider.domain!r} must be written lowercase and unpadded")
+            if "/" in domain or ":" in domain:
+                raise ValueError(f"{provider.domain!r} must be a bare domain, not a URL")
+            if domain in seen:
+                raise ValueError(f"{provider.domain!r} is listed twice")
+            seen.add(domain)
+        return self
+
+    @property
+    def domains(self) -> frozenset[str]:
+        return frozenset(provider.domain for provider in self.providers)
+
+    def named(self, domain: str) -> ServiceProvider | None:
+        return next((p for p in self.providers if p.domain == domain.lower()), None)
 
 
 class DestinationRegistry(StrictModel):
@@ -644,6 +719,19 @@ class VisaPlan(StrictModel):
     rather than in a footnote. A tool is never a substitute for the evidence it stands in for: one
     for `document_checklist` still leaves `application_document_source_ids` empty, so
     `validate_absent_checklist` still forbids listing any requirement (entry 60).
+    """
+
+    delegated_services: list[DelegatedService] = Field(default_factory=list)
+    """Companies the destination's own pages send the traveller to for a question no page answered.
+
+    Set by the application from the resolved corridor, never by the model, and the URL is one this
+    program's crawler read out of an approved government page's markup — never a string a model
+    produced from page text. That distinction is the safety argument: this is a link a traveller
+    will follow, for the checklist.
+
+    Like a tool, it fills nothing. One for `document_checklist` still leaves
+    `application_document_source_ids` empty, so `validate_absent_checklist` still forbids the plan
+    from listing a single requirement.
     """
 
     @property

@@ -86,6 +86,17 @@ def build_research_packet(
                 }
                 for tool in destination.official_tools
             ],
+            # Where the authority contracts the work out. Addresses only: none of these was
+            # fetched, so there is nothing to quote and deliberately no field to quote it into.
+            "delegated_services": [
+                {
+                    "topic": service.topic,
+                    "url": str(service.url),
+                    "provider": service.provider,
+                    "appointed_by": service.appointed_by,
+                }
+                for service in destination.delegated_services
+            ],
         },
         "traveller_profile": {
             **traveller_profile.model_dump(mode="json"),
@@ -265,6 +276,7 @@ class OpenAIVisaPlanExtractor:
                 # Straight from the configuration, never from the draft: the traveller is being
                 # sent to this URL, so it has to be one an authority published.
                 official_tools=destination.official_tools,
+                delegated_services=destination.delegated_services,
             )
         except ValidationError as exc:
             raise LLMExtractionError("Model output failed source and schema validation") from exc

@@ -178,6 +178,44 @@ function toolCallout(tool) {
   return callout;
 }
 
+const DELEGATE_TOPICS = {
+  visa_decision: "whether you need a visa",
+  document_checklist: "the documents you will need",
+  application_route: "how and where to apply",
+  fees: "what it costs",
+  processing_times: "how long it takes",
+  general_entry: "the entry requirements for your trip",
+};
+
+function delegatesFor(plan, topic) {
+  return (plan.delegated_services || []).filter((service) => service.topic === topic);
+}
+
+function delegateCallout(service) {
+  const gives = DELEGATE_TOPICS[service.topic] || "the answer for your own trip";
+  const callout = element("div", "decision-tool decision-tool--delegated");
+  callout.append(element("p", "decision-tool-title", `Published by ${service.provider}, not by the government`));
+  const body = element("p", "", `The authority does not publish ${gives} on its own website. Its own page at `);
+  body.append(externalLink(service.appointed_by, service.appointed_by));
+  body.append(document.createTextNode(" sends you to "));
+  body.append(externalLink(service.url, service.url));
+  // The honest limit, said where the link is rather than in a footnote. This is a commercial site,
+  // so nothing in this plan was read from it and nothing here can vouch for what it says.
+  body.append(document.createTextNode(", a company it contracts with. We have not read that site and nothing in this plan comes from it \u2014 check it against the government page above."));
+  callout.append(body);
+  return callout;
+}
+
+function appendDelegates(container, plan, topic, seen) {
+  delegatesFor(plan, topic).forEach((service) => {
+    if (seen) {
+      if (seen.has(service.url)) return;
+      seen.add(service.url);
+    }
+    container.append(delegateCallout(service));
+  });
+}
+
 function appendTools(container, plan, topic, seen) {
   toolsFor(plan, topic).forEach((tool) => {
     // One page can settle several questions, and each is a different answer worth giving — France's
@@ -215,6 +253,7 @@ function renderDecision(plan, ctx) {
   }
   container.append(element("p", "lead", `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`));
   appendTools(container, plan, "visa_decision");
+  appendDelegates(container, plan, "visa_decision");
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
   return container;
 }
@@ -225,9 +264,11 @@ function renderApplicationLocation(plan, ctx) {
   if (!location) {
     container.append(element("p", "lead", "The application location remains unresolved."));
     appendTools(container, plan, "application_route");
+    appendDelegates(container, plan, "application_route");
     return container;
   }
   appendTools(container, plan, "application_route");
+  appendDelegates(container, plan, "application_route");
 
   const grid = element("div", "detail-grid");
   const details = [
@@ -264,14 +305,22 @@ function renderRequirements(plan, ctx) {
   const { container } = panel("Visa application documents", "Official checklist");
 
   if (!plan.requirements.length) {
-    container.append(
-      element(
-        "p",
-        "lead",
-        "No official page lists the documents for this application. The authority publishes them through its own questionnaire instead.",
-      ),
-    );
+    // Three different reasons end up here and the sentence has to be true of the one that applies.
+    // Saying "through its own questionnaire" when the authority actually contracted the work out
+    // would misdescribe who published the checklist, which is the thing the reader has to judge.
+    const viaTool = toolsFor(plan, "document_checklist").length > 0;
+    const viaDelegate = delegatesFor(plan, "document_checklist").length > 0;
+    let why = "No official page lists the documents for this application.";
+    if (viaTool && viaDelegate) {
+      why += " The authority publishes them through its own questionnaire and through a company it contracts with.";
+    } else if (viaTool) {
+      why += " The authority publishes them through its own questionnaire instead.";
+    } else if (viaDelegate) {
+      why += " The authority does not publish them itself \u2014 it sends applicants to a company it contracts with.";
+    }
+    container.append(element("p", "lead", why));
     appendTools(container, plan, "document_checklist");
+    appendDelegates(container, plan, "document_checklist");
     return container;
   }
 
@@ -283,6 +332,7 @@ function renderRequirements(plan, ctx) {
     ),
   );
   appendTools(container, plan, "document_checklist");
+  appendDelegates(container, plan, "document_checklist");
   appendIfFilled(container, renderEvidence(plan.application_document_source_ids, ctx, "requirements"));
 
   const list = element("div", "requirement-list");
@@ -359,8 +409,10 @@ function renderReliability(plan) {
   // Fees, processing times and entry conditions have no panel of their own — they live inside the
   // steps — so a questionnaire holding one is offered here rather than dropped.
   const shown = new Set();
-  ["fees", "processing_times", "general_entry"].forEach((topic) =>
-    appendTools(container, plan, topic, shown));
+  ["fees", "processing_times", "general_entry"].forEach((topic) => {
+    appendTools(container, plan, topic, shown);
+    appendDelegates(container, plan, topic, shown);
+  });
   container.append(issueBlock("Unresolved questions", plan.unresolved_questions));
   container.append(
     element(

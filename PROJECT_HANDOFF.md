@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-27 — update this line when you touch the handoff |
-| **Tests** | 567 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 578 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has fifty-seven rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has sixty rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -123,8 +123,9 @@ does not: a build reads 3–15% of what it records, and the answering page for a
 one hop below something recorded and never opened. Fixed and proved on the Netherlands — gateway
 pages read 0 → 185, tourism checklists held 5 → 14, and `netherlands/PH/PH` now answers four of six
 roles from the corpus. Nine countries are untested and the gate makes six of them no-ops, so the work
-is small. **Item 36 is what it exposed and is the bigger finding**: for most residences the
-Netherlands publishes its checklist on VFS Global, which the trust rule refuses.
+is small. **Item 36 is done** (entry 89): where an authority contracts its guidance out, the
+delegate is now named to the traveller — with the page that appointed it, never read, never cited,
+and still unable to fill the role.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
@@ -496,7 +497,11 @@ re-add the amendment history here.
    forks**, because for most residences the checklist is published on `vfsglobal.com`. Nigeria is
    handled by Belgium's TLScontact. The guidance is official and current and sits on a domain the
    trust rule refuses, correctly. This is entry 82's form and entry 59's questionnaire in a third
-   shape, and the widest of the three. TODO item 36; the other nine countries are uncounted.
+   shape, and the widest of the three. **The answering half is now built** (entry 89): such a page
+   is *named* to the traveller with the government page that appointed it, never read and never
+   cited, so `netherlands/PK/PK` now hands over the checklist link it previously withheld. What
+   remains uncounted is the other nine countries, and nothing verifies a delegate's URL still
+   resolves.
 
 32. **Nine of the ten corpora have never been rebuilt with the family reservation.** Entry 88 proved
    it on the Netherlands only. The gate makes it inert where there is no qualifying family — CA, JP

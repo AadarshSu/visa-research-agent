@@ -32,6 +32,7 @@ from typing import get_args
 import httpx
 from pydantic import Field
 
+from visa_research_agent.config.loader import get_service_providers
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus, merge
 from visa_research_agent.discovery.crawl import (
     DEFAULT_KEPT_TEXT_CHARACTERS,
@@ -53,6 +54,7 @@ from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, i
 from visa_research_agent.domain.models import (
     DestinationConfig,
     FailureOutcome,
+    ServiceProviderRegistry,
     StrictModel,
     TravelPurpose,
 )
@@ -219,6 +221,8 @@ class CorpusBuild(StrictModel):
     """Entries the corpus holds afterwards, which is never fewer than before."""
 
     unreadable: int = 0
+    delegated: int = 0
+    """How many places this country's own pages sent the traveller that we may name but not read."""
     by_depth: dict[int, int] = Field(default_factory=dict)
     """How far this crawl reached. A means rather than the point: the corpus exists so a live
     corridor does not re-fetch for 50+ seconds, and *which pages exist* does not vary by traveller
@@ -398,6 +402,7 @@ async def build_country_corpus(
     now: datetime,
     lexicon: Lexicon | None = None,
     registry: CountryRegistry | None = None,
+    providers: ServiceProviderRegistry | None = None,
     maximum_pages: int = DEFAULT_CORPUS_PAGES,
     maximum_depth: int = DEFAULT_CORPUS_DEPTH,
     maximum_pages_per_host: int = DEFAULT_CORPUS_PAGES_PER_HOST,
@@ -469,6 +474,7 @@ async def build_country_corpus(
         family_slugs=frozenset(other.slug for other in every_country.countries),
         family_share=family_share,
         family_pattern=CORPUS_FAMILY_PATTERN,
+        provider_domains=(providers or get_service_providers()).domains,
     )
     crawled = await crawler.crawl(destination, seeds)
     pdfs_read = 0
@@ -493,7 +499,12 @@ async def build_country_corpus(
     # The domains are refreshed to what the registry says now, so the file records the set actually
     # used. The entries are not filtered by it: `entries_within` applies trust when the corpus is
     # *read*, which is what lets a later narrowing take effect without deleting what was found.
-    after = merge(before.model_copy(update={"trusted_domains": trusted}), entries, now=now)
+    after = merge(
+        before.model_copy(update={"trusted_domains": trusted}),
+        entries,
+        now=now,
+        delegations=crawler.delegations.values(),
+    )
     return after, CorpusBuild(
         country_code=country.code,
         queries=len(queries),
@@ -503,6 +514,7 @@ async def build_country_corpus(
         added=sum(1 for entry in entries if entry.url not in known),
         total=len(after.entries),
         unreadable=sum(1 for entry in entries if entry.status == "unreadable"),
+        delegated=len(after.delegations),
         by_depth=Counter(entry.depth for entry in entries),
         lost_hosts=lost_reasons,
         lost_host_outcomes=lost_outcomes,

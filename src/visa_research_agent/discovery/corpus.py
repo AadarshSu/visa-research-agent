@@ -35,7 +35,7 @@ from typing import Literal
 
 from pydantic import Field, ValidationError, field_validator
 
-from visa_research_agent.discovery.models import PageLink
+from visa_research_agent.discovery.models import Delegation, PageLink
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.domain.trust import host_is_within, host_of
 from visa_research_agent.research.errors import VisaResearchError
@@ -144,6 +144,13 @@ class CountryCorpus(StrictModel):
     built_at: datetime
     entries: list[CorpusEntry] = Field(default_factory=list)
 
+    delegations: list[Delegation] = Field(default_factory=list)
+    """Where this country's own pages sent the traveller for guidance it does not publish itself.
+
+    Stored beside the entries and never among them, because they are not pages this project may
+    read. A corridor may name one; nothing may cite one. See `Delegation` and DECISIONS entry 89.
+    """
+
     _validate_built_at = field_validator("built_at")(
         lambda value: _require_aware(value, "built_at")
     )
@@ -175,6 +182,7 @@ def merge(
     found: Iterable[CorpusEntry],
     *,
     now: datetime,
+    delegations: Iterable[Delegation] = (),
 ) -> CountryCorpus:
     """Fold a fresh crawl into a corpus, adding and updating but **never removing**.
 
@@ -218,10 +226,17 @@ def merge(
         elif entry.status == "unreadable" and existing.status == "unreadable":
             existing.detail = entry.detail
 
+    # Additive like the entries, and for the same reason: a crawl that did not happen to walk the
+    # page naming a delegate has not learned the authority stopped delegating.
+    by_delegate = {item.url: item for item in corpus.delegations}
+    for delegation in delegations:
+        by_delegate.setdefault(delegation.url, delegation)
+
     return corpus.model_copy(
         update={
             "built_at": now,
             "entries": sorted(by_url.values(), key=lambda item: item.url),
+            "delegations": sorted(by_delegate.values(), key=lambda item: item.url),
         }
     )
 

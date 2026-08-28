@@ -52,6 +52,20 @@ Follow these rules:
      empty, rule 8a still applies in full, and a plan that lists requirements behind one is
      rejected. Say the authority publishes its document list through that questionnaire and point
      the traveller at it; do not reconstruct the list from anything else.
+8d. destination.delegated_services lists companies the authority contracts with and sends applicants
+   to — VFS Global, TLScontact and the like. These are NOT government sites and were NOT read: only
+   the address and the government page that linked it are given, and there is no content here
+   because this program may not fetch them. Each carries the topic the authority hands over.
+   - They are next steps, never evidence, and the limit is stricter than a tool's: a tool is the
+     authority's own page, this is somebody else's. Never state what one contains, never treat a
+     provider's name as an authority, and never cite one as a source.
+   - Record an unresolved question naming what the authority delegates and to whom, and say plainly
+     that the guidance is published by that company rather than by the government, so the traveller
+     knows to check it against the government page that appointed it.
+   - A delegated document_checklist does NOT permit a checklist, exactly as a tool does not.
+     application_document_source_ids stays empty and rule 8a applies in full.
+   - It never sets decision_is_unverified. That flag has two causes and this is not one of them: a
+     company's website is not an authority withholding a page, and it is not an official tool.
 
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it

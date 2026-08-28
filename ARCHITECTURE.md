@@ -596,6 +596,7 @@ remember", so they are also worth reading in one place.
 | **Page corpus** | **country** | **additive, never pruned** | **Yes** — the candidate source | `var/corpus/`, `discovery/corpus.py` |
 | **Page text** | **country** | **additive; replaced per URL** | **Yes** — the model selector reads it to choose what to fetch | `var/pagetext/`, `discovery/page_text.py` |
 | **Selection oracle** | corridor | committed, hand-edited | **No** — it grades runs, it never serves one | `oracle/selection_oracle.yaml`, `discovery/selection_recall.py` |
+| **Delegated services** | **country** | additive, never pruned | **Yes** — named to the traveller, never fetched | inside `var/corpus/`, `config/service_providers.yaml` |
 
 ### The corpus stores the link; the index stores the page
 

@@ -20,7 +20,7 @@ from visa_research_agent.domain.models import (
     StrictModel,
     TravelPurpose,
 )
-from visa_research_agent.domain.trust import host_of
+from visa_research_agent.domain.trust import host_of, registrable_domain
 
 # Built from the domain's `GuidanceTopic` rather than restated, so a role a page can fill and a
 # topic a plan can offer a tool for can never drift apart. `irrelevant` is discovery's alone: it
@@ -156,6 +156,27 @@ class RoleScores(StrictModel):
         return max(others) if others else 0.0
 
 
+class Delegation(StrictModel):
+    """A commercial service an approved government page pointed the traveller at.
+
+    **It is deliberately not a `CandidatePage`, and the type is the enforcement.** There is nowhere
+    here to put a score, a role, an excerpt or a body, because none of those may ever exist for it:
+    the page is not fetched, not read, not quoted, and cannot fill a role or become a source. The
+    same shape as `UnreadableAuthority` (entry 27), for the same reason — a next step the traveller
+    can take and this program may not.
+
+    `named_on` is the warrant and is why the two fields travel together. Without it the row is a
+    commercial URL somebody found somewhere; with it, it is a record that the destination's own
+    government said this is where its guidance lives.
+    """
+
+    url: str = Field(min_length=1)
+    named_on: str = Field(min_length=1)
+    """The approved government page that linked it."""
+
+    link_text: str = Field(default="", max_length=300)
+
+
 class CandidatePage(StrictModel):
     """A page under consideration, with everything known about it so far."""
 
@@ -266,6 +287,22 @@ class ResolvedTool(StrictModel):
     url: str = Field(min_length=1)
 
 
+class ResolvedDelegate(StrictModel):
+    """A company this destination's own pages send the traveller to, for a role no page answers.
+
+    `named_on` travels with it everywhere, because it is the only thing that makes the row
+    legitimate: a commercial URL an approved government page linked, not a commercial URL. A
+    traveller shown this must be able to see who sent them.
+
+    It fills nothing. There is no `source_id` here and no way to reach one, so a plan naming a
+    delegate for `document_checklist` is still forbidden from listing a single requirement.
+    """
+
+    role: GuidanceTopic
+    url: str = Field(min_length=1)
+    named_on: str = Field(min_length=1)
+
+
 class ResolvedCorridor(StrictModel):
     """The sources discovery selected for one corridor, plus what it could not resolve."""
 
@@ -322,6 +359,9 @@ class ResolvedCorridor(StrictModel):
     resolves. That is the refusal discipline leaking, and it is the failure this field exists to
     prevent. See DECISIONS entry 32.
     """
+
+    delegated_services: list["ResolvedDelegate"] = Field(default_factory=list)
+    """Where the authority sends this traveller for a role it does not publish itself."""
 
     interactive_tools: list["ResolvedTool"] = Field(default_factory=list)
     """Pages that were read and found to *ask* a question rather than answer it.
@@ -525,6 +565,21 @@ class ResolvedCorridor(StrictModel):
                 ),
             }
             for tool in tools
+        ]
+        # Where the authority contracts the work out. Same rule as a tool — only for a role no
+        # source filled — and the same shape: an address and who sent the traveller there, with no
+        # field anything could be quoted from. The provider's name is derived from the host rather
+        # than from any page, because nothing here was read.
+        payload["delegated_services"] = [
+            {
+                "topic": delegate.role,
+                "url": delegate.url,
+                "provider": registrable_domain(host_of(delegate.url)),
+                "appointed_by": delegate.named_on,
+            }
+            for role in ROLE_ORDER
+            for delegate in self.delegated_services
+            if delegate.role == role and delegate.role not in filled
         ]
         payload["decision_is_unverified"] = self.decision_is_unverified
         return DestinationConfig.model_validate(payload)

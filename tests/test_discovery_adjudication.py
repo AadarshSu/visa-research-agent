@@ -27,14 +27,34 @@ from visa_research_agent.discovery.adjudication import (
     validated_choices,
     validated_tools,
 )
-from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink
+from visa_research_agent.discovery.models import (
+    CandidatePage,
+    Corridor,
+    DiscoveryRole,
+    PageLink,
+    ResolvedSource,
+    ResolvedTool,
+)
 from visa_research_agent.discovery.resolver import (
     AdjudicationRefusal,
     CorridorResolver,
     FetchedShortlist,
+    RoleDecision,
 )
 
 pytestmark = pytest.mark.anyio
+
+
+def _unpack(
+    decision: RoleDecision,
+) -> tuple[list[ResolvedSource], list[DiscoveryRole], int, list[ResolvedTool]]:
+    """The four things these tests assert on, from the record `_decide_roles` now returns.
+
+    Kept as a helper rather than rewriting every assertion: what this file is about is which page
+    fills which role, and that did not change when delegated services were added beside it.
+    """
+
+    return decision.sources, decision.unresolved, decision.model_calls, decision.tools
 
 
 def corridor() -> Corridor:
@@ -205,8 +225,10 @@ async def test_a_refusal_is_honoured_rather_than_filled_in() -> None:
     )
     notes: list[str] = []
 
-    sources, unresolved, calls, _ = await resolver_with(adjudicator)._decide_roles(
-        destination(), corridor(), shortlist(), notes
+    sources, unresolved, calls, _ = _unpack(
+        await resolver_with(adjudicator)._decide_roles(
+            destination(), corridor(), shortlist(), notes
+        )
     )
 
     assert calls == 1
@@ -228,8 +250,8 @@ async def test_a_chosen_page_is_recorded_as_decided_by_the_model() -> None:
         )
     )
 
-    sources, _, _, _ = await resolver_with(adjudicator)._decide_roles(
-        destination(), corridor(), shortlist(), []
+    sources, _, _, _ = _unpack(
+        await resolver_with(adjudicator)._decide_roles(destination(), corridor(), shortlist(), [])
     )
 
     assert [source.decided_by for source in sources] == ["model"]
@@ -258,8 +280,10 @@ async def test_a_momentary_failure_is_retried_rather_than_costing_the_corridor()
     )
     notes: list[str] = []
 
-    sources, _, calls, _ = await resolver_with(adjudicator)._decide_roles(
-        destination(), corridor(), shortlist(), notes
+    sources, _, calls, _ = _unpack(
+        await resolver_with(adjudicator)._decide_roles(
+            destination(), corridor(), shortlist(), notes
+        )
     )
 
     assert calls == 2
@@ -289,8 +313,8 @@ async def test_a_call_that_keeps_failing_refuses_instead_of_using_the_heuristic(
 
 
 async def test_without_an_adjudicator_nothing_changes_and_no_call_is_made() -> None:
-    sources, _, calls, _ = await resolver_with(None)._decide_roles(
-        destination(), corridor(), shortlist(), []
+    sources, _, calls, _ = _unpack(
+        await resolver_with(None)._decide_roles(destination(), corridor(), shortlist(), [])
     )
 
     assert calls == 0
@@ -570,8 +594,10 @@ async def test_a_page_that_asks_the_decision_resolves_the_corridor_instead_of_lo
     )
     notes: list[str] = []
 
-    sources, unresolved, _, tools = await resolver_with(adjudicator)._decide_roles(
-        destination(), corridor(), shortlist(), notes
+    sources, unresolved, _, tools = _unpack(
+        await resolver_with(adjudicator)._decide_roles(
+            destination(), corridor(), shortlist(), notes
+        )
     )
 
     assert [(tool.role, tool.url) for tool in tools] == [("visa_decision", DETAIL_INDIA)]
@@ -604,8 +630,8 @@ async def test_a_tool_is_carried_for_any_role_not_only_the_decision() -> None:
         )
     )
 
-    sources, unresolved, _, tools = await resolver_with(adjudicator)._decide_roles(
-        destination(), corridor(), shortlist(), []
+    sources, unresolved, _, tools = _unpack(
+        await resolver_with(adjudicator)._decide_roles(destination(), corridor(), shortlist(), [])
     )
 
     assert [tool.role for tool in tools] == ["document_checklist"]
@@ -618,8 +644,8 @@ async def test_the_heuristic_path_never_names_a_tool() -> None:
     """Whether a page is a questionnaire is a question about meaning, and entry 57 is what keyword
     matching meaning cost. With no adjudicator the corridor behaves exactly as it did before."""
 
-    _, _, calls, tools = await resolver_with(None)._decide_roles(
-        destination(), corridor(), shortlist(), []
+    _, _, calls, tools = _unpack(
+        await resolver_with(None)._decide_roles(destination(), corridor(), shortlist(), [])
     )
 
     assert calls == 0

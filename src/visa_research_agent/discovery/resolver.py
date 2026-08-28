@@ -34,6 +34,7 @@ from visa_research_agent.discovery.adjudication import (
     load_blocked_prompt,
     validated_blocked_choices,
     validated_choices,
+    validated_delegates,
     validated_tools,
 )
 from visa_research_agent.discovery.corpus import CountryCorpus, canonical_key
@@ -54,10 +55,12 @@ from visa_research_agent.discovery.models import (
     ROLE_ORDER,
     CandidatePage,
     Corridor,
+    Delegation,
     DiscoveryRole,
     PageLink,
     RefusalCause,
     ResolvedCorridor,
+    ResolvedDelegate,
     ResolvedSource,
     ResolvedTool,
     RoleScores,
@@ -350,6 +353,23 @@ def clean_title(raw: str | None, fallback: str) -> str:
                 title = head
                 break
     return title[:90] or fallback
+
+
+@dataclass
+class RoleDecision:
+    """What the role step concluded: sources, and the two kinds of next step that fill nothing.
+
+    A dataclass rather than a tuple because it has grown twice — questionnaires in entry 60,
+    delegated services in entry 89 — and each time every caller had to be counted again to add a
+    position. Both extra lists are deliberately *not* sources: naming one resolves nothing and
+    cites nothing.
+    """
+
+    sources: list[ResolvedSource]
+    unresolved: list[DiscoveryRole]
+    model_calls: int = 0
+    tools: list[ResolvedTool] = field(default_factory=list)
+    delegates: list[ResolvedDelegate] = field(default_factory=list)
 
 
 class CorridorResolver:
@@ -692,9 +712,12 @@ class CorridorResolver:
 
         # 5. Assign roles from the combined evidence.
         try:
-            sources, unresolved, model_calls, tools = await self._decide_roles(
-                destination, corridor, fetched, notes
-            )
+            decision = await self._decide_roles(destination, corridor, fetched, notes)
+            sources = decision.sources
+            unresolved = decision.unresolved
+            tools = decision.tools
+            delegates = decision.delegates
+            model_calls = decision.model_calls
         except AdjudicationRefusal as exc:
             # Refuse rather than fall back to the heuristic. Degrading to the decider that named
             # Brazil's Riyadh page as a document checklist is not the conservative option — see
@@ -719,6 +742,9 @@ class CorridorResolver:
                     "so it was not carried"
                 )
         tools = [tool for tool in tools if tool.role not in filled]
+        # The same suppression for a delegated service, and it must be the same: a role a page
+        # answers does not also need the traveller sent to a contractor.
+        delegates = [delegate for delegate in delegates if delegate.role not in filled]
         if decision_found or not refused:
             blocking = []
         elif self.adjudicator is None:
@@ -742,6 +768,7 @@ class CorridorResolver:
             inaccessible_urls=refused,
             decision_blocking_urls=blocking,
             interactive_tools=tools,
+            delegated_services=delegates,
             queries=queries,
             pages_fetched=len(shortlist),
             model_calls=model_calls,
@@ -1224,7 +1251,7 @@ class CorridorResolver:
         corridor: Corridor,
         fetched: "FetchedShortlist",
         notes: list[str],
-    ) -> tuple[list[ResolvedSource], list[DiscoveryRole], int, list[ResolvedTool]]:
+    ) -> RoleDecision:
         """Choose the page for each role, by judgement when an adjudicator is configured.
 
         The fourth return is the interactive tools the model read and judged to hold a role's
@@ -1251,12 +1278,13 @@ class CorridorResolver:
 
         if self.adjudicator is None or not fetched.candidates:
             sources, unresolved = self._assign_roles(destination, fetched.candidates, notes)
-            return sources, unresolved, 0, []
+            return RoleDecision(sources=sources, unresolved=unresolved)
 
         # The traveller's own country words, so a long page is cut around them rather than at a
         # fixed offset. Nationality and residence only: the destination is named on every page it
         # publishes, so anchoring on it would anchor on nothing.
         nationality, residence = resolve_corridor_countries(corridor, self.countries)
+        delegations = self._delegations_for(destination)
         packet = build_candidate_packet(
             corridor,
             fetched.by_id,
@@ -1265,6 +1293,7 @@ class CorridorResolver:
             excerpt_head_characters=self.excerpt_head_characters,
             excerpt_window_characters=self.excerpt_window_characters,
             anchor_terms=sorted({*nationality.text_tokens, *residence.text_tokens}),
+            delegations=delegations,
         )
         adjudication, model_calls = await self._adjudicate_with_one_retry(packet, notes)
 
@@ -1282,7 +1311,51 @@ class CorridorResolver:
             url = fetched.by_id[source_id].link.url
             tools.append(ResolvedTool(role=role, url=url))
             notes.append(f"{url} answers {role} interactively: {reason}")
-        return sources, unresolved, model_calls, tools
+
+        delegated, delegate_discarded = validated_delegates(adjudication, delegations)
+        notes.extend(delegate_discarded)
+        delegates: list[ResolvedDelegate] = []
+        filled = {role for source in sources for role in source.roles}
+        for role in ROLE_ORDER:
+            chosen_delegate = delegated.get(role)
+            if chosen_delegate is None or role == "irrelevant" or role in filled:
+                continue
+            delegate_id, reason = chosen_delegate
+            record = delegations[delegate_id]
+            delegates.append(ResolvedDelegate(role=role, url=record.url, named_on=record.named_on))
+            notes.append(
+                f"{record.url} is where {destination.display_name} sends this traveller for "
+                f"{role}, according to {record.named_on}: {reason}"
+            )
+        return RoleDecision(
+            sources=sources,
+            unresolved=unresolved,
+            model_calls=model_calls,
+            tools=tools,
+            delegates=delegates,
+        )
+
+    def _delegations_for(self, destination: DestinationConfig) -> dict[str, Delegation]:
+        """The recorded places this country's own pages send a traveller, as selectable ids.
+
+        Ids rather than URLs, and a separate namespace from `source_id`, so that a model can only
+        ever *pick* one. Nothing here was fetched and nothing here has text, which is why they are
+        not candidates and cannot be scored, cited or read.
+        """
+
+        if self.corpus is None:
+            return {}
+        corpus = self.corpus
+        approved = destination.trusted_domains
+        return {
+            f"delegate-{index}": record
+            for index, record in enumerate(
+                sorted(corpus.delegations, key=lambda item: item.url), start=1
+            )
+            # The warrant is re-checked here, not assumed from the store: a domain narrowed since
+            # the corpus was built must stop vouching for what it once linked.
+            if host_is_within(host_of(record.named_on), approved)
+        }
 
     async def _adjudicate_with_one_retry(
         self, packet: str, notes: list[str]

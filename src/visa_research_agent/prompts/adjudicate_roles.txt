@@ -69,8 +69,30 @@ Follow these rules:
    and "an official tool holds it" are different things to tell a traveller, and the second one
    sends them somewhere specific, so it has to be true.
 
-12. Return only the structured output requested by the schema.
-13. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
+12. `delegates` is for a role you returned null for **because the authority contracts the work
+   out and says so on its own page**. The packet's `delegated_services` lists addresses this
+   program's crawler found linked from approved government pages — VFS Global, TLScontact and the
+   like. Choose at most one per role, by `delegate_id`.
+
+   Name one only when both are true:
+
+   a. no candidate page answers that role for this traveller; and
+   b. the guidance genuinely lives there — a candidate you read says so, in words like "on the VFS
+      Global website you'll find a checklist with the documents you need", or the delegate's own
+      address is plainly the application service for this corridor.
+
+   **You are choosing from a list, never writing a URL.** A `delegate_id` that is not in the packet
+   is discarded and the role is left unfilled. None of these pages was fetched and none has text
+   here, because this program may not read a company's site — so do not guess what one contains,
+   and do not name one merely because the authority mentions the company in passing. Where the
+   contractor only takes the appointment and the authority publishes the documents itself, the role
+   is answered by the page, not by the delegate.
+
+   Naming a delegate fills nothing. It will not be cited, and for `document_checklist` the plan is
+   still forbidden from listing a single document.
+
+13. Return only the structured output requested by the schema.
+14. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
    the page says around each mention of the traveller's own country. `[…]` marks text left out.
    Do not read across one — two passages either side of it may be pages apart — and do not treat a
    list that ends at one as complete. What is present is still quoted verbatim, so a page that

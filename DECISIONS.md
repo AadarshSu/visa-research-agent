@@ -98,6 +98,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
+| [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
 | [86](#86-matched-budget-the-selector-is-not-7-points-better-than-ranking-it-is-41) | **Matched budget: +41 points, not +7** — entry 85 compared configurations, not selectors |
@@ -137,6 +138,99 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 89. Guidance an authority contracts out: named, never read, never believed
+**2026-08-28 · asked by the project owner, built, proved on the corridor that motivated it**
+
+Entry 88 found that for most residences the Netherlands does not publish its document checklist on
+any government domain — it says, on its own page, "on the VFS Global website you'll find a checklist
+with the documents you need". That entry called it a ceiling. **It is a ceiling on *reading*, not on
+*answering*, and treating the two as the same thing was the mistake.** The owner said so, twice, and
+was right: entry 27 already names a page an authority refused, entries 59 and 60 already name a
+questionnaire that asks instead of answering. A delegated service is the third member of that family
+and the rule is the family's rule — *a next step the traveller can take and this program may not.*
+
+### What was refused, and why it is not this
+
+Trusting `vfsglobal.com` as a source, or crawling it into the corpus, was considered and declined.
+It is **one domain serving around sixty destinations**, so `belongs_to_destination` — the check that
+stops the United States embassy's page about Vietnam answering a Vietnam corridor — has no analogue
+there. The artefact at stake is the document checklist, which is the single output this project
+exists to get right, and a contractor's copy can drift from the authority's with nothing able to
+detect it. Entry 2 stands: officialness is a property of who controls the domain.
+
+Naming needs none of that, and gets most of the value.
+
+### The warrant is two independent things, and one of them is not the government page
+
+The obvious design — the authority's own page linked it, so it is legitimate — is **not enough**, and
+the reason is the one that governs everything else here. The link is extracted from HTML, and HTML is
+`untrusted_content`. A compromised or spoofed government page could hand a traveller any address at
+all, *for the checklist*. So, exactly as `auto_trusted_domains` demands governmental **and** own-TLD:
+
+1. an approved page on the destination's own government domain linked it, and
+2. the registrable domain is on `config/service_providers.yaml`, a committed reviewed list.
+
+Either alone fails closed. The list is deliberately **not** `authority_domains.yaml`: that file
+records who may be *believed*, this one records who may be *pointed at*, and merging them would put
+a commercial contractor one boolean away from being citable.
+
+### The model selects; it may never supply
+
+`crawl._expand` still refuses the off-domain link — `is_crawlable` is untouched — and now writes it
+down on the way past. The adjudicator is handed `delegated_services` as **addresses with no content
+field**, the same shape `build_blocked_packet` uses for a refused page and for the same reason:
+nobody read it, so there is nothing that could be quoted. It answers with a `delegate_id` indexing
+the list our crawler built, and `validated_delegates` discards anything else exactly as an invented
+`source_id` is discarded.
+
+**So the URL a traveller follows always came from an `href` our own code read off an approved
+government page, never from a model reading page text.** That is the whole safety argument, and it
+is why the fast version — have the model extract the URL from the excerpt, which would have worked
+today for Singapore and Japan — was not built.
+
+### It fills nothing, and the checks that matter still fire
+
+`application_document_source_ids` stays empty, so `validate_absent_checklist` still forbids listing a
+single requirement. It never sets `decision_is_unverified`: that flag has two causes — an authority
+withholding a page, and an official tool — and a company's website is neither. It is dropped for any
+role a source already answered. `Delegation` and `DelegatedService` have nowhere to put an excerpt,
+which is the same enforcement-by-type as `Selection` in entry 83.
+
+### Measured on the Netherlands, and proved on the corridor that motivated it
+
+A rebuild recorded **236 delegations**, and what they are matters more than the count: 44 are "track
+the status of your application", 30 are "find out which documents you need", the rest are appointment
+addresses and contact pages. Only the second kind is guidance, which is why the prompt says a
+contractor that merely takes the appointment does not answer the role.
+
+`netherlands/PK/PK/tourism`, end to end:
+
+```
+could not be identified:  visa_decision, document_checklist
+published by a company the authority contracts with:
+  document_checklist  https://visa.vfsglobal.com/one-pager/netherlands/pakistan/english
+                      named on .../schengen-visa/apply-pakistan
+```
+
+The checklist role is still **unfilled**, so the plan may not list a document — and the traveller is
+handed the page anyway, with the government page that appointed it. The model chose the one-pager
+over four appointment and tracking links on the same host, and grounded it in what the Dutch page
+says. Before this, that corridor said nothing about documents at all.
+
+### What is not settled
+
+- **The interface wording has not been read by a traveller.** It is amber rather than the tools'
+  green, states the limit beside the link rather than in a footnote, and the empty-checklist panel
+  now says which of three reasons applies instead of always claiming a questionnaire — but that is
+  a design judgement, not a measurement.
+- **Only the Netherlands has been rebuilt with recording on.** The other nine hold no delegations
+  yet, so the feature is inert for them.
+- **Nobody has checked whether a delegate's page still exists.** A dead contractor URL would be
+  named as confidently as a live one. It is a link rather than a claim, which is why this was not
+  treated as blocking, but it is the obvious next defect.
 
 ---
 

@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose fifty-seven rows are
+what has wasted the most time here — see the corrections table further down, whose sixty rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -205,6 +205,31 @@ produces a serious defect.
   questions — dual citizenship, travelling with family — are not in a corridor, and answering them is
   inventing traveller input on the one question where being wrong is most damaging. If it is ever
   revisited, the bar is in entry 59, and it must sit **on top of** naming the tool, never instead of it.
+- **Guidance an authority contracts out may be named, never read, and never believed (entry 89).**
+  The Netherlands tells most residences "on the VFS Global website you'll find a checklist with the
+  documents you need", so for those travellers the choice is naming the delegate or saying nothing.
+  It is entry 27's refused page and entry 60's questionnaire a third time: **a next step the
+  traveller can take and this program may not.**
+
+  **Trusting or crawling a contractor was considered and declined.** `vfsglobal.com` is one domain
+  serving ~60 destinations, so `belongs_to_destination` — what stops the US embassy's Vietnam page
+  answering a Vietnam corridor — has no analogue there, and the artefact at stake is the checklist.
+  Entry 2 stands. Do not add one to `authority_domains.yaml`; `config/service_providers.yaml` is a
+  separate file precisely so a delegate is never one boolean from being citable.
+
+  **The warrant is two independent things, and the government page is only one of them.** An
+  approved page linked it **and** its registrable domain is on the reviewed list — because the link
+  comes out of HTML, and HTML is `untrusted_content`: without the second half a spoofed page could
+  hand a traveller any address, for the checklist. Either alone fails closed.
+
+  **The model selects; it may never supply.** The crawler records the `href`, the packet carries
+  addresses with **no content field**, and `validated_delegates` discards any id it did not record —
+  so the URL a traveller follows was read by our code off a government page, never written by a
+  model. Do not "simplify" this into extracting the URL from the excerpt. Naming one fills nothing:
+  `application_document_source_ids` stays empty, `validate_absent_checklist` still forbids listing a
+  requirement, and it never sets `decision_is_unverified` — a company's site is not an authority
+  withholding a page and is not an official tool.
+
 - **A visa decision that could not be confirmed must be `null`, and the application enforces that.**
   Not the prompt: a model asked for null returned `true` in testing. A wrong yes or no about whether
   someone needs a visa is the most damaging thing this can say, so `decision_is_unverified` overrides
@@ -332,6 +357,9 @@ cause, and only running the thing showed it.
 | a family key can blank the first country it finds | the destination is named in its own path; all 219 got different keys (entry 88) |
 | opening the gateway buys a checklist per residence | 113 of 185 link nothing — the checklist is on VFS Global (entry 88) |
 | the biggest country-shaped family is the one worth crawling | Canada's is 176 travel advisories, Japan's 141 country pages (entry 88) |
+| a contractor's checklist is a ceiling on what we can offer | it is a ceiling on *reading*; naming it was always allowed (entry 89) |
+| the authority's own page linking it is warrant enough | the link comes out of HTML, which is untrusted content (entry 89) |
+| most contractor links are the guidance | 44 of 236 are "track your application"; 30 are documents (entry 89) |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
 | a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
 | an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |

@@ -54,6 +54,13 @@ the CLI does not offer it.
   model client (entry 87), and the recorded scores are exact input to it because the numeric text
   lift is off everywhere. Never reimplement it: a reimplementation disagreed with an observed run,
   while binding the real thing reproduced 26 of 26 recorded shortlists (entry 61).
+- **A delegated service is not a source and cannot become one.** Where an authority contracts its
+  guidance out — the Netherlands sends most residences to VFS Global for the document checklist —
+  the crawler records the `href` off the approved page and the plan *names* it. It is never fetched,
+  quoted or cited, and it fills no role. Two things must both hold before one is recorded: an
+  approved government page linked it, and its registrable domain is in
+  `config/service_providers.yaml`. The model picks by `delegate_id` from what we recorded and can
+  never supply a URL. Entry 89.
 - **`visa-discover selection-recall`** grades what a selector chose to read against
   `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it. Reads
   two files, calls nothing.

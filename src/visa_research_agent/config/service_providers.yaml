@@ -1,0 +1,53 @@
+# Commercial companies that governments delegate visa services to.
+#
+# **Nothing here is trusted, and that word is worth being exact about.** A domain in this file is
+# never fetched, never read, never quoted, and can never fill a role or become a source. The only
+# thing it may do is be *named* to a traveller as a next step, and only when a page on the
+# destination's own approved government domain linked it. That is DECISIONS entry 27's rule for a
+# refused page and entries 59 and 60's rule for a questionnaire, applied to a third case: guidance
+# the authority publishes by handing it to somebody else.
+#
+# **Why the list is needed at all, given the authority's own page is the warrant.** The link is
+# extracted from HTML, and HTML is untrusted content. Without a reviewed list, a compromised or
+# spoofed government page could point a traveller at an attacker's site — and it would be pointing
+# them at it for the document checklist, which is the single output this project exists to get
+# right. So two independent things must both hold, exactly as `auto_trusted_domains` requires two:
+# the destination's own government named it, **and** the registrable domain is on this list.
+#
+# **Why it is not `authority_domains.yaml`.** That file records who may be *believed*. This one
+# records who may be *pointed at*. Merging them would put a commercial contractor one boolean away
+# from being cited as a source, which is the whole failure DECISIONS entry 2 exists to prevent.
+#
+# Measured 2026-08-27, across the ten corpus countries: 292 Dutch pages, 14 Singaporean and several
+# Japanese, British, French, Emirati and Swedish ones hand the traveller to one of these. For the
+# Netherlands it is where the per-residence document checklist actually lives, so without this the
+# traveller is told nothing at all for most residences (DECISIONS entry 88).
+#
+# Adding a row is a review, not a code change. The bar: the company is named on the government pages
+# of several destinations as the place their own guidance or applications live.
+
+schema_version: 1
+
+providers:
+  - domain: vfsglobal.com
+    name: VFS Global
+    note: >-
+      The largest of them. Named on Dutch, Singaporean, Japanese, Indian and Danish government
+      pages. Address shape is usually visa.vfsglobal.com/{residence}/{language}/{destination},
+      which is a corridor's own two dimensions.
+
+  - domain: vfsglobal.co.in
+    name: VFS Global (India)
+    note: A regional domain of the same company, named on Danish mission pages serving India.
+
+  - domain: tlscontact.com
+    name: TLScontact
+    note: >-
+      Named on Dutch application pages for residences where another Schengen state represents the
+      Netherlands — Nigeria is handled through Belgium's TLScontact centre in Abuja.
+
+  - domain: blsinternational.com
+    name: BLS International
+    note: >-
+      Named on Spanish and Portuguese mission pages. Included because it is the third company of
+      this kind that appears on government domains; no corridor has needed it yet.

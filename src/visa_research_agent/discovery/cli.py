@@ -273,6 +273,16 @@ def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
             "    from them, so nothing here states what they would say.",
             file=stream,
         )
+    if resolved.delegated_services:
+        print("\n  published by a company the authority contracts with:", file=stream)
+        for service in resolved.delegated_services:
+            print(f"    {service.role:<22} {service.url}", file=stream)
+            print(f"    {'':<22} named on {service.named_on}", file=stream)
+        print(
+            "    These were not read and nothing here rests on them: they are not government\n"
+            "    domains, so this program may name them and may not believe them.",
+            file=stream,
+        )
     if resolved.unresolved_roles:
         print("\n  could not be identified:", file=stream)
         for role in resolved.unresolved_roles:
@@ -785,6 +795,12 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
         print(
             f"      {build.indexed_text} pages kept their text for the index"
             + (f", including {build.pdfs_read} PDFs read for text only" if build.pdfs_read else ""),
+            file=stream,
+        )
+    if build.delegated:
+        print(
+            f"      {build.delegated} places its own pages send travellers, on companies we may "
+            "name but never read",
             file=stream,
         )
     if build.lost_hosts:

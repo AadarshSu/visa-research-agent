@@ -34,6 +34,7 @@ from visa_research_agent.discovery.models import (
     ROLE_ORDER,
     CandidatePage,
     Corridor,
+    Delegation,
     DiscoveryRole,
 )
 from visa_research_agent.discovery.urls import published_date_in_path
@@ -81,8 +82,28 @@ class RoleTool(StrictModel):
     reason: str = Field(min_length=1)
 
 
+class RoleDelegate(StrictModel):
+    """A delegated service the model says holds a role's answer, chosen from a recorded list."""
+
+    role: DiscoveryRole
+    delegate_id: str = Field(min_length=1)
+    reason: str = Field(min_length=1)
+
+
 class RoleAdjudication(StrictModel):
     choices: list[RoleChoice] = Field(default_factory=list)
+
+    delegates: list[RoleDelegate] = Field(default_factory=list)
+    """Roles the authority answers by handing the traveller to a company it contracts with.
+
+    The Netherlands publishes its per-residence document checklist on VFS Global for most
+    residences and says so on its own pages — so for those travellers the choice is naming the
+    delegate or saying nothing at all. Entry 89.
+
+    Kept apart from `choices` and from `tools` because it fills nothing and is not a page anybody
+    read: the model is choosing from a list of links **our crawler recorded** off approved pages,
+    never writing a URL, which is what keeps a hostile page's markup out of a traveller's hands.
+    """
 
     tools: list[RoleTool] = Field(default_factory=list)
     """Roles no candidate answers because an official questionnaire works the answer out instead.
@@ -196,6 +217,41 @@ def validated_blocked_choices(
             )
             continue
         kept.add(choice.source_id)
+    return kept, discarded
+
+
+def validated_delegates(
+    adjudication: RoleAdjudication,
+    delegations: dict[str, Delegation],
+) -> tuple[dict[DiscoveryRole, tuple[str, str]], list[str]]:
+    """The delegated services the model says hold each role, keeping only ones we recorded.
+
+    **The model may select; it may never supply.** A `delegate_id` that is not in the recorded set
+    is dropped exactly as an invented `source_id` is, and the URL handed to a traveller is therefore
+    always one our own crawler read out of an approved government page's markup — never a string a
+    model produced from `untrusted_content`. That distinction is the whole safety argument for this
+    feature: the output is a link a traveller will follow, for the checklist, which is the single
+    thing this project exists to get right.
+
+    Naming one fills nothing, so there is no path from here to a citation.
+    """
+
+    kept: dict[DiscoveryRole, tuple[str, str]] = {}
+    discarded: list[str] = []
+    for delegate in adjudication.delegates:
+        if delegate.role == "irrelevant":
+            discarded.append("the model named a delegated service for the irrelevant role")
+            continue
+        if delegate.delegate_id not in delegations:
+            discarded.append(
+                f"the model named {delegate.delegate_id!r} as the delegated service for "
+                f"{delegate.role}, which was not a recorded delegation"
+            )
+            continue
+        if delegate.role in kept:
+            discarded.append(f"the model named more than one delegated service for {delegate.role}")
+            continue
+        kept[delegate.role] = (delegate.delegate_id, delegate.reason.strip())
     return kept, discarded
 
 
@@ -365,6 +421,7 @@ def build_candidate_packet(
     excerpt_head_characters: int,
     excerpt_window_characters: int,
     anchor_terms: Sequence[str],
+    delegations: dict[str, Delegation] | None = None,
 ) -> str:
     """Serialize the corridor and the candidates, with the trust boundary named explicitly.
 
@@ -375,6 +432,7 @@ def build_candidate_packet(
     are the only thing that steers which part of a long page is shown; see `anchored_excerpt`.
     """
 
+    delegations = delegations or {}
     packet = {
         "traveller": {
             "passport_nationality": corridor.passport_nationality,
@@ -405,6 +463,18 @@ def build_candidate_packet(
                 ),
             }
             for source_id, candidate in candidates.items()
+        ],
+        # Addresses, never content. These pages are not fetched, so there is nothing to excerpt and
+        # deliberately no field one could be put in — the same shape `build_blocked_packet` uses for
+        # a page an authority refused, and for the same reason.
+        "delegated_services": [
+            {
+                "delegate_id": delegate_id,
+                "url": delegation.url,
+                "link_text": delegation.link_text,
+                "named_on": delegation.named_on,
+            }
+            for delegate_id, delegation in sorted(delegations.items())
         ],
     }
     return json.dumps(packet, indent=2, ensure_ascii=False)

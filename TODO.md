@@ -29,7 +29,7 @@ records, and the page answering a *specific* traveller sits one hop below someth
 never opened — the Netherlands held 219 `apply-{country}` pages and **five** tourism checklists. That
 is fixed and proved on one country (item 35), and it exposed a wider limit that is not the crawler's:
 for most residences the Netherlands publishes its checklist on **VFS Global**, which the trust rule
-refuses (item 36).
+refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
 **Search has credit again, and the three things that were gating stage 3 are fixed and confirmed
 live**: pacing and `402` classification (entry 74), the post mis-pick (entry 72, six of seven
@@ -124,7 +124,6 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 35. Roll the per-traveller family reservation across the other nine | `next` |
-|  | 36. Decide what to do about guidance published on a commercial contractor | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
@@ -157,7 +156,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has fifty-seven rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has sixty rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -216,22 +215,28 @@ pages read, 113 link nothing and 58 link only language forks, because for most r
 Netherlands publishes its checklist on **VFS Global**. See item 36.
 
 
-### 36. Decide what to do about guidance published on a commercial contractor — `next`
+### 36. ~~Decide what to do about guidance published on a commercial contractor~~ — `done, entry 89`
 
-**Why:** entry 88 found the third form of entry 59's wall, and it is the widest. Kenya, Pakistan and
-Egypt's Dutch application pages all say "On the **VFS Global** website you'll find a checklist with
-the documents you need". The guidance is official, is current, and sits on `vfsglobal.com`, which the
-trust rule refuses — correctly, because it is not a government.
+**Done 2026-08-28.** Decided and built: named, never read, never believed. Trusting or crawling a
+contractor was declined for reasons in entry 89; `config/service_providers.yaml` holds the reviewed
+list, and the warrant is two independent things — an approved government page linked it **and** the
+domain is on that list.
 
-This is **not** a proposal to trust it. The rule holds: officialness is a property of who controls
-the domain. What needs deciding is what a traveller is told, and there is a shape that already exists
-for exactly this: entries 59 and 60 name a questionnaire without driving it or citing it. A page an
-authority *delegates* to is the same problem — the answer is somewhere specific, we may not read it,
-and saying so is more use than silence.
+Proved on `netherlands/PK/PK`: `document_checklist` stays unfilled, so no requirement may be listed,
+and the traveller is handed
+`visa.vfsglobal.com/one-pager/netherlands/pakistan/english` with the government page that appointed
+it. That corridor previously said nothing about documents at all.
 
-**Measure first, and it is free:** count how many of the ten corpus countries' residence dimensions
-end at a contractor. The Netherlands is 124 of 185 gateway pages mentioning VFS or TLScontact, and
-nobody has looked at the other nine.
+**What it left open**, smallest first:
+
+- **Nobody checks whether a delegate's URL still resolves.** A dead contractor link would be named
+  as confidently as a live one. It is a link rather than a claim, which is why it did not block, but
+  it is the obvious next defect. A `HEAD` against a page we may not read is arguably fine; argue it.
+- **Only the Netherlands has recording on**, because only it has been rebuilt (item 35). The other
+  nine hold no delegations and the feature is inert for them.
+- **The interface wording is a design judgement, not a measurement.** Amber rather than the tools'
+  green, the limit stated beside the link, and the empty-checklist panel now names which of three
+  reasons applies. Nobody has watched a traveller read it.
 
 
 ### 30. Perfect batch 1 before adding a single further country — `next`

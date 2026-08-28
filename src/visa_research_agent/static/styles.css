@@ -343,6 +343,15 @@ button:disabled {
   line-height: 1.55;
 }
 
+/* A delegated service is a weaker thing than an official tool and must not look identical to it:
+   the tool is the authority's own page, this is a company the authority contracts with, and the
+   reader has to be able to tell at a glance which they are being sent to. */
+.decision-tool--delegated {
+  border-left-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber);
+}
+
 .decision-tool-title {
   margin: 0 0 8px;
   font-weight: 800;
