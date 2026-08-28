@@ -781,24 +781,55 @@ corridors:
         - url: https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen
           seen: text
           why: the same table at the address the English site links
-    unanswered:
-      document_checklist: >-
-        every gdrfad.gov.ae service page in contention scores identically at 36.0 and describes a
-        service — extending a tourist visa, a cruise-ship permit, a job-exploration visit — rather
-        than naming what a Filipino tourist must bring.
-      application_route: >-
-        nothing states where a Filipino resident applies. The corridor's Indian row is answered by a
-        visa-on-arrival page, which does not apply here.
-      fees: nothing in the set prices a tourist entry permit for this nationality.
-      processing_times: nothing states a processing time for a visit visa.
-      general_entry: >-
-        no page states entry conditions for a visa-required traveller; the travel-updates page is
-        about Emiratis travelling abroad.
+      document_checklist:
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            "Issuance of a single-entry tourist visa", whose Requirements section names them —
+            "1. One personal photo. 2. Copy of the passport. 3. Identity card for the country of
+            origin for some nationalities (Iraq - Pakistan - Iran - Afghanistan)", a list this
+            traveller is inside and outside the third line of
+      application_route:
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            the same page's Service Steps — log in to the smart services system with UAE Pass,
+            search for the service, complete the application — and "Only accredited tourism offices
+            in the emirate can issue this kind of visa", which is the route's real constraint
+        - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Types-of-visas/tourist-visa
+          seen: text
+          why: the government platform's index of tourist visa routes and who issues each
+      fees:
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            "30-day tourist visa fee: AED 252. 60-day tourist visa fee: AED 352. In addition to
+            value added tax (5%)." Priced in the currency the traveller pays
+      processing_times:
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: '"Expected Completion Time 48.0 Hour(s)"'
+      general_entry:
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            the same page's Terms And Conditions — a passport valid for at least six months, and a
+            ticket to leave the UAE
+    excluded:
+      - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/visa-fees
+        why: >-
+          the top `fees` candidate at **126.4**, titled "Visa fees and fines", and it prices nothing:
+          "Visa charges are stated on each service card on the websites of ICP and GDRFA-D." It
+          defers to the page that actually answers, which scores **0.0** for the role.
     note: >-
-      the mirror of the Indian row, and the more informative half of the pair. There the UAE
-      publishes a service keyed on nationality *and* residence and answers six roles from one page;
-      here the same country answers exactly one, because a Filipino resident in the Philippines
-      falls outside every keyed service and lands on the plain per-country table.
+      **This row was curated wrongly the first time and is the reason the corrections table gained a
+      line.** It was built from a two-role dump and recorded five roles as unanswered, on the
+      reasoning that a Filipino resident at home falls outside the UAE's residence-keyed services.
+      That reasoning was sound and the conclusion was false: `f9e586fe` answers five roles for
+      anybody, and it scores **0.0** for three of them — `fees`, `processing_times` and
+      `general_entry` — while the pages that *do* score for those roles state nothing. Entry 78's
+      defect, in the sharpest form the fixture has: the ranking cannot see inside a page, so the
+      page that answers is invisible to the role it answers.
 
   - corridor: canada/PH/PH/tourism
     contention: 539
@@ -889,14 +920,28 @@ corridors:
   - corridor: france/PH/PH/tourism
     contention: 201
     text_held: 18
+    answers:
+      application_route:
+        - url: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
+          seen: text
+          why: >-
+            the embassy in Manila — the post serving this traveller — setting out the main steps:
+            check the Visa Wizard, "create an account and complete your application online on the
+            portal", then submit it to the visa application centre
+    tools:
+      visa_decision: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
+      document_checklist: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
+      fees: https://ph.diplomatie.gouv.fr/en/applying-for-a-visa
     unanswered:
       visa_decision: >-
-        france-visas.gouv.fr answers a Cloudflare challenge, so 183 of the 201 candidates hold no
-        stored text and the decision is not in the 18 that do.
-      document_checklist: as above.
-      application_route: as above.
-      fees: as above.
-      processing_times: as above.
+        the Manila post names the France-Visas Visa Wizard and states nothing itself; france-visas.gouv.fr
+        answers a Cloudflare challenge, so 183 of the 201 candidates hold no stored text.
+      document_checklist: >-
+        the same page says the wizard "will also tell you what documents must be attached to your
+        application", which names a tool rather than listing anything.
+      fees: >-
+        the same sentence, "along with the relevant fee". No candidate prices a short-stay visa.
+      processing_times: nothing states one.
       general_entry: >-
         the EES page is in the set and readable, and it describes the new border system rather than
         the conditions this traveller must satisfy.
@@ -906,14 +951,14 @@ corridors:
     excluded:
       - url: https://ph.diplomatie.gouv.fr/en/visiting-france
         why: >-
-          the top-scoring candidate for both `document_checklist` and `application_route`, on the
-          embassy in Manila — the post serving this traveller — and it is tourism marketing:
-          "France is a multi-faceted destination... check out France.fr". The scorer is reading
-          "Visiting France" on the right host and there is nothing about a visa on the page.
+          the top-scoring candidate for both `document_checklist` and `application_route` at 66.0, on
+          the right host — the post serving this traveller — and it is tourism marketing: "France is
+          a multi-faceted destination... check out France.fr". The page that actually answers,
+          `applying-for-a-visa`, is 20 points below it.
     note: >-
-      the sharpest instance of known problem 30 in the fixture: France is bounded at 18 readable
-      candidates of 201, so an arm that picks the right France page earns no credit for it. That is
-      a limit on the metric, not on the arm, and item 5 moves the bound rather than the metric.
+      one answer and three tools, which is the same shape as the Indian row and reached by the same
+      route: France publishes the traveller-specific part inside the Visa Wizard, and the portal
+      that hosts it answers a Cloudflare challenge, leaving 18 readable candidates of 201.
 
   - corridor: united-kingdom/PH/PH/tourism
     contention: 260
@@ -1071,23 +1116,37 @@ corridors:
   - corridor: sweden/PH/PH/tourism
     contention: 73
     text_held: 57
+    answers:
+      application_route:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: >-
+            "In some countries, you must submit your application to a Swedish embassy or
+            consulate-general. In a number of countries, Sweden is represented by another Schengen
+            country" — the route stated, with the per-residence detail behind a country selector
+      general_entry:
+        - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
+          seen: text
+          why: >-
+            "Sweden requires that you have SEK 700 for each day of your visit", and medical travel
+            insurance covering at least EUR 30,000 valid in all Schengen countries
     unanswered:
       visa_decision: >-
-        the list of nationalities requiring a visa is in the set and holds no stored text.
+        the apply page defers — "if you come from a country whose citizens need an entry visa" over
+        an external link — and the list of those countries is on government.se with no stored text.
       document_checklist: >-
-        the checklist-scoring pages are about attesting delayed doctoral and bachelor studies.
-      application_route: nothing states where a Filipino resident applies.
+        deferred in the page's own words: "The documents you must submit depend on the country in
+        which you are applying... it is therefore important that you check on the website of the
+        correct embassy to find out which documents you should prepare."
       fees: no candidate scored above zero for it.
       processing_times: no candidate scored above zero for it.
-      general_entry: >-
-        the two candidates are a list of acts and ordinances entering into force, which is a
-        different sense of the word.
     unverifiable:
       - https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden/
     note: >-
-      Sweden answers six roles for the Indian traveller and none for this one. The whole difference
-      is which pages hold stored text: `migrationsverket.se` covers extending and appealing a visa,
-      and the page that would state the decision is on `government.se` with no body indexed.
+      also re-curated after the first pass read three candidates deep and found the page for
+      *extending* a visa rather than the one for applying. Two of the four remaining gaps are the
+      authority deferring in its own words, which is a different thing from the corpus lacking a
+      page and is worth keeping apart from it.
 
   - corridor: singapore/PH/PH/tourism
     contention: 140

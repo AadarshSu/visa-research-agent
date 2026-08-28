@@ -99,7 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
-| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-40-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 40% for the other |
+| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-53-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 53% for the other |
 | [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
@@ -143,7 +143,7 @@ not — and stored text ranks, it never speaks).
 
 ---
 
-## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 40% for the other
+## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 53% for the other
 **2026-08-28 · known problem 29, closed by curation. It found a defect in the grader on the way through**
 
 Every recall number this project quoted rested on the same ten corridors, all `IN/GB/tourism`:
@@ -162,33 +162,75 @@ one place a corpus change can be seen at all.
 
 ```
 IN/GB/tourism   47/47 of its answers held (100%)   47/60 roles answerable at all (78%)
-PH/PH/tourism   24/24 of its answers held (100%)   24/60 roles answerable at all (40%)
+PH/PH/tourism   32/32 of its answers held (100%)   32/60 roles answerable at all (53%)
 ```
 
 The corpus holds every page a human could name, for both. What moves is **how much can be answered at
-all**: the same ten stores answer 47 of 60 roles for one traveller and 24 of 60 for the other. That is
+all**: the same ten stores answer 47 of 60 roles for one traveller and 32 of 60 for the other. That is
 the traveller dimension, and a percentage whose denominator is itself the finding could not show it —
 so `visa-discover coverage` now prints both figures per traveller and `KnownAnswer` carries `roles`
 so the denominator cannot move.
+
+**The 100% is a real finding for `IN/GB` and close to circular for `PH/PH`, and the first version of
+this entry did not say so.** The Indian rows were curated from the page-text index, which holds
+corpus pages *and* pages fetched by live search — 10,444 pages, of which **1,691 are not in the
+corpus**. A curated answer could have landed on one of those and none did. The Philippine rows were
+curated with `visa-discover contention`, whose set is built *from* the corpus, so any page nameable
+there is held by construction. The only way to score below 100% was to mistype a URL, which happened
+once — Canada, where the corpus holds `…/supporting-documents.html/1000.html` and the store's copy of
+it is Canada.ca's 404 page. So `PH/PH`'s held column measures transcription; **its finding is
+entirely the 32 of 60.**
 
 **The zero-answer corridors are counted.** France and Sweden answer *none* of their six roles for this
 traveller, and skipping them — which the first implementation did, by filtering on `not
 corridor.answers` — read 24 of **48**, flattering exactly the traveller the row exists to be honest
 about.
 
-### Where the 23 lost roles went, which is four different things
+### The first pass read three candidates deep and got three rows wrong
 
-- **Residence-keyed services stop applying.** The UAE answers six roles for the Indian row from one
-  page keyed on Indian nationality *and* UK residence. A Filipino resident in the Philippines falls
-  outside every keyed service and lands on the plain per-country table: **six roles to one.**
-- **Stored text runs out.** Sweden answers six and then none. `migrationsverket.se` covers extending
-  and appealing a visa; the page that states the decision is on `government.se` with no body indexed.
-  France is bounded at **18 readable candidates of 201** by its Cloudflare challenge.
+Asked whether the UAE's row meant *no applicable page exists* or *an applicable page was not
+selected*, the answer was the second, and it took one look to find out. The row was built from a
+dump of two roles and recorded five as unanswered, reasoning that a Filipino resident at home falls
+outside the UAE's residence-keyed services. The reasoning was sound and the conclusion was false:
+`gdrfad.gov.ae/en/services/f9e586fe-…`, "Issuance of a single-entry tourist visa", answers **five**
+roles for anybody —
+
+```
+document_checklist   "1. One personal photo. 2. Copy of the passport."      scores 36.0
+application_route    Service Steps, and "only accredited tourism offices"   scores 39.6
+fees                 "30-day tourist visa fee: AED 252"                     scores  0.0
+processing_times     "Expected Completion Time 48.0 Hour(s)"                scores  0.0
+general_entry        passport valid six months, a ticket to leave           scores  0.0
+```
+
+**Three of the five roles it answers, it scores zero for.** That is entry 78's defect in its sharpest
+form: the ranking reads a link and cannot see inside a page, and the pages that *do* score for those
+roles state nothing — the top `fees` candidate at **126.4** is `u.ae/…/visa-fees`, which says "visa
+charges are stated on each service card on the websites of ICP and GDRFA-D" and prices nothing.
+
+Two more rows moved on the re-check. Sweden went 0 → 2: the first pass found the page for
+*extending* a visa and missed the one for applying, which states the route and the SEK 700 per day
+and EUR 30,000 insurance conditions. France went 0 → 1 plus three tools: `ph.diplomatie.gouv.fr/en/
+applying-for-a-visa` is the Manila post's actual visa page, 20 points *below* the tourism-marketing
+page at the same host that the first pass excluded.
+
+**So `PH/PH` is 32 of 60, not 24**, and the lesson is about curation rather than about the store: a
+fixture read three candidates deep describes the ranking, not the corpus.
+
+### Where the 15 remaining gaps are, which is four different things
+
+- **Stored text runs out.** France is bounded at **18 readable candidates of 201** by its Cloudflare
+  challenge, and Sweden's decision page sits on `government.se` with no body indexed.
+- **The authority defers in its own words.** Sweden on documents: "the documents you must submit
+  depend on the country in which you are applying... check on the website of the correct embassy."
+  That is not the corpus lacking a page, and it is worth counting apart from one.
 - **The corpus is thin.** Germany answers one role for either traveller, out of 83 candidates and a
-  1,565-entry corpus. That is a statement about the crawl, not about either passport.
+  1,565-entry corpus. A statement about the crawl, not about either passport.
 - **The answer is "no visa", and three roles then have nothing to answer.** Singapore: there is no
   application, so no route, no checklist and no fee. A corridor that resolves correctly can leave
-  most roles empty, which is worth knowing before reading any roles-filled number.
+  most roles empty, which is worth knowing before reading any roles-filled number — and it is an
+  argument for not asking the other five questions at all once the decision is "no visa required".
+  TODO item 39.
 
 Two roles moved the *other* way. The Netherlands answers four against three, because the Manila fee
 page holds stored text where the London one does not — **entry 88's rebuild appearing in a
@@ -246,6 +288,21 @@ traveller.
   so a date test would work today and rot silently. The file should say what it is.
 - **A third traveller.** Two is what makes a number a comparison; the next question is *purpose*,
   where all twenty rows are still `tourism`.
+
+### Three things it hands to the queue
+
+- **A "no visa required" answer should end the corridor, not open five more questions** (TODO item
+  39). Singapore's row records three roles unanswered *because* the answer is no visa — there is no
+  application, so there is no route, no checklist and no fee. Asking anyway makes a correct, complete
+  answer look like a 2-of-6 failure in every metric this project has.
+- **France's challenge is answerable and the corpus never answered it** (item 5). Entry 41 settled
+  that a Cloudflare challenge is not a refusal and may be answered by our own renderer under our own
+  user agent, and entry 75 built that for the request path. The *corpus build* did not get it, which
+  is why France holds 18 readable candidates of 201.
+- **Curation should be able to fetch a page the index does not hold** (item 40). Sweden's decision
+  list and the Netherlands' Philippine checklist are recorded `unverifiable` for want of stored text,
+  and the product would simply fetch them. `visa-discover contention` is offline by design and that
+  should stay the default, so this is an opt-in for a single named candidate.
 
 ### What it does not answer
 

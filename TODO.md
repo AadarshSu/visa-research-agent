@@ -33,7 +33,7 @@ refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
 **And the oracle now has a second traveller** (entry 91). Twenty corridors, `IN/GB/tourism` and
 `PH/PH/tourism` over the same ten countries. Both read 100% *held* and the denominators are the
-finding: the same stores answer **47 of 60 roles for one traveller and 24 of 60 for the other**.
+finding: the same stores answer **47 of 60 roles for one traveller and 32 of 60 for the other**.
 Building it exposed a defect in the grader — see item 38, which is now the first thing to do.
 
 **The gate is built and it is now the promotion rule for stage 3** (item 37, entry 90).
@@ -138,6 +138,9 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
+|  | 39. Stop asking five more questions once the answer is "no visa required" | `next` |
+|  | 40. Let curation fetch one page the index does not hold | `next` |
+|  | 5b. Answer France's challenge in the corpus build, not only the request path | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -171,7 +174,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventy-one rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventy-four rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -264,7 +267,7 @@ nothing today.** Entry 87's numbers stand as recorded and are not currently repr
 
 - entry 87's 100% / 91% / 70%, reproduced from logs that say who chose;
 - **the first selector number for a second traveller**, which nothing has ever measured. Expect it to
-  be worse: the `PH/PH` half of the fixture answers 24 of 60 roles against 47 of 60, so there is less
+  be worse: the `PH/PH` half of the fixture answers 32 of 60 roles against 47 of 60, so there is less
   to find and the pages that answer are thinner.
 
 Twenty corridors of search and model quota. Cheap, and it is the only thing standing between the
@@ -272,6 +275,77 @@ widened oracle and a number.
 
 **Careful:** clear nothing. `var/corpus/` and `var/pagetext/` are stores; `var/recall/` is where the
 output lands and the old logs are harmless now that they are refused rather than mis-graded.
+
+
+### 39. Stop asking five more questions once the answer is "no visa required" — `next`
+
+**Why:** Singapore's `PH/PH` row records `document_checklist`, `application_route` and `fees` as
+unanswered, and every one of them is unanswered **because the corridor resolved correctly**. A
+Filipino needs no visa for Singapore, so there is no application to bring documents to, no route to
+take and no fee to pay. Asking anyway turns a complete, correct answer into a 2-of-6 result in every
+metric this project has — entry 58's checklist rate included, and known problem 26 already warns that
+those numbers measure *answering* rather than being right.
+
+**What a complete answer looks like when the decision is "no visa":** the decision, the official page
+that states it, and whatever entry conditions do still bind — Singapore's SG Arrival Card, an onward
+ticket, a passport validity rule. That is `visa_decision` and `general_entry`, and the other four
+roles are **not applicable** rather than missing.
+
+**Do:** give a role a third outcome beside filled and unfilled — *not applicable, because the visa
+decision is no*. It has to be derived from the adjudicated decision rather than guessed, and it must
+never fire when `visa_decision` is unverified or handed over as a tool: "we could not confirm whether
+you need a visa" can never suppress the checklist. Then teach the corridor's own reporting, the
+interface's empty-checklist panel (which already names three reasons — entry 89) and
+`visa-discover coverage` to count those roles apart from the ones nobody could answer.
+
+**Careful, and this is the whole risk:** a wrong "no visa required" that then suppresses five
+questions is worse than a wrong one that leaves them visible, because the traveller has nothing left
+to notice the error with. So this may only key on a `visa_decision` that is *stated by a source* —
+never on a tool, never on a blocked page, never on `decision_is_unverified`.
+
+**Also update the oracle**, whose Singapore rows currently record those three as `unanswered` with a
+reason. They want a fourth key — `not_applicable` — or the fixture will keep scoring a correct
+corridor as a thin one.
+
+
+### 40. Let curation fetch one page the index does not hold — `next`
+
+**Why:** entry 91. Sweden's `visa_decision` is on `government.se` with no stored text, and the
+Netherlands' Philippine tourism checklist is named from its address alone. Both are recorded
+`unverifiable` or `title_only`, and **the product would simply fetch them** — the index is a ranking
+store, not the limit on what can be read. So the oracle understates what is answerable, which is
+known problem 30 read from the other side: it is a limit of the *curation tool*, not of the corpus.
+
+**Do:** an opt-in on `visa-discover contention` that fetches **one named candidate** through
+`LiveSourceFetcher` — so domain trust, `robots.txt`, the TLS rules and the freshness ceiling all
+apply exactly as they do in a corridor — and prints it for the curator. Offline stays the default,
+because the set a row is curated against has to be reproducible next month.
+
+**Careful:** this is a curation aid and must not become a second retrieval path. It reads one URL a
+person typed, never a set; it never writes to the corpus or the index; and a page it fetches is still
+fetched again by the product before a word of it reaches a traveller.
+
+
+### 5b. Answer France's challenge in the *corpus build*, not only the request path — `next`
+
+**Why:** entry 91 measured France at **18 readable candidates of 201**, which is the worst text
+coverage in the fixture and the reason France answers one role for either traveller. Entry 41 settled
+the principle — a Cloudflare challenge is not a refusal, it states no policy, and answering it by
+running the page's own JavaScript in our own renderer **under our own user agent** misrepresents
+nothing — and entry 75 built it, taking `render_mode` to `on_demand` and recovering Cyprus.
+
+**What was missed is that the corpus build does not do it.** The request path renders a challenged
+page; the offline crawl that fills `var/corpus/` and `var/pagetext/` does not, so France's portal is
+recorded as pages with no text and every later measurement inherits the gap.
+
+**This is not a relaxation of anything** and must not be written as one. Spoofing a user agent,
+retrying past a rate limit and rendering past a **refusal** all stay forbidden; `www.mfa.gr`'s Akamai
+`403` and `urm.lt`'s unanswerable challenge are untouched. The line is entry 41's: did the authority
+state anything.
+
+**Do:** give the corpus crawler the renderer on the same terms the request path has it, with a
+budget, and rebuild France. Then re-run `visa-discover coverage --country FR` and re-curate France's
+two oracle rows, which are currently the fixture's weakest.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`

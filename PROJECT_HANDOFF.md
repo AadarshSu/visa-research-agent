@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has seventy-one rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has seventy-four rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -72,7 +72,7 @@ destinations.
 | **Page-text index** | **1 country built, 11 backfilled** — `var/pagetext/`, one SQLite/FTS5 file each. Japan holds 684 pages of body text (94 PDFs) after a rebuild; the other ten are cache backfills of 1–38 pages. **Read at step 3b of `_resolve`, before the shortlist — and currently inert, on purpose** (entry 80). The A/B was taken and **it could not answer the question**: six runs of identical code give 4, 4, 4, 4, 5 and 6 roles, so role count cannot see a ranking change on one corridor (entry 81, which withdraws entry 80's regression). What is established is that the role-filling pages are shortlisted and fetched in every arm — the lift is recall-neutral, nothing shows it helps, and it stays off. Entries 78–81. |
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
 | **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
-| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 24 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
+| **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 32 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
 | **Corpus sufficiency** | **`visa-discover coverage`, committed** (entry 90) — the promotion rule for stage 3. Two halves, never added: 47 of 47 known answers (**one traveller**, a regression check) and every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
@@ -497,7 +497,9 @@ re-add the amendment history here.
 29. **The selection fixture has two travellers and one purpose.** `oracle/selection_oracle.yaml` is
    now twenty corridors — `IN/GB/tourism` and `PH/PH/tourism` over the same ten countries (entry
    91) — so the nationality-and-residence half of this is answered, and the answer is large: the
-   same stores answer **47 of 60 roles for one traveller and 24 of 60 for the other**. What is left
+   same stores answer **47 of 60 roles for one traveller and 32 of 60 for the other**. Read the
+   `held` column with care: it is a finding for `IN/GB`, curated from the page-text index, and
+   near-circular for `PH/PH`, curated from the corpus itself. What is left
    is **purpose**: every one of the twenty rows is `tourism`, and the roles most likely to move are
    `document_checklist` and `application_route`. Note also that the `PH/PH` rows have **no selector
    grade yet** — that needs item 38's runs.
@@ -535,7 +537,7 @@ re-add the amendment history here.
    item 35.
 
 33. **The 47 of 47 is one traveller, and there is now a second one beside it.** Entry 91 curated
-   `PH/PH/tourism` across the same ten countries: **24 of 60 roles answerable against 47 of 60**,
+   `PH/PH/tourism` across the same ten countries: **32 of 60 roles answerable against 47 of 60**,
    both at 100% held. So the gate is no longer blind to the traveller, and two profiles is still
    two. Every row is `tourism` — known problem 29. What follows is the original entry. Against
    `oracle/selection_oracle.yaml` every answerable role's page is already in the corpus, and that
@@ -562,6 +564,19 @@ re-add the amendment history here.
    rebuild could turn either over. Entry 90 chose the conservative reading deliberately — the gate
    says what the store contains, never what the authority publishes — and the fix is to rebuild the
    thin corpora, not to soften the verdict.
+
+36. **A correct "no visa required" scores as a thin corridor.** Singapore's `PH/PH` row leaves
+   `document_checklist`, `application_route` and `fees` unanswered *because* the answer is no visa —
+   there is no application, so there is nothing for those roles to name. Every metric here counts
+   them as gaps, which understates a corridor that answered completely. TODO item 39; the fix has to
+   key on a decision a source **stated**, never on a tool or an unverified one, because a wrong "no
+   visa" that suppresses five questions leaves the traveller nothing to notice the error with.
+
+37. **The oracle's `unverifiable` rows are a limit of the curation tool, not of the corpus.**
+   `visa-discover contention` is offline, so a candidate the page-text index holds no body for
+   cannot be judged — Sweden's decision list, the Netherlands' Philippine checklist. The product
+   would simply fetch those pages. So the fixture understates what is answerable, which is known
+   problem 30 read from the other side. TODO item 40.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

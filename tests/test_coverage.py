@@ -325,13 +325,18 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     for traveller, (held, answerable, _) in totals.items():
         assert held == answerable, f"{traveller} lost an answer the corpus used to hold"
     assert totals["IN/GB/tourism"][1] == 47
-    assert totals["PH/PH/tourism"][1] == 24
+    assert totals["PH/PH/tourism"][1] == 32
 
 
 def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> None:
     """Both travellers read 100% *held*, and that is not the finding — the denominators are. The
-    same ten corpora answer 47 of 60 roles for the curated Indian traveller and 24 of 60 for the
-    Filipino one, which is the dimension a single-traveller oracle could not show at all."""
+    same ten corpora answer 47 of 60 roles for the curated Indian traveller and 32 of 60 for the
+    Filipino one, which is the dimension a single-traveller oracle could not show at all.
+
+    **Held is a weak number for the `PH/PH` half and this test does not lean on it.** Those rows
+    were curated with `visa-discover contention`, which builds its set *from* the corpus, so a page
+    named there is in the corpus by construction — see entry 91. The `IN/GB` rows were curated from
+    the page-text index, which holds 1,691 pages the corpus does not, so their 100% is a finding."""
 
     from visa_research_agent.discovery.corpus import FileCorpusStore
     from visa_research_agent.discovery.lexicon import get_country_registry
