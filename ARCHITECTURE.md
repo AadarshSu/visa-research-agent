@@ -505,6 +505,15 @@ halves that are deliberately never added together: **reachability**, computed fr
 from the runs that happened. A country refused for want of a registry row leaves no recall log at all,
 so merging the two would let the larger failure hide inside the smaller one.
 
+**The offline build and the request path get the same renderer and different budgets** (entry 92).
+A challenge states no policy, so answering one under our own user agent is legitimate — entry 41 —
+and the corpus crawler has always called `_answer_challenge`. What it had was twelve renders, sized
+for a forty-page corridor, against France's sixty-four challenged pages. `DEFAULT_CORPUS_RENDERS` is
+400 for the offline job, bounded a second way by `CHALLENGE_FAILURES_PER_HOST`: three consecutive
+unanswered challenges and that host is given up on for the rest of the crawl, so a site nobody can
+answer costs three renders instead of hours. A refusal — a bare `403`, a `401`, a `429` — is never
+rendered past on either path.
+
 **`visa-discover contention`** rebuilds a corridor's candidate set from the store so an oracle row
 can be curated for a corridor nobody has run — the resolver's own `score_link` and `reject`, no
 search, no model, no fetch (entry 91). It is what took the fixture from one curated traveller to two,

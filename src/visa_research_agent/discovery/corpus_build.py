@@ -94,6 +94,25 @@ CORPUS_EXPANSION_THRESHOLD = 0.0
 # `pdf_checklist_bonus` exists for, and 26% of Japan's corpus is PDFs. So they are read in a second
 # pass, for their text only, best-scoring first.
 DEFAULT_CORPUS_PDFS = 400
+
+# How many pages an offline build may render, against the request path's twelve.
+#
+# **The renderer was always passed to this job; the budget was the bug** (entry 92). Measured on the
+# France corpus of 2026-08-28: 64 pages on `france-visas.gouv.fr` answered a Cloudflare challenge,
+# twelve renders were available to answer them, and the rest were recorded "that challenge could not
+# be answered here" — a sentence that is true of this crawl and false of the authority. France came
+# out of that build with **18 readable candidates of 201**, the worst text coverage in the selection
+# fixture, and the item that queued this work said the build did not render at all. It does.
+#
+# Entry 41 is what makes raising it legitimate rather than a relaxation: a challenge states no
+# policy, so answering one by running the page's own scripts **under our own user agent** deceives
+# nobody. A refusal is still a refusal — a bare `403`, a `401`, a `429` — and is never rendered
+# past.
+#
+# Bounded on two sides, because the cost is time rather than quota: this ceiling, and
+# `CHALLENGE_FAILURES_PER_HOST`, which stops a host we genuinely cannot answer from spending the
+# whole budget proving it. A corridor keeps twelve because a traveller is waiting for it.
+DEFAULT_CORPUS_RENDERS = 400
 # **Zero, which means the even split stays — the mechanism below is built, tested and off.**
 #
 # Item 32 said the United Kingdom's fee tables stopped at 15 of ~198 nationalities because an even

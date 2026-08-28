@@ -99,6 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
+| [92](#92-the-corpus-build-always-rendered-twelve-renders-is-what-left-france-unreadable) | **The corpus build always rendered** — the budget was twelve, and France met 64 challenges |
 | [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-60-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 60% for the other |
 | [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
@@ -140,6 +141,86 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 92. The corpus build always rendered; twelve renders is what left France unreadable
+**2026-08-28 · TODO item 5b. The item's own premise was wrong, and checking it took one grep**
+
+France is the weakest corridor in `oracle/selection_oracle.yaml` — **18 readable candidates of
+201**, so neither curated traveller can be given more than one answer there, and known problem 30
+names it as the bound on the whole metric. Item 5b was written to fix that and said the reason was
+that the offline corpus build does not answer Cloudflare challenges the way the request path does.
+
+**It does. It always has.** `run_corpus` builds a `PlaywrightPageRenderer` from the same
+`render_mode` the request path reads and hands it to the same `CrawlFetcher`, which calls the same
+`_answer_challenge`. What it also hands over is `settings.maximum_crawl_renders`, which is **12**.
+
+### What twelve renders buys on a site that challenges everything
+
+Counted from the France corpus built 2026-08-27:
+
+```
+160  disallowed by robots.txt          — obeyed, and nothing to do about it
+ 64  challenge, unanswered             — all on france-visas.gouv.fr (46 + 18)
+ 34  connection failures
+ 32  HTTP 404
+```
+
+Sixty-four challenged pages, twelve renders, and `_render_if_empty` drawing on the same budget. So
+most of those 64 were recorded *"it asked this client to prove it is a browser (HTTP 403), and that
+challenge could not be answered here"* — a sentence that is true of that crawl and false of the
+authority, which is the failure mode this project's rules care most about. The corpus recorded
+`france-visas.gouv.fr` as 133 unopened addresses and 67 unreadable ones.
+
+**This is the corrections table's most repeated shape**: the documented diagnosis named a missing
+capability, and the capability was there with a number set for a different job. A corridor gets
+twelve renders because a traveller is waiting for it. A nightly build has nobody waiting.
+
+### Raising it alone would have bought a worse failure
+
+`DEFAULT_CORPUS_RENDERS = 400` for the offline job. On its own that is a trap: `urm.lt` fingerprints
+past our user agent and its challenge cannot be answered at all (entry 75), so it would take 400
+renders at up to `render_challenge_settle_milliseconds` — 20 seconds — apiece, and spend over two
+hours proving the same thing four hundred times. Entry 75 recorded that hazard for Slovakia and
+nothing acted on it.
+
+So the budget is bounded on a second axis: **`CHALLENGE_FAILURES_PER_HOST = 3`.** Three *consecutive*
+unanswered challenges and this crawl stops offering that host renders. Three rather than one because
+a challenge fails for reasons that are not the host's — a slow page, a redirect caught mid-flight —
+and consecutively rather than cumulatively because a site that mostly passes must never be written
+off. One page that answers clears the host.
+
+A render that comes back still carrying the interstitial counts as a failure, which is the ordinary
+way this fails: `_wait_out_challenge` polls and returns whatever the page last held when its deadline
+passes, so the caller has to check the result rather than the call.
+
+### The line entry 41 draws has not moved
+
+Answering a challenge is legitimate because a challenge **states no policy** — it is a question about
+the client, and our renderer answers it announcing `VisaResearchAgent/0.1`, deceiving nobody. What
+stays forbidden is unchanged and now has tests on the crawl path as well as the request path: a bare
+`403`, a `401` and a `429` are refusals, are never rendered past, and never reach the renderer at
+all. `robots.txt` is still obeyed — France's 160 disallowed pages are untouched by this and should
+be. A page whose challenge goes unanswered is still reported `challenged`, which keeps "we could not
+prove we are a browser" a statement about us.
+
+### What it cost and what it bought
+
+The rebuild is recorded in the handoff rather than here, because a number that came out of one crawl
+belongs where it can be re-measured. What is settled is the mechanism: the renderer was never the
+missing piece, the budget was, and an unanswerable host now costs three renders instead of the job.
+
+### What was rejected
+
+- **Raising `settings.maximum_crawl_renders`.** That is the request path's number and a corridor has
+  a latency budget; the two jobs want different values, so the offline one passes its own.
+- **Giving up on a host after one failure.** A challenge that fails once has told us about a page.
+  Three consecutive failures have told us about a host.
+- **Counting failures cumulatively.** A site that challenges intermittently would eventually be
+  written off for good, which is the opposite of what the count is for.
+- **Retrying a refusal in a browser.** Not considered, and named here only because raising a render
+  budget is exactly the change that could be mistaken for it later.
 
 ---
 

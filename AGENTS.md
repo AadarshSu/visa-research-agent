@@ -85,6 +85,12 @@ the CLI does not offer it.
   a corridor nobody has run. `--role` ranks within one role, `--show <url>` prints that candidate's
   stored text, which is how a role is judged. The set is **corpus-only** and the first ten oracle
   rows were curated from `corpus ∪ search`; see entry 91 for what that costs.
+- **An offline build answers browser challenges far more than a corridor can.** Both are handed the
+  same renderer; the budget differs — `DEFAULT_CORPUS_RENDERS` is 400 against the request path's 12,
+  because a build has no traveller waiting (entry 92). A host whose challenge cannot be answered is
+  given up on after **three consecutive** failures, so `urm.lt` costs three renders rather than the
+  whole job. None of this moves entry 41's line: a bare `403`, a `401` and a `429` state a decision,
+  are never rendered past, and never reach the renderer at all.
 - **Clear `var/cache/` when testing a retrieval change and `var/corridors/` when testing a discovery
   change**, or a pre-change result is served and the fix appears not to work. **`var/corpus/` is
   deliberately not cleared** — it is the store, not a cache, and rebuilding one costs search quota.

@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose seventy-six rows are
+what has wasted the most time here — see the corrections table further down, whose seventy-eight rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -393,6 +393,8 @@ cause, and only running the thing showed it.
 | the authority's own page linking it is warrant enough | the link comes out of HTML, which is untrusted content (entry 89) |
 | most contractor links are the guidance | 44 of 236 are "track your application"; 30 are documents (entry 89) |
 | singapore is the next family reservation win, it fills five roles | its page is a leaf, and ICA's index yields 6 children not 198 |
+| the corpus build does not answer a browser challenge, unlike the request path | it always did; the budget was **12** renders against France's 64 challenges (entry 92) |
+| raising the render budget is the whole fix | an unanswerable host would then spend 400 renders proving it — cap per host (entry 92) |
 | the corpus is not yet good enough to serve a corridor alone | for `IN/GB` it holds 47 of 47 answerable roles, and did before entry 88 |
 | so a corpus-sufficiency number settles it | that one is blind to the traveller dimension; 100% and uninformative |
 | a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
@@ -440,6 +442,13 @@ it. A single number covering both would hide which half failed.
 Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
 now have a text index in `var/pagetext/` (entry 85). A country without either crawls in the request
 path and has its pages chosen by the heuristic, exactly as before.
+
+**An offline build answers a browser challenge and a corridor barely can.** Both pass the renderer;
+what differs is the budget — `DEFAULT_CORPUS_RENDERS` is 400 against the request path's 12, because a
+build has no traveller waiting (entry 92). A host whose challenge cannot be answered is given up on
+after **three consecutive** failures, so it costs three renders rather than the job. Entry 41's line
+is unmoved: a bare `403`, a `401` and a `429` state a decision, are never rendered past, and never
+reach the renderer.
 
 **A corpus records far more than it reads — 3 to 15% of its entries were ever opened — and the page
 answering a *specific* traveller is usually one hop below something it recorded and never opened**

@@ -60,7 +60,26 @@ MINIMUM_CRAWL_LINKS = 3
 
 # How many pages one crawl may render. A site that is unreadable throughout would otherwise
 # render every page it visits, and each render costs seconds rather than milliseconds.
+#
+# **This is the request path's number and the offline build raises it** — see
+# `corpus_build.DEFAULT_CORPUS_RENDERS`. Measured 2026-08-28: France's corpus met **64 challenged
+# pages** on `france-visas.gouv.fr` with twelve renders to answer them, so 52 of them were recorded
+# "that challenge could not be answered here" when the truth was that this crawl had run out of
+# budget, not that the challenge was unanswerable. A corridor keeps twelve because it has a
+# traveller waiting; a nightly build does not.
 MAXIMUM_CRAWL_RENDERS = 12
+
+# How many unanswered challenges from one host before this crawl stops offering it renders.
+#
+# Without it, raising the budget for the offline build trades one failure for a worse one: a host
+# whose challenge we genuinely cannot answer — `urm.lt` fingerprints past our user agent (entry 75)
+# — would take every render in the budget at up to `render_challenge_settle_milliseconds` apiece,
+# which at 400 renders is over two hours of a build spent proving the same thing 400 times.
+#
+# Three rather than one, because a challenge can fail for reasons that are not the host's: a slow
+# page, a redirect caught mid-flight. Three consecutive failures on one host is a property of the
+# host. Successes reset it, so a site that mostly passes is never given up on.
+CHALLENGE_FAILURES_PER_HOST = 3
 
 
 # What a page contributes to a text index, matching `maximum_source_characters` in settings. The
@@ -248,6 +267,7 @@ class CrawlFetcher:
         minimum_links: int = MINIMUM_CRAWL_LINKS,
         maximum_renders: int = MAXIMUM_CRAWL_RENDERS,
         challenge_settle_milliseconds: int = settings.render_challenge_settle_milliseconds,
+        challenge_failures_per_host: int = CHALLENGE_FAILURES_PER_HOST,
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         host_delay_seconds: float = 0.5,
@@ -270,6 +290,9 @@ class CrawlFetcher:
         # `RenderBudget`. If this fetcher ever becomes long-lived, this counter has the same defect.
         self.maximum_renders = maximum_renders
         self.challenge_settle_milliseconds = challenge_settle_milliseconds
+        self.challenge_failures_per_host = challenge_failures_per_host
+        # Consecutive unanswered challenges per host, cleared by one that answers.
+        self.challenge_failures: dict[str, int] = {}
         self.renders = 0
         self.transport = transport
         self.sleep = sleep
@@ -582,7 +605,12 @@ class CrawlFetcher:
         stops one host from consuming a whole crawl.
         """
 
+        host = host_of(url)
         if self.renderer is None or self.renders >= self.maximum_renders:
+            return None
+        if self.challenge_failures.get(host, 0) >= self.challenge_failures_per_host:
+            # Given up on, not refused. The page is still reported `challenged`, which stays a
+            # statement about this client rather than about the authority.
             return None
         self.renders += 1
         rendered = await self.renderer.render(
@@ -591,13 +619,17 @@ class CrawlFetcher:
             settle_milliseconds=self.challenge_settle_milliseconds,
             awaiting_challenge=True,
         )
-        if rendered is None:
+        if rendered is None or is_challenge(403, {}, rendered.html):
+            # Counted per host and only while they run together: one page that answers clears the
+            # host, so a site that challenges intermittently is not written off for a slow load.
+            self.challenge_failures[host] = self.challenge_failures.get(host, 0) + 1
             return None
         if not destination.trusts_host(host_of(rendered.final_url)):
             self._record_failure(
                 url, "untrusted", "answering its challenge navigated off the approved domains"
             )
             return None
+        self.challenge_failures.pop(host, None)
         self.final_urls[url] = rendered.final_url
         return rendered.html
 

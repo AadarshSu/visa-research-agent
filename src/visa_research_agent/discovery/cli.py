@@ -60,6 +60,7 @@ from visa_research_agent.discovery.corpus import CountryCorpus, FileCorpusStore
 from visa_research_agent.discovery.corpus_build import (
     DEFAULT_CORPUS_DEPTH,
     DEFAULT_CORPUS_PAGES,
+    DEFAULT_CORPUS_RENDERS,
     CorpusBuild,
     build_country_corpus,
 )
@@ -1205,7 +1206,9 @@ async def run_corpus(args: argparse.Namespace, stream: TextIO) -> int:
         user_agent=settings.source_user_agent,
         host_delay_seconds=settings.discovery_host_delay_seconds,
         renderer=renderer,
-        maximum_renders=settings.maximum_crawl_renders,
+        # Not `settings.maximum_crawl_renders`, which is the request path's twelve. An offline
+        # build has no traveller waiting and a challenged authority costs it nothing but time.
+        maximum_renders=args.renders,
     )
     try:
         corpus, build = await build_country_corpus(
@@ -1279,6 +1282,13 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=DEFAULT_CORPUS_DEPTH,
         help="how many hops from a seed; the request path affords two, this is not that path",
+    )
+    corpus.add_argument(
+        "--renders",
+        type=int,
+        default=DEFAULT_CORPUS_RENDERS,
+        help="how many pages may be rendered to answer a browser challenge; twelve on the "
+        "request path, and the budget is what left France unreadable (entry 92)",
     )
     corpus.add_argument(
         "--no-text",
