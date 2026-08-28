@@ -76,6 +76,7 @@ not — and stored text ranks, it never speaks).
 | [30](#30-conflicts-is-deleted-by-entry-6s-own-rule) | `conflicts` is deleted, by entry 6's own rule |
 | [31](#31-a-failed-adjudication-refuses-rather-than-falling-back-to-the-heuristic) | A failed adjudication refuses rather than falling back — **amends 16** |
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
+| [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 
 ### Finding the right page: ranking, recall, judgement
 | | |
@@ -145,6 +146,75 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 97. `RecallRecord.selector` recorded which selector was *configured*, and a credit outage proved it
+
+**2026-08-28 · found while running TODO item 38, which it invalidated and then unblocked**
+
+Item 38 exists because entry 91 found that nothing in a recall log said which selector fetched its
+pages, so grading a pre-entry-85 log put the heuristic inside the model's own arm. `selector` was
+added to fix that. Running the twenty oracle corridors showed the fix recorded the wrong fact.
+
+### What happened
+
+Part-way through the batch the **OpenAI account ran out of credit**. `SelectionQuotaExhausted` came
+back for the last seven corridors, the heuristic ranking chose instead — honestly, with a note, and
+exactly as entry 83 designed — and all seven wrote `selector: model`, because the value was derived
+at the write as `"model" if self.selector is not None else "heuristic"`. **That is the
+configuration, not the run.**
+
+`selection-recall` then reported 20 corridors graded, 94% for the model against 64% for the matched
+heuristic. Seven of those twenty had *identical picks in both arms*: `japan/PH/PH` read 34 pages and
+scored 5/5 in the model column and 5/5 in the matched-heuristic column, and so did `sweden/PH/PH` at
+6/6 and `united-kingdom/PH/PH` at 5/5. The heuristic was being graded against itself and credited to
+the model.
+
+**Configuring a model selector is four steps away from a model having chosen anything.** The index
+may hold nothing for the destination, the scored pool may be empty, the call may fail, and the call
+may name no id this program recorded. Every one falls back to `_shortlist`. So the fact is now set
+where it is known — `ResolutionTrace.selector`, defaulting to `heuristic` and assigned `model` at
+the single exit where a validated selection is returned — and the write passes it through.
+
+### Why this is entry 91's defect and not a new one
+
+Entry 91 wrote that "nothing recorded which selector ran" and added a field. The field recorded
+which selector was *available*. Both errors have the same shape and the same consequence: an arm's
+number is computed from picks the other arm made. The corrections table has carried "the grader
+compares a model against a heuristic / six logs put the heuristic in both arms" since entry 91; this
+entry is that row a second time, which is why the guard is now a **positive control** in the tests —
+one case asserting `model` is still recorded when a model actually chose, so the fix cannot decay
+into "always heuristic".
+
+### The numbers, on logs that say who chose
+
+Thirteen of the twenty corridors ran with the model; the other seven were re-run so their logs say
+`heuristic` rather than being edited, and `selection-recall` refuses them by name.
+
+| arm | roles | read |
+| --- | --- | --- |
+| heuristic, matched budget | 32/60 — **53%** | 131 |
+| **model** | 57/60 — **95%** | 131 |
+| heuristic, shipped budget | 51/60 — **85%** | 455 |
+
+Entry 87 read 100% / 70% / 91% over ten `IN/GB` corridors. This is 95% / 53% / 85% over thirteen
+corridors including three `PH/PH`, from logs that name their own arm — the first figure that is
+reproducible from disk rather than from a scratchpad. **The direction held and the gap widened**:
++42 points at matched budget, and the model still beats the heuristic given 3.5× the reads.
+
+**Do not read the `PH/PH` column as the second traveller's number.** Three of ten is not a
+measurement of a traveller; it is what the credit lasted for. Seven remain, and item 38 stays open
+for them.
+
+### What was rejected
+
+- **Editing the seven logs to say `heuristic`.** They are records of what a run did. Re-running them
+  costs seven searches and produces the same correction without anybody writing a fact by hand.
+- **Deleting them.** `selection-recall` would then report them as never run, which is false — they
+  ran, and what they measured was the heuristic.
+- **Grading them anyway with a caveat.** The number was already printed once with no caveat
+  available, because nothing in the file knew there was something to caveat.
 
 ---
 

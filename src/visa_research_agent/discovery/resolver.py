@@ -18,6 +18,7 @@ import re
 from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import Field
@@ -269,6 +270,23 @@ class ResolutionTrace:
     The crawl's failures were the only ones recorded until 2026-08-24, and once the crawl left the
     request path (entry 51) that meant none were. The shortlist fetch is the only stage that meets a
     refusal now.
+    """
+
+    selector: Literal["model", "heuristic"] = "heuristic"
+    """Which selector **actually chose** the shortlist, not which one was configured.
+
+    Set by `_choose_what_to_read` at the one point it can be known, and defaulting to the arm that
+    always runs. Configuring a model selector is four steps away from a model having picked
+    anything: the index may hold nothing for this destination, the pool may be empty, the call may
+    fail, and the call may name no page this program recorded. Every one of those falls back to the
+    heuristic ranking, honestly and by design (entry 83).
+
+    It used to be derived at the write as `"model" if self.selector is not None else "heuristic"`,
+    which is the *configuration*. On 2026-08-28 an OpenAI credit exhaustion took seven of twenty
+    oracle corridors down that third path, and all seven wrote `model` — so `selection-recall`
+    replayed the heuristic's own picks inside the model's arm and reported a number for an arm that
+    had not run. That is entry 91's defect one level in: it recorded which selector was *available*
+    and called it which selector *ran*. Entry 97.
     """
 
     refusal_cause: RefusalCause | None = None
@@ -696,7 +714,7 @@ class CorridorResolver:
             )
 
         # 4. Choose what to read, then fetch it through the ordinary retrieval path.
-        shortlist = await self._choose_what_to_read(destination, corridor, candidates, notes)
+        shortlist = await self._choose_what_to_read(destination, corridor, candidates, notes, trace)
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
         trace.fetched = {candidate.link.url for candidate in fetched.candidates}
@@ -781,6 +799,7 @@ class CorridorResolver:
         corridor: Corridor,
         candidates: dict[str, CandidatePage],
         notes: list[str],
+        trace: ResolutionTrace,
     ) -> list[CandidatePage]:
         """Pick the pages to fetch — by model where one is configured, by the heuristic otherwise.
 
@@ -843,6 +862,10 @@ class CorridorResolver:
             f"{len(chosen)} of {len(pool)} candidates were chosen to read by a model shown what "
             f"{len(text_by_id)} of them say, rather than by ranking the links to them"
         )
+        # The only exit where a model picked the pages. Every `return self._shortlist(...)` above
+        # is the heuristic doing the choosing, and each leaves the trace's default alone — which is
+        # why this is set here rather than derived from `self.selector` at the write (entry 97).
+        trace.selector = "model"
         return self._readable_only(selected_candidates(chosen, by_id))
 
     def _text_scoring_is_fair(self, scored: int, candidates: int) -> bool:
@@ -1553,7 +1576,7 @@ class CorridorResolver:
                     recorded_at=self.now(),
                     outcome=outcome,
                     cause=cause,
-                    selector="model" if self.selector is not None else "heuristic",
+                    selector=trace.selector,
                     unresolved_roles=list(resolved.unresolved_roles) if resolved else [],
                     queries=trace.queries,
                     seeds=trace.seeds,

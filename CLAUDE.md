@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose eighty-eight rows are
+what has wasted the most time here — see the corrections table further down, whose ninety rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -422,6 +422,8 @@ cause, and only running the thing showed it.
 | singapore's three entry duties say what a visa-free list looks like | japan states ~5 and the UK ~7 — the range has no floor to pick (entry 96) |
 | a visa-free plan has nowhere to apply, so force `where_to_apply` to null | a visa-free american still needs a UK ETA; forcing null deletes it (entry 96) |
 | entry 95 named the three validators in the way | there were five — the checklist's third clause and the status grade (entry 96) |
+| entry 91 fixed the log so it records which selector ran | it records which was *configured*; a failed model call logs as `model` (entry 97) |
+| a model selector configured is a model selector that chose | four paths fall back to the heuristic, and a credit outage took seven (entry 97) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

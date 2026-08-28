@@ -5,6 +5,7 @@ over — "was that page ranked out, or never found?" — so these run a whole co
 site and then ask the record.
 """
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -21,6 +22,7 @@ from discovery_site import (
 
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.recall_log import (
     ConsideredCandidate,
     FileRecallLog,
@@ -28,6 +30,8 @@ from visa_research_agent.discovery.recall_log import (
     compare_runs,
 )
 from visa_research_agent.discovery.resolver import CorridorResolver
+from visa_research_agent.discovery.selection import Selection, SelectionQuotaExhausted
+from visa_research_agent.domain.models import DestinationConfig
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.source_cache import FileSourceCache
 
@@ -286,3 +290,117 @@ def test_the_run_count_comes_from_the_runs_not_from_the_records() -> None:
     assert report.records_read == 1
     assert not report.comparison_is_complete
     assert report.flipped, "the outcomes still differ even though only one record survived"
+
+
+# --- which selector actually chose, which is not which one was configured -----------------------
+
+
+class FailingSelector:
+    """A configured model selector whose call cannot succeed.
+
+    This is the shape of what happened on 2026-08-28: the OpenAI account ran out of credit part-way
+    through the twenty oracle corridors, so `SelectionQuotaExhausted` came back for the last seven
+    and the heuristic ranking chose instead — honestly, and by design (entry 83).
+    """
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def select(self, system_prompt: str, packet: str) -> Selection:
+        self.calls += 1
+        raise SelectionQuotaExhausted("The OpenAI account is out of credit")
+
+
+class PickingSelector:
+    """A selector that names the first candidate it is offered, by reading the packet's ids."""
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def select(self, system_prompt: str, packet: str) -> Selection:
+        self.calls += 1
+        entries = json.loads(packet)["candidates"]
+        return Selection(source_ids=[entries[0]["source_id"]])
+
+
+def indexed_destination() -> DestinationConfig:
+    """The fake site under a real country's display name, so a page-text index can be found.
+
+    `_destination_code` matches the display name against the country registry, so the ordinary
+    "testland" fixture can never reach the selector at all — its index is looked up under a code
+    that does not exist.
+    """
+
+    return destination().model_copy(update={"display_name": "Japan"})
+
+
+def text_store(tmp_path: Path, urls: list[str]) -> PageTextStore:
+    store = PageTextStore(tmp_path / "pagetext")
+    store.write(
+        "JP",
+        [
+            StoredPage(
+                url=url,
+                fetched_at=RESOLVED_AT,
+                body="Visa requirements for Indian nationals applying from the United Kingdom. "
+                * 20,
+            )
+            for url in urls
+        ],
+    )
+    return store
+
+
+async def test_a_configured_selector_that_never_chose_is_not_recorded_as_the_model(
+    tmp_path: Path,
+) -> None:
+    """The defect, as one assertion.
+
+    `selector` was derived at the write as `"model" if self.selector is not None else "heuristic"`,
+    which records the *configuration*. A destination whose text index holds nothing never reaches
+    the model at all — the heuristic ranks, exactly as it would with no selector configured — and
+    calling that a model run puts the heuristic's own picks inside the model's arm when
+    `selection-recall` replays them. Entries 91 and 97.
+    """
+
+    log = RecordingLog()
+    resolver = build_resolver(tmp_path, [INDEX, MISSION_INDEX], log)
+    selector = FailingSelector()
+    resolver.selector = selector
+
+    await resolver.resolve(destination(), corridor())
+
+    assert log.records, "a run must be recorded"
+    assert log.records[-1].selector == "heuristic"
+    assert selector.calls == 0, "no index, so the model was never even asked"
+
+
+async def test_a_failed_selection_records_the_arm_that_actually_ranked(tmp_path: Path) -> None:
+    """The credit-exhaustion path: the model was asked, could not answer, and did not choose."""
+
+    log = RecordingLog()
+    resolver = build_resolver(tmp_path, [INDEX, MISSION_INDEX], log)
+    selector = FailingSelector()
+    resolver.selector = selector
+    resolver.page_text = text_store(tmp_path, [INDEX, MISSION_INDEX, DETAIL_INDIA])
+
+    resolved = await resolver.resolve(indexed_destination(), corridor())
+
+    assert selector.calls == 1, "the model was asked"
+    assert log.records[-1].selector == "heuristic", "and it did not choose"
+    assert any("candidate selection failed" in note for note in resolved.notes)
+
+
+async def test_a_selection_that_chose_is_recorded_as_the_model(tmp_path: Path) -> None:
+    """The positive control, so the fix is not just 'always heuristic'."""
+
+    log = RecordingLog()
+    resolver = build_resolver(tmp_path, [INDEX, MISSION_INDEX], log)
+    selector = PickingSelector()
+    resolver.selector = selector
+    resolver.page_text = text_store(tmp_path, [INDEX, MISSION_INDEX, DETAIL_INDIA])
+
+    await resolver.resolve(indexed_destination(), corridor())
+
+    assert selector.calls == 1
+    assert log.records[-1].selector == "model"

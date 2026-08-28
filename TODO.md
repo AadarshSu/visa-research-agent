@@ -137,7 +137,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
+| **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next`, 7 of 20 left |
 |  | 40. Let curation fetch one page the index does not hold | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
@@ -288,36 +288,63 @@ of `extract_visa_plan.txt` is unexercised. Item 38's re-run is where that gets t
 visa-free corridor to it.
 
 
-### 38. Re-run the twenty oracle corridors so a selector can be graded again — `next`
+### 38. Re-run the twenty oracle corridors so a selector can be graded again — `next`, **7 of 20 left**
 
-**Why:** entry 91 widened the oracle to a second traveller and, in doing so, found that
-`arms_from_logs` could not tell a model run from a heuristic one — a run's fetched URLs are read as
-*the model's picks* and nothing in `RecallRecord` said which selector fetched them. Six of the new
-traveller's logs predate entry 85, so grading them put the heuristic into the arm labelled `model`
-and moved the printed figure from 100% to 92% with nothing saying why.
+**Run 2026-08-28. Thirteen of the twenty are graded and the number is reproducible from disk for the
+first time; seven are blocked on OpenAI credit.** The run also found the defect that made the first
+printing of it wrong — entry 97.
 
-`RecallRecord.selector` now records it and an unattributable log is **not graded**, which is
-`cause`'s rule from entry 63 applied to a second field. **The cost is that `selection-recall` grades
-nothing today.** Entry 87's numbers stand as recorded and are not currently reproducible from disk.
+**What it produced**, over 13 corridors, from logs that name their own arm:
 
-**Do:** run the ten `IN/GB` corridors and the ten `PH/PH` ones with `discovery_selector: model`, then
-`visa-discover selection-recall`. Two things come out of it and only the first is a repeat:
+| arm | roles | read |
+| --- | --- | --- |
+| heuristic, matched budget | 32/60 — **53%** | 131 |
+| **model** | 57/60 — **95%** | 131 |
+| heuristic, shipped budget | 51/60 — **85%** | 455 |
 
-- entry 87's 100% / 91% / 70%, reproduced from logs that say who chose;
-- **the first selector number for a second traveller**, which nothing has ever measured. Expect it to
-  be worse: the `PH/PH` half of the fixture answers 41 of 60 roles against 47 of 60, so there is less
-  to find and the pages that answer are thinner.
+Entry 87 read 100% / 70% / 91% over ten `IN/GB` corridors and was not reproducible. The direction
+held and the gap widened: **+42 points at matched budget**, and the model still wins against a
+heuristic given 3.5× the reads.
 
-Twenty corridors of search and model quota. Cheap, and it is the only thing standing between the
-widened oracle and a number.
+**What the run found, which is why the first printing said 20 corridors and 94%.** The OpenAI
+account ran out of credit part-way through, seven corridors fell back to the heuristic ranking, and
+all seven logged `selector: model` — because the field recorded whether a selector was *configured*,
+not whether one *chose*. `japan/PH/PH` scored 5/5 in both arms off the same 34 pages. Fixed in
+`ResolutionTrace.selector`, with a positive control so it cannot decay into "always heuristic".
+Entry 97.
+
+**What is left, and it is only the credit.** Seven `PH/PH` corridors — Germany, France, the United
+Kingdom, Japan, the Netherlands, Sweden and the United States — have been re-run so their logs
+honestly say `heuristic`, and `selection-recall` refuses them by name. Top the account up and run:
+
+```bash
+for d in germany france united-kingdom japan netherlands sweden united-states; do
+  .venv/bin/visa-discover corridor --destination $d --nationality PH --from PH
+done
+.venv/bin/visa-discover selection-recall
+```
+
+**Do not read the three `PH/PH` corridors that did run as the second traveller's number.** Three of
+ten is what the credit lasted for, not a measurement of a traveller.
+
+**Also still blocked on credit: the visa-free plan has never been produced by a model.**
+`singapore/PH/PH/tourism` resolves correctly — the model picks ICA's visa-requirement page for
+`visa_decision` and the entry page for `general_entry`, 2 of 2 against the oracle — but
+`POST /visa-plans` for it returns `429` from OpenAI, so **rule 8e of `extract_visa_plan.txt` is
+still unexercised**. Item 39 built and verified the shape from a hand-made plan; this is the one
+part of it a model has never done. Run it the moment there is credit — start the app, then:
+
+```bash
+curl -sS localhost:8000/visa-plans -H 'content-type: application/json' -d '{"destination":"singapore","traveller":{"passport_nationality":"PH","country_of_residence":"PH","travel_purpose":"tourism"}}'
+```
+
+What a pass looks like: `visa_required: false`, `requirements` and `application_document_source_ids`
+empty, `where_to_apply` null, and `application_steps` holding entry duties — the SG Arrival Card and
+its three-day deadline, a passport-validity rule, onward travel — rather than an application. Fewer
+than four steps is expected and allowed; four steps that describe an application are the failure.
 
 **Careful:** clear nothing. `var/corpus/` and `var/pagetext/` are stores; `var/recall/` is where the
 output lands and the old logs are harmless now that they are refused rather than mis-graded.
-
-**And add `singapore/PH/PH/tourism` to whatever runs**, because it is the one corridor in the
-fixture whose answer is a stated "no visa required" and the entry shape has never been produced by
-the model — item 39 built and verified it from a hand-made plan, so rule 8e of
-`extract_visa_plan.txt` is the only part of that work still unexercised (entry 96).
 
 
 ### 40. Let curation fetch one page the index does not hold — `next`
