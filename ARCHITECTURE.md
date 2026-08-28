@@ -524,6 +524,13 @@ rather than graded. `arms_from_logs` reads a run's fetched URLs as the model's p
 run scored that way lands in the arm named `model` and is compared with itself — which is what
 widening the oracle exposed. `RecallRecord.cause`'s rule, applied to a second field.
 
+**A role can also fail to arise** (entry 94). A visa-free traveller makes no application, so
+`document_checklist`, `application_route`, `fees` and `processing_times` have nothing to answer —
+Singapore's Philippine corridor. The fixture records `not_applicable` and `load_oracle` refuses it
+unless the same row has a page answering `visa_decision`, because the failure to avoid is a recall
+gap dressed as a fact about the world. `VisaPlan` has no equivalent yet: `application_steps` is
+`min_length=4` and the whole shape assumes an application, which is TODO item 39.
+
 **A role settled by an official tool is credited and kept apart** (entry 93). `audit.py` has put
 `resolved_decision_tool` in the *resolved* group since entry 63, and `coverage` now agrees: half one
 reports roles answered by a page, roles settled by a questionnaire, and roles open. They are never

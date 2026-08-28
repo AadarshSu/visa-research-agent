@@ -79,6 +79,24 @@ class CorridorOracle(StrictModel):
     """A role whose answer an official questionnaire works out instead of a page stating it. Naming
     one never fills the role (entries 59 and 60), so these are graded on their own line."""
 
+    not_applicable: dict[str, str] = Field(default_factory=dict)
+    """A role that does not arise for this traveller, with why — never one nobody could answer.
+
+    Singapore is the case it was added for (TODO item 39). A Filipino needs no visa, so there is no
+    application: no checklist to bring, no route to take, no fee to pay and nothing to process. All
+    four were recorded `unanswered`, and the row read two of six — **a corridor that resolved
+    correctly, scored as a thin one.** That is entry 93's defect a second time: the metric counting
+    a complete outcome as a gap.
+
+    Kept apart from `unanswered` because the two mean opposite things about the store. `unanswered`
+    is a recall problem somebody could fix by crawling deeper or reading better. This is a fact
+    about the world, and a bigger corpus would not touch it.
+
+    **It may only be claimed where the corridor's own `visa_decision` is answered by a page saying
+    no.** A role is not "not applicable" because nobody found it — that is `unanswered`, and the
+    distinction is the whole point.
+    """
+
     unanswered: dict[str, str] = Field(default_factory=dict)
     unverifiable: list[str] = Field(default_factory=list)
     """Candidates that plausibly answer a role and hold no stored text. Neither credited nor
@@ -126,6 +144,23 @@ def load_oracle(path: Path = DEFAULT_ORACLE_PATH) -> SelectionOracle:
         if overlap:
             raise OracleError(
                 f"{corridor.corridor} both answers and does not answer {', '.join(sorted(overlap))}"
+            )
+        for role in corridor.not_applicable:
+            if role not in ROLE_ORDER:
+                raise OracleError(f"{corridor.corridor} names an unknown role {role!r}")
+        clash = set(corridor.not_applicable) & (set(corridor.answers) | set(corridor.unanswered))
+        if clash:
+            raise OracleError(
+                f"{corridor.corridor} calls {', '.join(sorted(clash))} not applicable and also "
+                "answers it or records it unanswered"
+            )
+        # The guard that keeps `not_applicable` from becoming a place to hide a recall failure.
+        # A role only fails to arise because the decision says it does not, so a row claiming it
+        # without a stated decision is claiming something it cannot know.
+        if corridor.not_applicable and "visa_decision" not in corridor.answers:
+            raise OracleError(
+                f"{corridor.corridor} calls a role not applicable without a page answering "
+                "visa_decision; only a stated decision can say a role does not arise"
             )
     return oracle
 

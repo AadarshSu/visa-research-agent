@@ -114,6 +114,17 @@ class KnownAnswer:
 
         return "/".join(self.corridor.split("/")[1:])
 
+    not_applicable: tuple[str, ...] = ()
+    """Roles that do not arise for this traveller, because the decision is that no visa is needed.
+
+    Its own column, never a gap. Singapore's Philippine row read **two of six** while resolving
+    perfectly: a Filipino needs no visa, so there is no application, no checklist to bring to one,
+    no fee and nothing to process. Calling those four `unanswered` said the store had failed to find
+    four pages, when what it had found was that there is nothing to find.
+
+    Distinct from `settled` as well as from a gap. A tool-settled role is a real question the
+    traveller must still go and resolve; this is a question that never arises."""
+
     settled: tuple[str, ...] = ()
     """Roles no page states and an official questionnaire settles, per entries 59 and 60.
 
@@ -307,6 +318,7 @@ def known_answers(oracle: SelectionOracle, corpus: CountryCorpus, slug: str) -> 
                 # A role a page answers is answered, whatever else names it. Only a role with no
                 # page answer is credited to its tool, so the two columns can never double-count.
                 settled=tuple(role for role in corridor.tools if role not in corridor.answers),
+                not_applicable=tuple(corridor.not_applicable),
                 aliased=tuple(aliased),
             )
         )

@@ -98,6 +98,34 @@ def test_every_curated_page_carries_the_sentence_that_decided_it() -> None:
                 assert len(page.why) > 20, f"{corridor.corridor} {role} {page.url}"
 
 
+def test_a_role_cannot_be_both_not_applicable_and_answered(tmp_path: Path) -> None:
+    path = write_oracle(
+        tmp_path / "oracle.yaml",
+        ONE_CORRIDOR + "    not_applicable:\n      fees: there is no application\n",
+    )
+
+    with pytest.raises(OracleError, match="not applicable and also"):
+        load_oracle(path)
+
+
+def test_a_role_may_not_be_called_not_applicable_without_a_stated_decision(tmp_path: Path) -> None:
+    """The guard that keeps `not_applicable` from becoming somewhere to hide a recall failure.
+
+    A question only fails to arise because the decision says so, so a row claiming it without a page
+    answering `visa_decision` is claiming something it cannot know — and would turn "we could not
+    find the checklist" into "there is no checklist", which is the worst direction to be wrong in.
+    """
+
+    body = ONE_CORRIDOR.replace("      visa_decision:\n", "      general_entry:\n", 1)
+    path = write_oracle(
+        tmp_path / "oracle.yaml",
+        body + "    not_applicable:\n      application_route: there is no application\n",
+    )
+
+    with pytest.raises(OracleError, match="without a page answering visa_decision"):
+        load_oracle(path)
+
+
 def test_a_role_the_oracle_says_is_unanswered_may_not_also_be_answered(tmp_path: Path) -> None:
     path = write_oracle(
         tmp_path / "oracle.yaml",

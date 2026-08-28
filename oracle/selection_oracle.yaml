@@ -1227,27 +1227,40 @@ corridors:
         - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/sg-arrival-card
           seen: text
           why: >-
-            the SG Arrival Card and health declaration every visitor must submit, which is the entry
-            condition that actually binds a visa-free traveller
-    unanswered:
+            the SG Arrival Card and health declaration every visitor must submit within three days
+            of arrival — the entry condition that actually binds a visa-free traveller, and the only
+            thing this corridor asks of them
+    not_applicable:
       document_checklist: >-
-        nothing names documents for a visa-free visitor, which is the honest outcome — there is no
-        application to bring documents to.
+        there is no visa application, so there are no documents to bring to one. The traveller's
+        obligations are on the arrival card, which `general_entry` names.
       application_route: >-
-        the same. `visa_decision` is "no visa", so there is no route to state.
-      fees: no candidate scored above zero for it.
+        there is nothing to apply for. "Where do I apply" has no answer because the question does
+        not arise, which is different from an answer nobody could find.
+      fees: >-
+        no application, no fee. ICA charges nothing for the SG Arrival Card and says so: "the use of
+        the SG Arrival Card e-Service is free of charge".
       processing_times: >-
-        the only candidate is the ICA site root at 10.5, which states nothing.
+        nothing is processed. The three-day arrival-card window is a deadline on the traveller, not
+        a wait on the authority, and it is recorded under `general_entry` where it belongs.
     excluded:
       - url: https://www.mfa.gov.sg/newsroom/press-statements-transcripts-and-photos/20250910-lkyef-visit-by-senator-of-the-philippines-loren-legarda
         why: >-
           the top `document_checklist` and second `application_route` candidate at 66.0, and it is a
           press statement about a Philippine senator visiting a fellowship programme. The country
           token is doing all the work; nothing else on the page is about this corridor.
+      - url: https://www.ica.gov.sg/docs/default-source/ica/ipses/ltvp-document-checklist.pdf
+        why: >-
+          the strongest `document_checklist` match by body text, and it is the checklist for a
+          **Long-Term Visit Pass**. Rule 6 excludes it on purpose: a 30-day tourist visit is not a
+          long-term stay, and this traveller needs no pass at all.
     note: >-
-      the answer is "no visa", and three of the six roles are unanswerable *because* of it rather
-      than in spite of it. Worth keeping in mind when reading any roles-filled number: a corridor
-      that resolves correctly can leave most roles empty.
+      **the corridor that resolves correctly and used to score two of six.** Four roles do not go
+      unanswered here; they do not arise, because a Filipino needs no visa for Singapore. Recording
+      them as `unanswered` said the store had failed to find four pages, when what it had found was
+      that there is nothing to find — TODO item 39, and entry 93's defect in its second shape. The
+      Indian row is 6 of 6 for the opposite reason: India **is** on the same list, so every one of
+      those four questions arises for that traveller and is answered.
 
   - corridor: united-states/PH/PH/tourism
     contention: 270

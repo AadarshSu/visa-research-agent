@@ -965,26 +965,29 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
             held = sum(row.held for row in rows)
             answerable = sum(row.answerable for row in rows)
             settled = sum(len(row.settled) for row in rows)
+            absent = sum(len(row.not_applicable) for row in rows)
             roles = sum(row.roles for row in rows)
             print(
                 f"\n  {traveller:<18} {held}/{answerable} of its answers held "
                 f"({held / answerable if answerable else 0:.0%})",
                 file=stream,
             )
+            done = answerable + settled + absent
             print(
-                f"  {'':<18} {answerable} roles answered by a page, {settled} settled by an "
-                f"official tool, {roles - answerable - settled} open\n"
-                f"  {'':<18} -> {answerable + settled}/{roles} the traveller can act on "
-                f"({(answerable + settled) / roles if roles else 0:.0%})",
+                f"  {'':<18} {answerable} answered by a page, {settled} settled by an official "
+                f"tool, {absent} do not arise, {roles - done} open\n"
+                f"  {'':<18} -> {done}/{roles} of the traveller's questions accounted for "
+                f"({done / roles if roles else 0:.0%})",
                 file=stream,
             )
             for row in rows:
                 flag = "" if row.held == row.answerable else "   <-- MISS"
                 alias = f"   ({len(row.aliased)} under a host alias)" if row.aliased else ""
                 tool = f", {len(row.settled)} by tool" if row.settled else ""
+                absent_here = f", {len(row.not_applicable)} n/a" if row.not_applicable else ""
                 print(
                     f"      {row.corridor:<40} {row.held}/{row.answerable} held, "
-                    f"{row.answerable}/{row.roles} by a page{tool}{alias}{flag}",
+                    f"{row.answerable}/{row.roles} by a page{tool}{absent_here}{alias}{flag}",
                     file=stream,
                 )
                 for role, urls in sorted(row.missing.items()):
@@ -996,8 +999,11 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
             "        A questionnaire the authority publishes *is* an answer — the plan names it\n"
             "        beside the question and the traveller acts on it — but nothing about it is\n"
             "        citable, and a tool-settled checklist lists no requirement (entry 60).\n"
-            "  open: no page and no tool. This is the column that moves with the traveller, and\n"
-            "        the one a single-traveller oracle could not show — known problem 33.",
+            "  n/a: the question does not arise — Singapore asks a visa-free traveller for no\n"
+            "        checklist, route, fee or processing time, and counting those as gaps\n"
+            "        scored a corridor that resolved correctly as a thin one (entry 94).\n"
+            "  open: no page, no tool, and the question does arise. This is the column that moves\n"
+            "        with the traveller, and the one a single-traveller oracle could not show.",
             file=stream,
         )
 

@@ -403,10 +403,45 @@ def test_the_report_shows_what_the_traveller_can_act_on_without_merging_the_colu
     )
     printed = stream.getvalue()
     assert "settled by an official tool" in printed
-    assert "the traveller can act on" in printed
+    assert "of the traveller's questions accounted for" in printed
     # The two are still separable in the output — merging them is what would hide the difference
     # between a page this project can cite and a form only the traveller can fill in.
     assert "by a page" in printed
+
+
+def test_a_role_that_does_not_arise_is_counted_apart_from_one_nobody_answered() -> None:
+    """Singapore's Philippine row read two of six while resolving perfectly. A Filipino needs no
+    visa, so four of the six questions do not arise — no application, so no checklist, route, fee or
+    processing time. Recording them `unanswered` claimed the store had failed to find four pages
+    when what it had found was that there is nothing to find. TODO item 39."""
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    singapore = next(r for r in oracle.corridors if r.corridor == "singapore/PH/PH/tourism")
+    row = next(
+        r
+        for r in known_answers(oracle, corpus_of([], code="SG"), "singapore")
+        if r.corridor == singapore.corridor
+    )
+    assert set(row.not_applicable) == {
+        "document_checklist",
+        "application_route",
+        "fees",
+        "processing_times",
+    }
+    assert row.answerable == 2
+    # Every one of the six is accounted for: two answered, four that do not arise, none open.
+    assert row.answerable + len(row.not_applicable) + len(row.settled) == row.roles
+
+
+def test_the_same_country_keeps_those_roles_for_a_traveller_who_does_need_a_visa() -> None:
+    """The control. India is on the very list the Philippines is absent from, so all six questions
+    arise for that traveller and all six are answered — which is what makes the Philippine row's
+    four a fact about the corridor and not about Singapore's website."""
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    indian = next(r for r in oracle.corridors if r.corridor == "singapore/IN/GB/tourism")
+    assert indian.not_applicable == {}
+    assert len(indian.answers) == 6
 
 
 def test_a_corridor_answering_nothing_still_counts_in_the_denominator() -> None:

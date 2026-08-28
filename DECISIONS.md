@@ -99,6 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
+| [94](#94-no-visa-required-is-a-complete-answer-and-four-of-singapores-six-questions-stop-existing) | **"No visa required" is a complete answer** — four of Singapore's six questions stop existing |
 | [93](#93-a-tool-mediated-answer-is-an-answer-and-the-metric-was-the-only-thing-saying-otherwise) | **A tool-mediated answer is an answer** — the product always said so; only the metric did not |
 | [92](#92-the-corpus-build-always-rendered-twelve-renders-is-what-left-france-unreadable) | **The corpus build always rendered** — the budget was twelve, and France met 64 challenges |
 | [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-68-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 68% for the other |
@@ -142,6 +143,84 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 94. "No visa required" is a complete answer, and four of Singapore's six questions stop existing
+**2026-08-28 · TODO item 39, the measurement half. The product half is specified and not built**
+
+Entry 93 fixed a metric that scored a tool-mediated answer as a gap. This is the same defect's other
+instance and the last one: Singapore's Philippine row read **two of six** while resolving perfectly.
+
+A Filipino needs no visa for Singapore. So there is no application — and with no application there
+is no checklist to bring to one, no route to take, no fee to pay and nothing to process. Those four
+roles were recorded `unanswered`, which says *the store failed to find four pages*. What the store
+had actually found is that **there is nothing to find**.
+
+```
+singapore/PH/PH   2 answered by a page, 4 do not arise, 0 open      6/6 accounted for
+singapore/IN/GB   6 answered by a page                              6/6 accounted for
+```
+
+The Indian row is the control and it is what makes this a fact about the corridor rather than about
+Singapore's website: India **is** on the very list the Philippines is absent from, so all six
+questions arise for that traveller and all six are answered.
+
+### The distinction, and why a third bucket rather than a wider second
+
+`unanswered` and `not_applicable` mean opposite things about the store:
+
+- **`unanswered`** is a recall problem. Somebody could fix it by crawling deeper, reading better, or
+  waiting for the authority to publish. It belongs in the column that judges us.
+- **`not_applicable`** is a fact about the world. A bigger corpus would not touch it, and no amount
+  of effort will produce a visa fee for a visa-free traveller.
+
+Merging them would be entry 93's mistake in reverse — and merging `not_applicable` into *answered*
+would be worse still, because "we know the answer" and "the question does not arise" are different
+things to tell a traveller.
+
+### The guard, which is the whole risk
+
+**A wrong "no visa required" that then suppresses four questions is far worse than a wrong one that
+leaves them visible**, because the traveller has nothing left to notice the error with. So
+`load_oracle` refuses a row that claims `not_applicable` **without a page answering
+`visa_decision`**:
+
+> only a stated decision can say a role does not arise
+
+That closes the failure this bucket would otherwise invite: "we could not find the checklist"
+quietly becoming "there is no checklist". A role is also refused if it is called not applicable and
+answered, or not applicable and unanswered — one status per role, always.
+
+### What is built and what is not
+
+**Built:** the fixture's fourth outcome, its two validators, and `visa-discover coverage`'s fourth
+column. `PH/PH` now reads **50 of 60 accounted for** — 41 answered by a page, 5 settled by an
+official tool, 4 that do not arise, 10 genuinely open.
+
+**Not built: the product half.** A `VisaPlan` still has no way to say a question does not arise, and
+looking for one turned up why it is more than a field: `application_steps` is `min_length=4` and
+`where_to_apply` and `requirements` are shaped for an application that a visa-free traveller never
+makes. There is no no-visa path anywhere in `research/` — the only mention is
+`require_load_bearing_sources`, which is about missing evidence rather than an absent application.
+
+So the product half needs its own decision: whether a visa-free plan renders as an application with
+zero steps, or as a different shape whose steps are *entry* steps — submit the arrival card, carry
+an onward ticket, hold six months of passport validity. The second is almost certainly right and it
+is not a rename. It stays TODO item 39, now reduced to that question, and it must key on
+`visa_required is False` **from a stated source** — never a tool, never a blocked page, never
+`decision_is_unverified`, for the reason above.
+
+### What was rejected
+
+- **Inferring "no visa" in discovery.** The adjudicator assigns pages to roles and never reads the
+  decision out of them; `visa_required` is known at extraction. Guessing it a step early would put
+  the suppression before the evidence that licenses it.
+- **Letting a curator mark a role not applicable on judgement.** The validator requires an answered
+  `visa_decision` in the same row, so the claim is anchored to a page somebody named.
+- **Counting the four as answered.** They are accounted for, not answered. A traveller reading
+  "checklist: none required" is being told something true; a metric reading "checklist: answered"
+  would be telling us something false.
 
 ---
 

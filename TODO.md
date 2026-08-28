@@ -138,7 +138,7 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next` |
-|  | 39. Stop asking five more questions once the answer is "no visa required" | `next` |
+|  | 39. Let a plan say a question does not arise | `next` |
 |  | 40. Let curation fetch one page the index does not hold | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
@@ -173,7 +173,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has eighty-four rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has eighty-five rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -276,42 +276,34 @@ widened oracle and a number.
 output lands and the old logs are harmless now that they are refused rather than mis-graded.
 
 
-### 39. Stop asking five more questions once the answer is "no visa required" — `next`
+### 39. Let a plan say a question does not arise — `next`
 
-**Sharpened by entry 93, which fixed the other instance of this defect.** A role settled by an
-official tool is now counted and credited — France's Philippine row reads 5 of 6 rather than 2,
-because the Wizard *is* the answer the authority published. Singapore is the last case of the same
-shape: three of its four gaps are gaps **because** the answer is "no visa", and the metric still
-scores a correct, complete corridor as a thin one. The fix here is the same in spirit and different
-in mechanism — there the role is settled elsewhere, here it does not exist.
+**Half done (entry 94): the measurement half is built, the product half is not.**
 
-**Why:** Singapore's `PH/PH` row records `document_checklist`, `application_route` and `fees` as
-unanswered, and every one of them is unanswered **because the corridor resolved correctly**. A
-Filipino needs no visa for Singapore, so there is no application to bring documents to, no route to
-take and no fee to pay. Asking anyway turns a complete, correct answer into a 2-of-6 result in every
-metric this project has — entry 58's checklist rate included, and known problem 26 already warns that
-those numbers measure *answering* rather than being right.
+Singapore's Philippine row read two of six while resolving perfectly — a Filipino needs no visa, so
+there is no application, and with no application there is no checklist, route, fee or processing
+time. The oracle now has a fourth outcome, `not_applicable`, guarded so it can only be claimed where
+a page answers `visa_decision`; `visa-discover coverage` counts it in its own column, and Singapore
+is 6 of 6 accounted for. `PH/PH` overall reads **50 of 60**.
 
-**What a complete answer looks like when the decision is "no visa":** the decision, the official page
-that states it, and whatever entry conditions do still bind — Singapore's SG Arrival Card, an onward
-ticket, a passport validity rule. That is `visa_decision` and `general_entry`, and the other four
-roles are **not applicable** rather than missing.
+**What is left is the plan, and it is more than a field.** `VisaPlan` has no way to say a question
+does not arise, and the shape assumes an application that a visa-free traveller never makes:
+`application_steps` is `min_length=4`, and `where_to_apply` and `requirements` are built for one.
+There is no no-visa path anywhere in `research/`.
 
-**Do:** give a role a third outcome beside filled and unfilled — *not applicable, because the visa
-decision is no*. It has to be derived from the adjudicated decision rather than guessed, and it must
-never fire when `visa_decision` is unverified or handed over as a tool: "we could not confirm whether
-you need a visa" can never suppress the checklist. Then teach the corridor's own reporting, the
-interface's empty-checklist panel (which already names three reasons — entry 89) and
-`visa-discover coverage` to count those roles apart from the ones nobody could answer.
+**The question to decide first**, before any code: does a visa-free plan render as an application
+with nothing in it, or as a different shape whose steps are *entry* steps — submit the arrival card,
+carry an onward ticket, hold six months of passport validity? The second is almost certainly right,
+and it is a design change rather than a rename. Argue it in a decision entry.
 
-**Careful, and this is the whole risk:** a wrong "no visa required" that then suppresses five
+**Careful, and this is the whole risk:** a wrong "no visa required" that then suppresses four
 questions is worse than a wrong one that leaves them visible, because the traveller has nothing left
-to notice the error with. So this may only key on a `visa_decision` that is *stated by a source* —
-never on a tool, never on a blocked page, never on `decision_is_unverified`.
+to notice the error with. It may only key on `visa_required is False` **stated by a source** — never
+a tool, never a blocked page, never `decision_is_unverified`. The oracle's validator already enforces
+the fixture's half of that and is the model for the plan's.
 
-**Also update the oracle**, whose Singapore rows currently record those three as `unanswered` with a
-reason. They want a fourth key — `not_applicable` — or the fixture will keep scoring a correct
-corridor as a thin one.
+**Then the interface**, whose empty-checklist panel names three reasons today (entry 89) and needs a
+fourth: not that we failed to find a checklist, but that this traveller needs none.
 
 
 ### 40. Let curation fetch one page the index does not hold — `next`

@@ -65,6 +65,12 @@ the CLI does not offer it.
   holds the answer is **`visa-discover coverage`**; whether the *corridor* then finds it is selection
   recall, below. A single number covering both would hide which half failed, which is the mistake
   `visa-discover audit` exists not to make.
+- **A role can fail to arise, and that is not a gap** (entry 94). No visa means no application, so
+  a visa-free corridor has no checklist, route, fee or processing time to find — Singapore's
+  Philippine row is 2 answered and 4 that do not arise, against the Indian row's 6 answered, because
+  India is on the same list the Philippines is absent from. The oracle records it as
+  `not_applicable` and refuses the claim unless a page answers `visa_decision`: **"we could not find
+  the checklist" must never become "there is no checklist".** The plan cannot say this yet — item 39.
 - **A role an official questionnaire settles is answered, and is counted apart** (entry 93). The
   distinction is *direct* answer — "Filipino citizens residing in the Philippines need a visa" —
   against *tool-mediated* — "France-Visas' Visa Wizard determines whether you need a visa; use it

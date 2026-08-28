@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has eighty-four rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has eighty-five rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -126,11 +126,19 @@ on every page and held stored text for none; it now holds **863**, its visa-requ
 readable, and Sweden's Philippine row went **2 of 6 to 6 of 6**. The United States, at 19, is what
 remains and its hosts are application portals rather than guidance.
 
+**"No visa required" is a complete answer, and the metric now says so** (entry 94). Singapore's
+Philippine row read two of six while resolving perfectly: no visa means no application, so four of
+the six questions do not arise. The oracle has a fourth outcome, guarded so it can only be claimed
+where a page answers `visa_decision` — "we could not find the checklist" must never become "there is
+no checklist". **The product half is not built**: `VisaPlan` cannot say a question does not arise,
+and `application_steps` is `min_length=4`, so a visa-free plan needs a shape decision rather than a
+field. TODO item 39, now reduced to that.
+
 **A tool-mediated answer is an answer, and only the coverage metric said otherwise** (entry 93).
 The product has treated `resolved_decision_tool` as *resolved* since entry 63 — "the authority
 publishes it only as a tool" — and `visa-discover coverage`, written the same week, counted it as a
 gap. Half one now reports three columns and never merges them: **IN/GB 47 by a page + 7 by a tool =
-54/60 the traveller can act on; PH/PH 41 + 5 = 46/60.** France's Philippine row is **5 of 6**, not 2.
+54/60 accounted for; PH/PH 41 + 5 + 4 that do not arise = 50/60.** France's Philippine row is **5 of 6**, not 2.
 `settled` is never added into `held`, because a page is citable and a tool is not.
 
 **France's Wizard was checked against the fixture and confirms it — three roles, named not filled**
