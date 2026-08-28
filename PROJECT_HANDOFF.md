@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 634 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 636 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has ninety rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has ninety-two rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -143,22 +143,29 @@ spec never named were also in the way — `validate_absent_checklist`'s unresolv
 the spec was wrong: `where_to_apply` is permitted to be `None`, not required, because a visa-free
 American still needs a UK ETA.
 
-**Item 38 is 13 of 20 done, and the number is reproducible from disk for the first time** (entry
-97). Over the thirteen corridors that ran with the model: **95% role recall against the matched
-heuristic's 53%**, at 131 reads each, and against the shipped heuristic's 85% at 455 reads. Entry 87
-read 100% / 70% / 91% and was not reproducible; the direction held and the gap widened to +42 points.
+**Item 38 is done: all twenty corridors graded, none unattributed, and the figure is reproducible
+from disk for the first time** (entries 97, 98). The model reaches **92% role recall against the
+matched heuristic's 47%** at 203 reads each, and against the shipped heuristic's 89% at 700 reads.
+Entry 87 read 100% / 70% / 91% over ten corridors and could not be regenerated; over all twenty the
+direction held and the matched-budget gap widened to **+45 points**. The `PH/PH` half reads 34/40
+against `IN/GB`'s 47/48 — the first selector figure for a second traveller, worse for the reason
+item 38 predicted. `united-kingdom/PH/PH` at 2/5 is the weakest row.
 
-**The run found the defect that made its own first printing wrong.** The OpenAI account ran out of
-credit part-way through, seven corridors fell back to the heuristic ranking, and all seven logged
-`selector: model` — the field recorded whether a selector was *configured*, not whether one *chose*.
-`japan/PH/PH` scored 5/5 in both arms off the same 34 pages. It is entry 91's defect one level in,
-now fixed on `ResolutionTrace` with a positive control in the tests.
+**The run found the defect that made its own first printing wrong** (entry 97). The OpenAI account
+ran out of credit part-way through, seven corridors fell back to the heuristic ranking, and all
+seven logged `selector: model` — the field recorded whether a selector was *configured*, not whether
+one *chose*. `japan/PH/PH` scored 5/5 in both arms off the same 34 pages. Entry 91's defect one
+level in, now fixed on `ResolutionTrace` with a positive control, and the seven were re-run rather
+than edited.
 
-**Two things are blocked on OpenAI credit and nothing else.** The seven remaining `PH/PH` corridors
-(their logs now honestly say `heuristic`, and `selection-recall` refuses them by name), and the
-visa-free plan, which **no model has ever produced**: `singapore/PH/PH/tourism` resolves correctly
-and picks the right two pages, but `POST /visa-plans` returns `429`, so rule 8e of
-`extract_visa_plan.txt` is still unexercised. TODO item 38 has both, with the commands.
+**A model has now produced the visa-free plan** (entry 98). `singapore/PH/PH/tourism` returns
+`visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and
+five entry steps each citing ICA's entry page. It needed a **sixth** change entry 95 did not name:
+the guard that raises when a destination designates a checklist source and the model returns no
+requirements read a correct empty answer as a failed extraction, because Singapore's configuration
+pins an India-specific page as the checklist for every traveller. **The step floor never bit** —
+three runs gave 6, 4 and 5 steps — so the no-floor decision still rests on entry 96's argument
+rather than on this run.
 
 **"No visa required" is a complete answer, and the metric now says so** (entry 94). Singapore's
 Philippine row read two of six while resolving perfectly: no visa means no application, so four of

@@ -139,6 +139,69 @@ async def test_openai_extractor_requires_a_designated_application_document_sourc
 
 
 @pytest.mark.anyio
+async def test_a_stated_no_visa_survives_a_destination_that_designates_a_checklist() -> None:
+    """The sixth thing in the way of the entry shape, and it was not a validator (entry 98).
+
+    Singapore designates `sg_ica_india_visa_details` as its checklist for *every* traveller, so a
+    corridor whose answer is "no visa required" reaches a guard that reads an empty requirements
+    list as a model that ignored the checklist. For an application that is exactly right; here
+    there is no application, so there are no application documents, and the empty list is the
+    answer rather than a failure.
+
+    The plan must also stop designating the source it no longer draws on, or the interface
+    announces a checklist with nothing under it.
+    """
+
+    golden_draft = load_golden_draft()
+    draft = golden_draft.model_copy(
+        update={
+            "visa_required": False,
+            "visa_type": None,
+            "where_to_apply": None,
+            "requirements": [],
+            "unresolved_questions": [],
+            # Only steps that link to a page, never to a route: with no `where_to_apply` a
+            # route-linked step is refused by `validate_requirement_sources`, which entry 95 named
+            # as the guard that looks like an obstacle and is not.
+            "application_steps": [
+                step
+                for step in golden_draft.application_steps
+                if step.link_target != "application_route"
+            ][:3],
+        }
+    )
+    generator = FakeStructuredPlanGenerator(draft)
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+    extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
+
+    plan = await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    assert plan.visa_required is False
+    assert plan.requirements == []
+    assert plan.application_document_source_ids == [], (
+        "a plan with no application must not designate a checklist it does not draw on"
+    )
+    assert len(plan.application_steps) == 3, "the entry list is as long as the sources state"
+    assert plan.status == "verified", "a stated decision on cleanly read pages is verified"
+
+
+@pytest.mark.anyio
+async def test_a_visa_that_is_required_still_needs_its_designated_checklist() -> None:
+    """The guard above narrowed and not removed: only a stated *no* may return nothing."""
+
+    golden_draft = load_golden_draft()
+    draft = golden_draft.model_copy(
+        update={"requirements": [], "unresolved_questions": ["What documents are needed?"]}
+    )
+    generator = FakeStructuredPlanGenerator(draft)
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+    extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
+
+    with pytest.raises(LLMExtractionError, match="no source-backed application documents"):
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+
+@pytest.mark.anyio
 async def test_openai_extractor_stops_before_call_when_input_is_too_large() -> None:
     generator = FakeStructuredPlanGenerator(load_golden_draft())
     fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())

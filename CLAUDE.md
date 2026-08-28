@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose ninety rows are
+what has wasted the most time here — see the corrections table further down, whose ninety-two rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -33,11 +33,18 @@ have a corpus **and now a page-text index** (entry 85). A questionnaire is treat
 than a blockade — named for the role it settles, offered beside that question (entries 59, 60), and
 guidance an authority contracts out to a company is named the same way (entry 89).
 
-**The visa-free plan is an entry plan and it is built** (entries 95–96, [TODO.md](TODO.md) item 39,
-done). A traveller who needs no visa gets their entry duties, no checklist and a route panel that
-says there is nowhere to apply — only ever on a decision a source **stated**. The floor entry 95 left
-open turned out not to be a number: three visa-free corridors state 3, ~5 and ~7 duties. Rule 8e of
-`extract_visa_plan.txt` is the one part never exercised by a model — item 38 is where that happens.
+**The visa-free plan is an entry plan, it is built, and a model has produced one** (entries 95–96
+and 98, [TODO.md](TODO.md) items 39 and 39a, done). `singapore/PH/PH/tourism` returns
+`visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and
+five entry steps citing ICA's entry page. The floor entry 95 left open turned out not to be a
+number — three visa-free corridors state 3, ~5 and ~7 duties — though **the floor never bit in the
+runs that passed**, so that choice rests on entry 96's argument rather than on a run.
+
+**Selector work has a reproducible number over all twenty oracle corridors** (entries 97–98,
+item 38, done): the model reads **92% of roles against the matched heuristic's 47%** at 203 reads
+each, and the shipped heuristic's 89% at 700. The run also found that `RecallRecord.selector`
+recorded which selector was *configured* rather than which one *chose* — a credit outage put the
+heuristic inside the model's own arm, for the second time in this project's history.
 
 **The gate is built and it is the promotion rule for stage 3** (entry 90, [TODO.md](TODO.md) item
 37). Its first half now reports four columns — roles answered **by a page**, roles **settled by an
@@ -336,11 +343,14 @@ produces a serious defect.
   the United Kingdom is not. `validate_requirement_sources` is what keeps this safe and is unchanged:
   a step may link to an application route only where there is one.
 
-  **Two validators the spec did not name are conditioned on a stated no, and one clause never
-  moves.** `validate_absent_checklist` no longer demands "what could not be answered" from a plan
-  where nothing failed to be answered, and `resolve_plan_status` no longer grades such a plan
-  `partial` for ever. Its first clause is untouched and is the one this project exists to enforce:
-  with no designated document source, a plan may not list a single requirement.
+  **Three things the spec did not name are conditioned on a stated no, and one clause never moves.**
+  `validate_absent_checklist` no longer demands "what could not be answered" from a plan where
+  nothing failed to be answered; `resolve_plan_status` no longer grades such a plan `partial` for
+  ever; and extraction's `if application_source_ids and not requirements: raise` no longer reads a
+  correct empty checklist as a failed model call (entry 98) — a destination that *designates* a
+  checklist designated it for the travellers who apply. `validate_absent_checklist`'s first clause
+  is untouched and is the one this project exists to enforce: with no designated document source, a
+  plan may not list a single requirement.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Never show a traveller an unverified claim that would alarm them if wrong.** The rule from entry 6,
@@ -424,6 +434,8 @@ cause, and only running the thing showed it.
 | entry 95 named the three validators in the way | there were five — the checklist's third clause and the status grade (entry 96) |
 | entry 91 fixed the log so it records which selector ran | it records which was *configured*; a failed model call logs as `model` (entry 97) |
 | a model selector configured is a model selector that chose | four paths fall back to the heuristic, and a credit outage took seven (entry 97) |
+| entry 95 named three validators, entry 96 found five | there are six — a guard in extraction reads an empty checklist as failure (entry 98) |
+| the entry plan passed, so the no-floor decision is proven | three runs gave 6, 4 and 5 steps; the floor never bit (entry 98) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

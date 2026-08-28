@@ -77,6 +77,7 @@ not — and stored text ranks, it never speaks).
 | [31](#31-a-failed-adjudication-refuses-rather-than-falling-back-to-the-heuristic) | A failed adjudication refuses rather than falling back — **amends 16** |
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
+| [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
 
 ### Finding the right page: ranking, recall, judgement
 | | |
@@ -146,6 +147,69 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 98. A model produced the entry plan, and a sixth thing was in the way
+
+**2026-08-28 · finishes TODO items 38 and 39**
+
+Entry 96 built the visa-free shape and verified it from a hand-made plan; the model had never been
+asked to produce one, because the OpenAI account was out of credit. With credit restored,
+`POST /visa-plans` for `singapore/PH/PH/tourism` refused — and the reason was neither the schema nor
+the prompt.
+
+### The sixth blocker, in the assembly rather than a validator
+
+```python
+if application_source_ids and not requirements:
+    raise LLMExtractionError("Model output contains no source-backed application documents")
+```
+
+Singapore is one of the seven hand-configured destinations, and its
+`application_document_source_ids` is **`sg_ica_india_visa_details`** — a page about Indian travel
+documents, configured for every traveller. A Filipino needs no visa, so the model correctly returned
+no requirements, and this guard read a correct answer as a failed extraction.
+
+The guard is right for an application: a destination that designates a checklist and gets nothing
+back has had its checklist ignored. It is wrong for an entry plan, where there is no application to
+have documents for. It is now conditioned on `entry_only`, which is `visa_required is False` on the
+plan about to be built — the same stated-decision gate everything else in this shape uses. Two
+things move with it: `application_document_source_ids` is emptied, so the interface never announces
+a checklist with nothing under it, and `has_checklist_source` follows, so the status is graded on
+what the plan actually designates.
+
+**That makes six things in the way, against entry 95's three.** The step floor, the
+unresolved-question clause, `resolve_plan_status`, `where_to_apply` being required rather than
+permitted (entry 96), and now this. The pattern in all six is the same: every one assumed a plan
+describes an application, because until now every plan did.
+
+### What the model produced
+
+`visa_required: false`, `where_to_apply: null`, `requirements: []`,
+`application_document_source_ids: []`, `unresolved_questions: []`, **`status: verified`**, and five
+entry steps — passport validity, the SG Arrival Card and its three-day window, cash and onward
+travel, biometrics at clearance, and the Visit Pass conditions — every one citing ICA's general
+entry page and linking with `link_target: "source"`. Rendered, it reads *"There is nowhere to apply"*,
+*"There are no application documents to gather"*, and **Before you travel**. Every one of the six
+changes is load-bearing in that plan: remove any and it either refuses or misdescribes itself.
+
+### The floor did not bite, and saying so matters
+
+Three runs gave **6, 4 and 5** steps. The oracle counts three entry duties for this corridor, from
+the two pages it credits; the model reads ICA's whole entry page and finds more. So **nothing here
+tested the low end** — the no-floor decision rests on entry 96's argument and on Japan and the
+United Kingdom, not on this run, and a corridor whose sources state one duty has still never been
+seen. Recorded because the temptation is to read a passing run as evidence for the choice that made
+it pass, and this one is not.
+
+### Left alone, deliberately
+
+Singapore's configuration names an India-specific page as the checklist for every traveller, and the
+model's explanation mentions it — *"the listed India-specific document checklist does not apply to
+this traveller"* — which is honest and is a configuration artefact leaking into a traveller's plan.
+That is a defect in `destinations.yaml`, not in this shape, and it belongs with the other
+hand-configured destinations rather than being patched here. TODO, smaller things.
 
 ---
 

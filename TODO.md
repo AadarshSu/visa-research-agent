@@ -137,8 +137,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 38. Re-run the twenty oracle corridors so a selector can be graded again | `next`, 7 of 20 left |
-|  | 40. Let curation fetch one page the index does not hold | `next` |
+| **Now** | 40. Let curation fetch one page the index does not hold | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -288,63 +287,50 @@ of `extract_visa_plan.txt` is unexercised. Item 38's re-run is where that gets t
 visa-free corridor to it.
 
 
-### 38. Re-run the twenty oracle corridors so a selector can be graded again — `next`, **7 of 20 left**
+### 38. ~~Re-run the twenty oracle corridors so a selector can be graded again~~ — `done, entries 97-98`
 
-**Run 2026-08-28. Thirteen of the twenty are graded and the number is reproducible from disk for the
-first time; seven are blocked on OpenAI credit.** The run also found the defect that made the first
-printing of it wrong — entry 97.
+**Done 2026-08-28. All twenty graded, none unattributed, and the figure is reproducible from disk
+for the first time.**
 
-**What it produced**, over 13 corridors, from logs that name their own arm:
+| arm | roles | joint | read |
+| --- | --- | --- | --- |
+| heuristic, matched budget | 41/88 — **47%** | 12/29 — 41% | 203 |
+| **model** | 81/88 — **92%** | 20/29 — 69% | 203 |
+| heuristic, shipped budget | 78/88 — **89%** | 23/29 — 79% | 700 |
 
-| arm | roles | read |
-| --- | --- | --- |
-| heuristic, matched budget | 32/60 — **53%** | 131 |
-| **model** | 57/60 — **95%** | 131 |
-| heuristic, shipped budget | 51/60 — **85%** | 455 |
+Entry 87 read 100% / 70% / 91% over ten `IN/GB` corridors and could not be regenerated. Over all
+twenty it is **92% / 47% / 89%**: the direction held, the matched-budget gap widened to **+45
+points**, and the model still edges a heuristic given 3.4× the reads.
 
-Entry 87 read 100% / 70% / 91% over ten `IN/GB` corridors and was not reproducible. The direction
-held and the gap widened: **+42 points at matched budget**, and the model still wins against a
-heuristic given 3.5× the reads.
+**The first traveller number for a second traveller.** The `PH/PH` half reads 34/40 roles for the
+model against the `IN/GB` half's 47/48 — worse, as this item predicted, and for the reason it
+predicted: there is less in the store to find. `united-kingdom/PH/PH` at 2/5 is the weakest row and
+is where to look first.
 
-**What the run found, which is why the first printing said 20 corridors and 94%.** The OpenAI
-account ran out of credit part-way through, seven corridors fell back to the heuristic ranking, and
-all seven logged `selector: model` — because the field recorded whether a selector was *configured*,
-not whether one *chose*. `japan/PH/PH` scored 5/5 in both arms off the same 34 pages. Fixed in
-`ResolutionTrace.selector`, with a positive control so it cannot decay into "always heuristic".
-Entry 97.
+**The run found the defect that made its own first printing wrong** — entry 97. The OpenAI account
+ran out of credit part-way through, seven corridors fell back to the heuristic ranking, and all
+seven logged `selector: model`, because the field recorded whether a selector was *configured*
+rather than whether one *chose*. `japan/PH/PH` scored 5/5 in both arms off the same 34 pages. Fixed
+on `ResolutionTrace.selector` with a positive control, the seven were re-run rather than edited, and
+the numbers above are from logs that name their own arm.
 
-**What is left, and it is only the credit.** Seven `PH/PH` corridors — Germany, France, the United
-Kingdom, Japan, the Netherlands, Sweden and the United States — have been re-run so their logs
-honestly say `heuristic`, and `selection-recall` refuses them by name. Top the account up and run:
 
-```bash
-for d in germany france united-kingdom japan netherlands sweden united-states; do
-  .venv/bin/visa-discover corridor --destination $d --nationality PH --from PH
-done
-.venv/bin/visa-discover selection-recall
-```
+### 39a. ~~Have a model actually produce the visa-free plan~~ — `done, entry 98`
 
-**Do not read the three `PH/PH` corridors that did run as the second traveller's number.** Three of
-ten is what the credit lasted for, not a measurement of a traveller.
+**Done 2026-08-28.** `POST /visa-plans` for `singapore/PH/PH/tourism` returns `visa_required: false`,
+`where_to_apply: null`, empty `requirements` and `application_document_source_ids`, no unresolved
+questions, **`status: verified`**, and five entry steps — passport validity, the SG Arrival Card and
+its three-day window, cash and onward travel, biometrics at clearance, Visit Pass conditions — each
+citing ICA's general entry page. Rendered: *"There is nowhere to apply"*, *"There are no application
+documents to gather"*, **Before you travel**.
 
-**Also still blocked on credit: the visa-free plan has never been produced by a model.**
-`singapore/PH/PH/tourism` resolves correctly — the model picks ICA's visa-requirement page for
-`visa_decision` and the entry page for `general_entry`, 2 of 2 against the oracle — but
-`POST /visa-plans` for it returns `429` from OpenAI, so **rule 8e of `extract_visa_plan.txt` is
-still unexercised**. Item 39 built and verified the shape from a hand-made plan; this is the one
-part of it a model has never done. Run it the moment there is credit — start the app, then:
+**It needed a sixth change entry 95 did not name.** `if application_source_ids and not requirements:
+raise` read a correct empty checklist as a failed extraction, because Singapore's configuration
+designates an India-specific page as the checklist for every traveller. Conditioned on the same
+stated-decision gate; entry 98.
 
-```bash
-curl -sS localhost:8000/visa-plans -H 'content-type: application/json' -d '{"destination":"singapore","traveller":{"passport_nationality":"PH","country_of_residence":"PH","travel_purpose":"tourism"}}'
-```
-
-What a pass looks like: `visa_required: false`, `requirements` and `application_document_source_ids`
-empty, `where_to_apply` null, and `application_steps` holding entry duties — the SG Arrival Card and
-its three-day deadline, a passport-validity rule, onward travel — rather than an application. Fewer
-than four steps is expected and allowed; four steps that describe an application are the failure.
-
-**Careful:** clear nothing. `var/corpus/` and `var/pagetext/` are stores; `var/recall/` is where the
-output lands and the old logs are harmless now that they are refused rather than mis-graded.
+**The floor did not bite.** Three runs gave 6, 4 and 5 steps. Nothing here tested the low end, so
+the no-floor decision still rests on entry 96's argument rather than on this run.
 
 
 ### 40. Let curation fetch one page the index does not hold — `next`
@@ -1504,6 +1490,23 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**Singapore's hand-written configuration is India-specific, and a traveller can now read that.**
+Found 2026-08-28, entry 98. `destinations.yaml` names `sg_ica_india_visa_details` — a page about
+Indian travel documents — as `application_document_source_ids` for *every* traveller, so a Filipino
+request fetches it as a required source and the model's explanation mentioned it: *"the listed
+India-specific document checklist does not apply to this traveller"*. Honest, and a configuration
+artefact leaking into a plan. It also broke the visa-free shape until entry 98 conditioned the
+empty-checklist guard, which is how it was found. The seven hand-configured destinations should be
+checked for the same shape — a per-nationality page pinned as if it were the country's checklist —
+and the fix is per-destination, not a code change. Note that the *automatic* path does not have this
+problem: it resolves the corridor for the traveller who asked.
+
+**`www.ph.emb-japan.go.jp` answers 404, twice.** Seen on both `japan/PH/PH` runs on 2026-08-28, so
+it is a stable fact about that host rather than a transient. Japan's Manila embassy is exactly where
+a Filipino traveller's guidance would be, and `japan/PH/PH` still scores 5/5 without it. Worth a
+check that the address in the corpus is stale rather than the host being gone.
+
 
 **25 recall logs carry no cause, and only a re-run fills them in.** Entry 63 added
 `RecallRecord.cause`, and the logs from the twenty-corridor measurement predate it. They cannot be

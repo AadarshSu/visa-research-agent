@@ -234,6 +234,15 @@ class OpenAIVisaPlanExtractor:
             )
             for index, authority in enumerate(destination.unreadable_authorities)
         ]
+        # Not the model's to decide when nothing confirmed it. Asked for in the prompt and enforced
+        # here, because a wrong yes or no is the most damaging thing this can say. Computed before
+        # the plan is built because it is also what licenses the entry shape: everything that shape
+        # relaxes — no checklist question, fewer than four steps, a status that may still be
+        # verified — is allowed only where this is `False`, which this line makes reachable only
+        # from a page (DECISIONS entry 95).
+        visa_required = None if destination.decision_is_unverified else draft.visa_required
+        entry_only = visa_required is False
+
         requirements = [
             requirement
             for requirement in draft.requirements
@@ -243,16 +252,15 @@ class OpenAIVisaPlanExtractor:
         # anything the model offered is dropped rather than kept on a page that is not a checklist —
         # an eligibility rule or an application form read as though it were guidance. The plan then
         # has to say what it could not answer, or the validator refuses it.
-        if application_source_ids and not requirements:
+        #
+        # **Unless a page stated that this traveller needs no visa.** Then an empty list is the
+        # right answer rather than a failed extraction: there is no application, so there are no
+        # application documents, and a destination that *declares* a checklist source has declared
+        # one for the travellers who apply. Singapore is the case — `sg_ica_india_visa_details` is
+        # configured for every traveller, and a Filipino needs no visa, so the model correctly
+        # returned nothing and this guard read that as a model failure. Entry 98.
+        if application_source_ids and not requirements and not entry_only:
             raise LLMExtractionError("Model output contains no source-backed application documents")
-
-        # Not the model's to decide when nothing confirmed it. Asked for in the prompt and enforced
-        # here, because a wrong yes or no is the most damaging thing this can say. Computed before
-        # the plan is built because it is also what licenses the entry shape: everything that shape
-        # relaxes — no checklist question, fewer than four steps, a status that may still be
-        # verified — is allowed only where this is `False`, which this line makes reachable only
-        # from a page (DECISIONS entry 95).
-        visa_required = None if destination.decision_is_unverified else draft.visa_required
         try:
             where_to_apply = (
                 ApplicationLocation.model_validate(draft.where_to_apply.model_dump())
@@ -267,14 +275,19 @@ class OpenAIVisaPlanExtractor:
                 decision_source_ids=draft.decision_source_ids,
                 where_to_apply=where_to_apply,
                 requirements=requirements,
-                application_document_source_ids=destination.application_document_source_ids,
+                # Emptied for an entry plan, because a designated checklist source with nothing
+                # under it would have the interface announce a checklist that does not exist. The
+                # page is still cited wherever a step or the decision rests on it.
+                application_document_source_ids=(
+                    [] if entry_only else destination.application_document_source_ids
+                ),
                 application_steps=draft.application_steps,
                 sources=references,
                 unresolved_questions=draft.unresolved_questions,
                 last_checked=max(reference.retrieved_at for reference in references),
                 status=resolve_plan_status(
                     report,
-                    has_checklist_source=bool(application_source_ids),
+                    has_checklist_source=bool(application_source_ids) and not entry_only,
                     decision_is_unverified=destination.decision_is_unverified,
                     no_visa_required=visa_required is False,
                 ),
