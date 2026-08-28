@@ -99,7 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
-| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-53-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 53% for the other |
+| [91](#91-a-second-traveller-in-the-oracle-the-corpus-answers-78-of-roles-for-one-and-60-for-the-other) | **A second traveller in the oracle** — 78% of roles answerable for one, 60% for the other |
 | [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
@@ -143,7 +143,7 @@ not — and stored text ranks, it never speaks).
 
 ---
 
-## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 53% for the other
+## 91. A second traveller in the oracle: the corpus answers 78% of roles for one and 60% for the other
 **2026-08-28 · known problem 29, closed by curation. It found a defect in the grader on the way through**
 
 Every recall number this project quoted rested on the same ten corridors, all `IN/GB/tourism`:
@@ -162,11 +162,11 @@ one place a corpus change can be seen at all.
 
 ```
 IN/GB/tourism   47/47 of its answers held (100%)   47/60 roles answerable at all (78%)
-PH/PH/tourism   32/32 of its answers held (100%)   32/60 roles answerable at all (53%)
+PH/PH/tourism   36/36 of its answers held (100%)   36/60 roles answerable at all (60%)
 ```
 
 The corpus holds every page a human could name, for both. What moves is **how much can be answered at
-all**: the same ten stores answer 47 of 60 roles for one traveller and 32 of 60 for the other. That is
+all**: the same ten stores answer 47 of 60 roles for one traveller and 36 of 60 for the other. That is
 the traveller dimension, and a percentage whose denominator is itself the finding could not show it —
 so `visa-discover coverage` now prints both figures per traveller and `KnownAnswer` carries `roles`
 so the denominator cannot move.
@@ -179,7 +179,7 @@ curated with `visa-discover contention`, whose set is built *from* the corpus, s
 there is held by construction. The only way to score below 100% was to mistype a URL, which happened
 once — Canada, where the corpus holds `…/supporting-documents.html/1000.html` and the store's copy of
 it is Canada.ca's 404 page. So `PH/PH`'s held column measures transcription; **its finding is
-entirely the 32 of 60.**
+entirely the 36 of 60.**
 
 **The zero-answer corridors are counted.** France and Sweden answer *none* of their six roles for this
 traveller, and skipping them — which the first implementation did, by filtering on `not
@@ -214,10 +214,28 @@ and EUR 30,000 insurance conditions. France went 0 → 1 plus three tools: `ph.d
 applying-for-a-visa` is the Manila post's actual visa page, 20 points *below* the tourism-marketing
 page at the same host that the first pass excluded.
 
-**So `PH/PH` is 32 of 60, not 24**, and the lesson is about curation rather than about the store: a
+**Asked to re-check the other seven rows, the same mechanism turned up two more.** Germany's
+`visa-service/215870-215870` — "Visas for Germany" — answers `application_route`, `fees` and
+`processing_times` and **link-scores 7.6**, so it sits near the bottom of every role ranking. The
+United States' `fees-visa-services.html` prices a B-2 at $185 and link-scores 16.4. Neither was found
+by ranking links; both were found by ranking stored **body** text with `page_text.rank`, which is the
+only instrument here that can see inside a page.
+
+**The re-check had to change instrument, and that is the transferable part.** The first re-check
+ranked each unanswered role by link score — and `ranked_for_role` filters on `score_for(role) > 0`,
+so a page scoring zero for the role it answers can never appear. That is the *same blind spot* that
+produced the original error, applied to the audit of the original error. Ranking by body text finds
+them; ranking by link score cannot, by construction.
+
+**The older `IN/GB` rows held up.** Germany's Indian row already names `215870-215870` for all three
+roles, and names a second alias for it. So this was a fault in the new curation rather than in the
+fixture's method — which is itself worth knowing, because it means entry 87's ten rows do not need
+redoing.
+
+**So `PH/PH` is 36 of 60, not 24**, and the lesson is about curation rather than about the store: a
 fixture read three candidates deep describes the ranking, not the corpus.
 
-### Where the 15 remaining gaps are, which is four different things
+### Where the 11 remaining gaps are, which is four different things
 
 - **Stored text runs out.** France is bounded at **18 readable candidates of 201** by its Cloudflare
   challenge, and Sweden's decision page sits on `government.se` with no body indexed.

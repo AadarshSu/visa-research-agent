@@ -33,7 +33,7 @@ refuses — now named to the traveller rather than withheld (item 36, entry 89).
 
 **And the oracle now has a second traveller** (entry 91). Twenty corridors, `IN/GB/tourism` and
 `PH/PH/tourism` over the same ten countries. Both read 100% *held* and the denominators are the
-finding: the same stores answer **47 of 60 roles for one traveller and 32 of 60 for the other**.
+finding: the same stores answer **47 of 60 roles for one traveller and 36 of 60 for the other**.
 Building it exposed a defect in the grader — see item 38, which is now the first thing to do.
 
 **The gate is built and it is now the promotion rule for stage 3** (item 37, entry 90).
@@ -174,7 +174,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventy-four rows and every
+documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has seventy-six rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -267,7 +267,7 @@ nothing today.** Entry 87's numbers stand as recorded and are not currently repr
 
 - entry 87's 100% / 91% / 70%, reproduced from logs that say who chose;
 - **the first selector number for a second traveller**, which nothing has ever measured. Expect it to
-  be worse: the `PH/PH` half of the fixture answers 32 of 60 roles against 47 of 60, so there is less
+  be worse: the `PH/PH` half of the fixture answers 36 of 60 roles against 47 of 60, so there is less
   to find and the pages that answer are thinner.
 
 Twenty corridors of search and model quota. Cheap, and it is the only thing standing between the

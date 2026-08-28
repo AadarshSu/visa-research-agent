@@ -904,18 +904,39 @@ corridors:
           why: >-
             the Federal Foreign Office's "Overview of visa requirements/exemptions for entry into the
             Federal Republic of Germany" — the row reads "Philippines / yes"
+      application_route:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+          seen: text
+          why: >-
+            "The Embassies and Consulates General (missions abroad) of the Federal Republic of
+            Germany are responsible for issuing visas. Ratione loci competence... lies with the
+            mission responsible for the area in which you have your ordinary residence or domicile"
+            — the route keyed on residence, which is what this corridor turns on
+      fees:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+          seen: text
+          why: >-
+            "The processing fee for a Schengen visa is normally EUR 90 and for a national visa (for
+            longer stays) EUR 75", with the waiver categories listed under it
+      processing_times:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+          seen: text
+          why: >-
+            "As a rule, missions require up to 15 calendar days to reach a decision on a correct
+            application for a Schengen visa"
     unanswered:
       document_checklist: >-
-        the only checklist-scoring page in the set is a child-abduction consular page, which is not
-        one.
-      application_route: nothing states where or how a Filipino resident applies.
-      fees: no page in the set prices a Schengen visa.
-      processing_times: nothing states one.
-      general_entry: nothing states entry conditions.
+        deferred in the page's own words: "you should consult the requirements well in advance of
+        your departure date to find out about the documentation which has to be submitted". The
+        ministry names no documents; the mission does, and no mission page is in the corpus.
+      general_entry: >-
+        nothing states the conditions this traveller must satisfy at the border.
     note: >-
-      83 candidates against the ten-corridor median of 200, and the German corpus is 1,565 entries.
-      Both rows for Germany answer one role, which is a statement about how little of Germany has
-      been crawled rather than about either traveller.
+      **also re-curated after a first pass read three candidates deep**, and by the same mechanism
+      the UAE row failed on: `visa-service/215870-215870` — "Visas for Germany" — answers three roles
+      and **link-scores 7.6**, so it sits near the bottom of every role ranking while the pages above
+      it are a child-abduction consular notice and an FAQ index. It was found by ranking the stored
+      *body* text instead, which is what `page_text.rank` is for.
 
   - corridor: france/PH/PH/tourism
     contention: 201
@@ -1199,18 +1220,25 @@ corridors:
             Philippines — so a Filipino needs a visitor visa. travel.state.gov stores nothing and
             publishes the same tree under adoption.state.gov, which is the only reason this is
             readable at all
+      fees:
+        - url: https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html
+          seen: mirror
+          why: >-
+            "Non-petition-based nonimmigrant visa (except E): $185.00 — includes B Visitor Visa:
+            Business, Tourism, Medical treatment", which is this corridor's category. Found by
+            ranking stored body text; it link-scores 16.4
     unanswered:
       document_checklist: >-
-        the candidates are 2000s-era travel.state.gov paths with no stored text and a USCIS
-        office-finder.
+        the candidates are 2000s-era travel.state.gov paths with no stored text, USCIS form
+        instructions for immigrant petitions, and an office-finder. Nothing names what a B-2
+        applicant brings.
       application_route: >-
         the top candidates are a green card application and the J-1 exchange visitor programme,
         neither of which is a tourism route.
-      fees: >-
-        the readable fee page is the adoption mirror's fee index; nothing prices a B-2.
       processing_times: nothing states one for a visitor visa.
       general_entry: nothing states entry conditions for this traveller.
     note: >-
       the Visa Waiver country list is recorded as unreadable in the Indian row, and it reads here —
       because the mirror was found. The same page, the same fixture, and the difference is which
-      address somebody thought to look at.
+      address somebody thought to look at. Both answers here are on `adoption.state.gov`, which is
+      the United States corridor's whole legibility: `travel.state.gov` stores no text at all.
