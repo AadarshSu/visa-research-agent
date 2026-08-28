@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose sixty-three rows are
+what has wasted the most time here — see the corrections table further down, whose sixty-seven rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -33,9 +33,12 @@ have a corpus **and now a page-text index** (entry 85). A questionnaire is treat
 than a blockade — named for the role it settles, offered beside that question (entries 59, 60), and
 guidance an authority contracts out to a company is named the same way (entry 89).
 
-**The next thing to build is a gate, not a feature** ([TODO.md](TODO.md) item 37). Nothing today can
-answer "is this country's corpus good enough to serve a corridor" for any traveller but `IN/GB`, so
-promoting a country to stage 3 is currently a judgement rather than a number.
+**The gate is built and it is the promotion rule for stage 3** (entry 90, [TODO.md](TODO.md) item
+37). `visa-discover coverage` answers "is this country's corpus good enough to serve a corridor" in
+two halves that are never added — 47 of 47 known answers, which is **one traveller** and stays a
+regression check, and every per-traveller family the store holds, from which the verdict is computed
+**alone**. Six of the ten have no per-traveller dimension, SG and GB are *bounded by the authority*
+(a pass), and only NL is `incomplete`. Offline, no model, no search.
 
 **How close the corpus is to the goal, measured** (entry 82). Across 30 corridors into the ten corpus
 countries, **18 had zero misses**, and of the 67 pages missed in total **none were on a host the
@@ -50,8 +53,8 @@ wearing a different hat, and the answer is the same: name the tool.
 page in the corpus — for one traveller.** `oracle/selection_oracle.yaml` is `IN/GB/tourism` for all
 ten countries, and the Netherlands' answers were held both before and after entry 88's rebuild, so
 this measurement is blind to the thing that rebuild fixed. **Never quote the 100% as evidence a
-corpus is ready.** The dimension that varies is the traveller, and the gate that measures it is
-[TODO.md](TODO.md) item 37, which is the next thing to build.
+corpus is ready** — it is half one of the gate above, and the gate's own verdict deliberately
+ignores it.
 
 **What chooses which pages to read is now a model, not the ranking** (entries 83–87). It reads stored
 page text for every candidate in contention and picks up to 20 pages to fetch, where the heuristic
@@ -364,6 +367,10 @@ cause, and only running the thing showed it.
 | a page titled "Document Checklist" is a checklist | `imm5484.html` is a download page whose text explains Acrobat Reader (entry 87) |
 | a fetch-everything oracle is the automatable version of the same thing | it would still be URLs somebody fetched, so it inherits the alias bug (entry 87) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
+| a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
+| the netherlands is the covered case, entry 88 finished it | three complete families were never opened; it reads `incomplete` (entry 90) |
+| CA, JP and GB have no per-traveller family | GB has one — the fee wizard; `_queue` groups per *page* (entry 90) |
+| the corpus-sufficiency number is 47/47, so build the gate around it | the gate's verdict ignores it; one traveller cannot outvote 197 (entry 90) |
 | the corpus is thin because the crawl did not go deep enough | it opened 3–15% of what it recorded; the rest are addresses (entry 88) |
 | reserving budget for a family is enough to reach it | one pool is score-ordered, so the fee family took all of it (entry 88) |
 | a family key can blank the first country it finds | the destination is named in its own path; all 219 got different keys (entry 88) |
@@ -409,7 +416,12 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 .venv/bin/visa-discover corpus --country CA     # build a country's offline page corpus
 .venv/bin/visa-discover pagetext --backfill    # index the text the retrieval cache already holds
 .venv/bin/visa-discover selection-recall       # grade what was chosen to read; no network, no model
+.venv/bin/visa-discover coverage --country NL  # is a country's corpus good enough? no network, no model
 ```
+
+**Two different questions, two different commands, and they must not be merged.** `coverage` asks
+whether the **store** holds the answer; `selection-recall` asks whether the **corridor** then finds
+it. A single number covering both would hide which half failed.
 
 Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
 now have a text index in `var/pagetext/` (entry 85). A country without either crawls in the request

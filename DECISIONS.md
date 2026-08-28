@@ -99,6 +99,7 @@ not — and stored text ranks, it never speaks).
 | --- | --- |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
+| [90](#90-the-corpus-gate-the-100-is-kept-and-demoted-and-the-number-that-matters-is-per-traveller) | **The corpus gate** — the 47/47 is one traveller; the number that matters is the per-traveller family |
 | [88](#88-the-corpus-does-not-generalise-across-travellers-and-the-ceiling-is-not-the-crawler) | **The corpus does not generalise across travellers** — and the ceiling is VFS Global, not the crawl |
 | [87](#87-an-oracle-neither-selector-built-entry-86s-41-is-30-and-the-direction-holds) | **An oracle neither selector built** — entry 86's +41 is +30; the joint oracle scored address luck |
 | [86](#86-matched-budget-the-selector-is-not-7-points-better-than-ranking-it-is-41) | **Matched budget: +41 points, not +7** — entry 85 compared configurations, not selectors |
@@ -138,6 +139,111 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 90. The corpus gate: the 100% is kept and demoted, and the number that matters is per traveller
+**2026-08-28 · TODO item 37, built. Two of its three expectations came out differently when run**
+
+The question that gates promoting a country to stage 3 is *"if we build a corpus for X, can a
+corridor into X be answered from it?"* Until now that was a judgement made because a corpus file
+existed. `visa-discover coverage` makes it a number — offline, no model, no search, reading only
+`var/corpus/`, `var/pagetext/` and the committed oracle.
+
+### Why it is two halves and why they are never added
+
+Asked of `oracle/selection_oracle.yaml`, *"is the page that answers each role already in the
+corpus"* comes back **47 of 47**. That is true, it is reproduced by a test, and on its own it is
+close to useless: every corridor in that oracle is `IN/GB/tourism`, and the Netherlands' three
+answers were held both **before and after** entry 88's rebuild — so the fix that measurement should
+have caught improved Philippine, Pakistani and Chinese residents and improved `IN/GB` by nothing.
+
+So half one is kept and labelled for what it is, a **regression** check that should stay at 100%,
+and half two measures the dimension that varies. They are printed apart, which is `audit.py`'s
+discipline: one number covering both hides which half failed. The verdict is computed from half two
+**alone**, so a 100% meaning "fine for one traveller" can never outvote a family measurement meaning
+"unserved for the other 197".
+
+### The trap that had already produced a wrong number once
+
+The first run of half one read **46 of 47**. The miss was `www.gdrfad.gov.ae/en/services/727c…`
+against `gdrfad.gov.ae/en/services/727c…` — one page. Comparison is on `canonical_key`, never on the
+raw string, and the alias is reported rather than silently folded so the count can be checked.
+
+### Gateway or leaf cannot be settled by counting children
+
+Opening a member of the Dutch `…/schengen-visa/apply-{}` family yields 2.4 children apiece; opening a
+member of Singapore's `…/visa-detail-page/{}` yields 1.5. Those are not far enough apart to divide
+on, and the two families are opposites — the Dutch member leads to that residence's checklist and the
+Singaporean member **is** the answer.
+
+Asking whether the child is itself *about one country* separates them completely:
+
+```
+NL  …/schengen-visa/apply-{}     169 children,  168 country-named   gateway
+NL  …/consular-fees/{}            44 children,    0 country-named   leaf
+SG  …/visa-detail-page/{}          3 children,    0 country-named   leaf
+```
+
+Singapore's three are a landing page, a public advisory and a user manual. The shape is counted from
+opened members and is honestly `unopened` where none has been opened, because nothing distinguishes a
+gateway from a leaf before one is — which is the same fact that forces `FamilyQueues` to give every
+family its turn rather than back a winner.
+
+### Two of the item's three expected verdicts held; the Netherlands' did not
+
+Item 37 predicted the Netherlands would read *covered*. It reads **incomplete**, and the numbers are
+why: its largest gateway family is **71 of 184 opened (39%)**, and three complete families have
+**never been opened at all** — `making-appointment/{}` at 188 held, `caribbean-visa/short-stay/
+apply-{}` at 185, `passport-id-card/abroad/apply-{}` at 184. Entry 88 proved the mechanism on one
+country and did not finish the country. That is item 35's work, now with a number on it.
+
+The other two held. Six of the ten have no qualifying family and read *no per-traveller dimension*;
+Singapore reads *bounded by the authority* at 32 of 198, which is a **pass** — the missing 166 are
+behind a selector and no crawl budget crosses one (entry 82), so saying so and stopping is correct.
+
+### The United Kingdom has a per-traveller family, and entry 88 said it had none
+
+Entry 88 counted qualifying families as **NL 9, SG 1, and zero for CA, JP and GB**. Measured
+corpus-wide the counts are **NL 13, SG 2, GB 1**, and the difference is not a disagreement — it is
+two different questions:
+
+- `LinkCrawler._queue` groups the links found on **one page**, because a family is a list an
+  authority published in one place and siblings on unrelated pages are a coincidence. Grouping that
+  way reproduces entry 88's 9 / 1 / 0 **exactly**.
+- This groups across the whole corpus, because the question is what the authority *publishes*, not
+  what a crawl can act on.
+
+The four extra Dutch families are the `checklist-schengen-visa-…/{}` leaves, which exist one per
+gateway and are listed together nowhere. The extra British one is
+`visa-fees.homeoffice.gov.uk/y?previous-answer={}` — **entry 82's fee wall appearing as a family for
+the first time**, 14 of 198 held and none opened. Per-page grouping would have reported the United
+Kingdom as having no per-traveller dimension, which is false. So both groupings are kept: the report
+groups corpus-wide and marks each family `listed` or `spread` for whether the reservation can see it.
+
+### What was rejected
+
+- **One number.** It would be half one's 100%, because half one has a denominator and half two does
+  not have a comparable one. See above.
+- **Grading on roles filled.** Entry 81 measured it swinging by two on identical input and entries 79
+  to 81 are three consecutive entries that were wrong for leaning on it. There is no model anywhere
+  in this command, by construction.
+- **Counting "opened" as coverage.** An unopened URL is still a usable candidate — what does not
+  exist is the *child* of a member nobody opened. So `opened` gates the verdict only for a gateway,
+  and a complete leaf family reads *covered* with nothing opened.
+- **A `text_for_selection` call with the values discarded.** `PageTextStore.indexed` returns a set of
+  URLs, so no prose can reach a report. Entry 83's barrier is a type, and the second caller wanting
+  bodies is still the change somebody has to argue for.
+
+### What it does not answer
+
+- **Whether the corridor then *finds* what the store holds.** That is `selection-recall` (entry 87),
+  and merging them would hide which half failed.
+- **A complete, under-opened family that no page lists.** It is printed as `spread` and does not push
+  the verdict either way. No such family exists in the ten corpora — every one that is `spread` is
+  also far short of the world — so the case is documented rather than machined for.
+- **Correctness.** Like every number this project quotes about itself, this measures whether the
+  store *holds* an answer, never whether the answer is right (known problem 26).
 
 ---
 

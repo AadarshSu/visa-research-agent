@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 578 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 594 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has sixty-three rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has sixty-seven rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -73,6 +73,7 @@ destinations.
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
 | **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
 | **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed** — ten corridors, 47 answered roles over 71 pages, named by hand from each corridor's whole contention set (entry 87). It also records what could *not* be established: **13 of 60 roles have no readable answer**, 7 live behind a questionnaire, 12 candidates hold no stored text and could not be judged. `visa-discover selection-recall` grades any directory of recall logs against it and prints entries 85–86's joint oracle beside it, so the bias is a number on every run. No network, no model. |
+| **Corpus sufficiency** | **`visa-discover coverage`, committed** (entry 90) — the promotion rule for stage 3. Two halves, never added: 47 of 47 known answers (**one traveller**, a regression check) and every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
@@ -118,23 +119,26 @@ jointly-built oracle side by side. **Entry 86's +41 points is +30**; the directi
 it hands forward: thirteen of sixty roles have no readable answer at all, and the fixture is one
 nationality and one residence — known problems 29 and 30.
 
-**Start at item 37: build the gate.** On 2026-08-28 the corpus-sufficiency question was measured for
-the first time and came back **47 of 47 answerable roles already in the corpus (100%)** — against an
-oracle that is a single traveller, `IN/GB/tourism`, for all ten countries. Checked against the
-pre-rebuild Netherlands corpus, all three of its answers were already held, so entry 88's fix
-improved `IN/GB` by nothing and improved other residences instead. **So the corpus has been good
-enough for the traveller we can measure, and is unmeasured for every other one**, and a gate that
-reproduces that 100% is not a gate. Item 37 specifies the version that measures the dimension which
-actually varies, offline and with no model.
+**Item 37 is done** (entry 90). `visa-discover coverage` is the gate: offline, no model, no search,
+two halves that are never added, and the verdict computed from the second alone so the first cannot
+outvote it. Half one is the 47 of 47 known answers and stays a **regression check over one
+traveller**; half two is the per-traveller family. Six of the ten corpora have no per-traveller
+dimension, Singapore and the United Kingdom are *bounded by the authority* — a pass, because no
+crawl budget crosses a selector — and only the Netherlands is `incomplete`. Two things it corrected
+while being built: a gateway cannot be told from a leaf by counting children, only by asking whether
+the children are themselves per-traveller; and **the United Kingdom has a per-traveller family where
+entry 88 counted none**, its fee wizard, because the crawler groups links found on one page and this
+groups across the store.
 
-**Then item 35.** Entry 88 asked whether a corpus built once serves every traveller and found it
-does not: a build reads 3–15% of what it records, and the answering page for a specific traveller is
-one hop below something recorded and never opened. Fixed and proved on the Netherlands — gateway
-pages read 0 → 185, tourism checklists held 5 → 14, and `netherlands/PH/PH` now answers four of six
-roles from the corpus. Nine countries are untested and the gate makes six of them no-ops, so the work
-is small. **Item 36 is done** (entry 89): where an authority contracts its guidance out, the
-delegate is now named to the traveller — with the page that appointed it, never read, never cited,
-and still unable to fill the role.
+**Start at item 35, and the first job is the Netherlands rather than the other nine.** Entry 88
+proved the mechanism there and did not finish the country: the schengen gateway sits at 71 of 184
+opened and three *complete* families have never been opened at all — `making-appointment/{}` at 188
+held, `caribbean-visa/short-stay/apply-{}` at 185, `passport-id-card/abroad/apply-{}` at 184.
+Whether those three are gateways or leaves is unknown until one is opened, which is why the verdict
+is `incomplete`. Rerun the gate after the rebuild; the verdict is the acceptance test. Then the
+other nine, six of which the gate has already shown to be no-ops. **Item 36 is done** (entry 89):
+where an authority contracts its guidance out, the delegate is now named to the traveller — with the
+page that appointed it, never read, never cited, and still unable to fill the role.
 
 **Item 30 leads: perfect batch 1 before adding a single further country.** The registry grows in
 batches, and **a batch is done in three stages** (entry 68): *reachable* → *resolves* → *fast*.
@@ -512,21 +516,26 @@ re-add the amendment history here.
    remains uncounted is the other nine countries, and nothing verifies a delegate's URL still
    resolves.
 
-32. **Nine of the ten corpora have never been rebuilt with the family reservation.** Entry 88 proved
-   it on the Netherlands only. The gate makes it inert where there is no qualifying family — CA, JP
-   and GB have zero. **Singapore was checked on 2026-08-28 and is not a second Netherlands**: its
+32. **The Netherlands is unfinished and nine corpora have never been rebuilt at all.** Entry 88
+   proved the reservation on the Netherlands and did not finish it: `visa-discover coverage` reads
+   `incomplete` there, with the schengen gateway at 71 of 184 opened and three complete families
+   never opened. The reservation is inert where there is no qualifying family — CA, JP and GB have
+   zero **that a crawl can see**, though the United Kingdom does have one across the store (entry
+   90). **Singapore was checked on 2026-08-28 and is not a second Netherlands**: its
    per-nationality page is a leaf rather than a gateway, and ICA's own index yields 6 children
    rather than 198, so the missing 164 nationalities are behind a selector — entry 82's wall. A
    rebuild there buys stored text for the selector (5 of 34 have any today), not coverage. TODO
    item 35.
 
-33. **"Is the corpus good enough" has one measurement and it covers one traveller.** Against
-   `oracle/selection_oracle.yaml` the answer is 47 of 47 answerable roles already in the corpus, and
-   that oracle is `IN/GB/tourism` for all ten countries. The Netherlands' three answers were held
-   before entry 88's rebuild and after it, so the measurement cannot see the thing entry 88 fixed —
-   it improved Philippine, Pakistani and Chinese residents, whom nothing measures. **Do not quote
-   the 100% as evidence a corpus is ready**; it is the regression half of a gate whose other half
-   does not exist yet. TODO item 37.
+33. **The 47 of 47 is one traveller, and it is now labelled as such rather than fixed.** Against
+   `oracle/selection_oracle.yaml` every answerable role's page is already in the corpus, and that
+   oracle is `IN/GB/tourism` for all ten countries. The Netherlands' three answers were held before
+   entry 88's rebuild and after it, so it cannot see the thing entry 88 fixed. **Do not quote the
+   100% as evidence a corpus is ready.** The gate that measures the dimension which varies is built
+   (`visa-discover coverage`, entry 90) and computes its verdict from the family half **alone**, so
+   nothing in the tooling can make that mistake — but a person reading the first half of its output
+   still can. What stays open is the oracle itself: widening it past one nationality and one
+   residence is known problem 29.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

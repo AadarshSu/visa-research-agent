@@ -58,6 +58,15 @@ from visa_research_agent.discovery.corpus_build import (
     CorpusBuild,
     build_country_corpus,
 )
+from visa_research_agent.discovery.coverage import (
+    VERDICT_MEANING,
+    CountryCoverage,
+    CoverageReport,
+    coverage,
+)
+from visa_research_agent.discovery.coverage import (
+    report as coverage_report,
+)
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.lexicon import (
     Country,
@@ -912,6 +921,124 @@ def run_page_text(args: argparse.Namespace, stream: TextIO) -> int:
     return 0
 
 
+def print_coverage(report: CoverageReport, stream: TextIO) -> None:
+    """Both halves, always, and never added together.
+
+    The known-answer half is printed first and labelled for what it is — a regression check over one
+    traveller. Printing it alone is how "the corpus is ready" got claimed on a 100% that could not
+    see the dimension it was being claimed about (known problem 33), so it is never printed without
+    the family half beside it, even for a country that has no families.
+    """
+
+    print("\nCorpus coverage, half 1: the answers a human named, over one traveller", file=stream)
+    known = [row for country in report.countries for row in country.known]
+    if not known:
+        print("  no country asked about appears in the oracle.", file=stream)
+    else:
+        held = sum(row.held for row in known)
+        answerable = sum(row.answerable for row in known)
+        for row in known:
+            flag = "" if row.held == row.answerable else "   <-- MISS"
+            alias = f"   ({len(row.aliased)} under a host alias)" if row.aliased else ""
+            print(
+                f"  {row.corridor:<40} {row.held}/{row.answerable} roles held{alias}{flag}",
+                file=stream,
+            )
+            for role, urls in sorted(row.missing.items()):
+                print(f"      {role:<22} {urls[0]}", file=stream)
+        print(f"\n  {held}/{answerable} answerable roles already in the corpus.", file=stream)
+        print(
+            "  This is the regression half and it should stay at 100%. Every oracle corridor is\n"
+            "  IN/GB/tourism, so it says nothing about any other traveller — known problem 33.",
+            file=stream,
+        )
+
+    print("\nCorpus coverage, half 2: the dimension that varies, per traveller", file=stream)
+    for country in report.countries:
+        print(
+            f"\n  {country.code}  {country.entries} entries, {country.pages_opened} opened, "
+            f"{country.delegations} delegated  ->  {country.verdict}",
+            file=stream,
+        )
+        print(f"      {VERDICT_MEANING[country.verdict]}", file=stream)
+        if not country.families:
+            continue
+        print(
+            f"      {'held':>9}  {'opened':>10}  {'shape':<9} {'text':>9}  {'crawl':<5}  family",
+            file=stream,
+        )
+        for family in country.families:
+            print(
+                f"      {f'{family.held}/{family.countries}':>9} {family.completeness:>4.0%}  "
+                f"{f'{family.opened}':>4} {family.opened_share:>4.0%}  {family.shape:<9} "
+                f"{f'{family.text_held}/{family.held}':>9}  "
+                f"{'listed' if family.reservable else 'spread':<5}  {family.key}",
+                file=stream,
+            )
+    if report.unbuilt:
+        print(
+            f"\n  no corpus at all for {', '.join(report.unbuilt)} — a job nobody has run, "
+            "not a coverage failure.",
+            file=stream,
+        )
+    print(
+        "\n  held: members the corpus knows the address of. An unopened member is still a usable\n"
+        "        candidate; what does not exist is the child of a member nobody opened.\n"
+        "  shape: gateway means opening a member yields that traveller's own page; leaf means the\n"
+        "        member is the answer, so opening it buys nothing. Counted, never guessed.\n"
+        "  text: members the page-text index can read, which is what the model selector sees.\n"
+        "  crawl: listed means one page names enough siblings for the crawl's reservation to see\n"
+        "        the family; spread means it exists in the store and no page lists it.\n"
+        "  Whether a corridor then *finds* what is held is a different question: selection-recall.",
+        file=stream,
+    )
+
+
+def run_coverage(args: argparse.Namespace, stream: TextIO) -> int:
+    """Is a country's corpus good enough to serve a corridor? Reads three stores, calls nothing.
+
+    Exit code 1 when any country is short of a verdict somebody can promote on — a missing
+    known answer, or a gateway family the crawl has not walked. `bounded by the authority` is a
+    **pass**: the family cannot be crawled at any budget, so saying so and stopping is the correct
+    outcome rather than a shortfall (entry 82).
+    """
+
+    oracle = load_oracle(Path(args.oracle))
+    registry = get_country_registry()
+    slugs = frozenset(country.slug for country in registry.countries)
+    store = FileCorpusStore(settings.corpus_directory)
+    text = PageTextStore(settings.page_text_directory)
+
+    wanted = [c.strip().upper() for c in args.country.split(",") if c.strip()] or store.countries()
+    rows: list[CountryCoverage] = []
+    unbuilt: list[str] = []
+    for code in wanted:
+        corpus = store.load(code)
+        country = registry.get(code)
+        if corpus is None or country is None:
+            unbuilt.append(code)
+            continue
+        rows.append(
+            coverage(
+                corpus,
+                oracle,
+                slug=country.slug,
+                slugs=slugs,
+                countries=len(registry.countries),
+                indexed=lambda urls, code=code: text.indexed(code, urls),  # type: ignore[misc]
+            )
+        )
+    if not rows:
+        print(f"No corpus to measure in {settings.corpus_directory}.", file=stream)
+        return 1
+    built = coverage_report(rows, unbuilt)
+    print_coverage(built, stream)
+    short = any(
+        row.verdict == "incomplete" or any(k.missing for k in row.known) for row in built.countries
+    )
+    return 1 if short else 0
+
+
 async def run_corpus(args: argparse.Namespace, stream: TextIO) -> int:
     """Build one country's page corpus, offline and deliberately (DECISIONS entry 44).
 
@@ -1090,6 +1217,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="the second heuristic budget, for reference; the first is always the model's own",
     )
 
+    cover = commands.add_parser(
+        "coverage",
+        help="is a country's stored corpus good enough to serve a corridor? offline, no model",
+    )
+    cover.add_argument(
+        "--country",
+        default="",
+        help="comma-separated ISO codes, e.g. NL,SG; every country with a corpus by default",
+    )
+    cover.add_argument(
+        "--oracle",
+        default=str(DEFAULT_ORACLE_PATH),
+        help="the hand-curated fixture, for the regression half only",
+    )
+
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
@@ -1127,6 +1269,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return run_audit(args, sys.stderr)
         if args.command == "selection-recall":
             return run_selection_recall(args, sys.stderr)
+        if args.command == "coverage":
+            return run_coverage(args, sys.stderr)
         return asyncio.run(run_corridor(args, sys.stderr))
     except SearchError as exc:
         print(f"Search is unavailable: {exc}", file=sys.stderr)

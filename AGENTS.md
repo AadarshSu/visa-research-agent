@@ -62,9 +62,17 @@ the CLI does not offer it.
   `config/service_providers.yaml`. The model picks by `delegate_id` from what we recorded and can
   never supply a URL. Entry 89.
 - **Two different questions, two different commands, and do not merge them.** Whether the *store*
-  holds the answer is corpus coverage — [TODO.md](TODO.md) item 37, not built yet. Whether the
-  *corridor* then finds it is selection recall, below. A single number covering both would hide which
-  half failed, which is the mistake `visa-discover audit` exists not to make.
+  holds the answer is **`visa-discover coverage`**; whether the *corridor* then finds it is selection
+  recall, below. A single number covering both would hide which half failed, which is the mistake
+  `visa-discover audit` exists not to make.
+- **`visa-discover coverage`** answers "is this country's corpus good enough to serve a corridor" in
+  two halves that are never added, and it is the promotion rule for stage 3 (entry 90). Half one is
+  the 47 of 47 answers a human named in `oracle/selection_oracle.yaml` — **one traveller, `IN/GB`,
+  so it is a regression check and never evidence a corpus is ready.** Half two is every
+  per-traveller family the store holds, and the verdict comes from that half alone. Four verdicts:
+  *no per-traveller dimension*, *covered* and *bounded by the authority* are passes; *incomplete*
+  means rebuild before promoting. Reads three stores, calls nothing, has no model in it anywhere —
+  keep it that way, because entry 81 is what grading this on roles filled would cost.
 - **`visa-discover selection-recall`** grades what a selector chose to read against
   `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it. Reads
   two files, calls nothing.

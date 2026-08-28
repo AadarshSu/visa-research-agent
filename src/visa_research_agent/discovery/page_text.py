@@ -309,6 +309,35 @@ class PageTextStore:
                 held.update({str(url): str(body) for url, body in rows})
         return held
 
+    def indexed(self, code: str, urls: Iterable[str]) -> set[str]:
+        """Which of these pages the index holds a body for. **URLs only — no body comes back.**
+
+        Asked by `coverage.py`, which reports how much of a per-traveller family the model selector
+        can actually read: Singapore holds 32 of its per-nationality pages and stored text for five
+        of them, and those are different numbers with different fixes.
+
+        Deliberately not `text_for_selection` with the values thrown away. That method is named for
+        its single caller because a second one wanting bodies is a change somebody has to argue for
+        (entry 83), and this caller does not want bodies — it wants a count. Returning a set of URLs
+        keeps that true in the type rather than in a convention: there is no prose in the answer, so
+        none can leak into a report.
+        """
+
+        wanted = list(dict.fromkeys(urls))
+        if not wanted or not self.has(code):
+            return set()
+        held: set[str] = set()
+        with self._connect(code, create=False) as connection:
+            for start in range(0, len(wanted), _URLS_PER_QUERY):
+                chunk = wanted[start : start + _URLS_PER_QUERY]
+                placeholders = ",".join("?" * len(chunk))
+                rows = connection.execute(
+                    f"SELECT url FROM page_text WHERE url IN ({placeholders})",  # noqa: S608
+                    chunk,
+                ).fetchall()
+                held.update(str(row[0]) for row in rows)
+        return held
+
     def score_held(
         self,
         code: str,

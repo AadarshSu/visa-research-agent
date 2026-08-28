@@ -298,7 +298,8 @@ that expired, self-signed, hostname-mismatched and unknown-CA certificates are s
 `discovery/`. Runs two ways, on the same code:
 
 - **`visa-discover`**, a deliberate command with a person reading the result. Still the way to
-  investigate a corridor — `corridor` to resolve one, `audit` to count what goes unanswered and why.
+  investigate a corridor — `corridor` to resolve one, `audit` to count what goes unanswered and why,
+  `coverage` to ask whether a country's store is good enough to serve one at all.
 - **In the request path**, when `destination_mode: automatic` — a destination nobody configured is
   researched when a plan is asked for. No human approves a domain; the rule below does. See
   `discovery/automatic.py` and [DECISIONS.md](DECISIONS.md) entry 19.
@@ -503,6 +504,21 @@ halves that are deliberately never added together: **reachability**, computed fr
 `authority_domains.yaml` against the country registry — exact, no runs, no network — and **causes**,
 from the runs that happened. A country refused for want of a registry row leaves no recall log at all,
 so merging the two would let the larger failure hide inside the smaller one.
+
+**`visa-discover coverage`** asks the other half of the same question and is deliberately a separate
+command (entry 90). `audit` and `selection-recall` both grade *runs*; this grades the **store**, so it
+reads only `var/corpus/`, `var/pagetext/` and `oracle/selection_oracle.yaml`, and has no model, no
+search and no network in it anywhere. Like `audit` it prints two halves that are never added: the
+**known answers** a human curated, which is 47 of 47 and covers exactly one traveller, and the
+**per-traveller family** — a run of addresses differing only by which country they are about,
+`…/schengen-visa/apply-{}`. The verdict is computed from the second half alone, so a 100% meaning
+"fine for `IN/GB`" can never outvote a family measurement meaning "unserved for the other 197". Four
+verdicts, of which three are passes: *no per-traveller dimension*, *covered*, *bounded by the
+authority* — the members are behind a selector and no crawl budget crosses one — and *incomplete*,
+which means rebuild before promoting the country to stage 3. `coverage.py` groups families across the
+whole store where `LinkCrawler._queue` groups the links found on one page, and each family is marked
+`listed` or `spread` for which grouping sees it; that difference is what makes the United Kingdom's
+fee wizard visible as a family at all.
 
 **What it is, precisely, is a recall gate — and reading it as a decider is what kept the gate too
 narrow** (entry 40). A page it ranks *in* wrongly costs one excerpt; a page it ranks *out* is one
