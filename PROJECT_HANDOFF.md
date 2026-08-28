@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has ninety-five rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has ninety-seven rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -154,6 +154,13 @@ direction held and the matched-budget gap widened to **+45 points**.
 role**, `united-arab-emirates/PH/PH` reads 6 of 6 and left the checklist unfilled. An earlier version
 of this file called the UK row "the weakest and the place to look next"; it is the opposite. For what
 a corridor actually lacks, read `unresolved_roles` in its recall log.
+
+**The oracle is knowingly imperfect and is left that way** (entry 100). The UK row credits a page
+that states no fee, and names one of three live addresses for a byte-identical document. Both were
+left uncorrected because every distortion of this kind penalises the arm that reads *fewest* pages —
+so **92% is a floor, not a ceiling**, and the 92-against-89 gap with the shipped heuristic is the
+understated one. The rule: audit a row when it scores especially low, never rebuild the grader, and
+re-curate without reading a recall log first.
 
 **The run found the defect that made its own first printing wrong** (entry 97). The OpenAI account
 ran out of credit part-way through, seven corridors fell back to the heuristic ranking, and all

@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [100](#100-the-oracle-is-left-wrong-on-purpose-because-every-distortion-in-it-runs-one-way) | **The oracle is left wrong on purpose** — the distortions run against the model, so the number is a floor |
 | [99](#99-text-coverage-is-not-the-constraint-and-selection-recall-does-not-measure-what-it-looks-like) | **Coverage is not the constraint** — France 7% scores 100%, the UK 81% scores 40%; item 40 dropped |
 
 ### Finding the right page: ranking, recall, judgement
@@ -151,6 +152,64 @@ not — and stored text ranks, it never speaks).
 
 ---
 
+## 100. The oracle is left wrong on purpose, because every distortion in it runs one way
+
+**2026-08-28 · decided by the project owner · how `selection-recall` is read and maintained**
+
+Entry 99 found that `united-kingdom/PH/PH` scores 2 of 5 while filling every role, and said "the
+oracle simply named a different page". Looking properly, its three misses are **three different
+things**, and only one of them is that:
+
+| role | what is actually going on |
+| --- | --- |
+| `processing_times` | **not a miss.** `visa-decision-waiting-times-applications-outside-the-uk` and the `visa-processing-times-applications-outside-the-uk` the oracle names hold the **same 7,003 bytes, same SHA**, along with a third address. GOV.UK renamed the page and kept them all live |
+| `fees` | **the oracle is wrong.** `gov.uk/visa-fees` states no fee — its body is "Use this tool to work out the cost… Start now on the Home Office website". Its `why` calls it "the published fee schedule for every visa type", which is false of that page. It is a **tool** by entries 59–60 |
+| `general_entry` | genuinely different — nothing fetched matches the oracle's page by content hash or looks like an alias of it |
+
+Both of the first two are error classes entry 87 already found and fixed once each: the alias
+(ICA at three addresses) and the page whose title is not its content (`imm5484.html`). They recur
+because the fix was applied to a row rather than to the method.
+
+### Why nothing is being corrected
+
+**A content-hash matcher was designed and declined.** It would fix the alias class in every country
+permanently and cannot be gamed toward one arm. It was declined because it addresses the narrowest
+of the three, does nothing for the other two, and would make the figure *look* more precise than the
+ground truth under it is — which is what invited this number to be over-read twice in one day.
+
+**The instrument is an A/B, and errors that hit every arm cancel.** `selection-recall` exists to say
+whether the model picks better than the heuristic. A row that names a stale URL or credits the wrong
+page penalises whichever arm did not fetch that exact URL, which is usually all of them. The absolute
+figure suffers; the comparison does not.
+
+**And the errors that do not cancel run against the model.** Aliasing only bites when an arm fetches
+the answer at an address the oracle does not name — and the more pages an arm reads, the likelier it
+also hits the named one. So it penalises the **low-budget** arms:
+
+- **92% model against 47% matched heuristic** — both read 203 pages, so aliasing roughly cancels and
+  this comparison stands as measured.
+- **92% model against 89% shipped heuristic** — the heuristic reads 700. That gap is **understated**.
+
+So the reported number is a **floor**. An instrument that under-flatters the thing it is being used
+to advocate for is erring in the right direction, and that is the whole warrant for leaving it.
+
+### The rule going forward
+
+**Audit a row when it scores especially low; do not audit on a schedule and do not rebuild the
+grader.** A low row means *go read what the row names* — not that the selector is broken. Both
+directions are now proven in one sitting: `united-kingdom/PH/PH` reads 2/5 and filled every role,
+`united-arab-emirates/PH/PH` reads 6/6 and left the checklist unfilled.
+
+**Corridor health is a different, free signal and stays separate:** `unresolved_roles` in the recall
+log. Never substitute one for the other — entry 99 is what happens when they are conflated.
+
+**Whoever re-curates the United Kingdom row must not read a recall log first.** Both corrections
+identified above would *raise* the model's score, and they were found by someone who had spent an
+afternoon looking at what the model picked. The row carries a note saying exactly this, so the
+warning travels with the data rather than living here.
+
+---
+
 ## 99. Text coverage is not the constraint, and `selection-recall` does not measure what it looks like
 
 **2026-08-28 · kills TODO item 40 before it was built, and corrects entry 87's headline reading**
@@ -186,8 +245,12 @@ not, on this evidence, costing anything.
 `united-kingdom/PH/PH` scores **2 of 5** against the oracle and its recall log says
 `unresolved_roles: []` — **every role filled, corridor resolved.** The model chose
 `visa-fees.homeoffice.gov.uk/y/philippines/…`, the fee page keyed to this traveller, over the generic
-`gov.uk/visa-fees` the oracle names. It fetched, it answered, and the oracle simply named a different
-page. Entry 98's handoff called this row "the weakest in the new grading and the place to look next";
+`gov.uk/visa-fees` the oracle names.
+
+**"The oracle simply named a different page" was this entry's first reading of that and it is wrong
+for two of the three roles — see entry 100.** `processing_times` is the *same document* at another
+of its three live addresses, and the `fees` row credits a page that states no fee. Only
+`general_entry` is the different-but-valid case described here. Entry 98's handoff called this row "the weakest in the new grading and the place to look next";
 it is the opposite.
 
 ### The two numbers are nearly uncorrelated, and this is the durable finding

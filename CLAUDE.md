@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose ninety-five rows are
+what has wasted the most time here — see the corrections table further down, whose ninety-seven rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -439,6 +439,8 @@ cause, and only running the thing showed it.
 | 46% text coverage in contention means the selector picks blind | France scores 100% at 7%; all 7 misses had text the model read (entry 99) |
 | the UK's `PH/PH` row is the weakest, so look there next | it scores 2/5 and filled **every** role — the oracle names another page (entry 99) |
 | `selection-recall`'s role recall says how well a corridor did | it says how well the model agreed with pages a person named (entry 99) |
+| the UK row's misses are the oracle naming other valid pages | one is the *same document* at another URL; one is the oracle being wrong (entry 100) |
+| a wrong oracle row makes the selector number untrustworthy | the errors run against the model, so 92% is a floor — leave it (entry 100) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

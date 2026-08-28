@@ -1058,6 +1058,25 @@ corridors:
       row. The United Kingdom is the fixture's standing case that answering five roles and refusing
       is a worse outcome than it looks.
 
+
+      **Two rows here are known to be questionable, and are deliberately left as they are (entry
+      100).** `fees` names a page that states no fee: `gov.uk/visa-fees` is a launcher whose whole
+      body reads "Use this tool to work out the cost of your UK visa application. Start now on the
+      Home Office website", so the `why` above — "the published fee schedule for every visa type" —
+      is false of that page. By entries 59 and 60 it is a **tool**, and it probably belongs beside
+      `check-uk-visa` in `tools:` rather than in `answers:`. And `processing_times` names one of
+      **three live addresses for a byte-identical document**: `visa-processing-times-applications-
+      outside-the-uk`, `visa-decision-waiting-times-applications-outside-the-uk` and
+      `visa-processing-times` all hold the same 7,003 characters, so a selector that reads any of
+      them has read the answer and is scored a miss for two of the three.
+
+
+      They are not corrected because correcting either would **raise the model's score**, and the
+      person who found them had just spent an afternoon looking at what the model picked. The
+      distortion runs against the model and the number is therefore a floor, which is the safe
+      direction for an instrument to err in. Anyone re-curating this row should do it from the
+      contention set without reading a recall log first.
+
   - corridor: japan/PH/PH/tourism
     contention: 99
     text_held: 42
