@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [99](#99-text-coverage-is-not-the-constraint-and-selection-recall-does-not-measure-what-it-looks-like) | **Coverage is not the constraint** — France 7% scores 100%, the UK 81% scores 40%; item 40 dropped |
 
 ### Finding the right page: ranking, recall, judgement
 | | |
@@ -147,6 +148,86 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 99. Text coverage is not the constraint, and `selection-recall` does not measure what it looks like
+
+**2026-08-28 · kills TODO item 40 before it was built, and corrects entry 87's headline reading**
+
+Item 40 proposed letting curation fetch a page the index does not hold. Asked to build it, the
+better version looked like a **corpus-build** pass filling the index for every recorded-but-unopened
+entry — 29,641 of 40,718 corpus entries hold no text, and in contention only **46%** do, so the
+model selector was choosing blind on more than half of what it saw. The project owner asked the
+question that killed it: *France has 7% coverage and fills five of six roles — do we fetch for
+everything, or only where a role is unfilled?*
+
+### Coverage does not predict recall, measured three ways
+
+| | |
+| --- | --- |
+| corridors that missed an oracle page (5) | mean contention coverage **44%** |
+| corridors that hit every oracle page (15) | mean contention coverage **51%** |
+
+Seven points on n=5 against n=15 is noise, and the extremes run backwards: **France at 6–7% scores
+100%** for both travellers, while **the United Kingdom at 81% — the second-highest — scores 40%**.
+
+Then the direct test, which is the one that settles it. All **7 missed roles across 20 corridors**
+were pages already in the candidate set and already scored; not one was absent, and **all eight of
+those pages held stored text the model had read**. `gov.uk/visa-fees` scored **134.4 as `fees`** —
+the top candidate for the role it fills, 951 characters in the index — and was passed over. Adding
+text to more pages cannot improve a choice made among pages that already had text.
+
+**So the pass was not built, and item 40 is dropped rather than rewritten.** The 46% is real and is
+not, on this evidence, costing anything.
+
+### Why the United Kingdom looked worst and is not
+
+`united-kingdom/PH/PH` scores **2 of 5** against the oracle and its recall log says
+`unresolved_roles: []` — **every role filled, corridor resolved.** The model chose
+`visa-fees.homeoffice.gov.uk/y/philippines/…`, the fee page keyed to this traveller, over the generic
+`gov.uk/visa-fees` the oracle names. It fetched, it answered, and the oracle simply named a different
+page. Entry 98's handoff called this row "the weakest in the new grading and the place to look next";
+it is the opposite.
+
+### The two numbers are nearly uncorrelated, and this is the durable finding
+
+| corridor | oracle | actually unfilled |
+| --- | --- | --- |
+| `united-kingdom/PH/PH` | 2/5 | — none |
+| `canada/PH/PH` | 4/5 | — none |
+| `united-arab-emirates/PH/PH` | **6/6** | `document_checklist` |
+| `germany/IN/GB` | **4/4** | `document_checklist` |
+
+A perfect oracle score sits on top of an unfilled role; a poor one sits on a complete corridor.
+`selection-recall` measures **agreement with pages a person named**, not whether the traveller got an
+answer. Entry 87's 92% should be read as "the model reads 92% of the specific pages we curated" — it
+is the right metric for grading a *selector against a selector*, which is what it exists for, and it
+is the wrong number to quote for coverage or for corridor health. The CLI legend now says so, because
+this entry is the second time the two have been conflated.
+
+### What the corridors actually lack
+
+Reading `unresolved_roles` across the twenty: `document_checklist` is unfilled in **9**, of which
+Singapore's is correct — the question does not arise for a visa-free traveller (entry 94) — so
+**8 genuine gaps, and it is the only role that recurs.** `visa_decision` is unfilled in 7, but 5 of
+those are `resolved_decision_tool`, which entry 63 settled as a resolution; the two real ones are
+**the United States, for both travellers**, which is `decision_not_found`.
+
+Entry 88 already diagnosed the checklist gap — the page is one hop below something the crawl recorded
+and never opened, or the authority contracted it out. That is **item 35**, and it is what should be
+next.
+
+### What was rejected
+
+- **Filling the index for every unopened entry.** 29,641 pages, hours per country, and the
+  measurement says it buys nothing here.
+- **Filling it only where a role is unfilled.** The right instinct — it is the owner's question —
+  but the misses are not coverage misses, so the condition never fires on the real gaps.
+- **Item 40 as written.** Its premise, "a limit of the curation tool, not of the corpus", was
+  already false for a different reason: since entry 85 the selector is a model that reads stored
+  text, so the index *is* what the product chooses from. Both the original premise and its
+  replacement were wrong, in opposite directions.
 
 ---
 

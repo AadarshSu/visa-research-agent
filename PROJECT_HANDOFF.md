@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has ninety-two rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has ninety-five rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -147,9 +147,13 @@ American still needs a UK ETA.
 from disk for the first time** (entries 97, 98). The model reaches **92% role recall against the
 matched heuristic's 47%** at 203 reads each, and against the shipped heuristic's 89% at 700 reads.
 Entry 87 read 100% / 70% / 91% over ten corridors and could not be regenerated; over all twenty the
-direction held and the matched-budget gap widened to **+45 points**. The `PH/PH` half reads 34/40
-against `IN/GB`'s 47/48 — the first selector figure for a second traveller, worse for the reason
-item 38 predicted. `united-kingdom/PH/PH` at 2/5 is the weakest row.
+direction held and the matched-budget gap widened to **+45 points**.
+
+**Read that number as what it is: agreement with pages a person named, not corridor health** (entry
+99). The two come apart in both directions — `united-kingdom/PH/PH` reads **2 of 5 and filled every
+role**, `united-arab-emirates/PH/PH` reads 6 of 6 and left the checklist unfilled. An earlier version
+of this file called the UK row "the weakest and the place to look next"; it is the opposite. For what
+a corridor actually lacks, read `unresolved_roles` in its recall log.
 
 **The run found the defect that made its own first printing wrong** (entry 97). The OpenAI account
 ran out of credit part-way through, seven corridors fell back to the heuristic ranking, and all
@@ -157,6 +161,19 @@ seven logged `selector: model` — the field recorded whether a selector was *co
 one *chose*. `japan/PH/PH` scored 5/5 in both arms off the same 34 pages. Entry 91's defect one
 level in, now fixed on `ResolutionTrace` with a positive control, and the seven were re-run rather
 than edited.
+
+**Item 40 is dropped unbuilt, and the measurement is why** (entry 99). Filling the page-text index
+for the 29,641 recorded-but-unopened corpus entries looked like the highest-value work — in
+contention only **46%** of candidates hold text. It buys nothing measurable: coverage does not
+predict recall (44% for corridors that missed, 51% for corridors that did not), France scores 100% at
+7% coverage, the UK scores 40% at 81%, and **all seven missed roles were pages already in contention
+whose stored text the model had read**. Do not resurrect it by pointing at the 46%.
+
+**What the corridors actually lack is the checklist.** Across the twenty, `document_checklist` is
+unfilled in 9 — Singapore's correctly, since the question does not arise — leaving **8 genuine gaps,
+the only role that recurs**. That is entry 88's diagnosis and **[TODO.md](TODO.md) item 35** is the
+work. `visa_decision` is unfilled in 7, but 5 are `resolved_decision_tool` and resolve by entry 63;
+the two real ones are the United States for both travellers.
 
 **A model has now produced the visa-free plan** (entry 98). `singapore/PH/PH/tourism` returns
 `visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and

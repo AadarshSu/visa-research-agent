@@ -137,8 +137,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 40. Let curation fetch one page the index does not hold | `next` |
-|  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
+| **Now** | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
@@ -333,53 +332,35 @@ stated-decision gate; entry 98.
 the no-floor decision still rests on entry 96's argument rather than on this run.
 
 
-### 40. Let curation fetch one page the index does not hold — `next`
+### 40. ~~Let curation fetch one page the index does not hold~~ — `dropped, entry 99`
 
-**Why:** entry 91. Sweden's `visa_decision` is on `government.se` with no stored text, and the
-Netherlands' Philippine tourism checklist is named from its address alone. Both are recorded
-`unverifiable` or `title_only`, and **the product would simply fetch them** — the index is a ranking
-store, not the limit on what can be read. So the oracle understates what is answerable, which is
-known problem 30 read from the other side: it is a limit of the *curation tool*, not of the corpus.
+**Dropped 2026-08-28, unbuilt, because the measurement that would have justified it disproved it.**
 
-**Do:** an opt-in on `visa-discover contention` that fetches **one named candidate** through
-`LiveSourceFetcher` — so domain trust, `robots.txt`, the TLS rules and the freshness ceiling all
-apply exactly as they do in a corridor — and prints it for the curator. Offline stays the default,
-because the set a row is curated against has to be reproducible next month.
+**Its premise was already false.** The item said the index is "a ranking store, not the limit on what
+can be read… a limit of the *curation tool*, not of the corpus". That was true while the heuristic
+ranked links. Since entry 85 the selector is a **model that reads stored text**, and a page with none
+is handed to it as *"nothing is stored about what this page says… treat that as much weaker
+evidence"*. So the index is what the product chooses from, and the better version of this item was a
+**corpus-build pass** filling the index for recorded-but-unopened entries — 29,641 of 40,718, and in
+contention only **46%** hold text.
 
-**Careful:** this is a curation aid and must not become a second retrieval path. It reads one URL a
-person typed, never a set; it never writes to the corpus or the index; and a page it fetches is still
-fetched again by the product before a word of it reaches a traveller.
+**Then the numbers said it buys nothing.** Coverage does not predict recall: corridors that missed an
+oracle page average **44%** coverage, corridors that hit every one average **51%**. France scores
+**100% at 7% coverage**; the United Kingdom scores **40% at 81%**. And all **7 missed roles across 20
+corridors** were pages already in the candidate set, already scored, **all holding stored text the
+model had read** — `gov.uk/visa-fees` among them, top candidate for `fees` at 134.4. Adding text to
+more pages cannot improve a choice made among pages that already had text.
 
+**What to do instead is item 35.** Reading `unresolved_roles` across the twenty, `document_checklist`
+is unfilled in 9 — Singapore's correctly, because the question does not arise — so **8 genuine gaps,
+and it is the only role that recurs**. Entry 88 diagnosed it: the page is one hop below something the
+crawl recorded and never opened, or the authority contracted it out. `visa_decision` is unfilled in 7,
+but 5 are `resolved_decision_tool`, which entry 63 settled as a resolution; the two real ones are the
+**United States for both travellers**, which is `decision_not_found` and is item 30's territory.
 
-### 5b. ~~Answer France's challenge in the corpus build~~ — `done, entry 92`
-
-**Done 2026-08-28, and the item's own premise was wrong.** The corpus build always passed the
-renderer and always called `_answer_challenge`; what it passed with it was
-`settings.maximum_crawl_renders` — **12** — against France's **64** challenged pages. So most were
-recorded "that challenge could not be answered here", which was true of that crawl and false of the
-authority.
-
-`DEFAULT_CORPUS_RENDERS = 400` for the offline job, bounded a second way by
-`CHALLENGE_FAILURES_PER_HOST = 3` so a host nobody can answer — `urm.lt` fingerprints past our user
-agent — costs three renders rather than two hours. Entry 41's line is unmoved and now has tests on
-the crawl path: a bare `403`, a `401` and a `429` never reach the renderer.
-
-**The rebuild bought less than the mechanism suggests.** `france-visas.gouv.fr` went from 12 pages
-with stored text to **104**, and that bought **one role** — the arrival page's entry conditions, for
-both travellers. France's other four gaps are inside the **Visa Wizard**, which is a tool rather than
-a page, and no crawl reaches those. France is still the weakest row in the fixture and item 5's
-remaining half is what would change that.
-
-**Sweden was rebuilt on the same day and is where the change actually paid.** Counting each corpus's
-`challenge, unanswered` entries offline first — **FR 66, SE 216, US 19, zero for the other seven** —
-showed Sweden, not France, was losing the most to the render budget. `government.se` answered a
-challenge on every page and so held stored text for none; after the rebuild it holds **863**, and its
-visa-requirement list — which both Sweden rows recorded unverifiable or title-only — now names "India
-**)" and "The Philippines *)" outright. **Sweden's Philippine row went 2 of 6 to 6 of 6.**
-
-**What is left: the United States, at 19.** `egov.uscis.gov` and `ceac.state.gov` are application
-portals rather than guidance, so expect little; the other seven corpora have none and a rebuild for
-this reason would buy them nothing. Count before crawling — that is the transferable part.
+**Do not resurrect this by pointing at the 46%.** It is a true number about the store and is not, on
+this evidence, costing a corridor anything. Anyone proposing to fix it needs a measurement that ties
+coverage to a role that was actually lost — which is what this attempt looked for and did not find.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`

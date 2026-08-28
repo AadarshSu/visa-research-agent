@@ -658,7 +658,12 @@ def print_selection_recall(grading: Grading, stream: TextIO) -> None:
     print(
         "\n  roles: pages that answer a role, in an oracle neither selector helped build.\n"
         "  joint: the pages entries 85 and 86 graded against, which both arms did help build.\n"
-        "  tools: an official questionnaire holding a role's answer. Naming one never fills it.",
+        "  tools: an official questionnaire holding a role's answer. Naming one never fills it.\n"
+        "\n  This grades a selector against a selector: it counts agreement with the pages a\n"
+        "  person named, NOT whether the corridor got its answer. The two come apart in both\n"
+        "  directions — `united-kingdom/PH/PH` reads 2 of 5 here and filled every role, while\n"
+        "  `united-arab-emirates/PH/PH` reads 6 of 6 and left the checklist unfilled. For what a\n"
+        "  corridor actually lacks, read `unresolved_roles` in its recall log (entry 99).",
         file=stream,
     )
     for arm in grading.arms:
