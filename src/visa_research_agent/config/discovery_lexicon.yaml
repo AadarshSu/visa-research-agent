@@ -112,10 +112,46 @@ roles:
       - {phrase: how long does it take, weight: 20}
 
   general_entry:
+    # **Three terms, and it showed.** Measured 2026-08-29 across the twenty oracle corridors, this
+    # role produced **zero** scoring candidates in Germany and Japan and never more than 27
+    # anywhere, while `visa_decision` ranged to 465. A page scoring nothing for a role is not
+    # merely ranked low — it can never be shortlisted or selected *for that role* at any budget,
+    # which is entry 78's finding in a second place. `general_entry` was the largest genuinely-open
+    # role in the fixture at 7 of 20 corridors, and the three roles with the fewest terms — this
+    # one, `fees` and `processing_times` — were exactly the three that produced no candidates at
+    # all. Entry 103.
+    #
+    # What entry-condition pages actually say, taken from pages already read: Singapore's arrival
+    # card and "sufficient funds"; Germany's "means of subsistence" and EUR 30,000 travel
+    # insurance; the United Kingdom's "you'll leave at the end of your visit"; Japan's "landing
+    # permission" granted at the port. None of that vocabulary was here.
+    #
+    # `entry requirements` is deliberately **not** added: it already sits in `visa_decision` at 12,
+    # and duplicating it across roles would let one phrase decide two roles at once. The same rule
+    # as everywhere else in this file applies within the role — no phrase may contain, or be
+    # contained by, another, or both fire and the page scores twice.
+    #
+    # `customs` is left at 8 and is a known mis-attractor: Canada's only `general_entry` candidates
+    # were a vehicle-import page and a customs-on-return page. It is not removed in the same change
+    # that adds thirteen terms, because then neither could be attributed; the new terms outrank it
+    # by 2-3x, which should dilute it. Re-check it once this is measured.
     terms:
       - {phrase: entering, weight: 12}
       - {phrase: arrival card, weight: 15}
       - {phrase: customs, weight: 8}
+      - {phrase: entry conditions, weight: 22}
+      - {phrase: conditions of entry, weight: 22}
+      - {phrase: landing permission, weight: 22}
+      - {phrase: immigration clearance, weight: 20}
+      - {phrase: means of subsistence, weight: 20}
+      - {phrase: sufficient funds, weight: 20}
+      - {phrase: passport validity, weight: 18}
+      - {phrase: onward travel, weight: 18}
+      - {phrase: travel insurance, weight: 15}
+      - {phrase: period of stay, weight: 15}
+      - {phrase: length of stay, weight: 15}
+      - {phrase: border control, weight: 15}
+      - {phrase: return ticket, weight: 12}
 
 # Purpose words. A page matching the traveller's purpose gains; a page matching a different
 # purpose is penalised hard, because that is the wrong-checklist failure mode.

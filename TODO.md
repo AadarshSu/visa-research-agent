@@ -393,7 +393,19 @@ passport renewals and appointment booking. Measured over all ten corpora first �
 those two families and keeps every other family in every country. It also stops the crawl reserving
 budget for them. The `incomplete` advice line, which entry 101 showed was false, is fixed too.
 
-**Step 2 is what remains: seed the crawl from the corpus's unfetched addresses**, the only thing
+**And the gap this item was aimed at turned out not to be the biggest one (entry 103).** Reading
+`unresolved_roles` counts a tool-settled role as unresolved; against the oracle, the genuinely-open
+roles are **`general_entry` 7, `document_checklist` 3, `processing_times` 3** of 120 slots. The three
+roles with the fewest lexicon terms are exactly the three that score **zero** candidates in some
+countries, and they hold 11 of the 16. `general_entry` is now widened — Japan 0 → 2 candidates, the
+UK 10 → 23 — with every other role's top page unchanged.
+
+**So the next cheap win is `fees` and `processing_times`, which have the same defect**: four terms and
+three, producing no candidate at all in 6 and 8 corridors of 20. Same measurement harness, same
+before/after discipline, no crawl. Entry 103 left them untouched only so `general_entry`'s effect
+could be attributed.
+
+**Step 2 is what remains of *this* item: seed the crawl from the corpus's unfetched addresses**, the only thing
 that can ever open them. Entry 101 rejected doing it blind — 600 depth-0 seeds against today's 162
 is a real change to crawl shape. **And measure first**: an attempt to establish whether unfetched
 recorded pages hold checklists anywhere outside the Netherlands failed, because URL-pattern counting

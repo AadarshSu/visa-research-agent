@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 641 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 642 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and one rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and four rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -201,11 +201,20 @@ visa family survives the pattern on the word `visa` though it is the wrong terri
 that serves tourism reads **100%**. **Step 2 — seeding the crawl from recorded-but-unfetched
 addresses — is what remains, and item 35 says to measure before spending it.**
 
-**What the corridors actually lack is the checklist.** Across the twenty, `document_checklist` is
-unfilled in 9 — Singapore's correctly, since the question does not arise — leaving **8 genuine gaps,
-the only role that recurs**. That is entry 88's diagnosis and **[TODO.md](TODO.md) item 35** is the
-work. `visa_decision` is unfilled in 7, but 5 are `resolved_decision_tool` and resolve by entry 63;
-the two real ones are the United States for both travellers.
+**What the corridors actually lack is `general_entry`, not the checklist** (entry 103, which
+corrects what this file said twice). Counting `unresolved_roles` in a recall log counts a role handed
+to a questionnaire as unresolved — entry 93's conflation, read back in through a different file.
+Against the oracle with tool-settled and does-not-arise removed, **16 of 120 role slots are genuinely
+open**, and they are `general_entry` 7, `document_checklist` 3, `processing_times` 3, and one each of
+`fees`, `visa_decision` and `application_route`.
+
+**The three roles with the fewest lexicon terms are exactly the three that score no candidates at
+all** — `general_entry` and `processing_times` at three terms, `fees` at four — and they hold 11 of
+the 16. A page scoring zero for a role can never be shortlisted or selected *for* it at any budget,
+which is entry 78 in a second place. `general_entry` is widened from 3 terms to 16: Japan goes from
+**0 candidates to 2**, the United Kingdom 10 → 23, Sweden 4 → 9, and the top page for every other
+role in every affected corridor is **unchanged**. `fees` and `processing_times` have the same defect
+and are untouched, so that one role's effect could be read.
 
 **A model has now produced the visa-free plan** (entry 98). `singapore/PH/PH/tourism` returns
 `visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and

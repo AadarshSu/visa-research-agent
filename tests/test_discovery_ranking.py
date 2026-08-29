@@ -534,6 +534,39 @@ def test_a_page_that_states_the_answer_scores_as_the_visa_decision() -> None:
         assert scores.score_for("visa_decision") > 0, label
 
 
+def test_a_page_stating_entry_conditions_scores_for_general_entry() -> None:
+    """The role had three terms and scored **zero** candidates in Germany and Japan (entry 103).
+
+    A page scoring nothing for a role is not merely ranked low — it can never be shortlisted or
+    selected *for* that role at any budget, which is entry 78's finding in a second place. These
+    are real pages' words: Japan's landing permission, Germany's Schengen subsistence rule, and
+    Singapore's arrival-card conditions. Each must score something.
+    """
+
+    corridor = Corridor(
+        destination_slug="testland",
+        passport_nationality="IN",
+        applying_from="GB",
+        purpose="tourism",
+    )
+    registry = get_country_registry()
+    pages = [
+        ("landing permission at the port of entry", "https://mfa.gov.example/landing-permission"),
+        ("means of subsistence and travel insurance", "https://mfa.gov.example/entry-conditions"),
+        ("show sufficient funds and onward travel", "https://ica.gov.example/entering"),
+        ("how long can I stay: period of stay", "https://mfa.gov.example/period-of-stay"),
+    ]
+    for text, url in pages:
+        scores = score_link(
+            PageLink(url=url, text=text, heading="", depth=0, discovered_from="seed"),
+            corridor,
+            get_lexicon(),
+            registry.require("IN"),
+            registry.require("GB"),
+        )
+        assert scores.score_for("general_entry") > 0, text
+
+
 def test_no_new_overlapping_lexicon_terms() -> None:
     """A term inside another term makes both fire, so the page scores twice.
 

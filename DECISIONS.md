@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [103](#103-the-roles-that-go-unanswered-are-the-roles-with-the-fewest-words) | **The unanswered roles are the ones with fewest words** — 3 terms, 0 candidates in two countries |
 | [102](#102-a-family-needs-a-visa-word-not-merely-a-government-word) | **A family needs a visa word** — `apply`/`appointment`/`fees` let passport renewals hold a verdict |
 | [101](#101-a-rebuild-cannot-open-what-a-build-recorded-and-the-gate-was-counting-the-wrong-thing) | **A rebuild cannot open what a build recorded** — and `opened` undercounted fetches by 2.6× |
 | [100](#100-the-oracle-is-left-wrong-on-purpose-because-every-distortion-in-it-runs-one-way) | **The oracle is left wrong on purpose** — the distortions run against the model, so the number is a floor |
@@ -151,6 +152,100 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 103. The roles that go unanswered are the roles with the fewest words
+
+**2026-08-29 · TODO item 35 · widens `general_entry`, and corrects two numbers this file was
+carrying**
+
+### Two corrections first, because the second changed what got built
+
+**`document_checklist` is not the dominant gap.** Entries 99 to 102 and the handoff all said it was
+unfilled in 8 of 20 corridors and "the only role that recurs". That came from `unresolved_roles` in
+the recall logs, **which counts a role handed to a questionnaire as unresolved** — the exact
+conflation entry 93 fixed for the coverage metric, read back in through a different file. Against the
+oracle with tool-settled and does-not-arise roles removed, **16 of 120 role slots are genuinely
+open** — 87% accounted for — and they fall out like this:
+
+| role | terms in the lexicon | corridors of 20 with **zero** scoring candidates | genuinely open |
+| --- | --- | --- | --- |
+| `visa_decision` | 18 | 0 | 1 |
+| `application_route` | 13 | 0 | 1 |
+| `document_checklist` | 8 | 0 | 3 |
+| `fees` | 4 | 6 | 1 |
+| `processing_times` | 3 | 8 | 3 |
+| **`general_entry`** | **3** | **4** | **7** |
+
+**The three roles with four terms or fewer are exactly the three that produce no candidates at all**,
+and they hold 11 of the 16 open slots. A page scoring zero for a role is not merely ranked low — it
+can never be shortlisted or selected *for that role* at any budget. That is entry 78's finding
+(`document_checklist` filed as `visa_decision`, unrecoverable at any shortlist depth) in a second
+place, reached from the opposite direction: there, one page had the wrong role; here, no page has
+the role at all.
+
+**And the delegated-checklist column would change nothing measurable.** The owner is right that a VFS
+Global link the plan already hands over should count as accounted-for — it is entry 93's defect one
+instance later, and it is filed. But measured, France's open role is `processing_times` and the
+Netherlands' are `general_entry` and `fees`; both already answer the checklist. An earlier claim that
+it "would change the Netherlands most" was reasoning from 236 recorded delegations, not from any
+role it unblocks.
+
+### What the seven open `general_entry` slots actually are
+
+The oracle records a reason per slot, and they are not one thing:
+
+- **Nothing scores at all** — `germany` ×2, `japan/PH/PH`, whose reason says outright "no candidate
+  scored above zero for it". Confirmed live: **0 of 83** candidates score in Germany, **0 of 99** in
+  Japan.
+- **The page present is the wrong one** — `netherlands` ×2, where the only entry-condition candidate
+  is the ETIAS page, which is for travellers who need no visa. A correct exclusion, not a defect.
+- **Wrong pages present** — `canada/PH/PH`, whose candidates are a vehicle-import page and a
+  customs-on-return page. Both attracted by `customs`, a term in this very role.
+- **Nothing states it** — `united-states/PH/PH`.
+
+So widening the vocabulary could only ever fix some of the seven, and that was said before the terms
+were written rather than discovered after.
+
+### The change, and what it bought
+
+Thirteen terms, from pages already read: `landing permission` (Japan), `means of subsistence` and
+`travel insurance` (Germany's Schengen rule), `sufficient funds` and `onward travel` (Singapore),
+`entry conditions`, `immigration clearance`, `period of stay` and the rest. `entry requirements` was
+deliberately **not** added — it is already `visa_decision`'s at weight 12, and one phrase deciding
+two roles is its own defect.
+
+Measured across all twenty corridors, before and after:
+
+| | before | after |
+| --- | --- | --- |
+| `japan/IN/GB`, `japan/PH/PH` | **0**, **0** | **2**, **1** |
+| `united-kingdom` ×2 | 10 candidates, top 30 | **23, top 43** |
+| `sweden` ×2 | 4, top 24 | **9, top 31** |
+| `canada` ×2 | 19, top 24 | 22, top 31 |
+| `france/IN/GB` | 2, top 42 | 3, top 64 |
+| `germany` ×2 | 0 | **still 0** |
+
+Japan is the case the oracle named, and it moves. **Germany does not, and was predicted not to**: its
+entry-condition pages are in the *text index* — put there by a cache backfill — and **not in its
+corpus**, so no scoring change can reach them. That is a discovery gap and belongs to item 30.
+
+**The damage check is the one that matters and it is clean.** Two corridors lost a single
+`visa_decision` candidate each — 96→95, 73→72 — with the top score unchanged, which is a page whose
+best role became `general_entry`. Comparing the **top page for every other role** across the five
+affected corridors, before against after: **identical, every one.** Entry 81's rule — grade the
+shortlist, not the plan — applied to a vocabulary change.
+
+### What was left alone, deliberately
+
+`customs` stays at weight 8 despite being the term that pulled Canada's vehicle-import page in.
+Removing it in the same change that adds thirteen terms would make neither attributable, and the new
+terms outrank it three-to-one. Re-check it against a measurement of its own.
+
+`fees` and `processing_times` are untouched. The table above says they have the same defect — 6 and 8
+corridors with no candidate at all — and fixing them is the same shape of work, but this entry
+changed one role so that one role's effect could be read.
 
 ---
 
