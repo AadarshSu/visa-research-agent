@@ -762,9 +762,21 @@ promoting from it would have trusted three wrong domains while missing three rig
 for the **organisation**, then read its `P856`/`P17`. `iom.sk` was examined and **rejected** — it is
 the International Organization for Migration, not Slovakia's government.
 
-**Still nothing for Bulgaria, Brazil, Lithuania, Norway, Slovakia and Uruguay.** `migracija.lt` and
-`regjeringen.no` are almost certainly right, and "almost certainly" is what this rule refuses. They
-need a person with a source.
+**Twelve more landed the same day on the owner's judgement (entry 111), and no country is thin any
+more.** Bulgaria, Denmark, Iceland, Liechtenstein, Lithuania, Luxembourg, Norway and Slovakia all
+carry two to four domains now. Five were read from the page's own title; six are marked "Judgement"
+and "Owner's call" in the file because the site is behind a challenge or renders client-side. **The
+standard `reviewed` now carries is "a person decided, and the file says what they had"** — read entry
+111 before adding more, and keep marking the tier.
+
+**Brazil and Uruguay still carry one domain, correctly.** `liveinuruguay.uy` is a relocation
+promotion and `gub.uy` already covers the government. **`iom.sk` stays refused** — it is the
+International Organization for Migration, which passes the own-TLD half and fails the governmental
+one, and it is left in `unconfirmable` so the next reviewer meets it.
+
+**Untested: whether any of the nine gains what Germany gained.** Reachability did not move — all nine
+were already researchable from one domain. What moved is how much of each government a corridor may
+see, and only a corpus build will say whether that is worth four open slots apiece.
 
 **Germany is done and it worked (entries 107, 108).** `diplo.de` is now `reviewed` — the warrant is
 that the already-trusted `auswaertiges-amt.de` prints "Website http://www.washington.diplo.de" under

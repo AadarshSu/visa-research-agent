@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and seventeen rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and eighteen rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -123,6 +123,13 @@ produces a serious defect.
   A country whose own top-level domain *is* `gov` otherwise admits its whole federal namespace, and
   the cost lands on search count and crawl budget — three searches per trusted domain, so five domains
   is fifteen queries on the cold path (entry 22).
+
+  **`reviewed` means a person decided, not that a machine confirmed (entry 111).** Three tiers live
+  in that field and each entry says which it is: an independent source (Wikidata `P856`/`P17`, or a
+  TLS certificate naming the organisation), the page's own words, or the reviewer's judgement where
+  the site could not be read at all. The rule itself never bends — **governmental *and* under the
+  country's own top-level domain** — which is why `iom.sk` stays refused: the International
+  Organization for Migration passes the second half and fails the first.
 
   **Which domains are trusted is now committed data, not a live search (entry 38).**
   `config/authority_domains.yaml` is generated offline by `visa-discover registry` and read at
@@ -487,6 +494,7 @@ cause, and only running the thing showed it.
 | the US corridor cannot be helped, the pages are refused | naming them turns a 503 into a plan: `resolved_decision_blocked` (entry 109) |
 | `unconfirmable` is a shortlist of the authority's real domains | three for three the right one was absent — ask Wikidata, don't promote (entry 110) |
 | a domain under the country's own TLD that migration bodies use is fine | `iom.sk` is the **International** Organization for Migration (entry 110) |
+| `reviewed` in `authority_domains.yaml` means independently confirmed | it means a person decided — three tiers, each marked in the entry (entry 111) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

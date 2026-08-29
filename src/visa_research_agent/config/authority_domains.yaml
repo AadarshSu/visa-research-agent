@@ -72,6 +72,10 @@ countries:
   reviewed:
     mfa.bg: official website of the Ministry of Foreign Affairs of Bulgaria — Wikidata Q1813345, P856/P17,
       checked 2026-08-25
+    mvr.bg: Bulgaria's Ministry of the Interior, serving its own name in Cyrillic in the page
+      title. DECISIONS entry 111, 2026-08-29
+    gov.bg: Bulgaria's Council of Ministers, serving Ministerski savet. DECISIONS entry 111,
+      2026-08-29
   unconfirmable: []
 - code: BR
   name: Brazil
@@ -156,8 +160,11 @@ countries:
       Denmark's own top-level domain, which is the two-part warrant entry 107 used for Germany.
       Serves "Welcome to the official website of Denmark". A country portal rather than a visa
       authority. DECISIONS entry 110, 2026-08-29
-  unconfirmable:
-  - nyidanmark.dk
+    nyidanmark.dk: the official "New to Denmark" portal of the Danish Immigration Service and
+      SIRI, serving "Ny i Danmark" under Denmark's own top-level domain. Judgement rather than an
+      independent source — Wikidata gives the service's site as us.dk and does not name this one.
+      Owner's call, DECISIONS entry 111, 2026-08-29
+  unconfirmable: []
 - code: EE
   name: Estonia
   trusted:
@@ -275,9 +282,11 @@ countries:
       https://www.stjornarradid.is/ with P17 Iceland. Iceland had **no** domain at all before this
       and was refused outright, and note that neither proposed domain was the right one. DECISIONS
       entry 110, 2026-08-29
-  unconfirmable:
-  - government.is
-  - island.is
+    government.is: serves the title "Government of Iceland" under Iceland's own top-level domain,
+      and is the English presence of stjornarradid.is. DECISIONS entry 111, 2026-08-29
+    island.is: Iceland's digital public-services portal. Judgement — it serves no title to read
+      and no independent source names it. Owner's call, DECISIONS entry 111, 2026-08-29
+  unconfirmable: []
 - code: IT
   name: Italy
   trusted:
@@ -316,18 +325,27 @@ countries:
       https://www.regierung.li/ with P17 Liechtenstein, and the site serves "Regierung des
       Fürstentums Liechtenstein". Liechtenstein had no domain at all before this. DECISIONS entry
       110, 2026-08-29
-  unconfirmable:
-  - llv.li
+    llv.li: the Liechtensteinische Landesverwaltung, the national administration. Judgement — it
+      sits behind a Cloudflare challenge so nothing could be read from here, and no independent
+      source names it. Owner's call, DECISIONS entry 111, 2026-08-29
+  unconfirmable: []
 - code: LT
   name: Lithuania
   trusted: []
   reviewed:
     urm.lt: official website of the Ministry of Foreign Affairs of Lithuania — Wikidata Q1548931, P856/P17,
       checked 2026-08-25
-  unconfirmable:
-  - mfa.lt
-  - migracija.lt
-  - vrm.lt
+    migracija.lt: the Migration Department under Lithuania's Ministry of the Interior, which is
+      the authority that decides a visa. Judgement — the site renders client-side and serves no
+      title, and Wikidata holds no official website for the department. Owner's call, DECISIONS
+      entry 111, 2026-08-29
+    vrm.lt: Lithuania's Ministry of the Interior, the Migration Department's parent. Judgement —
+      behind a Cloudflare challenge, so unread from here. Owner's call, DECISIONS entry 111,
+      2026-08-29
+    mfa.lt: Lithuania's Ministry of Foreign Affairs, almost certainly the English-facing alias of
+      the already-reviewed urm.lt. Judgement — behind a challenge. Owner's call, DECISIONS entry
+      111, 2026-08-29
+  unconfirmable: []
 - code: LU
   name: Luxembourg
   trusted: []
@@ -338,8 +356,10 @@ countries:
     public.lu: the directory of Luxembourg's public sites (etat.lu), named on the already-reviewed
       gouvernement.lu and under Luxembourg's own top-level domain — entry 107's two-part warrant.
       A directory rather than a visa authority. DECISIONS entry 110, 2026-08-29
-  unconfirmable:
-  - mae.lu
+    mae.lu: Luxembourg's Ministry of Foreign and European Affairs, which serves that name in its
+      own title as "Ministere des Affaires etrangeres et europeennes". DECISIONS entry 111,
+      2026-08-29
+  unconfirmable: []
 - code: LV
   name: Latvia
   trusted:
@@ -405,9 +425,12 @@ countries:
   reviewed:
     udi.no: official website of the Norwegian Directorate of Immigration — Wikidata Q12008658, P856/P17,
       checked 2026-08-25
-  unconfirmable:
-  - norway.no
-  - regjeringen.no
+    norway.no: serves the title "The Norway Portal - Norwegian Ministry of Foreign Affairs", naming
+      the ministry itself. DECISIONS entry 111, 2026-08-29
+    regjeringen.no: the Norwegian Government's own website. Judgement — behind a Cloudflare challenge
+      so unread from here, and Wikidata gives udi.no for the immigration directorate rather than
+      naming this. Owner's call, DECISIONS entry 111, 2026-08-29
+  unconfirmable: []
 - code: NZ
   name: New Zealand
   trusted:
@@ -500,6 +523,9 @@ countries:
   reviewed:
     mzv.sk: official website of the Ministry of Foreign and European Affairs of the Slovak Republic —
       Wikidata Q3499939, P856/P17, checked 2026-08-25
+    minv.sk: the Ministry of Interior of the Slovak Republic, where Slovak immigration sits,
+      serving "Ministerstvo vnutra Slovenskej republiky" in its own title. Not a promotion from
+      unconfirmable, which held only iom.sk. DECISIONS entry 111, 2026-08-29
   unconfirmable:
   - iom.sk
 - code: TH

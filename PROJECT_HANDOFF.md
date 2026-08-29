@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and seventeen rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and eighteen rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 

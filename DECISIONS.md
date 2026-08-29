@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [111](#111-twelve-more-domains-on-the-owners-judgement-and-what-that-standard-is) | **Twelve more on judgement** — `reviewed` now means "a person decided", in three marked tiers |
 | [110](#110-six-domains-for-five-countries--and-the-proposed-lists-were-wrong-about-which-domain-to-want) | **Six domains, five countries** — and three for three, the right domain was not the proposed one |
 | [109](#109-travelstategov-was-never-a-challenge--it-is-a-block-and-we-were-rendering-past-it) | **`travel.state.gov` is a block, not a challenge** — one shared marker had us rendering past a refusal |
 | [108](#108-germanys-rebuild-closed-three-of-four-slots-the-united-states-closed-none) | **Germany 1 host → 87, three slots closed** — and the US challenge is a real ceiling |
@@ -159,6 +160,73 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 111. Twelve more domains on the owner's judgement, and what that standard is
+
+**2026-08-29 · trust decisions taken by the project owner · TODO item 2**
+
+Entry 110 added six domains it could confirm independently and listed six countries where the
+evidence was not there, saying `migracija.lt` and `regjeringen.no` were "almost certainly right, and
+almost certainly is what this rule refuses". **The owner's answer was that almost certainly is fine.**
+That is theirs to decide — the `reviewed` field exists precisely as the human escape hatch entries 33
+and 34 designed — and what this entry does is make the standard explicit rather than let it blur.
+
+### Nine countries, and none is thin any more
+
+| | domains after | what was added |
+| --- | --- | --- |
+| Bulgaria | 3 | `mvr.bg`, `gov.bg` |
+| Denmark | 4 | `nyidanmark.dk` |
+| Iceland | 3 | `government.is`, `island.is` |
+| Liechtenstein | 2 | `llv.li` |
+| Lithuania | 4 | `migracija.lt`, `vrm.lt`, `mfa.lt` |
+| Luxembourg | 3 | `mae.lu` |
+| Norway | 3 | `norway.no`, `regjeringen.no` |
+| Slovakia | 2 | `minv.sk` |
+
+Every domain is under its own country's top-level domain, and every entry records the evidence that
+supports it — **saying which kind it is**, because the kinds are not equal:
+
+- **Read from the page itself**, which is real evidence: `norway.no` serves "The Norway Portal -
+  Norwegian Ministry of Foreign Affairs"; `mae.lu` serves "Ministere des Affaires etrangeres et
+  europeennes"; `government.is` serves "Government of Iceland"; `minv.sk` serves "Ministerstvo vnutra
+  Slovenskej republiky"; `mvr.bg` serves Bulgaria's interior ministry in Cyrillic.
+- **Judgement, marked as judgement**: `migracija.lt`, `vrm.lt`, `mfa.lt`, `regjeringen.no`, `llv.li`
+  and `island.is` could not be read — four sit behind a Cloudflare challenge and two render
+  client-side with no title — and Wikidata names none of them. Their entries say "Judgement" and
+  "Owner's call" in the file, so a future reader can tell them from the confirmed ones without coming
+  back here.
+
+**Bulgaria and Slovakia were not promotions.** Their `unconfirmable` lists held nothing usable, so
+their interior ministries were found by looking — which is how the other two thirds of the world will
+have to be done.
+
+### Two were still refused, and the owner's licence does not reach them
+
+- **`iom.sk`** serves "Medzinárodná organizácia pre migráciu (IOM) Slovensko" — the **International**
+  Organization for Migration's Slovak office. An intergovernmental body, not Slovakia's government.
+  "Almost certainly right" is not the question when a domain is *certainly a different organisation*.
+  Left in `unconfirmable` so the next reviewer meets it and refuses it too.
+- **`liveinuruguay.uy`** serves "Live in Uruguay" and reads as a relocation promotion rather than an
+  authority. Uruguay already has `www.gub.uy`, the whole-government portal, so nothing is lost.
+
+Brazil and Uruguay therefore still carry one domain each, and that is the correct outcome rather than
+an unfinished one.
+
+### What the standard now is, said plainly
+
+`reviewed` no longer means "independently confirmed". It means **a person decided, and the file says
+what they had.** Three tiers live in it now — an independent source (Wikidata, TLS), the page's own
+words, and judgement — and mixing them silently is the failure this entry exists to avoid. The rule
+the file states is unchanged and still binds: **governmental *and* under the country's own top-level
+domain**, which is what `iom.sk` fails on the first half while passing the second.
+
+`visa-discover audit` still reads `row, no confirmable domain: 0` and 55 researchable. **Reachability
+is unchanged** — all nine could already be researched from one domain. What changed is how much of
+each government a corridor may see, which is what turned Germany's four open slots into six filled
+ones (entry 108). Whether these nine gain the same way is untested.
 
 ---
 
