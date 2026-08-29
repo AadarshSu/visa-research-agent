@@ -13,7 +13,7 @@ out of sample, and failed it. Both cases below are taken from the real pages:
 """
 
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
-from visa_research_agent.discovery.models import Corridor, PageLink
+from visa_research_agent.discovery.models import Corridor, DiscoveryRole, PageLink
 from visa_research_agent.discovery.scoring import (
     POST_SPECIFIC_ROLES,
     _matches_country,
@@ -565,6 +565,72 @@ def test_a_page_stating_entry_conditions_scores_for_general_entry() -> None:
             registry.require("GB"),
         )
         assert scores.score_for("general_entry") > 0, text
+
+
+def test_a_page_saying_what_it_costs_or_how_long_it_takes_scores_for_that_role() -> None:
+    """`fees` had four terms and `processing_times` three, and between them they scored **zero**
+    candidates in fourteen of the twenty oracle corridors (entry 104).
+
+    Every phrase here is off a real page: GOV.UK's "visa decision waiting times", Sweden's
+    `you-are-waiting-for-a-decision` URL path, the Netherlands' "consular fees in India".
+    """
+
+    corridor = Corridor(
+        destination_slug="testland",
+        passport_nationality="IN",
+        applying_from="GB",
+        purpose="tourism",
+    )
+    registry = get_country_registry()
+    pages: list[tuple[DiscoveryRole, str, str]] = [
+        ("fees", "consular fees in India", "https://gov.example/consular-fees/india"),
+        ("fees", "how much does it cost", "https://gov.example/cost"),
+        ("processing_times", "visa decision waiting times", "https://gov.example/waiting-times"),
+        ("processing_times", "", "https://gov.example/you-are-waiting-for-a-decision"),
+        (
+            "processing_times",
+            "a decision usually takes 15 working days",
+            "https://gov.example/wait",
+        ),
+    ]
+    for role, text, url in pages:
+        scores = score_link(
+            PageLink(url=url, text=text, heading="", depth=0, discovered_from="seed"),
+            corridor,
+            get_lexicon(),
+            registry.require("IN"),
+            registry.require("GB"),
+        )
+        assert scores.score_for(role) > 0, f"{role}: {text or url}"
+
+
+def test_paying_a_fee_is_not_the_same_question_as_what_the_fee_is() -> None:
+    """`payment` was tried in `fees` and rejected (entry 104). It raised Canada's top candidate
+    from 51 to 61 and the page it promoted was `epay/order.do` — "Pay Your Application Fees, Online
+    Payment" — over the fee schedule. A traveller needs the amount, not the till, so a checkout
+    page must not outrank a page that states a fee."""
+
+    corridor = Corridor(
+        destination_slug="testland",
+        passport_nationality="IN",
+        applying_from="GB",
+        purpose="tourism",
+    )
+    registry = get_country_registry()
+
+    def score(text: str, url: str) -> float:
+        return score_link(
+            PageLink(url=url, text=text, heading="", depth=0, discovered_from="seed"),
+            corridor,
+            get_lexicon(),
+            registry.require("IN"),
+            registry.require("GB"),
+        ).score_for("fees")
+
+    schedule = score("consular fees in India", "https://gov.example/consular-fees/india")
+    checkout = score("pay your application fees online", "https://gov.example/epay/order.do")
+
+    assert schedule > checkout, "the page stating the fee must outrank the page collecting it"
 
 
 def test_no_new_overlapping_lexicon_terms() -> None:

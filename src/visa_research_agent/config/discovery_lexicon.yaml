@@ -99,17 +99,61 @@ roles:
       - {phrase: apply, weight: 8}
 
   fees:
+    # Four terms, and **no scoring candidate at all in six of the twenty oracle corridors** —
+    # Germany, Sweden and Singapore, both travellers each (entry 104). All four say "fee" or
+    # "charge", so a page that says what a visa costs in any other words scores nothing, and a page
+    # scoring nothing for a role can never be selected *for* that role at any budget.
+    #
+    # The additions are what fee pages actually say, read out of the corpora that scored zero. The
+    # one that pays is `consular fee`: the Netherlands publishes `consular-fees/{country}` per
+    # traveller, and an Indian corridor's top fee candidate went from 64 to **112.8** on the page
+    # for India itself.
+    #
+    # **`payment` was tried and rejected, and the way it failed is the point.** On counts and scores
+    # it looked like the best addition here: it raised Canada's top fee candidate from 51 to 61 and
+    # the United States' from 27 to 32. Reading the pages behind those scores, it had promoted
+    # `eservices.cic.gc.ca/epay/order.do` — "Pay Your Application Fees, Online Payment" — above the
+    # fee schedule. A traveller needs the amount, not the till. **A score that rose is not a page
+    # that improved**, which is the same lesson as entry 81's, met in a vocabulary change.
+    #
+    # `application fee` will double-fire with `fees` on the literal text "application fees", the way
+    # `visa fees` already does. That class of overlap is pre-existing and frozen in
+    # `test_no_new_overlapping_lexicon_terms`; what the test forbids is a *declared* phrase
+    # containing another, and none of these do.
     terms:
       - {phrase: visa fee, weight: 25}
       - {phrase: visa fees, weight: 25}
       - {phrase: fees, weight: 12}
       - {phrase: charges, weight: 10}
+      - {phrase: application fee, weight: 22}
+      - {phrase: consular fee, weight: 22}
+      - {phrase: how much does it cost, weight: 20}
+      - {phrase: service fee, weight: 18}
 
   processing_times:
+    # Three terms, and **no scoring candidate in eight of the twenty corridors** — the worst of the
+    # six roles (entry 104). Two of the three are the same phrase singular and plural, so this role
+    # effectively knew two ways of asking the question.
+    #
+    # Taken from the pages themselves: GOV.UK publishes "Visa decision **waiting times**", and
+    # Sweden's Migrationsverket puts `you-are-waiting-for-a-decision` in the URL path, which
+    # `searchable_url` flattens to prose. Neither contains the word "processing". Sweden went from
+    # **zero candidates to fifteen**, topped by `migrationsverket.se/en/you-are-waiting-for-a-
+    # decision` at 46.4 — the right page, where before nothing scored at all.
+    #
+    # Singular forms only, deliberately: matching is substring, so `waiting time` already catches
+    # "waiting times" without declaring a second phrase that would double-fire. The `processing
+    # time`/`processing times` pair above predates that reasoning and is frozen rather than fixed.
     terms:
       - {phrase: processing time, weight: 25}
       - {phrase: processing times, weight: 25}
       - {phrase: how long does it take, weight: 20}
+      - {phrase: waiting time, weight: 25}
+      - {phrase: waiting for a decision, weight: 22}
+      - {phrase: usually takes, weight: 18}
+      - {phrase: decision within, weight: 18}
+      - {phrase: working days, weight: 15}
+      - {phrase: business days, weight: 15}
 
   general_entry:
     # **Three terms, and it showed.** Measured 2026-08-29 across the twenty oracle corridors, this

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 642 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 644 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and four rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and five rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -211,10 +211,20 @@ open**, and they are `general_entry` 7, `document_checklist` 3, `processing_time
 **The three roles with the fewest lexicon terms are exactly the three that score no candidates at
 all** — `general_entry` and `processing_times` at three terms, `fees` at four — and they hold 11 of
 the 16. A page scoring zero for a role can never be shortlisted or selected *for* it at any budget,
-which is entry 78 in a second place. `general_entry` is widened from 3 terms to 16: Japan goes from
-**0 candidates to 2**, the United Kingdom 10 → 23, Sweden 4 → 9, and the top page for every other
-role in every affected corridor is **unchanged**. `fees` and `processing_times` have the same defect
-and are untouched, so that one role's effect could be read.
+which is entry 78 in a second place. All three are now widened (entries 103, 104).
+`general_entry` goes from 3 terms to 16 — Japan **0 candidates to 2**, the UK 10 → 23, Sweden 4 → 9 —
+and `fees` and `processing_times` follow: **corridors scoring zero for those two fall 14 → 10**, with
+Sweden's timings going **0 → 15** topped by the right page at 46.4, and the Netherlands' fees topped
+by `consular-fees/india` at 112.8. The top page for every role not being changed is **identical**
+before and after, in every affected corridor.
+
+**Germany stays at zero for all three roles**, and that is now the clearest single finding: its
+entry, fee and timing pages are in the text index by cache backfill and **not in its corpus**, so no
+scoring change reaches them. Germany's problem is discovery — item 30.
+
+**One term was rejected and the reason generalises:** `payment` raised Canada's top fee score from 51
+to 61 by promoting "Pay Your Application Fees, Online Payment" above the fee schedule. A traveller
+needs the amount, not the till. **A score that rose is not a page that improved.**
 
 **A model has now produced the visa-free plan** (entry 98). `singapore/PH/PH/tourism` returns
 `visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and

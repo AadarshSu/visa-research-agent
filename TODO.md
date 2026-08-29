@@ -400,10 +400,16 @@ roles with the fewest lexicon terms are exactly the three that score **zero** ca
 countries, and they hold 11 of the 16. `general_entry` is now widened — Japan 0 → 2 candidates, the
 UK 10 → 23 — with every other role's top page unchanged.
 
-**So the next cheap win is `fees` and `processing_times`, which have the same defect**: four terms and
-three, producing no candidate at all in 6 and 8 corridors of 20. Same measurement harness, same
-before/after discipline, no crawl. Entry 103 left them untouched only so `general_entry`'s effect
-could be attributed.
+**`fees` and `processing_times` are now done too (entry 104)**: corridors scoring zero for those two
+fall **14 → 10**, Sweden's timings go 0 → 15 topped by the right page, and the Netherlands' fees are
+topped by `consular-fees/india` at 112.8. `payment` was tried and rejected — it promoted a checkout
+page over the fee schedule.
+
+**Two vocabulary follow-ups, both small and both needing their own measurement:** `customs` (weight 8
+in `general_entry`) still pulls Canada's vehicle-import page and was left in a thirteen-term change
+where it could not be attributed; and Germany scores **zero for all three widened roles**, which is
+now firmly a discovery gap rather than a scoring one — its pages are in the text index by cache
+backfill and not in its corpus. That belongs to item 30, not here.
 
 **Step 2 is what remains of *this* item: seed the crawl from the corpus's unfetched addresses**, the only thing
 that can ever open them. Entry 101 rejected doing it blind — 600 depth-0 seeds against today's 162

@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [104](#104-fees-and-processing_times-get-the-same-treatment-and-one-term-is-rejected-for-a-reason-worth-keeping) | **`fees` and `processing_times` widened** — and `payment` rejected: a checkout page is not a fee |
 | [103](#103-the-roles-that-go-unanswered-are-the-roles-with-the-fewest-words) | **The unanswered roles are the ones with fewest words** — 3 terms, 0 candidates in two countries |
 | [102](#102-a-family-needs-a-visa-word-not-merely-a-government-word) | **A family needs a visa word** — `apply`/`appointment`/`fees` let passport renewals hold a verdict |
 | [101](#101-a-rebuild-cannot-open-what-a-build-recorded-and-the-gate-was-counting-the-wrong-thing) | **A rebuild cannot open what a build recorded** — and `opened` undercounted fetches by 2.6× |
@@ -152,6 +153,61 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 104. `fees` and `processing_times` get the same treatment, and one term is rejected for a reason worth keeping
+
+**2026-08-29 · TODO item 35 · finishes what entry 103 measured**
+
+Entry 103 found that the three roles with four terms or fewer were exactly the three producing no
+scoring candidate at all, and widened one of them so its effect could be attributed. This does the
+other two. `fees` had four terms, all saying "fee" or "charge"; `processing_times` had three, two of
+which were the same phrase singular and plural.
+
+### Measured across the twenty corridors
+
+**Corridors scoring zero for `fees` or `processing_times`: 14 → 10.**
+
+| | before | after |
+| --- | --- | --- |
+| `sweden` ×2, processing times | **0** | **15, top 46.4** |
+| `singapore` ×2, fees | **0** | 3, top 18 |
+| `netherlands` ×2, fees | 31, top 64 | **76, top 112.8** |
+| `canada` ×2, fees | 40, top 34 | 53, top 51 |
+| `germany` ×2, both | 0 | **still 0** |
+| `france`/`united-arab-emirates`, times | 0 | still 0 |
+
+Sweden's is the clean win and the clean diagnosis: GOV.UK publishes "visa decision **waiting**
+times" and Migrationsverket puts `you-are-waiting-for-a-decision` in the URL path, and **neither
+contains the word "processing"**. Its new top candidate is that page at 46.4, where before nothing
+scored at all. The Netherlands' is the other: `consular fee` reaches `consular-fees/india`, the page
+published for that traveller, at **112.8**.
+
+Germany stays at zero for both, as it did for `general_entry` and for the same reason — its pages are
+in the text index by cache backfill and not in its corpus. Three roles now point at the same
+conclusion: **Germany's problem is discovery, and no scoring change will touch it.**
+
+### The term that was rejected, which is the part worth keeping
+
+`payment`, weight 10, looked like the best addition in the set. On the numbers it raised Canada's top
+fee candidate from **51 to 61** and the United States' from 27 to 32, and dropping it cost those and
+gained only the loss of two Swedish candidates scoring 3.0 and 2.0.
+
+Reading the pages behind the score, it had promoted `eservices.cic.gc.ca/epay/order.do` — **"Pay Your
+Application Fees, Online Payment"** — above the fee schedule. A traveller needs the amount, not the
+till. It is dropped, and a test asserts a page stating a fee outranks a page collecting one.
+
+**A score that rose is not a page that improved.** That is entry 81's rule — grade the shortlist, not
+the metric that moved — reached in a vocabulary change, and it is the second time in two entries that
+a count-and-score summary hid the thing that mattered. The first was `customs` in entry 103, kept
+because it could not be attributed in a change of thirteen terms; it is still there and still pulling
+Canada's vehicle-import page, and it should be re-checked on its own.
+
+### The damage check, which is the same one entry 103 used
+
+The top page for `visa_decision`, `document_checklist`, `application_route` and `general_entry`,
+across the nine corridors any of these roles moved in, before against after: **identical, every one.**
 
 ---
 
