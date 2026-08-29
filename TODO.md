@@ -363,67 +363,47 @@ this evidence, costing a corridor anything. Anyone proposing to fix it needs a m
 coverage to a role that was actually lost — which is what this attempt looked for and did not find.
 
 
-### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`
+### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
 
-**The gate now says what to do, which it could not when this item was written** (item 37, entry 90).
-`visa-discover coverage` reads:
+**The rebuild was run on 2026-08-29 and its acceptance test could never have passed.** 42 queries,
+162 seeds, 2,965 pages crawled — **27 new entries, verdict unchanged**. `build_corpus` seeds from
+search results only and merges the existing corpus in afterwards, so a rebuild re-walks the same
+ground: **an address a build recorded and left unfetched stays unfetched however often you re-run
+it.** Entry 88's 3–15% is structural, not a budget symptom. Entry 101.
 
-```
-NL  incomplete                  9 listed families, largest gateway 71/184 opened
-SG  bounded by the authority    32/198 held, behind a selector — a pass, nothing to do
-GB  bounded by the authority    14/198 held, the fee wizard — a pass, nothing to do
-AE CA DE FR JP SE US            no per-traveller dimension — no-ops, confirmed rather than assumed
-```
+**Two of the three things this item asked for turn out to be already true, and the gate was hiding
+it.** `opened` counted a member that *fathered a recorded link*, so a member fetched from a page
+that links nowhere read as never fetched. Corrected to `read = max(opened, text_held)`, the Dutch
+families are **schengen 100%** (was 39%), `entry-visa` 94%, `consular-fees` 99%. The 113-page gap
+the old column showed was entry 89's VFS Global ceiling being reported as a crawl gap.
 
-**So the first job is the Netherlands, not the other nine.** Entry 88 proved the mechanism and did
-not finish the country: three *complete* families have never been opened at all —
-`making-appointment/{}` at 188 held, `caribbean-visa/short-stay/apply-{}` at 185,
-`passport-id-card/abroad/apply-{}` at 184 — and the schengen gateway sits at 39% opened. Whether the
-three unopened ones are gateways or leaves is **unknown until one is opened**, which is the honest
-state and the reason the verdict is `incomplete` rather than `covered`.
+**What is genuinely left, and it is small:**
 
-Rerun `visa-discover coverage --country NL` after the rebuild; the verdict is the acceptance test.
+- `airport-transit-visa/apply-{}` at **52% read** — in scope, serves the `transit` purpose.
+- `mvv-long-stay/apply-{}` at **1%** — long-stay, so arguably not this product's business.
+- Three families at **0%** that should never have counted: `passport-id-card/abroad/apply-{}`
+  (Dutch citizens renewing a passport), `caribbean-visa/short-stay/apply-{}` (Aruba/Curaçao —
+  outside Schengen, so *wrong* for a `netherlands` corridor), and `making-appointment/{}` (booking,
+  permanently out of scope). All three pass `CORPUS_FAMILY_PATTERN` because it keyword-matches the
+  address on `apply|visa|appointment`.
 
-**Then the other nine, and the gate has already made six of them no-ops.** Rebuild and diff the
-qualifying families, which is free to check offline before spending a crawl.
+**So the next decision is which of two things to build, and neither is a crawl:**
 
-**Why:** entry 88. A corpus crawl reads 3–15% of what it records, and the page that answers a
-*specific* traveller is almost always one hop below something it recorded and never opened. Proved
-and fixed on the Netherlands: gateway pages read went 0 → 185, tourism checklists held 5 → 14, and
-`netherlands/PH/PH` — a profile the store could not serve at all — now fills four of six roles from
-the corpus with the crawl skipped.
+1. **A relevance test for families**, replacing the keyword pattern — the gate should not be held
+   `incomplete` by Dutch passport renewals. Entry 57's lesson says this is a meaning question and a
+   pattern cannot answer it.
+2. **Seeding the crawl from the corpus's unfetched addresses**, which is the only thing that can
+   ever open them. Entry 101 rejected doing it blind: 600 depth-0 seeds against today's 162 is a
+   real change to crawl shape, and on this country it would spend the budget on passport renewals.
+   **Do 1 before 2** — otherwise 2 crawls the wrong families faster.
 
-**Nine countries are untested, and the gate makes most of them no-ops.** Families the *reservation*
-can see — the crawler groups links found on one page — are **NL 9, SG 1, and zero for CA, JP and GB**
-(AE, DE, FR, SE, US likewise). So the work is small. Counted across the whole store instead the
-totals are NL 13, SG 2, GB 1, and the difference is a finding rather than a discrepancy: entry 90.
+**The other nine are unchanged and mostly no-ops** — six read *no per-traveller dimension*, and SG
+and GB are *bounded by the authority*, which is a pass. Verified after the measurement change: no
+other country's verdict moved.
 
-**Singapore is not the Netherlands, and this was checked rather than assumed (2026-08-28).** An
-earlier draft of this item said to do it first because its per-nationality page fills five roles.
-That was the wrong reason:
-
-- Singapore's `visa-detail-page/{country}` is a **leaf**, not a gateway. Opening the 34 held yields
-  two children in total, against the Dutch gateway's six apiece — and an unopened URL is already a
-  usable candidate, so the 34 already work.
-- Its coverage gap is a **form wall**, not a budget one. `ica.gov.sg/.../visa_requirements` yields
-  **6 children, not 198**; the 34 held all came from mission pages (33 New Delhi, 1 Chennai). That
-  is entry 82's UK fee table, and no reservation reaches the other 164.
-- What a rebuild *would* buy is narrower and real: **only 4 of the 32 that group have stored text**
-  (the gate's own count; two of the 34 carry country names the registry has no slug for), and stored
-  text is what the model selector reads. It improves selection for other nationalities, not
-  coverage. Worth doing, worth not overselling.
-- **The thing that might actually help is invisible to this mechanism.** Sixteen mission
-  `visa-information` pages are in the store and **none has ever been opened**. They sit on sixteen
-  hosts and carry no country token, so they never group into a family. Whether any lists
-  nationalities the way New Delhi's does is untested — London's, which has been read, does not.
-
-So: rebuild the eight remaining countries and diff the qualifying families, which is free to check
-offline before spending a crawl. Expect selection gains, not coverage, anywhere the authority
-publishes its list behind a selector.
-
-**Do not raise the share to reach further.** The Dutch ceiling is not the budget: of 185 gateway
-pages read, 113 link nothing and 58 link only language forks, because for most residences the
-Netherlands publishes its checklist on **VFS Global**. See item 36.
+**Do not raise the share to reach further.** Unchanged and now doubly true: the last build opened
+661 pages against a 1,200 budget and 290 on `netherlandsworldwide.nl` against a 400 per-host cap, so
+nothing was capping it.
 
 
 ### 36. ~~Decide what to do about guidance published on a commercial contractor~~ — `done, entry 89`

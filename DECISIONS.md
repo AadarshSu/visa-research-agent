@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [101](#101-a-rebuild-cannot-open-what-a-build-recorded-and-the-gate-was-counting-the-wrong-thing) | **A rebuild cannot open what a build recorded** — and `opened` undercounted fetches by 2.6× |
 | [100](#100-the-oracle-is-left-wrong-on-purpose-because-every-distortion-in-it-runs-one-way) | **The oracle is left wrong on purpose** — the distortions run against the model, so the number is a floor |
 | [99](#99-text-coverage-is-not-the-constraint-and-selection-recall-does-not-measure-what-it-looks-like) | **Coverage is not the constraint** — France 7% scores 100%, the UK 81% scores 40%; item 40 dropped |
 
@@ -149,6 +150,88 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 101. A rebuild cannot open what a build recorded, and the gate was counting the wrong thing
+
+**2026-08-29 · TODO item 35's first job, run and diagnosed rather than completed**
+
+Item 35 said: rebuild the Netherlands, and `visa-discover coverage --country NL` flipping off
+`incomplete` is the acceptance test. The rebuild was run. **42 queries, 162 seeds, 2,965 pages
+crawled, 919 indexed — 27 new entries and no change of verdict.** Three things came out of that,
+and none of them is "crawl harder".
+
+### A rebuild re-walks the same ground, by construction
+
+`build_corpus` seeds the crawl from **search results only**; the existing corpus is merged in
+afterwards and is never a frontier. Same queries, same seeds, same scores, same walk. **An address a
+build recorded and left unfetched stays unfetched however many times the build is re-run.** Entry
+88's "a build opens 3 to 15% of what it records" is therefore not a budget symptom that a rebuild
+buys back — it is structural, and item 35's acceptance test could never have passed.
+
+### The gate's `opened` column was wrong by 2.6×
+
+`opened` counted a member that some other entry names as its `discovered_from` — a member that
+**fathered a recorded link**. A member that was fetched and linked nothing therefore read as never
+fetched:
+
+| Dutch family | counted `opened` | actually fetched |
+| --- | --- | --- |
+| `schengen-visa/apply-{}` | 72 | **185** |
+| `entry-visa/apply-{}` | 61 | **204** |
+| `consular-fees/{}` | 42 | **183** |
+
+The schengen gap is **113**, and 113 is a number this project already had written down: item 35's own
+warning says *"of 185 gateway pages read, 113 link nothing and 58 link only language forks, because
+for most residences the Netherlands publishes its checklist on VFS Global"*. **The gate was
+reporting entry 89's contractor ceiling as a crawl gap**, and advising a rebuild to go and fetch
+pages it already held.
+
+`Family.read` is now `max(opened, text_held)` — the maximum because neither signal is sound alone:
+the index misses a page fetched with no readable body, and `discovered_from` misses a page that led
+nowhere. The verdict is computed from it. A country with no text index falls back to `opened` and
+behaves exactly as before.
+
+**`shape` deliberately stays on `opened`.** It divides country-named children by opened members, so
+both sides have to be counted the same way; swapping `read` into the denominator alone turns 168
+children over 72 into 168 over 185 and flips the Dutch schengen family — a gateway by any reading —
+to `leaf`. Two tests pin this, one per direction.
+
+### What that changed, and what it did not
+
+Schengen goes **39% → 100% read**, `entry-visa` to 94%, `consular-fees` to 99%. **The verdict is
+still `incomplete`, and now for honest reasons**: five families really are unread — and three of
+them should never have been in the count at all.
+
+### Three of the families holding the verdict are out of scope, and their own headings say so
+
+- `passport-id-card/abroad/apply-{}` — *"Applying for your Dutch passport or ID card"*. For Dutch
+  citizens abroad. No visa applicant needs it.
+- `caribbean-visa/short-stay/apply-{}` — *"Applying for a short-stay **Caribbean** visa"*. Aruba,
+  Curaçao, Bonaire — outside Schengen. Serving it to a `netherlands` tourism corridor would be
+  **wrong**, not merely useless.
+- `making-appointment/{}` — booking, which is permanently out of scope.
+
+All three pass `CORPUS_FAMILY_PATTERN`, which keyword-matches the address on
+`visa|permit|entry|checklist|consular|appointment|apply|immigrat|fees`. It cannot tell "apply for a
+Dutch passport" from "apply for a visa" — the keyword-versus-meaning problem entry 57 settled for
+blocked pages, in a new place. **Not fixed here**, because tightening the pattern per country is
+whack-a-mole and the alternative — asking whether a family could answer a role for a corridor into
+this destination — is a design change that should be argued on its own.
+
+What remains genuinely unread and genuinely in scope is **`airport-transit-visa/apply-{}` at 52%**,
+which serves the `transit` purpose, and arguably `mvv-long-stay/apply-{}` at 1%, which does not.
+
+### What was rejected
+
+- **Raising the page budget or the family share.** Neither bound: the last build opened 661 pages
+  against a 1,200 budget and 290 on `netherlandsworldwide.nl` against a 400 per-host cap.
+- **Reading `opened` as fetched everywhere.** It breaks `shape`, measurably and in the direction
+  that hides a gateway.
+- **Seeding the crawl from the corpus's unfetched addresses.** It is the fix for the first finding
+  and it is a real change to crawl shape — 600 depth-0 seeds where there were 162 — so it needs its
+  own decision, and on this country it would spend that budget on Dutch passport renewals.
 
 ---
 

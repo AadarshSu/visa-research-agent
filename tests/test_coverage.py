@@ -252,6 +252,54 @@ def test_the_text_column_counts_what_the_selector_could_read() -> None:
     assert family.held == len(COUNTRIES)
 
 
+def test_a_member_that_was_read_and_linked_nothing_is_not_a_crawl_gap() -> None:
+    """The Netherlands defect, as one assertion (entry 101).
+
+    `opened` counts a member some entry names as its `discovered_from` — a member that *fathered a
+    link*. A member fetched from a site that links nowhere onward reads as never fetched, so the
+    gate called for a rebuild to go and get pages it already had: the Dutch schengen family scored
+    39% opened while every one of its 184 members held stored text, and the rebuild run to check
+    crawled 2,965 pages for 27 new entries.
+
+    Here nothing led anywhere and the index holds every member, so the family is fully read and the
+    verdict must not ask for a crawl."""
+
+    corpus = gateway_site(opened=0)
+    everything = {f"{AUTHORITY}/visa/apply-{country}" for country in COUNTRIES}
+    family = families_in(
+        corpus, SLUGS, countries=len(COUNTRIES), indexed=lambda urls: everything.intersection(urls)
+    )[0]
+
+    assert family.opened == 0, "nothing led on, which is true and is not the question"
+    assert family.read == len(COUNTRIES), "and every one of them was fetched"
+    assert family.read_share == 1.0
+
+
+def test_the_gateway_test_stays_on_what_led_on_so_both_sides_agree() -> None:
+    """`shape` divides country-named children by opened members, so swapping `read` into the
+    denominator alone would flip a gateway to a leaf on the arithmetic rather than the evidence.
+    On the Netherlands that is 168 children over 72 opened — a gateway — against 168 over 185
+    read, which is not."""
+
+    corpus = gateway_site(opened=3)
+    everything = {f"{AUTHORITY}/visa/apply-{country}" for country in COUNTRIES}
+    family = families_in(
+        corpus, SLUGS, countries=len(COUNTRIES), indexed=lambda urls: everything.intersection(urls)
+    )[0]
+
+    assert family.read > family.opened, "the fixture has the gap this test is about"
+    assert family.shape == "gateway", "three opened members each led to their own checklist"
+
+
+def test_a_family_nobody_fetched_still_has_no_shape() -> None:
+    """`unopened` now means *unread*, and with no index to say otherwise it is unchanged."""
+
+    family = families_in(gateway_site(opened=0), SLUGS, countries=len(COUNTRIES))[0]
+
+    assert family.read == 0
+    assert family.shape == "unopened"
+
+
 # --- half one: the answers a human named -------------------------------------------------------
 
 

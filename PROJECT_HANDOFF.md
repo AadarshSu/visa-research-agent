@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 636 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 639 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has ninety-seven rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has one hundred rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -175,6 +175,24 @@ contention only **46%** of candidates hold text. It buys nothing measurable: cov
 predict recall (44% for corridors that missed, 51% for corridors that did not), France scores 100% at
 7% coverage, the UK scores 40% at 81%, and **all seven missed roles were pages already in contention
 whose stored text the model had read**. Do not resurrect it by pointing at the 46%.
+
+**Item 35's rebuild was run and its acceptance test could never have passed** (entry 101). A corpus
+rebuild seeds from search results and merges the old corpus in afterwards, so it re-walks the same
+ground — 2,965 pages crawled bought **27 entries** and no change of verdict. Entry 88's "a build
+opens 3–15% of what it records" is structural; re-running never fixes it.
+
+**And the gate was counting the wrong thing.** `opened` meant "fathered a recorded link", so a
+member fetched from a page that links nowhere read as never fetched — the Dutch schengen family
+showed **72 opened against 185 fetched**. That 113-page gap is entry 89's VFS Global ceiling being
+reported as a crawl gap. `Family.read` is now `max(opened, text_held)` and the verdict uses it;
+`shape` deliberately still uses `opened` so both sides of its ratio agree. Schengen reads **100%**
+(was 39%). No other country's verdict moved.
+
+**The Netherlands is still `incomplete`, now honestly**: `airport-transit-visa` at 52% is a real
+in-scope gap, and three families holding the verdict are out of scope entirely — Dutch passport
+renewal, Caribbean (non-Schengen) visas, and appointment booking, all admitted by a keyword pattern
+that cannot tell "apply for a passport" from "apply for a visa". Item 35 now says which two things
+to decide between, and neither is a crawl.
 
 **What the corridors actually lack is the checklist.** Across the twenty, `document_checklist` is
 unfilled in 9 — Singapore's correctly, since the question does not arise — leaving **8 genuine gaps,

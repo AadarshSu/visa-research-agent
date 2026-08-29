@@ -61,9 +61,14 @@ from visa_research_agent.discovery.urls import country_family_keys
 #     GB  visa-fees.homeoffice.gov.uk/y?…={}    14/198    7%
 FAMILY_COMPLETE_SHARE = 0.5
 
-# Below this share of a complete gateway family opened, a rebuild with the family reservation still
-# has coverage to buy. Not a quality bar and not tuned: it is the point past which "most of it" is
-# a fair description. The Netherlands after entry 88's rebuild sits at 39%.
+# Below this share of a complete gateway family **read**, a rebuild with the family reservation
+# still has coverage to buy. Not a quality bar and not tuned: it is the point past which "most of
+# it" is a fair description.
+#
+# Measured against `read` rather than `opened` since entry 101. On `opened` the Netherlands'
+# schengen family scored 39% and the gate said a rebuild would buy coverage; every one of its 184
+# grouped members had already been fetched, and the rebuild run to check that bought 27 entries
+# out of 2,965 pages crawled.
 FAMILY_OPENED_SHARE = 0.75
 
 FamilyShape = Literal["gateway", "leaf", "unopened"]
@@ -210,16 +215,48 @@ class Family:
         return self.opened / self.held if self.held else 0.0
 
     @property
+    def read(self) -> int:
+        """Members the crawl actually **fetched**, which is not the same as `opened`.
+
+        `opened` counts a member some other entry names as its `discovered_from` — a member that
+        *fathered a recorded link*. A member that was fetched and linked nothing therefore reads as
+        never fetched, and on the Netherlands that gap is the whole finding: the schengen family
+        counts **72 opened against 185 fetched**, and the missing 113 are the pages that link
+        nothing because for most residences the checklist is on VFS Global (entry 89). The gate was
+        reporting a documented ceiling as a crawl gap and advising a rebuild that cannot help — and
+        a rebuild was run to check, crawling 2,965 pages for 27 new entries and no change of
+        verdict (entry 101).
+
+        The maximum of the two signals, because neither is sound alone: the index misses a page
+        fetched with no readable body, and `discovered_from` misses a page that led nowhere. A
+        country with no text index falls back to `opened` and behaves exactly as before.
+        """
+
+        return max(self.opened, self.text_held)
+
+    @property
+    def read_share(self) -> float:
+        return self.read / self.held if self.held else 0.0
+
+    @property
     def shape(self) -> FamilyShape:
         """Gateway, leaf, or not yet known — detected by counting children, never guessed.
 
         An unopened family is honestly `unopened`: nothing distinguishes a gateway from a leaf
-        before one member is opened, which is the same fact that forces `FamilyQueues` to give every
+        before one member is read, which is the same fact that forces `FamilyQueues` to give every
         family its turn rather than back a winner.
+
+        **The gateway test stays on `opened`, deliberately.** It asks how many country-named
+        children an opened member yields, so both sides of it have to be counted the same way.
+        Swapping in `read` would divide the same children by 2.6× the members on the Netherlands
+        and flip its schengen family — a gateway by any reading — to `leaf`. What `read` is for is
+        the verdict: whether a rebuild has anything left to fetch.
         """
 
-        if not self.opened:
+        if not self.read:
             return "unopened"
+        if not self.opened:
+            return "leaf"
         return "gateway" if self.country_named_children >= self.opened else "leaf"
 
     @property
@@ -259,7 +296,7 @@ class CountryCoverage:
         if not complete:
             return "bounded by the authority"
         if any(
-            family.shape in ("gateway", "unopened") and family.opened_share < FAMILY_OPENED_SHARE
+            family.shape in ("gateway", "unopened") and family.read_share < FAMILY_OPENED_SHARE
             for family in complete
         ):
             return "incomplete"

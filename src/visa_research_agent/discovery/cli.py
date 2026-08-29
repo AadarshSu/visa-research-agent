@@ -1023,14 +1023,14 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
         if not country.families:
             continue
         print(
-            f"      {'held':>9}  {'opened':>10}  {'shape':<9} {'text':>9}  {'crawl':<5}  family",
+            f"      {'held':>9}  {'read':>10}  {'led on':>7}  {'shape':<9} {'crawl':<5}  family",
             file=stream,
         )
         for family in country.families:
             print(
                 f"      {f'{family.held}/{family.countries}':>9} {family.completeness:>4.0%}  "
-                f"{f'{family.opened}':>4} {family.opened_share:>4.0%}  {family.shape:<9} "
-                f"{f'{family.text_held}/{family.held}':>9}  "
+                f"{f'{family.read}':>4} {family.read_share:>4.0%}  "
+                f"{f'{family.opened}':>7}  {family.shape:<9} "
                 f"{'listed' if family.reservable else 'spread':<5}  {family.key}",
                 file=stream,
             )
@@ -1041,11 +1041,16 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
             file=stream,
         )
     print(
-        "\n  held: members the corpus knows the address of. An unopened member is still a usable\n"
-        "        candidate; what does not exist is the child of a member nobody opened.\n"
+        "\n  held: members the corpus knows the address of. An unread member is still a usable\n"
+        "        candidate; what does not exist is the child of a member nobody read.\n"
+        "  read: members the crawl actually fetched, and what the verdict is computed from.\n"
+        "  led on: of those, how many led to a page the corpus recorded. **The gap between\n"
+        "        these two is not a crawl gap** — it is members read that link nothing. On\n"
+        "        the Netherlands that gap is 113 pages whose checklist is on VFS Global, and the\n"
+        "        gate used to read it as work a rebuild could do (entry 101).\n"
         "  shape: gateway means opening a member yields that traveller's own page; leaf means the\n"
-        "        member is the answer, so opening it buys nothing. Counted, never guessed.\n"
-        "  text: members the page-text index can read, which is what the model selector sees.\n"
+        "        member is the answer, so opening it buys nothing. Counted, never guessed, and\n"
+        "        counted from `led on` so both sides of the ratio agree.\n"
         "  crawl: listed means one page names enough siblings for the crawl's reservation to see\n"
         "        the family; spread means it exists in the store and no page lists it.\n"
         "  Whether a corridor then *finds* what is held is a different question: selection-recall.",
