@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and eighteen rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and nineteen rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -175,6 +175,19 @@ contention only **46%** of candidates hold text. It buys nothing measurable: cov
 predict recall (44% for corridors that missed, 51% for corridors that did not), France scores 100% at
 7% coverage, the UK scores 40% at 81%, and **all seven missed roles were pages already in contention
 whose stored text the model had read**. Do not resurrect it by pointing at the 46%.
+
+**A third traveller the corpus was never tuned for scores higher than the two it was built on**
+(entry 112). A Nigerian passport applying from Nigeria, run across the ten built countries with no
+oracle and no curation: **52 of 60 roles accounted for — 87%**, against the tuned travellers' 99 of
+120 (82.5%). Six of ten countries account for all six roles; **four of the eight gaps are the United
+States**, entry 109's block, and the other nine countries reach 50 of 54 (93%).
+
+What makes it convincing is *which* pages were chosen — per-Nigeria pages in five countries, each
+exercising a different piece of this week's work: `nigeria.diplo.de` (the entry 107 trust decision),
+`…/schengen-visa/apply-nigeria` (the family reservation), `ica.gov.sg/…/visa-detail-page/nigeria`,
+the UK's `visa-fees…/y/nigeria/…` fee wall, and `france-visas.gouv.fr/en/nigeria`. **One run per
+corridor and no oracle**, so this measures corridor health rather than agreement with curated ground
+truth — the distinction entry 100 exists for.
 
 **Item 35's rebuild was run and its acceptance test could never have passed** (entry 101). A corpus
 rebuild seeds from search results and merges the old corpus in afterwards, so it re-walks the same

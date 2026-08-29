@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [112](#112-a-third-traveller-the-corpus-was-never-tuned-for-scores-higher-than-the-two-it-was-built-on) | **A third traveller scores 87%** — higher than the two the system was built on |
 | [111](#111-twelve-more-domains-on-the-owners-judgement-and-what-that-standard-is) | **Twelve more on judgement** — `reviewed` now means "a person decided", in three marked tiers |
 | [110](#110-six-domains-for-five-countries--and-the-proposed-lists-were-wrong-about-which-domain-to-want) | **Six domains, five countries** — and three for three, the right domain was not the proposed one |
 | [109](#109-travelstategov-was-never-a-challenge--it-is-a-block-and-we-were-rendering-past-it) | **`travel.state.gov` is a block, not a challenge** — one shared marker had us rendering past a refusal |
@@ -160,6 +161,57 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 112. A third traveller the corpus was never tuned for scores higher than the two it was built on
+
+**2026-08-29 · the mini-goal's actual test**
+
+Every number in this file came from two travellers — `IN/GB` and `PH/PH` — and entry 90's argument is
+that one traveller cannot outvote 197. A Nigerian passport applying from Nigeria was run across the
+ten built countries: a nationality needing a visa for all ten, applying from a country neither
+existing traveller uses, with **no oracle row and no curation**. Corridor health is a free signal
+(entries 99, 100), so `unresolved_roles` is the measurement and nothing had to be hand-built.
+
+### The result
+
+**52 of 60 role slots accounted for — 45 by a page and 7 by an official tool, 87%.** The twenty
+corridors for the two tuned travellers read 99 of 120, **82.5%**. The traveller nobody optimised for
+scored *higher* than the two the whole system was measured against.
+
+Six of the ten countries account for all six roles — the United Kingdom, Japan and Singapore purely
+from pages, Canada, France and Sweden with a tool. Of the eight gaps, **four are the United States**,
+which is entry 109's block and a known ceiling. Excluding it, the other nine countries reach **50 of
+54, 93%**.
+
+### What makes it convincing is which pages were chosen
+
+The corridors did not fall back on generic guidance. They found pages published **for Nigeria
+specifically**, in five different countries, and each one exercises a different piece of machinery
+built this week:
+
+| page | what it demonstrates |
+| --- | --- |
+| `nigeria.diplo.de/ng-en/service/visastart` | entry 107's trust decision — the German mission network generalising to a traveller it was never checked against |
+| `netherlandsworldwide.nl/…/schengen-visa/apply-nigeria` | the per-traveller family reservation, item 35 |
+| `ica.gov.sg/…/visa-detail-page/nigeria` | Singapore's per-nationality family, which `coverage` calls *bounded by the authority* at 32 of 198 — Nigeria is one of the 32 |
+| `visa-fees.homeoffice.gov.uk/y/nigeria/usd/visit/all` | entry 82's United Kingdom fee wall, which no crawl reaches at any budget and search seeded |
+| `france-visas.gouv.fr/en/nigeria` | France's per-country page, readable only since entry 92's render budget |
+
+**That is the mini-goal answered.** The store was built and tuned for two travellers and serves a
+third at least as well, using the per-country pages rather than generic ones.
+
+### What it does not show
+
+One run per corridor, and entry 81's rule stands — role counts on a single corridor are noisy. There
+is **no oracle for `NG/NG`**, so this measures whether the corridor filled its roles, not whether it
+chose the pages a person would have named; those are different questions and entry 100 is what
+happens when they are conflated. And ten countries is not 198.
+
+Germany is the one country that filled `document_checklist` for both tuned travellers and **not** for
+this one — `uk.diplo.de` and `manila.diplo.de` yielded it, `nigeria.diplo.de` did not. That is a
+per-traveller gap of exactly the kind this exercise exists to surface, and it is not yet diagnosed.
 
 ---
 

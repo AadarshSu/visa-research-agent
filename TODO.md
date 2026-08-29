@@ -1520,6 +1520,15 @@ in the DECISIONS entry; this is the one-line index.
 
 ## Smaller things
 
+**Germany fills `document_checklist` for two travellers and not for a third.** Found 2026-08-29,
+entry 112. `uk.diplo.de/…/what-documents-do-i-need-for-a-c-visa` answers it for `IN/GB` and a Manila
+page answers it for `PH/PH`, but `germany/NG/NG` leaves it unidentified even though
+`nigeria.diplo.de` is in the corpus and answers that corridor's `visa_decision`. So the mission is
+reachable and the checklist page under it either is not held or is not being selected — the two have
+different fixes and nobody has looked yet. It is the cleanest per-traveller gap the third-traveller
+run surfaced.
+
+
 **`travel.state.gov` stores nothing, and rebuilding with the render budget did not change that.**
 Entries 106 and 108. **Tested 2026-08-29**: the US corpus predated the render fix, so it was rebuilt
 with the same 400-render budget that took France's portal 12 → 104 readable and Sweden's

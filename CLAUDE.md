@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and eighteen rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and nineteen rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -495,6 +495,7 @@ cause, and only running the thing showed it.
 | `unconfirmable` is a shortlist of the authority's real domains | three for three the right one was absent — ask Wikidata, don't promote (entry 110) |
 | a domain under the country's own TLD that migration bodies use is fine | `iom.sk` is the **International** Organization for Migration (entry 110) |
 | `reviewed` in `authority_domains.yaml` means independently confirmed | it means a person decided — three tiers, each marked in the entry (entry 111) |
+| the corpus is tuned for two travellers, expect a third to do worse | `NG/NG` scores **87%** against their 82.5%, on per-country pages (entry 112) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
