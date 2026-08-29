@@ -754,7 +754,16 @@ and its child look alike in an excerpt of the head.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`, **and Germany is the worked example**
 
-**A country's four open role slots now trace to one line of this file (entry 106).** Germany's corpus
+**Germany is done and it worked (entries 107, 108).** `diplo.de` is now `reviewed` — the warrant is
+that the already-trusted `auswaertiges-amt.de` prints "Website http://www.washington.diplo.de" under
+"Consulate General of the Federal Republic of Germany", which is entry 89's two-part test satisfied
+from stored text, after TLS failed to confirm it. Rebuilt: **1,565 entries on one host → 5,712 across
+87**, `germany/PH/PH` now fills **6 of 6** and `germany/IN/GB` 5 of 6. Both `document_checklist`
+slots closed; one `general_entry` remains. **The rest of this item — the other fifteen countries with
+no governmental marker — is untouched and is still the work.** What Germany shows is the size of the
+prize per country.
+
+**The original case, kept because it is the worked example (entry 106).** Germany's corpus
 is **1,565 entries and every one is `www.auswaertiges-amt.de`** — not a single mission page — because
 `authority_domains.yaml` lists **`diplo.de` as `unconfirmable`**: under Germany's own top-level domain,
 no governmental hostname marker, so never fetched. The Federal Foreign Office defers to its missions
@@ -1487,8 +1496,17 @@ in the DECISIONS entry; this is the one-line index.
 
 ## Smaller things
 
-**`travel.state.gov` stores nothing, and it is the United States' entire visa guidance tree.**
-Entry 106. The corpus holds **70** of its pages — 67 never opened, 3 marked *"it asked this client to
+**`travel.state.gov` stores nothing, and rebuilding with the render budget did not change that.**
+Entries 106 and 108. **Tested 2026-08-29**: the US corpus predated the render fix, so it was rebuilt
+with the same 400-render budget that took France's portal 12 → 104 readable and Sweden's
+`government.se` 0 → 863. `travel.state.gov` still holds **zero** stored pages — 76 entries, 73 never
+opened, 3 unreadable after `CHALLENGE_FAILURES_PER_HOST` gave up. **The challenge is not answerable
+by our renderer**, which makes the United States' five open slots a ceiling rather than a backlog.
+Entry 18 forbids working around it. The only readable route is the partial `adoption.state.gov`
+mirror (entry 87), and leaning on a mirror deliberately would be its own decision. Original
+diagnosis follows.
+
+**How it was found.** Entry 106. The corpus holds **70** of its pages — 67 never opened, 3 marked *"it asked this client to
 prove it is a browser (HTTP 403), and that challenge could not be answered here"* — and the text index
 holds **zero** from it, against 24 from the `adoption.state.gov` mirror that entry 87 found publishes
 the same tree. All five remaining US role gaps are this one cause. Entry 92 counted the US at 19

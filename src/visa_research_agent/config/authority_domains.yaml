@@ -131,9 +131,14 @@ countries:
   reviewed:
     auswaertiges-amt.de: official website of the Federal Foreign Office, Germany — Wikidata P856/P17,
       checked 2026-08-18
+    diplo.de: the Federal Foreign Office's mission network, where every German embassy and consulate
+      publishes. Named by the already-approved auswaertiges-amt.de, which lists "Website
+      http://www.washington.diplo.de" under "Consulate General of the Federal Republic of Germany"
+      on its own country-information page — an approved government page naming it, under Germany's
+      own top-level domain. TLS does not confirm it (a Let's Encrypt wildcard on *.diplo.de names no
+      organisation), which is why the rule filed it unconfirmable. DECISIONS entry 107, 2026-08-29
   unconfirmable:
   - bundesregierung.de
-  - diplo.de
 - code: DK
   name: Denmark
   trusted: []

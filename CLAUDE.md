@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and ten rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and twelve rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -129,6 +129,15 @@ produces a serious defect.
   construction; a country missing from it is **refused**, never bootstrapped live, because falling back
   would silently reintroduce the per-request variance the file exists to remove. The rule itself is
   unchanged — `auto_trusted_domains` still decides — so everything below still applies.
+
+  **What that costs, measured on one country (entry 107).** Germany's corpus was 1,565 pages of a
+  single host because `diplo.de` — where every German mission publishes — sat in `unconfirmable`,
+  and the ministry defers to its missions for documents. It is now `reviewed`, on the warrant entry
+  89 uses for contractors: an approved government page names it (`auswaertiges-amt.de` prints
+  "Website http://www.washington.diplo.de") **and** it is under Germany's own top-level domain. TLS
+  could not confirm it — a Let's Encrypt wildcard names no organisation — and note that a refused
+  domain leaves **no** trace in the corpus to review from, because `is_crawlable` drops it before
+  recording.
 
   **Measured 2026-08-18: the governmental half fails for 19 of 51 countries; 16 since 2026-08-25** —
   Germany, Italy, the Netherlands, Sweden and most of Schengen have no governmental marker in their
@@ -454,6 +463,8 @@ cause, and only running the thing showed it.
 | 21 unfilled roles is 21 problems to go and solve | 4 are correct, 7 just closed, 9 are two named causes (entry 106) |
 | germany's corpus is thin because the crawl did not reach | it is 1,565 pages of **one host**: `diplo.de` is `unconfirmable` (entry 106) |
 | the US render gap is application portals, expect little | it is `travel.state.gov` — the whole guidance tree, 0 pages stored (entry 106) |
+| a domain the trust rule refused leaves evidence to review later | it leaves none — `is_crawlable` drops it before recording (entry 107) |
+| the US corpus just needs the render budget france and sweden got | it got it; `travel.state.gov` still stores **0** — the challenge is unanswerable (entry 108) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

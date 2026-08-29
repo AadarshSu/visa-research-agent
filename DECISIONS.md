@@ -78,6 +78,8 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [108](#108-germanys-rebuild-closed-three-of-four-slots-the-united-states-closed-none) | **Germany 1 host → 87, three slots closed** — and the US challenge is a real ceiling |
+| [107](#107-diplode-is-reviewed-and-trusted-because-the-ministry-itself-names-it) | **`diplo.de` reviewed and trusted** — TLS could not confirm it; the ministry's own page did |
 | [106](#106-the-ceiling-nine-open-slots-two-countries-two-causes--and-the-selector-ab-is-closed) | **The ceiling: nine slots, two countries, two causes** — and the selector A/B is closed |
 | [105](#105-the-vocabulary-work-verified-end-to-end-and-a-role-scoring-zero-can-still-be-filled) | **Verified end to end** — the heuristic gained 12 points; a zero-scoring role can still be filled |
 | [104](#104-fees-and-processing_times-get-the-same-treatment-and-one-term-is-rejected-for-a-reason-worth-keeping) | **`fees` and `processing_times` widened** — and `payment` rejected: a checkout page is not a fee |
@@ -155,6 +157,108 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 108. Germany's rebuild closed three of four slots; the United States' closed none
+
+**2026-08-29 · the measured outcome of entry 107 and of the US render question**
+
+Both rebuilds ran. One worked and one did not, and the failure is as useful as the success.
+
+### Germany: 1 host to 87, and the checklist arrived
+
+`diplo.de` trusted, corpus rebuilt: **1,565 entries on one host → 5,712 entries across 87 hosts**,
+4,147 of them new, and the text index 389 → 1,530 pages. The oracle travellers' own missions are now
+held — `uk.diplo.de` at 226 pages, `manila.diplo.de` at 133 — and the corpus holds real artefacts it
+never could before, like `canada.diplo.de/…/checklist-tourist-visa`.
+
+Live, against entry 106's prediction of four slots:
+
+| corridor | before | after |
+| --- | --- | --- |
+| `germany/IN/GB` | 4 roles, no checklist | **5** — `document_checklist` from `uk.diplo.de/…/what-documents-do-i-need-for-a-c-visa` |
+| `germany/PH/PH` | 4 roles, no checklist | **6 of 6** — checklist, route, fees and times all off one Manila page, entry off another |
+
+**Three of the four predicted slots closed**, both `document_checklist` and one `general_entry`.
+`general_entry` for `IN/GB` is still open. The prediction was four and the result is three, which is
+recorded that way rather than rounded.
+
+The mechanism is exactly what entry 106 argued: the ministry defers to its missions for documents,
+and the missions were unreachable by committed data rather than by crawl budget.
+
+### The United States: rebuilt, and the challenge still cannot be answered
+
+The US corpus predated the render fix — built 2026-08-27, and `DEFAULT_CORPUS_RENDERS = 400` landed
+2026-08-28 — so it had never been given a budget that could answer a challenge. It has now.
+**`travel.state.gov` still holds zero stored pages.** 76 entries, 73 never opened, 3 marked
+unreadable with the same recorded reason, which is `CHALLENGE_FAILURES_PER_HOST` giving up after
+three consecutive failures. The index grew 467 → 576 pages from elsewhere.
+
+Both US corridors are unchanged: `visa_decision` and `document_checklist` still unidentified for
+both travellers.
+
+**So the US's five slots are a genuine ceiling, not a backlog.** Entry 41 permits answering a
+challenge and this one is not answerable by our renderer; entry 18 forbids working around it by any
+other means. What remains readable is `adoption.state.gov`, the partial mirror entry 87 found. This
+is the honest end of that line unless the mirror is deliberately leaned on, which is its own
+decision.
+
+### Where the ceiling stands
+
+Of entry 106's nine open slots: **three closed, six remain** — one `general_entry` in Germany and
+five in the United States behind a challenge nobody can answer. Against the twenty corridors, the
+four Singapore slots still correctly do not arise.
+
+---
+
+## 107. `diplo.de` is reviewed and trusted, because the ministry itself names it
+
+**2026-08-29 · decided by the project owner · a trust decision, recorded as `authority_domains.yaml`
+requires**
+
+Entry 106 traced four of Germany's open role slots to one line of committed data: **`diplo.de` sat in
+`unconfirmable`**, so no German mission was ever fetched, so Germany's corpus was 1,565 entries and
+**every one of them `www.auswaertiges-amt.de`**. The Federal Foreign Office defers to its missions
+for documents in its own words. The ministry could be crawled forever and never answer
+`document_checklist`.
+
+### The evidence, and the two sources that did not work
+
+- **TLS did not confirm it.** `diplo.de`, `uk.diplo.de` and `manila.diplo.de` all present
+  `CN=*.diplo.de` issued by Let's Encrypt — a domain-validated wildcard naming **no organisation**.
+  That is entry 66's measured limit ("TLS names the authority for 9 of 16") and it is why the
+  generator filed the domain unconfirmable rather than wrongly.
+- **The corpus could not confirm it either**, and for a reason worth noting: it holds **zero**
+  `diplo.de` addresses, because `is_crawlable` rejects an untrusted domain before recording it. A
+  domain the rule refuses leaves no trace to argue from, which is a small trap for anyone trying to
+  review one from stored data.
+- **The stored page text did.** `auswaertiges-amt.de` — already reviewed and trusted — publishes on
+  its own country-information page: *"Website http://www.washington.diplo.de"*, under the heading
+  **"Consulate General of the Federal Republic of Germany"**. Thirty-six stored pages on the trusted
+  host mention it.
+
+That is **entry 89's two-part warrant**, which was written for contractors and applies unchanged
+here: an approved government page names it, **and** its registrable domain is under the destination
+country's own top-level domain. Either half alone fails closed; both together are what the trust rule
+has always asked for, arrived at by a route the generator cannot take.
+
+### What was deliberately not done
+
+**`bundesregierung.de` stays `unconfirmable`.** It is the federal government's portal, it is not
+where visa guidance lives, and the case above is specifically about missions. A trust decision should
+move exactly the domain the evidence covers — widening to "the German government" is the "looks
+official" reasoning the rule exists to refuse.
+
+**The rule itself is unchanged.** This is the `reviewed` escape hatch entries 33 and 34 designed for
+governments that mark no hostname, used as designed and with the evidence written down. Nothing about
+`auto_trusted_domains` moves, and no other country is affected.
+
+### What it should buy, stated before the rebuild
+
+Four role slots: `document_checklist` and `general_entry` for both oracle travellers into Germany.
+The mission pages are where the documents are named. Whether the crawl reaches them is a separate
+question from whether it is allowed to, and this entry only settles the second.
 
 ---
 
