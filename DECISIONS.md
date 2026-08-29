@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [105](#105-the-vocabulary-work-verified-end-to-end-and-a-role-scoring-zero-can-still-be-filled) | **Verified end to end** — the heuristic gained 12 points; a zero-scoring role can still be filled |
 | [104](#104-fees-and-processing_times-get-the-same-treatment-and-one-term-is-rejected-for-a-reason-worth-keeping) | **`fees` and `processing_times` widened** — and `payment` rejected: a checkout page is not a fee |
 | [103](#103-the-roles-that-go-unanswered-are-the-roles-with-the-fewest-words) | **The unanswered roles are the ones with fewest words** — 3 terms, 0 candidates in two countries |
 | [102](#102-a-family-needs-a-visa-word-not-merely-a-government-word) | **A family needs a visa word** — `apply`/`appointment`/`fees` let passport renewals hold a verdict |
@@ -153,6 +154,74 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 105. The vocabulary work verified end to end, and a role scoring zero can still be filled
+
+**2026-08-29 · re-runs the twenty corridors under entries 103 and 104**
+
+Entries 103 and 104 changed how three roles rank and measured it **offline only** — contention
+counts and top pages. Nothing had confirmed a corridor filled more roles. The twenty corridors were
+re-run, which also refreshed recall logs that had gone stale: they were written under the old
+lexicon, and `selection-recall` replays from them.
+
+### The falsifiable prediction held
+
+Sweden's `processing_times` went from **zero scoring candidates to fifteen** offline. Live, the
+corridor now fills both `fees` and `processing_times` off
+`migrationsverket.se/…/visiting-sweden-for-up-to-90-days-entry-visa`, with the adjudicator quoting
+**"the Schengen visa fee is EUR 90"** and **"a decision is normally made within 15 days"**. Both were
+unfilled before.
+
+### What moved, and the caveat that governs how to read it
+
+Roles accounted for — filled by a page or named as a tool — across the nineteen corridors comparable
+between runs: **91 → 97 of 114.** Nine gains against four losses. The largest single move is
+`united-arab-emirates/PH/PH` at 2 → 6.
+
+**Entry 81's rule applies and must not be waved past**: role count on one corridor is noisy — six runs
+of identical code gave 4, 4, 4, 4, 5 and 6. So a corridor moving by one is nothing, and the losses
+(`visa_decision` in UAE `IN/GB` and `netherlands/PH/PH`, `document_checklist` in `sweden/IN/GB`) are
+as likely variance as regression. What survives that caveat is the aggregate direction and Sweden's
+two roles, where the mechanism is visible in the adjudicator's own words.
+
+### Selection recall, which is the cleaner instrument, and it splits
+
+| arm | before | after |
+| --- | --- | --- |
+| heuristic, matched budget | 41/88 — 47% | **52/88 — 59%** |
+| model | 81/88 — 92% | 79/88 — 90% |
+| heuristic, shipped budget | 78/88 — 89% | 76/88 — 86% |
+| tools found by the model | 7/12 | **10/12** |
+
+**The arm that gained is the arm made of vocabulary.** The heuristic *is* the ranking, so better
+words move it directly: +12 points. The model reads stored text and was already at 92; a wider
+contention set hands it more candidates, some of them noise, and it dipped two points. The model's
+lead over the matched heuristic narrows from +45 to +31 and is still large.
+
+That split matters more than it looks. **The heuristic is what serves the 43 countries with no text
+index** — a country without one falls back to it and says so in the corridor's notes. This change
+helps them most, and they are the ones stage 3 is about.
+
+### The correction: a role scoring zero candidates can still be filled
+
+Entries 103 and 104 both say "a page scoring nothing for a role can never be selected *for* that role
+at any budget". True, and it does not mean the role goes unanswered. **Germany proves it.** It scores
+**zero** candidates for `fees` and for `processing_times`, and it fills both — off
+`auswaertiges-amt.de/en/visa-service/215870-215870`, a page that entered contention on
+`application_route` and which the adjudicator then read as also stating "the normal processing fee
+for a Schengen visa is EUR 90" and "up to 15 calendar days to decide".
+
+**A page enters contention on its best role; the adjudicator assigns roles afterwards, from the
+text.** So a zero-candidate role is a *selection* defect, not necessarily a coverage one, and the
+vocabulary work should be understood as buying better fetches rather than directly buying answers.
+That is exactly the shape of the result above: the ranking arm gained twelve points and the
+role-filling total gained six, noisily.
+
+It also softens entry 103's Germany conclusion. "Its problem is discovery and no scoring change
+reaches it" is true of Germany's *corpus* and not of its corridors, because the live candidate set is
+**corpus ∪ live search** (entry 47) and search supplies what the corpus lacks.
 
 ---
 

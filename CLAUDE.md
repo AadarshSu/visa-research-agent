@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and five rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and seven rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -449,6 +449,8 @@ cause, and only running the thing showed it.
 | a role goes unanswered because the pages are not in the corpus | the three thinnest vocabularies are the three scoring **zero** candidates (entry 103) |
 | widening a role's vocabulary will fill it | germany stays 0 of 83 — its pages are in the index, not the corpus (entry 103) |
 | a term that raises a role's top score is a term that helps | `payment` raised it by promoting the checkout page over the fee table (entry 104) |
+| a role with zero scoring candidates cannot be filled | germany fills fees and times off a page that entered as `application_route` (entry 105) |
+| widening the vocabulary helps the model selector most | it helps the **heuristic** most, +12 points — that is the arm made of words (entry 105) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

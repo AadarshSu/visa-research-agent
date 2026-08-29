@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and five rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and seven rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -225,6 +225,20 @@ scoring change reaches them. Germany's problem is discovery — item 30.
 **One term was rejected and the reason generalises:** `payment` raised Canada's top fee score from 51
 to 61 by promoting "Pay Your Application Fees, Online Payment" above the fee schedule. A traveller
 needs the amount, not the till. **A score that rose is not a page that improved.**
+
+**All of it is now verified end to end** (entry 105). The twenty corridors were re-run: Sweden fills
+`fees` and `processing_times` where both had zero candidates, quoting "EUR 90" and "15 days"; roles
+accounted for went **91 → 97 of 114**, nine gains against four losses. On `selection-recall` the
+split is the finding — the **heuristic gained 12 points (47% → 59%)** while the model dipped two to
+90%, because the heuristic *is* the ranking and the model was already reading text. **That is the arm
+serving the 43 countries with no text index**, which is what stage 3 is about. Entry 81's noise rule
+still governs single-corridor moves.
+
+**And a correction that changes how to read entries 103–104:** a role with zero scoring candidates
+can still be filled. Germany scores zero for `fees` and `processing_times` and fills both, off a page
+that entered contention as `application_route` and which the adjudicator read for all three. A page
+enters on its best role and roles are assigned afterwards, from the text — so thin vocabulary is a
+**selection** defect, not automatically a coverage one.
 
 **A model has now produced the visa-free plan** (entry 98). `singapore/PH/PH/tourism` returns
 `visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and
