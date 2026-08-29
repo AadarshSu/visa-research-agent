@@ -23,7 +23,8 @@ from visa_research_agent.research.rendering import RenderedPage
 
 AUTHORITY = "immigration.gov.example"
 CHALLENGE = (
-    '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title>'
+    '<!DOCTYPE html><html lang="en-US"><head><title>One moment please</title>'
+    '<script>window._cf_chl_opt={cvId:"3",cType:"managed"};</script>'
     '<script src="/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"></script>'
 )
 GUARDED = (

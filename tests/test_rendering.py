@@ -593,13 +593,47 @@ AZURE_CHALLENGE = (
     '<meta name="description" content="Azure WAF JS Challenge"/><title>Azure WAF</title>'
 )
 CLOUDFLARE_CHALLENGE = (
-    '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title>'
+    '<!DOCTYPE html><html lang="en-US"><head><title>One moment please</title>'
+    '<script>window._cf_chl_opt={cvId:"3",cType:"managed"};</script>'
     '<script src="/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"></script>'
 )
+CLOUDFLARE_BLOCK = (
+    '<!DOCTYPE html><html lang="en-US"><head><title>Attention Required! | Cloudflare</title>'
+    '<script src="/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"></script></head>'
+    "<body><h1>Sorry, you have been blocked</h1><h2>You are unable to access travel.state.gov</h2>"
+    "<p>This website is using a security service to protect itself from online attacks.</p>"
+)
+"""What `travel.state.gov` really answers, taken from the page on 2026-08-29 (entry 109).
+
+It shares `cdn-cgi/challenge-platform` with a genuine Cloudflare challenge and shares **nothing
+else**: no `cf-mitigated` header, no `_cf_chl_opt`, no invitation to enable JavaScript, and no
+script to run. It states that the client is blocked, which is the authority saying something.
+"""
+
 AKAMAI_REFUSAL = (
     "<HTML><HEAD> <TITLE>Access Denied</TITLE> </HEAD><BODY> <H1>Access Denied</H1> "
     'You don&#39;t have permission to access "http://www.mfa.gr/" on this server.'
 )
+
+
+def test_cloudflares_block_page_is_a_refusal_not_a_challenge() -> None:
+    """The defect entry 109 found, as one assertion.
+
+    `cdn-cgi/challenge-platform` was a challenge marker, and it appears on Cloudflare's **block**
+    page as well as its challenge page. So `travel.state.gov` — "Sorry, you have been blocked" — was
+    read as a capability test, the renderer was pointed at a page an authority had refused (which
+    DECISIONS entry 18 forbids outright), and the corpus recorded the false reason "it asked this
+    client to prove it is a browser".
+
+    The block page still carries that marker here on purpose: the guard has to hold *because* the
+    page says it blocked us, not because the marker went away.
+    """
+
+    assert not is_challenge(403, {}, CLOUDFLARE_BLOCK)
+    assert not is_challenge(403, {"cf-mitigated": "challenge"}, CLOUDFLARE_BLOCK), (
+        "a stated block outranks any header claiming otherwise"
+    )
+    assert is_challenge(403, {}, CLOUDFLARE_CHALLENGE), "a real challenge is still answered"
 
 
 def test_cloudflare_declares_a_challenge_in_a_header() -> None:

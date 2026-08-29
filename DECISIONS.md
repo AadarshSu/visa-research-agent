@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [109](#109-travelstategov-was-never-a-challenge--it-is-a-block-and-we-were-rendering-past-it) | **`travel.state.gov` is a block, not a challenge** — one shared marker had us rendering past a refusal |
 | [108](#108-germanys-rebuild-closed-three-of-four-slots-the-united-states-closed-none) | **Germany 1 host → 87, three slots closed** — and the US challenge is a real ceiling |
 | [107](#107-diplode-is-reviewed-and-trusted-because-the-ministry-itself-names-it) | **`diplo.de` reviewed and trusted** — TLS could not confirm it; the ministry's own page did |
 | [106](#106-the-ceiling-nine-open-slots-two-countries-two-causes--and-the-selector-ab-is-closed) | **The ceiling: nine slots, two countries, two causes** — and the selector A/B is closed |
@@ -157,6 +158,82 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 109. `travel.state.gov` was never a challenge — it is a block, and we were rendering past it
+
+**2026-08-29 · corrects entries 106 and 108, and closes a rule violation**
+
+Asked why the United States' slots were unanswerable, the honest answer was that "three failed
+renders" is thin evidence for "cannot be answered". Fetching the page settled it, and the answer is
+not the one this file has been carrying.
+
+### What `travel.state.gov` actually says
+
+Under our own user agent it answers `403` with **"Sorry, you have been blocked. You are unable to
+access travel.state.gov… The action you just performed triggered the security solution"**, and offers
+to let us email the site owner. There is **no script to run**. Side by side with a genuine challenge:
+
+| | `france-visas.gouv.fr` | `travel.state.gov` |
+| --- | --- | --- |
+| `cf-mitigated: challenge` | **yes** | no |
+| `_cf_chl_opt` | **yes** | no |
+| "Enable JavaScript and cookies to continue" | **yes** | no |
+| `cdn-cgi/challenge-platform` | yes | **yes** |
+| "you have been blocked" | no | **yes** |
+| `<title>` | One moment please | Attention Required! \| Cloudflare |
+
+**`cdn-cgi/challenge-platform` is Cloudflare scaffolding common to the challenge page and the block
+page**, and it was in `CHALLENGE_BODY_MARKERS`. It is the only marker `travel.state.gov` carries.
+
+### Three things that were wrong because of one marker
+
+1. **We pointed the renderer at a page an authority refused**, three times per host per build. Entry
+   18 forbids that outright — it is the first thing on the list, above retries and user-agent
+   spoofing. It was not a judgement call anybody made; a shared string made a refusal look like a
+   question.
+2. **The recorded reason was false.** The corpus stored *"it asked this client to prove it is a
+   browser (HTTP 403), and that challenge could not be answered here"* about a page that says it
+   blocked us. CLAUDE.md's rule is that the reason reported must be true of what was seen, and this
+   one was not.
+3. **The corridor could not use the outcome entries 27 and 32 exist for.** A settled refusal on a
+   credible `visa_decision` page may *qualify* the corridor — naming the page so the traveller opens
+   it themselves. Misread as an unanswered challenge, it named nothing and the corridor simply
+   failed.
+
+### The fix
+
+`cdn-cgi/challenge-platform` is removed; `_cf_chl_opt`, `azure waf js challenge` and the
+`cf-mitigated` header remain and each correctly separates the two pages. A **negative** guard is
+added and **checked first**: a body carrying "you have been blocked" or "attention required" is a
+refusal whatever else it carries, including a `cf-mitigated: challenge` header. That ordering is the
+point — the cost of being wrong is asymmetric, and a marker that starts appearing on block pages
+would otherwise silently reopen the violation.
+
+The test fixtures were part of the problem: both used a challenge body whose *only* marker was the
+shared one, so nothing could have caught this. They now carry `_cf_chl_opt` like a real challenge,
+and a new fixture is the real block page — **keeping** the shared marker, so the guard has to hold
+because the page says it blocked us rather than because the marker went away.
+
+### What is verified, and what is not
+
+Verified: the reason is now correct. Both US corridors report *"travel.state.gov could not be read
+because the authority refused automated retrieval (HTTP 403), so its guidance could not be
+independently verified here"*.
+
+**Not verified: whether the corridor now qualifies as authority-blocked and names the page.** That
+path runs through `_decision_blocking`, which is a model call (entry 57), and the OpenAI credit ran
+out during the check. It is the interesting half and it is untested.
+
+### What this corrects
+
+Entry 108 called the United States "a real ceiling, not a backlog" because "the challenge is not
+answerable by our renderer". **It was never a challenge**, so the ceiling is real for a different and
+better-understood reason: the authority refuses this client, which is a fact we may *report* rather
+than a capability we lack. Entry 106's "a browser challenge nobody could answer" is wrong in the same
+way. The five US slots stay unfilled either way; what changes is that the traveller can now be told
+the truth about why.
 
 ---
 

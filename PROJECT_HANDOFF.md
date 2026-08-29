@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and twelve rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and fourteen rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -245,11 +245,16 @@ vocabulary work, and the remaining **9 sit in two countries with one cause each*
   entry 89's two-part warrant, satisfied from stored text. Rebuilt: **1,565 entries on one host →
   5,712 across 87**, and `germany/PH/PH` now fills **6 of 6** while `germany/IN/GB` fills 5. Both
   `document_checklist` slots closed. One `general_entry` remains.
-- **The United States — a real ceiling, not a backlog** (entry 108). Its corpus predated the render
-  fix, so it was rebuilt with the budget France and Sweden got. **`travel.state.gov` still stores
-  zero pages**: 76 entries, 73 never opened, 3 unreadable after `CHALLENGE_FAILURES_PER_HOST` gave
-  up. The challenge is not answerable by our renderer, entry 18 forbids working around it, and only
-  the partial `adoption.state.gov` mirror remains readable. Both US corridors are unchanged.
+- **The United States — a block, and we had been rendering past it** (entries 108, 109). Its corpus
+  predated the render fix, so it was rebuilt with the budget France and Sweden got; `travel.state.gov`
+  still stores **zero** pages. Asked why, the page turned out to answer *"Sorry, you have been
+  blocked"* with no script to run — **not a challenge at all.** One marker did it:
+  `cdn-cgi/challenge-platform` is Cloudflare scaffolding shared by the challenge page and the block
+  page, and it was the only one that page carried. So the renderer was pointed at a refusal (which
+  entry 18 forbids), a false reason was recorded, and the corridor could not use entry 32's
+  name-the-page outcome. Fixed, with a negative guard checked first. **The reason is now correct and
+  verified; whether the corridor now qualifies as authority-blocked is untested — that path is a
+  model call and the OpenAI credit ran out.**
 
 **The selector A/B is closed** (entry 106, owner's decision). The model wins and has on every
 measurement since entry 84 — 90% against 59% at matched budget. The twenty corridors are no longer

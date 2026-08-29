@@ -67,9 +67,30 @@ FailureOutcome = Literal[
 CHALLENGE_HEADER = "cf-mitigated"
 CHALLENGE_BODY_MARKERS = (
     "azure waf js challenge",
-    "cdn-cgi/challenge-platform",
     "_cf_chl_opt",
 )
+"""Markers that appear on a page **asking** a question, and not on one stating a refusal.
+
+`cdn-cgi/challenge-platform` used to be here and was removed on 2026-08-29 (entry 109). It is
+Cloudflare scaffolding shared by the challenge page *and* the block page, so it read
+`travel.state.gov` — which answers **"Sorry, you have been blocked. You are unable to access
+travel.state.gov"**, with no script to run — as a capability test. Measured side by side:
+`france-visas.gouv.fr` carries `cf-mitigated: challenge`, `_cf_chl_opt` and "Enable JavaScript and
+cookies to continue"; `travel.state.gov` carries none of them and only the shared marker.
+"""
+
+REFUSAL_BODY_MARKERS = (
+    "you have been blocked",
+    "attention required",
+)
+"""Cloudflare's block language, which settles the question before any challenge marker is consulted.
+
+A negative test rather than a stricter positive one, because the cost of being wrong is asymmetric:
+entry 18 forbids pointing the renderer at a page an authority **refused**, and a marker that starts
+appearing on block pages would otherwise silently reopen exactly that. A page that says a client is
+blocked has stated something, and no amount of Cloudflare scaffolding around it turns that into a
+question.
+"""
 
 
 def is_challenge(status_code: int, headers: Mapping[str, str], body: str) -> bool:
@@ -82,9 +103,14 @@ def is_challenge(status_code: int, headers: Mapping[str, str], body: str) -> boo
 
     if status_code not in {401, 403, 503}:
         return False
+    haystack = body[:20_000].lower()
+    # Checked first and deliberately: a page that states a client is blocked is a refusal whatever
+    # else it carries, and entry 18 forbids rendering past one. Ordering it ahead of the header is
+    # what makes this a guard rather than a tie-breaker.
+    if any(marker in haystack for marker in REFUSAL_BODY_MARKERS):
+        return False
     if headers.get(CHALLENGE_HEADER, "").strip().lower() == "challenge":
         return True
-    haystack = body[:20_000].lower()
     return any(marker in haystack for marker in CHALLENGE_BODY_MARKERS)
 
 

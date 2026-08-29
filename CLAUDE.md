@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and twelve rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and fourteen rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -161,6 +161,14 @@ produces a serious defect.
   one. Mark the source inaccessible, say so, and let the role go unfilled. Never substitute
   plausibility for evidence, in a product whose wrong answers send someone to a visa centre without
   the right papers.
+
+  **And establish it from what the page states, not from a vendor's scaffolding (entry 109).**
+  `cdn-cgi/challenge-platform` appears on Cloudflare's **block** page as well as its challenge page,
+  and while it was a challenge marker this program pointed the renderer at `travel.state.gov` —
+  which answers *"Sorry, you have been blocked"* with no script to run — and recorded the false
+  reason that the authority had asked it to prove it is a browser. A body saying "you have been
+  blocked" or "attention required" is now a refusal **before** any challenge marker or header is
+  consulted, and that ordering is deliberate.
 
   **First establish that it *is* a block, because for France it was not (entry 41, 2026-08-19).** This
   rule used to open by naming France's portal as a site that "answers `403` to anything that is not a
@@ -464,7 +472,9 @@ cause, and only running the thing showed it.
 | germany's corpus is thin because the crawl did not reach | it is 1,565 pages of **one host**: `diplo.de` is `unconfirmable` (entry 106) |
 | the US render gap is application portals, expect little | it is `travel.state.gov` — the whole guidance tree, 0 pages stored (entry 106) |
 | a domain the trust rule refused leaves evidence to review later | it leaves none — `is_crawlable` drops it before recording (entry 107) |
-| the US corpus just needs the render budget france and sweden got | it got it; `travel.state.gov` still stores **0** — the challenge is unanswerable (entry 108) |
+| the US corpus just needs the render budget france and sweden got | it got it; `travel.state.gov` still stores **0** (entry 108) |
+| ...so the US challenge is one our renderer cannot answer | it is not a challenge — "you have been blocked", and we rendered past it (entry 109) |
+| a cloudflare marker in the body means a challenge to answer | `cdn-cgi/challenge-platform` is on the **block** page too (entry 109) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
