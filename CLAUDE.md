@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and nineteen rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and twenty rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -25,71 +25,46 @@ where it is genuinely unavoidable; it is not acceptable as the ordinary source o
 has to be *useful*, and "useful" has a number: how often a corridor finds what it needs without
 searching. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34 feed it.
 
-**Where it stands, as of 2026-08-28.** The pipeline works end to end and passed a bar committed in
-advance (entry 35, measured in entry 58): over twenty corridors, **75% confirm the visa decision** and
-**50% yield a document checklist** — a marginal pass. Corridors are served from stored per-country
-corpora at a median 27.4s. All 53 reachable destinations have been run at least once (entry 70); ten
-have a corpus **and now a page-text index** (entry 85). A questionnaire is treated as an answer rather
-than a blockade — named for the role it settles, offered beside that question (entries 59, 60), and
-guidance an authority contracts out to a company is named the same way (entry 89).
+**Where it stands, as of 2026-08-29.** The pipeline works end to end and passed a bar committed in
+advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
+median 27.4s. **55 of 198 destinations are researchable and every row now carries a confirmable
+domain** (entry 110); ten have a corpus and a page-text index, and **43 more are ready to build —
+that is [TODO.md](TODO.md) item 41 and the thing to do next.** A questionnaire is treated as an
+answer rather than a blockade (entries 59, 60), and guidance an authority contracts out is named the
+same way (entry 89).
+
+**The corpus generalises to a traveller it was never tuned for** (entry 112). Every number in this
+project came from `IN/GB` and `PH/PH` until a Nigerian passport from Nigeria was run across the ten
+built countries with no oracle and no curation: **52 of 60 roles accounted for, 87%**, against the
+tuned travellers' 82.5%. It answered from per-Nigeria pages in five countries — `nigeria.diplo.de`,
+`…/schengen-visa/apply-nigeria`, `…/visa-detail-page/nigeria`, the UK's Nigeria fee table and
+`france-visas.gouv.fr/en/nigeria` — so the store is serving each traveller their own pages rather
+than generic guidance. Six of ten countries account for all six roles.
+
+**The open ledger on those ten is six role slots**, and both causes are understood: one
+`general_entry` in Germany, and five in the United States behind a Cloudflare **block** that cannot
+be answered and never will be (entry 109). Four more in Singapore correctly do not arise, because a
+visa-free traveller makes no application (entry 94).
+
+**The trust configuration was the biggest single lever, and it is not the crawler** (entries 107,
+110, 111). Germany sat at 1,565 entries on **one host** because `diplo.de` — where every German
+mission publishes — was `unconfirmable`; reviewed, it went to **5,712 entries across 87 hosts** and
+from four filled roles to six. Eighteen domains were then added across nine more countries. **If a
+build comes back on one host, read `authority_domains.yaml` before touching crawl settings.**
 
 **The visa-free plan is an entry plan, it is built, and a model has produced one** (entries 95–96
-and 98, [TODO.md](TODO.md) items 39 and 39a, done). `singapore/PH/PH/tourism` returns
-`visa_required: false`, nowhere to apply, no checklist, no unresolved questions, **`verified`**, and
-five entry steps citing ICA's entry page. The floor entry 95 left open turned out not to be a
-number — three visa-free corridors state 3, ~5 and ~7 duties — though **the floor never bit in the
-runs that passed**, so that choice rests on entry 96's argument rather than on a run.
+and 98). `singapore/PH/PH/tourism` returns `visa_required: false`, nowhere to apply, no checklist, no
+unresolved questions, **`verified`**, and five entry steps citing ICA's entry page. The floor entry
+95 left open turned out not to be a number — three visa-free corridors state 3, ~5 and ~7 duties —
+though **the floor never bit in the runs that passed**, so that choice rests on entry 96's argument
+rather than on a run.
 
-**Selector work has a reproducible number over all twenty oracle corridors** (entries 97–98,
-item 38, done): the model reads **92% of roles against the matched heuristic's 47%** at 203 reads
-each, and the shipped heuristic's 89% at 700. The run also found that `RecallRecord.selector`
-recorded which selector was *configured* rather than which one *chose* — a credit outage put the
-heuristic inside the model's own arm, for the second time in this project's history.
-
-**The gate is built and it is the promotion rule for stage 3** (entry 90, [TODO.md](TODO.md) item
-37). Its first half now reports four columns — roles answered **by a page**, roles **settled by an
-official tool**, roles that **do not arise**, and roles open — and never merges them (entries 93,
-94). A role only fails to arise where a page answers `visa_decision`: "we could not find the
-checklist" may never become "there is no checklist". A questionnaire the
-authority publishes *is* an answer: the plan names it beside the question, the traveller acts on it,
-and nothing about it is citable. `visa-discover coverage` answers "is this country's corpus good
-enough to serve a corridor" in two halves that are never added — 47 of 47 known answers, which is **one traveller** and stays a
-regression check, and every per-traveller family the store holds, from which the verdict is computed
-**alone**. Six of the ten have no per-traveller dimension, SG and GB are *bounded by the authority*
-(a pass), and only NL is `incomplete`. Offline, no model, no search.
-
-**How close the corpus is to the goal, measured** (entry 82). Across 30 corridors into the ten corpus
-countries, **18 had zero misses**, and of the 67 pages missed in total **none were on a host the
-corpus lacks**. Site-level recall is solved. What remains is page-level and has two causes: ordinary
-deep pages a bigger crawl reaches, and **spaces behind a form** — the United Kingdom publishes its
-per-nationality fee tables through a country selector with no links between nationalities, so no
-crawl reaches them at any budget, while Canada's equivalent reached 213 values because Canada
-published a page listing every country as a link. The second cause is the questionnaire outcome
-wearing a different hat, and the answer is the same: name the tool.
-
-**And measured a second way on 2026-08-28: 47 of 47 answerable roles already have their answering
-page in the corpus — for one traveller.** `oracle/selection_oracle.yaml` is `IN/GB/tourism` for all
-ten countries, and the Netherlands' answers were held both before and after entry 88's rebuild, so
-this measurement is blind to the thing that rebuild fixed. **Never quote the 100% as evidence a
-corpus is ready** — it is half one of the gate above, and the gate's own verdict deliberately
-ignores it.
-
-**What chooses which pages to read is now a model, not the ranking** (entries 83–87). It reads stored
-page text for every candidate in contention and picks up to 20 pages to fetch, where the heuristic
-ranked links and fetched 35. It costs a second model call per corridor. `discovery_selector: model`.
-
-**And selector work finally has ground truth it did not build** (entry 87, TODO item 34), **now for
-two travellers** (entry 91). `oracle/selection_oracle.yaml` names, by hand, the page answering each
-role for **twenty** corridors — `IN/GB/tourism` and `PH/PH/tourism` over the same ten countries —
-from each corridor's whole contention set rather than from what any arm fetched. Both read 100%
-*held* and the denominators are the finding: the same stores answer **47 of 60 roles for one
-traveller and 36 of 60 for the other**. Read the `held` column with care — it is a finding for
-`IN/GB`, curated from a wider set, and near-circular for `PH/PH`, curated from the corpus itself. Against it the model
-reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the heuristic is
-allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used,
-the same arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the
-shipped heuristic is +9. `visa-discover selection-recall` prints both columns on every run, so the
-bias is a number rather than a caveat.
+**The selector experiment is closed** (entry 106, the owner's decision). The model wins and has on
+every measurement since entry 84 — 92% of roles against the matched heuristic's 47%, most recently
+90% against 59%. **The twenty corridors are no longer re-run to refresh that number.**
+`visa-discover selection-recall` stays as an offline regression check, and entries 87, 100 and 106
+say how to read it: it measures agreement with pages a person named, not corridor health, and its
+known errors run against the model so the figure is a floor.
 
 **Read entries 78–87 before touching discovery ranking.** Five of them correct the ones before them,
 and the corrections table below carries the specific traps.
@@ -496,6 +471,7 @@ cause, and only running the thing showed it.
 | a domain under the country's own TLD that migration bodies use is fine | `iom.sk` is the **International** Organization for Migration (entry 110) |
 | `reviewed` in `authority_domains.yaml` means independently confirmed | it means a person decided — three tiers, each marked in the entry (entry 111) |
 | the corpus is tuned for two travellers, expect a third to do worse | `NG/NG` scores **87%** against their 82.5%, on per-country pages (entry 112) |
+| DK, LT and SK refuse every passport and no corpus will fix them | that was measured when each had **one** domain; they now have 4, 4 and 2 |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
@@ -565,8 +541,13 @@ whether the **store** holds the answer; `selection-recall` asks whether the **co
 it. A single number covering both would hide which half failed.
 
 Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
-now have a text index in `var/pagetext/` (entry 85). A country without either crawls in the request
-path and has its pages chosen by the heuristic, exactly as before.
+now have a text index in `var/pagetext/` (entry 85). **43 more are ready to build — [TODO.md](TODO.md)
+item 41.** A country without either crawls in the request path and has its pages chosen by the
+heuristic, exactly as before, which is the ordinary path and never a failure.
+
+**A one-host corpus is a trust-configuration symptom, not a crawler one.** Germany's held 1,565
+entries on `www.auswaertiges-amt.de` alone until `diplo.de` was reviewed, then 5,712 across 87 hosts
+(entries 107, 108). Read `authority_domains.yaml` before touching crawl settings.
 
 **An offline build answers a browser challenge and a corridor barely can.** Both pass the renderer;
 what differs is the budget — `DEFAULT_CORPUS_RENDERS` is 400 against the request path's 12, because a

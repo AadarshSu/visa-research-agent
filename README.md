@@ -5,7 +5,7 @@ government domains have been confirmed. It reports what official government sour
 claim, and states plainly what it could not verify. It does not guarantee eligibility, completeness, or
 visa approval, and it never submits anything on anyone's behalf.
 
-**53 of 198 countries are currently *reachable*.** Which domains a country may be researched from is
+**55 of 198 countries are currently *reachable*.** Which domains a country may be researched from is
 generated offline, reviewed once, and committed in `config/authority_domains.yaml`; a country absent from
 it is refused rather than guessed at. The file holds **55 rows**; Iceland and Liechtenstein carry no
 domain that could be confirmed, so they refuse too.

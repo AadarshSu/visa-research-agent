@@ -90,9 +90,11 @@ certificate confirmations and seven pieces of research, one time.
 researchable, and that is stage 1 of three. **Item 30 is now first, and no further country is added
 until batch 1 clears all three stages**: reachable, resolves, fast.
 
-**Batch 1 is all 53 reachable countries**, not the fourteen — those were catching up to the rest, and
-counting the rest the same way found the real gap: **41 of the 53 have never had a corridor run against
-them**, which is not the same as failing. 43 have no corpus. **Accuracy is verified by the project owner
+**Batch 1 is every reachable country** — 53 when this was written, **55 since 2026-08-29** when
+Iceland and Liechtenstein gained their first domains (entry 110). Not the fourteen: those were
+catching up to the rest, and counting the rest the same way found the real gap. **41 of the 53 had
+never had a corridor run against them**, which is not the same as failing, and Iceland and
+Liechtenstein still have not. 45 have no corpus, of which **43 are ready to build — item 41**. **Accuracy is verified by the project owner
 outside this repository** and is deliberately not a stage; do not build a correctness grader here
 without asking.
 
@@ -137,7 +139,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
+| **Now** | 41. Build the corpora for the 43 remaining countries | `next` |
+|  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
@@ -361,6 +364,58 @@ but 5 are `resolved_decision_tool`, which entry 63 settled as a resolution; the 
 **Do not resurrect this by pointing at the 46%.** It is a true number about the store and is not, on
 this evidence, costing a corridor anything. Anyone proposing to fix it needs a measurement that ties
 coverage to a role that was actually lost — which is what this attempt looked for and did not find.
+
+
+### 41. Build the corpora for the 43 remaining countries — `next`, **start here**
+
+**Everything this needs is done.** The build pipeline is validated, the trust config no longer
+starves it, and a traveller nobody tuned for scores 87% on the ten already built (entry 112). This is
+the work stage 3 of item 30 has been waiting for.
+
+**The 43, all with two or more authority domains:**
+
+```
+AT AU BE BG CH CN CY CZ DK EE EG ES FI GR HR HU ID IE IN IS IT KR LI LT
+LU LV MA MT MX MY NO NZ PH PL PT RO SA SI SK TH TR VN ZA
+```
+
+Only **BR** and **UY** are left out, at one domain each. They can still be built — Germany ran on one
+for weeks — they will simply be thin, and `liveinuruguay.uy` and `iom.sk` were refused for cause
+(entry 111).
+
+**Do, per country:**
+
+```bash
+.venv/bin/visa-discover corpus --country XX     # search, crawl, index; ~30-70 queries
+.venv/bin/visa-discover coverage --country XX   # the promotion gate, offline
+.venv/bin/visa-discover corridor --destination <slug> --nationality NG --from NG
+```
+
+**What each step is for.** The build writes `var/corpus/XX.json` and `var/pagetext/XX.sqlite3`.
+`coverage` says whether the store holds the per-traveller dimension — six of the first ten read *no
+per-traveller dimension*, which is a pass, not a failure. The corridor is the only thing that says
+the store answers anybody; run at least one, and prefer a nationality that needs a visa there.
+
+**What to expect, from the ten already done:**
+
+- **Roughly 1,500 to 9,700 entries per country**, and 3-15% of what is recorded ever gets opened
+  (entry 88). That is structural — a rebuild re-walks the same search seeds and cannot open what the
+  last build recorded and skipped (entry 101).
+- **A one-host corpus means the trust config is starving it, not the crawler.** Germany sat at 1,565
+  entries on a single host until `diplo.de` was reviewed, then went to 5,712 across 87 and from four
+  roles to six (entries 107, 108). If a build comes back on one host, **check
+  `authority_domains.yaml` before touching crawl settings**.
+- **Count challenges before rebuilding anything** (entry 92). It is one offline query over the corpus
+  and it pointed at Sweden rather than France.
+- A `403` that says *"you have been blocked"* is a **refusal**, not a challenge, and must never be
+  rendered past — entry 109, which is why `travel.state.gov` holds zero pages and always will.
+
+**Careful:** `var/corpus/` and `var/pagetext/` are stores, not caches — **never clear them**.
+Rebuilding one costs search quota. Clear `var/cache/` only when testing a retrieval change.
+
+**How to know it worked:** the country's corridor fills roles from its *own* per-traveller pages
+rather than generic guidance. Entry 112 is the shape to look for — `nigeria.diplo.de`,
+`…/schengen-visa/apply-nigeria`, `…/visa-detail-page/nigeria`.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
