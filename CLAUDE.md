@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and fourteen rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and fifteen rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -475,6 +475,7 @@ cause, and only running the thing showed it.
 | the US corpus just needs the render budget france and sweden got | it got it; `travel.state.gov` still stores **0** (entry 108) |
 | ...so the US challenge is one our renderer cannot answer | it is not a challenge — "you have been blocked", and we rendered past it (entry 109) |
 | a cloudflare marker in the body means a challenge to answer | `cdn-cgi/challenge-platform` is on the **block** page too (entry 109) |
+| the US corridor cannot be helped, the pages are refused | naming them turns a 503 into a plan: `resolved_decision_blocked` (entry 109) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

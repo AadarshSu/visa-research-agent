@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and fourteen rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and fifteen rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -252,9 +252,13 @@ vocabulary work, and the remaining **9 sit in two countries with one cause each*
   `cdn-cgi/challenge-platform` is Cloudflare scaffolding shared by the challenge page and the block
   page, and it was the only one that page carried. So the renderer was pointed at a refusal (which
   entry 18 forbids), a false reason was recorded, and the corridor could not use entry 32's
-  name-the-page outcome. Fixed, with a negative guard checked first. **The reason is now correct and
-  verified; whether the corridor now qualifies as authority-blocked is untested — that path is a
-  model call and the OpenAI credit ran out.**
+  name-the-page outcome. Fixed, with a negative guard checked first. **Verified end to end:**
+  `united-states/PH/PH` now records `cause=resolved_decision_blocked` where it recorded
+  `decision_not_found`, and `POST /visa-plans` for `united-states/IN/GB` **returns a plan where it
+  previously returned a 503 with nothing** — `visa_required: null`, `status: partial`, six
+  `travel.state.gov` URLs named as blocked with true reasons, and an unresolved question handing the
+  traveller the page to open. The five US slots are still a ceiling; the traveller is now told the
+  truth instead of getting nothing.
 
 **The selector A/B is closed** (entry 106, owner's decision). The model wins and has on every
 measurement since entry 84 — 90% against 59% at matched budget. The twenty corridors are no longer

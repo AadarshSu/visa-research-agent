@@ -216,15 +216,30 @@ shared one, so nothing could have caught this. They now carry `_cf_chl_opt` like
 and a new fixture is the real block page — **keeping** the shared marker, so the guard has to hold
 because the page says it blocked us rather than because the marker went away.
 
-### What is verified, and what is not
+### Verified end to end, and the corridor's outcome changed
 
-Verified: the reason is now correct. Both US corridors report *"travel.state.gov could not be read
-because the authority refused automated retrieval (HTTP 403), so its guidance could not be
-independently verified here"*.
+The reason is correct — both corridors report *"travel.state.gov could not be read because the
+authority refused automated retrieval (HTTP 403), so its guidance could not be independently verified
+here"* — and the outcome moved with it. **`united-states/PH/PH` now records
+`cause=resolved_decision_blocked` where it recorded `decision_not_found`**, and both corridors exit
+resolved-with-gaps rather than refused. The third model call is `_decision_blocking` judging the
+refused page a credible `visa_decision` candidate from its address and label alone, which is entry
+57's bound.
 
-**Not verified: whether the corridor now qualifies as authority-blocked and names the page.** That
-path runs through `_decision_blocking`, which is a model call (entry 57), and the OpenAI credit ran
-out during the check. It is the interesting half and it is untested.
+`POST /visa-plans` for `united-states/IN/GB/tourism` **returned a plan where it previously returned a
+503 with nothing**:
+
+- `visa_required: None` and `status: partial` — the override holding, and `verified` unreachable
+- *"The visa decision could not be verified because United States authority (travel.state.gov)
+  guidance could not be read here."*
+- **six** `travel.state.gov` URLs listed as `blocked`, each with the true reason
+- an unresolved question giving the traveller the exact page to open themselves
+- a first step that says to open it
+
+That is entries 27, 32 and 57 working as designed, on a corridor that had been silently failing
+because one string made a refusal look like a question. **The five US role slots are still unfilled
+and still a ceiling** — what changed is that the traveller is now told the truth and handed the link
+instead of getting nothing.
 
 ### What this corrects
 
