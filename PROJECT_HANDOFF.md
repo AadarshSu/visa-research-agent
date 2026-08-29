@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and fifteen rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and seventeen rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -64,7 +64,7 @@ destinations.
 
 | | |
 | --- | --- |
-| **Reachable destinations** | **53 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). Only Iceland and Liechtenstein carry nothing confirmable. `visa-discover audit` prints the split. |
+| **Reachable destinations** | **55 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). **Every row now carries a confirmable domain** — Iceland and Liechtenstein were the last two and were fixed on 2026-08-29 (entry 110), so `audit` reads `row, no confirmable domain: 0`. `visa-discover audit` prints the split. |
 | **Countries with an offline page corpus** | **10** — AE, CA, DE, FR, GB, JP, NL, SE, SG, US; ~23,000 pages. **Germany was rebuilt on 2026-08-29 across 87 hosts (was 1) after `diplo.de` was trusted**, entries 107–108. France and Sweden were rebuilt on 2026-08-28 with a render budget that can answer a challenge (entry 92): FR 5,317 → 6,277 entries with `france-visas.gouv.fr` 12 → 104 readable, SE 2,246 → 3,586 with `government.se` 0 → 863. **A build opens 3–15% of what it records** (entry 88), and the page answering a specific traveller is usually one hop below something it recorded and never opened. The Netherlands is rebuilt with a reserved share for per-traveller families and is the only one so far; item 35. These are served without crawling. The other **43** crawl in the request path, which is the ordinary path for a country nobody has built — a corpus is a speed optimisation, never a prerequisite. |
 | **Verified working** | **All 53 have now been run; 10 have a corpus.** Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason. **34 of the 41 answer at least one passport** — Cyprus and India were recovered by the renderer on the same day (entry 75), India with all six roles. **Seven refuse every passport** with a diagnosis checked against what was seen: DK, LT, MA, MX, RO, SA, SK. **No corpus will fix those seven** (entry 76) — every one fails at *retrieval*, and a corpus crawl meets the identical wall. Item 30's remaining work is stage 3, the 43 corpora. |
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |

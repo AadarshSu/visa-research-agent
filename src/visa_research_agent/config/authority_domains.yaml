@@ -96,9 +96,11 @@ countries:
   name: Switzerland
   trusted:
   - admin.ch
-  reviewed: {}
-  unconfirmable:
-  - swiss-visa.ch
+  reviewed:
+    swiss-visa.ch: Switzerland's official online visa system. Its TLS certificate names the operator
+      outright — O=Bundesamt für Justiz (BJ), C=CH, the Swiss Federal Office of Justice — so the
+      governmental half is confirmed independently rather than inferred. Serves "Online visa system"
+      at 200. DECISIONS entry 110, 2026-08-29
 - code: CN
   name: China
   trusted:
@@ -145,8 +147,16 @@ countries:
   reviewed:
     um.dk: official website of the Ministry of Foreign Affairs of Denmark — Wikidata P856/P17, checked
       2026-08-18
+    us.dk: the Danish Immigration Service (Udlændingestyrelsen), the authority that decides a visa.
+      Wikidata Q4573196 gives P856 https://www.us.dk with P17 Denmark, and the site serves
+      "Udlændingestyrelsen" at 200. Found by asking Wikidata for the organisation rather than by
+      promoting a proposed domain — `nyidanmark.dk` was the obvious guess and Wikidata does not
+      support it, so it stays below. DECISIONS entry 110, 2026-08-29
+    denmark.dk: the official website of Denmark, named on the already-reviewed um.dk and under
+      Denmark's own top-level domain, which is the two-part warrant entry 107 used for Germany.
+      Serves "Welcome to the official website of Denmark". A country portal rather than a visa
+      authority. DECISIONS entry 110, 2026-08-29
   unconfirmable:
-  - denmark.dk
   - nyidanmark.dk
 - code: EE
   name: Estonia
@@ -260,7 +270,11 @@ countries:
 - code: IS
   name: Iceland
   trusted: []
-  reviewed: {}
+  reviewed:
+    stjornarradid.is: the Government of Iceland. Wikidata Q12351757 gives P856
+      https://www.stjornarradid.is/ with P17 Iceland. Iceland had **no** domain at all before this
+      and was refused outright, and note that neither proposed domain was the right one. DECISIONS
+      entry 110, 2026-08-29
   unconfirmable:
   - government.is
   - island.is
@@ -297,7 +311,11 @@ countries:
 - code: LI
   name: Liechtenstein
   trusted: []
-  reviewed: {}
+  reviewed:
+    regierung.li: the Government of the Principality of Liechtenstein. Wikidata Q2137649 gives P856
+      https://www.regierung.li/ with P17 Liechtenstein, and the site serves "Regierung des
+      Fürstentums Liechtenstein". Liechtenstein had no domain at all before this. DECISIONS entry
+      110, 2026-08-29
   unconfirmable:
   - llv.li
 - code: LT
@@ -317,9 +335,11 @@ countries:
     gouvernement.lu: official website of the Government of Luxembourg — Wikidata Q21479996, P856/P17,
       checked 2026-08-25. The whole-government portal rather than a named visa authority, which is the
       weakest of these seven
+    public.lu: the directory of Luxembourg's public sites (etat.lu), named on the already-reviewed
+      gouvernement.lu and under Luxembourg's own top-level domain — entry 107's two-part warrant.
+      A directory rather than a visa authority. DECISIONS entry 110, 2026-08-29
   unconfirmable:
   - mae.lu
-  - public.lu
 - code: LV
   name: Latvia
   trusted:

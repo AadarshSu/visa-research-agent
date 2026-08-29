@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and fifteen rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and seventeen rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -138,6 +138,15 @@ produces a serious defect.
   could not confirm it — a Let's Encrypt wildcard names no organisation — and note that a refused
   domain leaves **no** trace in the corpus to review from, because `is_crawlable` drops it before
   recording.
+
+  **How to review one, because the obvious way is wrong (entry 110).** `unconfirmable` records what a
+  search turned up under the country's own TLD; it is **not** a shortlist of the authority's real
+  addresses. Asked properly — Wikidata for the *organisation*, then its `P856` and `P17` — the right
+  domain was absent from the proposed list three times out of three: Denmark's immigration service is
+  `us.dk` and not `nyidanmark.dk`, Iceland's government is `stjornarradid.is` and not `government.is`,
+  Liechtenstein's is `regierung.li` and not `llv.li`. And `iom.sk` sits under `.sk` while being the
+  **International** Organization for Migration, which is the standing reminder that the own-TLD half
+  is only half.
 
   **Measured 2026-08-18: the governmental half fails for 19 of 51 countries; 16 since 2026-08-25** —
   Germany, Italy, the Netherlands, Sweden and most of Schengen have no governmental marker in their
@@ -476,6 +485,8 @@ cause, and only running the thing showed it.
 | ...so the US challenge is one our renderer cannot answer | it is not a challenge — "you have been blocked", and we rendered past it (entry 109) |
 | a cloudflare marker in the body means a challenge to answer | `cdn-cgi/challenge-platform` is on the **block** page too (entry 109) |
 | the US corridor cannot be helped, the pages are refused | naming them turns a 503 into a plan: `resolved_decision_blocked` (entry 109) |
+| `unconfirmable` is a shortlist of the authority's real domains | three for three the right one was absent — ask Wikidata, don't promote (entry 110) |
+| a domain under the country's own TLD that migration bodies use is fine | `iom.sk` is the **International** Organization for Migration (entry 110) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

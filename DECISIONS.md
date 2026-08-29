@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [110](#110-six-domains-for-five-countries--and-the-proposed-lists-were-wrong-about-which-domain-to-want) | **Six domains, five countries** — and three for three, the right domain was not the proposed one |
 | [109](#109-travelstategov-was-never-a-challenge--it-is-a-block-and-we-were-rendering-past-it) | **`travel.state.gov` is a block, not a challenge** — one shared marker had us rendering past a refusal |
 | [108](#108-germanys-rebuild-closed-three-of-four-slots-the-united-states-closed-none) | **Germany 1 host → 87, three slots closed** — and the US challenge is a real ceiling |
 | [107](#107-diplode-is-reviewed-and-trusted-because-the-ministry-itself-names-it) | **`diplo.de` reviewed and trusted** — TLS could not confirm it; the ministry's own page did |
@@ -158,6 +159,71 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 110. Six domains for five countries — and the proposed lists were wrong about which domain to want
+
+**2026-08-29 · trust decisions, recorded as `authority_domains.yaml` requires · TODO item 2**
+
+Entry 107 fixed Germany and entry 108 measured what it bought. Eleven more countries were thin — nine
+with a single domain, and Iceland and Liechtenstein **refused outright with none**. The obvious move
+was to promote their `unconfirmable` entries. That move is wrong, and finding out why is the useful
+part of this entry.
+
+### The method that worked is the one entry 67 already named
+
+Germany's warrant — an approved page naming the domain — needs a corpus, and these countries have
+none. So the evidence came three ways:
+
+- **Wikidata, by organisation** (entry 67's "ask Wikidata about the domain", run in reverse): look up
+  the authority, read `P856` official website and `P17` country. This produced **`us.dk`**, the Danish
+  Immigration Service; **`stjornarradid.is`**, the Government of Iceland; **`regierung.li`**, the
+  Government of the Principality of Liechtenstein.
+- **TLS, for one of fifteen.** `swiss-visa.ch` presents `O=Bundesamt für Justiz (BJ), C=CH` — the
+  Swiss Federal Office of Justice, named in the certificate. The other fourteen candidates are
+  domain-validated certificates naming nobody, which is entry 66's limit showing up worse than the 9
+  of 16 it recorded.
+- **Entry 107's two-part warrant**, for `denmark.dk` (named on the reviewed `um.dk`) and `public.lu`
+  (named on the reviewed `gouvernement.lu`), both under their own top-level domain.
+
+Every one was then fetched and serves a page identifying itself: *Udlændingestyrelsen*, *Regierung
+des Fürstentums Liechtenstein*, *Online visa system*, *Welcome to the official website of Denmark*.
+
+### The finding: `unconfirmable` is a list of guesses, not a shortlist
+
+**Denmark's proposed domain was `nyidanmark.dk`** — "New to Denmark", which anyone would take for the
+immigration portal. Wikidata gives the Danish Immigration Service's official website as **`us.dk`**,
+which was **not in the proposed list at all**. **Iceland's proposals were `government.is` and
+`island.is`**; the Government of Iceland's official website is **`stjornarradid.is`**, also absent.
+**Liechtenstein's proposal was `llv.li`**; the government is at **`regierung.li`**.
+
+Three for three, the right domain was not the proposed one. `unconfirmable` records what a search
+turned up under the country's own top-level domain — it is not a ranked list of the authority's real
+addresses, and reviewing it as though it were would have trusted three wrong domains while missing
+three right ones. **Ask Wikidata for the organisation; do not promote from the list.**
+
+### What was rejected
+
+**`iom.sk` is the International Organization for Migration.** It is an intergovernmental body, not
+Slovakia's government, so it fails the governmental half no matter how many Slovak pages link it or
+that it sits under `.sk`. It is the clearest illustration in the file of why "under the right
+top-level domain" is only half the rule, and it is left in `unconfirmable` deliberately — a future
+reviewer should meet it and reject it again.
+
+**Bulgaria, Brazil, Lithuania, Norway, Slovakia and Uruguay got nothing**, and that is the honest
+outcome rather than a failure to try. Wikidata has no official website for Lithuania's Migration
+Department, Slovakia's Interior Ministry, Uruguay's Dirección Nacional de Migración or Luxembourg's
+MAE; the trusted homepages do not name the candidates; TLS names nobody. `migracija.lt` and
+`regjeringen.no` are almost certainly right and "almost certainly" is the reasoning this rule exists
+to refuse. They need a person with a source, which is what item 2 is.
+
+### What it moved
+
+`visa-discover audit` now reads **`row, no confirmable domain: 0`**, where two countries sat before,
+and **55 researchable**. Iceland and Liechtenstein were refused before any page was fetched and are
+now reachable. Whether they *answer* is stage 2 and untested — this entry only settles what may be
+read.
 
 ---
 

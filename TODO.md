@@ -754,6 +754,18 @@ and its child look alike in an excerpt of the head.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`, **and Germany is the worked example**
 
+**Six more domains landed for five countries on 2026-08-29 (entry 110), and `audit` now reads
+`row, no confirmable domain: 0`** — Iceland and Liechtenstein were refused outright and are now
+reachable, taking researchable from 53 to **55**. The transferable lesson is about *method*:
+`unconfirmable` is what a search turned up, **not** a shortlist of the authority's real domains, and
+promoting from it would have trusted three wrong domains while missing three right ones. Ask Wikidata
+for the **organisation**, then read its `P856`/`P17`. `iom.sk` was examined and **rejected** — it is
+the International Organization for Migration, not Slovakia's government.
+
+**Still nothing for Bulgaria, Brazil, Lithuania, Norway, Slovakia and Uruguay.** `migracija.lt` and
+`regjeringen.no` are almost certainly right, and "almost certainly" is what this rule refuses. They
+need a person with a source.
+
 **Germany is done and it worked (entries 107, 108).** `diplo.de` is now `reviewed` — the warrant is
 that the already-trusted `auswaertiges-amt.de` prints "Website http://www.washington.diplo.de" under
 "Consulate General of the Federal Republic of Germany", which is entry 89's two-part test satisfied
