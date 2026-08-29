@@ -387,15 +387,18 @@ the old column showed was entry 89's VFS Global ceiling being reported as a craw
   permanently out of scope). All three pass `CORPUS_FAMILY_PATTERN` because it keyword-matches the
   address on `apply|visa|appointment`.
 
-**So the next decision is which of two things to build, and neither is a crawl:**
+**Step 1 is done (entry 102).** `CORPUS_FAMILY_PATTERN` now requires a visa-domain word rather
+than any government word: `apply`, `appointment` and `fees` are gone, because they admitted Dutch
+passport renewals and appointment booking. Measured over all ten corpora first — it drops exactly
+those two families and keeps every other family in every country. It also stops the crawl reserving
+budget for them. The `incomplete` advice line, which entry 101 showed was false, is fixed too.
 
-1. **A relevance test for families**, replacing the keyword pattern — the gate should not be held
-   `incomplete` by Dutch passport renewals. Entry 57's lesson says this is a meaning question and a
-   pattern cannot answer it.
-2. **Seeding the crawl from the corpus's unfetched addresses**, which is the only thing that can
-   ever open them. Entry 101 rejected doing it blind: 600 depth-0 seeds against today's 162 is a
-   real change to crawl shape, and on this country it would spend the budget on passport renewals.
-   **Do 1 before 2** — otherwise 2 crawls the wrong families faster.
+**Step 2 is what remains: seed the crawl from the corpus's unfetched addresses**, the only thing
+that can ever open them. Entry 101 rejected doing it blind — 600 depth-0 seeds against today's 162
+is a real change to crawl shape. **And measure first**: an attempt to establish whether unfetched
+recorded pages hold checklists anywhere outside the Netherlands failed, because URL-pattern counting
+cannot tell a checklist from a Bastille Day PDF. Without that measurement step 2 is a crawl-shape
+change justified by one country whose ceiling is a contractor.
 
 **The other nine are unchanged and mostly no-ops** — six read *no per-traveller dimension*, and SG
 and GB are *bounded by the authority*, which is a pass. Verified after the measurement change: no
@@ -1451,6 +1454,18 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**A delegated checklist counts as `open` in the coverage metric, and the plan already hands the
+traveller its link.** Raised by the project owner 2026-08-29. `coverage` half one reports four
+columns — answered by a page, settled by an official tool, does not arise, open — and a role the
+authority contracted out falls into `open`, even though `delegated_services` puts the URL in front
+of the traveller exactly as `official_tools` does. **This is entry 93's defect one instance later**:
+that entry gave tools their own column because "the product has called it resolved since entry 63;
+only the metric disagreed", and the same sentence is true of delegates since entry 89. A fifth
+column, counted apart and never added into `held` — a company's page is not citable and
+`validate_absent_checklist` still forbids a requirement behind one. It would change the Netherlands
+most, which holds 236 delegations.
+
 
 **Singapore's hand-written configuration is India-specific, and a traveller can now read that.**
 Found 2026-08-28, entry 98. `destinations.yaml` names `sg_ica_india_visa_details` — a page about

@@ -343,3 +343,28 @@ def test_the_shipped_pattern_keeps_the_dutch_family_and_drops_the_canadian_one()
     assert CORPUS_FAMILY_PATTERN.search(also_keep)
     assert not CORPUS_FAMILY_PATTERN.search(drop)
     assert not CORPUS_FAMILY_PATTERN.search(also_drop)
+
+
+def test_a_government_verb_is_not_enough_to_be_a_travellers_family() -> None:
+    """The gate requires a visa-domain word, not merely a word governments use (entry 102).
+
+    Both of these held the Netherlands at `incomplete` and would have taken reserved crawl budget.
+    Neither can answer a role for anybody: one is Dutch citizens renewing a passport abroad, the
+    other is booking an appointment, which this project never does.
+    """
+
+    passports = "https://www.netherlandsworldwide.nl/passport-id-card/abroad/apply-{}"
+    booking = "https://www.netherlandsworldwide.nl/making-appointment/{}"
+
+    assert not CORPUS_FAMILY_PATTERN.search(passports)
+    assert not CORPUS_FAMILY_PATTERN.search(booking)
+
+
+def test_the_pattern_still_admits_a_family_for_the_wrong_territory() -> None:
+    """Written down rather than papered over: the gate cannot tell a Schengen visa from the
+    Kingdom's Caribbean one, which is the wrong answer for a `netherlands` corridor rather than a
+    useless one. Excluding it needs a notion of territory a keyword gate does not have."""
+
+    caribbean = "https://www.netherlandsworldwide.nl/caribbean-visa/short-stay/apply-{}"
+
+    assert CORPUS_FAMILY_PATTERN.search(caribbean), "known limitation, asserted so it stays visible"

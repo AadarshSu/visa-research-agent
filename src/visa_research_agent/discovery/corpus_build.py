@@ -161,9 +161,24 @@ DEFAULT_CORPUS_FAMILY_SHARE = 0.4
 # members and Japan's are `mofa.go.jp/region/{area}/{}` at 141, and reserving budget for those would
 # spend 40% of a build on travel advisories. With this gate, six of the ten countries have no
 # qualifying family and the reservation is inert for them, which is the intended outcome.
-CORPUS_FAMILY_PATTERN = re.compile(
-    r"visa|permit|entry|checklist|consular|appointment|apply|immigrat|fees", re.IGNORECASE
-)
+# **A visa-domain word is required, not merely a government one (entry 102).** The first version of
+# this gate also accepted `apply`, `appointment` and `fees`, which every public service in the world
+# uses, and it let three families into the Netherlands' verdict that no corridor could ever use:
+# `passport-id-card/abroad/apply-{}` is Dutch citizens renewing a passport, and `making-appointment/
+# {}` is booking, which is permanently out of scope. Both held the country at `incomplete` and both
+# would have taken reserved crawl budget.
+#
+# Measured over all ten corpora before the change: it drops exactly those two and **keeps every
+# other family in every country** — including `consular-fees/{}`, which survives on `consular`, and
+# the United Kingdom's fee wall, which survives on `visa`.
+#
+# **It is still a keyword gate and it is still wrong in one known way.** `caribbean-visa/short-stay/
+# apply-{}` matches on `visa` and is the Kingdom's *Caribbean* visa — Aruba, Curaçao, Bonaire, all
+# outside Schengen — so it is the wrong answer for a `netherlands` corridor rather than merely a
+# useless one. Excluding it needs a notion of territory this gate does not have. That is not fixed
+# here and is written down rather than papered over, because `coverage` is offline with no model by
+# design (entry 90) and entry 57's lesson is that a pattern cannot decide meaning.
+CORPUS_FAMILY_PATTERN = re.compile(r"visa|permit|immigrat|consular|checklist|entry", re.IGNORECASE)
 
 
 def corpus_queries(

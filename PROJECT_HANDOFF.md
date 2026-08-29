@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-08-28 — update this line when you touch the handoff |
-| **Tests** | 639 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 641 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has one hundred rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and one rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -188,11 +188,18 @@ reported as a crawl gap. `Family.read` is now `max(opened, text_held)` and the v
 `shape` deliberately still uses `opened` so both sides of its ratio agree. Schengen reads **100%**
 (was 39%). No other country's verdict moved.
 
-**The Netherlands is still `incomplete`, now honestly**: `airport-transit-visa` at 52% is a real
-in-scope gap, and three families holding the verdict are out of scope entirely — Dutch passport
-renewal, Caribbean (non-Schengen) visas, and appointment booking, all admitted by a keyword pattern
-that cannot tell "apply for a passport" from "apply for a visa". Item 35 now says which two things
-to decide between, and neither is a crawl.
+**Item 35's step 1 is done** (entry 102). `CORPUS_FAMILY_PATTERN` now requires a visa-domain word
+rather than any government word — `apply`, `appointment` and `fees` are gone, since they admitted
+Dutch passport renewals and appointment booking into the verdict *and* into the crawl's reserved
+budget. Measured over all ten corpora first: it drops exactly those two families and keeps every
+other family in every country.
+
+**The Netherlands is still `incomplete`, now honestly**: `airport-transit-visa` at 52% read is a
+real in-scope gap (it serves `transit`), `mvv-long-stay` sits at 1%, and the Kingdom's *Caribbean*
+visa family survives the pattern on the word `visa` though it is the wrong territory for a
+`netherlands` corridor — a limitation a test now asserts so it stays visible. The schengen family
+that serves tourism reads **100%**. **Step 2 — seeding the crawl from recorded-but-unfetched
+addresses — is what remains, and item 35 says to measure before spending it.**
 
 **What the corridors actually lack is the checklist.** Across the twenty, `document_checklist` is
 unfilled in 9 — Singapore's correctly, since the question does not arise — leaving **8 genuine gaps,

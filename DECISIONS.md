@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [102](#102-a-family-needs-a-visa-word-not-merely-a-government-word) | **A family needs a visa word** — `apply`/`appointment`/`fees` let passport renewals hold a verdict |
 | [101](#101-a-rebuild-cannot-open-what-a-build-recorded-and-the-gate-was-counting-the-wrong-thing) | **A rebuild cannot open what a build recorded** — and `opened` undercounted fetches by 2.6× |
 | [100](#100-the-oracle-is-left-wrong-on-purpose-because-every-distortion-in-it-runs-one-way) | **The oracle is left wrong on purpose** — the distortions run against the model, so the number is a floor |
 | [99](#99-text-coverage-is-not-the-constraint-and-selection-recall-does-not-measure-what-it-looks-like) | **Coverage is not the constraint** — France 7% scores 100%, the UK 81% scores 40%; item 40 dropped |
@@ -150,6 +151,54 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 102. A family needs a visa word, not merely a government word
+
+**2026-08-29 · TODO item 35, step 1 · narrows `CORPUS_FAMILY_PATTERN`**
+
+Entry 101 found the Netherlands held at `incomplete` by three families no corridor could use, all
+admitted by a gate that keyword-matches the address on
+`visa|permit|entry|checklist|consular|appointment|apply|immigrat|fees`. Three of those tokens —
+**`apply`, `appointment`, `fees`** — are words every public service in the world uses, and they are
+what let in `passport-id-card/abroad/apply-{}` (Dutch citizens renewing a passport) and
+`making-appointment/{}` (booking, which this project never does).
+
+The pattern now requires a visa-domain word: `visa|permit|immigrat|consular|checklist|entry`.
+
+### Measured before it was written, over all ten corpora
+
+It drops **exactly those two families and keeps every other family in every country** — 13 Dutch
+families become 11, and AE, CA, DE, FR, GB, JP, SE, SG and US are unchanged to the family. Two
+survivals were the ones worth checking: `consular-fees/{}` keeps its place on `consular` rather than
+on `fees`, and the United Kingdom's fee wall keeps its place on `visa`.
+
+It also stops the crawl reserving budget for them, because `corpus_build` passes the same pattern to
+`LinkCrawler`. That is a second, quieter win: 40% of an offline build is reserved for families, and
+two of the Netherlands' were passport renewals and appointment bookings.
+
+### What it does not fix, asserted in a test so it stays visible
+
+`caribbean-visa/short-stay/apply-{}` matches on `visa` and survives. It is the Kingdom's **Caribbean**
+visa — Aruba, Curaçao, Bonaire, all outside Schengen — so for a `netherlands` corridor it is the
+**wrong** answer rather than a useless one. Excluding it needs a notion of territory this gate does
+not have, and `coverage` is offline with no model by design (entry 90), so the fix is not "ask a
+model". A test asserts the pattern still admits it, so the limitation cannot quietly be believed
+solved.
+
+### The verdict text was also wrong and is fixed
+
+`incomplete` read *"a gateway family is held but mostly unopened; a rebuild buys coverage"*. Entry
+101 measured that a rebuild buys nothing — it re-walks its search seeds — so the advice now says a
+crawl seeded from the recorded addresses is the only thing that reaches them.
+
+### Where the Netherlands stands after this
+
+Still `incomplete`, and every reason is now real: `airport-transit-visa/apply-{}` at **52% read**
+(in scope — it serves the `transit` purpose), `mvv-long-stay/apply-{}` at 1% (long-stay, arguably
+not this product's business), and the Caribbean family above. The schengen family that actually
+serves tourism reads **100%**.
 
 ---
 

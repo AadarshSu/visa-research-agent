@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose one hundred rows are
+what has wasted the most time here — see the corrections table further down, whose hundred and one rows are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it.** A country is built **offline** — its
@@ -444,6 +444,7 @@ cause, and only running the thing showed it.
 | a rebuild opens the addresses the last build recorded and skipped | it re-walks from search seeds; 2,965 pages crawled bought 27 entries (entry 101) |
 | a family member nothing was discovered from was never fetched | it was fetched and linked nothing — 72 "opened" against 185 read (entry 101) |
 | the netherlands is `incomplete` because its gateway is 39% walked | it is 100% walked; three of the families holding the verdict are out of scope (entry 101) |
+| a family gate matching `apply` finds pages travellers apply on | it finds dutch citizens renewing passports; require a *visa* word (entry 102) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

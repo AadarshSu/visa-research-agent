@@ -80,7 +80,10 @@ VERDICT_MEANING: dict[str, str] = {
         "the guidance is centralised, so the known-answer half settles this country"
     ),
     "covered": "the families exist and the corpus holds and has walked them",
-    "incomplete": "a gateway family is held but mostly unopened; a rebuild buys coverage",
+    "incomplete": (
+        "a gateway family is held and mostly unread; only a crawl seeded from those "
+        "addresses reaches them — a plain rebuild re-walks its search seeds (entry 101)"
+    ),
     "bounded by the authority": (
         "the family exists and cannot be crawled — the rest is behind a selector"
     ),
