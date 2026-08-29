@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [106](#106-the-ceiling-nine-open-slots-two-countries-two-causes--and-the-selector-ab-is-closed) | **The ceiling: nine slots, two countries, two causes** — and the selector A/B is closed |
 | [105](#105-the-vocabulary-work-verified-end-to-end-and-a-role-scoring-zero-can-still-be-filled) | **Verified end to end** — the heuristic gained 12 points; a zero-scoring role can still be filled |
 | [104](#104-fees-and-processing_times-get-the-same-treatment-and-one-term-is-rejected-for-a-reason-worth-keeping) | **`fees` and `processing_times` widened** — and `payment` rejected: a checkout page is not a fee |
 | [103](#103-the-roles-that-go-unanswered-are-the-roles-with-the-fewest-words) | **The unanswered roles are the ones with fewest words** — 3 terms, 0 candidates in two countries |
@@ -154,6 +155,78 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 106. The ceiling: nine open slots, two countries, two causes — and the selector A/B is closed
+
+**2026-08-29 · decided by the project owner (stop the A/B) · classification run the same day**
+
+Two things, and the first is a decision rather than a finding.
+
+### The selector experiment is closed
+
+The model beats the heuristic and has done so on every measurement since entry 84 — most recently
+**90% against 59% at matched budget** (entry 105). The question is settled, `discovery_selector:
+model` is shipped, and **the twenty corridors are no longer re-run to refresh that number.**
+`visa-discover selection-recall` stays as a regression check anybody can run offline; what stops is
+treating its figure as a headline and spending quota to keep it current. Read entries 87 and 100
+before quoting it at all: it measures agreement with pages a person named, its known errors run
+against the model, and the number is a floor.
+
+### The ceiling, which is what the corpus work is actually judged against
+
+The goal is a corpus that answers most travellers for the ten countries built, and "99 of 120 roles"
+does not say whether the remaining 21 are *findable*. Classified:
+
+| cause | slots | fillable? |
+| --- | --- | --- |
+| Singapore, visa-free | **4** | **No, and correct** — no application, so no checklist, route, fee or wait (entry 94) |
+| Closed by entries 103–104 | **7** | Already fixed — France's times ×2, the Netherlands' fees, Canada's and Japan's entry, the US route |
+| **Germany** | **4** | **Yes — one reviewed domain** |
+| **United States** | **5** | **Only if a challenge can be answered** |
+
+Nine slots remain, in two countries, with one cause each.
+
+### Germany: its corpus is one host, because its missions are `unconfirmable`
+
+Germany's corpus is **1,565 entries and every one is `www.auswaertiges-amt.de`**. Not one mission
+page. The Federal Foreign Office defers in its own words — *"you should consult the requirements well
+in advance of your departure date to find out about the documentation which has to be submitted"* —
+and the mission is what names documents.
+
+`authority_domains.yaml` explains it exactly: **`diplo.de` is listed `unconfirmable`.** It is under
+Germany's own top-level domain and carries no governmental hostname marker, so the rule refuses it,
+so it is never fetched, so no German mission is in the corpus. That is **entry 33's measured defect
+biting one country in a countable way**, and entry 34 already names the remedy: a reviewed domain in
+committed data. `diplo.de` is the Federal Foreign Office's own mission network — `uk.diplo.de`,
+`manila.diplo.de` — so the evidence for reviewing it is the same evidence that justified
+`auswaertiges-amt.de`.
+
+**Not done here, because it is a trust decision.** The file says editing `trusted` by hand is one, and
+it belongs to [TODO.md](TODO.md) item 2 with its reasoning written down, not to a classification
+exercise.
+
+### The United States: `travel.state.gov` answers a challenge nobody could answer
+
+70 `travel.state.gov` entries are in the corpus, **67 never opened and 3 marked unreadable**, with the
+recorded reason *"it asked this client to prove it is a browser (HTTP 403), and that challenge could
+not be answered here"*. The index holds **zero** pages from it and 24 from `adoption.state.gov`,
+which entry 87 found publishes the same tree and is the only reason any of it is readable.
+
+All five US slots are that one cause. Entry 92 counted the US at 19 unanswered challenges and
+predicted little from fixing it, on the grounds that `egov.uscis.gov` and `ceac.state.gov` are
+application portals — **which was the wrong host to look at.** `travel.state.gov` is the United
+States' entire visa guidance tree.
+
+Entry 41 permits answering a challenge, so this is allowed; whether our renderer *can* answer this
+one is untested, and `CHALLENGE_FAILURES_PER_HOST` gives up after three.
+
+### What this says about the corpus
+
+Of 120 role slots over twenty corridors, **four should never be filled, seven were filled this week,
+and the remaining nine are two known defects with owners.** The corpus is not 21 problems away from
+serving these countries; it is two.
 
 ---
 

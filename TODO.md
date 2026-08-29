@@ -752,7 +752,21 @@ and its child look alike in an excerpt of the head.
 **Where it can run at all:** the United Kingdom (82% of its contention set has stored text) and Japan
 (50%). Everywhere else falls back to the heuristic and says so in the corridor's notes.
 
-### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`
+### 2. Amend the trust rule for governments with no marker, and for Schengen — `next`, **and Germany is the worked example**
+
+**A country's four open role slots now trace to one line of this file (entry 106).** Germany's corpus
+is **1,565 entries and every one is `www.auswaertiges-amt.de`** — not a single mission page — because
+`authority_domains.yaml` lists **`diplo.de` as `unconfirmable`**: under Germany's own top-level domain,
+no governmental hostname marker, so never fetched. The Federal Foreign Office defers to its missions
+in its own words — *"you should consult the requirements well in advance… to find out about the
+documentation which has to be submitted"* — so `document_checklist` and `general_entry` are open for
+both travellers and no crawl of the ministry can close them.
+
+`diplo.de` is the Foreign Office's own mission network (`uk.diplo.de`, `manila.diplo.de`), so the
+evidence for reviewing it is the evidence that already justified `auswaertiges-amt.de`. Adding it is
+the `reviewed` escape hatch entries 33 and 34 designed. **It is a trust decision** — this file says
+editing `trusted` by hand is one — so it wants a DECISIONS entry naming the evidence, not a quiet
+edit. Expect it to close 4 of the 9 remaining open slots.
 
 **Why this is now first.** Measured 2026-08-24, entries 63 and 64. Of 198 countries offered, 157 are
 refused before a page is fetched and **every one of them has no registry row at all** — unfinished
@@ -1472,6 +1486,18 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**`travel.state.gov` stores nothing, and it is the United States' entire visa guidance tree.**
+Entry 106. The corpus holds **70** of its pages — 67 never opened, 3 marked *"it asked this client to
+prove it is a browser (HTTP 403), and that challenge could not be answered here"* — and the text index
+holds **zero** from it, against 24 from the `adoption.state.gov` mirror that entry 87 found publishes
+the same tree. All five remaining US role gaps are this one cause. Entry 92 counted the US at 19
+unanswered challenges and predicted little from fixing it, on the grounds that `egov.uscis.gov` and
+`ceac.state.gov` are application portals — **it was looking at the wrong host.** Entry 41 permits
+answering a challenge, so trying is allowed; whether the renderer can answer this one is untested and
+`CHALLENGE_FAILURES_PER_HOST` gives up after three. A US corpus rebuild is the experiment, and the
+honest prior is that it may simply not be answerable.
+
 
 **A delegated checklist counts as `open` in the coverage metric, and the plan already hands the
 traveller its link.** Raised by the project owner 2026-08-29. `coverage` half one reports four

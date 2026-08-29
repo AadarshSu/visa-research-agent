@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and seven rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and ten rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -233,6 +233,24 @@ split is the finding — the **heuristic gained 12 points (47% → 59%)** while 
 90%, because the heuristic *is* the ranking and the model was already reading text. **That is the arm
 serving the 43 countries with no text index**, which is what stage 3 is about. Entry 81's noise rule
 still governs single-corridor moves.
+
+**The corpus is two defects from serving these ten countries, not twenty-one** (entry 106). Of 120
+role slots: **4** should never be filled (Singapore is visa-free), **7** were closed by the
+vocabulary work, and the remaining **9 sit in two countries with one cause each**.
+
+- **Germany, 4 slots.** Its corpus is 1,565 entries and *every one* is `www.auswaertiges-amt.de` —
+  no mission page at all — because `diplo.de` is listed `unconfirmable` in
+  `authority_domains.yaml`. The ministry defers to its missions for documents in its own words. This
+  is entry 33's defect biting one country countably, and entry 34 already names the remedy: a
+  reviewed domain. **It is a trust decision — [TODO.md](TODO.md) item 2, not a drive-by edit.**
+- **The United States, 5 slots.** `travel.state.gov` answers a browser challenge nobody could answer:
+  70 entries recorded, 67 never opened, **0 pages of stored text**, against 24 from the
+  `adoption.state.gov` mirror. Entry 92 predicted little from the US render gap by looking at
+  `egov.uscis.gov` and `ceac.state.gov`; it was the wrong host.
+
+**The selector A/B is closed** (entry 106, owner's decision). The model wins and has on every
+measurement since entry 84 — 90% against 59% at matched budget. The twenty corridors are no longer
+re-run to refresh that figure; `selection-recall` stays as an offline regression check.
 
 **And a correction that changes how to read entries 103–104:** a role with zero scoring candidates
 can still be filled. Germany scores zero for `fees` and `processing_times` and fills both, off a page
