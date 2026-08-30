@@ -579,6 +579,18 @@ class LiveSourceFetcher:
                 f"authority domain for {destination.display_name}",
                 rendered.final_url,
             )
+        # Did answering it actually answer it? `crawl.py` asks this and retrieval did not, and the
+        # difference matters here more than there: the crawl would have stored a ranking candidate,
+        # this stores a **source a plan may cite**. A challenge our renderer cannot solve comes back
+        # as the interstitial, whose text is ~1,370 characters — comfortably past
+        # `minimum_source_characters`, so the thinness test below waves it through and provenance
+        # then says we read the authority when we read Cloudflare (entry 117).
+        #
+        # Asked on `rendered.html` and here, because this is the last point the raw HTML exists:
+        # `clean_source_html` strips the `<script>` that carries `_cf_chl_opt`, so the caller could
+        # not ask it afterwards even if it wanted to.
+        if awaiting_challenge and is_challenge(403, {}, rendered.html):
+            return None
         content = clean_source_html(rendered.html, maximum_characters=self.maximum_characters)
         return content, rendered.final_url
 

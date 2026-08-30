@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [117](#117-a-challenge-marker-4915-characters-past-the-window-and-what-it-cost) | **A challenge marker sat past a 20,000-char window** — the interstitial was stored as guidance, and could be cited |
 | [116](#116-forty-three-corpora-what-they-cost-what-they-answer-and-what-the-gate-cannot-say-about-them) | **43 corpora built, 10 → 53** — nine corridors answer from the store, and the gate is vacuous for all 43 |
 | [115](#115-the-shallow-crawl-warning-gave-the-same-advice-to-two-opposite-failures) | **The shallow-crawl advice was wrong half the time** — the Philippines spent 425 of 1,200 pages |
 | [114](#114-one-pdf-with-nul-bytes-discarded-a-whole-countrys-crawl) | **One PDF discarded China's crawl** — the text layer had NUL bytes and the failure landed after the crawl |
@@ -165,6 +166,95 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 117. A challenge marker 4,915 characters past the window, and what it cost
+
+**2026-08-30 · TODO item 42**
+
+Liechtenstein held **7,456 pages on trusted domains** and its `NG/NG` corridor produced **two**
+candidates, filling nothing. The corpus was not thin and the vocabulary was not narrow. Following it
+down:
+
+1. The corpus is **7,572 pages of `regierung.li`** — the cabinet and press site, `medienportal-*`
+   alone being 2,226 entries — and **7 of `llv.li`**, the Landesverwaltung where the Migration and
+   Passport Office actually publishes.
+2. The text index, however, holds **29 `llv.li` pages**, and they are exactly the right ones:
+   `…/migration-and-passport-office/visa`, `…/immigration/visa`,
+   `…/einreise-visa-und-aufenthalt-in-liechtenstein`, `…/schengen-dublin/…etias-`.
+3. **Every one of the 29 stores exactly 1,367 characters**, and the text is Cloudflare's:
+   *"Just a moment... Performing security verification. This website uses a security service to
+   protect against malicious bots."*
+
+So the crawl fetched the right pages, was handed an interstitial, **stored the interstitial as the
+page's guidance and marked the page `readable`**. The only link an interstitial carries is
+`cdn-cgi/challenge-platform/help`, which redirects off-domain — which is why nothing expanded and
+why the crawl spent itself on press releases instead.
+
+**The cause is one expression.** `is_challenge` read `body[:20_000]`, and Cloudflare emits
+`_cf_chl_opt` *after* the interstitial's inline CSS. Measured on the rendered page: the marker sits
+at index **24,915 of 29,336** — hidden by 4,915 characters. A plain `httpx` fetch of the same URL is
+3,774 characters and detects fine, which is why this never showed up anywhere else; **it needs the
+renderer's own output to reproduce**, and the renderer's output is the thing nothing was checking.
+
+**It broke the waiting, not only the labelling, and that is the part worth keeping.**
+`_wait_out_challenge` polls *until `is_challenge` returns False*. With the marker past the window it
+returned False on the **first** iteration, so the renderer never waited out a challenge it might
+have passed. Entry 75 measured settle times against `www.gov.cy` and concluded "the variable is not
+how long to wait but *what to wait for*" — correct, and the thing being waited for could not see
+what it was waiting on.
+
+**Two fixes, and the second is the more serious one.**
+
+- `is_challenge` scans the **whole** body. A prefix window makes detection depend on how much CSS a
+  vendor inlines above its own marker, which is not a property of whether the page is a challenge.
+  It costs 6.8ms on a 1.2MB body.
+- **Retrieval never re-checked a rendered challenge at all**, where `crawl.py` does. Its only guard
+  was thinness, and an interstitial carries ~1,370 characters against a `minimum_source_characters`
+  of 400 — so it passed. The crawl would have stored a ranking candidate; **retrieval stores a
+  source a plan may cite.** Proved by removing the fix and running the test: the interstitial comes
+  back as a `FetchedSource` with a content hash, so provenance records that we read the authority
+  when we read Cloudflare. The check has to live inside `_render`, because
+  `clean_source_html` strips the `<script>` carrying the marker before the caller could ask.
+
+**The window was also a latent safety hole, in the direction entry 18 cares about.** Widening the
+haystack strengthens the refusal test in the same stroke, and the regression test pins it: a page
+stating *"you have been blocked"* past 20,000 characters while carrying `cf-mitigated: challenge`
+**was read as a challenge and would have been rendered past**. That is entry 109's defect reachable
+by a second route nobody had looked at. The fixture deliberately carries no "Attention Required"
+title — with one, the refusal is declared inside the first 20,000 characters and the old code caught
+it anyway, so the test would have passed either way and pinned nothing.
+
+**The fix cannot heal what is already stored, so the stores were measured and repaired.**
+`PageTextStore.write` replaces only a URL it re-reads, and a page now correctly recorded
+`challenged` is never written — so every body stored before the fix would have survived untouched.
+Scanning all 53 indexes found **414 such rows of 43,567, across nine countries**, and the sample is
+not Liechtenstein-shaped at all:
+
+| | | |
+| --- | --- | --- |
+| PH 92 · LT 90 · NO 82 | TH 61 · ID 53 · LI 29 | US 4 · SK 2 · FI 1 |
+
+The URLs are the ones that matter — `am.mfa.lt/…/visas/59`, `aganapcg.dfa.gov.ph/…/visa`,
+`bangkok.immigration.go.th/…/tourist-visa-tr60-en`, `regjeringen.no/en/aktuelt/…immigration…`, and
+**`egov.uscis.gov/processing-times`**, a US role entry 106 attributed wholly to `travel.state.gov`.
+So this defect is part of why Lithuania fills nothing and the Philippines is thin, and those
+diagnoses were incomplete rather than wrong.
+
+`visa-discover pagetext --purge-interstitials` removes them, matched on **Cloudflare's whole
+sentence** and nothing looser. That narrowness was measured rather than chosen: the strict string
+selects all 414, every one 1,352–1,421 characters, and **no row matched a looser marker without
+also matching the strict one**, so phrases like "just a moment" or "attention required" — which a
+real guidance page could contain — are never used to delete anything. Run: 414 removed, 0 remaining,
+43,153 rows left.
+
+**Liechtenstein still fills nothing, and that is now the honest answer rather than a silent one.**
+Its challenge does not pass at 15s or at **60s**, three times the configured settle, so `llv.li` is
+a ceiling of the `travel.state.gov` kind. What changed is that the corridor now reports *"no stored
+page text was held for this destination, so the pages to read were chosen by the heuristic"* — where
+before it ranked on Cloudflare's prose and said nothing. A rebuild adds no entries either: 0 new,
+which entry 101 predicted, because a rebuild re-walks the same seeds.
 
 ---
 

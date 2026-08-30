@@ -478,6 +478,10 @@ cause, and only running the thing showed it.
 | a TLS failure is a missing intermediate to bundle | egypt's certificate expired in May 2025; bundling cannot fix that (entry 116) |
 | DK, LT and SK refuse every passport and no corpus will fix them | with corpora DK fills 4 roles and SK 2; only LT still fills none (entry 116) |
 | a corridor exiting 0 answered its six roles | bulgaria exits 0 having filled two — the other four are silent, not counted (entry 116) |
+| liechtenstein fills nothing because its corpus is thin or german | it holds the right 29 pages; each stores a cloudflare interstitial (entry 117) |
+| a challenge marker test only needs the top of the page | cloudflare puts `_cf_chl_opt` at index 24,915 of 29,336 (entry 117) |
+| the renderer waits out a challenge until it clears | it polled on `is_challenge`, which said 'cleared' on iteration one (entry 117) |
+| retrieval re-checks an answered challenge the way the crawl does | it checked thinness only; the interstitial became a citable source (entry 117) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
@@ -537,6 +541,7 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 ```bash
 .venv/bin/visa-discover corpus --country CA     # build a country's offline page corpus
 .venv/bin/visa-discover pagetext --backfill    # index the text the retrieval cache already holds
+.venv/bin/visa-discover pagetext --purge-interstitials  # drop stored bodies that are a bot-check page
 .venv/bin/visa-discover selection-recall       # grade what was chosen to read; no network, no model
 .venv/bin/visa-discover coverage --country NL  # is a country's corpus good enough? no network, no model
 .venv/bin/visa-discover contention --destination netherlands --nationality PH --from PH  # curate an oracle row
@@ -545,6 +550,11 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 **Two different questions, two different commands, and they must not be merged.** `coverage` asks
 whether the **store** holds the answer; `selection-recall` asks whether the **corridor** then finds
 it. A single number covering both would hide which half failed.
+
+**A stored body can be a bot-check page rather than the authority's, and 414 were** (entry 117).
+`is_challenge` truncated the body at 20,000 characters and Cloudflare's marker sits past it, so an
+unanswered challenge was stored as the page and marked `readable`. Fixed, and the stores were
+purged; **if a country ranks strangely, check for it before blaming the vocabulary.**
 
 **53 countries have a corpus in `var/corpus/` and a text index in `var/pagetext/`** — the ten of
 entry 85 plus the 43 of entry 116. Only **BR and UY** are researchable without one, at a single

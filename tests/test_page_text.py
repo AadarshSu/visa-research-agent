@@ -14,6 +14,7 @@ from visa_research_agent.discovery.lexicon import Country, get_country_registry,
 from visa_research_agent.discovery.models import CandidatePage, Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.page_text import (
     MINIMUM_INDEXABLE_CHARS,
+    RETRIEVAL_INTERSTITIAL_MARKER,
     PageTextError,
     PageTextStore,
     StoredPage,
@@ -273,3 +274,61 @@ def test_score_held_is_silent_for_a_country_with_no_index(tmp_path: Path) -> Non
         )
         == {}
     )
+
+
+INTERSTITIAL = (
+    "Just a moment... www.example.gov Performing security verification "
+    "This website uses a security service to protect against malicious bots. "
+    "This page is displayed while the website verifies you are not a bot. " * 3
+)
+GUIDANCE_TEXT = (
+    "Nigerian passport holders require a short-stay visa for tourism. "
+    "Bring a passport valid for three months beyond departure. " * 8
+)
+
+
+def test_a_stored_bot_check_page_is_purged_and_real_guidance_is_not(tmp_path: Path) -> None:
+    """Entry 117's repair. The detector fix stops new ones; this removes what is already stored.
+
+    414 rows across nine countries were Cloudflare's interstitial saved as the authority's page —
+    Lithuania's visa page and `egov.uscis.gov/processing-times` among them. `write` replaces only a
+    URL it re-reads, and a page now correctly recorded `challenged` is never written, so those rows
+    do not heal on a rebuild.
+    """
+
+    store = PageTextStore(tmp_path)
+    now = datetime(2026, 8, 30, 9, 0, tzinfo=UTC)
+    store.write(
+        "XX",
+        [
+            StoredPage(url="https://gov.example/visa", fetched_at=now, body=INTERSTITIAL),
+            StoredPage(url="https://gov.example/fees", fetched_at=now, body=GUIDANCE_TEXT),
+        ],
+    )
+    assert store.count("XX") == 2
+
+    removed = store.purge_retrieval_interstitials("XX")
+
+    assert removed == 1
+    assert store.count("XX") == 1, "the guidance page must survive"
+
+
+def test_purging_is_matched_on_the_whole_sentence_not_a_loose_phrase(tmp_path: Path) -> None:
+    """The narrowness is the safeguard, because this deletes data.
+
+    "Just a moment" and "attention required" are phrases a real guidance page can contain, and
+    measuring all 53 indexes showed no row needed them: every one of the 414 carried Cloudflare's
+    full sentence. So a page that merely says "just a moment" keeps its text.
+    """
+
+    store = PageTextStore(tmp_path)
+    now = datetime(2026, 8, 30, 9, 0, tzinfo=UTC)
+    innocent = (
+        "Attention required: just a moment of your time. Checking your browser settings is not "
+        "necessary to apply for this visa. " * 6
+    )
+    store.write("XX", [StoredPage(url="https://gov.example/notice", fetched_at=now, body=innocent)])
+
+    assert RETRIEVAL_INTERSTITIAL_MARKER not in innocent.lower()
+    assert store.purge_retrieval_interstitials("XX") == 0
+    assert store.count("XX") == 1

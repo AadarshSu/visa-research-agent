@@ -103,7 +103,19 @@ def is_challenge(status_code: int, headers: Mapping[str, str], body: str) -> boo
 
     if status_code not in {401, 403, 503}:
         return False
-    haystack = body[:20_000].lower()
+    # The **whole** body, not a prefix. It was capped at 20,000 characters, and Cloudflare puts
+    # `_cf_chl_opt` *after* the interstitial's inline CSS: measured on `www.llv.li`, the marker sits
+    # at index 24,915 of a 29,336-character rendered page, so the cap hid it by 4,915 characters.
+    # The cost of that was silent — the renderer handed back the interstitial, this said "not a
+    # challenge", and the crawl stored Cloudflare's "Performing security verification" page as
+    # Liechtenstein's visa guidance for 29 pages (entry 117).
+    #
+    # Scanning it all is what a marker test has to do to mean anything: a prefix window makes
+    # detection depend on how much CSS a vendor inlines above its own marker, which is not a
+    # property of whether the page is a challenge. It is also cheap — 6.8ms on a 1.2MB body,
+    # against a network fetch — and it strengthens the refusal check below in the same stroke,
+    # which is the direction entry 18 wants to be wrong in.
+    haystack = body.lower()
     # Checked first and deliberately: a page that states a client is blocked is a refusal whatever
     # else it carries, and entry 18 forbids rendering past one. Ordering it ahead of the header is
     # what makes this a guard rather than a tie-breaker.

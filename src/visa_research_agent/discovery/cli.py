@@ -921,6 +921,24 @@ def run_page_text(args: argparse.Namespace, stream: TextIO) -> int:
     """
 
     store = PageTextStore(settings.page_text_directory)
+    if args.purge_interstitials:
+        # Repairs what entry 117's detector fix can only stop happening again: `write` replaces a
+        # URL it re-reads, and a page now correctly recorded `challenged` is never written, so
+        # every body stored before the fix stays until something removes it.
+        codes = [args.country.upper()] if args.country else store.countries()
+        total = 0
+        for code in codes:
+            removed = store.purge_retrieval_interstitials(code)
+            total += removed
+            if removed:
+                print(f"  {code}: removed {removed}", file=stream)
+        print(
+            f"\n{total} stored bodies were a bot-check page rather than the authority's own, "
+            "and are gone. The pages stay in the corpus as candidates; only their ranking text "
+            "was wrong.",
+            file=stream,
+        )
+        return 0
     if args.backfill:
         report = backfill_from_cache(
             store, settings.cache_directory, country_of_host=country_of_host_from_registry()
@@ -1343,6 +1361,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--backfill",
         action="store_true",
         help="index every body the retrieval cache already holds; no fetch, no search",
+    )
+    page_text.add_argument(
+        "--purge-interstitials",
+        action="store_true",
+        help="delete stored bodies that are a bot-check page rather than the authority's own",
     )
     page_text.add_argument("--country", default="", help="ISO code to rank within, e.g. JP")
     page_text.add_argument("--role", default="document_checklist", help="which role to rank for")

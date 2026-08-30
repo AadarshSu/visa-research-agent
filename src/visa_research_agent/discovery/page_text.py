@@ -82,6 +82,16 @@ class PageTextError(VisaResearchError):
     """Raised when the page-text index cannot be read or written safely."""
 
 
+RETRIEVAL_INTERSTITIAL_MARKER = (
+    "this website uses a security service to protect against malicious bots"
+)
+"""Cloudflare's own sentence on the page it shows *instead of* the one that was asked for.
+
+Deliberately the whole sentence. See `PageTextStore.purge_retrieval_interstitials` for what a
+looser marker would cost and why none is needed.
+"""
+
+
 class StoredPage(StrictModel):
     """One page on its way *into* the index. Write-side only — nothing reads a body back out."""
 
@@ -184,6 +194,42 @@ class PageTextStore:
                 indexed += 1
             connection.commit()
         return indexed
+
+    def purge_retrieval_interstitials(self, code: str) -> int:
+        """Delete rows whose stored body is a bot-check page rather than the authority's own.
+
+        DECISIONS entry 117. Until the challenge detector was fixed, a challenge the renderer could
+        not answer came back as Cloudflare's interstitial and was stored as the page — 414 rows
+        across nine countries, including Lithuania's visa page, a Philippine consulate's visa page,
+        Thailand's tourist-visa pages and `egov.uscis.gov/processing-times`. The detector fix stops
+        new ones; nothing removes those, because `write` only ever replaces a URL it re-reads and a
+        page now correctly recorded `challenged` is not written at all.
+
+        **Matched on Cloudflare's own sentence, in full, and nothing looser.** Measured over all 53
+        indexes: this exact string selects 414 rows of 43,567, every one of them 1,352-1,421
+        characters of interstitial, and **no row matched any looser marker without also matching
+        this** — so the narrow test costs nothing and the broad ones were never needed. Markers
+        like "just a moment" or "attention required" are deliberately not used: those are phrases a
+        real guidance page could contain, and this deletes data.
+
+        A page whose text genuinely quoted this sentence would lose its ranking text and nothing
+        else — it stays in the corpus, and stored text never speaks to a traveller anyway
+        (entry 78).
+        """
+
+        with self._connect(code, create=False) as connection:
+            urls = [
+                row[0]
+                for row in connection.execute(
+                    "SELECT url FROM page_text WHERE lower(body) LIKE ?",
+                    (f"%{RETRIEVAL_INTERSTITIAL_MARKER}%",),
+                )
+            ]
+            for url in urls:
+                connection.execute("DELETE FROM page_text WHERE url = ?", (url,))
+                connection.execute("DELETE FROM pages WHERE url = ?", (url,))
+            connection.commit()
+        return len(urls)
 
     def count(self, code: str) -> int:
         with self._connect(code, create=False) as connection:

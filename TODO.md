@@ -140,7 +140,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 42. Find out why Liechtenstein's 7,456 pages yield two candidates | `next` |
+| **Now** | 44. Re-measure the countries whose ranking text was a bot-check page | `next` |
 |  | 43. Give the new 43 something the coverage gate can grade | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
@@ -390,23 +390,52 @@ certificate: entry 12's remedy is for an incomplete chain, not an expired one.
 **Two things it handed forward, now items 42 and 43 below.**
 
 
-### 42. Find out why Liechtenstein's 7,456 pages yield two candidates — `next`, **start here**
+### 42. ~~Find out why Liechtenstein's 7,456 pages yield two candidates~~ — `done, entry 117`
 
-**The clearest gap the 43-country build found, and it is not a thin corpus.** Liechtenstein holds
-**7,456 pages on trusted domains** and its `NG/NG/tourism` corridor produced **two** candidates,
-filling no role. Compare Bulgaria, which answered from 6,819, and Iceland, which filled five roles
-from 7,821.
+**Done 2026-08-30, and the cause was not Liechtenstein's.** `is_challenge` read `body[:20_000]`;
+Cloudflare emits `_cf_chl_opt` after the interstitial's inline CSS, at index **24,915 of 29,336** on
+the rendered page. So a challenge the renderer could not answer read as "not a challenge", the
+interstitial was stored as the page's text, and the page was marked `readable`. Liechtenstein's
+index held the right 29 `llv.li` pages — the visa page among them — each storing 1,367 characters of
+*"Performing security verification"*.
 
-So this is discovery or vocabulary, not crawling, and the corpus is already paid for. **Measure
-before changing anything** — the corrections table has a row for every time a ranking diagnosis was
-written from a reading rather than a run. Two candidates from 7,456 pages is a large enough ratio
-that the cause should be visible directly: look at what the corpus actually holds for Liechtenstein
-(`regierung.li` and `llv.li`), whether its pages are German-only, and whether Liechtenstein
-publishes visa guidance at all or defers to Switzerland — which would make "fills nothing" the
-correct answer and the fix a matter of saying so.
+**It broke the waiting too:** `_wait_out_challenge` polls until `is_challenge` is False, so it
+stopped on its first iteration and never waited out a challenge it might have passed.
 
-`visa-discover coverage --country LI` and the corridor log at the corpus's own scale are the two
-cheap starting points; neither needs the network.
+**And retrieval could cite the interstitial.** It never re-checked a rendered challenge where the
+crawl does; thinness was its only guard, and ~1,370 characters clears a 400 minimum. Removing the
+fix, the test shows the interstitial coming back as a `FetchedSource` with a content hash.
+
+**414 rows across nine countries were affected** — PH 92, LT 90, NO 82, TH 61, ID 53, LI 29, US 4,
+SK 2, FI 1 — including Lithuania's visa page and `egov.uscis.gov/processing-times`. Purged with
+`visa-discover pagetext --purge-interstitials`; 0 remain. That is item 44 below.
+
+**Liechtenstein itself is a ceiling, not a backlog.** Its challenge does not pass at 60 seconds,
+three times the configured settle. The corridor still fills no role — but it now says it has no
+stored text and fell back to the heuristic, instead of ranking on Cloudflare's prose in silence.
+
+
+### 44. Re-measure the countries whose ranking text was a bot-check page — `next`, **start here**
+
+**Cheap, and it may close open items rather than open new ones.** Until 2026-08-30, 414 stored
+bodies across nine countries were Cloudflare's interstitial rather than the authority's page
+(entry 117). They have been purged, so ranking for those countries has changed and **no measurement
+taken before that date describes them any more.**
+
+Worth re-running, in this order:
+
+- **The Philippines (92 rows) and Lithuania (90).** Both are recorded as thin or refusing, and both
+  had their consular and visa pages represented in the index by a bot-check page. Lithuania's
+  `robots.txt` `Disallow` (entry 116) is a real and separate ceiling, so expect its verdict to
+  stand; the Philippines has no such finding and is the better prospect.
+- **`egov.uscis.gov/processing-times`.** Entry 106 attributes all five US role gaps to
+  `travel.state.gov`, and four rows here say that account was incomplete. The US ceiling is real —
+  entry 109 — but "all five" is now unproven.
+- **Norway (82), Thailand (61), Indonesia (53).** Never corridor-tested since being built.
+
+**What this cannot fix, and do not expect it to.** Purging removes wrong ranking text; it does not
+add a candidate. Where the pages themselves are unreadable — `llv.li`, `mzv.sk`, `travel.state.gov`
+— the ceiling is unchanged, and entry 18 forbids working around any of them.
 
 
 ### 43. Give the new 43 something the coverage gate can grade — `next`

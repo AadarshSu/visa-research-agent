@@ -664,6 +664,110 @@ def test_a_genuine_refusal_is_not_read_as_a_challenge() -> None:
     assert not is_challenge(429, {"cf-mitigated": "challenge"}, "")
 
 
+async def test_a_challenge_the_renderer_could_not_answer_never_becomes_a_source(
+    tmp_path: Path,
+) -> None:
+    """Retrieval asked whether the rendered page was thin; it never asked whether it was still the
+    challenge (entry 117).
+
+    `crawl.py` re-checks and this did not, and the asymmetry ran the wrong way: the crawl would
+    have stored a ranking candidate, retrieval stores a **source a plan may cite**. Cloudflare's
+    interstitial carries well over `minimum_characters` of text, so the thinness test waves it
+    through and provenance then records that we read the authority when we read Cloudflare.
+    """
+
+    interstitial = (
+        CLOUDFLARE_CHALLENGE
+        + "<body><p>Performing security verification. "
+        + ("This page is displayed while the website verifies you are not a bot. " * 20)
+        + "</p></body>"
+    )
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            403,
+            text=interstitial,
+            headers={"Content-Type": "text/html; charset=utf-8", "cf-mitigated": "challenge"},
+        )
+
+    fetcher = LiveSourceFetcher(
+        FileSourceCache(tmp_path / "cache"),
+        ttl_hours=24.0,
+        maximum_stale_hours=168.0,
+        timeout_seconds=5.0,
+        concurrency=2,
+        maximum_characters=50_000,
+        minimum_characters=400,
+        user_agent="test-agent",
+        # The renderer runs the scripts and the challenge still does not pass, so what comes back
+        # is the interstitial again. That is llv.li exactly.
+        renderer=FakeRenderer(interstitial),
+        transport=httpx.MockTransport(respond),
+        now=lambda: datetime(2026, 8, 15, 9, 0, tzinfo=UTC),
+    )
+
+    result = await only_result(fetcher)
+
+    assert isinstance(result, SourceFailure), "an unanswered challenge is not a readable source"
+    assert result.outcome == "challenged"
+
+
+def test_a_challenge_marker_past_twenty_thousand_characters_is_still_found() -> None:
+    """The defect that cost Liechtenstein its guidance, as one assertion (entry 117).
+
+    `is_challenge` used to read `body[:20_000]`, and Cloudflare emits `_cf_chl_opt` **after** the
+    interstitial's inline CSS. Measured on `www.llv.li`: the marker sits at index 24,915 of a
+    29,336-character rendered page, so the window hid it by 4,915 characters. The renderer handed
+    the interstitial back, this said "not a challenge", and the crawl stored Cloudflare's
+    "Performing security verification" page as the text of 29 llv.li pages — the visa page among
+    them.
+
+    The padding is what the real page has there: inline CSS ahead of the vendor's own marker. A
+    detector whose answer depends on how much of it there is cannot mean anything.
+    """
+
+    padding = "<style>" + ("a{box-sizing:border-box;margin:0;padding:0}" * 600) + "</style>"
+    assert len(padding) > 20_000
+    late_marker = (
+        '<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title>'
+        + padding
+        + '<script>window._cf_chl_opt={cvId:"3"};</script>'
+    )
+
+    assert late_marker.lower().index("_cf_chl_opt") > 20_000, (
+        "the marker must be past the old window"
+    )
+    assert is_challenge(403, {}, late_marker)
+
+
+def test_a_block_stated_past_twenty_thousand_characters_is_still_a_refusal() -> None:
+    """The same widening, in the direction entry 18 cares about.
+
+    Scanning the whole body strengthens the refusal guard as well as the challenge test, and this
+    pins that: a page that says it blocked us is a refusal however far down it says so, and is
+    never rendered past.
+    """
+
+    padding = "<style>" + ("a{margin:0}" * 3_000) + "</style>"
+    # No "Attention Required" in the title, deliberately. With one there the refusal is declared
+    # inside the first 20,000 characters and the old code caught it anyway, so a fixture carrying
+    # it would pass whether or not the window was widened and would pin nothing.
+    late_block = (
+        "<!DOCTYPE html><html><head><title>www.example.gov</title>"
+        '<script src="/cdn-cgi/challenge-platform/h/b/orchestrate/chl_page/v1"></script></head>'
+        "<body>" + padding + "<h1>Sorry, you have been blocked</h1>"
+    )
+
+    assert late_block.lower().index("you have been blocked") > 20_000
+    assert "attention required" not in late_block.lower(), (
+        "the late 'you have been blocked' must be the only refusal marker, or this pins nothing"
+    )
+    assert not is_challenge(403, {}, late_block)
+    assert not is_challenge(403, {"cf-mitigated": "challenge"}, late_block), (
+        "a block stated anywhere in the body outranks a header claiming a challenge"
+    )
+
+
 def test_a_successful_page_is_never_a_challenge_however_it_reads() -> None:
     """A page may discuss Cloudflare, or embed its script, and still be the guidance itself."""
 
