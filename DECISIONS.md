@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [116](#116-forty-three-corpora-what-they-cost-what-they-answer-and-what-the-gate-cannot-say-about-them) | **43 corpora built, 10 → 53** — nine corridors answer from the store, and the gate is vacuous for all 43 |
 | [115](#115-the-shallow-crawl-warning-gave-the-same-advice-to-two-opposite-failures) | **The shallow-crawl advice was wrong half the time** — the Philippines spent 425 of 1,200 pages |
 | [114](#114-one-pdf-with-nul-bytes-discarded-a-whole-countrys-crawl) | **One PDF discarded China's crawl** — the text layer had NUL bytes and the failure landed after the crawl |
 | [113](#113-gov-bg-is-a-public-suffix-so-bulgaria-was-not-thin-it-was-unresearchable) | **`gov.bg` made Bulgaria unresearchable** — a reviewed domain nothing constructed until a build tried |
@@ -164,6 +165,73 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 116. Forty-three corpora: what they cost, what they answer, and what the gate cannot say about them
+
+**2026-08-30 · TODO item 41, done**
+
+All 43 remaining researchable countries were built, sequentially, in about thirteen hours of wall
+clock. The store went from **10 corpora to 53**, each with its page-text index. Only Brazil and
+Uruguay are now researchable without one, at a single authority domain each.
+
+**Two countries failed on the first pass and both were defects here, not out there** — entry 113's
+`gov.bg` and entry 114's NUL bytes. Both were fixed and rebuilt, and both then came back large:
+Bulgaria 7,098 entries, China 7,625. A third defect, entry 115, was in the build's own reporting.
+That is three code defects from one breadth run, which is entry 71's lesson holding: **the input
+space is other people's web servers, and only running them finds this class.**
+
+**What was built.** Median around 2,900 entries; Iceland 8,263 and Luxembourg 8,231 at the top,
+Egypt 45 and Lithuania 139 at the bottom. Every thin country has an identified cause **outside this
+program**, which is the part worth keeping:
+
+| | | |
+| --- | --- | --- |
+| Egypt | 45 | `emigration.gov.eg` has a certificate that expired 2025-05-08. Entry 12's remedy is for an *incomplete chain* and neither can nor should fix an expired one — **do not bundle anything for this** |
+| Lithuania | 139 | 51 pages are a stated `robots.txt` Disallow, 26 redirect off the approved domains. Correctly honoured, never to be worked around |
+| Philippines | 425 | off-domain redirects and three DFA consular hosts refusing `403` |
+| Saudi Arabia | 542 | thin reachable set |
+| Cyprus | 620 | 612 of 620 are `www.gov.cy`; 46 genuine `403`s and 33 unanswerable challenges |
+| Slovakia | 1,203 | 84 of 89 unreadable are challenges `mzv.sk` will not let our renderer answer — a ceiling, like `travel.state.gov` (entry 109) |
+
+**Host count only means something read against the domain count.** Croatia and Slovenia came back on
+two hosts each and both are healthy — they have exactly two configured domains, evenly split between
+the right two ministries. Germany's symptom was **one** host against **five** domains. The rule from
+entry 107 stands and needs that second number to be applied at all.
+
+**Nine corridors were run, and the headline is that all nine answered from the store**: every one
+printed "the crawl was skipped". That is what item 41 was for. Three served the traveller their own
+country's pages — China's `ng.china-embassy.gov.cn`, Portugal's and Slovakia's Abuja embassy pages —
+which is entry 112's shape reproduced on stores built after it.
+
+| | filled by a page | named by a tool | reported unidentified | not mentioned |
+| --- | --- | --- | --- | --- |
+| 9 corridors × 6 roles | **28** | 2 | 7 | 17 |
+
+**The last column is not a result, it is a question.** A role that is neither filled, nor named, nor
+listed under "could not be identified" simply does not appear, and Bulgaria exits `0` — resolved —
+having filled two roles of six. So the exit code tracks *explicitly unresolved* roles rather than
+answered ones, and no total of the form "N of 54" can be stated until that is settled. This is
+entry 93 one more time: the product and the metric disagreeing about what counts. **Do not publish
+a coverage percentage from these logs** until the silent column has a meaning.
+
+**And the promotion gate cannot grade any of the 43.** `visa-discover coverage` prints "no country
+asked about appears in the oracle" for every one of them, and its verdict line then reads *"the
+guidance is centralised, so the known-answer half settles this country"* — deferring to a half with
+no rows in it. All 43 read `no per-traveller dimension` (Portugal reads `bounded by the authority`),
+and for a country outside the oracle **that is vacuous, not a pass.** Item 41's recipe reads as
+though `coverage` gates a build; it does not, and only a corridor gates these.
+
+**One country is a genuine new gap and it is not a thin one.** Liechtenstein holds **7,456** pages
+on trusted domains and produced **two** candidates, filling nothing. That is discovery or
+vocabulary, not crawling, and it is the clearest thing this build handed the next session.
+
+**What the corrections table said about DK, LT and SK is now partly disproved.** That row —
+"refuse every passport and no corpus will fix them" — was measured when each had one domain. With
+corpora: **Denmark fills four roles by page**, Slovakia two including its own Abuja embassy page,
+and **Lithuania still fills none**. The claim was right about Lithuania and wrong about the other
+two.
 
 ---
 

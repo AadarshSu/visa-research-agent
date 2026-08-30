@@ -25,13 +25,12 @@ where it is genuinely unavoidable; it is not acceptable as the ordinary source o
 has to be *useful*, and "useful" has a number: how often a corridor finds what it needs without
 searching. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34 feed it.
 
-**Where it stands, as of 2026-08-29.** The pipeline works end to end and passed a bar committed in
+**Where it stands, as of 2026-08-30.** The pipeline works end to end and passed a bar committed in
 advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
 median 27.4s. **55 of 198 destinations are researchable and every row now carries a confirmable
-domain** (entry 110); ten have a corpus and a page-text index, and **43 more are ready to build —
-that is [TODO.md](TODO.md) item 41 and the thing to do next.** A questionnaire is treated as an
-answer rather than a blockade (entries 59, 60), and guidance an authority contracts out is named the
-same way (entry 89).
+domain** (entry 110), and **53 of those 55 now have a corpus and a page-text index** — item 41 is
+done, entry 116. A questionnaire is treated as an answer rather than a blockade (entries 59, 60),
+and guidance an authority contracts out is named the same way (entry 89).
 
 **The corpus generalises to a traveller it was never tuned for** (entry 112). Every number in this
 project came from `IN/GB` and `PH/PH` until a Nigerian passport from Nigeria was run across the ten
@@ -474,7 +473,11 @@ cause, and only running the thing showed it.
 | a reviewed domain is confirmed, so it is safe to ship | `gov.bg` is a public suffix; Bulgaria failed at *construction*, not at crawl (entry 113) |
 | a bad page costs a build that page | one PDF's NUL bytes discarded China's whole 18-minute crawl (entry 114) |
 | a shallow crawl needs a bigger page budget | the Philippines spent 425 of 1,200 and stopped anyway (entry 115) |
-| DK, LT and SK refuse every passport and no corpus will fix them | that was measured when each had **one** domain; they now have 4, 4 and 2 |
+| `coverage` is the promotion gate for a new country | outside the oracle its verdict defers to an empty half — vacuous (entry 116) |
+| a two-host corpus is starved, like germany's one-host one | HR and SI have exactly two domains and both are the right ministries (entry 116) |
+| a TLS failure is a missing intermediate to bundle | egypt's certificate expired in May 2025; bundling cannot fix that (entry 116) |
+| DK, LT and SK refuse every passport and no corpus will fix them | with corpora DK fills 4 roles and SK 2; only LT still fills none (entry 116) |
+| a corridor exiting 0 answered its six roles | bulgaria exits 0 having filled two — the other four are silent, not counted (entry 116) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
@@ -543,10 +546,14 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 whether the **store** holds the answer; `selection-recall` asks whether the **corridor** then finds
 it. A single number covering both would hide which half failed.
 
-Ten countries have a corpus in `var/corpus/` (AE, CA, DE, FR, GB, JP, NL, SE, SG, US) and all ten
-now have a text index in `var/pagetext/` (entry 85). **43 more are ready to build — [TODO.md](TODO.md)
-item 41.** A country without either crawls in the request path and has its pages chosen by the
-heuristic, exactly as before, which is the ordinary path and never a failure.
+**53 countries have a corpus in `var/corpus/` and a text index in `var/pagetext/`** — the ten of
+entry 85 plus the 43 of entry 116. Only **BR and UY** are researchable without one, at a single
+authority domain each. A country without either crawls in the request path and has its pages chosen
+by the heuristic, exactly as before, which is the ordinary path and never a failure.
+
+**Nine corridors were run over the new stores and all nine answered from them** — every one printed
+"the crawl was skipped" (entry 116). Three served a Nigerian traveller that country's *own* pages
+for them: China's Nigeria embassy, Portugal's and Slovakia's Abuja embassies.
 
 **A one-host corpus is a trust-configuration symptom, not a crawler one.** Germany's held 1,565
 entries on `www.auswaertiges-amt.de` alone until `diplo.de` was reviewed, then 5,712 across 87 hosts

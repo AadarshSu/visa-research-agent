@@ -65,9 +65,8 @@ challenge fingerprints past the user agent — recorded as `challenged`, and not
 **Item 30's stage 2 is finished, and stage 3 is what is left of it.** All 41 never-run destinations
 ran on 2026-08-25 — 103 corridors — and every one resolved or refused for a verified reason; 32 of 41
 answered at least one passport. The sweep also found two defects no five-country corridor could
-(entry 71) and closed known problem 27 with a measurement. **What remains under item 30 is building
-43 corpora**, which is the expensive stage: ~1,792 searches. Fix the search rate limiter first — see
-*Smaller things*.
+(entry 71) and closed known problem 27 with a measurement. **Item 30's stage 3 — building the 43 corpora — is
+done**: all 43 built 2026-08-30, entry 116, and the store now holds 53.
 
 **The session of 2026-08-24/25 asked what the rigor costs and answered it** (entries 63–66). Short
 version: **the rigor is cheap and the backlog is expensive, and it has been easy to mistake the second
@@ -93,8 +92,10 @@ until batch 1 clears all three stages**: reachable, resolves, fast.
 **Batch 1 is every reachable country** — 53 when this was written, **55 since 2026-08-29** when
 Iceland and Liechtenstein gained their first domains (entry 110). Not the fourteen: those were
 catching up to the rest, and counting the rest the same way found the real gap. **41 of the 53 had
-never had a corridor run against them**, which is not the same as failing, and Iceland and
-Liechtenstein still have not. 45 have no corpus, of which **43 are ready to build — item 41**. **Accuracy is verified by the project owner
+never had a corridor run against them**, which is not the same as failing. Iceland and Liechtenstein
+have now had one each (entry 116): Iceland fills five roles and names its visa checker for the
+sixth, Liechtenstein fills none and is item 42. **53 of the 55 now have a corpus and a text index**
+(entry 116); only BR and UY do not. **Accuracy is verified by the project owner
 outside this repository** and is deliberately not a stage; do not build a correctness grader here
 without asking.
 
@@ -139,7 +140,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 41. Build the corpora for the 43 remaining countries | `next` |
+| **Now** | 42. Find out why Liechtenstein's 7,456 pages yield two candidates | `next` |
+|  | 43. Give the new 43 something the coverage gate can grade | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 30. Perfect batch 1 before adding a single further country | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -366,56 +368,65 @@ this evidence, costing a corridor anything. Anyone proposing to fix it needs a m
 coverage to a role that was actually lost — which is what this attempt looked for and did not find.
 
 
-### 41. Build the corpora for the 43 remaining countries — `next`, **start here**
+### 41. ~~Build the corpora for the 43 remaining countries~~ — `done, entry 116`
 
-**Everything this needs is done.** The build pipeline is validated, the trust config no longer
-starves it, and a traveller nobody tuned for scores 87% on the ten already built (entry 112). This is
-the work stage 3 of item 30 has been waiting for.
+**Done 2026-08-30.** All 43 built in ~13 hours; the store went from 10 corpora to **53**, each with
+its page-text index. Only BR and UY are researchable without one, at one domain each.
 
-**The 43, all with two or more authority domains:**
+**Three code defects came out of it**, all fixed and each with its own entry: `gov.bg` was a public
+suffix and made Bulgaria fail at construction (113), one PDF's NUL bytes discarded China's whole
+crawl (114), and the shallow-crawl warning gave the same advice to two opposite failures (115).
+Bulgaria and China were rebuilt afterwards and came back at 7,098 and 7,625 entries.
 
-```
-AT AU BE BG CH CN CY CZ DK EE EG ES FI GR HR HU ID IE IN IS IT KR LI LT
-LU LV MA MT MX MY NO NZ PH PL PT RO SA SI SK TH TR VN ZA
-```
+**Nine corridors were run and all nine answered from the store** rather than crawling. Three served
+a Nigerian traveller that country's own pages — China's Nigeria embassy, Portugal's and Slovakia's
+Abuja embassies. Full numbers, including what the tally cannot yet say, are in entry 116.
 
-Only **BR** and **UY** are left out, at one domain each. They can still be built — Germany ran on one
-for weeks — they will simply be thin, and `liveinuruguay.uy` and `iom.sk` were refused for cause
-(entry 111).
+**Every thin corpus has a cause outside this program** — Egypt an expired certificate, Lithuania a
+stated `Disallow`, Slovakia unanswerable challenges, the Philippines off-domain redirects and
+`403`s. None is a crawler setting, and Egypt's in particular **must not** be "fixed" by bundling a
+certificate: entry 12's remedy is for an incomplete chain, not an expired one.
 
-**Do, per country:**
+**Two things it handed forward, now items 42 and 43 below.**
 
-```bash
-.venv/bin/visa-discover corpus --country XX     # search, crawl, index; ~30-70 queries
-.venv/bin/visa-discover coverage --country XX   # the promotion gate, offline
-.venv/bin/visa-discover corridor --destination <slug> --nationality NG --from NG
-```
 
-**What each step is for.** The build writes `var/corpus/XX.json` and `var/pagetext/XX.sqlite3`.
-`coverage` says whether the store holds the per-traveller dimension — six of the first ten read *no
-per-traveller dimension*, which is a pass, not a failure. The corridor is the only thing that says
-the store answers anybody; run at least one, and prefer a nationality that needs a visa there.
+### 42. Find out why Liechtenstein's 7,456 pages yield two candidates — `next`, **start here**
 
-**What to expect, from the ten already done:**
+**The clearest gap the 43-country build found, and it is not a thin corpus.** Liechtenstein holds
+**7,456 pages on trusted domains** and its `NG/NG/tourism` corridor produced **two** candidates,
+filling no role. Compare Bulgaria, which answered from 6,819, and Iceland, which filled five roles
+from 7,821.
 
-- **Roughly 1,500 to 9,700 entries per country**, and 3-15% of what is recorded ever gets opened
-  (entry 88). That is structural — a rebuild re-walks the same search seeds and cannot open what the
-  last build recorded and skipped (entry 101).
-- **A one-host corpus means the trust config is starving it, not the crawler.** Germany sat at 1,565
-  entries on a single host until `diplo.de` was reviewed, then went to 5,712 across 87 and from four
-  roles to six (entries 107, 108). If a build comes back on one host, **check
-  `authority_domains.yaml` before touching crawl settings**.
-- **Count challenges before rebuilding anything** (entry 92). It is one offline query over the corpus
-  and it pointed at Sweden rather than France.
-- A `403` that says *"you have been blocked"* is a **refusal**, not a challenge, and must never be
-  rendered past — entry 109, which is why `travel.state.gov` holds zero pages and always will.
+So this is discovery or vocabulary, not crawling, and the corpus is already paid for. **Measure
+before changing anything** — the corrections table has a row for every time a ranking diagnosis was
+written from a reading rather than a run. Two candidates from 7,456 pages is a large enough ratio
+that the cause should be visible directly: look at what the corpus actually holds for Liechtenstein
+(`regierung.li` and `llv.li`), whether its pages are German-only, and whether Liechtenstein
+publishes visa guidance at all or defers to Switzerland — which would make "fills nothing" the
+correct answer and the fix a matter of saying so.
 
-**Careful:** `var/corpus/` and `var/pagetext/` are stores, not caches — **never clear them**.
-Rebuilding one costs search quota. Clear `var/cache/` only when testing a retrieval change.
+`visa-discover coverage --country LI` and the corridor log at the corpus's own scale are the two
+cheap starting points; neither needs the network.
 
-**How to know it worked:** the country's corridor fills roles from its *own* per-traveller pages
-rather than generic guidance. Entry 112 is the shape to look for — `nigeria.diplo.de`,
-`…/schengen-visa/apply-nigeria`, `…/visa-detail-page/nigeria`.
+
+### 43. Give the new 43 something the coverage gate can grade — `next`
+
+**`visa-discover coverage` cannot say anything about any of the 43** (entry 116). Half one prints
+"no country asked about appears in the oracle", and the verdict then reads *"the guidance is
+centralised, so the known-answer half settles this country"* — deferring to a half with no rows.
+All 43 read `no per-traveller dimension`; **that is vacuous for them, not a pass.**
+
+Two things worth separating before spending effort:
+
+- **The gate should say when it cannot grade.** A country outside the oracle should read as
+  *ungraded* rather than borrowing the wording of a pass. This is small, offline, and stops a
+  future session reading 43 passes that were never earned.
+- **Whether the oracle should grow to 53 countries is a real question, not a foregone one.** Entry
+  91 built two travellers over ten countries by hand and entry 87 is emphatic that an oracle both
+  arms helped build is worthless. Curating 43 more rows is a large manual job whose value is
+  bounded by what entries 99, 100 and 106 already established: corridor health is a free signal and
+  `selection-recall` measures agreement with a person's picks rather than corridor health. **Argue
+  it in a decision entry before curating anything.**
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
@@ -1574,6 +1585,24 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**Cyprus names `mip.gov.cy`, which does not resolve; `www.mip.gov.cy` does.** Found 2026-08-30,
+entry 116. Cyprus's corpus is 612 of 620 entries on `www.gov.cy`, and its Ministry of Interior — the
+department that actually issues Cypriot visas — contributed five. The build reported `mip.gov.cy` as
+`unreachable [Errno 8] nodename nor servname provided`, while `www.mip.gov.cy` was reached and gave
+those five entries, so trust already covers the subdomain and only the seeding of the bare host
+failed. Whether naming the `www` host in `authority_domains.yaml` would actually seed more is
+**unmeasured** — seeds come from search results rather than from the domain list — so measure before
+editing. This is the same shape as entry 113's fix but not the same defect: nothing fails closed
+here, it is coverage.
+
+**Ireland reports one dead host two different ways.** Found 2026-08-30. `inis.gov.ie` is the
+decommissioned predecessor of `irishimmigration.ie`, which carries 2,080 of Ireland's 2,107 entries.
+The corpus build recorded it as `disallowed — its robots.txt is larger than the size limit for a
+crawl policy`; a direct fetch under the project's own TLS context gets `CERTIFICATE_VERIFY_FAILED`.
+Both are honest about what that client saw and neither costs an answer, so this is cosmetic — but
+two incompatible reasons for one host is the kind of thing that wastes a session later.
+
 
 **Germany fills `document_checklist` for two travellers and not for a third.** Found 2026-08-29,
 entry 112. `uk.diplo.de/…/what-documents-do-i-need-for-a-c-visa` answers it for `IN/GB` and a Manila
