@@ -95,6 +95,23 @@ CORPUS_EXPANSION_THRESHOLD = 0.0
 # pass, for their text only, best-scoring first.
 DEFAULT_CORPUS_PDFS = 400
 
+# Characters a text index cannot hold: NUL and the other C0 controls, plus anything that survived
+# extraction as an unpaired surrogate. Tab, newline and carriage return are deliberately kept —
+# they are the only whitespace the body needs.
+_UNSTORABLE_CHARACTERS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f]")
+
+
+def storable_text(text: str) -> str:
+    """`text` with the characters no store can hold removed, and nothing else changed.
+
+    Applied to every body on its way into the index. See `keep` in `build_country_corpus` for why
+    this drops characters rather than dropping the page or failing the build.
+    """
+
+    repaired = text.encode("utf-8", "replace").decode("utf-8", "replace")
+    return _UNSTORABLE_CHARACTERS.sub("", repaired)
+
+
 # How many pages an offline build may render, against the request path's twelve.
 #
 # **The renderer was always passed to this job; the budget was the bug** (entry 92). Measured on the
@@ -507,8 +524,18 @@ async def build_country_corpus(
     kept: list[StoredPage] = []
 
     def keep(url: str, title: str, text: str) -> None:
-        if text:
-            kept.append(StoredPage(url=url, fetched_at=now, body=text, title=title))
+        # Sanitised on the way in, because one page must never cost a build. A PDF's text layer can
+        # carry NUL bytes, and truncating at `DEFAULT_KEPT_TEXT_CHARACTERS` can cut a surrogate
+        # pair in half; pydantic refuses either as a string and SQLite cannot hold a NUL, so a
+        # single such page raised `ValidationError` out of `_read_pdfs` — *after* the crawl, so the
+        # corpus was never written and 18 minutes of China went with it (entry 114).
+        #
+        # Dropping these characters is not editing guidance. They carry no meaning, this text is
+        # ranking input that never reaches a traveller (entry 78), and the alternative on offer was
+        # losing every page rather than none.
+        body = storable_text(text)
+        if body:
+            kept.append(StoredPage(url=url, fetched_at=now, body=body, title=storable_text(title)))
 
     crawler = LinkCrawler(
         crawl_fetcher,

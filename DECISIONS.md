@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [114](#114-one-pdf-with-nul-bytes-discarded-a-whole-countrys-crawl) | **One PDF discarded China's crawl** — the text layer had NUL bytes and the failure landed after the crawl |
 | [113](#113-gov-bg-is-a-public-suffix-so-bulgaria-was-not-thin-it-was-unresearchable) | **`gov.bg` made Bulgaria unresearchable** — a reviewed domain nothing constructed until a build tried |
 | [112](#112-a-third-traveller-the-corpus-was-never-tuned-for-scores-higher-than-the-two-it-was-built-on) | **A third traveller scores 87%** — higher than the two the system was built on |
 | [111](#111-twelve-more-domains-on-the-owners-judgement-and-what-that-standard-is) | **Twelve more on judgement** — `reviewed` now means "a person decided", in three marked tiers |
@@ -162,6 +163,46 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 114. One PDF with NUL bytes discarded a whole country's crawl
+
+**2026-08-30 · found by the 43-country build, item 41**
+
+China crawled for eighteen minutes and then wrote nothing:
+
+```
+ValidationError: 1 validation error for StoredPage
+body  Input should be a valid string, unable to parse raw data as a unicode string
+      input_value='اࣿﷻ\x00\x00\x00 ...'
+```
+
+A PDF's text layer carried NUL bytes. `StoredPage.body` is a pydantic `str`, which refuses them —
+correctly, since SQLite cannot hold a NUL in a TEXT column either. What made it expensive is
+*where* it landed: `_read_pdfs` runs **after** the crawl, in the same call that writes the corpus,
+so the failure fell between doing the work and saving it. Nothing was written — not the PDF, not
+the 1,200 pages of crawl.
+
+**Dropping the characters is not editing guidance, and that is the argument for fixing it this
+way.** A NUL carries no meaning; truncating at `DEFAULT_KEPT_TEXT_CHARACTERS` can also cut a
+surrogate pair in half and leave an unpaired half behind, which fails the same validator for the
+same non-reason. This text is ranking input that never reaches a traveller (entry 78), so removing
+a character that cannot be stored changes nothing a traveller could ever see. The alternative on
+offer was not "keep the page intact" — it was losing every page in the country.
+
+`storable_text` strips the C0 controls and repairs unpaired surrogates, keeping tab, newline and
+carriage return. It is applied in `keep`, which is the single funnel into the index for both the
+crawl and the PDF pass, so no future caller can route around it.
+
+**Checked both ways rather than reasoned about.** The regression test drives a PDF whose text layer
+holds `\x00\x00` and a lone surrogate; with the sanitiser bypassed it fails with the exact
+production error, and with it in place the build completes and reports its PDF read.
+
+**The class of defect is entry 71's, one country wider.** Status `990` crashed a corridor and
+Morocco's chain had to be bundled, both found only by running countries nobody had run. This is the
+third: breadth keeps finding crashes that depth cannot, because the input space is other people's
+web servers.
 
 ---
 

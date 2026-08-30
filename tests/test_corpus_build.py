@@ -426,6 +426,46 @@ async def test_a_build_reads_the_pdfs_a_crawl_will_not_follow(tmp_path: Path) ->
 
 
 @pytest.mark.anyio
+async def test_a_pdf_whose_text_layer_holds_nul_bytes_does_not_cost_the_build(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One unstorable page must never discard a whole country's crawl.
+
+    China, 2026-08-30: a PDF's text layer carried NUL bytes, `StoredPage` refused them, and the
+    `ValidationError` came out of `_read_pdfs` — which runs *after* the crawl, so the corpus was
+    never written and eighteen minutes of crawling went with it. The characters are dropped now,
+    which changes no guidance: they carry no meaning and this text only ever ranks (entry 78).
+    """
+
+    index = PageTextStore(tmp_path)
+
+    async def text_with_nuls(
+        self: CrawlFetcher,
+        client: httpx.AsyncClient,
+        url: str,
+        destination: object,
+        *,
+        maximum_characters: int,
+    ) -> str:
+        return "Checklist\x00\x00 of documents required for a tourism visa\ud800"
+
+    monkeypatch.setattr(CrawlFetcher, "fetch_pdf_text", text_with_nuls)
+
+    _corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX, FULL_CHECKLIST]),
+        fetcher([]),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+        page_text=index,
+    )
+
+    assert report.pdfs_read == 1
+
+
+@pytest.mark.anyio
 async def test_a_build_follows_links_the_request_path_would_not() -> None:
     """`expansion_threshold` is a latency compromise, and this job has no latency budget.
 
