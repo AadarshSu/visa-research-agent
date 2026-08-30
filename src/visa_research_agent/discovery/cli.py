@@ -856,10 +856,23 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
         # The one thing this job exists to do better than the request path. Said out loud, because
         # on 2026-08-22 it silently did not happen: 203 seeds against a 200-page budget meant the
         # whole allowance went on seeds, and nothing in the output showed it.
+        # Two different failures wear the same shallow shape, and only one is a budget. The
+        # Philippines stopped at depth 1 having spent 425 of 1,200 pages: telling anyone to raise
+        # --pages there sends them to change the one number that was never the constraint
+        # (entry 115).
+        remedy = (
+            "Raise --pages well above the seed count."
+            if build.budget_was_spent
+            else (
+                f"It spent {build.crawled} of {build.page_budget} pages, so the budget was not "
+                "the limit — the frontier ran dry. Read the lost hosts and the unreadable count "
+                "above."
+            )
+        )
         print(
             f"      only {build.deep_share:.0%} of what it found lies beyond depth 1 — this crawl "
             "fetched its seeds and stopped, which is the request path's behaviour, not this job's. "
-            "Raise --pages well above the seed count.",
+            + remedy,
             file=stream,
         )
 

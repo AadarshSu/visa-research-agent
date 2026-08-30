@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [115](#115-the-shallow-crawl-warning-gave-the-same-advice-to-two-opposite-failures) | **The shallow-crawl advice was wrong half the time** — the Philippines spent 425 of 1,200 pages |
 | [114](#114-one-pdf-with-nul-bytes-discarded-a-whole-countrys-crawl) | **One PDF discarded China's crawl** — the text layer had NUL bytes and the failure landed after the crawl |
 | [113](#113-gov-bg-is-a-public-suffix-so-bulgaria-was-not-thin-it-was-unresearchable) | **`gov.bg` made Bulgaria unresearchable** — a reviewed domain nothing constructed until a build tried |
 | [112](#112-a-third-traveller-the-corpus-was-never-tuned-for-scores-higher-than-the-two-it-was-built-on) | **A third traveller scores 87%** — higher than the two the system was built on |
@@ -163,6 +164,37 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 115. The shallow-crawl warning gave the same advice to two opposite failures
+
+**2026-08-30 · found by the 43-country build, item 41**
+
+`depth_is_exercised` prints when under 10% of a crawl's entries lie beyond depth 1, and it closed
+with one fixed sentence: *"Raise --pages well above the seed count."* Two countries in this build
+triggered it and only one of them could have been helped by that.
+
+| | crawled | budget | what actually stopped it |
+| --- | --- | --- | --- |
+| Slovakia | 1,203 | 1,200 | spent the allowance at depth 1 — the advice fits |
+| Philippines | **425** | 1,200 | 43 links redirected off the approved domains, three DFA consular hosts refused with `403`, timeouts and `500`s — **the budget was never the constraint** |
+
+Telling the Philippines to raise `--pages` sends a reader to change the one number the run had
+already shown was not binding. That is entry 36's rule about reasons, in the build's own reporting
+rather than in a traveller's: **the remedy printed has to be true of the run that printed it.**
+
+**The fix is to carry the budget, not to guess from the shape.** `CorpusBuild.page_budget` records
+the allowance the build was given and `budget_was_spent` compares it to what was crawled, so the
+two cases are told apart by measurement rather than by a threshold on the same number that raised
+the warning. A crawl that stayed shallow with budget to spare is now told so, with the figures, and
+pointed at the lost hosts and the unreadable count — where its actual cause is already printed.
+
+**What this does not do is diagnose the frontier.** Both countries stayed at depth 1 and the reason
+the Philippines' frontier ran dry — off-domain redirects and refusals — is reported but not
+counted against the depth question. Whether a crawl that cannot expand should say more than "read
+the lines above" is open, and unmeasured; this entry only stops the output asserting something the
+run disproved.
 
 ---
 

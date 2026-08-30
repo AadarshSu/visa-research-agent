@@ -272,6 +272,13 @@ class CorpusBuild(StrictModel):
     """Entries the corpus holds afterwards, which is never fewer than before."""
 
     unreadable: int = 0
+    page_budget: int = 0
+    """The `--pages` allowance this build was given, so its own advice can tell two failures apart.
+
+    Without it `depth_is_exercised` could say a crawl stayed shallow but not *why*, and the advice
+    it printed — raise `--pages` — was wrong for half the cases: the Philippines stayed at depth 1
+    having spent 425 of 1,200 pages, so more budget could not have helped it (entry 115)."""
+
     delegated: int = 0
     """How many places this country's own pages sent the traveller that we may name but not read."""
     by_depth: dict[int, int] = Field(default_factory=dict)
@@ -318,6 +325,16 @@ class CorpusBuild(StrictModel):
         if not found:
             return 0.0
         return sum(count for depth, count in self.by_depth.items() if depth > 1) / found
+
+    @property
+    def budget_was_spent(self) -> bool:
+        """Whether the crawl used what it was given, within a page.
+
+        The question that separates "it ran out of allowance at depth 1" from "it ran out of links
+        to follow". Only the first is fixed by a larger budget.
+        """
+
+        return bool(self.page_budget) and self.crawled >= self.page_budget - 1
 
     @property
     def depth_is_exercised(self) -> bool:
@@ -587,6 +604,7 @@ async def build_country_corpus(
         queries=len(queries),
         seeds=len(seeds),
         crawled=len(crawled),
+        page_budget=maximum_pages,
         found=len(entries),
         added=sum(1 for entry in entries if entry.url not in known),
         total=len(after.entries),

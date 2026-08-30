@@ -473,6 +473,7 @@ cause, and only running the thing showed it.
 | the corpus is tuned for two travellers, expect a third to do worse | `NG/NG` scores **87%** against their 82.5%, on per-country pages (entry 112) |
 | a reviewed domain is confirmed, so it is safe to ship | `gov.bg` is a public suffix; Bulgaria failed at *construction*, not at crawl (entry 113) |
 | a bad page costs a build that page | one PDF's NUL bytes discarded China's whole 18-minute crawl (entry 114) |
+| a shallow crawl needs a bigger page budget | the Philippines spent 425 of 1,200 and stopped anyway (entry 115) |
 | DK, LT and SK refuse every passport and no corpus will fix them | that was measured when each had **one** domain; they now have 4, 4 and 2 |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |

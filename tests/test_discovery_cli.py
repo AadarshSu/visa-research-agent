@@ -9,10 +9,12 @@ import yaml
 from visa_research_agent.discovery.cli import (
     build_parser,
     corridor_destination,
+    print_corpus_build,
     print_corridor,
     print_variance,
     run_corridor,
 )
+from visa_research_agent.discovery.corpus_build import CorpusBuild
 from visa_research_agent.discovery.models import (
     Corridor,
     ResolvedCorridor,
@@ -295,3 +297,39 @@ def test_a_page_only_some_runs_read_is_named() -> None:
     assert "the corridor flipped" in written
     assert answering in written
     assert "read in runs 1" in written
+
+
+def shallow_build(*, crawled: int, page_budget: int) -> CorpusBuild:
+    """A build that stayed at depth 1, varying only whether it spent what it was given."""
+
+    return CorpusBuild(
+        country_code="XX",
+        crawled=crawled,
+        total=crawled,
+        page_budget=page_budget,
+        by_depth={1: crawled},
+    )
+
+
+def test_a_shallow_crawl_that_spent_its_budget_is_told_to_raise_it() -> None:
+    stream = io.StringIO()
+    print_corpus_build(shallow_build(crawled=1200, page_budget=1200), stream)
+    assert "Raise --pages" in stream.getvalue()
+
+
+def test_a_shallow_crawl_that_never_spent_its_budget_is_not_told_to_raise_it() -> None:
+    """The remedy has to be true of what happened, which is entry 36's rule about reasons.
+
+    The Philippines stopped at depth 1 having crawled 425 of 1,200 pages, and was told to raise
+    `--pages` — the one number that was demonstrably not the constraint. Slovakia, which did
+    exhaust its budget, got the same sentence, so the advice carried no information either way
+    (entry 115).
+    """
+
+    stream = io.StringIO()
+    print_corpus_build(shallow_build(crawled=425, page_budget=1200), stream)
+    printed = stream.getvalue()
+
+    assert "Raise --pages" not in printed
+    assert "425 of 1200 pages" in printed
+    assert "the frontier ran dry" in printed
