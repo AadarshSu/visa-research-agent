@@ -27,6 +27,7 @@ from visa_research_agent.discovery.registry_build import (
     write_registry,
 )
 from visa_research_agent.discovery.search import SearchError
+from visa_research_agent.domain.models import DestinationConfig
 
 pytestmark = pytest.mark.anyio
 
@@ -446,3 +447,29 @@ def test_the_committed_file_loads_and_every_reviewed_domain_carries_its_evidence
         for domain, reason in row.reviewed.items():
             assert len(reason.strip()) > 20, f"{row.code}/{domain} has no usable evidence"
         assert len(row.domains) <= MAXIMUM_AUTO_TRUSTED_DOMAINS
+
+
+def test_every_committed_row_builds_the_config_a_corridor_needs() -> None:
+    """The registry is only useful if its rows survive `DestinationConfig`, which is what both the
+    corpus build and the request path construct from them.
+
+    Written after `gov.bg` shipped in the entry 111 batch and made Bulgaria unresearchable: it is a
+    public suffix, so the validator refused it, and the country failed at construction rather than
+    crawling thinly. The reviewer's note was correct about the site — `www.gov.bg` really is the
+    Council of Ministers — and nothing checked that the domain they wrote could be loaded. Every
+    other `www.gov.XX` row in the file exists because of the same rule, so the convention was there
+    to follow and only this test makes it enforced rather than remembered.
+    """
+
+    from visa_research_agent.discovery.registry import load_authority_registry as load_real
+
+    for row in load_real().countries:
+        if not row.domains:
+            continue
+        DestinationConfig(
+            slug=row.name.lower().replace(" ", "-"),
+            display_name=row.name,
+            route_type="national",
+            implementation_status="available",
+            trusted_domains=list(row.domains),
+        )

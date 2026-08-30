@@ -78,6 +78,7 @@ not — and stored text ranks, it never speaks).
 | [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) | **The entry plan is built** — three visa-free corridors state 3, 5 and 7 duties, so the floor is no floor |
 | [97](#97-recallrecordselector-recorded-which-selector-was-configured-and-a-credit-outage-proved-it) | **`selector` recorded the configuration, not the run** — a credit outage put the heuristic in the model's arm again |
 | [98](#98-a-model-produced-the-entry-plan-and-a-sixth-thing-was-in-the-way) | **A model produced the entry plan** — and a sixth blocker read a correct empty checklist as a failure |
+| [113](#113-gov-bg-is-a-public-suffix-so-bulgaria-was-not-thin-it-was-unresearchable) | **`gov.bg` made Bulgaria unresearchable** — a reviewed domain nothing constructed until a build tried |
 | [112](#112-a-third-traveller-the-corpus-was-never-tuned-for-scores-higher-than-the-two-it-was-built-on) | **A third traveller scores 87%** — higher than the two the system was built on |
 | [111](#111-twelve-more-domains-on-the-owners-judgement-and-what-that-standard-is) | **Twelve more on judgement** — `reviewed` now means "a person decided", in three marked tiers |
 | [110](#110-six-domains-for-five-countries--and-the-proposed-lists-were-wrong-about-which-domain-to-want) | **Six domains, five countries** — and three for three, the right domain was not the proposed one |
@@ -161,6 +162,43 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 113. `gov.bg` is a public suffix, so Bulgaria was not thin — it was unresearchable
+
+**2026-08-30 · found by the 43-country build, item 41**
+
+Bulgaria's corpus build failed in two seconds, before a single query:
+
+```
+Value error, trusted domain gov.bg is a public suffix and would trust every site beneath it
+```
+
+`gov.bg` was added the day before in entry 111's batch of twelve, and **the reviewer's note is
+correct** — `www.gov.bg` really does serve the Council of Ministers, which is what they wrote down.
+What nothing checked is that the string they wrote could be *loaded*. `gov.bg` is on the Public
+Suffix List, so `DestinationConfig` refuses it, and the refusal is right: trusting a public suffix
+trusts every site beneath it, which is the whole failure mode entry 2 exists to prevent.
+
+**The consequence is worse than a thin corpus, and that is the point worth keeping.** A country
+whose corpus crawls badly still answers corridors from live search. A country whose *config* will
+not construct fails at construction on every path — corpus build and request path alike. Bulgaria
+had been sitting in the "55 researchable destinations" count while being researchable by nothing.
+
+**The fix was already the file's own convention.** Brazil carries `www.gov.br` for exactly this
+reason, and so do `www.gov.pl`, `www.gob.mx`, `www.gov.ie`, `www.gov.cy`, `www.gov.si` and
+`www.gov.za`. Bulgaria now carries `www.gov.bg`, verified live: it returns 200 and titles itself
+"Council of Ministers of the Republic of Bulgaria". A scan of all 55 committed rows found this was
+the only one.
+
+**What is new is the guard, not the correction.** `test_every_committed_row_builds_the_config_a
+_corridor_needs` constructs a `DestinationConfig` from every committed row — the same object both
+the corpus build and the request path make — and it fails on `gov.bg` and passes on `www.gov.bg`,
+checked both ways rather than reasoned about. The existing committed-file test checked that each
+reviewed domain *carries evidence*; it never checked that the domain *works*. With 143 countries
+still to be added to that file, a convention that lived in six other rows and one person's memory
+is now enforced.
 
 ---
 

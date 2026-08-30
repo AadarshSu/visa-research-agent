@@ -74,8 +74,10 @@ countries:
       checked 2026-08-25
     mvr.bg: Bulgaria's Ministry of the Interior, serving its own name in Cyrillic in the page
       title. DECISIONS entry 111, 2026-08-29
-    gov.bg: Bulgaria's Council of Ministers, serving Ministerski savet. DECISIONS entry 111,
-      2026-08-29
+    www.gov.bg: Bulgaria's Council of Ministers, serving Ministerski savet — the page titles
+      itself "Council of Ministers of the Republic of Bulgaria". Named with its www host because
+      bare gov.bg is a public suffix and was refused at construction, the same convention as
+      www.gov.br. DECISIONS entry 111, corrected 2026-08-30
   unconfirmable: []
 - code: BR
   name: Brazil

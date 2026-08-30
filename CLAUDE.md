@@ -471,6 +471,7 @@ cause, and only running the thing showed it.
 | a domain under the country's own TLD that migration bodies use is fine | `iom.sk` is the **International** Organization for Migration (entry 110) |
 | `reviewed` in `authority_domains.yaml` means independently confirmed | it means a person decided — three tiers, each marked in the entry (entry 111) |
 | the corpus is tuned for two travellers, expect a third to do worse | `NG/NG` scores **87%** against their 82.5%, on per-country pages (entry 112) |
+| a reviewed domain is confirmed, so it is safe to ship | `gov.bg` is a public suffix; Bulgaria failed at *construction*, not at crawl (entry 113) |
 | DK, LT and SK refuse every passport and no corpus will fix them | that was measured when each had **one** domain; they now have 4, 4 and 2 |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
