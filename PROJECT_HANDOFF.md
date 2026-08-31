@@ -110,32 +110,47 @@ found. No human approves anything per request. Seven destinations are also hand-
 
 ## What to do next
 
-**[TODO.md](TODO.md) is the queue — go there.** Its index table is generated from its own headings,
-so it cannot drift; this file deliberately does not copy it. What follows is only the state a cold
-session needs to read the queue.
+**[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
+follows is only the state a cold session needs to read the queue.
 
-**Start at item 41: build the corpora for the 43 remaining countries.** Everything that gated it is
-done. The 43 all carry two or more authority domains; only Brazil and Uruguay are left at one, and
-`iom.sk` and `liveinuruguay.uy` were refused for cause (entry 111). Per country it is
-`visa-discover corpus --country XX`, then `coverage --country XX`, then at least one corridor —
-item 41 has the list, the commands, what to expect and the three traps.
+**Its index table is hand-maintained, and it does drift** — this line used to claim the table was
+generated from the headings and therefore could not, which was false. On 2026-08-30 the table listed
+its items in a different order from the bodies below it, and **eleven finished items were still
+sitting in the `Now` section** with their full bodies. Both were corrected by hand. Nothing enforces
+either property, so check them when you touch the file: the table must match the body order, and a
+finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Why it is ready now, in four results from 2026-08-29:**
+**Start at item 44: re-measure the nine countries whose ranking text was a bot-check page.** It is
+cheap, and it may close open findings rather than open new ones — 414 stored bodies across PH, LT,
+NO, TH, ID, LI, US, SK and FI were Cloudflare's interstitial rather than the authority's page until
+2026-08-30 (entry 117), so **no measurement of those countries taken before that date describes them
+any more**. The Philippines and `egov.uscis.gov/processing-times` are the two most likely to have
+been under-diagnosed.
 
-- **A traveller nobody tuned for scores 87%** (entry 112). A Nigerian passport from Nigeria across
-  the ten built countries — no oracle, no curation — accounted for **52 of 60 roles** against the two
-  tuned travellers' 82.5%. It found per-Nigeria pages in five countries, so the store generalises on
-  its own per-traveller pages rather than on generic guidance.
-- **The trust config no longer starves a build** (entries 107, 110, 111). Germany went from 1,565
-  entries on **one host** to 5,712 across **87** when `diplo.de` was reviewed, and from four filled
-  roles to six. Eighteen domains were added across nine more countries, and `audit` now reads
-  `row, no confirmable domain: 0`.
-- **A block is told from a challenge** (entry 109). `cdn-cgi/challenge-platform` appears on
-  Cloudflare's *block* page too, so the renderer was being pointed at pages authorities had refused —
-  which entry 18 forbids — and a false reason was recorded. Fixed, and the US corridor now returns a
-  plan naming the refused pages where it used to return a 503.
-- **The role vocabulary is no longer the limit** (entries 103–105). Three roles had three or four
-  terms and scored **zero** candidates in some countries. Widened and verified live.
+**What changed on 2026-08-30, in four results:**
+
+- **53 of the 55 reachable countries now have a corpus and a page-text index** (item 41, entry 116),
+  up from ten. Only Brazil and Uruguay do not, at one authority domain each. That closed items 30
+  and 18 with it, and **batch 2 is now unblocked and deliberately not started**.
+- **Breadth found four defects that depth could not** — `gov.bg` was a public suffix and made
+  Bulgaria fail at *construction* (113); one PDF's NUL bytes discarded China's whole 18-minute crawl
+  (114); the shallow-crawl warning gave the same advice to two opposite failures (115); and
+  `is_challenge` truncated the body at 20,000 characters while Cloudflare's marker sat at 24,915,
+  so unanswered challenges were stored as guidance and **retrieval could cite one** (117).
+- **Item 19 is measured rather than argued, and the answer is "not yet".** Of 382 pages read by runs
+  that postdate their country's corpus, **59 were not in the corpus and all 59 came from search — 17
+  of them covering a role nothing else in that run covered**, including the page Bulgaria's visa
+  decision comes from and the UK's form-gated fee table. Neither obvious shortcut works: a corpus is
+  not a superset even where it is large. See item 19 for the method and what it does not measure.
+- **The write-back only runs on the API path.** `automatic.py:414` is its one call site, so
+  `visa-discover corridor` folds nothing back (`cli.py:744`). Bulgaria has `proven` entries: **0**.
+  Whether the CLI should write back is an open decision, because it would mutate the store between
+  `--runs` iterations, which is exactly what that flag exists to measure against.
+
+**Earlier context that still holds, from 2026-08-29:** a traveller nobody tuned for scores **87%**
+(entry 112); the trust config no longer starves a build — Germany went from 1,565 entries on one
+host to 5,712 across 87 when `diplo.de` was reviewed (entries 107, 110, 111); a block is told from a
+challenge (entry 109); and the role vocabulary is no longer the limit (entries 103–105).
 
 **The open ledger on the ten built countries is six role slots** — one `general_entry` in Germany and
 five in the United States behind a block that cannot be answered and never will be. Four more, in

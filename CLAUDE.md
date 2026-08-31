@@ -478,6 +478,8 @@ cause, and only running the thing showed it.
 | a TLS failure is a missing intermediate to bundle | egypt's certificate expired in May 2025; bundling cannot fix that (entry 116) |
 | DK, LT and SK refuse every passport and no corpus will fix them | with corpora DK fills 4 roles and SK 2; only LT still fills none (entry 116) |
 | a corridor exiting 0 answered its six roles | bulgaria exits 0 having filled two — the other four are silent, not counted (entry 116) |
+| a country with a large corpus no longer needs live search | bulgaria holds 7,098 pages and gets its decision from a search-only pdf (item 19) |
+| the corpus write-back keeps every run's findings | it runs on the api path only; `visa-discover corridor` folds nothing back (item 19) |
 | liechtenstein fills nothing because its corpus is thin or german | it holds the right 29 pages; each stores a cloudflare interstitial (entry 117) |
 | a challenge marker test only needs the top of the page | cloudflare puts `_cf_chl_opt` at index 24,915 of 29,336 (entry 117) |
 | the renderer waits out a challenge until it clears | it polled on `is_challenge`, which said 'cleared' on iteration one (entry 117) |
@@ -555,6 +557,13 @@ it. A single number covering both would hide which half failed.
 `is_challenge` truncated the body at 20,000 characters and Cloudflare's marker sits past it, so an
 unanswered challenge was stored as the page and marked `readable`. Fixed, and the stores were
 purged; **if a country ranks strangely, check for it before blaming the vocabulary.**
+
+**Live search still runs on every corridor, including from the webpage** — `_resolve` searches
+before it reads the corpus, and the corpus can only suppress the *crawl*. Measured 2026-08-30: of
+382 pages read by runs postdating their corpus, 59 were not in the corpus and **all 59 came from
+search**, 17 covering a role nothing else in the run covered. So the corpus is not a superset even
+where it is large, and **search may not be switched off for a country without measuring that
+country** — TODO item 19 carries the method.
 
 **53 countries have a corpus in `var/corpus/` and a text index in `var/pagetext/`** — the ten of
 entry 85 plus the 43 of entry 116. Only **BR and UY** are researchable without one, at a single
