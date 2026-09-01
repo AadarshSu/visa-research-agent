@@ -484,6 +484,12 @@ cause, and only running the thing showed it.
 | a challenge marker test only needs the top of the page | cloudflare puts `_cf_chl_opt` at index 24,915 of 29,336 (entry 117) |
 | the renderer waits out a challenge until it clears | it polled on `is_challenge`, which said 'cleared' on iteration one (entry 117) |
 | retrieval re-checks an answered challenge the way the crawl does | it checked thinness only; the interstitial became a citable source (entry 117) |
+| the philippines is thin — it never finds a checklist | it is **visa-free** for an indian passport; no application, no checklist (entry 118) |
+| lithuania's corridor is stopped by the robots `Disallow` entry 116 found | that limits its *corpus*; the corridor loses 8 pages to a challenge and 1 to NXDOMAIN (entry 118) |
+| all five US role gaps are `travel.state.gov` | 4 are `uk.usembassy.gov`, never requested at all (entry 118) |
+| purging the interstitials will surface `egov.uscis.gov/processing-times` | it is in neither the US corpus nor its index; purging never adds a candidate (entry 118) |
+| the model flip costs a role, never a corridor | two US runs, no search: one refused, one resolved `resolved_decision_blocked` (entry 118) |
+| a re-run adds a row to the recall log | it is keyed on the corridor — the baseline is **overwritten** (entry 118) |
 | an oversized `robots.txt` means the authority publishes a huge crawl policy | 5 of 5 such hosts served a **web page**; not one was a policy (entry 119) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |

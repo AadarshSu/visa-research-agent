@@ -7,8 +7,8 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-08-30 — update this line when you touch the handoff |
-| **Tests** | 654 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Last updated** | 2026-09-01 — update this line when you touch the handoff |
+| **Tests** | 657 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -120,12 +120,26 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 44: re-measure the nine countries whose ranking text was a bot-check page.** It is
-cheap, and it may close open findings rather than open new ones — 414 stored bodies across PH, LT,
-NO, TH, ID, LI, US, SK and FI were Cloudflare's interstitial rather than the authority's page until
-2026-08-30 (entry 117), so **no measurement of those countries taken before that date describes them
-any more**. The Philippines and `egov.uscis.gov/processing-times` are the two most likely to have
-been under-diagnosed.
+**Start at item 43: give the 43 new countries something the coverage gate can grade.** Item 44 is
+done — see below.
+
+**What changed on 2026-09-01, in three results (entries 118 and 119):**
+
+- **Item 44 is closed and three of its six corridors improved.** Norway and Indonesia now fill
+  **all six roles** — Norway off an India-specific checklist PDF, Indonesia off a VoA list page
+  scoring **1.6** — and Thailand names its own e-Visa checker for the decision. Not attributable to
+  the purge: five of the six had no corpus when their baseline was taken, so what these runs measure
+  is the corpus arriving with the purge folded into it.
+- **Three written-down diagnoses were wrong.** The Philippines' missing checklist is a **visa-free**
+  corridor where none arises; Lithuania's corridor ceiling is the challenge and a dead host, not the
+  `robots.txt` `Disallow` that limits its corpus; and *"all five United States gaps are
+  `travel.state.gov`"* is disproved — three pages are that block, **four are `uk.usembassy.gov` and
+  were never requested**. `egov.uscis.gov/processing-times`, item 44's own hypothesis, is in neither
+  the US corpus nor its index.
+- **`uk.usembassy.gov` answers its own `/robots.txt` with `200 text/html` and 659,508 bytes of a
+  "Technical Difficulties" page**, and the corridor told the traveller their embassy publishes an
+  outsized crawl policy. Every host that has ever tripped the size cap does the same thing; none was
+  a large policy. Fixed as entry 119 — the verdict is unchanged, the sentence is not.
 
 **What changed on 2026-08-30, in four results:**
 
@@ -265,6 +279,15 @@ re-add the amendment history here.
    corridors reproduced exactly, the exception being adjudication with recall held fixed. It means a
    corridor can be `is_usable` with a role unfilled for a purely model-side reason, indistinguishable
    from item 8. It also reaches which *tools* get named (entry 60).
+
+   **And it reaches whether the corridor resolves at all, which is new (entry 118).**
+   `united-states/IN/GB/tourism`, twice within seven minutes, corpus-routed so no search was
+   involved: run 1 refused `decision_not_found`, run 2 resolved `resolved_decision_blocked`. The
+   same three `travel.state.gov` URLs were refused in both and all three were in `candidates`, so
+   `_decision_blocking_judged` answered the same question about the same pages both ways. Every
+   earlier observation of this problem was about which roles fill; this one is the load-bearing
+   decision. It fails safe — a lost plan, never an invented one — and it is now the counting item 17
+   asks for, at no search cost.
 
 11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
    was, and that is now handled (entries 58–61). **Counted rather than assumed since entry 63**:

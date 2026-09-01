@@ -16,7 +16,16 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Where the list stands, 2026-08-30.** **53 of the 55 reachable countries now have a corpus and a
+**Where the list stands, 2026-09-01.** **Item 44 is done** (entry 118). Six corridors were re-run
+over the countries whose ranking text had been a bot-check page: **Norway and Indonesia now fill all
+six roles** and Thailand names its own checker for the decision, while the Philippines' missing
+checklist turns out to be a **visa-free** corridor where no checklist arises. Three written-down
+diagnoses were corrected, and one of them became entry 119: the United States loses four
+`uk.usembassy.gov` pages — the post an Indian applicant in Britain actually uses — because that host
+answers its own `/robots.txt` with 659 KB of HTML. **The United States corridor also flips between
+two runs of identical code with no search in it**, which is new and belongs to item 17.
+
+**Where the list stood, 2026-08-30.** **53 of the 55 reachable countries now have a corpus and a
 page-text index** (item 41, entry 116) — only Brazil and Uruguay do not, at one authority domain
 each. That closed items 30 and 18 with it. The three items that used to gate everything were
 finished earlier and confirmed by live runs: **item 22** (the corpus replaces the crawl, entries
@@ -156,8 +165,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 44. Re-measure the countries whose ranking text was a bot-check page | `next` |
-|  | 43. Give the new 43 something the coverage gate can grade | `next` |
+| **Now** | 43. Give the new 43 something the coverage gate can grade | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 31. Rank a candidate by what the page says, not only by the link to it | `built, off` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -199,30 +207,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 44. Re-measure the countries whose ranking text was a bot-check page — `next`, **start here**
-
-**Cheap, and it may close open items rather than open new ones.** Until 2026-08-30, 414 stored
-bodies across nine countries were Cloudflare's interstitial rather than the authority's page
-(entry 117). They have been purged, so ranking for those countries has changed and **no measurement
-taken before that date describes them any more.**
-
-Worth re-running, in this order:
-
-- **The Philippines (92 rows) and Lithuania (90).** Both are recorded as thin or refusing, and both
-  had their consular and visa pages represented in the index by a bot-check page. Lithuania's
-  `robots.txt` `Disallow` (entry 116) is a real and separate ceiling, so expect its verdict to
-  stand; the Philippines has no such finding and is the better prospect.
-- **`egov.uscis.gov/processing-times`.** Entry 106 attributes all five US role gaps to
-  `travel.state.gov`, and four rows here say that account was incomplete. The US ceiling is real —
-  entry 109 — but "all five" is now unproven.
-- **Norway (82), Thailand (61), Indonesia (53).** Never corridor-tested since being built.
-
-**What this cannot fix, and do not expect it to.** Purging removes wrong ranking text; it does not
-add a candidate. Where the pages themselves are unreadable — `llv.li`, `mzv.sk`, `travel.state.gov`
-— the ceiling is unchanged, and entry 18 forbids working around any of them.
-
-
-### 43. Give the new 43 something the coverage gate can grade — `next`
+### 43. Give the new 43 something the coverage gate can grade — `next`, **start here**
 
 **`visa-discover coverage` cannot say anything about any of the 43** (entry 116). Half one prints
 "no country asked about appears in the oracle", and the verdict then reads *"the guidance is
@@ -592,6 +577,22 @@ against `var/recall/` — that is the measurement that would actually establish 
 one observed flip stands as a single observation, and **entry 44 should be read with that in mind**;
 its case now rests mainly on crawl depth and latency rather than on a measured frequency.
 
+**A second flip, 2026-09-01, and it is not the same one — it has no search in it (entry 118).**
+`united-states/IN/GB/tourism`, twice within seven minutes, corpus-routed with the crawl skipped:
+run 1 read 9 pages, filled nothing and refused `decision_not_found`; run 2 read 14, filled
+`application_route` and `general_entry`, and resolved **`resolved_decision_blocked`**. The refused
+set was the same three `travel.state.gov` URLs both times and all three were in `candidates`, so
+`_decision_blocking_judged` was asked the same question about the same pages — `visitor.html`
+labelled *"Visitor Visa"* among them — and answered it both ways.
+
+**That moves this item's centre of gravity.** Entry 43's flip was *recall*, which entry 44's corpus
+was built to remove, and the 2026-08-22 counting found nothing. This one is the model, on the call
+that decides **whether the corridor resolves at all** rather than which roles fill — known problem
+10 reaching further than that problem has ever recorded. Options 1–4 above are all about recall and
+none of them addresses it. **Count this one before designing anything:** `--runs 3` on
+`united-states/IN/GB` is corpus-routed, so it costs no search quota and isolates the model, which is
+exactly what the 2026-08-22 run could not do.
+
 **One finding that is not about variance at all:** `document_checklist` went unfilled on every run
 even though `.../visit-canada/supporting-documents` scored **64.0** for exactly that role and was
 fetched. The adjudicator declined it three times running. That is item 9's question — "no checklist
@@ -807,6 +808,14 @@ page holds.
 user-agent spoofing, and no retrying past a rate limit. And `robots.txt` outranks all of it: a
 `Disallow`ed path is still not fetched, a policy that could not be read is still reported as unread
 rather than as permission, and a `Disallow` still may not resolve a corridor.
+
+**One `robots.txt` question is open and is deliberately not folded in here (entry 119).** Five of
+five hosts that ever tripped the size cap answer `/robots.txt` with `200 text/html` and a web page —
+a "Technical Difficulties" notice or an app shell — and the reason reported is now true of that.
+What was **not** changed is the verdict for a *small* HTML page at that path: it is parsed into an
+empty ruleset and the host is crawled. Closing it would stop crawling hosts crawled today, so it
+needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
+sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 
 ### 1. Fix the post-over-nationality weighting, and find out why Sweden does not move — `next`
 
@@ -1121,6 +1130,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 44. Re-measure the countries whose ranking text was a bot-check page | 09-01 | 118, 119 | NO and ID now fill **6 of 6**, TH names its checker. The Philippines' missing checklist is a **visa-free** corridor, Lithuania's ceiling is the challenge and not its `Disallow`, and the US gaps split — `travel.state.gov` blocked, `uk.usembassy.gov` never requested. The US corridor **flips** between two runs of identical code |
 | 42. Why Liechtenstein's 7,456 pages yield two candidates | 08-30 | 117 | **Not Liechtenstein's fault.** `is_challenge` read `body[:20_000]`; Cloudflare's marker sits at 24,915 of 29,336, so an unanswered challenge was stored as the page. 414 rows across nine countries, including Lithuania's visa page and `egov.uscis.gov/processing-times` |
 | 41. Build the corpora for the 43 remaining countries | 08-30 | 116 | 10 → **53 corpora** in ~13 hours. Three code defects only breadth could find (113, 114, 115). Nine corridors all answered from the store; the gate cannot grade any of the 43 |
 | 30. Perfect batch 1 before adding a further country | 08-30 | 116 | All three stages met: 55 reachable, all run and refusing for named reasons (08-25), and 53 corpus-routed. **BR and UY are the two without a corpus**, at one authority domain each. Batch 2 is now unblocked and deliberately not started |

@@ -44,6 +44,7 @@ not — and stored text ranks, it never speaks).
 | | |
 | --- | --- |
 | [119](#119-a-web-page-served-at-robotstxt-is-not-an-outsized-crawl-policy) | **A web page at `/robots.txt` is not an outsized policy** — 5 of 5 such hosts served markup; the verdict holds, the reason did not |
+| [118](#118-re-measuring-the-nine-three-improvements-three-corrected-diagnoses-and-a-corridor-that-flips) | **Re-measuring the nine** — NO, ID and TH improve; the US corridor flips between two runs of identical code |
 | [5](#5-refuse-rather-than-serve-evidence-that-may-be-wrong) | Refuse rather than serve evidence that may be wrong |
 | [18](#18-a-block-is-not-a-fact-about-the-guidance-never-work-around-one) | A block is not a fact about the guidance; never work around one |
 | [24](#24-a-fetch-place-is-not-spent-on-a-page-already-proved-unreadable) | A fetch place is not spent on a page already proved unreadable |
@@ -211,6 +212,77 @@ crawling hosts that are crawled now, which is a coverage change on unmeasured gr
 changes a sentence, not a permission. Whether the wider rule is right is its own question and needs
 its own measurement — how many authority hosts serve markup at that path at all, which nobody has
 counted.
+
+---
+
+## 118. Re-measuring the nine: three improvements, three corrected diagnoses, and a corridor that flips
+
+**2026-09-01 · TODO item 44, closes it**
+
+Entry 117 purged 414 stored bodies that were Cloudflare's interstitial rather than the authority's,
+across nine countries. No measurement of those countries taken before 2026-08-30 described them any
+more, so six corridors were re-run — the six item 44 named, each against the traveller its own
+baseline used.
+
+| corridor | baseline | 2026-09-01 | roles filled |
+| --- | --- | --- | --- |
+| `norway/IN/IN` | resolved, no checklist (08-25) | **resolved** | **6 of 6** |
+| `indonesia/IN/GB` | no `visa_decision` (08-25) | **resolved** | **6 of 6** |
+| `thailand/IN/GB` | `resolved_decision_blocked` (08-25) | **`resolved_decision_tool`** | 3 by page + the decision named as a tool |
+| `philippines/IN/GB` | resolved, no checklist (08-25) | resolved, no checklist | 2 of the 2 that arise |
+| `united-states/IN/GB` | `resolved_decision_blocked` (08-29) | **flips — see below** | 0, then 2 |
+| `lithuania/IN/GB` | nothing (08-25) | nothing | 0 |
+
+**Three of the six improved, and Norway is the clearest.** It now fills every role from India-specific
+pages: `norway.no/en/india/…/visitors-visa` states the decision, the route and the fee, and the
+checklist comes off `tourist-visa-document-checklist-january-2024.pdf` — a PDF naming the passport,
+the UDI form, insurance and the itinerary. Indonesia fills all six too, and its `visa_decision` page
+scored **1.6**: `imigrasi.go.id/wna/daftar-negara-voa-bvk-calling-visa`, the list India is named on.
+Entry 91's row — *a page that answers a role scores something for that role* — is wrong again, and the
+model selector is what recovers it. Thailand moves from a blocked decision to a **named checker**,
+which is entries 59–60 firing: the traveller can act on four of six rather than one.
+
+**None of that is attributable to the purge, and saying so would be inventing a cause.** Five of the
+six had no corpus at all when their baseline was taken — the 43 were built on 2026-08-30 — so what
+these runs measure is the corpus arriving, with the purge folded in and not separable from it. All
+six printed *"the crawl was skipped"*.
+
+**Three written-down diagnoses are corrected.**
+
+- **The Philippines' missing checklist is not a gap.** `evisa.gov.ph` states that Indian nationals
+  enter **visa-free** for 14 days, and the corridor fills the decision and the entry conditions off
+  that one page. There is no application, so there is no checklist — entry 94's Singapore shape, and
+  the reason the "thin" label was wrong rather than incomplete.
+- **Lithuania's corridor ceiling is not its `robots.txt`.** Entry 116 records a stated `Disallow`
+  over 51 pages, and that is true of the **corpus**. The corridor loses nothing to it: of nine
+  unreadable pages, **eight are `challenged`** — `keliauk.urm.lt/…/visas/…` and four `uk.mfa.lt`
+  pages including `documents-to-be-submitted` and `services-and-fees`, which are the answers —
+  and the ninth, `visa.vrm.lt/epm`, is **NXDOMAIN**. Zero are `disallowed`. Entry 75 already said the
+  challenge fingerprints past our user agent; what is new is that the Disallow is not what binds
+  here, and the verdict standing is not evidence that it was.
+- **"All five United States gaps are `travel.state.gov`" is disproved.** The gaps split two ways.
+  Three pages are `travel.state.gov`'s genuine `403` (entry 109, unchanged and permanent). **Four are
+  `uk.usembassy.gov` — the post an Indian national in Britain actually applies at — and they were
+  never requested**, because that host answers its own `/robots.txt` with `200 text/html` and 659,508
+  bytes of a "Technical Difficulties" page. Entry 119 is what that turned into. And item 44's specific
+  hypothesis is dead rather than confirmed: **`egov.uscis.gov/processing-times` is in neither the US
+  corpus nor its text index**, and the only `egov.uscis.gov` address the corpus holds is
+  `cdn-cgi/challenge-platform/help`. Purging removed wrong ranking text; it never adds a candidate,
+  exactly as item 44 warned.
+
+**And the United States corridor flips between two runs of identical code.** Run 1 read 9 pages,
+filled nothing and refused `decision_not_found`. Run 2 read 14, filled `application_route` and
+`general_entry`, and resolved **`resolved_decision_blocked`**. The refused set was the same three
+`travel.state.gov` URLs both times, all three present in `candidates`, so both runs asked
+`_decision_blocking_judged` the same question about the same pages — including `visitor.html`,
+labelled *"Visitor Visa"* — and got opposite answers. Known problem 10 has been recorded as reaching
+which *roles* fill; this is the first time it is recorded reaching **whether the corridor resolves at
+all**, which is the load-bearing decision entry 57 built that call for. It fails in the safe
+direction — a lost plan, never an invented one — and TODO item 17 is where it belongs.
+
+**A practical trap for whoever re-measures next.** The recall log is keyed on the corridor, so
+re-running one **overwrites its baseline row**. Copy the rows out before spending a run; three of the
+comparisons above survive only because they were printed first.
 
 ---
 
