@@ -500,6 +500,11 @@ cause, and only running the thing showed it.
 | a country reported as having no per-traveller family has none | romania has **58**, named in romanian; the detector matches english slugs (entry 121) |
 | a sibling-run probe can count families without a country list | it missed romania's own — its members sit under different numeric parents (entry 121) |
 | `str(exc)` is a reason | `httpx.ConnectTimeout` carries an empty one: *"the request failed ()"* (entry 122) |
+| the model selector replaced the shortlist, so ranking no longer gates recall | it pools `score > 0` — the model is shown **6%** of the corpus (entry 123) |
+| the model-vs-heuristic numbers are invalid if ranking gates the pool | both arms filter `> 0`; they raced the same 6%, the comparison stands (entry 123) |
+| "100% role recall" means the selector found what the corpus holds | the oracle was curated from candidates scoring above zero (entry 123) |
+| the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
+| the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

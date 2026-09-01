@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [123](#123-the-model-selector-is-shown-6-of-the-corpus-and-the-filter-is-the-heuristic-it-replaced) | **The model selector is shown 6% of the corpus** — the pool gate is the heuristic it replaced; the arm comparison stands, the denominators are narrower |
 | [121](#121-re-running-the-five-two-confident-predictions-wrong-a-refusal-dressed-as-a-200-and-a-family-in-romanian) | **Re-running the five** — Romania fills 5 of 6; Morocco refuses with a `200`; the family detector is English-only |
 | [120](#120-the-gate-says-when-it-cannot-grade-and-the-oracle-is-not-growing-to-53) | **The gate says when it cannot grade** — 42 of 53 were deferring to an empty half; the oracle grows one country at a time, not to 53 |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
@@ -171,6 +172,81 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 123. The model selector is shown 6% of the corpus, and the filter is the heuristic it replaced
+
+**2026-09-02 · re-prioritisation; TODO item 31 re-scoped**
+
+`_choose_what_to_read` builds the model's pool as
+
+```python
+pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
+```
+
+and everything after it — `by_id`, `build_selection_packet`, the model's choice — is drawn from
+that pool alone. So a candidate the **anchor heuristic** scores zero for every role is never shown
+to the selector, never fetched, and never judged. Measured over the 24 corridor runs that postdate
+2026-08-30, on current code and current stores:
+
+| | |
+| --- | --- |
+| candidates across the 24 runs | **71,798** |
+| candidates in the selector's pool | **4,450** |
+| **share the model was shown** | **6%** |
+
+and the distribution is the finding, not the average:
+
+| corridor | candidates | pool | |
+| --- | --- | --- | --- |
+| `liechtenstein/NG/NG` | 7,482 | **2** | 0% |
+| `bulgaria/NG/NG` | 6,847 | **8** | 0% |
+| `iceland/NG/NG` | 7,839 | 78 | 1% |
+| `morocco/IN/GB` | 1,801 | 19 | 1% |
+| `austria/IN/IN` | 3,670 | 96 | 3% |
+| `romania/IN/GB` | 2,278 | 94 | 4% |
+| `norway/IN/IN` (the widest) | 906 | 307 | 34% |
+
+**None of this is a new fact; the new part is which gate it sits on.** Entry 81 measured that "90%
+of candidates score zero and can never be shortlisted" and filed it against the **shortlist**. Entry
+85 then replaced the shortlist with the model selector as the recall gate — and the new gate
+inherited the old filter, which nobody wrote down. Entry 91 hit the same wall from the other side
+and named it precisely: a UAE page answers `fees`, `processing_times` and `general_entry` while
+scoring **0.0** for all three, and its re-check "had to change instrument" because ranking filters
+on `> 0`. It changed instrument for those rows and the live path was left alone.
+
+**What this does not invalidate, and the distinction matters.**
+
+*The model-versus-heuristic comparison stands.* Both arms apply the same filter — the model's pool
+is `best_combined() > 0` and the heuristic's `rank_for_role` keeps only `score > 0` — so entries
+84 to 87 raced two selectors over the **same** 6%, and what they measured is the ordering *within*
+it. The model winning there is unaffected, and entry 106's decision to close that experiment stands.
+
+*The absolute recall figures mean something narrower than they read.* `oracle/selection_oracle.yaml`
+was curated, in `contention.py`'s own words, "from **every candidate that scored above zero**". So
+"100% role recall" is *"the model found every answer a person could find inside the same 6%"*, and
+`coverage` half one's "the corpus holds 47 of 47 answerable roles" has an `answerable` counted under
+the same bound. They are accurate as measured and their denominator is smaller than their wording
+suggests. Entry 91 partly widened the fixture — the UAE's three 0.0 roles are in it, found with
+`page_text.rank` over stored **body** text — so the oracle is not purely a >0 artefact, but only the
+rows that got that re-check were widened.
+
+**Why this is now the top item rather than a footnote.** The countries that fill nothing are the
+countries with the smallest pools: Liechtenstein 2 and Bulgaria 8, against corpora of 7,482 and
+6,847. Those have been attributed to challenges and stated `Disallow`s, and those causes are real —
+but nobody has established they are *sufficient*, because the pool gate has never been separated
+from them. A corridor choosing from 2 pages of 7,482 is not evidence about Cloudflare.
+
+**And it re-scopes item 31 rather than confirming it.** That item is "add a numeric text lift inside
+`combined`", gated behind a coverage bar no country meets — a refinement to the ordering of the 6%,
+which is the arm that already lost. The question worth asking is a different one: **can stored text
+put a candidate into the pool at all?** Entry 78's rule is untouched either way — stored text ranks
+and never speaks — and so is the packet's real constraint, since `DEFAULT_SELECTION_CHARACTERS` is
+400,000 shared across candidates and a pool of 7,482 would leave each one a few dozen characters.
+So the answer is not "remove the filter". **Measure first**, offline and with no adjudicator in it:
+of the pages the oracle names as answering a role, how many score zero on links — that is the only
+number that says whether the 94% contains anything.
 
 ---
 

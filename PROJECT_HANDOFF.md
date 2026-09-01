@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-01 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-02 — update this line when you touch the handoff |
 | **Tests** | 662 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -120,7 +120,27 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 47: find out how much of the world the per-traveller family detector cannot see.**
+**Start at item 31, re-scoped: let the selector see the pages the anchor scorer scores zero.** The
+queue was re-prioritised on 2026-09-02 (entry 123) and the new Now order is **31, 19, 17, 47, 35, 9,
+2, 1, 5**.
+
+**The measurement that reordered it.** `_choose_what_to_read` pools only candidates the anchor
+heuristic scores above zero, so **the model selector is shown 6% of the corpus** — 4,450 of 71,798
+candidates over the 24 runs postdating 2026-08-30. Liechtenstein offers **2 of 7,482**, Bulgaria 8 of
+6,847. Entry 81 measured this against the *shortlist*; entry 85 replaced the shortlist with the
+selector and the new gate inherited the filter, which nobody wrote down.
+
+**What it does and does not invalidate.** Entries 84–87's model-versus-heuristic comparison
+**stands** — both arms filter on `> 0`, so they raced over the same 6%. What is narrower than it
+reads is the absolute figures: `oracle/selection_oracle.yaml` was curated "from every candidate that
+scored above zero", so "100% role recall" and `coverage`'s "47 of 47 answerable" share that
+denominator. Entry 91 partly widened the fixture with body-text ranking; only those rows.
+
+**Four stale claims were corrected in TODO on the same pass:** item 2's remaining corpus experiment
+is already answered (all 53 corpora carry their current domains), item 5's false
+challenged-authority sentence has not shipped since entry 75, item 7's "the CLI cannot reach a
+registry destination" was fixed by entry 45, and item 7's deployment blocker has dissolved.
+
 Items 43, 44 and 45 are done; see below.
 
 **What changed on 2026-09-01, in seven results (entries 118 to 122):**
