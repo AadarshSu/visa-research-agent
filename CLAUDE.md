@@ -491,6 +491,9 @@ cause, and only running the thing showed it.
 | the model flip costs a role, never a corridor | two US runs, no search: one refused, one resolved `resolved_decision_blocked` (entry 118) |
 | a re-run adds a row to the recall log | it is keyed on the corridor — the baseline is **overwritten** (entry 118) |
 | an oversized `robots.txt` means the authority publishes a huge crawl policy | 5 of 5 such hosts served a **web page**; not one was a policy (entry 119) |
+| `no per-traveller dimension` is a verdict the families computed | it is a **deferral** to half one — and for 42 of 53 countries that half was empty (entry 120) |
+| the 43 need oracle rows so the gate can grade them | 17 of 42 already resolve every passport; of the 9 that resolve none, 6 have a named cause (entry 120) |
+| a country that has never resolved a passport needs curating | 5 of the 9 were last run **before their corpus existed** — re-run first (entry 120) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
@@ -559,6 +562,12 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 **Two different questions, two different commands, and they must not be merged.** `coverage` asks
 whether the **store** holds the answer; `selection-recall` asks whether the **corridor** then finds
 it. A single number covering both would hide which half failed.
+
+**`coverage` says `ungraded` when it cannot grade, and 42 of 53 countries are** (entry 120). A
+country with no per-traveller family and no oracle row is graded by neither half; it used to borrow
+the wording of a pass. **Do not read that as 42 curation jobs** — the oracle grows one country at a
+time, when a specific question needs the store-versus-selector split and a corridor run has failed
+to settle it.
 
 **A stored body can be a bot-check page rather than the authority's, and 414 were** (entry 117).
 `is_challenge` truncated the body at 20,000 characters and Cloudflare's marker sits past it, so an

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-01 — update this line when you touch the handoff |
-| **Tests** | 657 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 660 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -73,7 +73,7 @@ destinations.
 | **Runtime mode** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic` |
 | **Model candidate selection** | **Built and on** (entries 83–87). `discovery_selector: model` reads stored page text for every candidate in contention and picks ~7 to fetch, against the heuristic's 35. **On by default since entry 85.** All ten corpus countries now have a text index (~420 searches, ~3 hours of crawling). Graded against **`oracle/selection_oracle.yaml`, ground truth neither selector helped build** (entry 87): **100% role recall against the heuristic's 70% at matched budget**, and 91% when the heuristic is allowed its shipped 35 places and 3.1× the fetches. On the jointly-built oracle entries 85–86 used, the same three arms read 86%, 45% and 79% — so **entry 86's +41 points is +30**, and its +7 against the shipped heuristic is +9. The direction held; the numbers moved. It costs a second model call per corridor; one line in `runtime.yaml` reverts it. Still one run per corridor, one corridor per country, all `IN/GB`. |
 | **Selection ground truth** | **`oracle/selection_oracle.yaml`, committed — twenty corridors over two travellers** (entries 87, 91). `IN/GB/tourism` and `PH/PH/tourism` across the same ten countries, named by hand from each corridor's whole contention set. Both read **100% held**; the denominators are the finding — the same stores answer **47 of 60 roles for one traveller and 41 of 60 for the other**. A row for a corridor nobody has run is curated offline with `visa-discover contention`. No network, no model. |
-| **Corpus sufficiency** | **`visa-discover coverage`, committed** (entries 90, 93) — the promotion rule for stage 3. Two halves, never added. Half one reports three columns per traveller — answered **by a page**, settled **by an official tool**, open — and never merges the first two: **IN/GB 47 + 7 = 54/60 actionable, PH/PH 41 + 5 = 46/60**. Half two is every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. **It cannot grade any of the 43 built on 2026-08-30** — none is in the oracle, so half one prints "no country asked about appears in the oracle" and the verdict defers to that empty half. All 43 read *no per-traveller dimension*, which for them is **vacuous, not a pass** (entry 116, item 43). |
+| **Corpus sufficiency** | **`visa-discover coverage`, committed** (entries 90, 93, 120) — the promotion rule for stage 3. Two halves, never added. Half one reports three columns per traveller — answered **by a page**, settled **by an official tool**, open — and never merges the first two: **IN/GB 47 + 7 = 54/60 actionable, PH/PH 41 + 5 = 46/60**. Half two is every per-traveller family the store holds, from which the verdict is computed alone. Today: six countries *no per-traveller dimension*, SG and GB *bounded by the authority* (a pass), **NL `incomplete`**. Offline, no model, no search. **It says when it cannot grade, since 2026-09-01** — a country with no per-traveller family and no oracle row reads **`ungraded`**, and the report names the set once at the end. **42 of the 53 built countries are ungraded**; the six oracle countries with no family still read *no per-traveller dimension*, which is a legitimate deferral, and Portugal is graded from its family despite being outside the oracle. Formerly all 43 read *no per-traveller dimension*, which was vacuous rather than a pass (entries 116, 120). |
 
 **The largest coverage limit is the interactive tool, not bot-blocking** — that was measured and it
 inverted the assumption this file had carried for weeks (entry 58). A page that is *read* and judged
@@ -120,10 +120,22 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 43: give the 43 new countries something the coverage gate can grade.** Item 44 is
-done — see below.
+**Start at item 45: re-run the five countries last measured before their corpus existed** — AT, MA,
+MX, RO and SA. Items 43 and 44 are done; see below.
 
-**What changed on 2026-09-01, in three results (entries 118 and 119):**
+**What changed on 2026-09-01, in four results (entries 118, 119 and 120):**
+
+- **The coverage gate was reading 42 passes nobody had earned** (item 43, entry 120). A country
+  with no per-traveller family verdicted `no per-traveller dimension`, whose own sentence says the
+  known-answer half settles it — and for anything outside the ten-country oracle that half held
+  nothing. A fifth verdict, **`ungraded`**, now says so, and the report names the set once at the
+  end. Half one's *content* still never votes; only its absence can withhold a verdict.
+- **The oracle is not growing to 53, and that was measured** (entry 120). 17 of the 42 ungraded
+  countries already resolve **every** passport tried, so a hand-curated row would buy a 100% on a
+  half that does not enter the verdict. Of the 9 that resolve none, 6 have a named cause outside
+  the store; only **LI, MA and SA** are genuinely ambiguous. The rule is now: grow the oracle one
+  country at a time, after a corridor run has failed to settle the question — **`ungraded` is not a
+  backlog of 42 curation jobs.**
 
 - **Item 44 is closed and three of its six corridors improved.** Norway and Indonesia now fill
   **all six roles** — Norway off an India-specific checklist PDF, Indonesia off a VoA list page

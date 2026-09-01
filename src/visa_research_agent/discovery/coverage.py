@@ -73,9 +73,15 @@ FAMILY_OPENED_SHARE = 0.75
 
 FamilyShape = Literal["gateway", "leaf", "unopened"]
 
-Verdict = Literal["no per-traveller dimension", "covered", "incomplete", "bounded by the authority"]
+Verdict = Literal[
+    "ungraded", "no per-traveller dimension", "covered", "incomplete", "bounded by the authority"
+]
 
 VERDICT_MEANING: dict[str, str] = {
+    "ungraded": (
+        "no per-traveller family and no oracle row — nothing here has graded this country, "
+        "and reading it as a pass is the mistake this verdict exists to prevent"
+    ),
     "no per-traveller dimension": (
         "the guidance is centralised, so the known-answer half settles this country"
     ),
@@ -286,15 +292,25 @@ class CountryCoverage:
 
     @property
     def verdict(self) -> Verdict:
-        """Which of four things is true of this country, from the families alone.
+        """Which of five things is true of this country, from the families alone.
 
-        Half one deliberately does not enter this. It covers one traveller, so letting it vote would
-        let a 100% that means "fine for `IN/GB`" outvote a family measurement that means "unserved
-        for the other 197 residences" — which is the exact failure this module exists to avoid.
+        Half one's *content* deliberately does not enter this. It covers one traveller, so letting
+        it vote would let a 100% that means "fine for `IN/GB`" outvote a family measurement that
+        means "unserved for the other 197 residences" — which is the exact failure this module
+        exists to avoid.
+
+        **Its presence does, and only ever to withhold a verdict.** `no per-traveller dimension`
+        is not a measurement — it is a *deferral*, and its sentence says so: "the known-answer half
+        settles this country". Measured 2026-09-01, **42 of the 53 built countries** were deferring
+        to a half with no rows in it at all, and the report read exactly like 42 passes. The other
+        three verdicts stand on the families alone and are untouched; a country outside the oracle
+        with a family is still graded normally, which is why Portugal reads `bounded by the
+        authority` rather than `ungraded`. Nothing here can turn a fail into a pass — only a pass
+        that was never earned into an admission that nobody looked. TODO item 43.
         """
 
         if not self.families:
-            return "no per-traveller dimension"
+            return "no per-traveller dimension" if self.known else "ungraded"
         complete = [family for family in self.families if family.is_complete]
         if not complete:
             return "bounded by the authority"

@@ -991,8 +991,12 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
 
     print("\nCorpus coverage, half 1: the answers a human named, per traveller", file=stream)
     known = [row for country in report.countries for row in country.known]
+    ungraded = [country.code for country in report.countries if country.verdict == "ungraded"]
     if not known:
-        print("  no country asked about appears in the oracle.", file=stream)
+        print(
+            "  no country asked about appears in the oracle, so this half graded nothing.",
+            file=stream,
+        )
     else:
         by_traveller: dict[str, list[KnownAnswer]] = {}
         for row in known:
@@ -1065,6 +1069,18 @@ def print_coverage(report: CoverageReport, stream: TextIO) -> None:
                 f"{'listed' if family.reservable else 'spread':<5}  {family.key}",
                 file=stream,
             )
+    if ungraded:
+        # Said once, plainly, and with the countries named. The per-country lines each carry the
+        # meaning string, but a reader scanning 53 of them sees a column of identical sentences and
+        # takes the shape of a pass from it — which is what happened to the 43 built on 2026-08-30
+        # (TODO item 43).
+        print(
+            f"\n  UNGRADED — {len(ungraded)} of {len(report.countries)}: "
+            f"{', '.join(ungraded)}.\n"
+            "  They have no per-traveller family and no oracle row, so neither half said anything\n"
+            "  about them. That is a fixture nobody has curated, not a corpus that passed.",
+            file=stream,
+        )
     if report.unbuilt:
         print(
             f"\n  no corpus at all for {', '.join(report.unbuilt)} — a job nobody has run, "

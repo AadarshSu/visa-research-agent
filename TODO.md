@@ -165,7 +165,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 43. Give the new 43 something the coverage gate can grade | `next` |
+| **Now** | 45. Re-run the five countries last measured before their corpus existed | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 31. Rank a candidate by what the page says, not only by the link to it | `built, off` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -207,24 +207,30 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 43. Give the new 43 something the coverage gate can grade — `next`, **start here**
+### 45. Re-run the five countries last measured before their corpus existed — `next`, **start here**
 
-**`visa-discover coverage` cannot say anything about any of the 43** (entry 116). Half one prints
-"no country asked about appears in the oracle", and the verdict then reads *"the guidance is
-centralised, so the known-answer half settles this country"* — deferring to a half with no rows.
-All 43 read `no per-traveller dimension`; **that is vacuous for them, not a pass.**
+**Item 44's lesson on a different set, and entry 120 found it.** Of the nine ungraded countries
+that have never resolved a single passport, **five were last run on 2026-08-25 and their corpora
+were built on 08-29/08-30** — so *"never resolved any passport"* describes a crawl-path run against
+a store that did not yet exist:
 
-Two things worth separating before spending effort:
+| | |
+| --- | --- |
+| AT | 464 candidates, **23 `disallowed`** — expect the verdict to stand; the pages were never requested |
+| RO | 189 candidates, 10 `disallowed`, 3 `unreachable` — same, and entry 70 records `mae.ro`'s hosts answering `503` to `robots.txt` |
+| MX | 97 candidates, **18 `untrusted`** — known problem 2, not a store question |
+| MA | 160 candidates, 5 `unusable` — **genuinely open**, and the best prospect |
+| SA | 139 candidates, **17 `unusable`**, 7 `unreachable` — genuinely open |
 
-- **The gate should say when it cannot grade.** A country outside the oracle should read as
-  *ungraded* rather than borrowing the wording of a pass. This is small, offline, and stops a
-  future session reading 43 passes that were never earned.
-- **Whether the oracle should grow to 53 countries is a real question, not a foregone one.** Entry
-  91 built two travellers over ten countries by hand and entry 87 is emphatic that an oracle both
-  arms helped build is worthless. Curating 43 more rows is a large manual job whose value is
-  bounded by what entries 99, 100 and 106 already established: corridor health is a free signal and
-  `selection-recall` measures agreement with a person's picks rather than corridor health. **Argue
-  it in a decision entry before curating anything.**
+**Do:** one corridor each, the same traveller the baseline used, and **copy the recall rows out
+first** — the log is keyed on the corridor and a re-run overwrites its own baseline (entry 118).
+Expect three of the five to stand for reasons already named; MA and SA are why this is worth the
+quota.
+
+**Then, and only then, decide whether any of them needs an oracle row.** Entry 120's rule: grow the
+oracle one country at a time, when a specific question needs the store-versus-selector split, and
+only after a corridor run has failed to settle it. **`ungraded` is not a backlog of 42 curation
+jobs**, and reading it as one is the mistake that entry warns about.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
@@ -1130,6 +1136,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 43. Give the new 43 something the coverage gate can grade | 09-01 | 120 | **42 of 53 countries were deferring to an empty half** and read as passes. Fixed with an `ungraded` verdict. The oracle is **not** growing to 53: 17 of the 42 resolve every passport tried, and of the 9 that resolve none, 6 have a named cause outside the store |
 | 44. Re-measure the countries whose ranking text was a bot-check page | 09-01 | 118, 119 | NO and ID now fill **6 of 6**, TH names its checker. The Philippines' missing checklist is a **visa-free** corridor, Lithuania's ceiling is the challenge and not its `Disallow`, and the US gaps split — `travel.state.gov` blocked, `uk.usembassy.gov` never requested. The US corridor **flips** between two runs of identical code |
 | 42. Why Liechtenstein's 7,456 pages yield two candidates | 08-30 | 117 | **Not Liechtenstein's fault.** `is_challenge` read `body[:20_000]`; Cloudflare's marker sits at 24,915 of 29,336, so an unanswered challenge was stored as the page. 414 rows across nine countries, including Lithuania's visa page and `egov.uscis.gov/processing-times` |
 | 41. Build the corpora for the 43 remaining countries | 08-30 | 116 | 10 → **53 corpora** in ~13 hours. Three code defects only breadth could find (113, 114, 115). Nine corridors all answered from the store; the gate cannot grade any of the 43 |

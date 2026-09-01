@@ -204,7 +204,28 @@ def test_a_complete_family_nobody_opened_is_incomplete_because_its_shape_is_unkn
     assert country.verdict == "incomplete"
 
 
-def test_a_country_with_no_family_has_no_per_traveller_dimension() -> None:
+def test_a_country_with_no_family_defers_to_the_half_that_has_rows() -> None:
+    """`no per-traveller dimension` is a **deferral**, not a measurement — its sentence says the
+    known-answer half settles the country. So it may only be said where that half has rows."""
+
+    plain = corpus_of([entry(f"{AUTHORITY}/visa/apply", depth=0)])
+    country = coverage(
+        plain,
+        load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH),
+        slug="japan",
+        slugs=SLUGS,
+        countries=200,
+    )
+    assert country.families == ()
+    assert country.known != ()
+    assert country.verdict == "no per-traveller dimension"
+
+
+def test_a_country_neither_half_can_speak_for_is_ungraded_not_passed() -> None:
+    """The 43 built on 2026-08-30, and what the gate said about them. With no family and no oracle
+    row, `no per-traveller dimension` deferred to a half holding nothing, and 42 of 53 countries
+    read as passes nobody had earned. TODO item 43."""
+
     plain = corpus_of([entry(f"{AUTHORITY}/visa/apply", depth=0)])
     country = coverage(
         plain,
@@ -214,7 +235,24 @@ def test_a_country_with_no_family_has_no_per_traveller_dimension() -> None:
         countries=200,
     )
     assert country.families == ()
-    assert country.verdict == "no per-traveller dimension"
+    assert country.known == ()
+    assert country.verdict == "ungraded"
+
+
+def test_a_family_grades_a_country_the_oracle_has_never_seen() -> None:
+    """Only the *deferral* needs the oracle. A country outside it with a per-traveller family is
+    measured from that family exactly as before — which is why Portugal reads `bounded by the
+    authority` and not `ungraded`."""
+
+    country = coverage(
+        gateway_site(opened=11),
+        load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH),
+        slug="nowhere",
+        slugs=SLUGS,
+        countries=200,
+    )
+    assert country.known == ()
+    assert country.verdict == "bounded by the authority"
 
 
 def test_a_perfect_known_half_does_not_make_a_country_covered() -> None:
@@ -530,3 +568,28 @@ def test_the_command_prints_both_halves_and_never_adds_them() -> None:
     assert "incomplete" in printed
     assert "no corpus at all for ZZ" in printed
     assert "selection-recall" in printed
+
+
+def test_the_report_names_the_ungraded_countries_once_at_the_end() -> None:
+    """The per-country lines each carry their meaning string, and a reader scanning 53 identical
+    sentences takes the shape of a pass from the column. So it is also said once, plainly, with the
+    countries named — and it is kept apart from `unbuilt`, which is a different absence: no corpus
+    at all rather than a corpus nothing graded."""
+
+    from visa_research_agent.discovery.cli import print_coverage
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    plain = corpus_of([entry(f"{AUTHORITY}/visa/apply", depth=0)], code="XX")
+    stream = io.StringIO()
+    print_coverage(
+        report(
+            [coverage(plain, oracle, slug="nowhere", slugs=SLUGS, countries=200)],
+            unbuilt=["ZZ"],
+        ),
+        stream,
+    )
+    printed = stream.getvalue()
+    assert "UNGRADED — 1 of 1: XX." in printed
+    assert "not a corpus that passed" in printed
+    assert "no corpus at all for ZZ" in printed
+    assert "the guidance is centralised" not in printed

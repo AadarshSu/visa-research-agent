@@ -121,6 +121,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [120](#120-the-gate-says-when-it-cannot-grade-and-the-oracle-is-not-growing-to-53) | **The gate says when it cannot grade** — 42 of 53 were deferring to an empty half; the oracle grows one country at a time, not to 53 |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
 | [95](#95-a-visa-free-plan-is-an-entry-plan-not-an-empty-application) | **A visa-free plan is an entry plan** — the spec; built in [96](#96-the-entry-plan-is-built-and-the-floor-it-needed-was-not-a-number) |
@@ -168,6 +169,76 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 120. The gate says when it cannot grade, and the oracle is not growing to 53
+
+**2026-09-01 · TODO item 43, closes it**
+
+`visa-discover coverage` had four verdicts and one of them was not a measurement.
+`no per-traveller dimension` is a **deferral** — its own sentence says *"the guidance is
+centralised, so the known-answer half settles this country"* — and for a country outside
+`oracle/selection_oracle.yaml` that half holds nothing at all. Measured: **42 of the 53 built
+countries** were deferring to an empty half, and the report read as 42 identical passes.
+
+**Fixed with a fifth verdict, `ungraded`**, and the asymmetry is deliberate. Half one's *content*
+still never votes — entry 90's rule, that one traveller cannot outvote 197, is untouched. Only its
+*presence* does, and only ever to withhold a verdict: nothing here can turn a fail into a pass, only
+a pass nobody earned into an admission that nobody looked. The other three verdicts are computed
+from the families alone and are unmoved, which is why **Portugal reads `bounded by the authority`
+and not `ungraded`** — it is outside the oracle and has a family, so the family grades it. The
+report also names the ungraded set once at the end, because a reader scanning 53 lines takes the
+shape of a pass from the column rather than from any one sentence.
+
+**The second question — should the oracle grow to 53 countries — is answered no, and it was
+measured rather than argued.**
+
+Curating 43 more countries at entry 91's two travellers is ~86 hand-made rows, and it cannot be
+shortcut: entry 87 is emphatic that an oracle either arm helped build is worthless, and entry 91
+that curating from the corpus makes it circular. Against that cost, three things:
+
+1. **Half one does not enter the verdict.** By design (entry 90). So 86 rows would convert 42
+   `ungraded` verdicts into 42 `no per-traveller dimension` deferrals — a *legitimate* deferral
+   instead of an illegitimate one, which is worth something, but not a statement about quality.
+2. **Entry 106 closed the selector experiment**, which was the oracle's other consumer. The twenty
+   corridors are no longer re-run.
+3. **Every one of the 42 already has corridor evidence, free.** 107 recorded runs, typed by cause,
+   with no curation at all. Split by whether any passport resolved:
+
+   | | |
+   | --- | --- |
+   | resolved **every** passport tried | **17** — AU, CZ, EE, EG, ES, HU, IS, LU, LV, MY, NO, NZ, PH, SI, TH, VN, ZA |
+   | resolved **some** | 16 |
+   | resolved **none** | **9** — AT, DK, LI, LT, MA, MX, RO, SA, SK |
+
+   For the 17 a curated row buys a 100% the free signal already predicts, on a half that does not
+   vote. That is the bulk of the job and all of its waste.
+
+**What a row buys that a corridor run cannot, stated fairly, because it is real.** A corridor tells
+you what the selector *found*; only a person reading the store can say what was *findable*. That is
+entry 91's denominator — the same stores answer 47 of 60 roles for one traveller and 41 for another
+— and no run produces it. So the question is never "is curation worthless", it is **"which countries
+is that split worth paying for"**, and the answer is the nine, not the forty-three.
+
+**And of the nine it is at most three, because six have a named cause outside the store.** AT, DK
+and RO lose their pages to a stated or unreadable `robots.txt` — never requested, so no row can
+speak for them; LT and SK to challenges (entries 75, 117, 118); MX to 18 pages the trust rule
+refused, which is known problem 2 and not a store question. **LI, MA and SA are the only genuinely
+ambiguous ones.**
+
+**Before any of them, re-run — because five of the nine were last run before their corpus existed.**
+AT, MA, MX, RO and SA were last measured on 2026-08-25 and their corpora were built on 08-29/08-30,
+so *"never resolved any passport"* describes a crawl-path run against a store that did not yet
+exist. This is item 44's lesson on a different set, and it is the cheap step: five corridors against
+a store that skips the crawl, versus a hand-curated fixture.
+
+**So the rule going forward: grow the oracle one country at a time, when a specific question needs
+the store/selector split, and only after a corridor run has failed to settle it.** `ungraded` is not
+a backlog of 42 curation jobs and must not be read as one — for a country with no per-traveller
+family this gate has nothing offline to say, and the right instrument is a different command. That
+separation is the same one `coverage` and `selection-recall` already keep, and merging them would
+hide which half failed.
 
 ---
 
