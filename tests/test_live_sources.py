@@ -312,6 +312,40 @@ async def test_unreachable_source_with_no_cache_is_reported_as_a_gap(tmp_path: P
 
 
 @pytest.mark.anyio
+async def test_a_timeout_with_no_message_still_says_what_happened(tmp_path: Path) -> None:
+    """`httpx.ConnectTimeout` carries an **empty** message, and retrieval used to interpolate it
+    straight into the sentence a traveller reads: *"could not be read because the request failed
+    ()"*. Measured on `www.moi.gov.sa`, 2026-09-01. A timeout is not a refusal and not a dead name,
+    and the class name is the only fact left once the message is gone."""
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectTimeout("")
+
+    failure = await fetch_failure(build_fetcher(tmp_path, Clock(), handler, []))
+
+    assert failure.outcome == "unreachable"
+    assert failure.detail == "the request failed (ConnectTimeout)"
+
+
+@pytest.mark.anyio
+async def test_a_certificate_failure_names_the_certificate_not_openssl(tmp_path: Path) -> None:
+    """The one transport failure where the fix is bundling an intermediate rather than giving up on
+    the host, so it must not read as a generic outage. DECISIONS entry 12; never disable
+    verification."""
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError(
+            "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local "
+            "issuer certificate (_ssl.c:1010)"
+        )
+
+    failure = await fetch_failure(build_fetcher(tmp_path, Clock(), handler, []))
+
+    assert failure.outcome == "unreachable"
+    assert failure.detail == "its TLS certificate could not be verified"
+
+
+@pytest.mark.anyio
 async def test_client_rendered_shell_is_reported_unusable_not_treated_as_evidence(
     tmp_path: Path,
 ) -> None:

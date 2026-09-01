@@ -42,7 +42,11 @@ from visa_research_agent.domain.models import (
     is_challenge,
 )
 from visa_research_agent.domain.trust import host_of, registrable_domain
-from visa_research_agent.research.live_sources import clean_source_html, extract_pdf_text
+from visa_research_agent.research.live_sources import (
+    clean_source_html,
+    extract_pdf_text,
+    transport_failure_reason,
+)
 from visa_research_agent.research.rendering import PageRenderer
 from visa_research_agent.research.robots import RobotsCache, RobotsVerdict
 from visa_research_agent.research.tls import build_ssl_context
@@ -528,13 +532,7 @@ class CrawlFetcher:
             await self._wait_for_host(host_of(url))
             response = await client.get(url)
         except httpx.HTTPError as exc:
-            reason = str(exc).strip()
-            if "CERTIFICATE_VERIFY_FAILED" in reason:
-                reason = "its TLS certificate could not be verified"
-            elif not reason:
-                # Several httpx errors carry no message, and "because " reads as a broken sentence.
-                reason = f"the request failed ({type(exc).__name__})"
-            self._record_failure(url, "unreachable", reason[:120])
+            self._record_failure(url, "unreachable", transport_failure_reason(exc)[:120])
             if host_does_not_resolve(exc):
                 self.unresolvable_hosts.add(host_of(url))
             return None

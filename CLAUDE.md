@@ -494,6 +494,7 @@ cause, and only running the thing showed it.
 | `no per-traveller dimension` is a verdict the families computed | it is a **deferral** to half one — and for 42 of 53 countries that half was empty (entry 120) |
 | the 43 need oracle rows so the gate can grade them | 17 of 42 already resolve every passport; of the 9 that resolve none, 6 have a named cause (entry 120) |
 | a country that has never resolved a passport needs curating | 5 of the 9 were last run **before their corpus existed** — re-run first (entry 120) |
+| `str(exc)` is a reason | `httpx.ConnectTimeout` carries an empty one: *"the request failed ()"* (entry 122) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

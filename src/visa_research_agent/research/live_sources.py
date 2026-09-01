@@ -173,6 +173,32 @@ def looks_like_pdf(response: httpx.Response) -> bool:
     return response.url.path.lower().endswith(".pdf")
 
 
+def transport_failure_reason(exc: httpx.HTTPError) -> str:
+    """Why a request never produced a response, in words a reader can act on.
+
+    Shared by retrieval and the crawl so the two cannot drift, and they had: the crawl handled both
+    cases below from 2026-08-18 and retrieval handled neither, while **retrieval's reason is the one
+    that reaches a traveller**.
+
+    Two things the raw exception gets wrong.
+
+    * `httpx.ConnectTimeout` and several of its siblings carry an **empty** message, so
+      interpolating `str(exc)` produces *"the request failed ()"* — a sentence with the fact
+      removed. That is what `www.moi.gov.sa` told a traveller on 2026-09-01, where the true fact,
+      "it did not answer in time", is a different thing from a refusal and from a broken name.
+    * A TLS verification failure arrives as an OpenSSL string nobody outside this project can read,
+      and it is the one failure that says the **certificate** rather than the host is the problem —
+      DECISIONS entry 12 is why that distinction is load-bearing here, since the response to it is
+      to bundle an intermediate and never to stop verifying.
+    """
+
+    reason = str(exc).strip()
+    if "CERTIFICATE_VERIFY_FAILED" in reason:
+        return "its TLS certificate could not be verified"
+    # The class name is not a nicety here: it is the only fact left when the message is empty.
+    return f"the request failed ({reason or type(exc).__name__})"
+
+
 def _robots_reason(verdict: RobotsVerdict, detail: str) -> str:
     """Why a crawl policy stopped a source, in words that are true of *that* verdict.
 
@@ -359,7 +385,7 @@ class LiveSourceFetcher:
             response = await self._request(client, url, cached)
         except httpx.HTTPError as exc:
             return self._serve_stale(
-                configured_source, cached, now, f"the request failed ({exc})", "unreachable"
+                configured_source, cached, now, transport_failure_reason(exc), "unreachable"
             )
 
         # Follow where the request actually landed. A page that redirects off the approved

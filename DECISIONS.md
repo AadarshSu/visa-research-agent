@@ -43,6 +43,7 @@ not — and stored text ranks, it never speaks).
 ### Refusal, blocks, and how we behave as a client
 | | |
 | --- | --- |
+| [122](#122-one-failure-reason-for-both-paths-because-the-traveller-facing-one-had-neither-case) | One transport-failure reason for both paths — a timeout with an empty message read as `the request failed ()` |
 | [119](#119-a-web-page-served-at-robotstxt-is-not-an-outsized-crawl-policy) | **A web page at `/robots.txt` is not an outsized policy** — 5 of 5 such hosts served markup; the verdict holds, the reason did not |
 | [118](#118-re-measuring-the-nine-three-improvements-three-corrected-diagnoses-and-a-corridor-that-flips) | **Re-measuring the nine** — NO, ID and TH improve; the US corridor flips between two runs of identical code |
 | [5](#5-refuse-rather-than-serve-evidence-that-may-be-wrong) | Refuse rather than serve evidence that may be wrong |
@@ -169,6 +170,31 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 122. One failure reason for both paths, because the traveller-facing one had neither case
+
+**2026-09-01 · found by entry 121**
+
+`www.moi.gov.sa` told a traveller their authority *"could not be read because the request failed
+()"*. Reproduced: `httpx.ConnectTimeout` carries an **empty** message, and retrieval interpolated
+`str(exc)` straight into the sentence — so the one fact in it was the fact that had been removed. A
+timeout is not a refusal and not a name that does not resolve, and those are three different things
+to tell someone whose embassy is missing from their plan.
+
+**The crawl had handled it since 2026-08-18 and retrieval had not**, which is the wrong way round:
+the crawl's string is an audit line and retrieval's is read by a traveller. It had missed the second
+case too — a `CERTIFICATE_VERIFY_FAILED` reaches retrieval as an OpenSSL string, where the crawl
+says *"its TLS certificate could not be verified"*. That one is load-bearing rather than cosmetic:
+entry 12 forbids ever disabling verification, so the response to it is to bundle the missing
+intermediate, and a reason that reads as a generic outage points at the wrong fix.
+
+`transport_failure_reason` is now one function both call, so the two cannot drift again. It costs
+the crawl a slightly longer sentence — `the request failed ([Errno 8] …)` where it used to print
+the bare errno — which reads better in the note it ends up in either way. The two `_robots_reason`
+helpers stay duplicated on purpose: those genuinely say different things, one to a traveller and
+one to an audit.
 
 ---
 
