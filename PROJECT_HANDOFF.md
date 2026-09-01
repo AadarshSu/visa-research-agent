@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-01 — update this line when you touch the handoff |
-| **Tests** | 660 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 662 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -120,10 +120,26 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 45: re-run the five countries last measured before their corpus existed** — AT, MA,
-MX, RO and SA. Items 43 and 44 are done; see below.
+**Start at item 47: find out how much of the world the per-traveller family detector cannot see.**
+Items 43, 44 and 45 are done; see below.
 
-**What changed on 2026-09-01, in four results (entries 118, 119 and 120):**
+**What changed on 2026-09-01, in seven results (entries 118 to 122):**
+
+- **Romania resolves and fills 5 of 6 roles** (item 45, entry 121), off `eviza.mae.ro` — including
+  a per-residence checklist PDF. Austria fills two. Both were countries this project had recorded
+  as never resolving any passport, and both predictions that the verdict would stand were wrong;
+  their baselines were crawl-path runs taken before their corpora existed.
+- **Morocco refuses with an `HTTP 200`** and is reported as `unusable` — *"too little readable text
+  to trust"* — when the body is an F5 *"Request Rejected"* page. **0 of 43,153 indexed bodies hold
+  one**, so the thinness guard already stops it becoming a source and this is a diagnosis defect,
+  not a safety one. Reclassifying it would change what resolves a corridor: item 46.
+- **The per-traveller family detector is English-only** (entry 121). Romania holds **58**
+  per-residence checklist PDFs named in Romanian and `country_family_keys` returns `[]` for every
+  one, so `coverage` reports it as having no per-traveller dimension. `coverage` half two and the
+  crawl's family reservation both rest on that function. How general it is, is **not** measured —
+  item 47.
+
+**What changed earlier on 2026-09-01, in four results (entries 118, 119 and 120):**
 
 - **The coverage gate was reading 42 passes nobody had earned** (item 43, entry 120). A country
   with no per-traveller family verdicted `no per-traveller dimension`, whose own sentence says the

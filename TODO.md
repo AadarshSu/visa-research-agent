@@ -165,7 +165,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 45. Re-run the five countries last measured before their corpus existed | `next` |
+| **Now** | 47. Find out how much of the world the family detector cannot see | `next` |
+|  | 46. Decide what to do about a refusal served as `HTTP 200` | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 31. Rank a candidate by what the page says, not only by the link to it | `built, off` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
@@ -207,30 +208,63 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 45. Re-run the five countries last measured before their corpus existed — `next`, **start here**
+### 47. Find out how much of the world the family detector cannot see — `next`, **start here**
 
-**Item 44's lesson on a different set, and entry 120 found it.** Of the nine ungraded countries
-that have never resolved a single passport, **five were last run on 2026-08-25 and their corpora
-were built on 08-29/08-30** — so *"never resolved any passport"* describes a crawl-path run against
-a store that did not yet exist:
+**Romania holds a 58-member per-residence checklist family and `coverage` reports it as having
+none** (entry 121). `eviza.mae.ro/media/3252/MAREA-BRITANIE.PDF` is the page that filled
+`document_checklist` for a UK-resident applicant, and its siblings are `AFGANISTAN`,
+`ARABIA-SAUDITA`, `BANGLADESH` — named in **Romanian**. `country_family_keys` matches English
+country slugs and returns `[]` for every one.
 
-| | |
-| --- | --- |
-| AT | 464 candidates, **23 `disallowed`** — expect the verdict to stand; the pages were never requested |
-| RO | 189 candidates, 10 `disallowed`, 3 `unreachable` — same, and entry 70 records `mae.ro`'s hosts answering `503` to `robots.txt` |
-| MX | 97 candidates, **18 `untrusted`** — known problem 2, not a store question |
-| MA | 160 candidates, 5 `unusable` — **genuinely open**, and the best prospect |
-| SA | 139 candidates, **17 `unusable`**, 7 `unreachable` — genuinely open |
+**Two things rest on that function**, so the blind spot is not cosmetic: `coverage` half two, whose
+verdict is computed from families alone (entry 90), and the crawl's family reservation, which is
+entry 88's whole answer to a corpus that opens 3–15% of what it records. A country publishing in
+its own language gets neither.
 
-**Do:** one corridor each, the same traveller the baseline used, and **copy the recall rows out
-first** — the log is keyed on the corridor and a re-run overwrites its own baseline (entry 118).
-Expect three of the five to stand for reasons already named; MA and SA are why this is worth the
-quota.
+**Measure before building anything, and note the obvious probe does not work.** A language-agnostic
+sweep for runs of sibling URLs sharing every path segment but the last found 16 corpora with a run
+of 20 or more — and **missed Romania's own family**, because its members sit under different
+numeric parents (`/media/3120/`, `/media/3126/`) rather than a shared one. So that probe undercounts
+and its zero means nothing. Something that groups on the *last segment's* shape, independent of the
+parent, is what would actually count this.
 
-**Then, and only then, decide whether any of them needs an oracle row.** Entry 120's rule: grow the
-oracle one country at a time, when a specific question needs the store-versus-selector split, and
-only after a corridor run has failed to settle it. **`ungraded` is not a backlog of 42 curation
-jobs**, and reading it as one is the mistake that entry warns about.
+**Then decide what to do, and do not assume it is a translation table.** 198 country names in every
+authority language is a large fixture with a maintenance cost, and entry 70 already found that
+demonyms bought 22 shortlist places all of which were noise. A cheaper candidate: a family is a run
+of siblings differing only in one token, whatever that token means — which needs no country list at
+all and is what the failed probe was reaching for.
+
+**What this does not change.** Entry 120's rule stands: the oracle grows one country at a time. If
+this measurement shows several countries have families nobody could see, that lowers the number of
+genuinely `ungraded` countries rather than raising the number needing curation.
+
+
+### 46. Decide what to do about a refusal served as `HTTP 200` — `next`
+
+**Morocco's authority declines the request and answers `200`** (entry 121). All four candidates in
+`morocco/IN/GB` came back as `unusable`, *"too little readable text to trust"*; fetched directly
+under our own user agent they are 244 bytes of *"Request Rejected. The requested URL was rejected.
+Please consult with your administrator. Your support ID is: …"* — an F5 BIG-IP block. `unusable`
+says we read the page and it held nothing. The truth is that we were not permitted to check, which
+is entry 18's distinction and the one this project treats as load-bearing.
+
+**It is a diagnosis defect and not a safety one, which is why it is an item rather than a fix.**
+All 43,153 indexed bodies were scanned and **0** hold that sentence: at 140 visible characters it is
+below `minimum_source_characters`, so the thinness guard already stops it becoming a source. Entry
+117's failure — an interstitial stored and citable — cannot happen here, and only because
+Cloudflare's is ~1,370 characters and this is not. **That is a size accident, not a design, and it
+is the reason to look rather than to leave it.**
+
+**Why reclassifying is a decision.** `blocked` feeds `inaccessible_urls` and entry 32's
+`decision_blocking_urls`, so a body-marker test would change **what resolves a corridor** —
+a Moroccan corridor could start reading `resolved_decision_blocked`. Entry 57's bounds and entry
+32's narrowness both apply, and entry 109 is the warning next door: it establishes a block from what
+the page **states**, never from a vendor's scaffolding. F5's sentence is the page stating it, which
+is the good case; the risk is the next vendor whose sentence is less clear.
+
+**Do:** count first. How many pages across the 53 corpora answer `200` with a body under
+`minimum_source_characters` that names a refusal, and on how many hosts. If it is Morocco alone the
+honest fix may be a truer `unusable` reason rather than a new outcome.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
@@ -1136,6 +1170,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 45. Re-run the five countries last measured before their corpus existed | 09-01 | 121, 122 | **Romania fills 5 of 6** off `eviza.mae.ro`, Austria 2 — both were predictions this item said would stand. Morocco refuses with an `HTTP 200` reported as `unusable` (item 46), and Romania's 58 Romanian-named checklist PDFs are invisible to the family detector (item 47) |
 | 43. Give the new 43 something the coverage gate can grade | 09-01 | 120 | **42 of 53 countries were deferring to an empty half** and read as passes. Fixed with an `ungraded` verdict. The oracle is **not** growing to 53: 17 of the 42 resolve every passport tried, and of the 9 that resolve none, 6 have a named cause outside the store |
 | 44. Re-measure the countries whose ranking text was a bot-check page | 09-01 | 118, 119 | NO and ID now fill **6 of 6**, TH names its checker. The Philippines' missing checklist is a **visa-free** corridor, Lithuania's ceiling is the challenge and not its `Disallow`, and the US gaps split — `travel.state.gov` blocked, `uk.usembassy.gov` never requested. The US corridor **flips** between two runs of identical code |
 | 42. Why Liechtenstein's 7,456 pages yield two candidates | 08-30 | 117 | **Not Liechtenstein's fault.** `is_challenge` read `body[:20_000]`; Cloudflare's marker sits at 24,915 of 29,336, so an unanswered challenge was stored as the page. 414 rows across nine countries, including Lithuania's visa page and `egov.uscis.gov/processing-times` |

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [121](#121-re-running-the-five-two-confident-predictions-wrong-a-refusal-dressed-as-a-200-and-a-family-in-romanian) | **Re-running the five** — Romania fills 5 of 6; Morocco refuses with a `200`; the family detector is English-only |
 | [120](#120-the-gate-says-when-it-cannot-grade-and-the-oracle-is-not-growing-to-53) | **The gate says when it cannot grade** — 42 of 53 were deferring to an empty half; the oracle grows one country at a time, not to 53 |
 | [4](#4-cached-evidence-reports-when-it-was-really-retrieved) | Cached evidence reports when it was **really** retrieved |
 | [89](#89-guidance-an-authority-contracts-out-named-never-read-never-believed) | **Guidance an authority contracts out** — named, never read; the model selects and may never supply |
@@ -195,6 +196,70 @@ the crawl a slightly longer sentence — `the request failed ([Errno 8] …)` wh
 the bare errno — which reads better in the note it ends up in either way. The two `_robots_reason`
 helpers stay duplicated on purpose: those genuinely say different things, one to a traveller and
 one to an audit.
+
+---
+
+## 121. Re-running the five: two confident predictions wrong, a refusal dressed as a `200`, and a family in Romanian
+
+**2026-09-01 · TODO item 45, closes it**
+
+Entry 120 found that five of the nine countries which had never resolved a passport were last
+measured on 2026-08-25, before their corpora existed on 08-29/08-30 — so their verdicts described a
+crawl-path run against a store that did not yet exist. Re-run, one corridor each, same traveller as
+the baseline, all five corpus-routed with the crawl skipped:
+
+| corridor | baseline | 2026-09-01 | roles filled |
+| --- | --- | --- | --- |
+| `romania/IN/GB` | `decision_not_found`, 0 roles | **`resolved`** | **5 of 6** |
+| `austria/IN/IN` | `decision_not_found`, 0 roles | `decision_not_found` | 2 — checklist and route |
+| `saudi-arabia/IN/GB` | `decision_not_found`, 0 roles | `decision_not_found` | 1 — route |
+| `morocco/IN/GB` | `decision_not_found`, 0 roles | `decision_not_found` | 0 |
+| `mexico/IN/GB` | `decision_not_found`, 0 roles | `decision_not_found` | 0 |
+
+**The two predictions written into item 45 were the two most confident ones, and both were wrong.**
+
+- *"RO: expect the verdict to stand; entry 70 records `mae.ro`'s hosts answering `503` to
+  `robots.txt`."* Romania now fills five of six roles off **`eviza.mae.ro`** — a host that answers
+  everything. Only `cglondra.mae.ro` still `503`s, and it costs nothing. Entry 70's finding was
+  true of the hosts it measured and was never true of the portal.
+- *"AT: 23 `disallowed`, expect the verdict to stand."* Six now, and Austria fills
+  `document_checklist` and `application_route` off `oesterreich.gv.at`. Only `visa_decision` is
+  open.
+
+**Morocco is not "genuinely open" — it is a refusal served as `HTTP 200`.** All four candidates
+were reported `unusable`, *"the page returned too little readable text to trust"*. Fetched directly
+through the project's own TLS context under our own user agent, `diplomatie.ma/en/visiting-morocco`
+and both `in.diplomatie.ma` pages return **244 bytes** saying *"Request Rejected. The requested URL
+was rejected. Please consult with your administrator. Your support ID is: …"* — an F5 BIG-IP block.
+The reason reported is technically true and materially wrong: `unusable` says we read the page and
+it held nothing, when the authority declined the request. Entry 18's whole discipline is telling
+those two apart, and a status-code test cannot, because the status is `200`.
+
+**Measured before assuming the worst: nothing was stored.** All 43,153 indexed bodies across the
+53 countries were scanned for that sentence and **0 matched** — the rejection page is 140 visible
+characters against a `minimum_source_characters` of 400, so the thinness guard catches every one and
+none can be cited. Entry 117's failure mode does not repeat here, and the reason is a size accident:
+Cloudflare's interstitial is ~1,370 characters and clears the same guard. So this is a
+**diagnosis** defect, not a safety one. **Reclassifying it is a real decision and is deliberately
+not taken here** — `blocked` feeds `inaccessible_urls` and entry 32's `decision_blocking_urls`, so a
+body-marker test would change what resolves a corridor. TODO item 46.
+
+**Mexico is a third kind and is behaving correctly.** `citas.sre.gob.mx`, `consulmex.sre.gob.mx` and
+`www.miconsulado.sre.gob.mx` all redirect or navigate to `validate.perfdrive.com` — bot mitigation
+on someone else's domain — and every one is refused as not an approved authority domain for Mexico.
+That is the redirect check doing exactly its job.
+
+**And entry 120 was wrong about Romania, in a way that is not about Romania.** It reads `ungraded`
+because `coverage` found no per-traveller family. Romania's corpus holds **58 per-residence
+checklist PDFs** — `eviza.mae.ro/media/3252/MAREA-BRITANIE.PDF` is the one that answered this
+corridor, alongside `AFGANISTAN`, `ARABIA-SAUDITA`, `BANGLADESH` — and `country_family_keys`
+returns `[]` for **every one of them**, because it matches English country slugs and these are
+named in Romanian. So the family detector is English-only, `coverage` half two and entry 88's crawl
+reservation both rest on it, and *"no per-traveller dimension"* can be an artefact of the language
+an authority publishes in. **How general that is remains unmeasured**: a language-agnostic probe
+for sibling runs across all 53 corpora missed Romania's own family, because its members sit under
+different numeric parents rather than a shared one. One country is established; the size of the
+blind spot is not. TODO item 47.
 
 ---
 
