@@ -60,6 +60,18 @@ import httpx
 # crawl policy, and guessing at the part that fit would be inventing permission.
 MAXIMUM_ROBOTS_BYTES = 512_000
 
+# What the oversize responses actually were, measured 2026-09-01. Every one of the five reachable
+# hosts that had ever tripped the cap — `rai.malaysia.gov.my`, `malaysiavisa.imi.gov.my` and the
+# `ng`, `ph` and `uk` `usembassy.gov` posts — answered `200 text/html` with a web page: a
+# single-page-app catch-all or a "Technical Difficulties" notice, 659 KB to 944 KB of markup with
+# not one directive in it. Not one was a large crawl policy. The verdict is unchanged and stays
+# CLOSED, because a policy that could not be read leaves permission unknown; what was wrong is the
+# **reason**, which told a reader the authority publishes an outsized policy. A false reason is the
+# failure this project treats as worse than no answer, so the two are now named apart. Recognised
+# from the declared type or the markup itself, since a host serving a page here is already
+# misconfigured and its `Content-Type` cannot be relied on either.
+HTML_MARKERS = ("<!doctype html", "<html")
+
 ROBOTS_TIMEOUT_SECONDS = 10.0
 
 # How long a policy may be reused before it is read again. A day is what large crawlers use, and it
@@ -227,6 +239,26 @@ def user_agent_token(user_agent: str) -> str:
     return user_agent.split("/")[0].strip() or "*"
 
 
+def _oversize_reason(response: httpx.Response) -> str:
+    """Why an over-cap response could not be read as a policy, said truly.
+
+    Both answers leave permission unknown and both close the host, so nothing here decides what is
+    fetched. What it decides is what a traveller and an audit are told, and the rule in
+    [CLAUDE.md](CLAUDE.md) is that the reason must be true of what was **seen**: a host answering
+    `/robots.txt` with a "Technical Difficulties" page has published no policy at all, and calling
+    that an outsized one invents a fact about the authority. Measured over every host that had ever
+    tripped the cap, the outsized-policy branch has never once been the true one — see
+    `HTML_MARKERS`.
+    """
+
+    declared = response.headers.get("content-type", "").split(";")[0].strip().lower()
+    body = response.content[:1024].lstrip().lower()
+    is_page = declared == "text/html" or body.startswith(tuple(m.encode() for m in HTML_MARKERS))
+    if is_page:
+        return "answered with a web page rather than a crawl policy"
+    return "is larger than the size limit for a crawl policy"
+
+
 class RobotsCache:
     """Each origin's crawl policy, fetched once and re-read when it expires.
 
@@ -324,7 +356,7 @@ class RobotsCache:
             # caller's client, so one reaching this branch has already exhausted its hops.
             return _Policy.OPEN
         if len(response.content) > self.maximum_bytes:
-            self.unreadable[origin] = "is larger than the size limit for a crawl policy"
+            self.unreadable[origin] = _oversize_reason(response)
             return _Policy.CLOSED
 
         return parse_rules(response.text, self.agent_token)

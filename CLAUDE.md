@@ -484,6 +484,7 @@ cause, and only running the thing showed it.
 | a challenge marker test only needs the top of the page | cloudflare puts `_cf_chl_opt` at index 24,915 of 29,336 (entry 117) |
 | the renderer waits out a challenge until it clears | it polled on `is_challenge`, which said 'cleared' on iteration one (entry 117) |
 | retrieval re-checks an answered challenge the way the crawl does | it checked thinness only; the interstitial became a citable source (entry 117) |
+| an oversized `robots.txt` means the authority publishes a huge crawl policy | 5 of 5 such hosts served a **web page**; not one was a policy (entry 119) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
 | a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
 | a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |

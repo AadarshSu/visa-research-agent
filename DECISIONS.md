@@ -43,6 +43,7 @@ not — and stored text ranks, it never speaks).
 ### Refusal, blocks, and how we behave as a client
 | | |
 | --- | --- |
+| [119](#119-a-web-page-served-at-robotstxt-is-not-an-outsized-crawl-policy) | **A web page at `/robots.txt` is not an outsized policy** — 5 of 5 such hosts served markup; the verdict holds, the reason did not |
 | [5](#5-refuse-rather-than-serve-evidence-that-may-be-wrong) | Refuse rather than serve evidence that may be wrong |
 | [18](#18-a-block-is-not-a-fact-about-the-guidance-never-work-around-one) | A block is not a fact about the guidance; never work around one |
 | [24](#24-a-fetch-place-is-not-spent-on-a-page-already-proved-unreadable) | A fetch place is not spent on a page already proved unreadable |
@@ -166,6 +167,50 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 119. A web page served at `/robots.txt` is not an outsized crawl policy
+
+**2026-09-01 · found by entry 118**
+
+`uk.usembassy.gov` — the post an Indian national applying from Britain actually uses — contributed
+four pages to the United States corridor, and every one was reported to the traveller as:
+
+> the authority's robots.txt is larger than the size limit for a crawl policy, so whether this
+> client may retrieve the page is unknown and it was not requested
+
+Measured: `https://uk.usembassy.gov/robots.txt` answers **`200 text/html`, 659,508 bytes**, and the
+body is `<!DOCTYPE html>` … *"Technical Difficulties"*. There is no policy there at all. The host has
+not published an outsized one; it has published a broken page, and the sentence told a reader
+something about the authority that was never observed.
+
+**It is every such host, not one.** Six hosts across three countries had ever tripped
+`MAXIMUM_ROBOTS_BYTES` in the recall logs, costing 49 page-losses. Five are reachable and **all five
+answer `200 text/html`** with a web page — a single-page-app catch-all for
+`rai.malaysia.gov.my` (944 KB) and `malaysiavisa.imi.gov.my` (923 KB), the same "Technical
+Difficulties" notice for the `ng`, `ph` and `uk` `usembassy.gov` posts (659 KB each). **The
+outsized-policy branch has never once been the true one.** The comment on the constant already said
+as much — *"A file larger than this is not a crawl policy"* — and the message contradicted it.
+
+**The verdict does not move, and that is the point.** A policy that could not be read leaves
+permission unknown, so the host stays `CLOSED` and the pages stay unrequested, exactly as before.
+Nothing here fetches one page more. What changes is the reason, because
+[CLAUDE.md](CLAUDE.md)'s rule for this file is that **the reason reported must be true of what was
+seen** — the same rule that made a dead host report as unreachable rather than as a policy nobody
+read, and that keeps `withheld_domains` from telling a reviewer something false. A false reason
+defeats the safeguard rather than merely reading badly.
+
+**Recognised from the markup as well as the declared type.** A host misconfigured enough to serve a
+page here has no claim on its `Content-Type` being believed either, so a leading `<!doctype html` or
+`<html>` decides it too.
+
+**What was deliberately not done: treating any `text/html` at `/robots.txt` as closed.** A *small*
+HTML page there is parsed today into an empty ruleset and the host is crawled; closing it would stop
+crawling hosts that are crawled now, which is a coverage change on unmeasured ground. This entry
+changes a sentence, not a permission. Whether the wider rule is right is its own question and needs
+its own measurement — how many authority hosts serve markup at that path at all, which nobody has
+counted.
 
 ---
 

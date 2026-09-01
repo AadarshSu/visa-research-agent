@@ -134,6 +134,69 @@ async def test_a_policy_that_could_not_be_read_is_unreadable_not_disallowed() ->
 
 
 @pytest.mark.anyio
+async def test_a_web_page_served_at_robots_is_not_called_an_outsized_policy() -> None:
+    """The reason has to be true of what was seen. Measured 2026-09-01: every host that had ever
+    tripped the size cap — the `uk`, `ng` and `ph` `usembassy.gov` posts, `rai.malaysia.gov.my`,
+    `malaysiavisa.imi.gov.my` — answered `200 text/html` with a web page and no directive in it,
+    while the corridor told the traveller their embassy publishes an outsized crawl policy. The
+    verdict is unchanged; only the sentence is."""
+
+    page = "<!DOCTYPE html><html><body>Technical Difficulties</body></html>" + "x" * 600_000
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=page, headers={"Content-Type": "text/html"})
+
+    cache = RobotsCache(user_agent=REAL_USER_AGENT)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        assert await cache.verdict(client, INDEX) is RobotsVerdict.UNREADABLE
+
+    reason = cache.unreadable[origin_of(INDEX)]
+    assert reason == "answered with a web page rather than a crawl policy"
+    assert "does not permit" not in reason
+
+
+@pytest.mark.anyio
+async def test_a_page_served_as_the_wrong_type_is_still_recognised_as_a_page() -> None:
+    """A host misconfigured enough to serve markup here has no claim on its `Content-Type` being
+    believed either, so the markup itself decides."""
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            text="\n  <html><body>oops</body></html>" + "x" * 600_000,
+            headers={"Content-Type": "application/octet-stream"},
+        )
+
+    cache = RobotsCache(user_agent=REAL_USER_AGENT)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        assert await cache.verdict(client, INDEX) is RobotsVerdict.UNREADABLE
+
+    assert cache.unreadable[origin_of(INDEX)] == (
+        "answered with a web page rather than a crawl policy"
+    )
+
+
+@pytest.mark.anyio
+async def test_a_genuinely_outsized_policy_keeps_its_own_reason() -> None:
+    """The other branch is still reachable and still true when it fires: a policy too large to
+    parse is a different fact from no policy at all, and guessing at the part that fit would be
+    inventing permission either way."""
+
+    policy = "User-agent: *\n" + "".join(f"Disallow: /p{n}\n" for n in range(60_000))
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text=policy, headers={"Content-Type": "text/plain"})
+
+    cache = RobotsCache(user_agent=REAL_USER_AGENT)
+    async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
+        assert await cache.verdict(client, INDEX) is RobotsVerdict.UNREADABLE
+
+    assert cache.unreadable[origin_of(INDEX)] == (
+        "is larger than the size limit for a crawl policy"
+    )
+
+
+@pytest.mark.anyio
 async def test_an_unreachable_host_raises_rather_than_inventing_a_policy() -> None:
     """The guard against a false reason. Swallowing this made every dead host report as
     "its robots.txt does not permit this client", which was not observed and is not true."""
