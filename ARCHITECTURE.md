@@ -473,9 +473,29 @@ What it may do is bounded hard, and the bounds are the safety story:
   `decided_by` to show it. Retrying a model provider is not what entry 18 forbids, which is about an
   authority refusing to be read. A refusal reports the calls it paid for.
 
-The heuristic is not replaced. It builds the shortlist the model chooses from, it answers when no
-adjudicator is configured, and its score is recorded beside the model's choice so a reviewer can see
-where the two disagreed.
+The heuristic is not replaced, and **what it now gates is larger than "the shortlist"**. With
+`discovery_selector: model`, `_choose_what_to_read` builds the model's pool as
+`[c for c in candidates.values() if c.best_combined()[1] > 0]` — so a candidate the heuristic scores
+zero for **every** role is never shown to the selector, never fetched and never judged. Measured over
+24 runs on current stores, that pool is **6% of the candidate set**: 4,450 of 71,798, with
+Liechtenstein offering 2 of 7,482 (entry 123). It also answers when no adjudicator is configured, and
+its score is recorded beside the model's choice so a reviewer can see where the two disagreed.
+
+**Two consequences a reader should carry.** First, the arm comparison of entries 84–87 is unaffected —
+both selectors filter on `> 0`, so they raced over the same 6% — but the absolute figures share that
+denominator, because `oracle/selection_oracle.yaml` was curated "from every candidate that scored
+above zero" and **cannot detect the filter it shares** (88 of 88 oracle-named pages are in the pool,
+which is a tautology). Second, the gate is not neutral between sources: it admits **49% of search
+results and 5.5% of corpus pages**, because search returns pages whose URL and title already match
+the vocabulary the scorer rewards (entry 125). Both are [TODO.md](TODO.md) item 31, and whether the
+discarded 94% contains any answer is **unmeasured**.
+
+**And the scorer has no signal for where the traveller applies from.** `score_link` adds
+`lexicon.nationality_weight` for a page about the **passport** country and has no residence
+equivalent; `mission_affinity` matches host labels, not a page that is *about* a country. Canada's
+635-member `where-submit-application.asp?country={XX}` family scores the `?country=IN` page 32.0 and
+the `?country=GB` page — the one that answers an Indian applicant in Britain — **0.0** (entry 124,
+item 1).
 
 **Every run also writes down what it considered** (`discovery/recall_log.py`, entry 43): all candidates
 with their scores, whether each was shortlisted and fetched, the queries, the seeds, and each unreadable
@@ -551,10 +571,15 @@ search and no network in it anywhere. Like `audit` it prints two halves that are
 **known answers** a human curated, which is 47 of 47 and covers exactly one traveller, and the
 **per-traveller family** — a run of addresses differing only by which country they are about,
 `…/schengen-visa/apply-{}`. The verdict is computed from the second half alone, so a 100% meaning
-"fine for `IN/GB`" can never outvote a family measurement meaning "unserved for the other 197". Four
-verdicts, of which three are passes: *no per-traveller dimension*, *covered*, *bounded by the
-authority* — the members are behind a selector and no crawl budget crosses one — and *incomplete*,
-which means rebuild before promoting the country to stage 3. `coverage.py` groups families across the
+"fine for `IN/GB`" can never outvote a family measurement meaning "unserved for the other 197".
+**Five verdicts** since entry 120, of which three are passes: *no per-traveller dimension*,
+*covered*, *bounded by the authority* — the members are behind a selector and no crawl budget crosses
+one — *incomplete*, which means rebuild before promoting the country to stage 3, and **`ungraded`**,
+which means the country has no per-traveller family **and** no oracle row, so neither half said
+anything about it. That last one is the common case: **42 of the 53 built countries are `ungraded`**,
+and they used to borrow the wording of a pass by deferring to an empty half. Half one's *content*
+still never votes; only its absence can withhold a verdict, and never grant one — which is why
+Portugal, outside the oracle but holding a family, is still graded *bounded by the authority*. `coverage.py` groups families across the
 whole store where `LinkCrawler._queue` groups the links found on one page, and each family is marked
 `listed` or `spread` for which grouping sees it; that difference is what makes the United Kingdom's
 fee wizard visible as a family at all.
@@ -716,11 +741,13 @@ smaller, which is what lost Canada its answer.
 > the next optimisation is. Confirmed again on 2026-08-24 across **40 runs of 20 corridors** (entry 58):
 > none crawled, median 27.4s.
 >
-> **Ten countries have a corpus** as of 2026-08-24 — Canada, UAE, Netherlands, United States, France,
-> Japan, Singapore, United Kingdom, Sweden, Germany — 16,375 pages between them (the count grows as
-> live runs write back what they found, entry 47). A country without one crawls exactly as before, and
-> **43 of the 53 reachable countries are in that position** — a corpus is a speed optimisation, not
-> a prerequisite.
+> **Fifty-three countries have a corpus** as of 2026-08-30 — the ten of entry 85 plus the 43 built in
+> entry 116, **186,596 addresses between them**, of which the page-text index holds bodies for
+> **43,153 (23%)**; a build opens 3–15% of what it records (entry 88). The count grows as live runs
+> write back what they found, but **only on the API path** — `visa-discover corridor` folds nothing
+> back (item 19). Only **Brazil and Uruguay** have none, and a country without one crawls exactly as
+> before: a corpus is a speed optimisation, not a prerequisite. Formerly ten as of 2026-08-24, 16,375
+> pages.
 >
 > **One thing broke on the way, and it is fixed.** Removing the crawl left entry 27's
 > blocked-authority exception unable to fire: `_decision_blocking` needed a refusal observed on a page

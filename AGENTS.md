@@ -39,6 +39,14 @@ the CLI does not offer it.
 - **`visa-discover bootstrap --destination-name "United States"`** prints the proposed domains with
   their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
   the trusted set is checked before blaming ranking for anything.
+- **First, check whether the page was ever a candidate at all.** With `discovery_selector: model`
+  the model only sees `[c for c in candidates.values() if c.best_combined()[1] > 0]`, which over 24
+  runs is **6% of the candidate set** — Liechtenstein offers 2 of 7,482 (entry 123). A page scoring
+  zero for every role is invisible to the selector however good it is, so *"the model did not pick
+  it"* and *"the model never saw it"* look identical from the outside. `var/recall/<corridor>.json`
+  distinguishes them: `best_score` of `0.0` means the second. **And check the traveller's residence
+  specifically** — `score_link` has a bonus for the passport country and **none** for where they
+  apply from, so a page that is exactly theirs can score zero for saying so (entry 124, item 1).
 - **To see the shortlist** — 35 places since entry 61, five reserved per role — wrap
   `resolver.shortlist`, print each candidate's score, role, link text, inherited heading and
   `link_scores.signals`, and return the list unchanged. Nothing else exposes it. **With
@@ -85,12 +93,19 @@ the CLI does not offer it.
   two halves that are never added, and it is the promotion rule for stage 3 (entry 90). Half one is
   the 47 of 47 answers a human named in `oracle/selection_oracle.yaml` — **one traveller, `IN/GB`,
   so it is a regression check and never evidence a corpus is ready.** Half two is every
-  per-traveller family the store holds, and the verdict comes from that half alone. Four verdicts:
-  *no per-traveller dimension*, *covered* and *bounded by the authority* are passes; *incomplete*
-  means rebuild before promoting. Reads three stores, calls nothing, has no model in it anywhere —
+  per-traveller family the store holds, and the verdict comes from that half alone. **Five verdicts**
+  since entry 120: *no per-traveller dimension*, *covered* and *bounded by the authority* are passes;
+  *incomplete* means rebuild before promoting; **`ungraded`** means neither half could say anything —
+  no family and no oracle row — and **42 of 53 countries are `ungraded`**. Do not read that as 42
+  curation jobs; entry 120 argues the oracle grows one country at a time. Reads three stores, calls nothing, has no model in it anywhere —
   keep it that way, because entry 81 is what grading this on roles filled would cost.
 - **`visa-discover selection-recall`** grades what a selector chose to read against
-  `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it. Reads
+  `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it.
+  **It cannot grade a change that widens the pool**, and that limit is structural rather than a
+  bug: the fixture was curated "from every candidate that scored above zero" (`contention.py`), so
+  no page outside the pool can appear in it — 88 of 88 oracle-named answering pages are in the pool,
+  which is a tautology rather than a result (entry 123). Anything touching `_choose_what_to_read`'s
+  filter needs a fixture curated from the **whole** candidate set first; item 31 owns that. Reads
   two files, calls nothing. **A recall log that cannot say which selector fetched its pages is
   refused, not graded** (entry 91): a run's fetched URLs are read as the model's picks, so grading a
   heuristic run that way puts the heuristic in the model's own arm. Every log written before

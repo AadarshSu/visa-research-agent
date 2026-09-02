@@ -85,7 +85,7 @@ not — and stored text ranks, it never speaks).
 | [116](#116-forty-three-corpora-what-they-cost-what-they-answer-and-what-the-gate-cannot-say-about-them) | **43 corpora built, 10 → 53** — nine corridors answer from the store, and the gate is vacuous for all 43 |
 | [115](#115-the-shallow-crawl-warning-gave-the-same-advice-to-two-opposite-failures) | **The shallow-crawl advice was wrong half the time** — the Philippines spent 425 of 1,200 pages |
 | [114](#114-one-pdf-with-nul-bytes-discarded-a-whole-countrys-crawl) | **One PDF discarded China's crawl** — the text layer had NUL bytes and the failure landed after the crawl |
-| [113](#113-gov-bg-is-a-public-suffix-so-bulgaria-was-not-thin-it-was-unresearchable) | **`gov.bg` made Bulgaria unresearchable** — a reviewed domain nothing constructed until a build tried |
+| [113](#113-govbg-is-a-public-suffix-so-bulgaria-was-not-thin--it-was-unresearchable) | **`gov.bg` made Bulgaria unresearchable** — a reviewed domain nothing constructed until a build tried |
 | [112](#112-a-third-traveller-the-corpus-was-never-tuned-for-scores-higher-than-the-two-it-was-built-on) | **A third traveller scores 87%** — higher than the two the system was built on |
 | [111](#111-twelve-more-domains-on-the-owners-judgement-and-what-that-standard-is) | **Twelve more on judgement** — `reviewed` now means "a person decided", in three marked tiers |
 | [110](#110-six-domains-for-five-countries--and-the-proposed-lists-were-wrong-about-which-domain-to-want) | **Six domains, five countries** — and three for three, the right domain was not the proposed one |

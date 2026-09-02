@@ -7,13 +7,15 @@ visa approval, and it never submits anything on anyone's behalf.
 
 **55 of 198 countries are currently *reachable*.** Which domains a country may be researched from is
 generated offline, reviewed once, and committed in `config/authority_domains.yaml`; a country absent from
-it is refused rather than guessed at. The file holds **55 rows**; Iceland and Liechtenstein carry no
-domain that could be confirmed, so they refuse too.
+it is refused rather than guessed at. The file holds **55 rows**, and since 2026-08-29 every one of
+them carries a confirmable domain — Iceland and Liechtenstein were the last two (entry 110).
 
 **Reachable is not the same as working**, and the difference is deliberate (`DECISIONS.md` entry 68).
 The registry grows **in batches**, and a batch is done in three stages — *reachable*, then *resolves*,
 then *fast from a stored corpus*. No further country is added until the current batch clears all three.
-**Batch 1 is all 53**: 12 have ever been run and 10 have a corpus, so most of it is stage 1. A batch
+**Batch 1 is all 55, and it has cleared all three stages** (entry 116): every one has been run and
+resolves or refuses for a named reason, and **53 of the 55 have an offline corpus and a page-text
+index** — only Brazil and Uruguay do not, at one authority domain each. A batch
 bounds the **destination** list and never nationality — whatever passport a traveller holds, a batch-1
 destination must answer them. See `visa-discover registry --only` and `visa-discover audit`.
 

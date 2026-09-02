@@ -25,12 +25,23 @@ where it is genuinely unavoidable; it is not acceptable as the ordinary source o
 has to be *useful*, and "useful" has a number: how often a corridor finds what it needs without
 searching. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34 feed it.
 
-**Where it stands, as of 2026-08-30.** The pipeline works end to end and passed a bar committed in
+**Where it stands, as of 2026-09-02.** The pipeline works end to end and passed a bar committed in
 advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
 median 27.4s. **55 of 198 destinations are researchable and every row now carries a confirmable
 domain** (entry 110), and **53 of those 55 now have a corpus and a page-text index** — item 41 is
 done, entry 116. A questionnaire is treated as an answer rather than a blockade (entries 59, 60),
 and guidance an authority contracts out is named the same way (entry 89).
+
+**And the store is far larger than what any corridor can reach (entries 123–125).** The 53 corpora
+hold **186,596 addresses**; the text index holds bodies for **43,153 of them (23%)**, because a build
+opens 3–15% of what it records; and `_choose_what_to_read` shows the model selector only candidates
+the anchor heuristic scores above zero, which is **6%** of a run's candidate set — Liechtenstein
+offers **2 of 7,482**. Whether the discarded 94% holds any answer is **unmeasured**, and
+`selection-recall` cannot say, because its fixture was curated from inside that 6%. The queue is
+ordered around this: **item 1** (the scorer has no signal for where the traveller applies from —
+Canada scores the wrong page 32.0 and the right one 0.0), then **item 31** (the gate itself), then
+**item 19**, whose search-dependence figure is an upper bound because the gate admits 49% of search
+results against 5.5% of corpus pages.
 
 **The corpus generalises to a traveller it was never tuned for** (entry 112). Every number in this
 project came from `IN/GB` and `PH/PH` until a Nigerian passport from Nigeria was run across the ten
@@ -61,6 +72,15 @@ rather than on a run.
 **The selector experiment is closed** (entry 106, the owner's decision). The model wins and has on
 every measurement since entry 84 — 92% of roles against the matched heuristic's 47%, most recently
 90% against 59%. **The twenty corridors are no longer re-run to refresh that number.**
+
+**But read those figures with their denominator (entry 123).** `_choose_what_to_read` pools only
+candidates the anchor heuristic scores above zero, so **the model is shown 6% of the corpus** — 4,450
+of 71,798 candidates over 24 runs, Liechtenstein 2 of 7,482. The *comparison* is unaffected, because
+both arms filter on `> 0` and raced over the same 6%. What is narrower than it reads is the absolute
+recall: the oracle was curated "from every candidate that scored above zero", so it **cannot detect
+the filter it shares**, and whether the discarded 94% holds any answer is unmeasured. The gate is
+also not neutral between sources — **49% of search results are admitted against 5.5% of corpus
+pages** (entry 125), so item 19's search-dependence figure is an upper bound. TODO item 31.
 `visa-discover selection-recall` stays as an offline regression check, and entries 87, 100 and 106
 say how to read it: it measures agreement with pages a person named, not corridor health, and its
 known errors run against the model so the figure is a floor.
@@ -641,7 +661,9 @@ retrieval cache for nothing. It is **ranking input only** — see the rule above
 **Two different things read this index and only one of them is on.** `discovery_selector: model`
 **is on** (entry 85): a model reads stored text for every candidate in contention and picks up to 20
 pages to fetch, replacing the shortlist as the recall gate, at the cost of a second model call per
-corridor. Graded against `oracle/selection_oracle.yaml` — ground truth neither selector helped build
+corridor. **What "every candidate in contention" means is `best_combined() > 0` — 6% of the corpus,
+and the pages below it are never shown (entry 123).** Graded against `oracle/selection_oracle.yaml` —
+ground truth neither selector helped build, though curated from that same 6%
 — it reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the
 heuristic is allowed its shipped 35 places and 3.1× the fetches (entry 87; entries 85 and 86 read
 86%, 45% and 79% on an oracle both arms made). A country with no stored text falls back to the
