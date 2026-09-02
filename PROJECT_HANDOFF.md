@@ -120,11 +120,20 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 31, re-scoped: let the selector see the pages the anchor scorer scores zero.** The
-queue was re-prioritised on 2026-09-02 (entry 123) and the new Now order is **31, 19, 17, 47, 35, 9,
-2, 1, 5**.
+**Start at item 1, re-scoped: score a page for being about where the traveller applies from.** The
+queue was re-prioritised twice on 2026-09-02 and the Now order is **1, 19, 17, 31, 47, 35, 9, 2, 5**.
 
-**The measurement that reordered it.** `_choose_what_to_read` pools only candidates the anchor
+**The measurement that put item 1 first (entry 124).** `score_link` adds `nationality_weight` when a
+page is about the traveller's **passport** country and has **no equivalent** for the country they
+apply from. Canada publishes 635 "where to submit your application" pages, one per country of
+application: for an Indian national in Britain, `?country=IN` scores `application_route` **32.0** and
+`?country=GB` — the page that answers them — scores **0.0**, below the threshold that admits a
+candidate at all. Romania's 58-member checklist family is the same defect: its UK checklist, Kosovo's
+and Cape Verde's all score **18.0 with identical signals**. **21 of 53 corpora publish a page per
+country, 5,901 pages**; most are embassy and advice pages where zero is correct, so **count the
+per-residence application families before sizing the fix**.
+
+**The earlier measurement of the same day (entry 123), which item 31 still rests on.** `_choose_what_to_read` pools only candidates the anchor
 heuristic scores above zero, so **the model selector is shown 6% of the corpus** — 4,450 of 71,798
 candidates over the 24 runs postdating 2026-08-30. Liechtenstein offers **2 of 7,482**, Bulgaria 8 of
 6,847. Entry 81 measured this against the *shortlist*; entry 85 replaced the shortlist with the

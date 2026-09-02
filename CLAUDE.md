@@ -505,6 +505,11 @@ cause, and only running the thing showed it.
 | "100% role recall" means the selector found what the corpus holds | the oracle was curated from candidates scoring above zero (entry 123) |
 | entry 91's 0.0 UAE page proves the pool gate hides answers | its `best_combined()` is **49.6** — it is *in* the pool; that was a per-role filter (entry 123) |
 | check the pool gate by finding oracle pages that score zero | 88 of 88 are in the pool — a fixture curated from the pool cannot name one outside it (entry 123) |
+| the pool gate is why liechtenstein and romania fill little | romania's discards are legislation pdfs; the miss was a **missing residence score** (entry 124) |
+| the scorer weighs passport against residence, so retune it | there is **no residence signal at all** — only a passport one (entry 124) |
+| canada ranks the right per-residence page below the wrong one | it scores the wrong one **32.0** and the right one **0.0** — not a ranking, an absence (entry 124) |
+| romania's family is invisible because it is named in romanian | its anchor text is english; `country_family_keys` reads the **URL** only (entry 124) |
+| the family detector needs 198 country names in every language | the blind spot is english **aliases and territories** — `czech-republic`, `kosovo` (entry 124) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

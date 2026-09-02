@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [124](#124-a-page-about-where-the-traveller-applies-from-earns-nothing-for-saying-so) | **The residence earns no score** — Canada scores the passport page 32.0 and the page they actually apply on 0.0 |
 | [123](#123-the-model-selector-is-shown-6-of-the-corpus-and-the-filter-is-the-heuristic-it-replaced) | **The model selector is shown 6% of the corpus** — the pool gate is the heuristic it replaced; the arm comparison stands, the denominators are narrower |
 | [121](#121-re-running-the-five-two-confident-predictions-wrong-a-refusal-dressed-as-a-200-and-a-family-in-romanian) | **Re-running the five** — Romania fills 5 of 6; Morocco refuses with a `200`; the family detector is English-only |
 | [120](#120-the-gate-says-when-it-cannot-grade-and-the-oracle-is-not-growing-to-53) | **The gate says when it cannot grade** — 42 of 53 were deferring to an empty half; the oracle grows one country at a time, not to 53 |
@@ -172,6 +173,70 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 124. A page about where the traveller applies from earns nothing for saying so
+
+**2026-09-02 · TODO item 1, promoted to the top of the queue**
+
+Canada publishes 635 pages at `ircc.canada.ca/english/where-submit-application.asp?country={XX}&lob={YY}`
+— "where to submit your application", one per country you apply **from**. For an Indian national in
+Britain, scored with the live scorer:
+
+| page | role score |
+| --- | --- |
+| `?country=IN` — the **passport** country | `application_route` **32.0** |
+| `?country=GB` — where they **actually apply** | **0.0**, and therefore invisible |
+
+Same template, same authority, same family. The page that answers the question is scored below the
+threshold that admits a candidate at all, while its sibling about the wrong country scores 32.
+
+**The mechanism is an asymmetry, and it is one line.** `score_link` calls
+`_describes_country(link, nationality)` and adds `lexicon.nationality_weight` when a page is about
+the traveller's **passport** country. There is no residence analogue. `mission_affinity` looks like
+one and is not — it matches **host labels** (`india.embassy.gov.au`), not a page that is *about* a
+country. Meanwhile `wrong_country` reads the very same anchor text to **reject** a page about any
+other country. So "this page is about country X" is used to exclude and never to promote.
+
+**Romania is the same defect in a purer form.** Its `eviza.mae.ro/media/{id}/{COUNTRY}.PDF` family is
+58 harmonised supporting-document lists, one per country of application. Scored for the same
+traveller:
+
+```
+MAREA-BRITANIE.PDF   link_text 'United Kingdom'   document_checklist 18.0
+KOSOVO.pdf           link_text 'Kosovo'           document_checklist 18.0
+CABO-VERDE.pdf       link_text 'Cape Verde'       document_checklist 18.0
+      identical signals: heading:supporting documents+10, shallow+8, depth1-10, pdf+10
+```
+
+The traveller's own checklist is indistinguishable from Kosovo's. It survived only because
+`wrong_country` dropped the other 55 — including it would have been *correct* to keep, but nothing
+raised it — and the corridor resolved because the **model read the stored text** and picked
+correctly. The scorer contributed nothing to that.
+
+**How wide the dimension is.** Measured across all 53 corpora, counting pages whose anchor text is a
+bare country name — the instrument the scorer itself reads: **21 corpora publish a page per country,
+5,901 pages in total**, and 13 of them cover 160 or more countries (CA 189, NL 188, MT 184, US 183,
+BG 182, FR 182, JP 182, LU 182, CH 175, SI 173, PT 168, NO 164, AU 158).
+
+**State the limit honestly.** Most per-country pages in those corpora are embassy contact pages,
+travel advice and bilateral-relations pages, where scoring zero is **correct**. The defect bites on
+the per-residence *application* families, and it is measured on two: Canada's 635 and Romania's 58.
+A count of how many of the 21 hold such a family is not yet taken.
+
+**This reorders the queue, and it corrects two of my own claims from earlier today.**
+
+- Entry 123's pool gate is real — the model is shown 6% — but its motivating example evaporated
+  under examination. What the gate discarded in Romania was Romanian **legislation** PDFs: chaff, as
+  item 31 allowed for. The gate is a hypothesis awaiting its own curation; **this is a measurement.**
+- Item 47's premise narrows. Romania's family is *not* invisible for being in Romanian — its anchor
+  text is English ("United Kingdom") and `wrong_country` reads it fine. What missed it was
+  `country_family_keys`, which matches the **URL** only, so `coverage` could not see a family the
+  live scorer can. A language-agnostic sweep of the other 52 found the residual blind spot is
+  overwhelmingly **English aliases and dependent territories** — `czech-republic`, `ivory-coast`,
+  `cape-verde`, `east-timor`, `kosovo`, `cook-islands`, `anguilla` — not translations. That is a
+  bounded alias fixture, not 198 names in every language.
 
 ---
 

@@ -16,7 +16,16 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**The queue was re-prioritised on 2026-09-02, and one measurement did most of it (entry 123).**
+**Re-prioritised again the same day, on a second measurement that beat the first (entry 124).**
+`score_link` rewards a page for being about the traveller's **passport** country and has **no
+signal at all** for the country they apply from. Canada publishes 635 "where to submit your
+application" pages, one per country of application: for an Indian national in Britain the
+`?country=IN` page scores **32.0** and the `?country=GB` page — the one that answers them — scores
+**0.0**. 21 of 53 corpora publish a page per country, 5,901 pages. **Item 1 goes to the top**, from
+the bottom of Now. Item 31 keeps its 6% but loses its motivating example, and item 47's premise
+narrows to an alias fixture rather than a translation table.
+
+**The first re-prioritisation of 2026-09-02 (entry 123).**
 The model selector is shown **6% of the corpus** — 4,450 of 71,798 candidates over 24 runs — because
 `_choose_what_to_read` pools only what the anchor heuristic scores above zero. Liechtenstein offers
 **2 of 7,482**. That makes **item 31 the top item, re-scoped** from "improve the ordering of the 6%"
@@ -180,14 +189,14 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 31. Let the selector see the pages the anchor scorer scores zero | `next` |
+| **Now** | 1. Score a page for being about where the traveller applies from | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
+|  | 31. Let the selector see the pages the anchor scorer scores zero | `next` |
 |  | 47. Find out how much of the world the family detector cannot see | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `next` |
-|  | 1. Fix the post-over-nationality weighting, and find out why Sweden does not move | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 | **Next up** | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
@@ -223,139 +232,55 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 31. Let the selector see the pages the anchor scorer scores zero — `next`, **start here**, **re-scoped 2026-09-02**
+### 1. Score a page for being about where the traveller applies from — `next`, **start here**, **re-scoped 2026-09-02**
 
-> **Re-scoped by entry 123, and the old framing is why this sat gated off for a week.** It used to
-> ask for a *numeric text lift inside `combined`* — an improvement to the **ordering** of the
-> candidates the model already sees. Measured, that is the wrong end: the model sees **6%** of the
-> corpus, and the other 94% is discarded by the anchor heuristic before the packet is built. The
-> ordering of the 6% is the arm that already lost.
+> **Measured across all 53 corpora and promoted from the bottom of this list to the top (entry 124).**
+> The defect is not a weighting to tune; it is a **missing signal**. `score_link` adds
+> `lexicon.nationality_weight` when `_describes_country(link, nationality)` — the traveller's
+> **passport** country — and there is no equivalent for the country they **apply from**.
+> `mission_affinity` looks like one and is not: it matches host labels (`india.embassy.gov.au`), not
+> a page that is *about* a country. Meanwhile `wrong_country` reads the same anchor text to
+> **reject** pages about other countries. So "this page is about country X" excludes and never
+> promotes.
+>
+> **Canada, scored with the live scorer for an Indian national applying from Britain:**
+>
+> | page | score |
+> | --- | --- |
+> | `ircc.canada.ca/…/where-submit-application.asp?country=IN` — the passport country | `application_route` **32.0** |
+> | the same page `?country=GB` — **where they actually apply** | **0.0**, below the pool threshold |
+>
+> That family has **635 members**. Romania's is 58: its UK checklist, Kosovo's and Cape Verde's all
+> score **18.0 with identical signals**, and the anchor text "United Kingdom" contributes nothing.
+> Romania resolved only because the *model* read the stored text.
+>
+> **How wide:** 21 of 53 corpora publish a page per country — 5,901 pages, 13 of them covering 160+
+> countries (CA 189, NL 188, MT 184, US 183, BG 182, FR 182, JP 182, LU 182, CH 175, SI 173, PT 168,
+> NO 164, AU 158). **But most such pages are embassy contacts, travel advice and bilateral
+> relations, where zero is correct.** The defect bites on per-residence *application* families, and
+> two are measured. **Count how many of the 21 hold one before sizing the fix.**
+>
+> **Careful — entry 70 is the standing warning.** A residence bonus is not free: demonyms bought
+> 22 shortlist places and every one was noise. Weight it against the `document_checklist` and
+> `application_route` roles where the post governs, measure across the verified corridors, and note
+> `visa_decision` and `general_entry` are deliberately excluded from post-preference (entry 72) —
+> a visa rule is the same at every consulate.
 
-**The gate, in one line of `_choose_what_to_read`:**
+**Why:** DECISIONS entries 39 and 40. Widening the shortlist fixed two corridors and left two problems
+standing, and they are now separable.
 
-```python
-pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
-```
+**The weighting bug is precise and reproducible.** For an Indian national applying from Great Britain the
+scorer gives `checklist-schengen-visa-tourism/india` **113.0** and `.../united-kingdom` **73.0**. For a
+consular checklist the **post** governs, not the passport: they apply at the Dutch mission in the UK. The
+adjudicator correctly refuses a wrong-post page, so the corridor discards a checklist it already fetched.
+Make `applying_from` outrank `passport_nationality` where a URL or link text names a post — and measure
+across the verified corridors, because link scoring decides what every corridor reads.
 
-Everything downstream — `by_id`, `build_selection_packet`, the model's choice — comes from `pool`.
-A candidate the link scorer rates zero for every role is never shown, never fetched, never judged.
-Over the 24 runs postdating 2026-08-30: **71,798 candidates, 4,450 in the pool.** Liechtenstein
-offers **2 of 7,482**; Bulgaria **8 of 6,847**; Morocco 19 of 1,801; Austria 96 of 3,670. The widest
-is Norway at 34%.
-
-**Do not confuse this with the per-role filter, which is a different thing.** `rank_for_role` drops
-a page scoring zero **for that role**; the pool drops a page scoring zero for **every** role. Entry
-91's UAE page — five roles answered, 0.0 for three of them — is the first kind: its
-`best_combined()` is **49.6**, it is in the pool, and it was shortlisted and fetched in four
-recorded runs. It says nothing about the pool gate, and an earlier draft of this item cited it as
-though it did.
-
-**The present oracle cannot measure this, and that is the finding, not an obstacle to work around.**
-`oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero"
-(`contention.py`), and entry 87 built the first ten rows from "the corridor's **whole** contention
-set" believing that was the whole set. Checked 2026-09-02: of the pages the oracle names as
-answering a role, **88 of 88 are in the pool and none scores zero**. That number could not have come
-out any other way — **a fixture curated from the pool cannot name a page outside it.**
-
-**So the measurement is a curation job, and it is the honest cost of this item.** Take a small
-number of corridors and name the answering pages from the **whole** candidate set — using
-`page_text.rank` over stored body text, the only instrument that can see inside a page — then ask
-how many of them the anchor scorer rates zero for every role. **Liechtenstein (2 of 7,482) and
-Bulgaria (8 of 6,847) are the right two**: the answer matters most there, and a row is cheapest to
-justify where the current pool is two pages. If those rows come back with every answer already in
-the pool, the 94% is chaff and this item closes.
-
-**Then: what could put a candidate into the pool, given the packet has a real bound.**
-`DEFAULT_SELECTION_CHARACTERS` is 400,000 shared across candidates, so a pool of 7,482 leaves each
-one a few dozen characters and the answer is **not** "drop the filter". Candidates worth arguing:
-
-- **Score the body where the index holds it, and admit on that** — the built-and-gated lift, used as
-  an *admission* test rather than an ordering one. `_text_scoring_is_fair` demands the index cover
-  half the candidate set before the lift may order anything, and that bar is right for ordering and
-  wrong for admission: a page that scores on its text is worth showing whether or not its neighbours
-  have text.
-- **Cap the pool rather than filter it** — take the best N by combined score, so a zero-scoring page
-  with body text can displace a low-scoring one instead of being excluded categorically.
-- **Do nothing, if the measurement says the 94% is chaff.** That is a real outcome and would close
-  this item; entry 62 and item 32 are both precedents for measuring a proposal and shipping nothing.
-
-**Two constraints that do not move.** Entry 78: stored text **ranks and never speaks** — `rank`
-returns URLs and scores, `TextMatch` has no field for a body, and nothing here may add one. And
-entry 81: grade the **shortlist, not the plan** — role count swings by two on identical input, so
-any A/B with an adjudicator in it cannot see a ranking change.
-
-**What this unblocks if it works.** Liechtenstein, Bulgaria, Morocco and Austria have had their
-results attributed to challenges and stated `Disallow`s. Those causes are real and entry 18 forbids
-working around them — but nobody has shown they are *sufficient*, because the pool gate has never
-been separated from them. A corridor choosing from 2 pages of 7,482 is not evidence about
-Cloudflare.
+**Sweden is unexplained.** It reads `migrationsverket.se`, fills `general_entry`, and neither widening
+the window nor correcting its domain moved the visa decision or the checklist. It has not been traced the
+way the Netherlands was, and it should be before anything else is changed on its account.
 
 ---
-
-<details>
-<summary>The previous scope, kept because its measurements stand</summary>
-
-
-> **Status corrected 2026-08-30.** This used to read "blocked on item 32"; item 32 is closed
-> (entry 82, no change shipped), so nothing external blocks this. What gates it is the
-> measurement below — one with no adjudicator in it.
-
-> **Superseded by entry 81 — the regression below is withdrawn.** Six runs of identical code give
-> 4, 4, 4, 4, 5 and 6 roles, so every A/B here sat inside the metric's noise. The pages that fill
-> roles are shortlisted and fetched in every arm, making the lift recall-neutral; nothing shows it
-> helps, so it stays off as the conservative default. **The next step is a measurement with no
-> adjudicator in it: grade the shortlist, not the plan.**
->
-> **And there is now a country where it could be tested.** The UK rebuild (entry 82) left a 1,598-page
-> text index, and over a real corridor **85% of the candidates in contention have text** — against
-> 13% for Japan. If entry 81 is right that the bar's denominator should be candidates that can
-> actually be shortlisted rather than all of them, the United Kingdom is the first country above it.
->
-> ~~**Measured 2026-08-26 and it regressed, so it is gated off (entry 80).**~~ Twelve runs on
-> `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
-> time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
-> only 115 of 860 candidates carried index text — 90% of `evisa.mofa.go.jp`, **0% of the UK post** —
-> so the lift ranked pages by who had been crawled. `_text_scoring_is_fair` now requires the index to
-> cover half a candidate set before it may rank it, and **no country is close**, so this is inert
-> ~~until item 32 lands.~~ **Item 32 closed with no change shipped (entry 82), so this is no longer
-> waiting on it** — what gates it is a measurement with no adjudicator in it.
->
-> **Built 2026-08-26 (entry 79), and the measurement below has now been taken.** Step 3b of
-> `_resolve` scores every candidate whose text the index holds, before `_shortlist`; `text_scores`
-> is its own field so stored text may lift a candidate and never sink one; `best_combined()`
-> replaces `link_scores.best()` throughout the shortlist so a page reserved for its text cannot then
-> be cut by an ordering blind to it. Live on `japan/IN/GB` with search up: **all six roles**, 115
-> candidates ranked on text.
->
-> **What is not done is the A/B.** One corpus-only run of each arm gave four roles either way, a
-> different four — and the recall log says both contested pages were shortlisted *and fetched* in
-> both arms, so the difference is adjudication variance (known problem 10), not ranking. The repeat
-> runs stopped when the OpenAI account ran out of credit. **Three runs of each arm, over the ten
-> corpus countries, is what settles it.**
-
-**Why:** entry 78 built the index and stopped one step short of using it. `discovery/page_text.py`
-holds the body text of 684 Japanese pages and nothing in the request path reads it. Every measurement
-in that entry is offline; **the end-to-end claim — that a corpus-only run keeps its checklist — is
-unmeasured.**
-
-**What to build, and the shape matters.** Not "replace `score_link` with `score_body`". The top of
-Japan's text ranking for `document_checklist` is Calgary and Houston consulate pages: real checklists,
-for the wrong post. `score_body` takes a nationality and **no residence**, so it has none of
-`mission_host_bonus` or `other_mission_penalty` — and entry 70 established that the post is the
-dimension that actually varies. The link score knows about posts, depth and host kind; the body score
-knows what the page *is*. So: keep `score_link` as the ranker, and add the body score for candidates
-whose text is held, combining rather than replacing.
-
-**The measurement that decides it** is the one entry 76 already ran: the ten corpus countries,
-corpus-only, and whether Canada, Japan, Germany and the United States keep the checklist they lost.
-Search does not need to be down to run it — the resolver can be asked for a corpus-only candidate set.
-
-**Do not let a cheap ranker gate the good one.** Entry 78 made this mistake inside `rank` itself and
-caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
-absolute bound and must not become a multiple of the shortlist size.
-
-</details>
-
 
 ### 19. Take search out of the request path too — `next`, **and this is the project's goal**
 
@@ -599,6 +524,148 @@ fetched. The adjudicator declined it three times running. That is item 9's quest
 exists" versus "we failed to find it" — with a third answer visible: *we found and read a plausible
 one and the decider said no*. Worth reading its reason before assuming recall is the problem.
 
+### 31. Let the selector see the pages the anchor scorer scores zero — `next`, **re-scoped 2026-09-02**
+
+> **Re-scoped by entry 123, and the old framing is why this sat gated off for a week.** It used to
+> ask for a *numeric text lift inside `combined`* — an improvement to the **ordering** of the
+> candidates the model already sees. Measured, that is the wrong end: the model sees **6%** of the
+> corpus, and the other 94% is discarded by the anchor heuristic before the packet is built. The
+> ordering of the 6% is the arm that already lost.
+
+**The gate, in one line of `_choose_what_to_read`:**
+
+```python
+pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
+```
+
+Everything downstream — `by_id`, `build_selection_packet`, the model's choice — comes from `pool`.
+A candidate the link scorer rates zero for every role is never shown, never fetched, never judged.
+Over the 24 runs postdating 2026-08-30: **71,798 candidates, 4,450 in the pool.** Liechtenstein
+offers **2 of 7,482**; Bulgaria **8 of 6,847**; Morocco 19 of 1,801; Austria 96 of 3,670. The widest
+is Norway at 34%.
+
+> **Its motivating example evaporated on examination, 2026-09-02 (entry 124), and the item
+> survives on the 6% alone.** Romania was the case that promoted this to the top of the queue; the
+> pages its gate discarded turn out to be Romanian **legislation** PDFs — chaff, exactly as the "do
+> nothing" outcome below allows for. What nearly cost Romania its answer was a **missing residence
+> score**, which is item 1 and is now measured. So this item has a real number (6% shown, 94%
+> discarded) and **no confirmed instance of an answer inside the 94%.** Curate first; the item may
+> close.
+
+**Do not confuse this with the per-role filter, which is a different thing.** `rank_for_role` drops
+a page scoring zero **for that role**; the pool drops a page scoring zero for **every** role. Entry
+91's UAE page — five roles answered, 0.0 for three of them — is the first kind: its
+`best_combined()` is **49.6**, it is in the pool, and it was shortlisted and fetched in four
+recorded runs. It says nothing about the pool gate, and an earlier draft of this item cited it as
+though it did.
+
+**The present oracle cannot measure this, and that is the finding, not an obstacle to work around.**
+`oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero"
+(`contention.py`), and entry 87 built the first ten rows from "the corridor's **whole** contention
+set" believing that was the whole set. Checked 2026-09-02: of the pages the oracle names as
+answering a role, **88 of 88 are in the pool and none scores zero**. That number could not have come
+out any other way — **a fixture curated from the pool cannot name a page outside it.**
+
+**So the measurement is a curation job, and it is the honest cost of this item.** Take a small
+number of corridors and name the answering pages from the **whole** candidate set — using
+`page_text.rank` over stored body text, the only instrument that can see inside a page — then ask
+how many of them the anchor scorer rates zero for every role. **Liechtenstein (2 of 7,482) and
+Bulgaria (8 of 6,847) are the right two**: the answer matters most there, and a row is cheapest to
+justify where the current pool is two pages. If those rows come back with every answer already in
+the pool, the 94% is chaff and this item closes.
+
+**Then: what could put a candidate into the pool, given the packet has a real bound.**
+`DEFAULT_SELECTION_CHARACTERS` is 400,000 shared across candidates, so a pool of 7,482 leaves each
+one a few dozen characters and the answer is **not** "drop the filter". Candidates worth arguing:
+
+- **Score the body where the index holds it, and admit on that** — the built-and-gated lift, used as
+  an *admission* test rather than an ordering one. `_text_scoring_is_fair` demands the index cover
+  half the candidate set before the lift may order anything, and that bar is right for ordering and
+  wrong for admission: a page that scores on its text is worth showing whether or not its neighbours
+  have text.
+- **Cap the pool rather than filter it** — take the best N by combined score, so a zero-scoring page
+  with body text can displace a low-scoring one instead of being excluded categorically.
+- **Do nothing, if the measurement says the 94% is chaff.** That is a real outcome and would close
+  this item; entry 62 and item 32 are both precedents for measuring a proposal and shipping nothing.
+
+**Two constraints that do not move.** Entry 78: stored text **ranks and never speaks** — `rank`
+returns URLs and scores, `TextMatch` has no field for a body, and nothing here may add one. And
+entry 81: grade the **shortlist, not the plan** — role count swings by two on identical input, so
+any A/B with an adjudicator in it cannot see a ranking change.
+
+**What this unblocks if it works.** Liechtenstein, Bulgaria, Morocco and Austria have had their
+results attributed to challenges and stated `Disallow`s. Those causes are real and entry 18 forbids
+working around them — but nobody has shown they are *sufficient*, because the pool gate has never
+been separated from them. A corridor choosing from 2 pages of 7,482 is not evidence about
+Cloudflare.
+
+---
+
+<details>
+<summary>The previous scope, kept because its measurements stand</summary>
+
+
+> **Status corrected 2026-08-30.** This used to read "blocked on item 32"; item 32 is closed
+> (entry 82, no change shipped), so nothing external blocks this. What gates it is the
+> measurement below — one with no adjudicator in it.
+
+> **Superseded by entry 81 — the regression below is withdrawn.** Six runs of identical code give
+> 4, 4, 4, 4, 5 and 6 roles, so every A/B here sat inside the metric's noise. The pages that fill
+> roles are shortlisted and fetched in every arm, making the lift recall-neutral; nothing shows it
+> helps, so it stays off as the conservative default. **The next step is a measurement with no
+> adjudicator in it: grade the shortlist, not the plan.**
+>
+> **And there is now a country where it could be tested.** The UK rebuild (entry 82) left a 1,598-page
+> text index, and over a real corridor **85% of the candidates in contention have text** — against
+> 13% for Japan. If entry 81 is right that the bar's denominator should be candidates that can
+> actually be shortlisted rather than all of them, the United Kingdom is the first country above it.
+>
+> ~~**Measured 2026-08-26 and it regressed, so it is gated off (entry 80).**~~ Twelve runs on
+> `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
+> time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
+> only 115 of 860 candidates carried index text — 90% of `evisa.mofa.go.jp`, **0% of the UK post** —
+> so the lift ranked pages by who had been crawled. `_text_scoring_is_fair` now requires the index to
+> cover half a candidate set before it may rank it, and **no country is close**, so this is inert
+> ~~until item 32 lands.~~ **Item 32 closed with no change shipped (entry 82), so this is no longer
+> waiting on it** — what gates it is a measurement with no adjudicator in it.
+>
+> **Built 2026-08-26 (entry 79), and the measurement below has now been taken.** Step 3b of
+> `_resolve` scores every candidate whose text the index holds, before `_shortlist`; `text_scores`
+> is its own field so stored text may lift a candidate and never sink one; `best_combined()`
+> replaces `link_scores.best()` throughout the shortlist so a page reserved for its text cannot then
+> be cut by an ordering blind to it. Live on `japan/IN/GB` with search up: **all six roles**, 115
+> candidates ranked on text.
+>
+> **What is not done is the A/B.** One corpus-only run of each arm gave four roles either way, a
+> different four — and the recall log says both contested pages were shortlisted *and fetched* in
+> both arms, so the difference is adjudication variance (known problem 10), not ranking. The repeat
+> runs stopped when the OpenAI account ran out of credit. **Three runs of each arm, over the ten
+> corpus countries, is what settles it.**
+
+**Why:** entry 78 built the index and stopped one step short of using it. `discovery/page_text.py`
+holds the body text of 684 Japanese pages and nothing in the request path reads it. Every measurement
+in that entry is offline; **the end-to-end claim — that a corpus-only run keeps its checklist — is
+unmeasured.**
+
+**What to build, and the shape matters.** Not "replace `score_link` with `score_body`". The top of
+Japan's text ranking for `document_checklist` is Calgary and Houston consulate pages: real checklists,
+for the wrong post. `score_body` takes a nationality and **no residence**, so it has none of
+`mission_host_bonus` or `other_mission_penalty` — and entry 70 established that the post is the
+dimension that actually varies. The link score knows about posts, depth and host kind; the body score
+knows what the page *is*. So: keep `score_link` as the ranker, and add the body score for candidates
+whose text is held, combining rather than replacing.
+
+**The measurement that decides it** is the one entry 76 already ran: the ten corpus countries,
+corpus-only, and whether Canada, Japan, Germany and the United States keep the checklist they lost.
+Search does not need to be down to run it — the resolver can be asked for a corpus-only candidate set.
+
+**Do not let a cheap ranker gate the good one.** Entry 78 made this mistake inside `rank` itself and
+caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
+absolute bound and must not become a multiple of the shortlist size.
+
+</details>
+
+
 ### 47. Find out how much of the world the family detector cannot see — `next`
 
 **Romania holds a 58-member per-residence checklist family and `coverage` reports it as having
@@ -606,6 +673,17 @@ none** (entry 121). `eviza.mae.ro/media/3252/MAREA-BRITANIE.PDF` is the page tha
 `document_checklist` for a UK-resident applicant, and its siblings are `AFGANISTAN`,
 `ARABIA-SAUDITA`, `BANGLADESH` — named in **Romanian**. `country_family_keys` matches English
 country slugs and returns `[]` for every one.
+
+> **The premise narrowed on 2026-09-02 (entry 124), and the fix looks smaller than this item
+> assumed.** Romania's family is *not* invisible for being in Romanian: its anchor text is English
+> ("United Kingdom"), and `wrong_country` reads it correctly to reject the other 55. What missed it
+> is that `country_family_keys` matches the **URL only** — so `coverage` cannot see a family the
+> live scorer can, which makes this a **metric** defect rather than a recall one. **Try matching the
+> anchor text before building any translation table.** A language-agnostic sweep of all 53 corpora
+> then found the residual blind spot is overwhelmingly **English aliases and dependent
+> territories** — `czech-republic`, `ivory-coast`, `cape-verde`, `east-timor`, `kosovo`,
+> `cook-islands`, `anguilla`, `curacao`, `hongkong` — not translations. That is a bounded alias
+> fixture of a few dozen rows, not 198 names in every authority language.
 
 **Two things rest on that function**, so the blind spot is not cosmetic: `coverage` half two, whose
 verdict is computed from families alone (entry 90), and the crawl's family reservation, which is
@@ -871,24 +949,6 @@ domain" bucket now empty. Two things that came out of it and are worth knowing b
 again: a marker added to `GOVERNMENT_NAMESPACE_LABELS` **must** also be in `trust.SUFFIX_MARKER_LABELS`
 or trusting one authority trusts its whole government (a test now asserts it), and **a rule change
 reaches nobody until the affected rows are rebuilt** — the registry is committed data.
-
-### 1. Fix the post-over-nationality weighting, and find out why Sweden does not move — `next`
-
-**Why:** DECISIONS entries 39 and 40. Widening the shortlist fixed two corridors and left two problems
-standing, and they are now separable.
-
-**The weighting bug is precise and reproducible.** For an Indian national applying from Great Britain the
-scorer gives `checklist-schengen-visa-tourism/india` **113.0** and `.../united-kingdom` **73.0**. For a
-consular checklist the **post** governs, not the passport: they apply at the Dutch mission in the UK. The
-adjudicator correctly refuses a wrong-post page, so the corridor discards a checklist it already fetched.
-Make `applying_from` outrank `passport_nationality` where a URL or link text names a post — and measure
-across the verified corridors, because link scoring decides what every corridor reads.
-
-**Sweden is unexplained.** It reads `migrationsverket.se`, fills `general_entry`, and neither widening
-the window nor correcting its domain moved the visa decision or the checklist. It has not been traced the
-way the Netherlands was, and it should be before anything else is changed on its account.
-
----
 
 ### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
 
