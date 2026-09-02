@@ -190,9 +190,9 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 1. Score a page for being about where the traveller applies from | `next` |
+|  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
-|  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 47. Find out how much of the world the family detector cannot see | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
 |  | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
@@ -288,7 +288,228 @@ way the Netherlands was, and it should be before anything else is changed on its
 
 ---
 
+### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **re-scoped 2026-09-02**
+
+> **Re-scoped twice on 2026-09-02, and the second time widened it from a remedy to the problem.**
+> It first asked for a *numeric text lift inside `combined`* — better **ordering** of what the model
+> already sees. Entry 123 measured that as the wrong end. Then it asked to *admit zero-scored pages
+> on their stored text* — which is one remedy, named before the problem had been sized. This item is
+> now the problem, and the remedies below are candidates under it, including doing nothing.
+>
+> **The principle is not new and the number is.** Known problem 9 has said since entry 40 that the
+> heuristic *"is a recall gate rather than a decider"* and that the conclusion is **widen the gate,
+> not improve the ranking** — entry 61 is the same lesson a second time. What nobody had was the
+> size of the gate, and it is 6%.
+
+**It sits ahead of item 19, and the reason is measured (entry 125).** The gate admits **search
+results at 49% and corpus pages at 5.5%** — a 9× difference, because a search engine returns pages
+whose URL and title already match visa vocabulary, which is exactly what the anchor scorer rewards.
+Item 19 asks whether search can leave the request path; it is measuring the corpus's contribution
+through a filter biased nine to one **against** the corpus. That does not make search dispensable —
+its results are genuinely more relevant — but it does mean item 19's "17 search-only pages covered a
+role nothing else covered" is an **upper bound** on search's necessity, and this item is what tightens
+it.
+
+**Three questions, in this order. Do not skip to the third.**
+
+**1. How big is the gate?** — answered, entry 123. One line of `_choose_what_to_read` decides it,
+and everything downstream comes from its result.
+
+**2. Is that bad?** — **unanswered, and the instrument to answer it does not exist.** This is the
+part worth reading twice. `selection-recall` is the natural tool and it **structurally cannot** grade
+a change that widens the pool: its ground truth was curated "from every candidate that scored above
+zero" (`contention.py`), so no page outside the pool can appear in it. Checked — 88 of 88
+oracle-named answering pages are in the pool, which is a tautology, not a result (entry 123). Nor
+can `coverage`, which grades the store rather than the corridor. **So the first deliverable of this
+item is a fixture, not a code change**: a handful of corridors whose answering pages are named from
+the **whole** candidate set, using `page_text.rank` over stored body text — the only instrument that
+can see inside a page. Liechtenstein (pool of 2) and Bulgaria (pool of 8) are where an answer would
+matter most and a hand-curated row is cheapest to justify. **If those rows come back with every
+answer already inside the pool, the 94% is chaff and this item closes** — which is a real outcome,
+and entries 62 and 82 are both precedents for measuring a proposal and shipping nothing.
+
+**3. What would fix it, if it is bad?** Four candidates, and they are not alternatives to each other
+— the first is already measured and ships on its own:
+
+- **Score what the anchor already says.** Item 1: a page about the country the traveller **applies
+  from** earns nothing for saying so, while the passport country earns `nationality_weight`. That is
+  a missing signal rather than a threshold, it is measured on Canada (32.0 against 0.0 on the same
+  family) and Romania, and it needs no fixture to justify. **Do it regardless of what question 2
+  returns.**
+- **More signals of the same kind.** The scorer rests on an English vocabulary and per-country city
+  labels, so it degrades on new countries and languages (known problem 9). Entries 103–105 widened
+  three role vocabularies and moved real corridors. Cheap, incremental, and bounded by the same
+  ceiling: an anchor cannot say what a page contains.
+- **Admit on the body, not only on the anchor.** The built-and-gated text lift, used as an
+  *admission* test rather than an ordering one. `_text_scoring_is_fair` requires the index to cover
+  half a candidate set before the lift may **order** it; that bar is right for ordering and wrong for
+  admission, since a page scoring on its own text is worth showing whether or not its neighbours have
+  text. **Bounded by coverage:** the index holds bodies for **23%** of the corpus overall and 7% for
+  Liechtenstein, so this reaches only part of the 94% and the rest stays anchor-only.
+- **Stop filtering and start capping.** Take the best N by combined score instead of everything above
+  zero, so a zero-anchor page with good body text displaces a weak one rather than being excluded
+  categorically, and N stays fixed. **This is the only candidate that bounds the packet by
+  construction**, which matters — see the budget note below.
+
+**And a fifth that is not a scoring change at all:** read more of what the corpus records. A build
+opens 3–15% of what it discovers (entry 88) and the text index holds 23% of it, so for most of the
+94% there is no body to score even in principle. That is item 35, and it is the same bottleneck from
+the other end. **Question 2's fixture will say which end binds** — if Liechtenstein's answers sit in
+pages we hold text for but score zero, it is this item; if they sit in addresses nobody opened, no
+gate change reaches them.
+
+**The packet has a real budget and "show everything" is not on the table.** `excerpt_budget` shrinks
+rather than drops, with a 200-character floor: France's 615 candidates get 650 characters each,
+about **100k tokens**, which is the design target. Liechtenstein's 7,482 would blow past it while
+529 of them have any text to show. Every remedy above has to stay inside that.
+
+**How to test whichever ships.** Entry 81's rule, without exception: **grade the shortlist, not the
+plan.** Role count swings by 4, 4, 4, 4, 5, 6 on six runs of identical code, so any A/B with an
+adjudicator in it cannot see a ranking change. Measure against the question-2 fixture, offline.
+
+**The gate, in one line of `_choose_what_to_read`:**
+
+```python
+pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
+```
+
+Everything downstream — `by_id`, `build_selection_packet`, the model's choice — comes from `pool`.
+A candidate the link scorer rates zero for every role is never shown, never fetched, never judged.
+Over the 24 runs postdating 2026-08-30: **71,798 candidates, 4,450 in the pool.** Liechtenstein
+offers **2 of 7,482**; Bulgaria **8 of 6,847**; Morocco 19 of 1,801; Austria 96 of 3,670. The widest
+is Norway at 34%.
+
+> **Its motivating example evaporated on examination, 2026-09-02 (entry 124), and the item
+> survives on the 6% alone.** Romania was the case that promoted this to the top of the queue; the
+> pages its gate discarded turn out to be Romanian **legislation** PDFs — chaff, exactly as the "do
+> nothing" outcome below allows for. What nearly cost Romania its answer was a **missing residence
+> score**, which is item 1 and is now measured. So this item has a real number (6% shown, 94%
+> discarded) and **no confirmed instance of an answer inside the 94%.** Curate first; the item may
+> close.
+
+**Do not confuse this with the per-role filter, which is a different thing.** `rank_for_role` drops
+a page scoring zero **for that role**; the pool drops a page scoring zero for **every** role. Entry
+91's UAE page — five roles answered, 0.0 for three of them — is the first kind: its
+`best_combined()` is **49.6**, it is in the pool, and it was shortlisted and fetched in four
+recorded runs. It says nothing about the pool gate, and an earlier draft of this item cited it as
+though it did.
+
+**The present oracle cannot measure this, and that is the finding, not an obstacle to work around.**
+`oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero"
+(`contention.py`), and entry 87 built the first ten rows from "the corridor's **whole** contention
+set" believing that was the whole set. Checked 2026-09-02: of the pages the oracle names as
+answering a role, **88 of 88 are in the pool and none scores zero**. That number could not have come
+out any other way — **a fixture curated from the pool cannot name a page outside it.**
+
+**So the measurement is a curation job, and it is the honest cost of this item.** Take a small
+number of corridors and name the answering pages from the **whole** candidate set — using
+`page_text.rank` over stored body text, the only instrument that can see inside a page — then ask
+how many of them the anchor scorer rates zero for every role. **Liechtenstein (2 of 7,482) and
+Bulgaria (8 of 6,847) are the right two**: the answer matters most there, and a row is cheapest to
+justify where the current pool is two pages. If those rows come back with every answer already in
+the pool, the 94% is chaff and this item closes.
+
+**Then: what could put a candidate into the pool, given the packet has a real bound.**
+`DEFAULT_SELECTION_CHARACTERS` is 400,000 shared across candidates, so a pool of 7,482 leaves each
+one a few dozen characters and the answer is **not** "drop the filter". Candidates worth arguing:
+
+- **Score the body where the index holds it, and admit on that** — the built-and-gated lift, used as
+  an *admission* test rather than an ordering one. `_text_scoring_is_fair` demands the index cover
+  half the candidate set before the lift may order anything, and that bar is right for ordering and
+  wrong for admission: a page that scores on its text is worth showing whether or not its neighbours
+  have text.
+- **Cap the pool rather than filter it** — take the best N by combined score, so a zero-scoring page
+  with body text can displace a low-scoring one instead of being excluded categorically.
+- **Do nothing, if the measurement says the 94% is chaff.** That is a real outcome and would close
+  this item; entry 62 and item 32 are both precedents for measuring a proposal and shipping nothing.
+
+**Two constraints that do not move.** Entry 78: stored text **ranks and never speaks** — `rank`
+returns URLs and scores, `TextMatch` has no field for a body, and nothing here may add one. And
+entry 81: grade the **shortlist, not the plan** — role count swings by two on identical input, so
+any A/B with an adjudicator in it cannot see a ranking change.
+
+**What this unblocks if it works.** Liechtenstein, Bulgaria, Morocco and Austria have had their
+results attributed to challenges and stated `Disallow`s. Those causes are real and entry 18 forbids
+working around them — but nobody has shown they are *sufficient*, because the pool gate has never
+been separated from them. A corridor choosing from 2 pages of 7,482 is not evidence about
+Cloudflare.
+
+---
+
+<details>
+<summary>The previous scope, kept because its measurements stand</summary>
+
+
+> **Status corrected 2026-08-30.** This used to read "blocked on item 32"; item 32 is closed
+> (entry 82, no change shipped), so nothing external blocks this. What gates it is the
+> measurement below — one with no adjudicator in it.
+
+> **Superseded by entry 81 — the regression below is withdrawn.** Six runs of identical code give
+> 4, 4, 4, 4, 5 and 6 roles, so every A/B here sat inside the metric's noise. The pages that fill
+> roles are shortlisted and fetched in every arm, making the lift recall-neutral; nothing shows it
+> helps, so it stays off as the conservative default. **The next step is a measurement with no
+> adjudicator in it: grade the shortlist, not the plan.**
+>
+> **And there is now a country where it could be tested.** The UK rebuild (entry 82) left a 1,598-page
+> text index, and over a real corridor **85% of the candidates in contention have text** — against
+> 13% for Japan. If entry 81 is right that the bar's denominator should be candidates that can
+> actually be shortlisted rather than all of them, the United Kingdom is the first country above it.
+>
+> ~~**Measured 2026-08-26 and it regressed, so it is gated off (entry 80).**~~ Twelve runs on
+> `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
+> time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
+> only 115 of 860 candidates carried index text — 90% of `evisa.mofa.go.jp`, **0% of the UK post** —
+> so the lift ranked pages by who had been crawled. `_text_scoring_is_fair` now requires the index to
+> cover half a candidate set before it may rank it, and **no country is close**, so this is inert
+> ~~until item 32 lands.~~ **Item 32 closed with no change shipped (entry 82), so this is no longer
+> waiting on it** — what gates it is a measurement with no adjudicator in it.
+>
+> **Built 2026-08-26 (entry 79), and the measurement below has now been taken.** Step 3b of
+> `_resolve` scores every candidate whose text the index holds, before `_shortlist`; `text_scores`
+> is its own field so stored text may lift a candidate and never sink one; `best_combined()`
+> replaces `link_scores.best()` throughout the shortlist so a page reserved for its text cannot then
+> be cut by an ordering blind to it. Live on `japan/IN/GB` with search up: **all six roles**, 115
+> candidates ranked on text.
+>
+> **What is not done is the A/B.** One corpus-only run of each arm gave four roles either way, a
+> different four — and the recall log says both contested pages were shortlisted *and fetched* in
+> both arms, so the difference is adjudication variance (known problem 10), not ranking. The repeat
+> runs stopped when the OpenAI account ran out of credit. **Three runs of each arm, over the ten
+> corpus countries, is what settles it.**
+
+**Why:** entry 78 built the index and stopped one step short of using it. `discovery/page_text.py`
+holds the body text of 684 Japanese pages and nothing in the request path reads it. Every measurement
+in that entry is offline; **the end-to-end claim — that a corpus-only run keeps its checklist — is
+unmeasured.**
+
+**What to build, and the shape matters.** Not "replace `score_link` with `score_body`". The top of
+Japan's text ranking for `document_checklist` is Calgary and Houston consulate pages: real checklists,
+for the wrong post. `score_body` takes a nationality and **no residence**, so it has none of
+`mission_host_bonus` or `other_mission_penalty` — and entry 70 established that the post is the
+dimension that actually varies. The link score knows about posts, depth and host kind; the body score
+knows what the page *is*. So: keep `score_link` as the ranker, and add the body score for candidates
+whose text is held, combining rather than replacing.
+
+**The measurement that decides it** is the one entry 76 already ran: the ten corpus countries,
+corpus-only, and whether Canada, Japan, Germany and the United States keep the checklist they lost.
+Search does not need to be down to run it — the resolver can be asked for a corpus-only candidate set.
+
+**Do not let a cheap ranker gate the good one.** Entry 78 made this mistake inside `rank` itself and
+caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
+absolute bound and must not become a multiple of the shortlist size.
+
+</details>
+
+
 ### 19. Take search out of the request path too — `next`, **and this is the project's goal**
+
+> **Reordered behind item 31 on 2026-09-02, and the reason is a number (entry 125).** The pool the
+> selector chooses from admits **49% of search results and 5.5% of corpus pages** — a 9× gap,
+> because search returns pages whose URL and title already match visa vocabulary, which is precisely
+> what the anchor scorer scores. So the measurement below — 59 of 382 pages read came only from
+> search, 17 of them load-bearing — was taken through a filter that systematically disadvantages the
+> alternative it is comparing against. **Read the 17 as an upper bound on search's necessity, not as
+> its value.** Item 31 is what tightens it, and it should run first.
 
 > **Measured 2026-08-30, and the answer is: not yet, and not the way either obvious option would do
 > it.** This is the comparison the item had been gated on since entry 82. It is offline, and it has
@@ -529,210 +750,6 @@ even though `.../visit-canada/supporting-documents` scored **64.0** for exactly 
 fetched. The adjudicator declined it three times running. That is item 9's question — "no checklist
 exists" versus "we failed to find it" — with a third answer visible: *we found and read a plausible
 one and the decider said no*. Worth reading its reason before assuming recall is the problem.
-
-### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **re-scoped 2026-09-02**
-
-> **Re-scoped twice on 2026-09-02, and the second time widened it from a remedy to the problem.**
-> It first asked for a *numeric text lift inside `combined`* — better **ordering** of what the model
-> already sees. Entry 123 measured that as the wrong end. Then it asked to *admit zero-scored pages
-> on their stored text* — which is one remedy, named before the problem had been sized. This item is
-> now the problem, and the remedies below are candidates under it, including doing nothing.
->
-> **The principle is not new and the number is.** Known problem 9 has said since entry 40 that the
-> heuristic *"is a recall gate rather than a decider"* and that the conclusion is **widen the gate,
-> not improve the ranking** — entry 61 is the same lesson a second time. What nobody had was the
-> size of the gate, and it is 6%.
-
-**Three questions, in this order. Do not skip to the third.**
-
-**1. How big is the gate?** — answered, entry 123. One line of `_choose_what_to_read` decides it,
-and everything downstream comes from its result.
-
-**2. Is that bad?** — **unanswered, and the instrument to answer it does not exist.** This is the
-part worth reading twice. `selection-recall` is the natural tool and it **structurally cannot** grade
-a change that widens the pool: its ground truth was curated "from every candidate that scored above
-zero" (`contention.py`), so no page outside the pool can appear in it. Checked — 88 of 88
-oracle-named answering pages are in the pool, which is a tautology, not a result (entry 123). Nor
-can `coverage`, which grades the store rather than the corridor. **So the first deliverable of this
-item is a fixture, not a code change**: a handful of corridors whose answering pages are named from
-the **whole** candidate set, using `page_text.rank` over stored body text — the only instrument that
-can see inside a page. Liechtenstein (pool of 2) and Bulgaria (pool of 8) are where an answer would
-matter most and a hand-curated row is cheapest to justify. **If those rows come back with every
-answer already inside the pool, the 94% is chaff and this item closes** — which is a real outcome,
-and entries 62 and 82 are both precedents for measuring a proposal and shipping nothing.
-
-**3. What would fix it, if it is bad?** Four candidates, and they are not alternatives to each other
-— the first is already measured and ships on its own:
-
-- **Score what the anchor already says.** Item 1: a page about the country the traveller **applies
-  from** earns nothing for saying so, while the passport country earns `nationality_weight`. That is
-  a missing signal rather than a threshold, it is measured on Canada (32.0 against 0.0 on the same
-  family) and Romania, and it needs no fixture to justify. **Do it regardless of what question 2
-  returns.**
-- **More signals of the same kind.** The scorer rests on an English vocabulary and per-country city
-  labels, so it degrades on new countries and languages (known problem 9). Entries 103–105 widened
-  three role vocabularies and moved real corridors. Cheap, incremental, and bounded by the same
-  ceiling: an anchor cannot say what a page contains.
-- **Admit on the body, not only on the anchor.** The built-and-gated text lift, used as an
-  *admission* test rather than an ordering one. `_text_scoring_is_fair` requires the index to cover
-  half a candidate set before the lift may **order** it; that bar is right for ordering and wrong for
-  admission, since a page scoring on its own text is worth showing whether or not its neighbours have
-  text. **Bounded by coverage:** the index holds bodies for **23%** of the corpus overall and 7% for
-  Liechtenstein, so this reaches only part of the 94% and the rest stays anchor-only.
-- **Stop filtering and start capping.** Take the best N by combined score instead of everything above
-  zero, so a zero-anchor page with good body text displaces a weak one rather than being excluded
-  categorically, and N stays fixed. **This is the only candidate that bounds the packet by
-  construction**, which matters — see the budget note below.
-
-**And a fifth that is not a scoring change at all:** read more of what the corpus records. A build
-opens 3–15% of what it discovers (entry 88) and the text index holds 23% of it, so for most of the
-94% there is no body to score even in principle. That is item 35, and it is the same bottleneck from
-the other end. **Question 2's fixture will say which end binds** — if Liechtenstein's answers sit in
-pages we hold text for but score zero, it is this item; if they sit in addresses nobody opened, no
-gate change reaches them.
-
-**The packet has a real budget and "show everything" is not on the table.** `excerpt_budget` shrinks
-rather than drops, with a 200-character floor: France's 615 candidates get 650 characters each,
-about **100k tokens**, which is the design target. Liechtenstein's 7,482 would blow past it while
-529 of them have any text to show. Every remedy above has to stay inside that.
-
-**How to test whichever ships.** Entry 81's rule, without exception: **grade the shortlist, not the
-plan.** Role count swings by 4, 4, 4, 4, 5, 6 on six runs of identical code, so any A/B with an
-adjudicator in it cannot see a ranking change. Measure against the question-2 fixture, offline.
-
-**The gate, in one line of `_choose_what_to_read`:**
-
-```python
-pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
-```
-
-Everything downstream — `by_id`, `build_selection_packet`, the model's choice — comes from `pool`.
-A candidate the link scorer rates zero for every role is never shown, never fetched, never judged.
-Over the 24 runs postdating 2026-08-30: **71,798 candidates, 4,450 in the pool.** Liechtenstein
-offers **2 of 7,482**; Bulgaria **8 of 6,847**; Morocco 19 of 1,801; Austria 96 of 3,670. The widest
-is Norway at 34%.
-
-> **Its motivating example evaporated on examination, 2026-09-02 (entry 124), and the item
-> survives on the 6% alone.** Romania was the case that promoted this to the top of the queue; the
-> pages its gate discarded turn out to be Romanian **legislation** PDFs — chaff, exactly as the "do
-> nothing" outcome below allows for. What nearly cost Romania its answer was a **missing residence
-> score**, which is item 1 and is now measured. So this item has a real number (6% shown, 94%
-> discarded) and **no confirmed instance of an answer inside the 94%.** Curate first; the item may
-> close.
-
-**Do not confuse this with the per-role filter, which is a different thing.** `rank_for_role` drops
-a page scoring zero **for that role**; the pool drops a page scoring zero for **every** role. Entry
-91's UAE page — five roles answered, 0.0 for three of them — is the first kind: its
-`best_combined()` is **49.6**, it is in the pool, and it was shortlisted and fetched in four
-recorded runs. It says nothing about the pool gate, and an earlier draft of this item cited it as
-though it did.
-
-**The present oracle cannot measure this, and that is the finding, not an obstacle to work around.**
-`oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero"
-(`contention.py`), and entry 87 built the first ten rows from "the corridor's **whole** contention
-set" believing that was the whole set. Checked 2026-09-02: of the pages the oracle names as
-answering a role, **88 of 88 are in the pool and none scores zero**. That number could not have come
-out any other way — **a fixture curated from the pool cannot name a page outside it.**
-
-**So the measurement is a curation job, and it is the honest cost of this item.** Take a small
-number of corridors and name the answering pages from the **whole** candidate set — using
-`page_text.rank` over stored body text, the only instrument that can see inside a page — then ask
-how many of them the anchor scorer rates zero for every role. **Liechtenstein (2 of 7,482) and
-Bulgaria (8 of 6,847) are the right two**: the answer matters most there, and a row is cheapest to
-justify where the current pool is two pages. If those rows come back with every answer already in
-the pool, the 94% is chaff and this item closes.
-
-**Then: what could put a candidate into the pool, given the packet has a real bound.**
-`DEFAULT_SELECTION_CHARACTERS` is 400,000 shared across candidates, so a pool of 7,482 leaves each
-one a few dozen characters and the answer is **not** "drop the filter". Candidates worth arguing:
-
-- **Score the body where the index holds it, and admit on that** — the built-and-gated lift, used as
-  an *admission* test rather than an ordering one. `_text_scoring_is_fair` demands the index cover
-  half the candidate set before the lift may order anything, and that bar is right for ordering and
-  wrong for admission: a page that scores on its text is worth showing whether or not its neighbours
-  have text.
-- **Cap the pool rather than filter it** — take the best N by combined score, so a zero-scoring page
-  with body text can displace a low-scoring one instead of being excluded categorically.
-- **Do nothing, if the measurement says the 94% is chaff.** That is a real outcome and would close
-  this item; entry 62 and item 32 are both precedents for measuring a proposal and shipping nothing.
-
-**Two constraints that do not move.** Entry 78: stored text **ranks and never speaks** — `rank`
-returns URLs and scores, `TextMatch` has no field for a body, and nothing here may add one. And
-entry 81: grade the **shortlist, not the plan** — role count swings by two on identical input, so
-any A/B with an adjudicator in it cannot see a ranking change.
-
-**What this unblocks if it works.** Liechtenstein, Bulgaria, Morocco and Austria have had their
-results attributed to challenges and stated `Disallow`s. Those causes are real and entry 18 forbids
-working around them — but nobody has shown they are *sufficient*, because the pool gate has never
-been separated from them. A corridor choosing from 2 pages of 7,482 is not evidence about
-Cloudflare.
-
----
-
-<details>
-<summary>The previous scope, kept because its measurements stand</summary>
-
-
-> **Status corrected 2026-08-30.** This used to read "blocked on item 32"; item 32 is closed
-> (entry 82, no change shipped), so nothing external blocks this. What gates it is the
-> measurement below — one with no adjudicator in it.
-
-> **Superseded by entry 81 — the regression below is withdrawn.** Six runs of identical code give
-> 4, 4, 4, 4, 5 and 6 roles, so every A/B here sat inside the metric's noise. The pages that fill
-> roles are shortlisted and fetched in every arm, making the lift recall-neutral; nothing shows it
-> helps, so it stays off as the conservative default. **The next step is a measurement with no
-> adjudicator in it: grade the shortlist, not the plan.**
->
-> **And there is now a country where it could be tested.** The UK rebuild (entry 82) left a 1,598-page
-> text index, and over a real corridor **85% of the candidates in contention have text** — against
-> 13% for Japan. If entry 81 is right that the bar's denominator should be candidates that can
-> actually be shortlisted rather than all of them, the United Kingdom is the first country above it.
->
-> ~~**Measured 2026-08-26 and it regressed, so it is gated off (entry 80).**~~ Twelve runs on
-> `japan/IN/GB`: corpus-only the lift gave 4/4/4 roles and lost `document_checklist` and `fees` every
-> time, against 4/6/5 without it; search-up 3/5/5 against 4/5/5. It never helped. The cause is that
-> only 115 of 860 candidates carried index text — 90% of `evisa.mofa.go.jp`, **0% of the UK post** —
-> so the lift ranked pages by who had been crawled. `_text_scoring_is_fair` now requires the index to
-> cover half a candidate set before it may rank it, and **no country is close**, so this is inert
-> ~~until item 32 lands.~~ **Item 32 closed with no change shipped (entry 82), so this is no longer
-> waiting on it** — what gates it is a measurement with no adjudicator in it.
->
-> **Built 2026-08-26 (entry 79), and the measurement below has now been taken.** Step 3b of
-> `_resolve` scores every candidate whose text the index holds, before `_shortlist`; `text_scores`
-> is its own field so stored text may lift a candidate and never sink one; `best_combined()`
-> replaces `link_scores.best()` throughout the shortlist so a page reserved for its text cannot then
-> be cut by an ordering blind to it. Live on `japan/IN/GB` with search up: **all six roles**, 115
-> candidates ranked on text.
->
-> **What is not done is the A/B.** One corpus-only run of each arm gave four roles either way, a
-> different four — and the recall log says both contested pages were shortlisted *and fetched* in
-> both arms, so the difference is adjudication variance (known problem 10), not ranking. The repeat
-> runs stopped when the OpenAI account ran out of credit. **Three runs of each arm, over the ten
-> corpus countries, is what settles it.**
-
-**Why:** entry 78 built the index and stopped one step short of using it. `discovery/page_text.py`
-holds the body text of 684 Japanese pages and nothing in the request path reads it. Every measurement
-in that entry is offline; **the end-to-end claim — that a corpus-only run keeps its checklist — is
-unmeasured.**
-
-**What to build, and the shape matters.** Not "replace `score_link` with `score_body`". The top of
-Japan's text ranking for `document_checklist` is Calgary and Houston consulate pages: real checklists,
-for the wrong post. `score_body` takes a nationality and **no residence**, so it has none of
-`mission_host_bonus` or `other_mission_penalty` — and entry 70 established that the post is the
-dimension that actually varies. The link score knows about posts, depth and host kind; the body score
-knows what the page *is*. So: keep `score_link` as the ranker, and add the body score for candidates
-whose text is held, combining rather than replacing.
-
-**The measurement that decides it** is the one entry 76 already ran: the ten corpus countries,
-corpus-only, and whether Canada, Japan, Germany and the United States keep the checklist they lost.
-Search does not need to be down to run it — the resolver can be asked for a corpus-only candidate set.
-
-**Do not let a cheap ranker gate the good one.** Entry 78 made this mistake inside `rank` itself and
-caught it only by measuring: BM25 put the answering page 116th of 122. `MAXIMUM_SCORED_MATCHES` is an
-absolute bound and must not become a multiple of the shortlist size.
-
-</details>
-
 
 ### 47. Find out how much of the world the family detector cannot see — `next`
 

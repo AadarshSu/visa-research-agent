@@ -121,7 +121,9 @@ either property, so check them when you touch the file: the table must match the
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
 **Start at item 1, re-scoped: score a page for being about where the traveller applies from.** The
-queue was re-prioritised twice on 2026-09-02 and the Now order is **1, 19, 17, 31, 47, 35, 9, 2, 5**.
+queue was re-prioritised on 2026-09-02 and the Now order is **1, 31, 19, 17, 47, 35, 9, 2, 5**.
+
+**Why item 31 sits ahead of the project's own goal (entry 125).** The selector's pool admits **49% of search results and 5.5% of corpus pages** — a 9× gap, because search returns pages whose URL and title already match visa vocabulary, which is what the anchor scorer scores. Item 19 asks whether search can leave the request path while measuring the corpus through a filter biased nine to one against it, so its "17 load-bearing search-only pages" is an upper bound on search's necessity. Item 31 tightens it.
 
 **The measurement that put item 1 first (entry 124).** `score_link` adds `nationality_weight` when a
 page is about the traveller's **passport** country and has **no equivalent** for the country they

@@ -510,6 +510,7 @@ cause, and only running the thing showed it.
 | canada ranks the right per-residence page below the wrong one | it scores the wrong one **32.0** and the right one **0.0** — not a ranking, an absence (entry 124) |
 | romania's family is invisible because it is named in romanian | its anchor text is english; `country_family_keys` reads the **URL** only (entry 124) |
 | the family detector needs 198 country names in every language | the blind spot is english **aliases and territories** — `czech-republic`, `kosovo` (entry 124) |
+| search is load-bearing for 17 roles, so the corpus is not ready | the gate admits search at 49% and the corpus at 5.5% — that 17 is an upper bound (entry 125) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

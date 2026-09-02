@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [125](#125-the-recall-gate-admits-search-at-49-and-the-corpus-at-55-so-item-31-goes-before-item-19) | **The gate admits search at 49% and the corpus at 5.5%** — item 19 measures the corpus through a filter biased against it |
 | [124](#124-a-page-about-where-the-traveller-applies-from-earns-nothing-for-saying-so) | **The residence earns no score** — Canada scores the passport page 32.0 and the page they actually apply on 0.0 |
 | [123](#123-the-model-selector-is-shown-6-of-the-corpus-and-the-filter-is-the-heuristic-it-replaced) | **The model selector is shown 6% of the corpus** — the pool gate is the heuristic it replaced; the arm comparison stands, the denominators are narrower |
 | [121](#121-re-running-the-five-two-confident-predictions-wrong-a-refusal-dressed-as-a-200-and-a-family-in-romanian) | **Re-running the five** — Romania fills 5 of 6; Morocco refuses with a `200`; the family detector is English-only |
@@ -173,6 +174,44 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 125. The recall gate admits search at 49% and the corpus at 5.5%, so item 31 goes before item 19
+
+**2026-09-02 · queue ordering**
+
+Item 19 — *take search out of the request path*, the project's stated goal — rests on a measurement
+taken on 2026-08-30: of 382 pages read by runs postdating their country's corpus, 59 were not in the
+corpus and **all 59 came from search**, 17 of them covering a role nothing else in the run covered.
+
+That measurement counts **pages read**, and a page is read only if it entered the selector's pool.
+Measured over the same 24 runs entry 123 used:
+
+| | | |
+| --- | --- | --- |
+| candidates from **search** | 1,120 | **548 in the pool — 49%** |
+| candidates from the **corpus** | 70,678 | **3,902 in the pool — 5.5%** |
+
+**A 9× difference in admission rate, and the cause is not mysterious.** A search engine returns
+pages whose URL and title already match the words in the query, and the anchor scorer rewards
+exactly those words. Search results are pre-selected for the thing the gate measures; corpus
+addresses are not.
+
+**What follows, stated carefully.** This is **not** evidence that search is dispensable — its
+results are genuinely more relevant, which is why they score. What it means is narrower and still
+decisive for ordering: item 19 is measuring the corpus's contribution *through a filter biased nine
+to one against the corpus*, so its headline — 17 load-bearing search-only pages — is an **upper
+bound** on search's necessity rather than a reading of it. Bulgaria is the flagship example and the
+shape is suggestive: its visa decision comes from a search-only PDF, and its corpus of 6,847 pages
+contributes a pool of **8**. Whether one of the other 6,839 states the same thing is exactly item
+31's question 2, and it is unmeasured.
+
+**So the Now order becomes 1, 31, 19, 17, …** Item 1 first because it is a measured defect with a
+named fix and no fixture to build (entry 124), and because it *changes the gate* — a residence
+signal moves pages from zero into the pool, so measuring the gate before it ships would describe a
+system about to move. Item 31 second, because its answer tightens item 19's number. Item 19 third,
+where it can be answered honestly.
 
 ---
 
