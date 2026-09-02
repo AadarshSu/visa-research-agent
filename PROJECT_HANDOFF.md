@@ -134,7 +134,10 @@ selector and the new gate inherited the filter, which nobody wrote down.
 **stands** — both arms filter on `> 0`, so they raced over the same 6%. What is narrower than it
 reads is the absolute figures: `oracle/selection_oracle.yaml` was curated "from every candidate that
 scored above zero", so "100% role recall" and `coverage`'s "47 of 47 answerable" share that
-denominator. Entry 91 partly widened the fixture with body-text ranking; only those rows.
+denominator. **The fixture cannot detect the filter it shares** — 88 of 88 oracle-named answering
+pages are in the pool, which is a tautology rather than reassurance — so whether the discarded 94%
+holds a single answer is **unmeasured**, and measuring it needs rows curated from the whole
+candidate set. Item 31 carries the method.
 
 **Four stale claims were corrected in TODO on the same pass:** item 2's remaining corpus experiment
 is already answered (all 53 corpora carry their current domains), item 5's false

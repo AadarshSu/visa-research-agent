@@ -211,10 +211,16 @@ and the distribution is the finding, not the average:
 **None of this is a new fact; the new part is which gate it sits on.** Entry 81 measured that "90%
 of candidates score zero and can never be shortlisted" and filed it against the **shortlist**. Entry
 85 then replaced the shortlist with the model selector as the recall gate — and the new gate
-inherited the old filter, which nobody wrote down. Entry 91 hit the same wall from the other side
-and named it precisely: a UAE page answers `fees`, `processing_times` and `general_entry` while
-scoring **0.0** for all three, and its re-check "had to change instrument" because ranking filters
-on `> 0`. It changed instrument for those rows and the live path was left alone.
+inherited the same shape of filter, which nobody wrote down.
+
+**Two different filters, and the first draft of this entry confused them — corrected the same day.**
+`rank_for_role` drops a page scoring zero **for that role**, so a page can be invisible for `fees`
+while ranking well for `application_route`. The pool drops a page scoring zero for **every** role,
+using `best_combined()`, which is the maximum across roles. Entry 91's UAE page is the first kind and
+not the second: it answers five roles while scoring 0.0 for three of them, and its `best_combined()`
+is **49.6** — it sits comfortably in the pool and was shortlisted and fetched in four recorded runs.
+So entry 91 is evidence about per-role ranking and **is not evidence that the pool hides answers**.
+Citing it as such was an overreach and is withdrawn.
 
 **What this does not invalidate, and the distinction matters.**
 
@@ -224,13 +230,20 @@ is `best_combined() > 0` and the heuristic's `rank_for_role` keeps only `score >
 it. The model winning there is unaffected, and entry 106's decision to close that experiment stands.
 
 *The absolute recall figures mean something narrower than they read.* `oracle/selection_oracle.yaml`
-was curated, in `contention.py`'s own words, "from **every candidate that scored above zero**". So
-"100% role recall" is *"the model found every answer a person could find inside the same 6%"*, and
-`coverage` half one's "the corpus holds 47 of 47 answerable roles" has an `answerable` counted under
-the same bound. They are accurate as measured and their denominator is smaller than their wording
-suggests. Entry 91 partly widened the fixture — the UAE's three 0.0 roles are in it, found with
-`page_text.rank` over stored **body** text — so the oracle is not purely a >0 artefact, but only the
-rows that got that re-check were widened.
+was curated, in `contention.py`'s own words, "from **every candidate that scored above zero**", and
+entry 87 built the first ten rows "from the corridor's **whole** contention set — 77 to 552
+candidates each" believing that was the whole set. It is the pool. So "100% role recall" is *"the
+model found every answer a person could find inside the same 6%"*, and `coverage` half one's "the
+corpus holds 47 of 47 answerable roles" has an `answerable` counted under the same bound.
+
+**The fixture cannot detect the filter it shares, and the check confirms the tautology rather than
+the gate.** Every page the oracle names as answering a role was located in that corridor's most
+recent recall log: **88 of 88 are in the pool, none scores zero, none is missing from the candidate
+set.** That is not reassurance — a fixture curated from the pool cannot name a page outside it, so
+this number could never have come out any other way. **Whether the discarded 94% contains a single
+role-answering page is unmeasured, and the oracle is structurally unable to measure it.** Entry 87
+removed the *selector* bias it set out to remove and inherited the *scorer* bias underneath, which
+is the one this entry names.
 
 **Why this is now the top item rather than a footnote.** The countries that fill nothing are the
 countries with the smallest pools: Liechtenstein 2 and Bulgaria 8, against corpora of 7,482 and
@@ -244,9 +257,12 @@ which is the arm that already lost. The question worth asking is a different one
 put a candidate into the pool at all?** Entry 78's rule is untouched either way — stored text ranks
 and never speaks — and so is the packet's real constraint, since `DEFAULT_SELECTION_CHARACTERS` is
 400,000 shared across candidates and a pool of 7,482 would leave each one a few dozen characters.
-So the answer is not "remove the filter". **Measure first**, offline and with no adjudicator in it:
-of the pages the oracle names as answering a role, how many score zero on links — that is the only
-number that says whether the 94% contains anything.
+So the answer is not "remove the filter". **And it cannot be measured against the present oracle**,
+per the tautology above. The measurement has to curate from the **whole** candidate set — body text
+included, which is the only instrument that can see inside a page — for a handful of corridors, and
+ask how many role-answering pages the anchor scorer rates zero for every role. Liechtenstein at 2 of
+7,482 and Bulgaria at 8 of 6,847 are where an answer would matter most and where a hand-curated row
+is cheapest to justify. That is the honest cost of this item and it is now the item.
 
 ---
 

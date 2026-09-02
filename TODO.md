@@ -243,20 +243,27 @@ Over the 24 runs postdating 2026-08-30: **71,798 candidates, 4,450 in the pool.*
 offers **2 of 7,482**; Bulgaria **8 of 6,847**; Morocco 19 of 1,801; Austria 96 of 3,670. The widest
 is Norway at 34%.
 
-**This is the same filter three earlier entries met and none of them followed to here.** Entry 81
-measured "90% score zero" against the *shortlist*; entry 85 replaced the shortlist with the model
-selector and the new gate inherited the old filter; entry 91 found a UAE page answering **three**
-roles at **0.0** and said its re-check "had to change instrument" because ranking filters on `> 0`.
-It changed instrument for those fixture rows. The live path was left alone.
+**Do not confuse this with the per-role filter, which is a different thing.** `rank_for_role` drops
+a page scoring zero **for that role**; the pool drops a page scoring zero for **every** role. Entry
+91's UAE page — five roles answered, 0.0 for three of them — is the first kind: its
+`best_combined()` is **49.6**, it is in the pool, and it was shortlisted and fetched in four
+recorded runs. It says nothing about the pool gate, and an earlier draft of this item cited it as
+though it did.
 
-**Measure before building anything, and the measurement is offline with no adjudicator in it.**
-Of the pages `oracle/selection_oracle.yaml` names as answering a role, how many link-score **zero**?
-That single number says whether the 94% contains answers or chaff. Note the fixture is partly
-compromised for this purpose and say so in the result: `contention.py` curates "from every candidate
-that scored above zero", so a >0 oracle cannot see its own blind spot — except for the rows entry 91
-widened with `page_text.rank`, which is exactly where the 0.0 pages in it came from. **A fair
-version curates a handful of rows from the whole corpus, body text included, and is the honest cost
-of this item.**
+**The present oracle cannot measure this, and that is the finding, not an obstacle to work around.**
+`oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero"
+(`contention.py`), and entry 87 built the first ten rows from "the corridor's **whole** contention
+set" believing that was the whole set. Checked 2026-09-02: of the pages the oracle names as
+answering a role, **88 of 88 are in the pool and none scores zero**. That number could not have come
+out any other way — **a fixture curated from the pool cannot name a page outside it.**
+
+**So the measurement is a curation job, and it is the honest cost of this item.** Take a small
+number of corridors and name the answering pages from the **whole** candidate set — using
+`page_text.rank` over stored body text, the only instrument that can see inside a page — then ask
+how many of them the anchor scorer rates zero for every role. **Liechtenstein (2 of 7,482) and
+Bulgaria (8 of 6,847) are the right two**: the answer matters most there, and a row is cheapest to
+justify where the current pool is two pages. If those rows come back with every answer already in
+the pool, the 94% is chaff and this item closes.
 
 **Then: what could put a candidate into the pool, given the packet has a real bound.**
 `DEFAULT_SELECTION_CHARACTERS` is 400,000 shared across candidates, so a pool of 7,482 leaves each
