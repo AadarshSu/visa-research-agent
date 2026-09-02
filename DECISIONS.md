@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [126](#126-on-the-roles-the-post-governs-the-passport-bonus-is-withdrawn-and-a-residence-bonus-put-in-its-place) | **The residence signal is built** — the Netherlands' UK apply page goes 14th of 1,074 to 1st; no oracle page loses a point |
 | [125](#125-the-recall-gate-admits-search-at-49-and-the-corpus-at-55-so-item-31-goes-before-item-19) | **The gate admits search at 49% and the corpus at 5.5%** — item 19 measures the corpus through a filter biased against it |
 | [124](#124-a-page-about-where-the-traveller-applies-from-earns-nothing-for-saying-so) | **The residence earns no score** — Canada scores the passport page 32.0 and the page they actually apply on 0.0 |
 | [123](#123-the-model-selector-is-shown-6-of-the-corpus-and-the-filter-is-the-heuristic-it-replaced) | **The model selector is shown 6% of the corpus** — the pool gate is the heuristic it replaced; the arm comparison stands, the denominators are narrower |
@@ -174,6 +175,132 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 126. On the roles the post governs, the passport bonus is withdrawn and a residence bonus put in its place
+
+**2026-09-02 · TODO item 1, built and measured**
+
+Entry 124 measured the defect: `score_link` rewards a page for being about the traveller's
+**passport** country and has no counterpart for the country they **apply from**, so "this page is
+about country X" could only ever exclude (`wrong_country`) and never promote. This is the fix.
+
+**The rule, in one sentence.** Where the residence and the nationality differ, a page about the
+residence gains `residence_weight` on `POST_SPECIFIC_ROLES` and a page about the nationality loses
+`nationality_weight` on those same roles.
+
+**They swap rather than stack, and `residence_weight` is set equal to `nationality_weight` for
+that reason.** A page about where the traveller applies from ends up exactly where a page about
+their passport used to be — 40 points, no more. Adding without withdrawing would only produce a
+*tie* (Canada 32 against 32, Romania 58 against 58), which does not fix a defect whose symptom is
+that the wrong page outranks the right one; and a bonus larger than 40 would be a thumb on the
+scale nothing has measured.
+
+**Four roles, not six.** `visa_decision` and `general_entry` are excluded, as they are from
+`mission_affinity` — whether a passport needs a visa is set by the destination's law and is the
+same at every consulate (entry 72). So the passport bonus is untouched where the passport is the
+question, and `best_combined()` — the selector's pool gate — reads the maximum across all six
+roles, which is why the change barely moves the pool at all (below).
+
+**A corridor whose traveller applies from their own country is untouched, by construction.** For
+them the two questions are one question and the nationality bonus already answers it, so neither
+half fires. That is half the selection oracle — every `PH/PH` row — and it is why the measurement
+below covers ten corridors rather than twenty.
+
+### The two families it was built on
+
+```
+canada/IN/GB   ircc.canada.ca/…/where-submit-application.asp?country=GB   -8.0  ->  32.0
+               …?country=IN                                               32.0  ->  -8.0
+romania/IN/GB  eviza.mae.ro/media/3252/MAREA-BRITANIE.PDF   'United Kingdom'   18.0  ->  58.0
+               …/3252/…-COM-nrC-2025-nr4379…_en.pdf         'India'            58.0  ->  18.0
+```
+
+Romania's is the sharper one: 58 harmonised supporting-document lists, one per country of
+application, and before this the traveller's own was indistinguishable from Kosovo's and Cape
+Verde's at 18.0 with identical signals. It is now first in its family by 40 points.
+
+### How wide the dimension actually is — 4 corpora, not 21
+
+Entry 124 counted **21 of 53 corpora publishing a page per country, 5,901 pages**, and said plainly
+that most of them are embassy contacts, travel advice and bilateral relations, where scoring zero
+is correct — leaving "count how many hold a per-residence *application* family" as the open
+question. Counted:
+
+| corpus | family | pages | best role |
+| --- | --- | --- | --- |
+| CA | `ircc.canada.ca/english/where-submit-application.asp/{}/{}` | 538 | `application_route` |
+| NL | `netherlandsworldwide.nl/{}/{}` | 332 | `fees` |
+| RO | `eviza.mae.ro/media/{}/{}` | 65 | `document_checklist` |
+| HR | `mvep.gov.hr/UserDocsImages/{}/datoteke/{}` | 12 | `document_checklist` |
+
+**944 pages across four countries**, not 5,901 across 21. The other 19 publish per-country
+*advice*. Two of the four are the two entry 124 named; Croatia's is the same artefact as Romania's
+("List of supporting documents ETHIOPIA.pdf", anchor text the country name) and the Netherlands' is
+the `apply-{country}` family entry 88 built the crawl's family reservation for. A fifth candidate,
+Estonia's `e-resident.gov.ee/blog/{}/{}`, is coincidence and is not counted.
+
+**The instrument had to change to find them, and that is itself the finding.** `country_family_keys`
+reads the **URL** and matches a lowercase country slug of three characters or more, so it sees
+neither Canada's `?country=IN` — a two-letter code, below its floor — nor Romania's
+`MAREA-BRITANIE.PDF`, which is Romanian. Both are the families the defect bites hardest on. The
+count above groups on the **anchor text**, which is what `score_link` reads, and masks whatever
+part of the address varies with it. Entry 124 already narrowed item 47's premise from a translation
+table to an alias fixture; this narrows it again — the blind spot that matters is not the language
+of the slug but that `coverage` and the crawl's reservation read a different instrument from the
+scorer. TODO item 47.
+
+### What it costs, measured with no adjudicator in it
+
+Entry 81's rule: grade the ranking, not the plan. Every one of the 160 pages
+`oracle/selection_oracle.yaml` names as answering a role was re-scored against its country's whole
+corpus, before and after, offline.
+
+- **No oracle answering page loses a single point.** Eight gain: the United Kingdom's supporting-
+  documents guide, three of its `apply-to-come-to-the-uk` pages, three of its processing-time
+  pages, and the Netherlands' `apply-united-kingdom` — every one of them exactly `+40`.
+- **12 rows improve their rank, 10 slip, 122 are unchanged.** Every one of the 10 slipped at an
+  *unchanged score*, passed by a sibling that gained — five United Arab Emirates rows, two France,
+  one Germany, one Sweden, and the United Kingdom's `standard-visitor` page passed by four other
+  pages the same oracle rows name.
+- **The headline is the Netherlands:** `…/schengen-visa/apply-united-kingdom` for
+  `application_route` goes from **14th of 1,074 to 1st**. That is the defect the item was opened on
+  in 2026-08-20 — `checklist-schengen-visa-tourism/india` 113.0 against `…/united-kingdom` 73.0 —
+  closed.
+
+**And it is not a way past the pool gate.** Over all 53 corpora scored for an `IN/GB` traveller the
+selector's pool moves from **12,573 to 12,583 of 186,596 candidates** — 6.74% either way. What
+changes is *which* pages: Canada's `?country=GB` page and the Netherlands'
+`caribbean-visa/long-stay/apply-united-kingdom` enter, Sweden's `british-citizens` pages and
+Germany's `uk.diplo.de` visa pages enter, and what leaves is `apply-india`, `?country=IN`,
+`in.usembassy.gov/apply-for-a-nonimmigrant-visa` and five `new-delhi.mfa.gov.sg` news items. **Item
+31 is untouched and still next** — this is a re-ordering inside the 6%, not a widening of it.
+
+### A frozen test had to move, and it is worth saying which
+
+`test_a_page_whose_own_words_name_the_nationality_still_earns_it` asserted, on
+`application_route`, that France's `…/applying-for-a-visa-indian-nationals` outranks the same post's
+generic page. Under this rule the pair ties, and that is the intended answer: a page for Indian
+nationals published by France's mission **in India** tells an applicant in India how to apply. The
+test's own stated intent — a page's own words are a different signal from the host it sits on —
+is unchanged and is now asked of `visa_decision`, where the passport is the question. Three tests
+were added beside it: the Canada flip, the decision role keeping its passport bonus, and an `X/X`
+corridor being scored exactly as before.
+
+### What this does not do
+
+`score_body` carries the same asymmetry — `body-nationality` has no residence counterpart — and is
+deliberately left alone. It runs on text this run fetched, after the candidate has already been
+chosen to read, so it cannot cost a page its place; the defect entry 124 measured is a **visibility**
+defect and lives in `score_link`. Changing both at once would also have made the measurement above
+unreadable, since body scores are not in the corpus.
+
+And it does not help a page with no role vocabulary at all. Canada's `?country=GB&lob=visit` page —
+the one a *tourism* corridor wants — scores nothing for any role, because its heading is "Submit
+your application" and `score_link` returns early on an empty vocabulary before any traveller signal
+is applied. The residence bonus reaches the `lob=citizenship` sibling and cannot reach that one.
+That is item 31's territory, not this one's.
 
 ---
 

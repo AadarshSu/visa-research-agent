@@ -315,6 +315,22 @@ language_terms:
 base_visa_weight: 6
 
 nationality_weight: 40
+
+# What the traveller's *residence* is worth, and only for the roles the post governs.
+#
+# `nationality_weight` above rewards a page for being about the passport country, and until
+# 2026-09-02 there was no counterpart for the country the traveller applies from — so "this page is
+# about country X" could only ever exclude (`wrong_country`), never promote. Canada publishes 635
+# "where to submit your application" pages, one per country of application: for an Indian national
+# in Britain the `?country=IN` page scored 32.0 and the `?country=GB` page, the one that answers
+# them, scored -8.0. DECISIONS entry 126.
+#
+# Equal to `nationality_weight` on purpose. On a post-specific role the passport bonus is withdrawn
+# and this one is added, so the two swap places rather than stack: a page about where they apply
+# from ends up exactly where a page about their passport used to be. A larger number would be a
+# thumb on the scale nothing has measured.
+residence_weight: 40
+
 purpose_bonus_weight: 20
 shallow_path_weight: 8
 depth_penalty_weight: -10

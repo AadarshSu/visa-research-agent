@@ -412,16 +412,26 @@ def test_every_country_has_the_field_the_trust_rule_depends_on() -> None:
 # --- who a page is about, and which post published it ----------------------------------------
 
 
-def route_link(url: str, text: str = "", heading: str = "") -> float:
+def scored_link(
+    url: str, text: str = "", heading: str = "", *, role: DiscoveryRole, applying_from: str = "GB"
+) -> float:
     registry = get_country_registry()
     scores = score_link(
         PageLink(url=url, text=text, heading=heading, depth=0, discovered_from="seed"),
-        corridor(),
+        corridor().model_copy(update={"applying_from": applying_from}),
         get_lexicon(),
         registry.require("IN"),
-        registry.require("GB"),
+        registry.require(applying_from),
     )
-    return scores.score_for("application_route")
+    return scores.score_for(role)
+
+
+def route_link(url: str, text: str = "", heading: str = "") -> float:
+    return scored_link(url, text, heading, role="application_route")
+
+
+def decision_link(url: str, text: str = "", heading: str = "") -> float:
+    return scored_link(url, text, heading, role="visa_decision")
 
 
 def test_the_post_a_traveller_applies_at_outranks_the_post_of_their_own_country() -> None:
@@ -445,17 +455,90 @@ def test_the_post_a_traveller_applies_at_outranks_the_post_of_their_own_country(
 
 def test_a_page_whose_own_words_name_the_nationality_still_earns_it() -> None:
     """The narrowing must not cost the real signal. A path or a title naming the country is the
-    page describing itself, which is a different thing from the host it sits on."""
+    page describing itself, which is a different thing from the host it sits on.
 
-    about_indians = route_link(
-        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa-indian-nationals",
-        "Applying for a visa: Indian nationals",
+    Asked of `visa_decision`, which is where the passport is the question. It used to be asked of
+    `application_route` and cannot be any more: entry 126 withdrew the nationality bonus from the
+    roles the *post* governs, so on those roles this pair now ties — which is the intended answer,
+    because a page for Indian nationals published by France's mission in India tells an applicant
+    in India how to apply, not one in Britain.
+    """
+
+    about_indians = decision_link(
+        "https://in.diplomatie.gouv.fr/en/do-you-need-a-visa-indian-nationals",
+        "Do you need a visa? Indian nationals",
     )
-    generic = route_link(
-        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa", "Applying for a visa"
+    generic = decision_link(
+        "https://in.diplomatie.gouv.fr/en/do-you-need-a-visa", "Do you need a visa?"
     )
 
     assert about_indians > generic
+
+
+def test_a_page_about_where_they_apply_from_outranks_one_about_their_passport() -> None:
+    """Canada publishes 635 "where to submit your application" pages, one per country of
+    application. For an Indian national in Britain the `?country=IN` page scored 32.0 for
+    `application_route` and the `?country=GB` page — the one that answers them — scored -8.0, below
+    the score that admits a candidate at all. Nothing rewarded a page for saying which country it
+    is about; only `wrong_country` read that, and only to reject. DECISIONS entry 126.
+    """
+
+    submit_from_britain = route_link(
+        "https://ircc.canada.ca/english/where-submit-application.asp?country=GB&lob=citizenship",
+        "United Kingdom",
+        "If you're a parent or legal guardian applying for a minor child",
+    )
+    submit_from_india = route_link(
+        "https://ircc.canada.ca/english/where-submit-application.asp?country=IN&lob=citizenship",
+        "India",
+        "If you're a parent or legal guardian applying for a minor child",
+    )
+
+    assert submit_from_britain > 0
+    assert submit_from_britain > submit_from_india
+
+
+def test_the_decision_is_still_the_passport_country_s_to_answer() -> None:
+    """Only the post-specific roles swap. Whether an Indian passport needs a visa is set by the
+    destination's law and is the same at every consulate, so the page about India keeps its bonus
+    for `visa_decision` — and the page about Britain earns nothing there. Entry 72 left
+    `visa_decision` and `general_entry` out of post-preference for this reason; entry 126 keeps
+    them out.
+    """
+
+    about_india = decision_link(
+        "https://ircc.canada.ca/english/visa-requirements-india", "Visa requirements: India"
+    )
+    about_britain = decision_link(
+        "https://ircc.canada.ca/english/visa-requirements-united-kingdom",
+        "Visa requirements: United Kingdom",
+    )
+
+    assert about_india > about_britain
+
+
+def test_a_traveller_applying_from_home_is_scored_exactly_as_before() -> None:
+    """The swap fires only where the two countries differ. For a Filipino applying in the
+    Philippines the passport and the post are one question, and the nationality bonus already
+    answers it — so `PH/PH` and every corridor like it is untouched by entry 126, which is half the
+    selection oracle."""
+
+    apply_from_india = scored_link(
+        "https://ircc.canada.ca/english/where-submit-application.asp?country=IN&lob=citizenship",
+        "India",
+        "If you're a parent or legal guardian applying for a minor child",
+        role="application_route",
+        applying_from="IN",
+    )
+    apply_from_britain = scored_link(
+        "https://ircc.canada.ca/english/where-submit-application.asp?country=GB&lob=citizenship",
+        "United Kingdom",
+        "If you're a parent or legal guardian applying for a minor child",
+        role="application_route",
+        applying_from="IN",
+    )
+
+    assert apply_from_india > apply_from_britain
 
 
 def test_site_furniture_is_vetoed_however_well_it_scores() -> None:

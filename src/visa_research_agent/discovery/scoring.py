@@ -413,7 +413,8 @@ def score_link(
     shared = 0.0
     shared_reasons: list[str] = []
 
-    if _describes_country(link, nationality):
+    about_nationality = _describes_country(link, nationality)
+    if about_nationality:
         shared += lexicon.nationality_weight
         shared_reasons.append(f"nationality:{nationality.code}+{lexicon.nationality_weight:g}")
 
@@ -483,6 +484,33 @@ def score_link(
     for scored_role in list(scores):
         scores[scored_role] += shared
         signals[scored_role].extend(shared_reasons)
+
+    # On a post-specific role the country that matters is the one the traveller applies *from*, so
+    # the passport bonus is withdrawn and a residence bonus put in its place. Canada publishes 635
+    # "where to submit your application" pages, one per country of application: for an Indian
+    # national in Britain the `?country=IN` page scored 32.0 for `application_route` and the
+    # `?country=GB` page — the one that answers them — scored -8.0, below the score that admits a
+    # candidate at all. Nothing rewarded a page for saying which country it is about; only
+    # `wrong_country` read that, and only to reject. DECISIONS entry 126.
+    #
+    # The two swap rather than stack, and only where they differ. A corridor whose traveller applies
+    # from their own country of nationality is unchanged, because for them the two questions are one
+    # question and the nationality bonus already answers it.
+    if residence.code != nationality.code:
+        about_residence = _describes_country(link, residence)
+        if about_residence or about_nationality:
+            adjustment = (
+                lexicon.residence_weight if about_residence else -lexicon.nationality_weight
+            )
+            reason = (
+                f"residence:{residence.code}+{lexicon.residence_weight:g}"
+                if about_residence
+                else f"not-residence:{nationality.code}{-lexicon.nationality_weight:g}"
+            )
+            for post_role in POST_SPECIFIC_ROLES:
+                if post_role in scores:
+                    scores[post_role] += adjustment
+                    signals[post_role].append(reason)
 
     # How this traveller applies is set by the mission serving where they live, so it outranks a
     # ministry's general pages for the post-specific roles — and a *different* post's page loses

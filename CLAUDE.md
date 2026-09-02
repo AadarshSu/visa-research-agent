@@ -38,10 +38,18 @@ opens 3–15% of what it records; and `_choose_what_to_read` shows the model sel
 the anchor heuristic scores above zero, which is **6%** of a run's candidate set — Liechtenstein
 offers **2 of 7,482**. Whether the discarded 94% holds any answer is **unmeasured**, and
 `selection-recall` cannot say, because its fixture was curated from inside that 6%. The queue is
-ordered around this: **item 1** (the scorer has no signal for where the traveller applies from —
-Canada scores the wrong page 32.0 and the right one 0.0), then **item 31** (the gate itself), then
-**item 19**, whose search-dependence figure is an upper bound because the gate admits 49% of search
-results against 5.5% of corpus pages.
+ordered around this: **item 31** (the gate itself), then **item 19**, whose search-dependence figure
+is an upper bound because the gate admits 49% of search results against 5.5% of corpus pages.
+
+**The scorer now has a residence signal, and it re-orders that 6% rather than widening it (entry
+126).** `score_link` rewarded a page for being about the traveller's **passport** country and had
+nothing for the country they apply from, so Canada's `?country=IN` page scored `application_route`
+32.0 and the `?country=GB` page that answers them scored -8.0. On the four `POST_SPECIFIC_ROLES` the
+passport bonus is now withdrawn and `residence_weight` put in its place — they **swap**, because
+adding without withdrawing only produces a tie — and a corridor whose traveller applies from their
+own country is untouched. No oracle answering page lost a point; the Netherlands' UK apply page went
+14th of 1,074 to 1st; the pool moved 12,573 → 12,583 of 186,596. `visa_decision` and `general_entry`
+stay out of post-preference, as entry 72 left them.
 
 **The corpus generalises to a traveller it was never tuned for** (entry 112). Every number in this
 project came from `IN/GB` and `PH/PH` until a Nigerian passport from Nigeria was run across the ten
@@ -531,6 +539,10 @@ cause, and only running the thing showed it.
 | romania's family is invisible because it is named in romanian | its anchor text is english; `country_family_keys` reads the **URL** only (entry 124) |
 | the family detector needs 198 country names in every language | the blind spot is english **aliases and territories** — `czech-republic`, `kosovo` (entry 124) |
 | search is load-bearing for 17 roles, so the corpus is not ready | the gate admits search at 49% and the corpus at 5.5% — that 17 is an upper bound (entry 125) |
+| adding a residence bonus fixes the page scored below its wrong sibling | adding without withdrawing gives a **tie**, 32 against 32 — they must swap (entry 126) |
+| the per-country dimension is 21 corpora and 5,901 pages | the *application* families inside it are **4 corpora and 944 pages** (entry 126) |
+| `country_family_keys` misses a family when the slug is foreign | it also misses Canada's `?country=IN` — a two-letter code below its floor (entry 126) |
+| a residence bonus widens the pool the anchor scorer gates | 12,573 → 12,583 of 186,596 — it re-orders the 6%, it does not widen it (entry 126) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

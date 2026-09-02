@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-02 — update this line when you touch the handoff |
-| **Tests** | 662 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 665 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -120,20 +120,25 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 1, re-scoped: score a page for being about where the traveller applies from.** The
-queue was re-prioritised on 2026-09-02 and the Now order is **1, 31, 19, 17, 47, 35, 9, 2, 5**.
+**Start at item 31: the anchor scorer gates 94% of the corpus out of the selector's sight.** The
+queue was re-prioritised on 2026-09-02 and the Now order is **31, 19, 17, 47, 35, 9, 2, 5**. Item 1
+sat at the top of it for part of that day and is **done** (entry 126).
 
 **Why item 31 sits ahead of the project's own goal (entry 125).** The selector's pool admits **49% of search results and 5.5% of corpus pages** — a 9× gap, because search returns pages whose URL and title already match visa vocabulary, which is what the anchor scorer scores. Item 19 asks whether search can leave the request path while measuring the corpus through a filter biased nine to one against it, so its "17 load-bearing search-only pages" is an upper bound on search's necessity. Item 31 tightens it.
 
-**The measurement that put item 1 first (entry 124).** `score_link` adds `nationality_weight` when a
-page is about the traveller's **passport** country and has **no equivalent** for the country they
-apply from. Canada publishes 635 "where to submit your application" pages, one per country of
-application: for an Indian national in Britain, `?country=IN` scores `application_route` **32.0** and
-`?country=GB` — the page that answers them — scores **0.0**, below the threshold that admits a
-candidate at all. Romania's 58-member checklist family is the same defect: its UK checklist, Kosovo's
-and Cape Verde's all score **18.0 with identical signals**. **21 of 53 corpora publish a page per
-country, 5,901 pages**; most are embassy and advice pages where zero is correct, so **count the
-per-residence application families before sizing the fix**.
+**Item 1 was measured, promoted to the top and finished the same day (entries 124 and 126).**
+`score_link` rewarded a page for being about the traveller's **passport** country and had no
+equivalent for the country they apply from — Canada's `?country=IN` page scored `application_route`
+**32.0** and the `?country=GB` page that answers them scored **-8.0**. On the four roles the *post*
+governs, the passport bonus is now withdrawn and a residence bonus put in its place: they **swap**
+rather than stack, because adding without withdrawing only produces a tie. Measured offline over
+`oracle/selection_oracle.yaml`, **no answering page loses a point**, eight gain 40, and the
+Netherlands' `…/schengen-visa/apply-united-kingdom` goes from **14th of 1,074 to 1st**. Over all 53
+corpora the selector's pool moves **12,573 → 12,583 of 186,596** — a re-ordering inside the 6%, not
+a widening of it, which is why item 31 is untouched and now leads. The dimension turned out to be
+**4 corpora and 944 pages** (CA 538, NL 332, RO 65, HR 12), not entry 124's 21 corpora and 5,901
+pages: that number counted every per-country page, and most are embassy contacts and travel advice
+where zero is correct.
 
 **The earlier measurement of the same day (entry 123), which item 31 still rests on.** `_choose_what_to_read` pools only candidates the anchor
 heuristic scores above zero, so **the model selector is shown 6% of the corpus** — 4,450 of 71,798

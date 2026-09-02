@@ -16,14 +16,18 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Re-prioritised again the same day, on a second measurement that beat the first (entry 124).**
-`score_link` rewards a page for being about the traveller's **passport** country and has **no
-signal at all** for the country they apply from. Canada publishes 635 "where to submit your
-application" pages, one per country of application: for an Indian national in Britain the
-`?country=IN` page scores **32.0** and the `?country=GB` page — the one that answers them — scores
-**0.0**. 21 of 53 corpora publish a page per country, 5,901 pages. **Item 1 goes to the top**, from
-the bottom of Now. Item 31 keeps its 6% but loses its motivating example, and item 47's premise
-narrows to an alias fixture rather than a translation table.
+**Item 1 was promoted to the top on 2026-09-02 (entry 124) and finished the same day (entry 126).**
+`score_link` rewarded a page for being about the traveller's **passport** country and had no signal
+at all for the country they apply from. On the four roles the *post* governs, the passport bonus is
+now withdrawn and a residence bonus put in its place — they **swap** rather than stack, because
+adding without withdrawing only produces a tie. The Netherlands' `apply-united-kingdom` page goes
+from **14th of 1,074 to 1st** for `application_route`, no oracle answering page loses a point, and
+the selector's pool over all 53 corpora moves 12,573 → 12,583 of 186,596: **a re-ordering inside
+the 6%, not a widening of it, so item 31 is untouched and is now the top item.** Entry 124's "21 of
+53 corpora, 5,901 pages" was the whole per-country dimension; the *application* families inside it
+are **4 corpora and 944 pages** (CA, NL, RO, HR). Finding them needed a different instrument, and
+that is item 47's real premise — `country_family_keys` reads the URL, so it sees neither Canada's
+`?country=IN` nor Romania's `MAREA-BRITANIE.PDF`.
 
 **The first re-prioritisation of 2026-09-02 (entry 123).**
 The model selector is shown **6% of the corpus** — 4,450 of 71,798 candidates over 24 runs — because
@@ -189,8 +193,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 1. Score a page for being about where the traveller applies from | `next` |
-|  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
+| **Now** | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 47. Find out how much of the world the family detector cannot see | `next` |
@@ -232,63 +235,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 1. Score a page for being about where the traveller applies from — `next`, **start here**, **re-scoped 2026-09-02**
-
-> **Measured across all 53 corpora and promoted from the bottom of this list to the top (entry 124).**
-> The defect is not a weighting to tune; it is a **missing signal**. `score_link` adds
-> `lexicon.nationality_weight` when `_describes_country(link, nationality)` — the traveller's
-> **passport** country — and there is no equivalent for the country they **apply from**.
-> `mission_affinity` looks like one and is not: it matches host labels (`india.embassy.gov.au`), not
-> a page that is *about* a country. Meanwhile `wrong_country` reads the same anchor text to
-> **reject** pages about other countries. So "this page is about country X" excludes and never
-> promotes.
->
-> **Canada, scored with the live scorer for an Indian national applying from Britain:**
->
-> | page | score |
-> | --- | --- |
-> | `ircc.canada.ca/…/where-submit-application.asp?country=IN` — the passport country | `application_route` **32.0** |
-> | the same page `?country=GB` — **where they actually apply** | **0.0**, below the pool threshold |
->
-> That family has **635 members**. Romania's is 58: its UK checklist, Kosovo's and Cape Verde's all
-> score **18.0 with identical signals**, and the anchor text "United Kingdom" contributes nothing.
-> Romania resolved only because the *model* read the stored text.
->
-> **How wide:** 21 of 53 corpora publish a page per country — 5,901 pages, 13 of them covering 160+
-> countries (CA 189, NL 188, MT 184, US 183, BG 182, FR 182, JP 182, LU 182, CH 175, SI 173, PT 168,
-> NO 164, AU 158). **But most such pages are embassy contacts, travel advice and bilateral
-> relations, where zero is correct.** The defect bites on per-residence *application* families, and
-> two are measured. **Count how many of the 21 hold one before sizing the fix.**
->
-> **This is one remedy under item 31 and it is the one that needs no fixture.** Item 31 owns the
-> general problem — the anchor scorer gates 94% of the corpus out of the selector's sight — and
-> most of its remedies wait on a measurement that does not exist yet. This one does not: the defect
-> is a missing signal rather than a threshold, and it is measured on two families. **Ship it
-> independently of item 31's answer.**
->
-> **Careful — entry 70 is the standing warning.** A residence bonus is not free: demonyms bought
-> 22 shortlist places and every one was noise. Weight it against the `document_checklist` and
-> `application_route` roles where the post governs, measure across the verified corridors, and note
-> `visa_decision` and `general_entry` are deliberately excluded from post-preference (entry 72) —
-> a visa rule is the same at every consulate.
-
-**Why:** DECISIONS entries 39 and 40. Widening the shortlist fixed two corridors and left two problems
-standing, and they are now separable.
-
-**The weighting bug is precise and reproducible.** For an Indian national applying from Great Britain the
-scorer gives `checklist-schengen-visa-tourism/india` **113.0** and `.../united-kingdom` **73.0**. For a
-consular checklist the **post** governs, not the passport: they apply at the Dutch mission in the UK. The
-adjudicator correctly refuses a wrong-post page, so the corridor discards a checklist it already fetched.
-Make `applying_from` outrank `passport_nationality` where a URL or link text names a post — and measure
-across the verified corridors, because link scoring decides what every corridor reads.
-
-**Sweden is unexplained.** It reads `migrationsverket.se`, fills `general_entry`, and neither widening
-the window nor correcting its domain moved the visa decision or the checklist. It has not been traced the
-way the Netherlands was, and it should be before anything else is changed on its account.
-
----
-
-### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **re-scoped 2026-09-02**
+### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **start here**, **re-scoped 2026-09-02**
 
 > **Re-scoped twice on 2026-09-02, and the second time widened it from a remedy to the problem.**
 > It first asked for a *numeric text lift inside `combined`* — better **ordering** of what the model
@@ -484,7 +431,8 @@ unmeasured.**
 
 **What to build, and the shape matters.** Not "replace `score_link` with `score_body`". The top of
 Japan's text ranking for `document_checklist` is Calgary and Houston consulate pages: real checklists,
-for the wrong post. `score_body` takes a nationality and **no residence**, so it has none of
+for the wrong post. `score_body` takes a nationality and **no residence** — entry 126 gave
+`score_link` a residence signal and deliberately left `score_body` alone — so it has none of
 `mission_host_bonus` or `other_mission_penalty` — and entry 70 established that the post is the
 dimension that actually varies. The link score knows about posts, depth and host kind; the body score
 knows what the page *is*. So: keep `score_link` as the ranker, and add the body score for candidates
@@ -769,6 +717,16 @@ country slugs and returns `[]` for every one.
 > territories** — `czech-republic`, `ivory-coast`, `cape-verde`, `east-timor`, `kosovo`,
 > `cook-islands`, `anguilla`, `curacao`, `hongkong` — not translations. That is a bounded alias
 > fixture of a few dozen rows, not 198 names in every authority language.
+
+> **Narrowed again on 2026-09-02 (entry 126), which built the anchor-text instrument this item
+> suggests trying first.** Grouping on the anchor text and masking whatever part of the address
+> varies with it finds the four per-residence *application* families the corpora hold — Canada 538
+> pages, the Netherlands 332, Romania 65, Croatia 12. `country_family_keys` sees **two** of them:
+> it misses Canada's `?country=IN`, a two-letter code below its three-character floor, and
+> Romania's Romanian-named PDF. So the anchor-text instrument works, it is written down in entry
+> 126, and it is worth an hour to fold into `country_family_keys` — but note **the two-character
+> floor is a second blind spot the language story never predicted**, and lowering it is not free:
+> `FAMILY_TOKEN_MINIMUM` is 3 because two-letter tokens collide with everything.
 
 **Two things rest on that function**, so the blind spot is not cosmetic: `coverage` half two, whose
 verdict is computed from families alone (entry 90), and the crawl's family reservation, which is
@@ -1417,6 +1375,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 1. Score a page for being about where the traveller applies from | 09-02 | 126 | The two bonuses **swap** rather than stack — adding without withdrawing only produces a tie. The Netherlands' `apply-united-kingdom` goes **14th of 1,074 to 1st** and no oracle answering page loses a point. The dimension is **4 corpora, not 21**: `country_family_keys` reads the URL, so it sees neither Canada's `?country=IN` nor Romania's `MAREA-BRITANIE.PDF` — the two families the defect bites hardest on (item 47) |
 | 45. Re-run the five countries last measured before their corpus existed | 09-01 | 121, 122 | **Romania fills 5 of 6** off `eviza.mae.ro`, Austria 2 — both were predictions this item said would stand. Morocco refuses with an `HTTP 200` reported as `unusable` (item 46), and Romania's 58 Romanian-named checklist PDFs are invisible to the family detector (item 47) |
 | 43. Give the new 43 something the coverage gate can grade | 09-01 | 120 | **42 of 53 countries were deferring to an empty half** and read as passes. Fixed with an `ungraded` verdict. The oracle is **not** growing to 53: 17 of the 42 resolve every passport tried, and of the 9 that resolve none, 6 have a named cause outside the store |
 | 44. Re-measure the countries whose ranking text was a bot-check page | 09-01 | 118, 119 | NO and ID now fill **6 of 6**, TH names its checker. The Philippines' missing checklist is a **visa-free** corridor, Lithuania's ceiling is the challenge and not its `Disallow`, and the US gaps split — `travel.state.gov` blocked, `uk.usembassy.gov` never requested. The US corridor **flips** between two runs of identical code |
@@ -1453,6 +1412,17 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**Sweden's ranking is unexplained, and entry 126 did not explain it.** Carried over from item 1,
+which was otherwise finished on 2026-09-02. Sweden reads `migrationsverket.se`, fills
+`general_entry`, and neither widening the shortlist window nor correcting its domain moved the visa
+decision or the checklist. The residence signal moved it the wrong way by one measure — its
+`visiting-sweden-for-up-to-90-days-entry-visa` page slipped from 104th to 111th for
+`application_route` at an **unchanged** score of 5.6, passed by seven `british-citizens` pages that
+gained 40 — which says the page was never scoring on anything and is a symptom rather than a
+regression. It has never been traced the way the Netherlands was, and it should be before anything
+is changed on its account.
+
 
 **Cyprus names `mip.gov.cy`, which does not resolve; `www.mip.gov.cy` does.** Found 2026-08-30,
 entry 116. Cyprus's corpus is 612 of 620 entries on `www.gov.cy`, and its Ministry of Interior — the

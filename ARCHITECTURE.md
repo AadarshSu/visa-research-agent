@@ -490,12 +490,19 @@ results and 5.5% of corpus pages**, because search returns pages whose URL and t
 the vocabulary the scorer rewards (entry 125). Both are [TODO.md](TODO.md) item 31, and whether the
 discarded 94% contains any answer is **unmeasured**.
 
-**And the scorer has no signal for where the traveller applies from.** `score_link` adds
-`lexicon.nationality_weight` for a page about the **passport** country and has no residence
-equivalent; `mission_affinity` matches host labels, not a page that is *about* a country. Canada's
-635-member `where-submit-application.asp?country={XX}` family scores the `?country=IN` page 32.0 and
-the `?country=GB` page — the one that answers an Indian applicant in Britain — **0.0** (entry 124,
-item 1).
+**The scorer had no signal for where the traveller applies from, and now has one** (entries 124 and
+126). `score_link` added `lexicon.nationality_weight` for a page about the **passport** country and
+had no residence equivalent — `mission_affinity` matches host labels, not a page that is *about* a
+country — so Canada's 635-member `where-submit-application.asp?country={XX}` family scored the
+`?country=IN` page 32.0 for `application_route` and the `?country=GB` page, the one that answers an
+Indian applicant in Britain, **-8.0**. On the four `POST_SPECIFIC_ROLES` the passport bonus is now
+withdrawn and `lexicon.residence_weight` added in its place: **they swap rather than stack**, since
+adding without withdrawing only produces a tie, and where the two countries are the same neither
+half fires. `visa_decision` and `general_entry` are excluded, as they are from `mission_affinity`,
+because a visa rule is the same at every consulate (entry 72). Measured over the selection oracle,
+no answering page lost a point and the Netherlands' `…/schengen-visa/apply-united-kingdom` went from
+14th of 1,074 to 1st — but the selector's pool moved only 12,573 → 12,583 of 186,596, so **this is a
+re-ordering inside the 6%, not a way past the gate**.
 
 **Every run also writes down what it considered** (`discovery/recall_log.py`, entry 43): all candidates
 with their scores, whether each was shortlisted and fetched, the queries, the seeds, and each unreadable

@@ -170,6 +170,9 @@ class Lexicon(StrictModel):
     language_terms: list[str] = Field(default_factory=list)
     base_visa_weight: float = 6.0
     nationality_weight: float = 40.0
+    residence_weight: float = 40.0
+    """What being about the country the traveller applies from is worth, on post-specific roles."""
+
     purpose_bonus_weight: float = 20.0
     shallow_path_weight: float = 8.0
     depth_penalty_weight: float = -10.0

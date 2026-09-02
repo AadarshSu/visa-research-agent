@@ -44,9 +44,11 @@ the CLI does not offer it.
   runs is **6% of the candidate set** — Liechtenstein offers 2 of 7,482 (entry 123). A page scoring
   zero for every role is invisible to the selector however good it is, so *"the model did not pick
   it"* and *"the model never saw it"* look identical from the outside. `var/recall/<corridor>.json`
-  distinguishes them: `best_score` of `0.0` means the second. **And check the traveller's residence
-  specifically** — `score_link` has a bonus for the passport country and **none** for where they
-  apply from, so a page that is exactly theirs can score zero for saying so (entry 124, item 1).
+  distinguishes them: `best_score` of `0.0` means the second. **And read the signals for
+  `residence:` and `not-residence:`** — on the four `POST_SPECIFIC_ROLES`, a page about where the
+  traveller applies from gains `residence_weight` and a page about their passport country loses
+  `nationality_weight`, so the two swap (entry 126). Neither fires when the passport and the
+  residence are the same country, and neither ever touches `visa_decision` or `general_entry`.
 - **To see the shortlist** — 35 places since entry 61, five reserved per role — wrap
   `resolver.shortlist`, print each candidate's score, role, link text, inherited heading and
   `link_scores.signals`, and return the list unchanged. Nothing else exposes it. **With
