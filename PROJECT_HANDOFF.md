@@ -311,9 +311,13 @@ re-add the amendment history here.
 
 9. **The heuristic scorer mis-ranks, and it is a recall gate rather than a decider.** The conclusion to
    draw is *widen the gate*, not *improve the ranking* — entry 40, and entry 61 is the same lesson
-   again. It still matters, because it builds the shortlist the model chooses from, and it rests on
-   English vocabulary and per-country city labels, so it will keep degrading on new countries and
-   languages. It remains the offline regression baseline. A sharply defined residual: for an Indian
+   again. **It matters more than that wording suggested and the mechanism has moved**: it no longer
+   builds the shortlist the model chooses from, it builds the **pool the model is allowed to see at
+   all**, and measured over 24 runs that pool is **6% of the candidate set** — Liechtenstein 2 of
+   7,482 (entry 123). Whether the discarded 94% contains answers is unmeasured and
+   `selection-recall` cannot say, because its ground truth was curated from the pool. TODO item 31
+   owns that; it rests on English vocabulary and per-country city labels, so it will keep degrading
+   on new countries and languages. It remains the offline regression baseline. A sharply defined residual: for an Indian
    national applying from Great Britain the scorer rates `checklist-schengen-visa-tourism/india`
    **113.0** against **73.0** for `/united-kingdom`, when for a consular checklist the **post** governs;
    the adjudicator discards the wrong-post page, so the corridor throws away a checklist it fetched.
