@@ -41,15 +41,26 @@ offers **2 of 7,482**. Whether the discarded 94% holds any answer is **unmeasure
 ordered around this: **item 31** (the gate itself), then **item 19**, whose search-dependence figure
 is an upper bound because the gate admits 49% of search results against 5.5% of corpus pages.
 
-**The scorer now has a residence signal, and it re-orders that 6% rather than widening it (entry
-126).** `score_link` rewarded a page for being about the traveller's **passport** country and had
-nothing for the country they apply from, so Canada's `?country=IN` page scored `application_route`
-32.0 and the `?country=GB` page that answers them scored -8.0. On the four `POST_SPECIFIC_ROLES` the
-passport bonus is now withdrawn and `residence_weight` put in its place — they **swap**, because
-adding without withdrawing only produces a tie — and a corridor whose traveller applies from their
-own country is untouched. No oracle answering page lost a point; the Netherlands' UK apply page went
-14th of 1,074 to 1st; the pool moved 12,573 → 12,583 of 186,596. `visa_decision` and `general_entry`
-stay out of post-preference, as entry 72 left them.
+**And what the scorer's number is actually used for is a boolean (entry 126).**
+`_choose_what_to_read` pools on `best_combined() > 0` and hands that pool to the model **unsorted**;
+`build_selection_packet` withholds the scores on purpose, because passing them *"would anchor the
+model to the ranking this call exists to replace"*. So `score_link`'s ordering is consumed by
+nothing on the shipped path — it decides **admission** and no more. Ranking still governs the
+heuristic fallback (no selector, no stored text, or a failed model call) and nowhere else. **Read
+every ranking measurement in this project against that**, including the ones in entries 124–126.
+
+**The scorer now has a residence signal, and it adds and never subtracts (entry 126).** `score_link`
+rewarded a page for being about the traveller's **passport** country and had nothing for the country
+they apply from, so Canada's `?country=GB` page scored -8.0 for `application_route` — outside the
+pool — while its `?country=IN` sibling scored 32.0. A page about the residence now earns
+`residence_weight` on the four `POST_SPECIFIC_ROLES`, and the two **tie**. It shipped as a *swap*,
+withdrawing the passport bonus from those roles, and that half was removed after measurement: it
+took **25 pages out of the pool and added none**, and it cost New Zealand's only Indian visitor
+checklist 40 points for a traveller in Britain, where New Zealand publishes no British one to lose
+to. The rule fires only where the two countries differ, so an `X/X` corridor is untouched;
+`visa_decision` and `general_entry` stay out of post-preference, as entry 72 left them. The whole
+change admits **35 pages of 186,596** — a weighting change is not a way past a boolean gate, which
+is the argument for item 31.
 
 **The corpus generalises to a traveller it was never tuned for** (entry 112). Every number in this
 project came from `IN/GB` and `PH/PH` until a Nigerian passport from Nigeria was run across the ten
@@ -540,6 +551,10 @@ cause, and only running the thing showed it.
 | the family detector needs 198 country names in every language | the blind spot is english **aliases and territories** — `czech-republic`, `kosovo` (entry 124) |
 | search is load-bearing for 17 roles, so the corpus is not ready | the gate admits search at 49% and the corpus at 5.5% — that 17 is an upper bound (entry 125) |
 | adding a residence bonus fixes the page scored below its wrong sibling | adding without withdrawing gives a **tie**, 32 against 32 — they must swap (entry 126) |
+| ...so the two bonuses must swap, or the defect stands | the swap took **25 pages out of the pool and added none**; the tie was the answer (entry 126) |
+| the scorer ranks the candidates the model then chooses between | the pool goes to the model **unsorted**, scores withheld — ranking is consumed by nothing (entry 126) |
+| a page whose path ends `/united-kingdom` is a page about the UK | the token carries a space and the segment does not — every multi-word country was invisible (entry 126) |
+| a demoted page is safe because it keeps a positive score | 37 role-scores fell to zero or below, and zero is the whole gate (entry 126) |
 | the per-country dimension is 21 corpora and 5,901 pages | the *application* families inside it are **4 corpora and 944 pages** (entry 126) |
 | `country_family_keys` misses a family when the slug is foreign | it also misses Canada's `?country=IN` — a two-letter code below its floor (entry 126) |
 | a residence bonus widens the pool the anchor scorer gates | 12,573 → 12,583 of 186,596 — it re-orders the 6%, it does not widen it (entry 126) |

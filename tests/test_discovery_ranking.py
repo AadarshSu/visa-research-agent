@@ -455,32 +455,31 @@ def test_the_post_a_traveller_applies_at_outranks_the_post_of_their_own_country(
 
 def test_a_page_whose_own_words_name_the_nationality_still_earns_it() -> None:
     """The narrowing must not cost the real signal. A path or a title naming the country is the
-    page describing itself, which is a different thing from the host it sits on.
+    page describing itself, which is a different thing from the host it sits on."""
 
-    Asked of `visa_decision`, which is where the passport is the question. It used to be asked of
-    `application_route` and cannot be any more: entry 126 withdrew the nationality bonus from the
-    roles the *post* governs, so on those roles this pair now ties — which is the intended answer,
-    because a page for Indian nationals published by France's mission in India tells an applicant
-    in India how to apply, not one in Britain.
-    """
-
-    about_indians = decision_link(
-        "https://in.diplomatie.gouv.fr/en/do-you-need-a-visa-indian-nationals",
-        "Do you need a visa? Indian nationals",
+    about_indians = route_link(
+        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa-indian-nationals",
+        "Applying for a visa: Indian nationals",
     )
-    generic = decision_link(
-        "https://in.diplomatie.gouv.fr/en/do-you-need-a-visa", "Do you need a visa?"
+    generic = route_link(
+        "https://in.diplomatie.gouv.fr/en/applying-for-a-visa", "Applying for a visa"
     )
 
     assert about_indians > generic
 
 
-def test_a_page_about_where_they_apply_from_outranks_one_about_their_passport() -> None:
+def test_a_page_about_where_they_apply_from_is_scored_at_all() -> None:
     """Canada publishes 635 "where to submit your application" pages, one per country of
-    application. For an Indian national in Britain the `?country=IN` page scored 32.0 for
-    `application_route` and the `?country=GB` page — the one that answers them — scored -8.0, below
-    the score that admits a candidate at all. Nothing rewarded a page for saying which country it
-    is about; only `wrong_country` read that, and only to reject. DECISIONS entry 126.
+    application. For an Indian national in Britain the `?country=GB` page — the one that answers
+    them — scored **-8.0** for `application_route`, so it failed `best_combined() > 0` and was never
+    shown to the selector at all, while its `?country=IN` sibling scored 32.0. Nothing rewarded a
+    page for saying which country it is about; only `wrong_country` read that, and only to reject.
+
+    **What is asserted is that it is scored, not that it wins.** Crossing zero is the whole of what
+    the request path consumes: `_choose_what_to_read` pools on that boolean and hands the pool to
+    the model *unsorted*, with the scores withheld. The two pages now tie at 32.0, and that is the
+    intended end state — the ordering between them is not a question this scorer should be
+    answering from a URL. DECISIONS entry 126.
     """
 
     submit_from_britain = route_link(
@@ -495,15 +494,53 @@ def test_a_page_about_where_they_apply_from_outranks_one_about_their_passport() 
     )
 
     assert submit_from_britain > 0
-    assert submit_from_britain > submit_from_india
+    assert submit_from_britain >= submit_from_india
+
+
+def test_a_page_about_the_passport_country_is_never_demoted_for_it() -> None:
+    """The residence bonus adds and never subtracts, and this is the case that decided it.
+
+    This first shipped as a *swap* — the nationality bonus withdrawn from the post-specific roles
+    and the residence bonus put in its place. New Zealand publishes `checklists/china/` and
+    `checklists/india/` and **no** British checklist, so for an Indian applying from Britain the
+    swap took 40 points off the only visitor checklist New Zealand publishes for them, with nothing
+    to lose to. Over 53 corpora the withdrawal removed 25 pages from the selector's pool and added
+    none. DECISIONS entry 126.
+    """
+
+    inz = "https://www.immigration.govt.nz/assets/inz/documents/checklists/india/checklist.pdf"
+    for role in ("document_checklist", "application_route", "fees", "processing_times"):
+        assert scored_link(inz, "Checklist for India", role=role) == scored_link(
+            inz, "Checklist for India", role=role, applying_from="IN"
+        )
+
+
+def test_a_country_written_with_hyphens_in_a_path_is_recognised() -> None:
+    """`united-kingdom` is how a URL writes a two-word country, and the check read neither it nor
+    `apply-united-kingdom`: the token carries a space and the segment's words carry none. So every
+    country whose name is more than one word was invisible unless the anchor text happened to say
+    it — the Netherlands' own `…/checklist-schengen-visa-tourism/united-kingdom` is labelled
+    "Checklist: tourism" and named no country at all. DECISIONS entry 126."""
+
+    dutch = "https://www.netherlandsworldwide.nl/visa-the-netherlands"
+    role: DiscoveryRole = "document_checklist"
+    named = scored_link(
+        f"{dutch}/checklist-schengen-visa-tourism/united-kingdom", "Checklist: tourism", role=role
+    )
+    generic = scored_link(
+        f"{dutch}/checklist-schengen-visa-tourism", "Checklist: tourism", role=role
+    )
+
+    assert generic > 0
+    assert named > generic
 
 
 def test_the_decision_is_still_the_passport_country_s_to_answer() -> None:
-    """Only the post-specific roles swap. Whether an Indian passport needs a visa is set by the
-    destination's law and is the same at every consulate, so the page about India keeps its bonus
-    for `visa_decision` — and the page about Britain earns nothing there. Entry 72 left
-    `visa_decision` and `general_entry` out of post-preference for this reason; entry 126 keeps
-    them out.
+    """Only the post-specific roles gain a residence bonus. Whether an Indian passport needs a visa
+    is set by the destination's law and is the same at every consulate, so the page about India
+    keeps its bonus for `visa_decision` and the page about Britain earns nothing there. Entry 72
+    left `visa_decision` and `general_entry` out of post-preference for this reason; entry 126
+    keeps them out.
     """
 
     about_india = decision_link(
@@ -518,10 +555,10 @@ def test_the_decision_is_still_the_passport_country_s_to_answer() -> None:
 
 
 def test_a_traveller_applying_from_home_is_scored_exactly_as_before() -> None:
-    """The swap fires only where the two countries differ. For a Filipino applying in the
-    Philippines the passport and the post are one question, and the nationality bonus already
-    answers it — so `PH/PH` and every corridor like it is untouched by entry 126, which is half the
-    selection oracle."""
+    """The residence bonus fires only where the two countries differ. For a Filipino applying in
+    the Philippines the passport and the post are one question, and the nationality bonus already
+    answers it — doubling it here would just inflate every page about their own country. So `PH/PH`
+    and every corridor like it is untouched by entry 126, which is half the selection oracle."""
 
     apply_from_india = scored_link(
         "https://ircc.canada.ca/english/where-submit-application.asp?country=IN&lob=citizenship",

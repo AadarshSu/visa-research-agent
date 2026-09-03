@@ -122,7 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
-| [126](#126-on-the-roles-the-post-governs-the-passport-bonus-is-withdrawn-and-a-residence-bonus-put-in-its-place) | **The residence signal is built** — the Netherlands' UK apply page goes 14th of 1,074 to 1st; no oracle page loses a point |
+| [126](#126-a-page-about-where-the-traveller-applies-from-earns-a-score-the-ordering-it-earns-is-consumed-by-nothing) | **The residence signal is built, then cut back to adding only** — and the scorer's ordering turns out to reach the request path as a *boolean* |
 | [125](#125-the-recall-gate-admits-search-at-49-and-the-corpus-at-55-so-item-31-goes-before-item-19) | **The gate admits search at 49% and the corpus at 5.5%** — item 19 measures the corpus through a filter biased against it |
 | [124](#124-a-page-about-where-the-traveller-applies-from-earns-nothing-for-saying-so) | **The residence earns no score** — Canada scores the passport page 32.0 and the page they actually apply on 0.0 |
 | [123](#123-the-model-selector-is-shown-6-of-the-corpus-and-the-filter-is-the-heuristic-it-replaced) | **The model selector is shown 6% of the corpus** — the pool gate is the heuristic it replaced; the arm comparison stands, the denominators are narrower |
@@ -178,48 +178,98 @@ not — and stored text ranks, it never speaks).
 
 ---
 
-## 126. On the roles the post governs, the passport bonus is withdrawn and a residence bonus put in its place
+## 126. A page about where the traveller applies from earns a score; the ordering it earns is consumed by nothing
 
-**2026-09-02 · TODO item 1, built and measured**
+**2026-09-02 · TODO item 1, built, measured, and then cut back on the day it shipped**
+
+> **Amended the same day, and the amendment is most of the entry.** This first shipped as a *swap* —
+> the nationality bonus withdrawn from the post-specific roles and a residence bonus put in its
+> place. The owner asked why a generic scoring function is deciding which page answers a specific
+> visa question at all, given that a URL is metadata about a resource rather than evidence of what
+> the resource says. Measuring that question rather than arguing it produced three findings, in
+> order of how much they matter:
+>
+> 1. **Under the shipped configuration the scorer's ordering is consumed by nothing.**
+>    `_choose_what_to_read` pools on `best_combined() > 0` and hands the pool to the model
+>    **unsorted**, and `build_selection_packet` withholds the scores on purpose — *"passing them
+>    would anchor the model to the ranking this call exists to replace"*. So `score_link`'s numeric
+>    output reaches the request path as a **boolean**: is it above zero. Every rank measurement
+>    below, mine included, was grading something no corridor reads.
+> 2. **The withdrawal could therefore only ever subtract.** Over 53 corpora it removed **25 pages
+>    from the pool and added none**, against the addition's 35 added and 0 removed. It also cost
+>    New Zealand's `checklists/india/…` 40 points for a traveller in Britain, where New Zealand
+>    publishes no British checklist for it to lose to. **Dropped.** The rule now adds and never
+>    subtracts.
+> 3. **Three of the four families already hold the answer in their own stored text.** Which makes
+>    this a patch at the wrong layer, and item 31 the real work. See below.
+
 
 Entry 124 measured the defect: `score_link` rewards a page for being about the traveller's
 **passport** country and has no counterpart for the country they **apply from**, so "this page is
 about country X" could only ever exclude (`wrong_country`) and never promote. This is the fix.
 
 **The rule, in one sentence.** Where the residence and the nationality differ, a page about the
-residence gains `residence_weight` on `POST_SPECIFIC_ROLES` and a page about the nationality loses
-`nationality_weight` on those same roles.
+residence gains `lexicon.residence_weight` on `POST_SPECIFIC_ROLES`. Nothing is subtracted from
+anything.
 
-**They swap rather than stack, and `residence_weight` is set equal to `nationality_weight` for
-that reason.** A page about where the traveller applies from ends up exactly where a page about
-their passport used to be — 40 points, no more. Adding without withdrawing would only produce a
-*tie* (Canada 32 against 32, Romania 58 against 58), which does not fix a defect whose symptom is
-that the wrong page outranks the right one; and a bonus larger than 40 would be a thumb on the
-scale nothing has measured.
+**It adds and never subtracts, which is the amendment.** The swap it replaced inferred *"for
+applicants in country X"* from *"about country X"* — a weaker claim than the one `mission_affinity`
+makes, which reads a **publisher**: a page on `newdelhi.mfa.gov.sg` really is the New Delhi post's,
+whereas a page about India may be for Indian passport-holders anywhere. Measured over 53 corpora at
+`IN/GB`, the withdrawal touched 102 pages, and while nearly every one was a genuinely wrong-post
+page with a residence sibling to lose to — the UK's `visa-fees…/y/india/inr` branch, which entry 87
+had already recorded as keyed on where you apply from, `gov.pl/web/india/consular-fees`,
+`newdelhi.mae.lu`, `norway.no/en/india/…` — New Zealand was not:
+
+```
+NZ  document_checklist  95.0 -> 55.0
+    immigration.govt.nz/assets/inz/documents/checklists/india/Checklist-for-india-group-visitor-visa-inz-11513.pdf
+```
+
+INZ publishes `checklists/china/` and `checklists/india/` and no British one, so the demotion had
+nothing to promote in its place. Conditioning the withdrawal on a residence sibling existing was
+considered and declined: it needs the whole candidate set, it needs a family key that survives
+Romanian filenames and two-letter query values, and finding 2 alone made it moot.
+
+**`residence_weight` is set equal to `nationality_weight`, and the result is a tie, not a flip.**
+Canada's two pages both land on 32.0, Romania's on 58.0. **That is the intended end state.** Which
+of two sibling pages answers a traveller is not a question a URL scorer should be settling, and
+finding 1 says it is not being asked to: the ordering is not read.
 
 **Four roles, not six.** `visa_decision` and `general_entry` are excluded, as they are from
 `mission_affinity` — whether a passport needs a visa is set by the destination's law and is the
-same at every consulate (entry 72). So the passport bonus is untouched where the passport is the
-question, and `best_combined()` — the selector's pool gate — reads the maximum across all six
-roles, which is why the change barely moves the pool at all (below).
+same at every consulate (entry 72).
 
 **A corridor whose traveller applies from their own country is untouched, by construction.** For
-them the two questions are one question and the nationality bonus already answers it, so neither
-half fires. That is half the selection oracle — every `PH/PH` row — and it is why the measurement
-below covers ten corridors rather than twenty.
+them the two questions are one question and the nationality bonus already answers it, so doubling
+it here would inflate every page about their own country. That is half the selection oracle — every
+`PH/PH` row — and it is why the measurement below covers ten corridors rather than twenty.
+
+### A second defect, found while measuring the first
+
+`_describes_country` tested `token == segment or token in segment.split("-")`. A URL writes "United
+Kingdom" as `united-kingdom`, and that test matches neither it nor `apply-united-kingdom`, because
+the token carries a space and the segment's words carry none. **So every country whose name is more
+than one word was invisible in a path unless the anchor text happened to say it** — and that is not
+a hypothetical: the Netherlands' `…/checklist-schengen-visa-tourism/united-kingdom` is labelled
+"Checklist: tourism" and named no country at all as far as scoring was concerned, which is why it
+*fell* from 9th to 11th under the addition alone while its neighbours rose. `_segment_names` now
+matches a contiguous run of the token's words. It moves **0 pages into the pool** — it is an
+ordering fix, and by finding 1 that means it changes nothing on the shipped path; it matters only
+to the heuristic fallback, where the same page goes from 11th to **2nd**. The passport bonus had
+the identical blind spot and gains the identical fix.
 
 ### The two families it was built on
 
 ```
-canada/IN/GB   ircc.canada.ca/…/where-submit-application.asp?country=GB   -8.0  ->  32.0
-               …?country=IN                                               32.0  ->  -8.0
-romania/IN/GB  eviza.mae.ro/media/3252/MAREA-BRITANIE.PDF   'United Kingdom'   18.0  ->  58.0
-               …/3252/…-COM-nrC-2025-nr4379…_en.pdf         'India'            58.0  ->  18.0
+canada/IN/GB   ircc.canada.ca/…/where-submit-application.asp?country=GB   -8.0  ->  32.0   (sibling ?country=IN unchanged at 32.0)
+romania/IN/GB  eviza.mae.ro/media/3252/MAREA-BRITANIE.PDF                 18.0  ->  58.0   (its India sibling unchanged at 58.0)
 ```
 
 Romania's is the sharper one: 58 harmonised supporting-document lists, one per country of
 application, and before this the traveller's own was indistinguishable from Kosovo's and Cape
-Verde's at 18.0 with identical signals. It is now first in its family by 40 points.
+Verde's at 18.0 with identical signals. It is now first in its family by 40 points — except against
+its India sibling, which it ties.
 
 ### How wide the dimension actually is — 4 corpora, not 21
 
@@ -251,44 +301,90 @@ table to an alias fixture; this narrows it again — the blind spot that matters
 of the slug but that `coverage` and the crawl's reservation read a different instrument from the
 scorer. TODO item 47.
 
-### What it costs, measured with no adjudicator in it
+### What it costs, measured three ways with no adjudicator in it
 
 Entry 81's rule: grade the ranking, not the plan. Every one of the 160 pages
 `oracle/selection_oracle.yaml` names as answering a role was re-scored against its country's whole
-corpus, before and after, offline.
+corpus, offline, in three arms — the baseline, the swap as first shipped, and the addition alone.
 
-- **No oracle answering page loses a single point.** Eight gain: the United Kingdom's supporting-
-  documents guide, three of its `apply-to-come-to-the-uk` pages, three of its processing-time
-  pages, and the Netherlands' `apply-united-kingdom` — every one of them exactly `+40`.
-- **12 rows improve their rank, 10 slip, 122 are unchanged.** Every one of the 10 slipped at an
-  *unchanged score*, passed by a sibling that gained — five United Arab Emirates rows, two France,
-  one Germany, one Sweden, and the United Kingdom's `standard-visitor` page passed by four other
-  pages the same oracle rows name.
-- **The headline is the Netherlands:** `…/schengen-visa/apply-united-kingdom` for
-  `application_route` goes from **14th of 1,074 to 1st**. That is the defect the item was opened on
-  in 2026-08-20 — `checklist-schengen-visa-tourism/india` 113.0 against `…/united-kingdom` 73.0 —
-  closed.
+**No answering page loses a point in any arm.** That was true of the swap too and is why it looked
+safe.
 
-**And it is not a way past the pool gate.** Over all 53 corpora scored for an `IN/GB` traveller the
-selector's pool moves from **12,573 to 12,583 of 186,596 candidates** — 6.74% either way. What
-changes is *which* pages: Canada's `?country=GB` page and the Netherlands'
-`caribbean-visa/long-stay/apply-united-kingdom` enter, Sweden's `british-citizens` pages and
-Germany's `uk.diplo.de` visa pages enter, and what leaves is `apply-india`, `?country=IN`,
-`in.usembassy.gov/apply-for-a-nonimmigrant-visa` and five `new-delhi.mfa.gov.sg` news items. **Item
-31 is untouched and still next** — this is a re-ordering inside the 6%, not a widening of it.
+**On rank against the baseline the three arms are indistinguishable, and that is the finding.** The
+metric that matters is how deep you must read to reach the *first* page the oracle says answers a
+role — summed over the 64 roles it can grade:
+
+| | baseline | swap | addition only | addition + segment fix |
+| --- | --- | --- | --- | --- |
+| summed depth to first answer | 857 | 855 | 863 | **856** |
+| roles where it got shallower | — | 4 | 2 | 3 |
+| roles where it got deeper | — | 6 | 7 | 6 |
+
+Ten of 64 roles move at all. The wins are real — the Netherlands' `…/schengen-visa/apply-united-kingdom`
+goes **14th of 1,074 to 2nd** for `application_route` and its UK tourism checklist 8th to 2nd — and
+they are cancelled by pages that were already 1st being passed at 1 → 3 and 1 → 4, which costs
+nothing at a 20-page budget. **The three roles that are genuinely out of reach do not move in any
+arm**: Germany at 80, the United States at 75, Sweden at 104.
+
+**The pool is the only number that survives finding 1, and there the arms separate cleanly:**
+
+| | pool of 186,596 | gained | lost |
+| --- | --- | --- | --- |
+| baseline | 12,573 | — | — |
+| swap | 12,583 | 35 | **25** |
+| addition only | **12,608** | 35 | **0** |
+
+What enters is Canada's `?country=GB`, the Netherlands' `caribbean-visa/long-stay/apply-united-kingdom`,
+Sweden's `british-citizens` pages, Germany's `uk.diplo.de` visa pages, Ireland's `irishimmigration.ie/uk/…`
+and Iceland's "I am a British citizen, how do I apply". Under the swap, `apply-india`, `?country=IN`,
+`in.usembassy.gov/apply-for-a-nonimmigrant-visa` and five `new-delhi.mfa.gov.sg` pages left; now
+nothing does.
+
+### The layer this is a patch on, and why item 31 is the real work
+
+The pages the addition rescues mostly did not need a scorer at all. Asked whether their bodies were
+already in the text index:
+
+| page | stored text | its own first line |
+| --- | --- | --- |
+| NL `…/schengen-visa/apply-united-kingdom` | 8,594 chars | "Applying for a Schengen visa for the Netherlands **in the United Kingdom**" |
+| NL `…/checklist-schengen-visa-tourism/united-kingdom` | 7,587 | "Checklist: Applying for a Schengen visa **in the United Kingdom** for tourism" |
+| RO `MAREA-BRITANIE.PDF` | 14,578 | the EC implementing decision itself |
+| NZ `checklists/india/…` | 5,753 | a checklist |
+| CA `?country=GB`, `?country=IN` | **0** | — |
+
+**Three of the four families say what they are in their first sentence, in text the index already
+holds.** A gate that read stored text would find them with no scorer change at all. This entry
+inferred from metadata what the resource states outright, and the honest description of it is a
+patch at the wrong layer that happens to measure clean.
+
+Canada is the one place the metadata is doing real work, and the distinction that survives is
+narrow: **a URL is not evidence of what a page says, but it can be evidence of what a page is keyed
+on.** `?country=GB` is a parameter, not prose. Reading a query variable is different in kind from
+inferring a topic from a slug, and only the first is sound. It also cannot be replaced, because no
+body exists for any of the 635 — and **77% of the corpus (143,443 of 186,596 addresses) has no
+stored body at all**, so something must still order the unread.
+
+The general version is [TODO.md](TODO.md) **item 31**, re-scoped by this entry: the pool gate is a
+**boolean on a metadata score**, 94% of the corpus fails it, and the content index that should be
+deciding admission is subordinated to the metadata scorer it was built to replace.
 
 ### A frozen test had to move, and it is worth saying which
 
-`test_a_page_whose_own_words_name_the_nationality_still_earns_it` asserted, on
-`application_route`, that France's `…/applying-for-a-visa-indian-nationals` outranks the same post's
-generic page. Under this rule the pair ties, and that is the intended answer: a page for Indian
-nationals published by France's mission **in India** tells an applicant in India how to apply. The
-test's own stated intent — a page's own words are a different signal from the host it sits on —
-is unchanged and is now asked of `visa_decision`, where the passport is the question. Three tests
-were added beside it: the Canada flip, the decision role keeping its passport bonus, and an `X/X`
-corridor being scored exactly as before.
+The swap made `test_a_page_whose_own_words_name_the_nationality_still_earns_it` fail — it asserts,
+on `application_route`, that France's `…/applying-for-a-visa-indian-nationals` outranks the same
+post's generic page, and under the swap the pair tied. It was retargeted to `visa_decision` to keep
+it passing. **Dropping the withdrawal restores it exactly as entry 64 wrote it**, which is the right
+outcome: a frozen regression failing is a signal to re-read the change, not a signal to re-aim the
+test, and it was pointing at the same thing the owner did. Four tests are added beside it: the
+Canada page being *scored at all* rather than winning, a page about the passport country never
+being demoted for it (New Zealand), a hyphenated multi-word country name in a path being
+recognised, and an `X/X` corridor being scored exactly as before.
 
 ### What this does not do
+
+It does not flip anything. Canada's two pages tie at 32.0 and Romania's at 58.0, and by finding 1
+the tie is never broken by this scorer anyway.
 
 `score_body` carries the same asymmetry — `body-nationality` has no residence counterpart — and is
 deliberately left alone. It runs on text this run fetched, after the candidate has already been

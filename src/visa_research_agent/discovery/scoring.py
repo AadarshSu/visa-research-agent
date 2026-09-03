@@ -98,6 +98,29 @@ def _matches_country(link: PageLink, country: Country) -> bool:
     return any(label in host_labels for label in country.host_labels)
 
 
+def _segment_names(segment: str, token: str) -> bool:
+    """True when a path segment names a country, including a multi-word name written with hyphens.
+
+    A URL writes "United Kingdom" as `united-kingdom`, and the obvious test — `token == segment or
+    token in segment.split("-")` — matches neither that nor `apply-united-kingdom`, because the
+    token carries a space and the segment's words carry none. So **every country whose name is more
+    than one word was invisible to this check unless the anchor text happened to say it**, which is
+    much of the world: the Netherlands publishes its UK tourism checklist at a path ending
+    `/united-kingdom`, labels it "Checklist: tourism", and it named no country at all as far as
+    scoring was concerned. Matching a contiguous run of the token's words against the segment's
+    hyphen-separated words covers all three shapes and leaves single-word tokens unchanged.
+    """
+
+    words = segment.split("-")
+    wanted = token.split()
+    if not wanted:
+        return False
+    return any(
+        words[start : start + len(wanted)] == wanted
+        for start in range(len(words) - len(wanted) + 1)
+    )
+
+
 def _describes_country(link: PageLink, country: Country) -> bool:
     """True when a link's own words say it is *about* a country.
 
@@ -118,7 +141,7 @@ def _describes_country(link: PageLink, country: Country) -> bool:
     for token in country.text_tokens:
         if _contains_word(text, token):
             return True
-        if any(token == segment or token in segment.split("-") for segment in segments):
+        if any(_segment_names(segment, token) for segment in segments):
             return True
     return False
 
@@ -413,8 +436,7 @@ def score_link(
     shared = 0.0
     shared_reasons: list[str] = []
 
-    about_nationality = _describes_country(link, nationality)
-    if about_nationality:
+    if _describes_country(link, nationality):
         shared += lexicon.nationality_weight
         shared_reasons.append(f"nationality:{nationality.code}+{lexicon.nationality_weight:g}")
 
@@ -485,32 +507,31 @@ def score_link(
         scores[scored_role] += shared
         signals[scored_role].extend(shared_reasons)
 
-    # On a post-specific role the country that matters is the one the traveller applies *from*, so
-    # the passport bonus is withdrawn and a residence bonus put in its place. Canada publishes 635
-    # "where to submit your application" pages, one per country of application: for an Indian
-    # national in Britain the `?country=IN` page scored 32.0 for `application_route` and the
-    # `?country=GB` page — the one that answers them — scored -8.0, below the score that admits a
-    # candidate at all. Nothing rewarded a page for saying which country it is about; only
-    # `wrong_country` read that, and only to reject. DECISIONS entry 126.
+    # A page about the country the traveller applies *from* earns something on the roles the post
+    # governs, where before it earned nothing at all: `wrong_country` read "this page is about
+    # country X" only to reject, so the fact could exclude a page and never promote one. Canada
+    # publishes 635 "where to submit your application" pages, one per country of application, and
+    # for an Indian national in Britain the `?country=GB` page — the one that answers them — scored
+    # -8.0 for `application_route` while its `?country=IN` sibling scored 32.0. DECISIONS entry 126.
     #
-    # The two swap rather than stack, and only where they differ. A corridor whose traveller applies
-    # from their own country of nationality is unchanged, because for them the two questions are one
-    # question and the nationality bonus already answers it.
-    if residence.code != nationality.code:
-        about_residence = _describes_country(link, residence)
-        if about_residence or about_nationality:
-            adjustment = (
-                lexicon.residence_weight if about_residence else -lexicon.nationality_weight
-            )
-            reason = (
-                f"residence:{residence.code}+{lexicon.residence_weight:g}"
-                if about_residence
-                else f"not-residence:{nationality.code}{-lexicon.nationality_weight:g}"
-            )
-            for post_role in POST_SPECIFIC_ROLES:
-                if post_role in scores:
-                    scores[post_role] += adjustment
-                    signals[post_role].append(reason)
+    # **It adds and never subtracts, which is the amendment and not the original shape.** This first
+    # shipped as a *swap*: the nationality bonus withdrawn from these four roles and this one put in
+    # its place, so the two pages changed seats. That inferred "for applicants in country X" from
+    # "about country X", which is a weaker claim than the one `mission_affinity` makes about a
+    # *publisher*, and it cost New Zealand's `checklists/india/…` 40 points for a traveller in
+    # Britain when New Zealand publishes no British checklist for it to lose to. Withdrawing on
+    # evidence a page's own stored text already carries is the wrong layer; TODO item 31.
+    #
+    # Only where the two differ. A traveller applying from their own country of nationality is
+    # unchanged, because for them the two questions are one question and the nationality bonus above
+    # already answers it — doubling it here would just inflate every page about their own country.
+    if residence.code != nationality.code and _describes_country(link, residence):
+        for post_role in POST_SPECIFIC_ROLES:
+            if post_role in scores:
+                scores[post_role] += lexicon.residence_weight
+                signals[post_role].append(
+                    f"residence:{residence.code}+{lexicon.residence_weight:g}"
+                )
 
     # How this traveller applies is set by the mission serving where they live, so it outranks a
     # ministry's general pages for the post-specific roles — and a *different* post's page loses

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-02 — update this line when you touch the handoff |
-| **Tests** | 665 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 667 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -126,19 +126,31 @@ sat at the top of it for part of that day and is **done** (entry 126).
 
 **Why item 31 sits ahead of the project's own goal (entry 125).** The selector's pool admits **49% of search results and 5.5% of corpus pages** — a 9× gap, because search returns pages whose URL and title already match visa vocabulary, which is what the anchor scorer scores. Item 19 asks whether search can leave the request path while measuring the corpus through a filter biased nine to one against it, so its "17 load-bearing search-only pages" is an upper bound on search's necessity. Item 31 tightens it.
 
-**Item 1 was measured, promoted to the top and finished the same day (entries 124 and 126).**
-`score_link` rewarded a page for being about the traveller's **passport** country and had no
-equivalent for the country they apply from — Canada's `?country=IN` page scored `application_route`
-**32.0** and the `?country=GB` page that answers them scored **-8.0**. On the four roles the *post*
-governs, the passport bonus is now withdrawn and a residence bonus put in its place: they **swap**
-rather than stack, because adding without withdrawing only produces a tie. Measured offline over
-`oracle/selection_oracle.yaml`, **no answering page loses a point**, eight gain 40, and the
-Netherlands' `…/schengen-visa/apply-united-kingdom` goes from **14th of 1,074 to 1st**. Over all 53
-corpora the selector's pool moves **12,573 → 12,583 of 186,596** — a re-ordering inside the 6%, not
-a widening of it, which is why item 31 is untouched and now leads. The dimension turned out to be
-**4 corpora and 944 pages** (CA 538, NL 332, RO 65, HR 12), not entry 124's 21 corpora and 5,901
-pages: that number counted every per-country page, and most are embassy contacts and travel advice
-where zero is correct.
+**Item 1 was measured, promoted, finished and then cut back, all on 2026-09-02 (entries 124 and
+126).** `score_link` rewarded a page for being about the traveller's **passport** country and had no
+equivalent for the country they apply from — Canada's `?country=GB` page scored **-8.0** for
+`application_route`, outside the pool, while its `?country=IN` sibling scored **32.0**. A page about
+the residence now earns `residence_weight` on the four roles the post governs, and **nothing is
+taken off** the passport page. It shipped as a *swap*; that half was withdrawn after measurement,
+having removed **25 pages from the selector's pool and added none** and cost New Zealand's only
+Indian visitor checklist 40 points for a traveller in Britain, where New Zealand publishes no
+British one to lose to. Over all 53 corpora the final shape admits **35 pages of 186,596** and
+removes none. The dimension turned out to be **4 corpora and 944 pages** (CA 538, NL 332, RO 65, HR
+12), not entry 124's 21 corpora and 5,901 pages: that number counted every per-country page, and
+most are embassy contacts and travel advice where zero is correct.
+
+**The finding that came out of it is bigger than the item, and it re-scopes item 31.**
+`_choose_what_to_read` pools on `best_combined() > 0` and hands the pool to the model **unsorted**,
+with the scores withheld on purpose — so the scorer's ordering is consumed by nothing on the shipped
+path, and `score_link` reaches a corridor as a **boolean**. Every rank measurement in entries
+124–126 was grading something no corridor reads. Three of the four families item 1 was built for
+already hold the answer in their own stored text — the Netherlands' UK apply page opens *"Applying
+for a Schengen visa for the Netherlands in the United Kingdom"* and the index has held those 8,594
+characters all along. **A weighting change is not a way past a boolean gate**, which is item 31.
+Two defects were also found on the way: `_describes_country` could not read `united-kingdom` in a
+path segment, so every multi-word country name was invisible unless the anchor text said it; and
+Canada's `?country=GB&lob=visit`, the page a *tourism* corridor actually wants, scores 0.0 because
+`score_link` returns early on an empty vocabulary — it is inside the 94% and it is not chaff.
 
 **The earlier measurement of the same day (entry 123), which item 31 still rests on.** `_choose_what_to_read` pools only candidates the anchor
 heuristic scores above zero, so **the model selector is shown 6% of the corpus** — 4,450 of 71,798

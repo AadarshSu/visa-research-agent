@@ -325,10 +325,16 @@ nationality_weight: 40
 # in Britain the `?country=IN` page scored 32.0 and the `?country=GB` page, the one that answers
 # them, scored -8.0. DECISIONS entry 126.
 #
-# Equal to `nationality_weight` on purpose. On a post-specific role the passport bonus is withdrawn
-# and this one is added, so the two swap places rather than stack: a page about where they apply
-# from ends up exactly where a page about their passport used to be. A larger number would be a
-# thumb on the scale nothing has measured.
+# Equal to `nationality_weight` on purpose, and it *adds* — nothing is taken off the page about the
+# passport country. A first version withdrew the passport bonus from these four roles so the two
+# would swap; measured, that removed 25 pages from the selector's pool and added none, and it cost
+# New Zealand's only Indian visitor checklist 40 points for a traveller in Britain, where New
+# Zealand publishes no British one for it to lose to.
+#
+# So the two now tie, and the tie is the point: which of two sibling pages answers a traveller is
+# not a question a URL scorer should settle. What the request path actually consumes from this
+# number is whether it is above zero — `_choose_what_to_read` pools on that and hands the pool to
+# the model unsorted, with the scores withheld. Crossing zero is the whole job.
 residence_weight: 40
 
 purpose_bonus_weight: 20

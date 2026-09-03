@@ -16,18 +16,26 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Item 1 was promoted to the top on 2026-09-02 (entry 124) and finished the same day (entry 126).**
-`score_link` rewarded a page for being about the traveller's **passport** country and had no signal
-at all for the country they apply from. On the four roles the *post* governs, the passport bonus is
-now withdrawn and a residence bonus put in its place — they **swap** rather than stack, because
-adding without withdrawing only produces a tie. The Netherlands' `apply-united-kingdom` page goes
-from **14th of 1,074 to 1st** for `application_route`, no oracle answering page loses a point, and
-the selector's pool over all 53 corpora moves 12,573 → 12,583 of 186,596: **a re-ordering inside
-the 6%, not a widening of it, so item 31 is untouched and is now the top item.** Entry 124's "21 of
-53 corpora, 5,901 pages" was the whole per-country dimension; the *application* families inside it
-are **4 corpora and 944 pages** (CA, NL, RO, HR). Finding them needed a different instrument, and
-that is item 47's real premise — `country_family_keys` reads the URL, so it sees neither Canada's
-`?country=IN` nor Romania's `MAREA-BRITANIE.PDF`.
+**Item 1 was promoted to the top on 2026-09-02 (entry 124), finished the same day, and then cut
+back the same day (entry 126).** A page about the country the traveller applies from now earns
+`residence_weight` on the four roles the post governs, and **nothing is taken off** the page about
+their passport country. It shipped as a *swap* — the passport bonus withdrawn and the residence
+bonus put in its place — and that half was withdrawn after measurement: over 53 corpora it removed
+**25 pages from the selector's pool and added none**, and it cost New Zealand's only Indian visitor
+checklist 40 points for a traveller in Britain, where New Zealand publishes no British one for it
+to lose to.
+
+**The finding that came out of asking why a URL scorer is deciding this at all is bigger than the
+item.** `_choose_what_to_read` pools on `best_combined() > 0` and hands the pool to the model
+**unsorted**, with the scores withheld on purpose. So the scorer's ordering is consumed by nothing
+in the shipped path — it reaches a corridor as a **boolean**. Item 1 in its final shape admits
+**35 pages of 186,596**, and three of the four families it was built for already hold the answer in
+their own stored text. **Item 31 is re-scoped around that and is the top item.**
+
+Entry 124's "21 of 53 corpora, 5,901 pages" was the whole per-country dimension; the *application*
+families inside it are **4 corpora and 944 pages** (CA, NL, RO, HR). Finding them needed a
+different instrument, and that is item 47's real premise — `country_family_keys` reads the URL, so
+it sees neither Canada's `?country=IN` nor Romania's `MAREA-BRITANIE.PDF`.
 
 **The first re-prioritisation of 2026-09-02 (entry 123).**
 The model selector is shown **6% of the corpus** — 4,450 of 71,798 candidates over 24 runs — because
@@ -237,11 +245,27 @@ careful reading and were wrong.
 
 ### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **start here**, **re-scoped 2026-09-02**
 
-> **Re-scoped twice on 2026-09-02, and the second time widened it from a remedy to the problem.**
-> It first asked for a *numeric text lift inside `combined`* — better **ordering** of what the model
-> already sees. Entry 123 measured that as the wrong end. Then it asked to *admit zero-scored pages
-> on their stored text* — which is one remedy, named before the problem had been sized. This item is
-> now the problem, and the remedies below are candidates under it, including doing nothing.
+> **Re-scoped three times on 2026-09-02. Read the third one first — it changes what the item is
+> about (entry 126).**
+>
+> **The scorer's ordering is consumed by nothing.** `_choose_what_to_read` pools on
+> `best_combined() > 0` and hands the pool to the model **unsorted**; `build_selection_packet`
+> withholds the scores deliberately, because *"passing them would anchor the model to the ranking
+> this call exists to replace"*. So `score_link`'s numeric output reaches the request path as a
+> **boolean**. Ranking still matters on the heuristic fallback — no selector, no stored text, or a
+> failed model call — and nowhere else.
+>
+> **That collapses this item to one question:** the admission test is a threshold on a score
+> computed from a URL and an anchor, and it excludes 94% of the corpus from a model that would
+> otherwise be reading the pages' own text. Item 1 was a *weighting* fix under this item and it
+> moved the pool by 35 pages of 186,596; no amount of further weighting work will do better, because
+> weighting is not what the gate reads. **Every remedy below should be judged on whether it changes
+> what is admitted.**
+>
+> The two earlier re-scopings, kept because the reasoning still holds: it first asked for a *numeric
+> text lift inside `combined`* — better ordering of what the model already sees, which entry 123
+> measured as the wrong end and finding 1 above now explains. Then it asked to *admit zero-scored
+> pages on their stored text* — which is one remedy, named before the problem had been sized.
 >
 > **The principle is not new and the number is.** Known problem 9 has said since entry 40 that the
 > heuristic *"is a recall gate rather than a decider"* and that the conclusion is **widen the gate,
@@ -278,11 +302,13 @@ and entries 62 and 82 are both precedents for measuring a proposal and shipping 
 **3. What would fix it, if it is bad?** Four candidates, and they are not alternatives to each other
 — the first is already measured and ships on its own:
 
-- **Score what the anchor already says.** Item 1: a page about the country the traveller **applies
-  from** earns nothing for saying so, while the passport country earns `nationality_weight`. That is
-  a missing signal rather than a threshold, it is measured on Canada (32.0 against 0.0 on the same
-  family) and Romania, and it needs no fixture to justify. **Do it regardless of what question 2
-  returns.**
+- **Score what the anchor already says.** ~~Item 1~~ — **done, entry 126, and its result is the
+  argument for the rest of this list.** A page about the country the traveller applies from now
+  earns `residence_weight` on the post-specific roles. Measured across all 53 corpora it admits
+  **35 pages of 186,596**, and three of the four families it was built for already hold the answer
+  in their own stored text — the Netherlands' UK apply page opens *"Applying for a Schengen visa
+  for the Netherlands in the United Kingdom"*, and the index has held those 8,594 characters all
+  along. **A weighting change is not a way past a boolean gate.**
 - **More signals of the same kind.** The scorer rests on an English vocabulary and per-country city
   labels, so it degrades on new countries and languages (known problem 9). Entries 103–105 widened
   three role vocabularies and moved real corridors. Cheap, incremental, and bounded by the same
@@ -330,9 +356,19 @@ is Norway at 34%.
 > survives on the 6% alone.** Romania was the case that promoted this to the top of the queue; the
 > pages its gate discarded turn out to be Romanian **legislation** PDFs — chaff, exactly as the "do
 > nothing" outcome below allows for. What nearly cost Romania its answer was a **missing residence
-> score**, which is item 1 and is now measured. So this item has a real number (6% shown, 94%
-> discarded) and **no confirmed instance of an answer inside the 94%.** Curate first; the item may
-> close.
+> score**, which was item 1 and is now shipped (entry 126). So this item has a real number (6%
+> shown, 94% discarded) and **no confirmed instance of an answer inside the 94%.** Curate first;
+> the item may close.
+>
+> **But note what item 1 could and could not reach, because it bounds the "do nothing" outcome.**
+> It admitted 35 pages and every one is a page the anchor *nearly* scored — a page with role
+> vocabulary that was missing one traveller signal. Nothing it did, or could have done, reaches a
+> page whose anchor says nothing at all, and Canada's `?country=GB&lob=visit` — the page a
+> *tourism* corridor actually wants — is exactly that: `score_link` returns early on an empty
+> vocabulary before any traveller signal applies, so it scores 0.0 and stays outside the pool while
+> its `lob=citizenship` sibling is admitted. **That page is inside the 94% and it is not chaff.**
+> It is the nearest thing to a confirmed instance the item has, and it has no stored text either,
+> so it is also a case only remedy five reaches.
 
 **Do not confuse this with the per-role filter, which is a different thing.** `rank_for_role` drops
 a page scoring zero **for that role**; the pool drops a page scoring zero for **every** role. Entry
@@ -1375,7 +1411,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
-| 1. Score a page for being about where the traveller applies from | 09-02 | 126 | The two bonuses **swap** rather than stack — adding without withdrawing only produces a tie. The Netherlands' `apply-united-kingdom` goes **14th of 1,074 to 1st** and no oracle answering page loses a point. The dimension is **4 corpora, not 21**: `country_family_keys` reads the URL, so it sees neither Canada's `?country=IN` nor Romania's `MAREA-BRITANIE.PDF` — the two families the defect bites hardest on (item 47) |
+| 1. Score a page for being about where the traveller applies from | 09-02 | 126 | **The scorer's ordering is consumed by nothing** — the pool goes to the model unsorted with scores withheld, so `score_link` reaches a corridor as a *boolean*. Shipped as a swap and cut back to adding only: the withdrawal removed **25 pages from the pool and added none**. Admits 35 of 186,596, and 3 of its 4 families already held the answer in stored text — which is the argument for item 31. Also: `_describes_country` could not read `united-kingdom` in a path, so every multi-word country was invisible unless the anchor said it |
 | 45. Re-run the five countries last measured before their corpus existed | 09-01 | 121, 122 | **Romania fills 5 of 6** off `eviza.mae.ro`, Austria 2 — both were predictions this item said would stand. Morocco refuses with an `HTTP 200` reported as `unusable` (item 46), and Romania's 58 Romanian-named checklist PDFs are invisible to the family detector (item 47) |
 | 43. Give the new 43 something the coverage gate can grade | 09-01 | 120 | **42 of 53 countries were deferring to an empty half** and read as passes. Fixed with an `ungraded` verdict. The oracle is **not** growing to 53: 17 of the 42 resolve every passport tried, and of the 9 that resolve none, 6 have a named cause outside the store |
 | 44. Re-measure the countries whose ranking text was a bot-check page | 09-01 | 118, 119 | NO and ID now fill **6 of 6**, TH names its checker. The Philippines' missing checklist is a **visa-free** corridor, Lithuania's ceiling is the challenge and not its `Disallow`, and the US gaps split — `travel.state.gov` blocked, `uk.usembassy.gov` never requested. The US corridor **flips** between two runs of identical code |
@@ -1416,12 +1452,12 @@ in the DECISIONS entry; this is the one-line index.
 **Sweden's ranking is unexplained, and entry 126 did not explain it.** Carried over from item 1,
 which was otherwise finished on 2026-09-02. Sweden reads `migrationsverket.se`, fills
 `general_entry`, and neither widening the shortlist window nor correcting its domain moved the visa
-decision or the checklist. The residence signal moved it the wrong way by one measure — its
-`visiting-sweden-for-up-to-90-days-entry-visa` page slipped from 104th to 111th for
-`application_route` at an **unchanged** score of 5.6, passed by seven `british-citizens` pages that
-gained 40 — which says the page was never scoring on anything and is a symptom rather than a
-regression. It has never been traced the way the Netherlands was, and it should be before anything
-is changed on its account.
+decision or the checklist. Its `visiting-sweden-for-up-to-90-days-entry-visa` page slipped from
+104th to 111th for `application_route` at an **unchanged** score of 5.6, passed by seven
+`british-citizens` pages that gained 40 — so the page was never scoring on anything, which is a
+symptom rather than a regression, and at 104 deep it is outside any selection budget either way. It
+has never been traced the way the Netherlands was, and it should be before anything is changed on
+its account.
 
 
 **Cyprus names `mip.gov.cy`, which does not resolve; `www.mip.gov.cy` does.** Found 2026-08-30,

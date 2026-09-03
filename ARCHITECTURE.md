@@ -495,14 +495,20 @@ discarded 94% contains any answer is **unmeasured**.
 had no residence equivalent — `mission_affinity` matches host labels, not a page that is *about* a
 country — so Canada's 635-member `where-submit-application.asp?country={XX}` family scored the
 `?country=IN` page 32.0 for `application_route` and the `?country=GB` page, the one that answers an
-Indian applicant in Britain, **-8.0**. On the four `POST_SPECIFIC_ROLES` the passport bonus is now
-withdrawn and `lexicon.residence_weight` added in its place: **they swap rather than stack**, since
-adding without withdrawing only produces a tie, and where the two countries are the same neither
-half fires. `visa_decision` and `general_entry` are excluded, as they are from `mission_affinity`,
-because a visa rule is the same at every consulate (entry 72). Measured over the selection oracle,
-no answering page lost a point and the Netherlands' `…/schengen-visa/apply-united-kingdom` went from
-14th of 1,074 to 1st — but the selector's pool moved only 12,573 → 12,583 of 186,596, so **this is a
-re-ordering inside the 6%, not a way past the gate**.
+Indian applicant in Britain, **-8.0** — outside the pool entirely. A page about the residence now
+earns `lexicon.residence_weight` on the four `POST_SPECIFIC_ROLES`. It **adds and never subtracts**:
+it shipped withdrawing the passport bonus from those roles so the two would swap, and that half was
+removed after measurement, having taken 25 pages out of the pool and added none. The two now tie,
+and nothing about this scorer breaks the tie. Where the traveller's two countries are the same it
+does not fire; `visa_decision` and `general_entry` are excluded, as they are from `mission_affinity`,
+because a visa rule is the same at every consulate (entry 72).
+
+**The reason the tie is acceptable is that the ordering is not read.** `_choose_what_to_read` pools
+on `best_combined() > 0` and passes the pool to the model **unsorted**, and `build_selection_packet`
+withholds the scores deliberately. `score_link` therefore decides **admission** and nothing else on
+the shipped path; its ordering governs only the heuristic fallback. The whole residence change
+admits **35 pages of 186,596**, which is why item 31 — the boolean gate itself — is the open work
+and further weighting is not.
 
 **Every run also writes down what it considered** (`discovery/recall_log.py`, entry 43): all candidates
 with their scores, whether each was shortlisted and fetched, the queries, the seeds, and each unreadable
