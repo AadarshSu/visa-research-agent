@@ -33,6 +33,7 @@ from pathlib import Path
 import yaml
 from pydantic import Field
 
+from visa_research_agent.discovery.contention import Contention
 from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, PageLink, RoleScores
 from visa_research_agent.discovery.resolver import DEFAULT_SHORTLIST_SIZE, shortlist
 from visa_research_agent.domain.models import StrictModel
@@ -47,6 +48,12 @@ DEFAULT_ORACLE_PATH = Path("oracle/selection_oracle.yaml")
 # only way the United States corridor could be judged at all: travel.state.gov stores nothing and
 # publishes its whole /content/travel/en/ tree under adoption.state.gov as well.
 SEEN_KINDS = ("text", "title_only", "mirror")
+
+# Which set a curator read to build a row. `pool` is the 6% `_choose_what_to_read` shows the model
+# and is the default, because it is what the first twenty rows were built from. `whole_corpus` means
+# the anchor scorer's filter was off, so the row can name a page the selector is never shown — which
+# is the only way a fixture can grade the gate rather than agree with it. See `curated_from`.
+CURATION_SETS = ("pool", "whole_corpus")
 
 
 class OracleError(VisaResearchError):
@@ -98,6 +105,21 @@ class CorridorOracle(StrictModel):
     """
 
     unanswered: dict[str, str] = Field(default_factory=dict)
+    curated_from: str = "pool"
+    """Which set the curator read to build this row — `pool` or `whole_corpus`.
+
+    **The fixture's own bias, recorded on the row rather than in a comment nobody joins to the
+    numbers.** The first twenty rows were curated from every candidate scoring above zero, which is
+    the same 6% `_choose_what_to_read` shows the selector — so they can say whether the selector
+    picked well *within* the gate and can say nothing at all about the gate, and 88 of 88 of their
+    answering pages being in the pool is a tautology (entry 123). A row marked `whole_corpus` was
+    curated with that filter off, from `Contention.unpooled` ranked by `PageTextStore.rank`, so its
+    answers may legitimately fall outside the pool and `pool_audit` can count them.
+
+    Never infer it. A row written before this field existed is a `pool` row, which is what the
+    default says, and silently promoting one would manufacture the evidence item 31 needs.
+    """
+
     unverifiable: list[str] = Field(default_factory=list)
     """Candidates that plausibly answer a role and hold no stored text. Neither credited nor
     dismissed: an arm that reads one is reported separately rather than scored either way."""
@@ -145,6 +167,11 @@ def load_oracle(path: Path = DEFAULT_ORACLE_PATH) -> SelectionOracle:
             raise OracleError(
                 f"{corridor.corridor} both answers and does not answer {', '.join(sorted(overlap))}"
             )
+        if corridor.curated_from not in CURATION_SETS:
+            raise OracleError(
+                f"{corridor.corridor} was curated from {corridor.curated_from!r}, which is not one "
+                f"of {', '.join(CURATION_SETS)}"
+            )
         for role in corridor.not_applicable:
             if role not in ROLE_ORDER:
                 raise OracleError(f"{corridor.corridor} names an unknown role {role!r}")
@@ -163,6 +190,57 @@ def load_oracle(path: Path = DEFAULT_ORACLE_PATH) -> SelectionOracle:
                 "visa_decision; only a stated decision can say a role does not arise"
             )
     return oracle
+
+
+@dataclass(frozen=True)
+class PoolAudit:
+    """Whether the pages a curator named are ones the selector is ever shown.
+
+    This is the measurement `selection-recall` structurally could not make. Its arms replay what a
+    run *chose* out of the pool, so a page the gate excluded is invisible to every arm at once and
+    scores as though no selector could have found it — which is true, and is the finding, and was
+    being reported as ordinary recall.
+
+    `outside` is the number that matters, and a non-zero one is a confirmed instance of an answer
+    inside the discarded 94%. `absent` is kept apart from it deliberately: a page the corpus does
+    not hold at all is item 35's gap, not this one's, and adding the two would merge the two ends of
+    the bottleneck that entry 88 spent a session separating.
+    """
+
+    corridor: str
+    curated_from: str
+    pooled: tuple[str, ...]
+    outside: tuple[str, ...]
+    absent: tuple[str, ...]
+
+    @property
+    def answers(self) -> int:
+        return len(self.pooled) + len(self.outside) + len(self.absent)
+
+
+def pool_audit(corridor: CorridorOracle, contention: Contention) -> PoolAudit:
+    """Split one row's answering pages by whether the anchor scorer admits them."""
+
+    pooled = {candidate.link.url for candidate in contention.candidates}
+    unpooled = {candidate.link.url for candidate in contention.unpooled}
+    inside: list[str] = []
+    outside: list[str] = []
+    absent: list[str] = []
+    for role in ROLE_ORDER:
+        for page in corridor.answers.get(role, []):
+            if page.url in pooled:
+                inside.append(page.url)
+            elif page.url in unpooled:
+                outside.append(page.url)
+            else:
+                absent.append(page.url)
+    return PoolAudit(
+        corridor=corridor.corridor,
+        curated_from=corridor.curated_from,
+        pooled=tuple(inside),
+        outside=tuple(outside),
+        absent=tuple(absent),
+    )
 
 
 @dataclass(frozen=True)

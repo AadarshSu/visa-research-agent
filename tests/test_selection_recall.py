@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from visa_research_agent.discovery.cli import main, print_selection_recall
-from visa_research_agent.discovery.models import ROLE_ORDER
+from visa_research_agent.discovery.contention import Contention
+from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corridor, PageLink
 from visa_research_agent.discovery.selection_recall import (
     DEFAULT_ORACLE_PATH,
     Arm,
@@ -23,6 +24,7 @@ from visa_research_agent.discovery.selection_recall import (
     grade,
     load_oracle,
     model_picks,
+    pool_audit,
     read_recall_logs,
     unattributed_logs,
 )
@@ -73,12 +75,14 @@ def test_the_committed_oracle_loads_and_says_what_it_claims() -> None:
 
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
 
-    assert len(oracle.corridors) == 20
+    assert len(oracle.corridors) == 21
     travellers = {"/".join(c.corridor.split("/")[1:]) for c in oracle.corridors}
-    # Two curated travellers over the same ten countries. The second is what makes any number from
-    # this fixture a statement about more than one profile — known problem 29, entry 91.
+    # Two curated travellers over the same ten countries, plus Czechia for the Indian one — the
+    # eleventh country and the only row curated from outside the pool (entry 127). The second
+    # traveller is what makes any number from this fixture a statement about more than one profile:
+    # known problem 29, entry 91.
     assert travellers == {"IN/GB/tourism", "PH/PH/tourism"}
-    assert len({c.corridor for c in oracle.corridors}) == 20
+    assert len({c.corridor for c in oracle.corridors}) == 21
     for corridor in oracle.corridors:
         assert corridor.text_held <= corridor.contention
         for role in [*corridor.answers, *corridor.tools, *corridor.unanswered]:
@@ -386,3 +390,110 @@ def test_the_command_refuses_rather_than_grading_nothing(tmp_path: Path) -> None
 
     assert code == 1
     assert stream.getvalue() == ""
+
+
+# --- the pool audit: grading the gate rather than the selector, TODO item 31 --------------------
+
+
+def audit_contention(pooled: list[str], unpooled: list[str]) -> Contention:
+    """A `Contention` holding only what `pool_audit` reads off it."""
+
+    def page(url: str) -> CandidatePage:
+        return CandidatePage(link=PageLink(url=url, depth=1, discovered_from="seed"))
+
+    return Contention(
+        corridor=Corridor(destination_slug="japan", passport_nationality="IN", applying_from="GB"),
+        candidates=tuple(page(url) for url in pooled),
+        unpooled=tuple(page(url) for url in unpooled),
+        rejected=0,
+        text_held=0,
+    )
+
+
+def test_an_answering_page_the_selector_is_never_shown_is_counted_apart(tmp_path: Path) -> None:
+    """The measurement `selection-recall`'s arms structurally cannot make.
+
+    Every arm replays what a run *chose out of the pool*, so a page the anchor scorer excluded is
+    invisible to all of them at once and scores as though no selector could have found it. That is
+    true, and it is the finding, and it was reading as ordinary recall.
+    """
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    audit = pool_audit(
+        oracle.corridors[0],
+        audit_contention(["https://a.go.jp/decision"], ["https://b.go.jp/fees"]),
+    )
+
+    assert audit.pooled == ("https://a.go.jp/decision", "https://a.go.jp/decision")
+    assert audit.outside == ("https://b.go.jp/fees",)
+    assert audit.absent == ()
+
+
+def test_a_page_the_corpus_does_not_hold_is_not_counted_as_one_the_gate_removed(
+    tmp_path: Path,
+) -> None:
+    """`absent` and `outside` are the two ends of a bottleneck entry 88 spent a session separating:
+    a page nobody crawled is item 35's gap, and a page crawled and scored to zero is item 31's.
+    Adding them would merge the two and make either unfixable from the number."""
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    audit = pool_audit(oracle.corridors[0], audit_contention(["https://a.go.jp/decision"], []))
+
+    assert audit.outside == ()
+    assert audit.absent == ("https://b.go.jp/fees",)
+
+
+def test_a_row_says_which_set_it_was_curated_from_and_defaults_to_the_pool(
+    tmp_path: Path,
+) -> None:
+    """Never inferred. A row written before the field existed was curated inside the gate, and
+    silently promoting one to `whole_corpus` would manufacture the evidence item 31 is waiting
+    for."""
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    assert oracle.corridors[0].curated_from == "pool"
+
+    widened = ONE_CORRIDOR.replace(
+        "    contention: 4", "    curated_from: whole_corpus\n    contention: 4"
+    )
+    assert (
+        load_oracle(write_oracle(tmp_path / "wide.yaml", widened)).corridors[0].curated_from
+        == "whole_corpus"
+    )
+
+
+def test_a_row_curated_from_a_set_nobody_defined_is_refused(tmp_path: Path) -> None:
+    """The same discipline `seen:` follows: an unrecognised value is a typo or a new idea, and
+    either way reading it as the default would quietly mislabel the row's bias."""
+
+    body = ONE_CORRIDOR.replace(
+        "    contention: 4", "    curated_from: everything\n    contention: 4"
+    )
+    with pytest.raises(OracleError, match="curated from 'everything'"):
+        load_oracle(write_oracle(tmp_path / "oracle.yaml", body))
+
+
+def test_the_fixture_can_now_name_a_page_the_selector_is_never_shown() -> None:
+    """Pins the honest reading of the shipped fixture, and the reading changed on 2026-09-02.
+
+    The first twenty rows were curated from candidates scoring above zero — the same filter
+    `_choose_what_to_read` applies — so a zero in the pool audit against them is a tautology, not a
+    result (entry 123). `czechia/IN/GB/tourism` is the first row curated with that filter off, and
+    its `document_checklist` answer is the EC supporting-documents list for applicants **in the
+    United Kingdom**, which scores zero for every role and is never shown to the selector. That is
+    the confirmed instance TODO item 31 was waiting for (entry 127).
+
+    Asserted as "at least one", not "exactly one": a second such row is progress and must not fail
+    a test. What must not happen is the count going back to zero, which would mean the fixture had
+    silently returned to agreeing with the gate by construction.
+    """
+
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+    widened = [row for row in oracle.corridors if row.curated_from == "whole_corpus"]
+
+    assert widened, "the fixture can no longer name a page outside the pool"
+    czechia = oracle.for_corridor("czechia/IN/GB/tourism")
+    assert czechia is not None and czechia.curated_from == "whole_corpus"
+    assert czechia.answering_urls("document_checklist") == {
+        "https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF"
+    }

@@ -28,6 +28,7 @@ Nothing here fetches, searches or calls a model.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from visa_research_agent.discovery.corpus import CountryCorpus
@@ -38,6 +39,7 @@ from visa_research_agent.discovery.models import (
     DiscoveryRole,
     PageLink,
 )
+from visa_research_agent.discovery.page_text import TextMatch
 from visa_research_agent.discovery.scoring import (
     foreign_post_labels,
     is_archived,
@@ -62,6 +64,22 @@ class Contention:
 
     corridor: Corridor
     candidates: tuple[CandidatePage, ...]
+    """Everything `best_combined() > 0` — the pool `_choose_what_to_read` shows the selector."""
+
+    unpooled: tuple[CandidatePage, ...]
+    """Everything that survived the rejection rules and scored zero for every role.
+
+    **This is the 94% and it is here so a fixture can name a page inside it.** Until 2026-09-02 this
+    set was discarded where it was computed, so `oracle/selection_oracle.yaml` was curated "from
+    every candidate that scored above zero" and could not, even in principle, contain a page the
+    anchor scorer had excluded. Checking the pool gate against it therefore returned 88 of 88 — a
+    tautology rather than a result (entry 123). A fixture cannot detect a filter it shares, so the
+    filter had to come off the curation tool first. TODO item 31.
+
+    Ordered by URL, because there is no score to order by: every member scores zero by definition,
+    which is exactly why `page_text.rank` and not this ranking is how a curator reads it.
+    """
+
     rejected: int
     """Corpus entries a rule threw out before scoring — archived, boilerplate, wrong audience, wrong
     country. Counted rather than listed because it is large and uninteresting until it is wrong:
@@ -101,6 +119,7 @@ def contention_for(
     other_posts = foreign_post_labels(countries, destination_code, residence)
 
     kept: list[CandidatePage] = []
+    outside: list[CandidatePage] = []
     rejected = 0
     for stored in corpus.entries_within(destination.trusted_domains):
         link: PageLink = stored.to_link()
@@ -115,13 +134,19 @@ def contention_for(
             title=stored.title or None,
             found_by="corpus",
         )
+        # The same test `_choose_what_to_read` applies, and both sides are kept. Dropping the second
+        # is what made the oracle unable to disagree with the gate; see `Contention.unpooled`.
         if candidate.best_combined()[1] > 0:
             kept.append(candidate)
+        else:
+            outside.append(candidate)
 
     kept.sort(key=lambda candidate: (-candidate.best_combined()[1], candidate.link.url))
+    outside.sort(key=lambda candidate: candidate.link.url)
     return Contention(
         corridor=corridor,
         candidates=tuple(kept),
+        unpooled=tuple(outside),
         rejected=rejected,
         text_held=sum(1 for candidate in kept if candidate.link.url in indexed),
     )
@@ -141,6 +166,35 @@ def _rejected(
     if wrong_audience(link, corridor, lexicon) is not None:
         return True
     return wrong_country(link, corridor, countries, destination_code) is not None
+
+
+def unpooled_by_text(
+    contention: Contention, matches: Sequence[TextMatch], *, limit: int = 20
+) -> list[tuple[TextMatch, CandidatePage]]:
+    """The pages the selector never sees, ordered by what their own text says.
+
+    **The ordering has to come from outside the thing being audited.** Every member of `unpooled`
+    scores zero on the anchor scorer by definition, so that scorer cannot say which of seven
+    thousand addresses is worth a curator's attention — and using it would reproduce the bias the
+    audit exists to detect. `PageTextStore.rank` is the one instrument that reads inside a page:
+    FTS5 narrows to the pages whose text carries a role's vocabulary at all, and `score_body` — the
+    project's existing rule for judging a page by its text — orders what comes back.
+
+    Pages with no stored body cannot appear, and that bound is not small: the index holds text for
+    23% of the corpus. So a curator working from this sees the readable part of the 94%, and a role
+    answered only by an address nobody opened stays invisible to the fixture. That is item 35's end
+    of the same bottleneck, and it is recorded on the row rather than left to be assumed.
+    """
+
+    by_url = {candidate.link.url: candidate for candidate in contention.unpooled}
+    found: list[tuple[TextMatch, CandidatePage]] = []
+    for match in matches:
+        candidate = by_url.get(match.url)
+        if candidate is not None:
+            found.append((match, candidate))
+        if len(found) >= limit:
+            break
+    return found
 
 
 def ranked_for_role(

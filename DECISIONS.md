@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [127](#127-the-fixture-can-now-name-a-page-the-gate-removed-and-the-first-one-it-names-is-a-real-answer) | **The pool gate hides a real answer** — Czechia's UK supporting-documents list scores zero for every role |
 | [126](#126-a-page-about-where-the-traveller-applies-from-earns-a-score-the-ordering-it-earns-is-consumed-by-nothing) | **The residence signal is built, then cut back to adding only** — and the scorer's ordering turns out to reach the request path as a *boolean* |
 | [125](#125-the-recall-gate-admits-search-at-49-and-the-corpus-at-55-so-item-31-goes-before-item-19) | **The gate admits search at 49% and the corpus at 5.5%** — item 19 measures the corpus through a filter biased against it |
 | [124](#124-a-page-about-where-the-traveller-applies-from-earns-nothing-for-saying-so) | **The residence earns no score** — Canada scores the passport page 32.0 and the page they actually apply on 0.0 |
@@ -175,6 +176,97 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 127. The fixture can now name a page the gate removed, and the first one it names is a real answer
+
+**2026-09-02 · TODO item 31, first deliverable**
+
+`selection-recall` could not grade the recall gate, and the reason was structural rather than an
+oversight. Its ground truth was curated "from every candidate that scored above zero" — the same
+`best_combined() > 0` that `_choose_what_to_read` applies — so **no page the gate removed could
+appear in the fixture at all**. Checking the gate against it returned 88 of 88 answering pages
+inside the pool, which entry 123 correctly called a tautology. A fixture cannot detect a filter it
+shares. This removes the filter from the curation tool, and the first row curated without it names
+an answer the selector is never shown.
+
+### What was built
+
+**`Contention.unpooled`.** `contention_for` computed the pool test and threw the losing side away at
+the point of computing it. Both sides are now kept, and the two plus `rejected` account for every
+corpus entry — so a curator reading `unpooled` is reading a set with no unrecorded second filter in
+it, which was the whole defect.
+
+**`unpooled_by_text`, and the ordering has to come from outside the thing being audited.** Every
+member of `unpooled` scores zero on the anchor scorer by definition, so that scorer cannot say which
+of seven thousand addresses is worth reading — and using it would reproduce the bias the audit
+exists to detect. `PageTextStore.rank` is the one instrument that reads inside a page: FTS5 narrows
+to pages whose text carries a role's vocabulary at all, and `score_body` orders what comes back.
+Surfaced as `visa-discover contention --outside-pool`.
+
+**`curated_from` on the row, defaulting to `pool`.** The fixture's own bias, recorded where the
+numbers are rather than in a comment nobody joins to them. It is never inferred: a row written
+before the field existed was curated inside the gate, and silently promoting one would manufacture
+the evidence this item is waiting for.
+
+**`pool_audit`, printed by `selection-recall`.** Splits a row's answering pages into pooled, outside
+the pool, and absent from the corpus. `absent` is kept apart from `outside` deliberately — a page
+nobody crawled is item 35's gap and a page crawled and scored to zero is item 31's, and adding them
+would merge the two ends of the bottleneck entry 88 spent a session separating. Where every row is
+`curated_from: pool` the report **says its own zero is a tautology** rather than printing it as a
+result.
+
+### The answer it found
+
+Swept across all 53 corpora for an `IN/GB` traveller: **9,666 pooled candidates against 141,789
+unpooled**, of which 843 score on their own text. Most are what item 31 allowed for — Liechtenstein's
+entire discarded set is its law collection, and the two top-scoring examples read out are the
+**Casino Ordinance** and the **Law on the Organization of the Ordinary Courts**, exactly the chaff
+entry 124 found for Romania. But not all of it is chaff:
+
+```
+czechia/IN/GB/tourism   document_checklist
+  https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF   link score 0.0 for every role
+  "Commission Implementing Decision establishing the list of supporting documents to be
+   submitted by applicants for short stay visas in the United Kingdom"
+```
+
+That is this traveller exactly — an Indian passport lodging in Britain — and it enumerates: a UK
+residence permit valid a month beyond departure, a reserved return ticket, proof of accommodation,
+three months of UK bank statements. **It scores zero for every role, so the selector is never shown
+it.** Meanwhile the pool's best `document_checklist` candidate for that corridor is an Entry/Exit
+System page at 36.0 and its runner-up is a *student* visa checklist.
+
+**So item 31 is no longer a hypothesis with a number attached.** The 94% contains at least one page
+that answers a role no pooled page answers, and it is the same artefact — an EC supporting-documents
+list keyed on the country of application — that Romania and Croatia publish and that entry 126 found
+the scorer blind to for a different reason.
+
+### The row, and what it deliberately leaves empty
+
+`czechia/IN/GB/tourism` is curated `whole_corpus` and answers **two** roles of six. The other four
+are `unanswered` with reasons rather than filled with the nearest plausible page: the exemption list
+the pool ranks first for `visa_decision` stores its heading and its site navigation and no list, and
+`types_of_visas` cites Regulation 2018/1806 by name without enumerating it, so nothing in the store
+settles an Indian passport either way. The London embassy's own "Visas" page is in the corpus, is
+**also** outside the pool, and the index holds no body for it — recorded `unverifiable`, which is
+neither credited nor held against any arm.
+
+That thinness is the honest shape of a row curated to answer one question. It was not built to raise
+a recall number and it does not.
+
+### What it does not establish
+
+**One row, one corridor, one traveller.** It proves the discarded set is not *uniformly* chaff; it
+says nothing about how often. Two bounds carry forward unchanged: `contention_for` is corpus-only,
+so a role only search would have surfaced cannot be curated from it, and the text index holds
+bodies for **23%** of the corpus — a role answered only by an address nobody opened is invisible to
+this instrument, which is item 35's end of the same bottleneck.
+
+**And it does not say what to do.** Item 31's four remedies are unchanged and unmeasured; what has
+changed is that the "do nothing, the 94% is chaff" outcome is now ruled out, and any remedy has a
+fixture that can tell whether it worked.
 
 ---
 

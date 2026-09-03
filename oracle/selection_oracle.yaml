@@ -1316,3 +1316,61 @@ corridors:
       because the mirror was found. The same page, the same fixture, and the difference is which
       address somebody thought to look at. Both answers here are on `adoption.state.gov`, which is
       the United States corridor's whole legibility: `travel.state.gov` stores no text at all.
+
+  # --- the first row curated from outside the pool, 2026-09-02, DECISIONS entry 127 -------------
+  #
+  # Every row above was curated from candidates scoring above zero, which is the same filter
+  # `_choose_what_to_read` applies — so they can say whether a selector picked well *inside* the
+  # gate and nothing at all about the gate itself, and 88 of 88 of their answering pages being in
+  # the pool is a tautology (entry 123). This one was curated with that filter off, using
+  # `visa-discover contention --outside-pool`, and it is the first confirmed answer in the
+  # discarded 94%. TODO item 31.
+  - corridor: czechia/IN/GB/tourism
+    curated_from: whole_corpus
+    contention: 268
+    text_held: 198
+    answers:
+      document_checklist:
+        - url: https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF
+          seen: text
+          why: >-
+            the European Commission implementing decision "establishing the list of supporting
+            documents to be submitted by applicants for short stay visas in the United Kingdom",
+            which is this traveller exactly — an Indian passport lodging in Britain. It enumerates
+            them: a UK residence permit valid a month beyond departure, a reserved return ticket,
+            proof of accommodation, three months of UK bank statements. **It scores zero for every
+            role on the anchor scorer**, so `_choose_what_to_read` never shows it to the selector,
+            and no arm of `selection-recall` can reach it. Found by ranking stored body text.
+      general_entry:
+        - url: https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF
+          seen: text
+          why: >-
+            the same document's "General requirements for all applicants" states the entry-relevant
+            duties — onward travel, means of subsistence, accommodation. Also outside the pool.
+    unverifiable:
+      - https://mzv.gov.cz/london/en/visa_and_consular_information/visa_information/index.mobi
+    unanswered:
+      visa_decision: >-
+        the pool's best candidate is the Los Angeles consulate's "List of States Whose Citizens Are
+        Exempt from Visa Requirement", and its stored text holds the heading and the site
+        navigation and no list. `.../types_of_visas/` cites Regulation 2018/1806 by name without
+        enumerating it. Nothing in the store settles an Indian passport either way.
+      application_route: >-
+        the best pooled candidate is the **Erbil** consulate's "How to apply for a visa" and the
+        best unpooled one is the supporting-documents list for applicants in **India** — both the
+        wrong post. The London embassy's own "Visas" page is in the corpus, is also outside the
+        pool, and the index holds no body for it, so it is recorded unverifiable rather than
+        credited or dismissed.
+      fees: >-
+        the candidates are the Los Angeles consulate's Czech-language fee page and Washington's
+        consular information. Neither is the post this traveller uses.
+      processing_times: >-
+        the best candidates are `ipc.gov.cz` pages on changing a name or a travel document, which
+        are residence-permit obligations rather than a visa queue.
+    note: >-
+      Curated to answer one question and it answered it: **is there an answer the anchor scorer
+      excludes?** Yes — the checklist that fits this traveller precisely is unpooled, while the
+      pool's best `document_checklist` candidate is an Entry/Exit System page at 36.0 and its
+      runner-up is a *student* visa checklist. The row is otherwise thin on purpose: roles that
+      could not be established from the store are left `unanswered` rather than filled with the
+      nearest plausible page, and `visa_decision` being among them is itself worth knowing.

@@ -410,7 +410,9 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     assert set(totals) == {"IN/GB/tourism", "PH/PH/tourism"}
     for traveller, (held, answerable, _) in totals.items():
         assert held == answerable, f"{traveller} lost an answer the corpus used to hold"
-    assert totals["IN/GB/tourism"][1] == 47
+    # 47 over the ten countries entry 91 curated, plus the two Czech roles entry 127 added — the
+    # first answers named from outside the selector's pool, and both held by the corpus.
+    assert totals["IN/GB/tourism"][1] == 49
     assert totals["PH/PH/tourism"][1] == 41
 
 

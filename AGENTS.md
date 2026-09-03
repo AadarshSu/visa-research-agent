@@ -44,7 +44,10 @@ the CLI does not offer it.
   runs is **6% of the candidate set** — Liechtenstein offers 2 of 7,482 (entry 123). A page scoring
   zero for every role is invisible to the selector however good it is, so *"the model did not pick
   it"* and *"the model never saw it"* look identical from the outside. `var/recall/<corridor>.json`
-  distinguishes them: `best_score` of `0.0` means the second. **What matters is whether the score
+  distinguishes them: `best_score` of `0.0` means the second, and
+  `visa-discover contention --outside-pool --role <role>` is how you look at that set — it ranks the
+  zero-scoring candidates by their own stored text, which is the only ordering the anchor scorer
+  cannot bias (entry 127). **What matters is whether the score
   crossed zero, not where it ranked** — the pool goes to the model unsorted with the scores withheld,
   so ordering is consumed only by the heuristic fallback (entry 126). **And read the signals for
   `residence:`** — on the four `POST_SPECIFIC_ROLES` a page about where the traveller applies from

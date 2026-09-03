@@ -286,18 +286,39 @@ it.
 **1. How big is the gate?** — answered, entry 123. One line of `_choose_what_to_read` decides it,
 and everything downstream comes from its result.
 
-**2. Is that bad?** — **unanswered, and the instrument to answer it does not exist.** This is the
-part worth reading twice. `selection-recall` is the natural tool and it **structurally cannot** grade
-a change that widens the pool: its ground truth was curated "from every candidate that scored above
-zero" (`contention.py`), so no page outside the pool can appear in it. Checked — 88 of 88
-oracle-named answering pages are in the pool, which is a tautology, not a result (entry 123). Nor
-can `coverage`, which grades the store rather than the corridor. **So the first deliverable of this
-item is a fixture, not a code change**: a handful of corridors whose answering pages are named from
-the **whole** candidate set, using `page_text.rank` over stored body text — the only instrument that
-can see inside a page. Liechtenstein (pool of 2) and Bulgaria (pool of 8) are where an answer would
-matter most and a hand-curated row is cheapest to justify. **If those rows come back with every
-answer already inside the pool, the 94% is chaff and this item closes** — which is a real outcome,
-and entries 62 and 82 are both precedents for measuring a proposal and shipping nothing.
+**2. Is that bad?** — **answered: yes, at least once (entry 127).** The instrument is built and the
+first row curated with it found a real answer in the discarded 94%.
+
+> The fixture could not previously say anything here, and the reason was structural:
+> `oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero", which is
+> the same filter `_choose_what_to_read` applies, so no page the gate removed could appear in it at
+> all — 88 of 88 answering pages inside the pool is a tautology, not a result (entry 123). A fixture
+> cannot detect a filter it shares.
+>
+> **What is now built:** `Contention.unpooled` keeps the losing side of the pool test instead of
+> discarding it; `unpooled_by_text` orders it with `PageTextStore.rank`, which reads inside a page,
+> because the anchor scorer scores every member zero by definition and using it would reproduce the
+> bias under audit; `visa-discover contention --outside-pool` is the curation view; `curated_from:`
+> on each row records which set the curator read, defaulting to `pool` and never inferred; and
+> `selection-recall` prints a **pool audit** splitting each row's answers into pooled, outside, and
+> absent from the corpus. Where every row is `curated_from: pool` the report says its own zero is a
+> tautology rather than printing it as a result.
+>
+> **What it found.** Swept over all 53 corpora at `IN/GB`: 9,666 pooled candidates against 141,789
+> unpooled, 843 of which score on their own text. Most is chaff exactly as this item allowed —
+> Liechtenstein's whole discarded set is its law collection, top two read out being the Casino
+> Ordinance and the Law on the Organization of the Ordinary Courts. But `czechia/IN/GB/tourism`
+> holds `mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF`, the EC decision *"establishing the
+> list of supporting documents to be submitted by applicants for short stay visas in the United
+> Kingdom"* — this traveller exactly — at **link score 0.0 for every role**, while the pool's best
+> `document_checklist` candidate is an Entry/Exit System page at 36.0 and its runner-up is a
+> *student* visa checklist. Committed as the fixture's first `whole_corpus` row.
+>
+> **So "the 94% is chaff and this item closes" is ruled out**, and any remedy below now has a
+> fixture that can tell whether it worked. What is still unmeasured is *how often* — one row, one
+> corridor, one traveller. Two bounds carry forward: `contention_for` is corpus-only, so a role only
+> search would surface cannot be curated from it, and the text index holds 23% of the corpus, so a
+> role answered only by an address nobody opened is invisible to this instrument (item 35).
 
 **3. What would fix it, if it is bad?** Four candidates, and they are not alternatives to each other
 — the first is already measured and ships on its own:
@@ -352,15 +373,19 @@ Over the 24 runs postdating 2026-08-30: **71,798 candidates, 4,450 in the pool.*
 offers **2 of 7,482**; Bulgaria **8 of 6,847**; Morocco 19 of 1,801; Austria 96 of 3,670. The widest
 is Norway at 34%.
 
+> **It has a confirmed instance as of entry 127, so read the paragraph below as history.** What
+> follows was true when the item's motivating example fell over and before the fixture could name a
+> page outside the pool; question 2 above now carries the answer.
+>
 > **Its motivating example evaporated on examination, 2026-09-02 (entry 124), and the item
-> survives on the 6% alone.** Romania was the case that promoted this to the top of the queue; the
+> survived on the 6% alone.** Romania was the case that promoted this to the top of the queue; the
 > pages its gate discarded turn out to be Romanian **legislation** PDFs — chaff, exactly as the "do
 > nothing" outcome below allows for. What nearly cost Romania its answer was a **missing residence
 > score**, which was item 1 and is now shipped (entry 126). So this item has a real number (6%
 > shown, 94% discarded) and **no confirmed instance of an answer inside the 94%.** Curate first;
 > the item may close.
 >
-> **But note what item 1 could and could not reach, because it bounds the "do nothing" outcome.**
+> **And note what item 1 could and could not reach.**
 > It admitted 35 pages and every one is a page the anchor *nearly* scored — a page with role
 > vocabulary that was missing one traveller signal. Nothing it did, or could have done, reaches a
 > page whose anchor says nothing at all, and Canada's `?country=GB&lob=visit` — the page a

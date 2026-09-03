@@ -55,6 +55,7 @@ from visa_research_agent.discovery.contention import (
     Contention,
     contention_for,
     ranked_for_role,
+    unpooled_by_text,
 )
 from visa_research_agent.discovery.corpus import CountryCorpus, FileCorpusStore
 from visa_research_agent.discovery.corpus_build import (
@@ -82,10 +83,11 @@ from visa_research_agent.discovery.lexicon import (
     get_denylist,
     get_lexicon,
 )
-from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
+from visa_research_agent.discovery.models import CandidatePage, Corridor, ResolvedCorridor
 from visa_research_agent.discovery.page_text import (
     BackfillReport,
     PageTextStore,
+    TextMatch,
     backfill_from_cache,
 )
 from visa_research_agent.discovery.proposal import render_corridor_yaml
@@ -106,7 +108,11 @@ from visa_research_agent.discovery.registry_build import (
     write_registry,
 )
 from visa_research_agent.discovery.resolver import DEFAULT_SHORTLIST_SIZE, CorridorResolver
-from visa_research_agent.discovery.search import BraveSearchProvider, SearchError
+from visa_research_agent.discovery.search import (
+    BraveSearchProvider,
+    SearchError,
+    resolve_corridor_countries,
+)
 from visa_research_agent.discovery.selection import (
     CandidateSelector,
     LangChainCandidateSelector,
@@ -114,9 +120,12 @@ from visa_research_agent.discovery.selection import (
 from visa_research_agent.discovery.selection_recall import (
     DEFAULT_ORACLE_PATH,
     Grading,
+    PoolAudit,
+    SelectionOracle,
     arms_from_logs,
     grade,
     load_oracle,
+    pool_audit,
     read_recall_logs,
     unattributed_logs,
 )
@@ -690,6 +699,52 @@ def print_selection_recall(grading: Grading, stream: TextIO) -> None:
         )
 
 
+def print_pool_audit(audits: list[PoolAudit], stream: TextIO) -> None:
+    """How many of the pages a curator named the selector is never shown.
+
+    **The one number in this command that grades the gate rather than the selector.** Every arm
+    replays what a run chose *out of the pool*, so a page the anchor scorer excluded is invisible to
+    all of them at once and reads as though no selector could have found it. A non-zero `outside`
+    is a confirmed answer inside the discarded 94%, which is what TODO item 31 is waiting for.
+    """
+
+    outside = sum(len(audit.outside) for audit in audits)
+    absent = sum(len(audit.absent) for audit in audits)
+    answers = sum(audit.answers for audit in audits)
+    whole = [audit for audit in audits if audit.curated_from == "whole_corpus"]
+    print(
+        f"\n  Pool audit over {len(audits)} corridor(s): of {answers} answering pages, "
+        f"{outside} are outside\n  the pool the selector is shown and {absent} are not in the "
+        f"corpus at all.",
+        file=stream,
+    )
+    for audit in audits:
+        if audit.outside or audit.absent:
+            print(
+                f"    {audit.corridor:<38} {len(audit.outside)} outside, "
+                f"{len(audit.absent)} absent  [{audit.curated_from}]",
+                file=stream,
+            )
+            for url in (*audit.outside, *audit.absent):
+                print(f"      {url}", file=stream)
+    if not whole:
+        print(
+            "\n  Every row here was curated from the pool itself (`curated_from: pool`), so a\n"
+            "  zero above is a **tautology, not a result** — the fixture cannot name a page the\n"
+            "  filter it shares had already removed (entry 123). Curate a row with\n"
+            "  `contention --outside-pool` and mark it `curated_from: whole_corpus` before\n"
+            "  reading anything into this line.",
+            file=stream,
+        )
+    elif not outside:
+        print(
+            f"\n  {len(whole)} row(s) were curated from the whole corpus and still name no page\n"
+            "  outside the pool. That is a real answer and it is the one item 31 expects most\n"
+            "  often: the discarded set is chaff. It is bounded by what the text index holds.",
+            file=stream,
+        )
+
+
 def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
     """Grade what was chosen to read. Reads two directories and calls nothing."""
 
@@ -702,7 +757,55 @@ def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
     arms = arms_from_logs(oracle, logs, full_size=args.shipped_size)
     grading = grade(oracle, arms, unattributed=unattributed_logs(oracle, logs))
     print_selection_recall(grading, stream)
+    audits = pool_audits_for(oracle, stream)
+    if audits:
+        print_pool_audit(audits, stream)
     return 0 if grading.graded else 1
+
+
+def pool_audits_for(oracle: SelectionOracle, stream: TextIO) -> list[PoolAudit]:
+    """Rebuild each row's contention set from the store, to split its answers by the pool gate.
+
+    Offline like the rest of the command: `contention_for` takes no fetcher and no search provider.
+    A corridor whose country has no corpus is skipped rather than guessed at, because "not in the
+    corpus" and "no corpus to look in" are the two things `PoolAudit.absent` exists to keep apart.
+    """
+
+    countries = get_country_registry()
+    corpora = FileCorpusStore(settings.corpus_directory)
+    lexicon = get_lexicon()
+    audits: list[PoolAudit] = []
+    for row in oracle.corridors:
+        slug, nationality, residence, purpose = row.corridor.split("/")
+        country = countries.by_slug(slug)
+        if country is None:
+            continue
+        corpus = corpora.load(country.code)
+        if corpus is None:
+            continue
+        corridor = Corridor(
+            destination_slug=slug,
+            passport_nationality=nationality,
+            applying_from=residence,
+            purpose=purpose,  # type: ignore[arg-type]
+        )
+        config = corridor_destination(slug, corridor, stream)
+        if config is None:
+            continue
+        audits.append(
+            pool_audit(
+                row,
+                contention_for(
+                    corpus,
+                    config,
+                    corridor,
+                    countries=countries,
+                    lexicon=lexicon,
+                    destination_code=country.code,
+                ),
+            )
+        )
+    return audits
 
 
 # One cold resolution of a corridor. Named so `run_corridor` can take a fake in tests.
@@ -1181,6 +1284,59 @@ def print_contention(
     )
 
 
+# How far down `PageTextStore.rank` to look before intersecting with the unpooled set. Generous on
+# purpose: the pool holds most of what scores well on text, so the first matches are usually pages
+# the selector already sees, and a small limit would report "nothing outside the pool" for the
+# uninteresting reason that it never got past them.
+MAXIMUM_UNPOOLED_MATCHES = 400
+
+
+def print_outside_pool(
+    contention: Contention,
+    role: str,
+    found: list[tuple[TextMatch, CandidatePage]],
+    stream: TextIO,
+) -> None:
+    """The candidates the selector is never shown, ranked by what their own text says.
+
+    **This is the only view in the project that can produce evidence against the pool gate.** Every
+    page here scores zero for every role on the anchor scorer, so `_choose_what_to_read` excludes it
+    and no arm of `selection-recall` can reach it; a row curated from this set is marked
+    `curated_from: whole_corpus` so the grader can tell it apart from the twenty rows built inside
+    the gate. TODO item 31.
+    """
+
+    total = len(contention.candidates) + len(contention.unpooled)
+    print(
+        f"\n{contention.key}: {len(contention.unpooled)} of {total} candidates score zero for "
+        f"every role,\n  so the selector is never shown them. Ranked here by their own stored "
+        f"text, for {role}:",
+        file=stream,
+    )
+    if not found:
+        print(
+            "\n  None of them hold text that scores for this role. That is a real answer and it\n"
+            "  is the one this item expects most often: the discarded set is largely chaff.\n"
+            "  It is bounded by what the index holds — 23% of the corpus — so a role answered\n"
+            "  only by an address nobody opened cannot appear here (TODO item 35).",
+            file=stream,
+        )
+        return
+    for position, (match, candidate) in enumerate(found, start=1):
+        print(f"  {position:>3}. {match.score:>7.1f}  {match.url}", file=stream)
+        label = candidate.title or candidate.link.text
+        if label:
+            print(f"           {label[:96]}", file=stream)
+        if match.signals:
+            print(f"           {' '.join(match.signals)[:96]}", file=stream)
+    print(
+        "\n  --show <url> prints a page's stored text, which is how a role is judged.\n"
+        "  A row curated from this list MUST record `curated_from: whole_corpus`, or the grader\n"
+        "  will read it as one more row that agrees with the gate by construction.",
+        file=stream,
+    )
+
+
 def run_contention(args: argparse.Namespace, stream: TextIO) -> int:
     """Rebuild a corridor's contention set from the store, for curating an oracle row.
 
@@ -1228,6 +1384,23 @@ def run_contention(args: argparse.Namespace, stream: TextIO) -> int:
         destination_code=destination.code,
         indexed=frozenset(held),
     )
+    if args.outside_pool:
+        nationality, _ = resolve_corridor_countries(corridor, countries)
+        matches = text.rank(
+            destination.code,
+            role=args.role,
+            corridor=corridor,
+            nationality=nationality,
+            lexicon=get_lexicon(),
+            limit=MAXIMUM_UNPOOLED_MATCHES,
+        )
+        print_outside_pool(
+            contention,
+            args.role,
+            unpooled_by_text(contention, matches, limit=args.limit),
+            stream,
+        )
+        return 0
     print_contention(contention, args.role, args.limit, held, stream)
     return 0
 
@@ -1455,6 +1628,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--show",
         default="",
         help="print this candidate's stored text instead, which is how a role is judged",
+    )
+    contend.add_argument(
+        "--outside-pool",
+        action="store_true",
+        help="rank the candidates scoring zero for every role, by their own stored text, so an "
+        "oracle row can name a page the selector is never shown (TODO item 31)",
     )
 
     corridor = commands.add_parser(

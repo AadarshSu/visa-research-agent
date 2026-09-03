@@ -162,3 +162,76 @@ def test_a_role_is_ranked_by_its_own_score_not_the_best_overall() -> None:
 
 def test_the_key_names_the_corridor_the_way_the_oracle_does() -> None:
     assert contention([entry(f"{HOST}/visa/x.html", text="visa")]).key == "japan/PH/PH/tourism"
+
+
+# --- the set the fixture could not see, TODO item 31 -------------------------------------------
+
+
+def test_a_candidate_no_role_wants_is_kept_so_a_curator_can_still_find_it() -> None:
+    """The complement of the test above, and the whole of what makes an oracle able to disagree.
+
+    `oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero", which
+    is the same filter `_choose_what_to_read` applies — so checking the pool gate against it
+    returned 88 of 88 answering pages inside the pool, a tautology rather than a result (entry 123).
+    A fixture cannot detect a filter it shares. The zero-scoring candidates are kept here so a
+    curator can read them, and `unpooled_by_text` is how they are ordered.
+    """
+
+    built = contention(
+        [
+            entry(f"{HOST}/visa/short-term-stay.html", text="Visa for temporary visitor"),
+            entry(f"{HOST}/about/staff/telephone-directory.html", text="Telephone directory"),
+        ]
+    )
+
+    assert [c.link.url for c in built.unpooled] == [f"{HOST}/about/staff/telephone-directory.html"]
+    assert not {c.link.url for c in built.candidates} & {c.link.url for c in built.unpooled}
+
+
+def test_the_two_sets_together_are_everything_that_survived_rejection() -> None:
+    """Nothing is silently dropped between them: a page is pooled, unpooled, or rejected by a rule
+    that `rejected` counts. Without that a curator reading `unpooled` would be reading a set with
+    an unrecorded second filter in it, which is the defect this whole item is about."""
+
+    entries = [
+        entry(f"{HOST}/visa/short-term-stay.html", text="Visa for temporary visitor"),
+        entry(f"{HOST}/about/staff/telephone-directory.html", text="Telephone directory"),
+        entry(f"{HOST}/visa/2019/archive-checklist.html", text="Checklist"),
+    ]
+    built = contention(entries)
+
+    assert len(built.candidates) + len(built.unpooled) + built.rejected == len(entries)
+
+
+def test_the_unpooled_are_ordered_by_their_text_and_never_by_their_anchor() -> None:
+    """`unpooled_by_text` takes the order from `PageTextStore.rank` and keeps it.
+
+    Every member scores zero on the anchor scorer by definition, so that scorer cannot rank them —
+    and using it would reproduce the bias the audit exists to detect. A page the index holds no body
+    for cannot appear at all, which is the bound the curation view prints.
+    """
+
+    from visa_research_agent.discovery.contention import unpooled_by_text
+    from visa_research_agent.discovery.page_text import TextMatch
+
+    built = contention(
+        [
+            entry(f"{HOST}/a/telephone-directory.html", text="Telephone directory"),
+            entry(f"{HOST}/b/staff-list.html", text="Staff list"),
+            entry(f"{HOST}/visa/short-term-stay.html", text="Visa for temporary visitor"),
+        ]
+    )
+    matches = [
+        TextMatch(url=f"{HOST}/b/staff-list.html", score=40.0, bm25=1.0),
+        # In the pool, so it must not be reported as something the selector cannot see.
+        TextMatch(url=f"{HOST}/visa/short-term-stay.html", score=90.0, bm25=2.0),
+        TextMatch(url=f"{HOST}/a/telephone-directory.html", score=10.0, bm25=0.5),
+        TextMatch(url=f"{HOST}/never-crawled.html", score=99.0, bm25=9.0),
+    ]
+
+    found = unpooled_by_text(built, matches)
+
+    assert [match.url for match, _ in found] == [
+        f"{HOST}/b/staff-list.html",
+        f"{HOST}/a/telephone-directory.html",
+    ]

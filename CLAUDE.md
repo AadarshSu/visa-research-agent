@@ -36,10 +36,13 @@ and guidance an authority contracts out is named the same way (entry 89).
 hold **186,596 addresses**; the text index holds bodies for **43,153 of them (23%)**, because a build
 opens 3–15% of what it records; and `_choose_what_to_read` shows the model selector only candidates
 the anchor heuristic scores above zero, which is **6%** of a run's candidate set — Liechtenstein
-offers **2 of 7,482**. Whether the discarded 94% holds any answer is **unmeasured**, and
-`selection-recall` cannot say, because its fixture was curated from inside that 6%. The queue is
-ordered around this: **item 31** (the gate itself), then **item 19**, whose search-dependence figure
-is an upper bound because the gate admits 49% of search results against 5.5% of corpus pages.
+offers **2 of 7,482**. **The discarded 94% holds at least one real answer** — Czechia's EC
+supporting-documents list for applicants in the United Kingdom scores 0.0 for every role (entry
+127). It took a new fixture to see it: `selection-recall`'s oracle was curated from inside that same
+6% and so agreed with the gate by construction, reporting 88 of 88 answers pooled. How *often* the
+94% holds an answer is still unmeasured. The queue is ordered around this: **item 31** (the gate
+itself), then **item 19**, whose search-dependence figure is an upper bound because the gate admits
+49% of search results against 5.5% of corpus pages.
 
 **And what the scorer's number is actually used for is a boolean (entry 126).**
 `_choose_what_to_read` pools on `best_combined() > 0` and hands that pool to the model **unsorted**;
@@ -558,6 +561,9 @@ cause, and only running the thing showed it.
 | the per-country dimension is 21 corpora and 5,901 pages | the *application* families inside it are **4 corpora and 944 pages** (entry 126) |
 | `country_family_keys` misses a family when the slug is foreign | it also misses Canada's `?country=IN` — a two-letter code below its floor (entry 126) |
 | a residence bonus widens the pool the anchor scorer gates | 12,573 → 12,583 of 186,596 — it re-orders the 6%, it does not widen it (entry 126) |
+| the discarded 94% is chaff, so the gate may be fine | czechia's UK supporting-documents list is in it, at **0.0 for every role** (entry 127) |
+| curate the gate's blind spot from the corridors with the smallest pools | LI's whole discarded set is its law collection — the answer was in CZ, pool 268 (entry 127) |
+| `selection-recall` can grade a change that widens the pool | its oracle shares the filter, so 88 of 88 was a tautology until entry 127 |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
@@ -623,11 +629,24 @@ extraction mode, cache TTL, stale ceiling — is committed in `config/runtime.ya
 .venv/bin/visa-discover selection-recall       # grade what was chosen to read; no network, no model
 .venv/bin/visa-discover coverage --country NL  # is a country's corpus good enough? no network, no model
 .venv/bin/visa-discover contention --destination netherlands --nationality PH --from PH  # curate an oracle row
+.venv/bin/visa-discover contention --destination czechia --nationality IN --from GB --outside-pool \
+    --role document_checklist                  # ...from the 94% the selector is never shown
 ```
 
 **Two different questions, two different commands, and they must not be merged.** `coverage` asks
 whether the **store** holds the answer; `selection-recall` asks whether the **corridor** then finds
 it. A single number covering both would hide which half failed.
+
+**A third question was unaskable until 2026-09-02: is the answer a page the selector is ever
+*shown*?** `_choose_what_to_read` pools on `best_combined() > 0` — 6% of the corpus — and the oracle
+was curated from inside that same filter, so it could not name a page the gate removed and reported
+88 of 88 answers pooled, a tautology (entry 123). `contention --outside-pool` now ranks the
+zero-scoring candidates by their own stored text (`PageTextStore.rank`, the one instrument that
+reads inside a page), each row records `curated_from: pool | whole_corpus`, and `selection-recall`
+prints a **pool audit** splitting a row's answers into pooled, outside, and absent from the corpus.
+**The first row curated that way found a real answer in the 94%** — Czechia's EC supporting-documents
+list for applicants in the United Kingdom, at 0.0 for every role (entry 127). Do not read a zero in
+that audit as a result while every row still says `curated_from: pool`; the report says so itself.
 
 **`coverage` says `ungraded` when it cannot grade, and 42 of 53 countries are** (entry 120). A
 country with no per-traveller family and no oracle row is graded by neither half; it used to borrow
