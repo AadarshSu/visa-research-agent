@@ -544,13 +544,34 @@ absolute bound and must not become a multiple of the shortlist size.
 
 ### 19. Take search out of the request path too — `next`, **and this is the project's goal**
 
-> **Reordered behind item 31 on 2026-09-02, and the reason is a number (entry 125).** The pool the
-> selector chooses from admits **49% of search results and 5.5% of corpus pages** — a 9× gap,
-> because search returns pages whose URL and title already match visa vocabulary, which is precisely
-> what the anchor scorer scores. So the measurement below — 59 of 382 pages read came only from
-> search, 17 of them load-bearing — was taken through a filter that systematically disadvantages the
-> alternative it is comparing against. **Read the 17 as an upper bound on search's necessity, not as
-> its value.** Item 31 is what tightens it, and it should run first.
+> **Re-scoped 2026-09-02 (entry 129), and the shape of the decision changes: this is a per-country
+> switch, not a global one.** Re-measured over 47 runs postdating their corpora: **450 pages read,
+> 78 not in the corpus, all 78 from search — 17.3% — and 25 covered a role no corpus page in that
+> run covered.** Two things about those 25 decide the item:
+>
+> **Every one of the 78 is on a host the corpus already crawls.** Search is not finding hosts the
+> trust configuration missed; entry 82's site-level conclusion holds across all 53 countries. It is
+> finding *pages* on known hosts the crawl never recorded.
+>
+> **And they concentrate where the corpus has a named ceiling.** Lithuania **12** (a `robots.txt`
+> `Disallow`, corpus 139 entries), the United Kingdom 3 (the fee space is behind a **form**),
+> Bulgaria 3 (deep `/upload/` PDFs), Liechtenstein 2 (an unanswerable challenge), Thailand 2,
+> and one each for the UAE, the United States (`travel.state.gov`, blocked) and Denmark. **Eighteen
+> of the 25 are capped by a policy, a challenge, a block or a form** — four things this project
+> forbids working around, three of them permanently.
+>
+> **So "reduce search" is the wrong verb.** The dependence is not general, and for Lithuania, the
+> United States and Liechtenstein search is the *only* legitimate way this program can name a page
+> to a traveller. Build the switch **per country, offline, default-on**: off where a corpus is
+> demonstrably sufficient, on where the ceiling is named, and every country recorded as one or the
+> other. Nothing is conditional at request time, so entry 44's rule — *a corpus miss must never be
+> answered by quietly falling back* — is satisfied by construction.
+>
+> **The earlier framing, kept because its caveat is now sized.** This item sat behind item 31
+> because the pool admits **49% of search results and 5.5% of corpus pages**, so the corpus was
+> being measured through a filter biased against it and the load-bearing figure read as an upper
+> bound (entry 125). Entry 128 sized that bias at **4 role-cells of 35**. The bound was real and it
+> was small; the search figure is close to its true value.
 
 > **Measured 2026-08-30, and the answer is: not yet, and not the way either obvious option would do
 > it.** This is the comparison the item had been gated on since entry 82. It is offline, and it has
@@ -845,6 +866,16 @@ genuinely `ungraded` countries rather than raising the number needing curation.
 
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
+
+> **Sized on 2026-09-02 (entry 129), and it is smaller than it looks.** Of the 30 role-cells the
+> corpus cannot answer, **12 are an official tool holding the answer** — not a gap at all, and
+> resolved by the product since entry 63 — 4 are pages nobody may read, and 2 are Germany declining
+> to name a document. **Twelve cells are the whole of what a deeper crawl could address**, and a
+> curator has read the candidates for each and found nothing. Meanwhile the 25 load-bearing pages
+> search supplies are all on hosts the corpus already crawls but never recorded, concentrated in
+> Lithuania (12, behind a `Disallow`), the UK fee form (3) and Bulgarian PDFs (3). **So this item's
+> value is in the countries with a form-gated or PDF-deep space, not in the ten it was written
+> for.**
 
 **The rebuild was run on 2026-08-29 and its acceptance test could never have passed.** 42 queries,
 162 seeds, 2,965 pages crawled — **27 new entries, verdict unchanged**. `build_corpus` seeds from

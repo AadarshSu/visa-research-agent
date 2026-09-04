@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [129](#129-why-the-corpus-cannot-answer-30-roles-and-what-search-is-actually-covering-for) | **40% of the corpus's gaps are an official tool, and search covers hosts it already has** — the ceiling is retrieval and policy, per country |
 | [128](#128-the-gate-costs-nothing-in-19-of-21-corridors-and-three-roles-in-the-other-two) | **The gate's cost is concentrated, not uniform** — 3 of 35 roles the pool cannot answer are recoverable outside it |
 | [127](#127-the-fixture-can-now-name-a-page-the-gate-removed-and-the-first-one-it-names-is-a-real-answer) | **The pool gate hides a real answer** — Czechia's UK supporting-documents list scores zero for every role |
 | [126](#126-a-page-about-where-the-traveller-applies-from-earns-a-score-the-ordering-it-earns-is-consumed-by-nothing) | **The residence signal is built, then cut back to adding only** — and the scorer's ordering turns out to reach the request path as a *boolean* |
@@ -177,6 +178,97 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 129. Why the corpus cannot answer 30 roles, and what search is actually covering for
+
+**2026-09-02 · TODO items 19 and 35 · the categorisation entry 128 asked for**
+
+Entry 128 sized the recall gate at 3 role-cells and left the bigger bucket — the cells nothing in
+the corpus answers — uncategorised, so the queue after item 31 was still ordered on a guess. This
+categorises them, and then asks the question they exist to serve: **what is search covering for.**
+
+### A fourth recovery first, and it is a lesson about the fixture
+
+`netherlands/PH/PH` `general_entry` is answered by the same EES leaflet as the Indian row. **The
+leaflet is nationality-independent, so a finding in one traveller's row was already true in the
+other's and nobody had looked.** Entry 128's "3 of 35" was 4 of 35 the moment it was written. When a
+row is re-curated against the whole corpus, re-curate its sibling traveller before quoting a total.
+
+### The 30 cells, by cause
+
+| cause | cells | | owner |
+| --- | --- | --- | --- |
+| an official tool holds the answer | 12 | 40% | **not a corpus gap at all** |
+| read, and nothing answered | 12 | 40% | the only bucket a deeper crawl could touch |
+| nobody could read the page | 4 | 13% | retrieval — items 5 and 8 |
+| the authority declines to state it | 2 | 7% | delegated to a contractor — item 36 |
+
+**The largest single cause is not a weakness.** Twelve cells are France's Visa Wizard, GOV.UK's
+`check-uk-visa`, IRCC's processing-time calculator, the Dutch checker and the US per-post wait-time
+lookup. Entry 93 settled what these are: the product has called them **resolved** since entry 63,
+and only this metric counts them as gaps. No crawl reaches them and none should.
+
+Take those out and the corpus's real deficit is **18 cells**, of which 4 are pages nobody may read
+and 2 are Germany declining to name a document at all — *"consult the requirements well in advance
+of your departure date"*, which is entry 89's delegation to VFS Global seen from the metric's side.
+**Twelve cells are the whole of what more crawling could address**, and a curator has already read
+the candidates for each of them and found nothing.
+
+By destination: France 8, the United States 6, Germany 4, Czechia 4, the Netherlands 3, Canada 2,
+the United Kingdom 2, Japan 1. France's eight are six tool cells and two roles where nothing scores;
+the United States' six are the `travel.state.gov` block.
+
+### What search is covering for — measured, and it inverts the obvious guess
+
+Over 47 runs postdating their country's corpus: **450 pages read, 78 not in the corpus, all 78 from
+search — 17.3%**, which reproduces entry 116's figure. Of those, **25 covered a role no corpus page
+in that run covered.**
+
+**Every one of the 78 is on a host the corpus already crawls.** So search is not finding hosts the
+trust configuration missed — entry 82's site-level conclusion still holds across all 53 countries,
+not just the original ten. It is finding *pages* on known hosts that the crawl never recorded.
+
+And they concentrate exactly where the corpus has a named ceiling:
+
+| | load-bearing search pages | corpus | why the crawl cannot reach them |
+| --- | --- | --- | --- |
+| Lithuania | **12** | 139 entries | a `robots.txt` `Disallow` that must not be worked around |
+| United Kingdom | 3 | 922 | the fee space is behind a **form**, so a crawl holds only what search seeded (entry 82) |
+| Bulgaria | 3 | 7,098 | deep PDFs under `/upload/` |
+| Liechtenstein | 2 | 7,579 | an unanswerable browser challenge |
+| Thailand | 2 | 4,393 | — |
+| UAE, US, Denmark | 1 each | | the US is `travel.state.gov`, blocked |
+
+**Eighteen of the 25 are countries whose corpus is capped by a policy, a challenge, a block or a
+form** — four things this project's rules forbid working around, and three of them permanently.
+
+### What follows for item 19, and it is not "reduce search"
+
+The project's goal is written as taking search out of the request path. This measurement says that
+is **the wrong shape of decision**, because the dependence is not general: it is concentrated in a
+handful of countries where the corpus cannot be completed by any amount of crawling.
+
+So the decision should be **per country, on evidence, and default-on**: switch search off where a
+country's corpus is demonstrably sufficient, keep it where the corpus has a **named** ceiling, and
+record which of the two every country is. That satisfies entry 44's rule — *a corpus miss must never
+be answered by quietly falling back* — because nothing would be conditional at request time: a
+country is configured one way or the other, offline, from a measurement.
+
+**It also means search's cost is worth paying where it is paid.** Three of the four permanent
+ceilings — Lithuania's `Disallow`, the United States' block, Liechtenstein's challenge — are cases
+where search is the *only* legitimate way this program can name a page to a traveller.
+
+### What this does not establish
+
+Twenty-one corridors over eleven countries for the categorisation, and 47 runs over whatever
+recall logs `var/recall/` happens to hold for the search figure — a sample nobody designed, skewed
+by which corridors have been re-run recently. Thailand's two load-bearing pages have no diagnosed
+cause and are the one row in that table nobody has looked at. And the 12 "read, and nothing
+answered" cells were judged against the pool for 18 of the 21 rows, so item 31 could still be
+hiding an answer in some of them; the depth-five triage in entry 128 says otherwise, and that is
+triage rather than curation.
 
 ---
 

@@ -1146,10 +1146,24 @@ corridors:
       at home against six for an Indian applying from Britain, and it answers them from
       `mofa.go.jp` alone rather than from the London and Edinburgh posts the Indian row leans on.
 
+  # Re-curated 2026-09-02 against the whole corpus for the roles the pool left open, entry 128.
+  # Only `general_entry` changed, and it changed off the same page as the Indian row: the EES
+  # leaflet is nationality-independent, so a finding in one traveller's row was already true in the
+  # other's and nobody had looked.
   - corridor: netherlands/PH/PH/tourism
+    curated_from: whole_corpus
     contention: 452
     text_held: 201
     answers:
+      general_entry:
+        - url: https://www.government.nl/site/binaries/site-content/collections/documents/2025/09/15/leaflets-entry-exit-system/ees-leaflet-a5-en-digital.pdf
+          seen: text
+          why: >-
+            the Entry/Exit System leaflet, stating what happens at the border for "non-EU nationals
+            travelling to the European countries using the EES for a short stay (up to 90 days
+            within a 180-day period), regardless of whether they need a short-stay visa". **Zero for
+            every role**, so the selector is never shown it, while the pool's best candidate is
+            `.../entering-without-visa`, whose audience is travellers who do not need one.
       document_checklist:
         - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/philippines
           seen: title_only
@@ -1183,9 +1197,6 @@ corridors:
       visa_decision: >-
         no candidate states it for a Philippine passport; every page defers to the checker, exactly
         as it does for the Indian one.
-      general_entry: >-
-        the entry-condition pages in the set are about the ETIAS, which is for travellers who do not
-        need a visa.
     excluded:
       - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/entry-visa/apply-philippines
         why: >-

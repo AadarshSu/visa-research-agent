@@ -414,7 +414,9 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     # Dutch `general_entry` entry 128 added — the answers named from outside the selector's pool,
     # all of them held by the corpus.
     assert totals["IN/GB/tourism"][1] == 50
-    assert totals["PH/PH/tourism"][1] == 41
+    # 41 as entry 91 curated it, plus the Dutch `general_entry` — the same EES leaflet as the
+    # Indian row, because it is nationality-independent and nobody had looked (entry 129).
+    assert totals["PH/PH/tourism"][1] == 42
 
 
 def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> None:

@@ -134,12 +134,22 @@ this traveller exactly — scores **0.0 for every role** and the selector is nev
 pool's best `document_checklist` candidate there is an Entry/Exit System page. **"The 94% is chaff
 and the item closes" is ruled out.**
 
-**And the frequency is now measured, on the owner's reframing (entry 128).** The question is not
+**The 30 cells nothing answers are now categorised, and the biggest cause is not a gap (entry
+129).** 12 of 30 are an **official tool** holding the answer — France's wizard, GOV.UK's checker,
+IRCC's calculator — which the product has resolved since entry 63 and no crawl reaches. 4 are pages
+nobody may read, 2 are Germany declining to name a document, and **12 are the whole of what a deeper
+crawl could address.** Alongside it, search dependence re-measured: **450 pages read, 78 not in the
+corpus, all from search, 25 load-bearing** — and **every one of the 78 is on a host the corpus
+already crawls**, concentrated in Lithuania (12, behind a `Disallow`), the UK fee form (3) and
+Bulgarian PDFs (3). **So item 19 is a per-country switch, not a global one**: 18 of the 25 are
+countries capped by a policy, challenge, block or form, three of them permanently.
+
+**And the frequency measurement it built on (entry 128).** The question is not
 whether the discarded 94% holds a relevant page but whether it answers a role the pool **cannot** —
 a corridor filling six roles from the pool loses nothing to the gate. Over 126 (corridor, role)
-cells: 87 answered from the pool, 31 unanswered by anything, 4 not applicable, **3 answered only
-outside the pool**, 1 absent from the corpus. **So of the 35 roles the pool cannot answer, 3 are
-recoverable — 8.6%, in 2 of 21 corridors, and 19 corridors lose nothing at all.** Quote that 19 only
+cells: 87 answered from the pool, 30 unanswered by anything, 4 not applicable, **4 answered only
+outside the pool**, 1 absent from the corpus. **So of the 34 roles the pool cannot answer, 4 are
+recoverable — 12%, in 3 of 21 corridors, and 18 corridors lose nothing at all.** Quote that 19 only
 with its caveat: nineteen of those rows were curated *from* the pool, and of the two curated against
 the whole corpus **both** lose something. The gap is closed by triage — all 38 open cells were
 listed and the plausible ones read — which is real but weaker than a curated row.

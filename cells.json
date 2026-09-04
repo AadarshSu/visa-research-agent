@@ -1,0 +1,302 @@
+[
+ [
+  "canada/IN/GB/tourism",
+  "processing_times",
+  "official tool",
+  56,
+  48,
+  55,
+  0,
+  "no candidate states a figure. IRCC publishes times through \"Select your application type to get an idea of how long it'll take us\", which computes rather than states."
+ ],
+ [
+  "germany/IN/GB/tourism",
+  "document_checklist",
+  "authority defers",
+  62,
+  53,
+  25,
+  0,
+  "no candidate names a document. The nearest, 215870, says only to \"consult the requirements well in advance\" \u2014 rule 4 of the adjudication prompt excludes exactly that. Germany's whole mission network (india.diplo.de, uk.diplo.de), where the checklist lives, is outside the trusted set by entry 33's governmental-marker gap."
+ ],
+ [
+  "germany/IN/GB/tourism",
+  "general_entry",
+  "read, and absent",
+  8,
+  8,
+  1,
+  0,
+  "nothing in the contention set states entry conditions; a search of all 45 stored bodies for travel insurance, the EUR 30,000 cover or sufficient funds returns nothing."
+ ],
+ [
+  "france/IN/GB/tourism",
+  "visa_decision",
+  "official tool",
+  466,
+  14,
+  388,
+  78,
+  "no readable candidate states whether an Indian national needs a visa. Every page defers to the Visa Wizard, which is why the corridor resolves as resolved_decision_tool. The highest- scoring candidate naming India, in.diplomatie.gouv.fr's \"France lifts airport transit visa requirements for Indian nationals\" at 164.0, is about airport transit and not about tourism."
+ ],
+ [
+  "france/IN/GB/tourism",
+  "document_checklist",
+  "official tool",
+  20,
+  6,
+  13,
+  7,
+  "the wizard \"will also tell you what documents must be attached\"; no page lists them"
+ ],
+ [
+  "france/IN/GB/tourism",
+  "fees",
+  "official tool",
+  1,
+  0,
+  1,
+  0,
+  "the wizard states \"the relevant fee\"; the only euro figures in the readable set are the EUR 877.50 student income threshold and the EUR 20 ETIAS charge"
+ ],
+ [
+  "france/IN/GB/tourism",
+  "processing_times",
+  "nothing scores",
+  0,
+  0,
+  0,
+  0,
+  "no readable candidate gives a figure; every page says waiting times vary by country and season"
+ ],
+ [
+  "united-kingdom/IN/GB/tourism",
+  "visa_decision",
+  "official tool",
+  72,
+  66,
+  72,
+  0,
+  "no candidate states whether an Indian national needs a visa. gov.uk/standard-visitor says only \"Depending on your nationality, you may not need a visa\"; the answer is behind gov.uk/check-uk-visa, which is entries 59 and 60's questionnaire."
+ ],
+ [
+  "netherlands/IN/GB/tourism",
+  "visa_decision",
+  "official tool",
+  135,
+  32,
+  121,
+  0,
+  "no candidate states it for an Indian passport. Every page defers \u2014 government.nl says \"whether you need a visa depends on your nationality\", and the UK application page says only that British passport holders do not."
+ ],
+ [
+  "netherlands/IN/GB/tourism",
+  "fees",
+  "unreadable",
+  76,
+  13,
+  70,
+  0,
+  "the right page is netherlandsworldwide.nl/consular-fees/united-kingdom and it holds no stored text. The consular-fee pages that are readable \u2014 the Czech Republic at EUR 90, the Palestinian Territories at EUR 90 \u2014 are other countries' posts, which rule 5 excludes."
+ ],
+ [
+  "united-states/IN/GB/tourism",
+  "visa_decision",
+  "unreadable",
+  147,
+  18,
+  131,
+  3,
+  "nothing readable states it for an Indian passport. The nearest is the Visa Waiver Program page, whose whole subject is who may travel without a visa \u2014 but its list of participating countries did not extract into stored text, so whether India's absence is legible there cannot be checked from disk. The corridor's own outcome, decision_not_found, agrees."
+ ],
+ [
+  "united-states/IN/GB/tourism",
+  "processing_times",
+  "official tool",
+  12,
+  2,
+  8,
+  2,
+  "no candidate states a figure. Wait times are published as a per-post lookup, which is a tool rather than a page stating an answer."
+ ],
+ [
+  "canada/PH/PH/tourism",
+  "general_entry",
+  "read, and absent",
+  22,
+  14,
+  21,
+  1,
+  "the entry-condition pages in the set are about importing a vehicle and about customs on return, neither of which states what this traveller must satisfy at the border."
+ ],
+ [
+  "germany/PH/PH/tourism",
+  "document_checklist",
+  "authority defers",
+  57,
+  50,
+  22,
+  0,
+  "deferred in the page's own words: \"you should consult the requirements well in advance of your departure date to find out about the documentation which has to be submitted\". The ministry names no documents; the mission does, and no mission page is in the corpus."
+ ],
+ [
+  "germany/PH/PH/tourism",
+  "general_entry",
+  "read, and absent",
+  7,
+  7,
+  1,
+  0,
+  "nothing states the conditions this traveller must satisfy at the border."
+ ],
+ [
+  "france/PH/PH/tourism",
+  "visa_decision",
+  "official tool",
+  461,
+  11,
+  384,
+  77,
+  "the Manila post names the France-Visas Visa Wizard and states nothing itself; france-visas.gouv.fr answers a Cloudflare challenge, so 183 of the 201 candidates hold no stored text."
+ ],
+ [
+  "france/PH/PH/tourism",
+  "document_checklist",
+  "official tool",
+  23,
+  7,
+  15,
+  8,
+  "the same page says the wizard \"will also tell you what documents must be attached to your application\", which names a tool rather than listing anything."
+ ],
+ [
+  "france/PH/PH/tourism",
+  "fees",
+  "official tool",
+  1,
+  0,
+  1,
+  0,
+  "the same sentence, \"along with the relevant fee\". No candidate prices a short-stay visa."
+ ],
+ [
+  "france/PH/PH/tourism",
+  "processing_times",
+  "nothing scores",
+  0,
+  0,
+  0,
+  0,
+  "nothing states one."
+ ],
+ [
+  "united-kingdom/PH/PH/tourism",
+  "visa_decision",
+  "official tool",
+  72,
+  66,
+  72,
+  0,
+  "no page states it for a Philippine passport. The checker works it out, which is entries 59 and 60's outcome and is the same one the Indian row reaches."
+ ],
+ [
+  "japan/PH/PH/tourism",
+  "general_entry",
+  "no stored text",
+  1,
+  0,
+  1,
+  0,
+  "no candidate scored above zero for it at all, which is true of the Indian row as well."
+ ],
+ [
+  "netherlands/PH/PH/tourism",
+  "visa_decision",
+  "official tool",
+  134,
+  31,
+  120,
+  0,
+  "no candidate states it for a Philippine passport; every page defers to the checker, exactly as it does for the Indian one."
+ ],
+ [
+  "united-states/PH/PH/tourism",
+  "document_checklist",
+  "unreadable",
+  62,
+  17,
+  47,
+  1,
+  "the candidates are 2000s-era travel.state.gov paths with no stored text, USCIS form instructions for immigrant petitions, and an office-finder. Nothing names what a B-2 applicant brings."
+ ],
+ [
+  "united-states/PH/PH/tourism",
+  "application_route",
+  "read, and absent",
+  108,
+  45,
+  66,
+  6,
+  "the top candidates are a green card application and the J-1 exchange visitor programme, neither of which is a tourism route."
+ ],
+ [
+  "united-states/PH/PH/tourism",
+  "processing_times",
+  "read, and absent",
+  12,
+  2,
+  8,
+  2,
+  "nothing states one for a visitor visa."
+ ],
+ [
+  "united-states/PH/PH/tourism",
+  "general_entry",
+  "read, and absent",
+  9,
+  3,
+  8,
+  1,
+  "nothing states entry conditions for this traveller."
+ ],
+ [
+  "czechia/IN/GB/tourism",
+  "visa_decision",
+  "read, and absent",
+  71,
+  33,
+  39,
+  1,
+  "the pool's best candidate is the Los Angeles consulate's \"List of States Whose Citizens Are Exempt from Visa Requirement\", and its stored text holds the heading and the site navigation and no list. `.../types_of_visas/` cites Regulation 2018/1806 by name without enumerating it. Nothing in the store settles an Indian passport either way."
+ ],
+ [
+  "czechia/IN/GB/tourism",
+  "application_route",
+  "read, and absent",
+  68,
+  44,
+  18,
+  1,
+  "the best pooled candidate is the **Erbil** consulate's \"How to apply for a visa\" and the best unpooled one is the supporting-documents list for applicants in **India** \u2014 both the wrong post. The London embassy's own \"Visas\" page is in the corpus, is also outside the pool, and the index holds no body for it, so it is recorded unverifiable rather than credited or dismissed."
+ ],
+ [
+  "czechia/IN/GB/tourism",
+  "fees",
+  "read, and absent",
+  78,
+  76,
+  7,
+  2,
+  "the candidates are the Los Angeles consulate's Czech-language fee page and Washington's consular information. Neither is the post this traveller uses."
+ ],
+ [
+  "czechia/IN/GB/tourism",
+  "processing_times",
+  "nothing scores",
+  0,
+  0,
+  0,
+  0,
+  "the best candidates are `ipc.gov.cz` pages on changing a name or a travel document, which are residence-permit obligations rather than a visa queue."
+ ]
+]

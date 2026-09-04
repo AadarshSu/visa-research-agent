@@ -569,6 +569,10 @@ cause, and only running the thing showed it.
 | the discarded 94% holds answers, so widen the gate | 19 of 21 corridors lose **nothing** to it; the prize is 3 roles of 35 (entry 128) |
 | a relevant page outside the pool is a page the gate cost us | not if the pool already answers that role — measure the **marginal** cost (entry 128) |
 | "19 of 21 lose nothing" is the measured result | 19 of those rows were curated *from* the pool; of the 2 curated outside it, **both** lose (entry 128) |
+| a role the corpus cannot answer is a crawling gap | **40% are an official tool** holding the answer — not a gap at all (entry 129) |
+| search finds hosts the trust configuration missed | all 78 pages it supplied are on hosts the corpus already crawls (entry 129) |
+| a finding in one traveller's oracle row is that traveller's | the Dutch EES leaflet was already true of the other row; nobody had looked (entry 129) |
+| take search out of the request path | 18 of 25 load-bearing pages are countries with a **named permanent ceiling** — make it per country (entry 129) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
