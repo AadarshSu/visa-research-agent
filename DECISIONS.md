@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [131](#131-bulgarias-foreign-ministry-is-behind-a-bot-manager-and-the-rebuild-disproved-my-own-hypothesis) | **`mfa.bg` bounces this client to Radware's CAPTCHA** — a permanent ceiling, not a stale failure |
 | [130](#130-thailands-two-pages-one-alias-one-real-and-a-crawl-that-enters-half-its-hosts-sideways) | **A build never visits the root of 52% of its hosts** — Thailand's missing page is the site's own front door |
 | [129](#129-why-the-corpus-cannot-answer-30-roles-and-what-search-is-actually-covering-for) | **40% of the corpus's gaps are an official tool, and search covers hosts it already has** — the ceiling is retrieval and policy, per country |
 | [128](#128-the-gate-costs-nothing-in-19-of-21-corridors-and-three-roles-in-the-other-two) | **The gate's cost is concentrated, not uniform** — 3 of 35 roles the pool cannot answer are recoverable outside it |
@@ -179,6 +180,84 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 131. Bulgaria's foreign ministry is behind a bot manager, and the rebuild disproved my own hypothesis
+
+**2026-09-04 · TODO item 48 · a corpus rebuild, run**
+
+Item 48 said to re-run Bulgaria's build before using it as a control, on the hypothesis that its 175
+`mfa.bg` failures were **stale** — recorded 2026-08-30 as *"it redirected off the approved
+domains"*, while three of those exact URLs answered `200` from `mfa.bg` with no redirect when
+checked in a browser on 2026-09-02. **The rebuild disproves that, and the real cause is worse.**
+
+### What the rebuild bought
+
+```
+BG  42 queries, 103 seeds, 7,149 crawled  ->  193 new, 7,291 held, 351 unreadable
+```
+
+| | before | after |
+| --- | --- | --- |
+| entries | 7,098 | 7,291 |
+| opened | 587 | 608 |
+| indexed bodies | 781 | 810 |
+| **`mfa.bg` opened** | **0 of 399** | **0 of 399** |
+| `mfa.bg` "redirected off the approved domains" | 175 | **176** |
+
+**7,149 pages crawled to buy 193 new addresses and 21 newly-opened pages**, every one of them
+`mvr.bg` provincial press-centre pages and `www.gov.bg` news and budget items. That is entry 101
+reproduced exactly on a second country: a rebuild re-walks its search seeds and cannot open an
+address a previous build recorded and skipped.
+
+And the failure count went **up by one**. The failure is not stale; it reproduces.
+
+### The cause, and why a browser could not see it
+
+Requesting `https://mfa.bg/en` with this program's own user agent:
+
+```
+https://mfa.bg/en
+  -> https://validate.perfdrive.com/?ssa=…   200   "Radware Error Page"
+     <link rel="stylesheet" href="https://captcha.perfdrive.com/captcha-public/css/…">
+```
+
+**`mfa.bg` is protected by Radware Bot Manager, which intercepts this client and redirects it to a
+third-party validation host serving a CAPTCHA.** It is intermittent and rate-shaped —
+`https://mfa.bg/en/155` served `200` directly in the same session — which is exactly why the
+browser check in entry 130's write-up passed and misled me: **a browser passes the bot check, so
+looking with one cannot tell you whether your crawler is being intercepted.** That is a general
+lesson about the instrument, not about Bulgaria.
+
+### What must not change, and what does
+
+**The refusal stays.** Completing a CAPTCHA or other bot detection is prohibited outright — not a
+judgement call, and not covered by entry 41's allowance for answering a *challenge* with our own
+renderer. Entry 41 governs a challenge the authority's own host serves; this is an interception that
+lands on somebody else's domain, and nothing off the approved domains may become evidence. So
+`mfa.bg` is **unreadable by this program, permanently**, and its pages are named to a traveller
+rather than read.
+
+**The recorded reason changes.** *"It redirected off the approved domains"* is true of the URL and
+useless about what happened: it reads as a site migration to go and look up, and it cost this
+session a wrong hypothesis and a rebuild. The crawl now names the landing host — *"it redirected to
+validate.perfdrive.com, which is not an approved domain"* — which distinguishes a migration from an
+interception without re-running anything. Entry 119 is the same correction on a different sentence,
+and CLAUDE.md's rule is the same one: **the reason reported must be true of what was seen.**
+
+### What it changes upstream
+
+**Bulgaria joins the permanent-ceiling set.** Entry 129 counted its three load-bearing search pages
+under "deep `/upload/` PDFs" — a crawlable-in-principle cause. They are not: the host cannot be
+crawled at all. So **21 of the 24 load-bearing search pages are countries capped by a policy, a
+challenge, a block, a form or a bot manager**, up from 18, and item 19's per-country conclusion
+strengthens: for Bulgaria as for Lithuania, Liechtenstein and the United States, **search is the only
+legitimate way this program can reach the page.**
+
+**And item 48 loses a control.** Bulgaria was in the root-seeding set as a search-dependent case;
+root seeding cannot help a host that refuses the crawler at every address. It stays in the set only
+as a **negative** control — a country where no crawl change should move anything.
 
 ---
 

@@ -540,7 +540,18 @@ class CrawlFetcher:
         # Redirects are followed, so the landing host must be re-checked exactly as retrieval does.
         final_url = str(response.url)
         if not destination.trusts_host(host_of(final_url)):
-            self._record_failure(url, "untrusted", "it redirected off the approved domains")
+            # **Name the host it landed on.** The bare sentence was true and useless, and it cost a
+            # session: Bulgaria's `mfa.bg` records it 176 times, and "the foreign ministry redirects
+            # off its own domains" reads as a site migration to look up. It is not — the landing
+            # host is `validate.perfdrive.com`, Radware's bot manager, serving a CAPTCHA. The
+            # refusal is right either way and does not change; what changes is that a reviewer can
+            # tell a migration from an interception without re-running the crawl. Entry 119 is the
+            # same correction on a different sentence.
+            self._record_failure(
+                url,
+                "untrusted",
+                f"it redirected to {host_of(final_url)}, which is not an approved domain",
+            )
             return None
         # And re-checked against the landing host's policy, for the same reason: the request that
         # was permitted is not the one that was answered. The fetch cannot be taken back, but its

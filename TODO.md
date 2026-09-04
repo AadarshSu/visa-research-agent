@@ -285,7 +285,7 @@ the first can make the second worse.**
 | | why it is in the set |
 | --- | --- |
 | **Thailand** | the known positive: TDAC's form is one hop from a root nobody visited |
-| **Bulgaria** | search-dependent for three `mfa.bg` PDFs, and see the third finding below |
+| **Bulgaria** | the **negative** control: `mfa.bg` refuses this client at every address (entry 131), so nothing here should move it |
 | **Spain** | `www.interior.gob.es` holds 1,930 pages and **109 were opened**; the sample is press-release pagination |
 | **Finland** | `um.fi` holds 1,736 and opened 173; a parameterised asset-publisher space |
 | **Greece** | `portal.immigration.gov.gr`, 428 pages on sequential numeric ids |
@@ -314,16 +314,22 @@ PDFs, opened **0**. `canonical_key` folds `www.` for comparison and the crawl's 
 does not. **Check whether this is deliberate before changing it**; a fix is small and its blast
 radius is every build.
 
-**And Bulgaria's zero is not an allocation failure at all — it may be a stale one.** All 404
-`mfa.bg` entries are `unknown` or `unreadable`, and **175 are recorded `unreadable` with "it
-redirected off the approved domains"** from the 2026-08-30 build. Checked live on 2026-09-02:
-`https://mfa.bg/en`, `https://mfa.bg/en/155` and `https://mfa.bg/en/embassyinfo/puerto+rico` all
-answer **200 from `mfa.bg` with no redirect at all**. So either the site behaved differently on
-the build day or the redirect check is wrong, and **Bulgaria's search dependence may be a failure
-that no longer exists.** `_STATUS_RANK` lets `readable` overwrite `unreadable`, so a rebuild that
-*tries* the host would clear it — the open question is whether a rebuild tries. **Re-run Bulgaria's
-build before drawing any conclusion from its corpus**, and do that before the root-seed experiment
-uses it as a control.
+**~~And Bulgaria's zero may be a stale failure~~ — re-run on 2026-09-04, and it is not (entry
+131).** The hypothesis was that its 175 `mfa.bg` failures were stale, because three of those URLs
+answered `200` in a browser. The rebuild crawled **7,149 pages for 193 new addresses and 21 newly
+opened**, `mfa.bg` stayed at **0 opened of 399**, and the failure count went **up to 176**.
+
+Asked with this program's own user agent, `https://mfa.bg/en` redirects to
+`validate.perfdrive.com` — **Radware Bot Manager, serving a CAPTCHA**. It is rate-shaped, so
+`/en/155` answers `200` in the same session, which is why a browser check could not see it: **a
+browser passes the bot check, so looking with one cannot tell you whether your crawler is being
+intercepted.**
+
+So Bulgaria is a **permanent ceiling**, not a crawl gap — completing a bot check is prohibited
+outright, and this interception lands on a third-party domain that could never be evidence anyway.
+It stays in the control set below only as a **negative** control: no crawl change should move it.
+The reason string is fixed (the crawl now names the landing host); the refusal is not, and must not
+be.
 
 **Why:** entries 129 and 130. Item 35 owns the crawl; this is the measurement that says which half
 of it to change, and entry 82 is the standing warning — "a surplus goes to the largest host" was

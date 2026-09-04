@@ -630,3 +630,43 @@ async def test_an_unreadable_pdf_costs_one_page_and_not_the_build() -> None:
 
     assert text is None
     assert pdf_url in fetcher.failures
+
+
+@pytest.mark.anyio
+async def test_a_redirect_to_an_untrusted_host_names_the_host_it_landed_on() -> None:
+    """The refusal is right; the sentence explaining it has to be specific enough to act on.
+
+    Bulgaria's `mfa.bg` records this failure 176 times and it read as a site migration to go and
+    look up. It is not one: the ministry bounces this client to `validate.perfdrive.com`, Radware's
+    bot manager, which serves a CAPTCHA. Naming the landing host is what tells those two apart
+    without re-running a crawl — entry 119 is the same correction on a different sentence.
+
+    **What is not changed is the refusal.** Completing a bot check is prohibited outright, so a page
+    behind one stays unread whatever the reason says.
+    """
+
+    guarded = f"https://{AUTHORITY}/visa/guarded"
+    elsewhere = "https://validate.example/captcha"
+
+    def redirecting(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404, text="not found")
+        if str(request.url) == guarded:
+            return httpx.Response(302, headers={"Location": elsewhere})
+        return httpx.Response(200, text="<html><body>ok</body></html>")
+
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(redirecting),
+        sleep=sleep_none,
+        host_delay_seconds=0.0,
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(redirecting),
+        follow_redirects=True,
+    ) as client:
+        page = await fetcher.fetch_html(client, guarded, destination())
+
+    assert page is None, "a page that lands off the approved domains must not be read"
+    reason = fetcher.failures[guarded]
+    assert "validate.example" in reason, reason
+    assert "not an approved domain" in reason

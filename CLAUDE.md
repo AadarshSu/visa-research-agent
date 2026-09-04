@@ -578,7 +578,9 @@ cause, and only running the thing showed it.
 | thailand's corpus is 4,393 pages, so it is well covered | 2,617 are **provincial office** WordPress sites; the national site has 41 (entry 130) |
 | a huge host eats the crawl budget | it does not — TH opened 41-42 on *every* host; fair shares between unequal hosts (item 48) |
 | the per-host budget counts an authority once | `host_of` keeps `www.`, so BG's interior ministry took 3 shares and 72% of the budget (item 48) |
-| a corpus failure reason describes the site | BG's 175 "redirected off the approved domains" answer `200` with no redirect (item 48) |
+| a corpus failure reason describes the site | BG's "redirected off the approved domains" is Radware's CAPTCHA host (entry 131) |
+| check a suspect crawl failure by opening the URL in a browser | a browser passes the bot check the crawler is failing — it cannot see it (entry 131) |
+| a rebuild will clear a stale failure | 7,149 pages crawled bought 193 entries and the failure count went **up** (entry 131) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

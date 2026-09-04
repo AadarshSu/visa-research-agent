@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-02 — update this line when you touch the handoff |
-| **Tests** | 678 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 679 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -126,9 +126,12 @@ Item 48 exists because entry 130 found a cheap-looking fix — 51.7% of hosts we
 root nobody visited — and Thailand showed that shipping it blind could make a second, separate
 problem worse. It also carries two findings worth acting on independently: the crawl's per-host fair
 share treats 31 Thai provincial offices as equals of the national immigration service, and
-**Bulgaria's foreign ministry is recorded 175 times as "redirected off the approved domains" while
-answering `200` with no redirect when checked live** — so re-run that build before trusting its
-corpus. Item 1
+**Bulgaria's build was re-run on 2026-09-04 and the "stale failure" hypothesis is
+disproved** (entry 131): 7,149 pages crawled bought 193 addresses, `mfa.bg` stayed at 0 opened of
+399, and the count rose to 176. `mfa.bg` bounces this client to `validate.perfdrive.com` — Radware
+Bot Manager, a CAPTCHA — so it is a **permanent ceiling** and its pages may be named but never read.
+That makes **21 of the 24 load-bearing search pages countries with a named permanent ceiling**, up
+from 18. Item 1
 sat at the top of it for part of that day and is **done** (entry 126).
 
 **Item 31's first deliverable is built and it changed the item's premise (entry 127).** Its own
