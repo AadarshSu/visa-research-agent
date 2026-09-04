@@ -511,10 +511,24 @@ corridors:
       - https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
       - https://www.mofa.go.jp/j_info/visit/visa/visaonline.html
       - https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+  # Re-curated 2026-09-02 against the whole corpus for the roles the pool left open, DECISIONS
+  # entry 128. Only `general_entry` changed: the rest of this row is as entry 87 curated it.
   - corridor: netherlands/IN/GB/tourism
+    curated_from: whole_corpus
     contention: 443
     text_held: 190
     answers:
+      general_entry:
+        - url: https://www.government.nl/site/binaries/site-content/collections/documents/2025/09/15/leaflets-entry-exit-system/ees-leaflet-a5-en-digital.pdf
+          seen: text
+          why: >-
+            the Dutch government's Entry/Exit System leaflet, which states what happens at the
+            border for "non-EU nationals travelling to the European countries using the EES for a
+            short stay (up to 90 days within a 180-day period), **regardless of whether they need a
+            short-stay visa**" — this traveller, explicitly, where the pooled candidate excludes
+            them. **It scores zero for every role**, so the selector is never shown it. The
+            equivalent EES page is already a `general_entry` answer in the France row, so this is
+            the same artefact judged the same way.
       document_checklist:
         - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom
           seen: text
@@ -549,16 +563,18 @@ corridors:
         the right page is netherlandsworldwide.nl/consular-fees/united-kingdom and it holds no
         stored text. The consular-fee pages that are readable — the Czech Republic at EUR 90, the
         Palestinian Territories at EUR 90 — are other countries' posts, which rule 5 excludes.
-      general_entry: >-
-        the only entry-condition page in the set is the ETIAS one, and ETIAS is for travellers who
-        do not need a visa, so it does not apply to this traveller.
     unverifiable:
       - https://www.netherlandsworldwide.nl/consular-fees/united-kingdom
       - https://www.netherlandsworldwide.nl/travel-netherlands/how-long-can-i-visit-the-netherlands-for
     note: >-
       443 candidates, and 190 of the stored bodies are business.gov.nl pages about permits, customs
       and company registration — the Dutch set is the noisiest of the ten, which is worth knowing
-      when reading a selector's score on it.
+      when reading a selector's score on it. `general_entry` was recorded unanswered until
+      2026-09-02 on the ground that "the only entry-condition page in the set is the ETIAS one, and
+      ETIAS is for travellers who do not need a visa" — true of the **pool**, and the reason it read
+      that way is that the set being searched was the pool. The pool's best candidate for the role
+      is `.../entering-without-visa`, which excludes this traveller for the same reason ETIAS does.
+      Entry 128.
     joint:
       - https://www.netherlandsworldwide.nl/consular-fees/united-kingdom
       - https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom

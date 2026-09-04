@@ -675,6 +675,30 @@ def print_selection_recall(grading: Grading, stream: TextIO) -> None:
         "  corridor actually lacks, read `unresolved_roles` in its recall log (entry 99).",
         file=stream,
     )
+    if any(arm.pooled_total or arm.outside_total for arm in grading.arms):
+        print(
+            f"\n  Role recall split by whether the gate admits the answer at all:\n"
+            f"\n  {'arm':<26} {'answer pooled':>16} {'':>5}   {'answer outside':>16} {'':>5}",
+            file=stream,
+        )
+        for arm in grading.arms:
+            outside = f"{arm.outside_hit}/{arm.outside_total}" if arm.outside_total else "—"
+            share = f"{arm.outside_recall:.0%}" if arm.outside_total else ""
+            print(
+                f"  {arm.name:<26} {f'{arm.pooled_hit}/{arm.pooled_total}':>16} "
+                f"{arm.pooled_recall:>5.0%}   {outside:>16} {share:>5}",
+                file=stream,
+            )
+        first = grading.arms[0]
+        print(
+            "\n  A role whose every answer is outside the pool cannot be filled by ANY arm,\n"
+            "  because all of them pick out of the pool. Rolling the two columns together\n"
+            "  reports a gate failure as a selector failure, which is what this command did\n"
+            f"  until entry 127. {first.absent_total} role(s) are held out of both columns: "
+            "their answers are not\n  in the corpus at all, which is item 35's gap and says "
+            "nothing about the gate.",
+            file=stream,
+        )
     for arm in grading.arms:
         if arm.unverifiable_read:
             print(
@@ -755,26 +779,33 @@ def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
         return 1
     logs = read_recall_logs(directory)
     arms = arms_from_logs(oracle, logs, full_size=args.shipped_size)
-    grading = grade(oracle, arms, unattributed=unattributed_logs(oracle, logs))
+    contentions = contentions_for(oracle, stream)
+    grading = grade(
+        oracle, arms, unattributed=unattributed_logs(oracle, logs), contentions=contentions
+    )
     print_selection_recall(grading, stream)
-    audits = pool_audits_for(oracle, stream)
+    audits = [
+        pool_audit(row, contentions[row.corridor])
+        for row in oracle.corridors
+        if row.corridor in contentions
+    ]
     if audits:
         print_pool_audit(audits, stream)
     return 0 if grading.graded else 1
 
 
-def pool_audits_for(oracle: SelectionOracle, stream: TextIO) -> list[PoolAudit]:
+def contentions_for(oracle: SelectionOracle, stream: TextIO) -> dict[str, Contention]:
     """Rebuild each row's contention set from the store, to split its answers by the pool gate.
 
     Offline like the rest of the command: `contention_for` takes no fetcher and no search provider.
-    A corridor whose country has no corpus is skipped rather than guessed at, because "not in the
+    A corridor whose country has no corpus is left out rather than guessed at, because "not in the
     corpus" and "no corpus to look in" are the two things `PoolAudit.absent` exists to keep apart.
     """
 
     countries = get_country_registry()
     corpora = FileCorpusStore(settings.corpus_directory)
     lexicon = get_lexicon()
-    audits: list[PoolAudit] = []
+    built: dict[str, Contention] = {}
     for row in oracle.corridors:
         slug, nationality, residence, purpose = row.corridor.split("/")
         country = countries.by_slug(slug)
@@ -792,20 +823,15 @@ def pool_audits_for(oracle: SelectionOracle, stream: TextIO) -> list[PoolAudit]:
         config = corridor_destination(slug, corridor, stream)
         if config is None:
             continue
-        audits.append(
-            pool_audit(
-                row,
-                contention_for(
-                    corpus,
-                    config,
-                    corridor,
-                    countries=countries,
-                    lexicon=lexicon,
-                    destination_code=country.code,
-                ),
-            )
+        built[row.corridor] = contention_for(
+            corpus,
+            config,
+            corridor,
+            countries=countries,
+            lexicon=lexicon,
+            destination_code=country.code,
         )
-    return audits
+    return built
 
 
 # One cold resolution of a corridor. Named so `run_corridor` can take a fake in tests.

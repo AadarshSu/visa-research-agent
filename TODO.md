@@ -286,9 +286,41 @@ it.
 **1. How big is the gate?** — answered, entry 123. One line of `_choose_what_to_read` decides it,
 and everything downstream comes from its result.
 
-**2. Is that bad?** — **answered: yes, at least once (entry 127).** The instrument is built and the
-first row curated with it found a real answer in the discarded 94%.
+**2. Is that bad?** — **answered twice, and the second answer is the one that sizes the item.**
+Entry 127: yes, at least once. Entry 128: **3 role-cells of the 35 the pool cannot answer, 8.6%,
+concentrated in 2 of 21 corridors** — and 19 of 21 corridors lose nothing to the gate at all.
 
+> **The framing that produced the useful number, and it was the owner's.** "Does the discarded 94%
+> hold a relevant page" is the wrong question: a corridor filling all six roles from pooled pages
+> loses nothing to the gate however much relevant material sits outside it. The question is whether
+> the outside answers a role the pool **cannot** — the gate's *marginal* cost. Six corridors answer
+> every role that arises out of the pool alone; **widening the gate is not a general improvement,
+> and any remedy has to be worth 3 roles of 35.** That makes "stop filtering and start capping" the
+> most attractive of the four below, because it is the only one that bounds the selection packet by
+> construction, which matters more at this size of prize than when the prize was unknown.
+>
+> **Do not quote "19 of 21 lose nothing" without its caveat:** nineteen of those rows were curated
+> *from* the pool and cannot report an outside answer by construction. What is informative is the
+> other side — **of the two rows curated against the whole corpus, both lose something.** The gap is
+> closed by triage rather than by fixture: all 38 open cells across all 21 corridors were listed
+> with their top five unpooled candidates ranked by stored text, and every cell whose candidates
+> were not plainly chaff, the wrong post or the wrong purpose was read in full. Three came back
+> positive and are in the fixture; the rest are the Casino Ordinance, IRCC contact forms,
+> `business.gov.nl` tax pages, trademark filing and a USCIS blog.
+>
+> **The three:** Czechia's UK supporting-documents list (`document_checklist` **and**
+> `general_entry`) and the Dutch EES leaflet (`general_entry`). The Dutch one is the sharper case
+> because the pool is not empty for that role — it offers `.../entering-without-visa`, whose
+> audience is travellers who do not need a visa, which this one does.
+
+> **How it is measured, so the next change can be graded the same way.** `role_reach` classifies
+> each (corridor, role) as `pooled` / `outside` / `absent` against the rebuilt contention set, and
+> `selection-recall` prints role recall split by the first two — an arm cannot be charged for a page
+> it was never shown. `absent` is held out of both columns: an address nobody crawled says nothing
+> about the gate in either direction (item 35). The arm split has a thin denominator, 0/1 outside,
+> because two of the three recovered roles are in Czechia, which has never been run and so has no
+> recall log to replay.
+>
 > The fixture could not previously say anything here, and the reason was structural:
 > `oracle/selection_oracle.yaml` was curated "from every candidate that scored above zero", which is
 > the same filter `_choose_what_to_read` applies, so no page the gate removed could appear in it at

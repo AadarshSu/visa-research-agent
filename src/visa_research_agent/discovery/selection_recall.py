@@ -265,9 +265,31 @@ class ArmScore:
     joint_total: int = 0
     unverifiable_read: int = 0
 
+    # Role recall split by whether the anchor scorer admits the role's answer at all. Every arm
+    # picks out of `pool`, so a role answered only outside it cannot be filled by any of them, and
+    # rolling the two together reports a gate failure as a selector failure. TODO item 31.
+    pooled_hit: int = 0
+    pooled_total: int = 0
+    outside_hit: int = 0
+    outside_total: int = 0
+    absent_total: int = 0
+    """Roles whose only answers are not in the corpus at all — item 35's gap, never item 31's.
+
+    Held out of both numerators and both denominators rather than counted as a miss. A page nobody
+    crawled says nothing about the admission gate in either direction, and the two ends of that
+    bottleneck are what entry 88 spent a session separating."""
+
     @property
     def role_recall(self) -> float:
         return self.roles_hit / self.roles_total if self.roles_total else 0.0
+
+    @property
+    def pooled_recall(self) -> float:
+        return self.pooled_hit / self.pooled_total if self.pooled_total else 0.0
+
+    @property
+    def outside_recall(self) -> float:
+        return self.outside_hit / self.outside_total if self.outside_total else 0.0
 
     @property
     def joint_recall(self) -> float:
@@ -301,13 +323,44 @@ class Grading:
     measurement (entry 91)."""
 
 
+def role_reach(corridor: CorridorOracle, role: str, contention: Contention | None) -> str | None:
+    """Where a role's answers live relative to the admission gate: pooled, outside, or absent.
+
+    A role counts as **pooled** when any of its answering pages is in the pool, because one is all
+    an arm needs. It is **outside** only when every answer it has was excluded by the gate — that is
+    the role no selector can fill however well it chooses. **absent** is the same test against the
+    corpus, and it is reported separately rather than as a miss: an address nobody crawled says
+    nothing about the gate in either direction (item 35, not item 31).
+
+    Returns None when the role is unanswered, or when there is no contention set to judge against —
+    a corridor whose country has no corpus is not evidence that its answers were excluded.
+    """
+
+    pages = corridor.answers.get(role)
+    if not pages or contention is None:
+        return None
+    pooled = {candidate.link.url for candidate in contention.candidates}
+    unpooled = {candidate.link.url for candidate in contention.unpooled}
+    urls = {page.url for page in pages}
+    if urls & pooled:
+        return "pooled"
+    if urls & unpooled:
+        return "outside"
+    return "absent"
+
+
 def grade(
     oracle: SelectionOracle,
     arms_by_corridor: Mapping[str, Sequence[Arm]],
     *,
     unattributed: Sequence[str] = (),
+    contentions: Mapping[str, Contention] | None = None,
 ) -> Grading:
-    """Score each arm on role recall, tools found, and entries 85-86's joint page set."""
+    """Score each arm on role recall, tools found, and entries 85-86's joint page set.
+
+    With `contentions` the role numbers are additionally split by `role_reach`, which is the only
+    way to tell a selector that chose badly from a gate that never offered the choice.
+    """
 
     totals: dict[str, ArmScore] = {}
     rows: dict[str, list[CorridorScore]] = {}
@@ -330,6 +383,20 @@ def grade(
             )
             score.roles_hit += hit
             score.roles_total += len(corridor.answers)
+            contention = (contentions or {}).get(corridor.corridor)
+            for role in ROLE_ORDER:
+                reach = role_reach(corridor, role, contention)
+                if reach is None:
+                    continue
+                found = bool(picked & corridor.answering_urls(role))
+                if reach == "pooled":
+                    score.pooled_total += 1
+                    score.pooled_hit += found
+                elif reach == "outside":
+                    score.outside_total += 1
+                    score.outside_hit += found
+                else:
+                    score.absent_total += 1
             score.pages_read += len(arm.picks)
             score.tools_hit += sum(1 for url in corridor.tools.values() if url in picked)
             score.tools_total += len(corridor.tools)

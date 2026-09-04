@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-02 — update this line when you touch the handoff |
-| **Tests** | 675 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 678 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -132,8 +132,17 @@ Czechia's `mzv.gov.cz/…/4835385_2943205_UK_EN.PDF`, the EC decision *"establis
 supporting documents to be submitted by applicants for short stay visas in the United Kingdom"* —
 this traveller exactly — scores **0.0 for every role** and the selector is never shown it, while the
 pool's best `document_checklist` candidate there is an Entry/Exit System page. **"The 94% is chaff
-and the item closes" is ruled out.** How *often* is still unmeasured: one row, one corridor, one
-traveller, and bounded by a corpus-only contention set and a text index covering 23%.
+and the item closes" is ruled out.**
+
+**And the frequency is now measured, on the owner's reframing (entry 128).** The question is not
+whether the discarded 94% holds a relevant page but whether it answers a role the pool **cannot** —
+a corridor filling six roles from the pool loses nothing to the gate. Over 126 (corridor, role)
+cells: 87 answered from the pool, 31 unanswered by anything, 4 not applicable, **3 answered only
+outside the pool**, 1 absent from the corpus. **So of the 35 roles the pool cannot answer, 3 are
+recoverable — 8.6%, in 2 of 21 corridors, and 19 corridors lose nothing at all.** Quote that 19 only
+with its caveat: nineteen of those rows were curated *from* the pool, and of the two curated against
+the whole corpus **both** lose something. The gap is closed by triage — all 38 open cells were
+listed and the plausible ones read — which is real but weaker than a curated row.
 
 **Why item 31 sits ahead of the project's own goal (entry 125).** The selector's pool admits **49% of search results and 5.5% of corpus pages** — a 9× gap, because search returns pages whose URL and title already match visa vocabulary, which is what the anchor scorer scores. Item 19 asks whether search can leave the request path while measuring the corpus through a filter biased nine to one against it, so its "17 load-bearing search-only pages" is an upper bound on search's necessity. Item 31 tightens it.
 

@@ -26,6 +26,7 @@ from visa_research_agent.discovery.selection_recall import (
     model_picks,
     pool_audit,
     read_recall_logs,
+    role_reach,
     unattributed_logs,
 )
 
@@ -497,3 +498,56 @@ def test_the_fixture_can_now_name_a_page_the_selector_is_never_shown() -> None:
     assert czechia.answering_urls("document_checklist") == {
         "https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF"
     }
+
+
+def test_a_role_is_pooled_when_any_one_of_its_answers_is(tmp_path: Path) -> None:
+    """One pooled answer is all an arm needs, so the role is not a gate failure.
+
+    `fees` in this fixture has two answering pages. With either of them in the pool the selector had
+    something to find, and counting the role as excluded because its *other* answer was not would
+    inflate the gate's cost with roles the gate never cost anything."""
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    row = oracle.corridors[0]
+
+    both = audit_contention(["https://a.go.jp/decision"], ["https://b.go.jp/fees"])
+    assert role_reach(row, "fees", both) == "pooled"
+
+    neither = audit_contention([], ["https://a.go.jp/decision", "https://b.go.jp/fees"])
+    assert role_reach(row, "fees", neither) == "outside"
+
+
+def test_a_role_with_no_answer_and_a_corridor_with_no_corpus_both_reach_nothing(
+    tmp_path: Path,
+) -> None:
+    """Two different silences, and neither may be counted against the gate.
+
+    An unanswered role has nothing to classify. A corridor whose country has no corpus has nothing
+    to classify it *against* — and reading that as "the answer was excluded" would let a missing
+    store manufacture evidence for item 31."""
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    row = oracle.corridors[0]
+
+    assert role_reach(row, "document_checklist", audit_contention(["x"], ["y"])) is None
+    assert role_reach(row, "fees", None) is None
+
+
+def test_a_role_answered_only_outside_the_pool_is_scored_apart_from_the_selector(
+    tmp_path: Path,
+) -> None:
+    """The number entry 128 exists to produce: an arm cannot be charged for a page it was never
+    shown. Both roles here are answered, one from the pool and one only outside it, and an arm that
+    picks the pooled one scores 1/1 on the column it could act on rather than 1/2 overall."""
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    contention = audit_contention(["https://a.go.jp/decision"], ["https://b.go.jp/fees"])
+    grading = grade(
+        oracle,
+        {"japan/IN/GB/tourism": [Arm(name="one", picks=("https://a.go.jp/decision",))]},
+        contentions={"japan/IN/GB/tourism": contention},
+    )
+    arm = grading.arms[0]
+
+    assert (arm.pooled_hit, arm.pooled_total) == (2, 2)
+    assert (arm.outside_hit, arm.outside_total) == (0, 0)

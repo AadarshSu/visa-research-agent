@@ -36,11 +36,13 @@ and guidance an authority contracts out is named the same way (entry 89).
 hold **186,596 addresses**; the text index holds bodies for **43,153 of them (23%)**, because a build
 opens 3–15% of what it records; and `_choose_what_to_read` shows the model selector only candidates
 the anchor heuristic scores above zero, which is **6%** of a run's candidate set — Liechtenstein
-offers **2 of 7,482**. **The discarded 94% holds at least one real answer** — Czechia's EC
-supporting-documents list for applicants in the United Kingdom scores 0.0 for every role (entry
-127). It took a new fixture to see it: `selection-recall`'s oracle was curated from inside that same
-6% and so agreed with the gate by construction, reporting 88 of 88 answers pooled. How *often* the
-94% holds an answer is still unmeasured. The queue is ordered around this: **item 31** (the gate
+offers **2 of 7,482**. **The discarded 94% holds real answers, and the gate's cost is
+concentrated rather than general.** Of the 35 role-cells the pool cannot answer, **3 are recoverable
+outside it (8.6%), in 2 of 21 corridors — the other 19 lose nothing** (entry 128). Measure the
+**marginal** cost that way, never "is there a relevant page out there": a corridor already filling
+six roles from the pool gains nothing from widening it. It took a new fixture to see any of this —
+the oracle was curated from inside that same 6% and so agreed with the gate by construction (entry
+127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. The queue is ordered around this: **item 31** (the gate
 itself), then **item 19**, whose search-dependence figure is an upper bound because the gate admits
 49% of search results against 5.5% of corpus pages.
 
@@ -564,6 +566,9 @@ cause, and only running the thing showed it.
 | the discarded 94% is chaff, so the gate may be fine | czechia's UK supporting-documents list is in it, at **0.0 for every role** (entry 127) |
 | curate the gate's blind spot from the corridors with the smallest pools | LI's whole discarded set is its law collection — the answer was in CZ, pool 268 (entry 127) |
 | `selection-recall` can grade a change that widens the pool | its oracle shares the filter, so 88 of 88 was a tautology until entry 127 |
+| the discarded 94% holds answers, so widen the gate | 19 of 21 corridors lose **nothing** to it; the prize is 3 roles of 35 (entry 128) |
+| a relevant page outside the pool is a page the gate cost us | not if the pool already answers that role — measure the **marginal** cost (entry 128) |
+| "19 of 21 lose nothing" is the measured result | 19 of those rows were curated *from* the pool; of the 2 curated outside it, **both** lose (entry 128) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

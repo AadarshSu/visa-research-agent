@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [128](#128-the-gate-costs-nothing-in-19-of-21-corridors-and-three-roles-in-the-other-two) | **The gate's cost is concentrated, not uniform** — 3 of 35 roles the pool cannot answer are recoverable outside it |
 | [127](#127-the-fixture-can-now-name-a-page-the-gate-removed-and-the-first-one-it-names-is-a-real-answer) | **The pool gate hides a real answer** — Czechia's UK supporting-documents list scores zero for every role |
 | [126](#126-a-page-about-where-the-traveller-applies-from-earns-a-score-the-ordering-it-earns-is-consumed-by-nothing) | **The residence signal is built, then cut back to adding only** — and the scorer's ordering turns out to reach the request path as a *boolean* |
 | [125](#125-the-recall-gate-admits-search-at-49-and-the-corpus-at-55-so-item-31-goes-before-item-19) | **The gate admits search at 49% and the corpus at 5.5%** — item 19 measures the corpus through a filter biased against it |
@@ -176,6 +177,105 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 128. The gate costs nothing in 19 of 21 corridors, and three roles in the other two
+
+**2026-09-02 · TODO item 31, the frequency measurement**
+
+Entry 127 built the instrument and found one answer outside the pool. This is the quantitative pass,
+and the owner reframed the question before it was run, correctly: **"does the discarded 94% hold a
+relevant page" is the wrong question.** A corridor that fills all six roles from pooled pages loses
+nothing to the gate however much relevant material sits outside it. The question is whether the
+outside holds an answer to a role the pool **cannot** answer — the gate's *marginal* cost.
+
+### The experiment
+
+126 cells, one per (corridor, role) over the 21 oracle corridors. For each, `role_reach` classifies
+the oracle's answering pages against the corridor's rebuilt contention set: **pooled** if any answer
+is in the pool, **outside** if every answer was excluded by `best_combined() > 0`, **absent** if the
+answer is not in the corpus at all. Offline; no model, no network.
+
+`absent` is held out of both numerators and both denominators rather than counted as a miss. A page
+nobody crawled says nothing about the admission gate in either direction — item 35, not item 31 —
+and adding the two would merge the ends of the bottleneck entry 88 spent a session separating.
+
+| | cells | |
+| --- | --- | --- |
+| answered from the pool | 87 | 69.0% |
+| unanswered by anything in the corpus | 31 | 24.6% |
+| does not arise for this traveller | 4 | 3.2% |
+| **answered ONLY outside the pool** | **3** | **2.4%** |
+| answer not in the corpus at all | 1 | 0.8% |
+
+**Cut as marginal value: of the 35 role-cells the pool cannot answer, 3 are recoverable by widening
+the gate — 8.6%.** The other 31 have no answer anywhere in the corpus and no gate change reaches
+them; 1 has an answer the corpus does not hold.
+
+### Per corridor, which is the form of the question that decides anything
+
+```
+japan/IN/GB   sweden/IN/GB   singapore/IN/GB   sweden/PH/PH   UAE/PH/PH   singapore/PH/PH
+                        6/6 roles answered from the pool — the gate costs them nothing
+netherlands/IN/GB   pool 3/6   outside 1
+czechia/IN/GB       pool 0/6   outside 2
+                        the only two corridors that lose anything
+```
+
+**19 of 21 corridors lose nothing to the gate**, and six of them fill every role that arises out of
+the pool alone. **So the owner's caveat holds and it is the headline**: widening the gate is not a
+general improvement, and a corridor already answering from the pool would gain nothing from it.
+
+### The number that is not what it looks like
+
+**19 of 21 is mostly a tautology and must not be quoted without this paragraph.** Nineteen of those
+rows were curated *from* the pool, so they cannot report an outside answer by construction — the
+same defect entry 123 named. What is informative is the other side: **of the two rows curated
+against the whole corpus, both lose something.** Two for two.
+
+What closes that gap is the triage rather than the fixture. All 38 open cells across all 21
+corridors were listed with their top five unpooled candidates ranked by stored text, and every cell
+whose candidates were not plainly chaff, the wrong post or the wrong purpose was read in full.
+Three came back positive; the rest are the Casino Ordinance, IRCC contact forms, `business.gov.nl`
+tax pages, trademark filing, a USCIS blog and other posts' visa pages. That is a real adjudication
+of 38 cells and it is **weaker evidence than a curated row**, because only the three positives were
+written into the fixture where a later session can disagree with them.
+
+### The three, and why the pool could not answer them
+
+```
+czechia/IN/GB      document_checklist   mzv.gov.cz/…/4835385_2943205_UK_EN.PDF
+czechia/IN/GB      general_entry        (the same document)
+netherlands/IN/GB  general_entry        government.nl/…/ees-leaflet-a5-en-digital.pdf
+```
+
+The Dutch one is the sharper case, because the pool is not empty for that role — it offers
+`netherlandsworldwide.nl/visa-the-netherlands/entering-without-visa`, whose audience is travellers
+who **do not** need a visa, which this traveller does. The oracle had recorded the role unanswered
+with the reason *"the only entry-condition page in the set is the ETIAS one, and ETIAS is for
+travellers who do not need a visa"* — true of the pool, and the reason it read that way is that the
+set being searched **was** the pool. The EES leaflet outside it states what happens at the border
+for non-EU nationals on a short stay *"regardless of whether they need a short-stay visa"*. The same
+artefact is already a `general_entry` answer in the France row, judged the same way.
+
+### What this does and does not license
+
+**It rules out "the 94% is chaff, close the item"** — that was entry 127 — and it now bounds the
+prize: **3 roles of 35, concentrated in 2 of 21 corridors.** A remedy has to be worth that, and
+"stop filtering and start capping" is the only one of item 31's four that bounds the selection
+packet by construction, which matters more at this size of prize than it did when the prize was
+unknown.
+
+**It does not measure the world.** Eleven countries, two travellers, and three bounds carry forward
+unchanged: `contention_for` is corpus-only so a role only search would surface cannot appear; the
+text index holds bodies for 23% of the corpus so a role answered only by an address nobody opened is
+invisible; and `unpooled_by_text` was read to a depth of five per cell.
+
+**And the arm split is separate and thinner.** `selection-recall` now prints role recall split by
+`pooled` and `outside` — the model reads 74/87 pooled and 0/1 outside — because an arm cannot be
+charged for a page it was never shown. That denominator is 1 rather than 3 because two of the three
+recovered roles are in Czechia, which has never been run and so has no recall log to replay.
 
 ---
 
