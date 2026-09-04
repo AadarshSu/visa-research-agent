@@ -581,6 +581,9 @@ cause, and only running the thing showed it.
 | a corpus failure reason describes the site | BG's "redirected off the approved domains" is Radware's CAPTCHA host (entry 131) |
 | check a suspect crawl failure by opening the URL in a browser | a browser passes the bot check the crawler is failing — it cannot see it (entry 131) |
 | a rebuild will clear a stale failure | 7,149 pages crawled bought 193 entries and the failure count went **up** (entry 131) |
+| the corpus holds a country's mission network, so it holds the post that serves you | AU holds 1,599 pages on `embassy.gov.au` and **0** on `uae.embassy.gov.au` (entry 132) |
+| "too little readable text" means the page is thin | 12 of them were one host that ate the corridor's whole render budget (entry 132) |
+| the corpus is tuned for three travellers, a fourth will do worse | `BD/AE` filled **88%** over 27 countries, 75% of it corpus-served (entry 132) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [132](#132-a-27-country-sweep-for-a-traveller-nobody-tuned-for-88-and-two-defects-only-breadth-could-find) | **88% for an untuned traveller** — and the corpus holds no mission for the country they apply from |
 | [131](#131-bulgarias-foreign-ministry-is-behind-a-bot-manager-and-the-rebuild-disproved-my-own-hypothesis) | **`mfa.bg` bounces this client to Radware's CAPTCHA** — a permanent ceiling, not a stale failure |
 | [130](#130-thailands-two-pages-one-alias-one-real-and-a-crawl-that-enters-half-its-hosts-sideways) | **A build never visits the root of 52% of its hosts** — Thailand's missing page is the site's own front door |
 | [129](#129-why-the-corpus-cannot-answer-30-roles-and-what-search-is-actually-covering-for) | **40% of the corpus's gaps are an official tool, and search covers hosts it already has** — the ceiling is retrieval and policy, per country |
@@ -180,6 +181,89 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 132. A 27-country sweep for a traveller nobody tuned for: 88%, and two defects only breadth could find
+
+**2026-09-04 · TODO items 19, 35, 48 · the evidence base both lead items were starved of**
+
+27 of the 53 countries with a corpus had no corridor run postdating it, so item 19's per-country
+switch and item 48's control set were both being argued from eleven countries. This is that gap
+closed: one corridor per country, **`BD/AE`** — a Bangladeshi passport applying from the United Arab
+Emirates, which nothing in this project was tuned for. All 27 completed; no provider ran out of
+credit.
+
+| | |
+| --- | --- |
+| roles filled | **142 of 162, 88%** |
+| pages read | 240 — **179 from the corpus (75%)**, 61 from search |
+| load-bearing search pages | 17 |
+| unresolved | `document_checklist` 11, `visa_decision` 9 |
+| outcomes | 13 resolved, 12 resolved with a role short, 2 refused on the checklist |
+
+**Read the 88% with its denominator**: a role counts as filled when it is not in `unresolved_roles`,
+and no corridor here was visa-free, so nothing inflates it the way entry 94's Singapore did. It is
+the third independent confirmation that the store generalises — entry 112's `NG/NG` scored 87% and
+the tuned pair 82.5%, so **a traveller nobody tuned for again does better than the ones who were.**
+
+### The corpus does not hold the mission serving where the traveller applies
+
+Eight of the seventeen load-bearing search pages are the destination's own post **in the UAE**, and
+the corpora do not hold those hosts at all:
+
+| | pages on the mission network | pages on the UAE post |
+| --- | --- | --- |
+| Australia | 1,599 on `embassy.gov.au` | **0** on `uae.embassy.gov.au` |
+| China | 3,523 on `china-embassy.gov.cn`, 2,280 on `china-consulate.gov.cn` | **0** on `ae.china-embassy.gov.cn`, **0** on `dubai.china-consulate.gov.cn` |
+| South Korea | 649 on `overseas.mofa.go.kr` | the `ae-dubai-en` and `ae-en` paths came from search |
+
+Turkey is the exception that shows it is reachable: its corpus holds `dubai-bk.mfa.gov.tr` and
+`dubai-cg.mfa.gov.tr`.
+
+**This is a per-traveller family whose members are *hosts*, not paths.** Entry 88 built the crawl's
+family reservation for `…/schengen-visa/apply-{country}` — one page published once per country,
+within a host. `{residence}.embassy.gov.au` is the same idea one level up, and the reservation
+cannot see it. It is also entry 44's design meeting its own limit: a corpus is built with **no
+traveller**, so a build seeds on generic country queries and lands on whichever missions the search
+engine surfaced — and there is no reason that is the one serving this traveller.
+
+It compounds with entry 126. The residence signal now scores a page for being *about* the country
+they apply from; here the page is not in the corpus to be scored.
+
+### One client-rendered host can spend the whole request-path render budget
+
+**"Too little readable text to trust" is the most common retrieval failure in the sweep — 34 of 74**
+— and it is concentrated: **12 on `immi.homeaffairs.gov.au` in a single corridor**, 7 across Turkey's
+`mfa.gov.tr` and `evisa.gov.tr`, 4 on `exteriores.gob.es`. Those are client-rendered pages, and the
+renderer exists to answer exactly that.
+
+The crawl caps this at `CHALLENGE_FAILURES_PER_HOST = 3`, added by entry 92 for precisely this
+reason — *"an unanswerable host would then spend 400 renders proving it"*. **`research/live_sources.py`
+has no equivalent**, so on the request path one host can take all twelve renders and every other
+client-rendered page in that corridor then degrades to the same verdict. Australia is the instance:
+12 unusable pages on one host, and the two roles it missed are `visa_decision` and
+`document_checklist` — the two that host answers.
+
+**Do not read this as "raise the render budget".** Entry 92 measured that on the corpus side and the
+answer was a per-host cap, not a bigger number.
+
+### What it changes in the queue
+
+- **Item 19 has its evidence base.** 75% of what a corridor reads is now corpus-served for a
+  traveller nobody tuned for, across 27 previously unmeasured countries.
+- **Item 48 gains a second discovery shape and a better control set.** Root seeding addresses
+  entering a host below its front door; this is *never entering the host at all*, and one is not a
+  fix for the other.
+- **A new item for each finding**, rather than folding them into 35 or 48, because the mission-host
+  family is a change to what a build *seeds* and the render cap is a change to the *request path*.
+
+### What it does not establish
+
+One traveller and one corridor per country. `BD/AE` shares a residence across all 27, so "the corpus
+lacks the UAE post" is 27 observations of one residence — whether a corpus lacks *every* post or just
+the ones no search query surfaced is unmeasured, and the cheapest next probe is the same sweep from a
+second residence.
 
 ---
 

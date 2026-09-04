@@ -120,7 +120,21 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 48: test root seeding before building it, and separate discovery from allocation.**
+**Start at item 49, then 50.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
+items were starved of — every country that had a corpus and no run postdating it, one corridor each,
+for **`BD/AE`**, a traveller nothing here was tuned for (entry 132). **142 of 162 roles filled, 88%**,
+with **179 of 240 pages read served from the corpus (75%)** and 17 load-bearing search pages. That is
+the third confirmation the store generalises: `NG/NG` scored 87% and the tuned pair 82.5%.
+
+It found two defects only breadth could reach. **The corpus holds no mission for the country the
+traveller applies from** — Australia has 1,599 pages on `embassy.gov.au` and **0** on
+`uae.embassy.gov.au`, China 5,803 across its mission networks and 0 on either UAE post — which is a
+per-traveller family whose members are *hosts*, one level above the reservation entry 88 built
+(item 49). And **one client-rendered host can spend a corridor's whole render budget**: *"too little
+readable text"* was the top failure at 34 of 74, 12 of them `immi.homeaffairs.gov.au` in one
+corridor, where the crawl has capped this since entry 92 and the request path never has (item 50).
+
+**Then item 48: test root seeding before building it, and separate discovery from allocation.**
 The queue was re-prioritised on 2026-09-02 and the Now order is **48, 31, 19, 17, 47, 35, 9, 2, 5**.
 Item 48 exists because entry 130 found a cheap-looking fix — 51.7% of hosts were entered below a
 root nobody visited — and Thailand showed that shipping it blind could make a second, separate

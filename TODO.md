@@ -16,7 +16,14 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Item 48 is new and leads the queue, 2026-09-02 (entries 129, 130).** The corpus's gaps were
+**Items 49 and 50 are new and lead the queue, 2026-09-04 (entry 132).** A 27-country sweep for
+`BD/AE` — a traveller nobody tuned for — filled **142 of 162 roles, 88%**, with **75% of what it read
+served from the corpus**, and found two defects breadth alone could reach: the corpus holds **no
+mission for the country the traveller applies from** (Australia 1,599 pages on `embassy.gov.au`, 0 on
+`uae.embassy.gov.au`), and **one client-rendered host can spend a corridor's whole render budget**
+where the crawl has capped that since entry 92.
+
+**Item 48 was the lead, 2026-09-02 (entries 129, 130).** The corpus's gaps were
 categorised and the largest cause turned out not to be a gap at all — 12 of 30 role-cells nothing
 answers are an **official tool** holding the answer, which the product has resolved since entry 63.
 Of what remains, the cheapest lead is that **1,148 of 2,222 hosts (51.7%) have pages in the corpus
@@ -210,7 +217,9 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
+| **Now** | 49. Seed a build with the missions serving each residence, not just the country | `next` |
+|  | 50. Cap renders per host on the request path, as the crawl already does | `next` |
+|  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
@@ -253,7 +262,65 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 48. Test root seeding before building it, and separate discovery from allocation — `next`, **start here**
+### 49. Seed a build with the missions serving each residence, not just the country — `next`, **start here**
+
+**The corpus does not hold the destination's post in the country the traveller applies from, and a
+27-country sweep found it eight times (entry 132).** Australia holds **1,599** pages on
+`embassy.gov.au` and **0** on `uae.embassy.gov.au`; China holds 3,523 on `china-embassy.gov.cn` plus
+2,280 on `china-consulate.gov.cn` and **0** on `ae.china-embassy.gov.cn` or
+`dubai.china-consulate.gov.cn`. Search supplied those pages on every corridor that needed them.
+
+**It is a per-traveller family whose members are hosts.** Entry 88 built the reservation for
+`…/schengen-visa/apply-{country}` — one page per country, *within* a host — and
+`{residence}.embassy.gov.au` is the same shape one level up, where the reservation cannot see it.
+Turkey shows the target is reachable: its corpus holds `dubai-bk.mfa.gov.tr` and `dubai-cg.mfa.gov.tr`.
+
+**And it is entry 44's design meeting its own limit, which is why this needs an argument and not a
+patch.** A corpus is built with **no traveller** — that is what makes it a store of pages rather than
+of answers — so a build seeds on generic country queries and lands on whichever missions the search
+engine surfaced. Seeding "the mission for every residence" reintroduces a traveller dimension into
+the offline job, which is exactly what entry 44 took out. **Argue that before building it.** The
+cheap version that may not cross the line: seed the *mission index* each foreign ministry publishes,
+and let the crawl take the family from there.
+
+**Measure first, and the first measurement is nearly free:** re-run the same sweep from a **second
+residence**. `BD/AE` shares one residence across all 27 countries, so "the corpus lacks the UAE post"
+is 27 observations of one post. Whether a corpus lacks *every* post or only the ones no query
+surfaced decides whether this is a seeding change or a budget one.
+
+**Why:** entry 132. It compounds with entry 126 — the residence signal scores a page for being about
+where they apply from, and here that page is not in the corpus to be scored.
+
+---
+
+### 50. Cap renders per host on the request path, as the crawl already does — `next`
+
+**One client-rendered host can spend a corridor's whole render budget, and Australia's did (entry
+132).** *"Too little readable text to trust"* was the most common retrieval failure in the
+27-country sweep — **34 of 74** — and 12 of them were `immi.homeaffairs.gov.au` in a single
+corridor, with 7 more across Turkey's `mfa.gov.tr` and `evisa.gov.tr`. Australia filled 4 of 6 and
+missed `visa_decision` and `document_checklist`: the two roles that host answers.
+
+`crawl.py` has `CHALLENGE_FAILURES_PER_HOST = 3`, added by entry 92 for this exact failure — *"an
+unanswerable host would then spend 400 renders proving it"*. **`research/live_sources.py` has no
+equivalent**, so the request path's 12 renders can all go to one host and every other
+client-rendered page in that corridor then degrades to the same verdict.
+
+**Do not raise the budget instead.** Entry 92 measured that on the corpus side and the answer was a
+per-host cap. The number to pick is not 3 by analogy: the request path has 12 renders against the
+build's 400, so a cap of 3 there is a quarter of the budget on one host. **Measure what a corridor
+actually spends before choosing it**, over the 27 recall logs this sweep just wrote.
+
+**And check the verdict is honest while you are there.** "Too little readable text to trust" is also
+what a masked refusal produces — entry 121 found Morocco's F5 *"Request Rejected"* served as
+`HTTP 200` behind that sentence, which is item 46. A budget-exhausted render and a refusal dressed
+as a thin page currently read identically.
+
+**Why:** entry 132.
+
+---
+
+### 48. Test root seeding before building it, and separate discovery from allocation — `next`
 
 **Entry 130 proposed seeding every trusted host's root and deliberately did not build it.** This is
 that experiment, plus the thing measuring it turned up: **item 35 is two problems, and the fix for
