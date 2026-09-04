@@ -576,6 +576,9 @@ cause, and only running the thing showed it.
 | a page the corpus lacks is a page the crawl could not reach | 52% of hosts were entered below their root, which was never visited (entry 130) |
 | a superset check over `canonical_key` is exact | it counts `…/en/index.html` as missing when a run fetched `…/en`; 1 of 78 here (entry 130) |
 | thailand's corpus is 4,393 pages, so it is well covered | 2,617 are **provincial office** WordPress sites; the national site has 41 (entry 130) |
+| a huge host eats the crawl budget | it does not — TH opened 41-42 on *every* host; fair shares between unequal hosts (item 48) |
+| the per-host budget counts an authority once | `host_of` keeps `www.`, so BG's interior ministry took 3 shares and 72% of the budget (item 48) |
+| a corpus failure reason describes the site | BG's 175 "redirected off the approved domains" answer `200` with no redirect (item 48) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

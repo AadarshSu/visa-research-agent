@@ -120,8 +120,15 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
-**Start at item 31: the anchor scorer gates 94% of the corpus out of the selector's sight.** The
-queue was re-prioritised on 2026-09-02 and the Now order is **31, 19, 17, 47, 35, 9, 2, 5**. Item 1
+**Start at item 48: test root seeding before building it, and separate discovery from allocation.**
+The queue was re-prioritised on 2026-09-02 and the Now order is **48, 31, 19, 17, 47, 35, 9, 2, 5**.
+Item 48 exists because entry 130 found a cheap-looking fix — 51.7% of hosts were entered below a
+root nobody visited — and Thailand showed that shipping it blind could make a second, separate
+problem worse. It also carries two findings worth acting on independently: the crawl's per-host fair
+share treats 31 Thai provincial offices as equals of the national immigration service, and
+**Bulgaria's foreign ministry is recorded 175 times as "redirected off the approved domains" while
+answering `200` with no redirect when checked live** — so re-run that build before trusting its
+corpus. Item 1
 sat at the top of it for part of that day and is **done** (entry 126).
 
 **Item 31's first deliverable is built and it changed the item's premise (entry 127).** Its own

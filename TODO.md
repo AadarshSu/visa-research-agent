@@ -16,6 +16,15 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
+**Item 48 is new and leads the queue, 2026-09-02 (entries 129, 130).** The corpus's gaps were
+categorised and the largest cause turned out not to be a gap at all — 12 of 30 role-cells nothing
+answers are an **official tool** holding the answer, which the product has resolved since entry 63.
+Of what remains, the cheapest lead is that **1,148 of 2,222 hosts (51.7%) have pages in the corpus
+and their root was never visited**. Item 48 is the experiment that decides whether seeding those
+roots helps, and it exists rather than a patch because Thailand showed item 35 is **two** problems —
+entering a site in the wrong place, and spending the budget on the wrong part of it once inside —
+and root seeding could make the second worse.
+
 **Item 1 was promoted to the top on 2026-09-02 (entry 124), finished the same day, and then cut
 back the same day (entry 126).** A page about the country the traveller applies from now earns
 `residence_weight` on the four roles the post governs, and **nothing is taken off** the page about
@@ -201,7 +210,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
+| **Now** | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
+|  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 47. Find out how much of the world the family detector cannot see | `next` |
@@ -243,7 +253,85 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **start here**, **re-scoped 2026-09-02**
+### 48. Test root seeding before building it, and separate discovery from allocation — `next`, **start here**
+
+**Entry 130 proposed seeding every trusted host's root and deliberately did not build it.** This is
+that experiment, plus the thing measuring it turned up: **item 35 is two problems, and the fix for
+the first can make the second worse.**
+
+> **Discovery** — the build enters a host below the page that matters. **1,148 of 2,222 hosts
+> across all 53 corpora (51.7%) have pages and their root was never visited at all**; only 20 roots
+> were seeds. A build seeds from search results, and a search result is a **page, not a site**, so a
+> host enters the corpus wherever the engine pointed. Thailand is the worked case: three
+> `tdac.immigration.go.th` pages, all children of one seed at `/manual/en/`, and the arrival-card
+> form linked from none of them.
+>
+> **Allocation** — once inside a large site, the budget goes to the wrong part of it. **These are
+> not the same problem and must not be merged**: the first is about where a crawl starts, the second
+> about what it spends. Seeding roots without fixing allocation feeds the second one more frontier.
+
+**Measure these five, and the fifth is the one that can veto the change.**
+
+1. How many pages does root seeding newly **discover** — recorded entries that no previous build held?
+2. How many of those are **relevant**, scored offline by role vocabulary rather than by eye?
+3. How many previously **search-only load-bearing** pages become corpus-reachable? Entry 129's
+   24 are the list to check against, and it is the only measurement that maps to a traveller.
+4. What does it **cost**: pages fetched per useful page found, against `DEFAULT_CORPUS_PAGES` of
+   1,200 and `DEFAULT_CORPUS_PAGES_PER_HOST` of 400.
+5. **Does it make allocation worse** by giving a huge irrelevant subtree more frontier to expand?
+
+**The control set, chosen so each case can fail differently.**
+
+| | why it is in the set |
+| --- | --- |
+| **Thailand** | the known positive: TDAC's form is one hop from a root nobody visited |
+| **Bulgaria** | search-dependent for three `mfa.bg` PDFs, and see the third finding below |
+| **Spain** | `www.interior.gob.es` holds 1,930 pages and **109 were opened**; the sample is press-release pagination |
+| **Finland** | `um.fi` holds 1,736 and opened 173; a parameterised asset-publisher space |
+| **Greece** | `portal.immigration.gov.gr`, 428 pages on sequential numeric ids |
+
+**What "worse" would look like, decided in advance:** a root seed that raises pages fetched on a
+host without raising role-scoring pages found on it. If Spain and Finland show that and Thailand
+shows the positive, the answer is **not** "seed roots" but section-aware crawling — a notion of
+*part of a site* the crawler does not currently have.
+
+---
+
+**Three things measuring this turned up that are separable from the experiment.**
+
+**A per-host fair share treats unequal hosts equally.** Thailand opened 1,041 pages across 63
+hosts and the top hosts each got **41 or 42** — Uthai Thani province, population ~330,000, took the
+same share as the national immigration service. 31 of those 63 hosts are provincial offices, so
+Thailand's national guidance was diluted 31-fold: **44 pages for `www.immigration.go.th`, 3 for
+TDAC, 2,615 recorded for the provinces.** The provincial sites are WordPress installations whose
+category and archive pages present an effectively unbounded link graph. **The crawler is not being
+greedy; it is being fair between things that are not equal.**
+
+**`host_of` does not fold `www.`, so one authority can take several shares.** Bulgaria opened 587
+pages: `www.mvr.bg` 149, `mvr.bg` 161, `e-uslugi.mvr.bg` 110 — **420 of 587, 72%, on the interior
+ministry across three spellings** — while `mfa.bg`, the foreign ministry that publishes the visa
+PDFs, opened **0**. `canonical_key` folds `www.` for comparison and the crawl's budget accounting
+does not. **Check whether this is deliberate before changing it**; a fix is small and its blast
+radius is every build.
+
+**And Bulgaria's zero is not an allocation failure at all — it may be a stale one.** All 404
+`mfa.bg` entries are `unknown` or `unreadable`, and **175 are recorded `unreadable` with "it
+redirected off the approved domains"** from the 2026-08-30 build. Checked live on 2026-09-02:
+`https://mfa.bg/en`, `https://mfa.bg/en/155` and `https://mfa.bg/en/embassyinfo/puerto+rico` all
+answer **200 from `mfa.bg` with no redirect at all**. So either the site behaved differently on
+the build day or the redirect check is wrong, and **Bulgaria's search dependence may be a failure
+that no longer exists.** `_STATUS_RANK` lets `readable` overwrite `unreadable`, so a rebuild that
+*tries* the host would clear it — the open question is whether a rebuild tries. **Re-run Bulgaria's
+build before drawing any conclusion from its corpus**, and do that before the root-seed experiment
+uses it as a control.
+
+**Why:** entries 129 and 130. Item 35 owns the crawl; this is the measurement that says which half
+of it to change, and entry 82 is the standing warning — "a surplus goes to the largest host" was
+found by measuring a budget change that looked obviously good.
+
+---
+
+### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **re-scoped 2026-09-02**
 
 > **Re-scoped three times on 2026-09-02. Read the third one first — it changes what the item is
 > about (entry 126).**
