@@ -573,6 +573,9 @@ cause, and only running the thing showed it.
 | search finds hosts the trust configuration missed | all 78 pages it supplied are on hosts the corpus already crawls (entry 129) |
 | a finding in one traveller's oracle row is that traveller's | the Dutch EES leaflet was already true of the other row; nobody had looked (entry 129) |
 | take search out of the request path | 18 of 25 load-bearing pages are countries with a **named permanent ceiling** — make it per country (entry 129) |
+| a page the corpus lacks is a page the crawl could not reach | 52% of hosts were entered below their root, which was never visited (entry 130) |
+| a superset check over `canonical_key` is exact | it counts `…/en/index.html` as missing when a run fetched `…/en`; 1 of 78 here (entry 130) |
+| thailand's corpus is 4,393 pages, so it is well covered | 2,617 are **provincial office** WordPress sites; the national site has 41 (entry 130) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

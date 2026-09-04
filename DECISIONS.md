@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [130](#130-thailands-two-pages-one-alias-one-real-and-a-crawl-that-enters-half-its-hosts-sideways) | **A build never visits the root of 52% of its hosts** — Thailand's missing page is the site's own front door |
 | [129](#129-why-the-corpus-cannot-answer-30-roles-and-what-search-is-actually-covering-for) | **40% of the corpus's gaps are an official tool, and search covers hosts it already has** — the ceiling is retrieval and policy, per country |
 | [128](#128-the-gate-costs-nothing-in-19-of-21-corridors-and-three-roles-in-the-other-two) | **The gate's cost is concentrated, not uniform** — 3 of 35 roles the pool cannot answer are recoverable outside it |
 | [127](#127-the-fixture-can-now-name-a-page-the-gate-removed-and-the-first-one-it-names-is-a-real-answer) | **The pool gate hides a real answer** — Czechia's UK supporting-documents list scores zero for every role |
@@ -178,6 +179,85 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 130. Thailand's two pages: one alias, one real, and a crawl that enters half its hosts sideways
+
+**2026-09-02 · TODO item 35 · the one undiagnosed row in entry 129**
+
+Entry 129 listed Thailand's two load-bearing search pages with no cause beside them. Both are on
+`tdac.immigration.go.th` — the Thailand Digital Arrival Card — and they turn out to be two different
+things, one of which is a defect in my own measurement and one of which generalises to every corpus.
+
+### One is an alias, and it corrects entry 129's own number
+
+The corridor fetched `tdac.immigration.go.th/manual/en`. The corpus holds
+`tdac.immigration.go.th/manual/en/index.html`, **readable and indexed**, whose stored text opens
+*"The Thailand Digital Arrival Card (TDAC) is an online form designed to replace the traditional
+paper-based arrival card"*. Same page, two addresses.
+
+`canonical_key` folds scheme and `www.` and **deliberately keeps trailing slashes**, because some
+authorities serve different content for them. That is right for the store and it means a *superset*
+check counts a directory index as missing when a run fetched the directory. Entry 87 found this
+class of error in the oracle — ICA publishes one page at three addresses.
+
+**Measured across all 78: exactly one is an alias.** So entry 129's 17.3% and its 25 load-bearing
+pages survive as 77 and 24, and Thailand's contribution is **1, not 2**. Checked rather than assumed,
+because the same error at 20% would have moved the conclusion.
+
+### The other is real, and its cause is new
+
+`tdac.immigration.go.th/arrival-card` — the form itself — is genuinely absent, and the corpus holds
+exactly three TDAC pages: `manual/en/index.html`, `manual/en/faq.html`, and a Cloudflare
+email-protection link that answered `404`. All three were discovered from
+`https://tdac.immigration.go.th/manual/en/`, **which is a search seed and is not itself an entry**.
+
+So the crawl entered that host at a deep seed, took the three links the manual offers, and stopped.
+Nothing on the manual links to the form, and **nothing anywhere in the corpus links to
+`/arrival-card`** — the three pages whose address contains "arrival-card" are Thai-language
+provincial-office articles *about* TDAC, not the form.
+
+**The cause is not policy, a challenge, a block or a form-gated space** — the four in entry 129's
+table. It is that the crawl **entered the host below the page that matters and the site does not
+link back up**. Call it seed-entry.
+
+### How general that is: 52% of hosts
+
+| across all 53 corpora, 2,222 hosts | | |
+| --- | --- | --- |
+| the root is an entry in the corpus | 1,054 | 47.4% |
+| the root was crawled as a seed but never recorded | 20 | 0.9% |
+| **the root was never visited at all** | **1,148** | **51.7%** |
+
+**294 of the never-visited hold twenty pages or more**: Spain's `www.interior.gob.es` at 1,930
+pages, Finland's `um.fi` at 1,736, Greece's `portal.immigration.gov.gr` at 428, and Bulgaria's
+`mfa.bg` at 399 — Bulgaria being one of the countries entry 129 found search load-bearing for.
+
+A build seeds from search results, and a search result is a *page*, not a site. So a host enters the
+corpus wherever the engine happened to point, and whether the crawl ever reaches that host's front
+door is left to the link graph below the seed.
+
+### The obvious fix, named and not built
+
+**Seed every trusted host's root alongside the search seeds.** It is cheap, it is bounded — 187
+trusted domains, and the hosts under them are already known once a build has run once — and it
+addresses a gap on half the hosts in the store.
+
+**It is not implemented here, deliberately.** This project's standing rule is to measure a proposal
+before shipping it, and three rows of the corrections table are proposals that were wrong. What is
+not yet known: whether a root page yields links a deep seed does not (Thailand says yes for TDAC and
+one host is not evidence), and what it costs — entry 82 measured that surplus budget goes to the
+*largest* host, so adding roots to the frontier could feed the same appetite. TODO item 35.
+
+### And Thailand has a second, separate problem worth recording
+
+Of 2,662 `immigration.go.th` pages in its corpus, **2,617 are provincial office sites**. Uthai Thani
+province alone holds **492**, Phitsanulok 375, Uttaradit 339 — against **41** for the national
+`www.immigration.go.th` and **3** for TDAC. Those provincial sites are WordPress installations with
+category and archive pages, so they present an effectively unbounded link graph, and the crawl spent
+its budget there. That is entry 82's finding — a surplus goes to the largest host — in a form where
+the largest host is also the least useful.
 
 ---
 

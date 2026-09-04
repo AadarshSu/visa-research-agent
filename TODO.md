@@ -867,6 +867,26 @@ genuinely `ungraded` countries rather than raising the number needing curation.
 
 ### 35. Finish the Netherlands, then roll the family reservation across the other nine — `next`, **re-scoped by entry 101**
 
+> **And it has a concrete, cheap first move as of entry 130: seed every trusted host's root.**
+> Across all 53 corpora, **1,148 of 2,222 hosts (51.7%) have pages and their root was never visited
+> at all** — only 20 roots were seeds. 294 of those hold twenty pages or more: Spain's
+> `www.interior.gob.es` at 1,930, Finland's `um.fi` at 1,736, Greece's `portal.immigration.gov.gr`
+> at 428, Bulgaria's `mfa.bg` at 399. A build seeds from search results, and a search result is a
+> **page, not a site**, so a host enters the corpus wherever the engine pointed and whether the
+> crawl ever reaches its front door is left to the link graph below that point.
+>
+> Thailand is the worked example. The corpus holds three `tdac.immigration.go.th` pages, all
+> children of one search seed at `/manual/en/`, and the arrival-card form itself is linked from
+> none of them — so search supplies it on every run. **Measure before building**, per this file's
+> own rule: it is not known whether a root yields links a deep seed does not (one host is not
+> evidence), nor what it costs, since entry 82 found surplus budget flows to the *largest* host and
+> roots on the frontier could feed the same appetite.
+>
+> **A second Thai finding, separate and not fixed by roots.** 2,617 of its 2,662
+> `immigration.go.th` pages are **provincial office** sites — Uthai Thani alone holds 492 against
+> the national site's 41 and TDAC's 3. They are WordPress installations whose category and archive
+> pages present an effectively unbounded link graph.
+>
 > **Sized on 2026-09-02 (entry 129), and it is smaller than it looks.** Of the 30 role-cells the
 > corpus cannot answer, **12 are an official tool holding the answer** — not a gap at all, and
 > resolved by the product since entry 63 — 4 are pages nobody may read, and 2 are Germany declining

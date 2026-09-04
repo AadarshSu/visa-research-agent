@@ -144,6 +144,16 @@ already crawls**, concentrated in Lithuania (12, behind a `Disallow`), the UK fe
 Bulgarian PDFs (3). **So item 19 is a per-country switch, not a global one**: 18 of the 25 are
 countries capped by a policy, challenge, block or form, three of them permanently.
 
+**Thailand was the one undiagnosed row and it produced the cheapest corpus fix on the list (entry
+130).** One of its two pages is an **alias** — the corridor fetched `…/manual/en` and the corpus
+holds `…/manual/en/index.html`, indexed — so the totals are 77 and 24, not 78 and 25; exactly one of
+the 78 is an alias, checked rather than assumed. The other is real, and its cause is new: the crawl
+entered `tdac.immigration.go.th` at a deep **search seed** and nothing on that site's manual links
+to its arrival-card form. Generalised: **1,148 of 2,222 hosts across all 53 corpora (51.7%) have
+pages and their root was never visited at all**, 294 of them holding twenty pages or more. The fix —
+seed every trusted host's root — is named in item 35 and deliberately **not built**, because the
+project's rule is to measure a proposal first.
+
 **And the frequency measurement it built on (entry 128).** The question is not
 whether the discarded 94% holds a relevant page but whether it answers a role the pool **cannot** —
 a corridor filling six roles from the pool loses nothing to the gate. Over 126 (corridor, role)
