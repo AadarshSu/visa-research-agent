@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [133](#133-a-second-residence-corpora-hold-almost-no-posts-at-all-and-which-ones-they-hold-is-arbitrary) | **24 of 27 corpora hold no post for either residence** — and Australia holds its Riyadh post, not its Dubai one |
 | [132](#132-a-27-country-sweep-for-a-traveller-nobody-tuned-for-88-and-two-defects-only-breadth-could-find) | **88% for an untuned traveller** — and the corpus holds no mission for the country they apply from |
 | [131](#131-bulgarias-foreign-ministry-is-behind-a-bot-manager-and-the-rebuild-disproved-my-own-hypothesis) | **`mfa.bg` bounces this client to Radware's CAPTCHA** — a permanent ceiling, not a stale failure |
 | [130](#130-thailands-two-pages-one-alias-one-real-and-a-crawl-that-enters-half-its-hosts-sideways) | **A build never visits the root of 52% of its hosts** — Thailand's missing page is the site's own front door |
@@ -181,6 +182,99 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 133. A second residence: corpora hold almost no posts at all, and which ones they hold is arbitrary
+
+**2026-09-05 · TODO item 49 · the measurement that item asked for**
+
+Entry 132 found the corpus holding no mission for the country the traveller applies from, eight
+times over 27 countries — but from **one** residence, so it could not tell *"corpora hold no posts"*
+from *"corpora hold whichever posts a search seed happened to surface"*. Item 49 named the cheap
+probe: run the same sweep from a second residence. This is that run — the same 27 countries, the
+same Bangladeshi passport, applying from **Saudi Arabia** instead of the United Arab Emirates.
+
+### The two travellers agree on the headline
+
+| | `BD/AE` | `BD/SA` |
+| --- | --- | --- |
+| roles filled | 142/162, **88%** | 135/156, **87%** |
+| pages read | 240 | 233 |
+| served from the corpus | 179, **75%** | 176, **76%** |
+| load-bearing search pages | 17 | **9** |
+| unresolved | checklist 11, decision 9 | checklist 13, decision 8 |
+
+Two untuned travellers, two residences, the same numbers. **~87% of roles and ~75% corpus-served is
+now a repeated result rather than a single observation**, alongside entry 112's `NG/NG` at 87%.
+
+### And the answer to the question is: corpora hold almost no posts at all
+
+Counting hosts whose subdomain names a post in the residence — matched on hyphen parts, so
+`dubai-bk.mfa.gov.tr` counts, and with an explicit token list per residence rather than
+`Country.mission_labels`, which carries **six** labels for the UAE and **one** for Saudi Arabia and
+would have made the second look emptier for a reason about the fixture:
+
+| holds a post in the UAE | holds a post in Saudi Arabia |
+| --- | --- |
+| Hungary `abudhabi.mfa.gov.hu` (63) | Australia `saudiarabia.embassy.gov.au` (35) |
+| Luxembourg `abudhabi.mae.lu` (40) | China `sa.china-embassy.gov.cn` (168) |
+| Turkey `dubai-bk` + `dubai-cg.mfa.gov.tr` (77) | |
+| **3 of 27** | **2 of 27** |
+
+**The two sets are disjoint. No corpus holds both.** So it is not that the UAE was unlucky: **24 of
+27 corpora hold no post for either residence**, and which two or three they do hold is arbitrary.
+
+**The natural experiment inside that is what makes it conclusive.** Australia holds 35 pages on
+`saudiarabia.embassy.gov.au` and **0** on `uae.embassy.gov.au`; China holds 168 on
+`sa.china-embassy.gov.cn` and **0** on `ae.china-embassy.gov.cn`. Same authority, same host pattern,
+one post present and its sibling absent. These posts are not unreachable, not unrecognisable, and
+not behind anything — **the crawl simply never went there**, because a build seeds from search
+results for a country with no traveller in mind, and nothing directs it at any particular post.
+
+### When the post is in the store, the corridor uses it
+
+```
+china/BD/SA   6/6 filled, 9 pages read — 5 of them from sa.china-embassy.gov.cn, from the corpus
+china/BD/AE   6/6 filled — and 0 from a UAE post, because there is none; search supplied them
+australia/BD/SA   4/6, read 1 page: saudiarabia.embassy.gov.au/ryad/visas_and_migration.html, corpus
+australia/BD/AE   4/6 — its uae.embassy.gov.au page came from search
+```
+
+So the mechanism works in both directions on the same authority. **A post in the corpus is read from
+the corpus; a post absent from it is bought from search.** That is item 49's whole case, and it is
+now demonstrated rather than inferred.
+
+### What this settles for item 49
+
+It is a **seeding** problem, not a budget or a reachability one. So the remedy is at the seed, and
+the cheap form named in that item — **seed the mission index each foreign ministry publishes and let
+the crawl take the family from there** — is the one the evidence supports: it needs no traveller in
+the offline job, which is what entry 44 forbids, and Turkey, Hungary and Luxembourg show the crawl
+walks a post's pages perfectly well once it arrives at one.
+
+It also drops item 48's root seeding a further notch. A build that never visits `embassy.gov.au`'s
+front door is one problem; a build that visits it and still never reaches `uae.embassy.gov.au` is a
+different one, and this measurement says the second is where the pages are.
+
+### Two smaller things, both data rather than code
+
+**`countries.yaml` gives Saudi Arabia one mission label and the UAE six.** `mission_affinity` reads
+that field to decide whether a page belongs to the post serving the traveller, so for a Saudi-
+resident traveller that bonus can fire only on a host labelled `sa` — never on `riyadh…` or
+`jeddah…`, which is how several authorities name it. Australia's own post is
+`saudiarabia.embassy.gov.au`, which that field cannot match. Same class as entry 65's missing
+markers for Austria, Canada and Uruguay, and the same fix: reviewed data, never a wider pattern.
+
+**And `mission_labels` is uneven enough that it could not be used as this entry's instrument** — the
+measurement above had to carry its own token list to compare the two residences fairly, which is
+itself the evidence that the field needs the same review.
+
+### What it does not establish
+
+Two residences, both Gulf states, one passport. A European or African residence could behave
+differently, though the mechanism found here — the seed decides, and the seed knows no traveller —
+has nothing in it that is specific to the Gulf.
 
 ---
 

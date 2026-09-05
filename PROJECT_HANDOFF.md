@@ -120,6 +120,14 @@ sitting in the `Now` section** with their full bodies. Both were corrected by ha
 either property, so check them when you touch the file: the table must match the body order, and a
 finished item moves to the `Done` index as one line, its reasoning left in DECISIONS.
 
+**Item 49's measurement is done and it confirmed the item (entry 133).** The same sweep from a
+second residence — Saudi Arabia — filled **135 of 156 roles, 87%**, **76% corpus-served**, matching
+`BD/AE`'s 88% and 75%. And **24 of 27 corpora hold no mission post for either residence**: three hold
+a UAE post, two hold a Saudi one, and the sets are **disjoint**. Australia holds 35 pages on
+`saudiarabia.embassy.gov.au` and **0** on `uae.embassy.gov.au`; China 168 on
+`sa.china-embassy.gov.cn` and **0** on `ae.china-embassy.gov.cn` — same authority, same host pattern.
+So it is a **seeding** problem, and when the post is present the corridor reads it from the store.
+
 **Start at item 49, then 50.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
 items were starved of — every country that had a corpus and no run postdating it, one corridor each,
 for **`BD/AE`**, a traveller nothing here was tuned for (entry 132). **142 of 162 roles filled, 88%**,

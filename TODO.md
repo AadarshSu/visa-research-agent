@@ -283,13 +283,35 @@ the offline job, which is exactly what entry 44 took out. **Argue that before bu
 cheap version that may not cross the line: seed the *mission index* each foreign ministry publishes,
 and let the crawl take the family from there.
 
-**Measure first, and the first measurement is nearly free:** re-run the same sweep from a **second
-residence**. `BD/AE` shares one residence across all 27 countries, so "the corpus lacks the UAE post"
-is 27 observations of one post. Whether a corpus lacks *every* post or only the ones no query
-surfaced decides whether this is a seeding change or a budget one.
+> **Measured 2026-09-05, and the answer is "every post" (entry 133).** The same sweep from Saudi
+> Arabia: **24 of 27 corpora hold no post for either residence.** Three hold a UAE post — Hungary
+> `abudhabi.mfa.gov.hu`, Luxembourg `abudhabi.mae.lu`, Turkey `dubai-bk`/`dubai-cg.mfa.gov.tr` — and
+> two hold a Saudi one, Australia `saudiarabia.embassy.gov.au` and China `sa.china-embassy.gov.cn`.
+> **The two sets are disjoint.**
+>
+> **Australia holds 35 pages on its Riyadh post and 0 on its Dubai one; China holds 168 on
+> `sa.china-embassy.gov.cn` and 0 on `ae.china-embassy.gov.cn`.** Same authority, same host pattern,
+> one present and its sibling absent — so these posts are not unreachable or unrecognisable, the
+> crawl never went there. **It is a seeding problem, not a budget or reachability one**, which
+> settles the shape of the fix: seed the mission index, do not crawl deeper.
+>
+> **And when the post is in the store the corridor uses it**: `china/BD/SA` filled 6 of 6 reading
+> five of its nine pages from `sa.china-embassy.gov.cn` **out of the corpus**, while `china/BD/AE`
+> filled 6 of 6 too and bought its UAE-post pages from search. The mechanism is demonstrated in both
+> directions on one authority.
+>
+> The second traveller also confirms the headline: `BD/SA` filled **135 of 156 roles, 87%**, with
+> **76% of what it read served from the corpus**, against `BD/AE`'s 88% and 75%.
 
-**Why:** entry 132. It compounds with entry 126 — the residence signal scores a page for being about
-where they apply from, and here that page is not in the corpus to be scored.
+**One more thing to fix while here, and it is data.** `countries.yaml` gives Saudi Arabia **one**
+mission label (`sa`) and the UAE **six**. `mission_affinity` reads that field to decide whether a
+page belongs to the post serving the traveller, so for a Saudi-resident traveller the bonus can fire
+only on a host labelled `sa` — never on `riyadh…`, `jeddah…`, or Australia's own
+`saudiarabia.embassy.gov.au`. Same class as entry 65's missing markers, same fix: reviewed rows,
+never a wider pattern.
+
+**Why:** entries 132 and 133. It compounds with entry 126 — the residence signal scores a page for
+being about where they apply from, and here that page is not in the corpus to be scored.
 
 ---
 

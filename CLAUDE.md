@@ -584,6 +584,9 @@ cause, and only running the thing showed it.
 | the corpus holds a country's mission network, so it holds the post that serves you | AU holds 1,599 pages on `embassy.gov.au` and **0** on `uae.embassy.gov.au` (entry 132) |
 | "too little readable text" means the page is thin | 12 of them were one host that ate the corridor's whole render budget (entry 132) |
 | the corpus is tuned for three travellers, a fourth will do worse | `BD/AE` filled **88%** over 27 countries, 75% of it corpus-served (entry 132) |
+| the corpus missed the UAE post because search never surfaced it | **24 of 27** hold no post for *either* residence tried (entry 133) |
+| a post absent from a corpus is a post the crawl could not reach | AU holds its Riyadh post and 0 on its Dubai one — same domain (entry 133) |
+| `Country.mission_labels` is even enough to measure posts with | AE carries six, SA carries **one** — it cannot match `saudiarabia.embassy.gov.au` (entry 133) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
