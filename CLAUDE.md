@@ -588,7 +588,9 @@ cause, and only running the thing showed it.
 | a rebuild will clear a stale failure | 7,149 pages crawled bought 193 entries and the failure count went **up** (entry 131) |
 | the corpus holds a country's mission network, so it holds the post that serves you | AU holds 1,599 pages on `embassy.gov.au` and **0** on `uae.embassy.gov.au` (entry 132) |
 | "too little readable text" means the page is thin | 12 of them were one host that ate the corridor's whole render budget (entry 132) |
-| the request path has 12 renders per corridor | 12 is the *crawl* fetcher's; the shortlist shares **5** in one `fetch` call (item 50) |
+| the request path has 12 renders per corridor | 12 is the *crawl* fetcher's; the shortlist shares **5** in one `fetch` call (entry 135) |
+| a page reported as having too little readable text was read by a browser | it may have been rendered, or never opened — one sentence said both (entry 135) |
+| cap a greedy host with a share of the render budget | a share throttles a host where rendering **works**; count consecutive failures (entry 135) |
 | the corpus is tuned for three travellers, a fourth will do worse | `BD/AE` filled **88%** over 27 countries, 75% of it corpus-served (entry 132) |
 | the corpus missed the UAE post because search never surfaced it | **24 of 27** hold no post for *either* residence tried (entry 133) |
 | a post absent from a corpus is a post the crawl could not reach | AU holds its Riyadh post and 0 on its Dubai one — same domain (entry 133) |
@@ -715,7 +717,11 @@ what differs is the budget — `DEFAULT_CORPUS_RENDERS` is 400, because a build 
 waiting (entry 92). **The corridor path has two render budgets and they are easy to confuse:**
 `MAXIMUM_CRAWL_RENDERS` is **12** on the crawl fetcher, while the pages that become *evidence* are
 read by `LiveSourceFetcher` at `maximum_renders` = **5** — and `_fetch_bodies` calls it **once** for
-the whole shortlist, so up to twenty pages share five renders. TODO item 50. A host whose challenge cannot be answered is given up on
+the whole shortlist, so up to twenty pages share five renders. **One host may not take them all**:
+three consecutive renders that come back with nothing readable and this run stops offering that host
+any, which is `CHALLENGE_FAILURES_PER_HOST`'s rule on the crawl side. A success resets the count, so
+a host where rendering works never approaches it. **A page that was not rendered says which bound
+stopped it** rather than reporting itself as empty (entry 135). A host whose challenge cannot be answered is given up on
 after **three consecutive** failures, so it costs three renders rather than the job. Entry 41's line
 is unmoved: a bare `403`, a `401` and a `429` state a decision, are never rendered past, and never
 reach the renderer.

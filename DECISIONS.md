@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [135](#135-one-host-may-not-spend-a-corridors-whole-render-allowance-and-a-page-nobody-rendered-stops-claiming-to-be-empty) | **The shortlist shares five renders, not twelve** — and an unrendered page reported itself as an empty one |
 | [134](#134-mission-labels-293-to-723-and-the-pool-gets-smaller-because-it-gets-righter) | **184 of 198 countries carried only their ISO code** — Saudi Arabia could not recognise its own post |
 | [133](#133-a-second-residence-corpora-hold-almost-no-posts-at-all-and-which-ones-they-hold-is-arbitrary) | **24 of 27 corpora hold no post for either residence** — and Australia holds its Riyadh post, not its Dubai one |
 | [132](#132-a-27-country-sweep-for-a-traveller-nobody-tuned-for-88-and-two-defects-only-breadth-could-find) | **88% for an untuned traveller** — and the corpus holds no mission for the country they apply from |
@@ -183,6 +184,68 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 135. One host may not spend a corridor's whole render allowance, and a page nobody rendered stops claiming to be empty
+
+**2026-09-05 · TODO item 50, built**
+
+Entry 132 found *"the page returned too little readable text to trust"* to be the most common
+retrieval failure across two 27-country sweeps — **34 of 74** — with 12 of them on
+`immi.homeaffairs.gov.au` in a single corridor, 7 across Turkey's `mfa.gov.tr` and `evisa.gov.tr`.
+Australia filled 4 of 6 roles and missed `visa_decision` and `document_checklist`: the two that host
+answers.
+
+### The item's own number was wrong, and checking it made the defect worse
+
+Item 50 said the request path had 12 renders. **There are two budgets and they are easy to
+confuse.** `MAXIMUM_CRAWL_RENDERS` is 12 and belongs to the *crawl* fetcher. The pages that become
+**evidence** are read by `LiveSourceFetcher`, whose `maximum_renders` is **5** — and
+`_fetch_bodies` calls `live_fetcher.fetch(probe)` **once** for the whole shortlist, so its own
+comment, *"one allowance per call, spent only by the sources this call reads"*, means **up to twenty
+shortlisted pages share five renders.**
+
+So one client-rendered host does not merely take a large share, it can take all of it. And it makes
+the fix different: a per-host cap of 3 is more than half of five, not a quarter of twelve.
+
+### Two things were wrong, and the reporting one is the reason nobody had found it
+
+**A page nobody rendered reported itself as a page with nothing to read.** `_render` returned `None`
+both when the budget was spent and when the render came back empty, and the caller then fell through
+to the same sentence. That sentence reaches a traveller, so it broke this project's standing rule —
+*the reason reported must be true of what was seen* — the same way entry 119's oversized `robots.txt`
+and entry 131's "redirected off the approved domains" did. **It is also why the budget could not be
+measured**: 34 failures across two sweeps and nothing anywhere saying which of them a browser had
+ever opened. `RenderBudget.claim` now returns the reason instead of a bare `False`, carried by a
+`_NotRendered` exception so neither call site can drop it.
+
+**And one host could exhaust the allowance.** The fix mirrors the crawl rather than inventing
+something: **three consecutive renders that come back with nothing readable, and this run stops
+offering that host any** — `CHALLENGE_FAILURES_PER_HOST` is the same rule and entry 92 arrived at it
+for the same reason, *"an unanswerable host would then spend 400 renders proving it"*.
+
+**Consecutive failures, not a share of the budget, and the distinction is the whole design.** A
+share cap throttles a host where rendering *works*, which is the opposite of what is wanted. A
+success resets the count, so a productive host keeps its renders right up to the run's total and
+never approaches the cap; only a host producing nothing is given up on.
+
+### What is deliberately not changed
+
+**The total stays at five.** Item 50 said to measure what a corridor spends before moving it, and
+that measurement is still impossible from the logs — which is exactly what the reporting half fixes.
+Raising it now would be the change entry 92 warns against, made blind, and the per-host cap is what
+stops the pathological case regardless of the total. **Re-run a sweep and read the new reasons
+before touching the number.**
+
+State lives on `RenderBudget`, which is built per call, so a host that failed for one traveller is
+not held against the next. That is the defect the class's own docstring was written about.
+
+### What it does not establish
+
+No corridor has been re-run. The tests prove the mechanism — three renders then a named refusal, a
+working host reaching five, and a starved page saying so rather than claiming to be empty — and
+whether Australia now fills six roles is unmeasured.
 
 ---
 

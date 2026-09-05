@@ -16,7 +16,13 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Items 49 and 50 are new and lead the queue, 2026-09-04 (entry 132).** A 27-country sweep for
+**Item 50 is done (entry 135) and item 49 leads, 2026-09-05.** Item 50's own premise was wrong and
+checking it made the defect worse — the shortlist shares **five** renders, not twelve — so one
+client-rendered host could take the whole allowance, and a page nobody rendered was reporting itself
+as a page with nothing to read. Both fixed; the **total** deliberately stays at five until a sweep
+reads the new reasons.
+
+**Items 49 and 50 were new on 2026-09-04 (entry 132).** A 27-country sweep for
 `BD/AE` — a traveller nobody tuned for — filled **142 of 162 roles, 88%**, with **75% of what it read
 served from the corpus**, and found two defects breadth alone could reach: the corpus holds **no
 mission for the country the traveller applies from** (Australia 1,599 pages on `embassy.gov.au`, 0 on
@@ -218,7 +224,6 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 49. Seed a build with the missions serving each residence, not just the country | `next` |
-|  | 50. Cap renders per host on the request path, as the crawl already does | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
@@ -317,33 +322,6 @@ a post it is shown; they do not put one in the corpus. Entry 133's finding stand
 
 **Why:** entries 132 and 133. It compounds with entry 126 — the residence signal scores a page for
 being about where they apply from, and here that page is not in the corpus to be scored.
-
----
-
-### 50. Cap renders per host on the request path, as the crawl already does — `next`
-
-**One client-rendered host can spend a corridor's whole render budget, and Australia's did (entry
-132).** *"Too little readable text to trust"* was the most common retrieval failure in the
-27-country sweep — **34 of 74** — and 12 of them were `immi.homeaffairs.gov.au` in a single
-corridor, with 7 more across Turkey's `mfa.gov.tr` and `evisa.gov.tr`. Australia filled 4 of 6 and
-missed `visa_decision` and `document_checklist`: the two roles that host answers.
-
-`crawl.py` has `CHALLENGE_FAILURES_PER_HOST = 3`, added by entry 92 for this exact failure — *"an
-unanswerable host would then spend 400 renders proving it"*. **`research/live_sources.py` has no
-equivalent**, so the request path's 12 renders can all go to one host and every other
-client-rendered page in that corridor then degrades to the same verdict.
-
-**Do not raise the budget instead.** Entry 92 measured that on the corpus side and the answer was a
-per-host cap. The number to pick is not 3 by analogy: the request path has 12 renders against the
-build's 400, so a cap of 3 there is a quarter of the budget on one host. **Measure what a corridor
-actually spends before choosing it**, over the 27 recall logs this sweep just wrote.
-
-**And check the verdict is honest while you are there.** "Too little readable text to trust" is also
-what a masked refusal produces — entry 121 found Morocco's F5 *"Request Rejected"* served as
-`HTTP 200` behind that sentence, which is item 46. A budget-exhausted render and a refusal dressed
-as a thin page currently read identically.
-
-**Why:** entry 132.
 
 ---
 
@@ -1708,6 +1686,7 @@ in the DECISIONS entry; this is the one-line index.
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
 | 1. Score a page for being about where the traveller applies from | 09-02 | 126 | **The scorer's ordering is consumed by nothing** — the pool goes to the model unsorted with scores withheld, so `score_link` reaches a corridor as a *boolean*. Shipped as a swap and cut back to adding only: the withdrawal removed **25 pages from the pool and added none**. Admits 35 of 186,596, and 3 of its 4 families already held the answer in stored text — which is the argument for item 31. Also: `_describes_country` could not read `united-kingdom` in a path, so every multi-word country was invisible unless the anchor said it |
+| 50. Cap renders per host on the request path | 09-05 | 135 | The item's own number was wrong and checking it made the defect worse: the shortlist shares **5** renders, not 12 — `MAXIMUM_CRAWL_RENDERS` is the *crawl's*. Two faults: one host could take all five, and a page nobody rendered reported itself as a page with nothing to read, which is why nobody had measured it. Three consecutive empty renders and a host is dropped, as `CHALLENGE_FAILURES_PER_HOST` does on the crawl; **the total stays at five until a sweep reads the new reasons** |
 | 45. Re-run the five countries last measured before their corpus existed | 09-01 | 121, 122 | **Romania fills 5 of 6** off `eviza.mae.ro`, Austria 2 — both were predictions this item said would stand. Morocco refuses with an `HTTP 200` reported as `unusable` (item 46), and Romania's 58 Romanian-named checklist PDFs are invisible to the family detector (item 47) |
 | 43. Give the new 43 something the coverage gate can grade | 09-01 | 120 | **42 of 53 countries were deferring to an empty half** and read as passes. Fixed with an `ungraded` verdict. The oracle is **not** growing to 53: 17 of the 42 resolve every passport tried, and of the 9 that resolve none, 6 have a named cause outside the store |
 | 44. Re-measure the countries whose ranking text was a bot-check page | 09-01 | 118, 119 | NO and ID now fill **6 of 6**, TH names its checker. The Philippines' missing checklist is a **visa-free** corridor, Lithuania's ceiling is the challenge and not its `Disallow`, and the US gaps split — `travel.state.gov` blocked, `uk.usembassy.gov` never requested. The US corridor **flips** between two runs of identical code |

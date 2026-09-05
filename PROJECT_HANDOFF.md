@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-02 — update this line when you touch the handoff |
-| **Tests** | 682 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 685 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -135,7 +135,13 @@ the pool went 10,483 → 10,328 — 141 of that in Germany, every one another co
 **The crawl half is untouched:** labels let a corridor recognise a post it is shown; they do not put
 one in the corpus.
 
-**Start at item 49, then 50.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
+**Item 50 shipped on 2026-09-05 (entry 135).** Its own premise was wrong and checking it made the
+defect worse: the corridor has **two** render budgets, and the pages that become evidence share
+**five** in one `fetch` call, not the crawl's twelve. One client-rendered host could take all five,
+and a page nobody rendered reported itself as a page with nothing to read — which is why the budget
+had never been measured. Both fixed; the **total stays at five** until a sweep reads the new reasons.
+
+**Start at item 49.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
 items were starved of — every country that had a corpus and no run postdating it, one corridor each,
 for **`BD/AE`**, a traveller nothing here was tuned for (entry 132). **142 of 162 roles filled, 88%**,
 with **179 of 240 pages read served from the corpus (75%)** and 17 load-bearing search pages. That is

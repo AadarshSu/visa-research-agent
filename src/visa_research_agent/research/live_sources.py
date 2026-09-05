@@ -219,6 +219,14 @@ def _robots_reason(verdict: RobotsVerdict, detail: str) -> str:
     )
 
 
+# How many renders from one host may come back with nothing readable before this run stops offering
+# it any. Three, matching `CHALLENGE_FAILURES_PER_HOST` on the crawl, and for the reason entry 92
+# gave there: a host that cannot be rendered will otherwise spend the whole allowance proving it.
+# Measured on the request path 2026-09-05 — Australia read 17 pages with 12 of them client-rendered
+# on `immi.homeaffairs.gov.au`, against a budget of five (entry 135).
+RENDER_FAILURES_PER_HOST = 3
+
+
 class RenderBudget:
     """How many pages one run may render, spent by that run and nobody else.
 
@@ -231,17 +239,60 @@ class RenderBudget:
     flight together cannot spend each other's.
     """
 
-    def __init__(self, maximum: int) -> None:
+    def __init__(self, maximum: int, *, failures_per_host: int = RENDER_FAILURES_PER_HOST) -> None:
         self.maximum = maximum
         self.spent = 0
+        self.failures_per_host = failures_per_host
+        self._failed: dict[str, int] = {}
 
-    def claim(self) -> bool:
-        """Take one render if the run can still afford it."""
+    def claim(self, host: str) -> str | None:
+        """Take one render for `host`, or say why this page will not get one.
 
+        **Returns the reason rather than a bare False**, because a page that was never rendered and
+        a page that was rendered and still had no text were reported with the same sentence — *"the
+        page returned too little readable text to trust"* — and that sentence is what a traveller
+        ends up being shown. It is also what made the budget unmeasurable: 34 such failures across
+        two 27-country sweeps, and nothing in the logs said which of them a browser had ever seen.
+        DECISIONS entry 135.
+        """
+
+        if self._failed.get(host, 0) >= self.failures_per_host:
+            return (
+                f"the page needed a browser and {host} had already failed to render "
+                f"{self.failures_per_host} times in this run, so it was not tried again"
+            )
         if self.spent >= self.maximum:
-            return False
+            return (
+                f"the page needed a browser and this run had already spent its {self.maximum} "
+                "renders, so it was not rendered"
+            )
         self.spent += 1
-        return True
+        return None
+
+    def record(self, host: str, *, useful: bool) -> None:
+        """Note whether a render produced readable text, so a dead host stops taking the budget.
+
+        **Consecutive failures, not a share of the budget.** A share cap would throttle a host where
+        rendering *works*, which is the opposite of what is wanted; this only gives up on one that
+        keeps producing nothing. It is `CHALLENGE_FAILURES_PER_HOST` on the crawl side, which entry
+        92 arrived at for the same reason — *"an unanswerable host would then spend 400 renders
+        proving it"* — and the request path never had it.
+        """
+
+        self._failed[host] = 0 if useful else self._failed.get(host, 0) + 1
+
+
+class _NotRendered(Exception):
+    """A page needed a browser and this run would not give it one.
+
+    Carried as an exception rather than returned, so it cannot be silently discarded at either of
+    the two `_render` call sites the way a `None` was. The reason it holds is shown to a traveller,
+    so it says which of the two bounds stopped it.
+    """
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
 
 
 class _ContentProblem(Exception):
@@ -417,13 +468,18 @@ class LiveSourceFetcher:
             # running the page's own scripts under our own user agent misrepresents us to nobody
             # (entries 41, 73). A refusal is the authority saying no, and is never worked around.
             if is_challenge(response.status_code, response.headers, response.text):
-                rendered = await self._render(
-                    destination,
-                    str(response.url),
-                    budget,
-                    settle_milliseconds=self.challenge_settle_milliseconds,
-                    awaiting_challenge=True,
-                )
+                try:
+                    rendered = await self._render(
+                        destination,
+                        str(response.url),
+                        budget,
+                        settle_milliseconds=self.challenge_settle_milliseconds,
+                        awaiting_challenge=True,
+                    )
+                except _NotRendered as skipped:
+                    return self._serve_stale(
+                        configured_source, cached, now, skipped.reason, "challenged"
+                    )
                 if rendered is not None and self._thin_reason(rendered[0]) is None:
                     content, final_url = rendered
                     return self._store_and_build(
@@ -481,10 +537,15 @@ class LiveSourceFetcher:
             # A page that gave up nothing readable may still be a real page whose text only
             # exists once its scripts have run. Rendering is tried here and nowhere else, so
             # the pages that already work never meet a browser.
+            not_rendered: str | None = None
             if self._thin_reason(content) is not None and not looks_like_pdf(document):
-                rendered = await self._render(destination, final_url, budget)
-                if rendered is not None:
-                    content, final_url = rendered
+                try:
+                    rendered = await self._render(destination, final_url, budget)
+                except _NotRendered as skipped:
+                    not_rendered = skipped.reason
+                else:
+                    if rendered is not None:
+                        content, final_url = rendered
         except _ContentProblem as problem:
             if problem.outcome == "untrusted":
                 return SourceFailure(
@@ -512,7 +573,12 @@ class LiveSourceFetcher:
         # list, so it must never reach extraction as though it were evidence.
         thin_reason = self._thin_reason(content)
         if thin_reason is not None:
-            return self._serve_stale(configured_source, cached, now, thin_reason, "unusable")
+            # Say which it was. A page a browser read and still found empty is a fact about the
+            # page; a page no browser ever opened is a fact about this run's budget, and reporting
+            # the second as the first is what hid the defect entry 135 measured.
+            return self._serve_stale(
+                configured_source, cached, now, not_rendered or thin_reason, "unusable"
+            )
 
         entry = CachedSource(
             url=url,
@@ -584,8 +650,12 @@ class LiveSourceFetcher:
         the same answer retrieval gives to a redirect that leaves them.
         """
 
-        if self.renderer is None or not budget.claim():
+        if self.renderer is None:
             return None
+        host = host_of(url)
+        refused = budget.claim(host)
+        if refused is not None:
+            raise _NotRendered(refused)
         rendered = await self.renderer.render(
             url,
             destination,
@@ -593,6 +663,7 @@ class LiveSourceFetcher:
             awaiting_challenge=awaiting_challenge,
         )
         if rendered is None:
+            budget.record(host, useful=False)
             return None
 
         # Rendering runs scripts, and a script can navigate. The landing host gets exactly the
@@ -616,8 +687,12 @@ class LiveSourceFetcher:
         # `clean_source_html` strips the `<script>` that carries `_cf_chl_opt`, so the caller could
         # not ask it afterwards even if it wanted to.
         if awaiting_challenge and is_challenge(403, {}, rendered.html):
+            budget.record(host, useful=False)
             return None
         content = clean_source_html(rendered.html, maximum_characters=self.maximum_characters)
+        # A render that came back with nothing readable counts against the host. That is what makes
+        # the cap self-limiting: a host where rendering works never approaches it.
+        budget.record(host, useful=self._thin_reason(content) is None)
         return content, rendered.final_url
 
     async def _read_document(

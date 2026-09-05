@@ -103,6 +103,31 @@ def destination_with_sources(count: int) -> DestinationConfig:
     )
 
 
+def destination_across_hosts(count: int) -> DestinationConfig:
+    """`count` primary sources on `count` different approved hosts, so only the run's own total can
+    stop a render — the per-host cap has nothing to bite on."""
+
+    hosts = [f"post{index}.immigration.gov.example" for index in range(count)]
+    return DestinationConfig(
+        slug="testland",
+        display_name="Testland",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["immigration.gov.example"],
+        sources=[
+            ConfiguredSource(
+                source_id=f"tl_visa_documents_{index}",
+                title=f"Testland Visa Documents {index}",
+                url=AnyHttpUrl(f"https://{host}/visa"),
+                authority="Testland Immigration Authority",
+                kind="immigration_authority",
+                research_pass="primary",
+            )
+            for index, host in enumerate(hosts)
+        ],
+    )
+
+
 def destination() -> DestinationConfig:
     return DestinationConfig(
         slug="testland",
@@ -773,3 +798,69 @@ def test_a_successful_page_is_never_a_challenge_however_it_reads() -> None:
 
     assert not is_challenge(200, {"cf-mitigated": "challenge"}, CLOUDFLARE_CHALLENGE)
     assert not is_challenge(404, {}, AZURE_CHALLENGE)
+
+
+# --- one host may not spend the whole render allowance, TODO item 50 ---------------------------
+
+
+async def test_a_host_that_keeps_rendering_to_nothing_stops_being_offered_renders(
+    tmp_path: Path,
+) -> None:
+    """Australia read 17 pages, 12 of them client-rendered on `immi.homeaffairs.gov.au`, against a
+    budget of **five** shared by the whole shortlist — so one host could exhaust it and every other
+    client-rendered page in that corridor degraded to the same verdict. It filled 4 of 6 roles and
+    missed `visa_decision` and `document_checklist`, the two that host answers. DECISIONS entry 135.
+
+    **Consecutive failures, not a share of the budget**, which is `CHALLENGE_FAILURES_PER_HOST` on
+    the crawl side — entry 92 arrived at it there for the same reason and the request path never
+    had it.
+    """
+
+    renderer = FakeRenderer(shell("<p>Loading</p>"))
+    fetcher = build_fetcher(tmp_path, shell(), renderer)
+
+    report = await fetcher.fetch(destination_with_sources(6))
+
+    assert len(renderer.calls) == 3, renderer.calls
+    assert len(report.failures) == 6
+    skipped = [f for f in report.failures if "had already failed to render" in f.detail]
+    assert len(skipped) == 3
+    assert all(failure.outcome == "unusable" for failure in report.failures)
+
+
+async def test_a_host_where_rendering_works_never_approaches_the_cap(tmp_path: Path) -> None:
+    """The cap is self-limiting, which is why it is failures and not a share. A page that renders to
+    readable text resets the host's count, so a productive host keeps its renders right up to the
+    run's total — the opposite of what a per-host quota would do."""
+
+    renderer = FakeRenderer(page(GUIDANCE))
+    fetcher = build_fetcher(tmp_path, shell(), renderer)
+
+    report = await fetcher.fetch(destination_with_sources(5))
+
+    assert len(renderer.calls) == 5
+    assert len(report.fetched) == 5
+    assert not report.failures
+
+
+async def test_a_page_no_browser_opened_does_not_report_the_page_as_empty(
+    tmp_path: Path,
+) -> None:
+    """*"The page returned too little readable text to trust"* was said of a page a browser read and
+    found empty **and** of a page no browser ever opened. That sentence reaches a traveller, and it
+    is also what made the budget unmeasurable — 34 such failures across two 27-country sweeps, with
+    nothing in the logs saying which was which.
+
+    Six pages on six hosts, so the per-host cap never fires and only the run's total of five can
+    stop the sixth.
+    """
+
+    renderer = FakeRenderer(page(GUIDANCE))
+    fetcher = build_fetcher(tmp_path, shell(), renderer)
+
+    report = await fetcher.fetch(destination_across_hosts(6))
+
+    assert len(renderer.calls) == 5, "the run's total is five"
+    starved = [f for f in report.failures if "already spent its 5 renders" in f.detail]
+    assert len(starved) == 1
+    assert "too little readable text" not in starved[0].detail
