@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [136](#136-the-sweep-that-could-not-price-anything-clearing-the-cache-is-correct-and-makes-the-run-incomparable) | **A cold-cache re-run cannot be compared to a warm-cache baseline** — and the render cap does not recover the roles that motivated it |
 | [135](#135-one-host-may-not-spend-a-corridors-whole-render-allowance-and-a-page-nobody-rendered-stops-claiming-to-be-empty) | **The shortlist shares five renders, not twelve** — and an unrendered page reported itself as an empty one |
 | [134](#134-mission-labels-293-to-723-and-the-pool-gets-smaller-because-it-gets-righter) | **184 of 198 countries carried only their ISO code** — Saudi Arabia could not recognise its own post |
 | [133](#133-a-second-residence-corpora-hold-almost-no-posts-at-all-and-which-ones-they-hold-is-arbitrary) | **24 of 27 corpora hold no post for either residence** — and Australia holds its Riyadh post, not its Dubai one |
@@ -184,6 +185,82 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 136. The sweep that could not price anything: clearing the cache is correct, and makes the run incomparable
+
+**2026-09-05 · entries 134 and 135, re-measured — and the measurement failed**
+
+Both 27-country sweeps were re-run to price the mission-label enrichment (entry 134) and the render
+cap (entry 135). **Neither can be priced from this run, and the reason is a mistake I made in
+setting it up.**
+
+### What the numbers said, and why they mean nothing
+
+| | `BD/AE` before | after | `BD/SA` before | after |
+| --- | --- | --- | --- | --- |
+| roles filled | 142 (88%) | 139 (86%) | 135 (87%) | 134 (86%) |
+| pages read | 240 | 224 | 233 | 235 |
+| load-bearing search | 17 | 13 | 9 | 7 |
+
+A two-point drop, which read as though the changes had cost something. They had not. `var/cache` was
+cleared before the run, **correctly** — CLAUDE.md says to clear it when testing a retrieval change,
+and the render cap is one. But the baseline was recorded against a **warm** cache, so the two arms
+did not face the same web:
+
+| failure outcome, both sweeps | before | after |
+| --- | --- | --- |
+| `blocked` | 1 | **15** |
+| `challenged` | 15 | **27** |
+| `untrusted` | 8 | 10 |
+| live-fetch classes together | 58 | **86**, +48% |
+
+Twenty-eight more pages failed at the *network*, which is what a cold cache buys: the baseline was
+serving stored text for pages this run had to ask for again, and some of those answers were a block
+or a challenge. That accounts for the missing roles without the code changes contributing anything.
+
+**So the rule needs a second half.** Clearing `var/cache` is right for testing a retrieval change
+*and* it destroys comparability with any baseline recorded warm. Either clear it for **both** arms
+or for neither.
+
+### What the run does establish
+
+**The reporting half of entry 135 works in production.** Across both sweeps **44 pages now say which
+bound stopped them** where every one of them previously said *"the page returned too little readable
+text to trust"*:
+
+```
+immi.homeaffairs.gov.au could not be read because the page needed a browser and
+  immi.homeaffairs.gov.au had already failed to render 3 times in this run, so it was not tried again
+dofi.ibz.be could not be read because the page needed a browser and this run had
+  already spent its 5 renders, so it was not rendered
+```
+
+Both bounds fire, and the per-host cap holds `immi.homeaffairs.gov.au` to three renders in each
+sweep. That is the measurement item 50 said did not exist yet, and it exists now.
+
+### And it corrects entry 135's own framing
+
+**Australia is 4 of 6 before and after, missing the same two roles.** The cap did not recover them,
+and on reflection it never could: capping a host stops it **starving other hosts**, it does not make
+that host renderable. Australia's `visa_decision` and `document_checklist` are on
+`immi.homeaffairs.gov.au`, which still cannot be rendered — 12 of its pages fail in the `SA` run.
+
+So entry 135's motivating sentence — *"it filled 4 of 6 and missed the two roles that host answers"*
+— is true and is **not** an argument that the cap fixes them. The cap's benefit is collateral: it
+protects a *second* client-rendered host in the same corridor from being starved by the first, and
+no corridor in this sweep is known to have that shape. **The value of the cap is therefore still
+unmeasured**, and the honest case for keeping it is the bound itself plus the reporting fix, not a
+role count.
+
+### What pricing either change would actually take
+
+Two more sweeps under identical cache conditions — revert, run warm; restore, run warm — at roughly
+forty minutes and a sweep's quota each. That is expensive against what is being priced: the label
+change is already measured offline (entry 134: no oracle page moved, pool 10,483 → 10,328), and the
+render change is a correctness fix whose worth is that a reason is now true. **Not done, and named
+here so nobody records these two as priced.**
 
 ---
 

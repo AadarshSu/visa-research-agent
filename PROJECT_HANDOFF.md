@@ -135,6 +135,15 @@ the pool went 10,483 → 10,328 — 141 of that in Germany, every one another co
 **The crawl half is untouched:** labels let a corridor recognise a post it is shown; they do not put
 one in the corpus.
 
+**Entries 134 and 135 are shipped and neither is priced (entry 136).** Both sweeps were re-run to
+price them and the run **could not**: `var/cache` was cleared first — correct for testing a retrieval
+change — but the baseline was recorded warm, so the two arms faced a different web (`blocked` 1 → 15,
+`challenged` 15 → 27, live-fetch failures +48%). That fully explains an apparent two-point drop. What
+the run *did* establish is that **44 pages now name which render bound stopped them** where all of
+them used to say "too little readable text", and that **the cap does not recover Australia's two
+roles** — it stops a greedy host starving *other* hosts, which is a different benefit and still
+unmeasured.
+
 **Item 50 shipped on 2026-09-05 (entry 135).** Its own premise was wrong and checking it made the
 defect worse: the corridor has **two** render budgets, and the pages that become evidence share
 **five** in one `fetch` call, not the crawl's twelve. One client-rendered host could take all five,

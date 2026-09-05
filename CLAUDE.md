@@ -591,6 +591,9 @@ cause, and only running the thing showed it.
 | the request path has 12 renders per corridor | 12 is the *crawl* fetcher's; the shortlist shares **5** in one `fetch` call (entry 135) |
 | a page reported as having too little readable text was read by a browser | it may have been rendered, or never opened — one sentence said both (entry 135) |
 | cap a greedy host with a share of the render budget | a share throttles a host where rendering **works**; count consecutive failures (entry 135) |
+| capping a greedy host recovers the roles it was hiding | AU is 4/6 before **and** after — a cap stops it starving *others* (entry 136) |
+| clear `var/cache` to test a retrieval change, then compare | a cold arm against a warm baseline is not a comparison: blocked 1 → 15 (entry 136) |
+| a two-point drop after a change is the change's cost | 28 extra **network** failures explained it; the code contributed nothing (entry 136) |
 | the corpus is tuned for three travellers, a fourth will do worse | `BD/AE` filled **88%** over 27 countries, 75% of it corpus-served (entry 132) |
 | the corpus missed the UAE post because search never surfaced it | **24 of 27** hold no post for *either* residence tried (entry 133) |
 | a post absent from a corpus is a post the crawl could not reach | AU holds its Riyadh post and 0 on its Dubai one — same domain (entry 133) |
@@ -736,7 +739,10 @@ rebuilt this way. The ceiling it hit is not the crawler's: for most residences t
 publishes its checklist on **VFS Global**, which the trust rule refuses — see TODO items 35 and 36.
 
 Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
-change — either one will serve a pre-change result and make a fix appear not to work. A stored
+change — either one will serve a pre-change result and make a fix appear not to work. **And clear it
+for both arms or for neither**: a cold-cache run faces a different web from a warm-cache baseline —
+measured 2026-09-05, `blocked` went 1 → 15 and `challenged` 15 → 27 across 53 corridors, which was
+enough to read as a two-point regression the code had nothing to do with (entry 136). A stored
 corridor is kept for three weeks. **`var/corpus/` and `var/pagetext/` are deliberately not cleared
 between runs**; they are stores, not caches, and rebuilding one costs search quota.
 
