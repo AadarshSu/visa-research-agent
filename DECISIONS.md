@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [134](#134-mission-labels-293-to-723-and-the-pool-gets-smaller-because-it-gets-righter) | **184 of 198 countries carried only their ISO code** — Saudi Arabia could not recognise its own post |
 | [133](#133-a-second-residence-corpora-hold-almost-no-posts-at-all-and-which-ones-they-hold-is-arbitrary) | **24 of 27 corpora hold no post for either residence** — and Australia holds its Riyadh post, not its Dubai one |
 | [132](#132-a-27-country-sweep-for-a-traveller-nobody-tuned-for-88-and-two-defects-only-breadth-could-find) | **88% for an untuned traveller** — and the corpus holds no mission for the country they apply from |
 | [131](#131-bulgarias-foreign-ministry-is-behind-a-bot-manager-and-the-rebuild-disproved-my-own-hypothesis) | **`mfa.bg` bounces this client to Radware's CAPTCHA** — a permanent ceiling, not a stale failure |
@@ -182,6 +183,71 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 134. Mission labels, 293 to 723, and the pool gets smaller because it gets righter
+
+**2026-09-05 · TODO item 49 · the data half, shipped**
+
+Entry 133 found `countries.yaml` giving Saudi Arabia **one** mission label — `sa` — against the
+United Arab Emirates' six, so `mission_affinity` could not recognise
+`saudiarabia.embassy.gov.au` as the post serving a traveller in Riyadh even with 35 pages of it in
+Australia's corpus. Counted across the file: **184 of 198 countries carried only their ISO code**,
+and the 14 that carried more are the ones somebody had already needed.
+
+### What was added, and on what warrant
+
+Two classes, kept apart because their warrants differ.
+
+**Name forms — mechanical, from the file itself.** Each country's name, slug and synonyms, as
+`saudi-arabia` and `saudiarabia`. No judgement, and unique by construction.
+
+**Cities — curated, because a post is usually named after its city rather than its country.** The
+file's own header has said so since it was written. Grounded in the labels the 53 corpora actually
+use, which is where the foreign-language forms come from: `riad` and `dschidda` for Riyadh and
+Jeddah, `windhuk`, `maskat`, `bukarest`, `szoul`, `peking`, `saudiarabien`. 115 countries, 237 city
+labels.
+
+**A label two countries could claim is dropped from both.** `foreign_post_labels` turns a label no
+corridor endpoint claims into *another post*, worth **-45** on the post-specific roles — so an
+ambiguous label does not merely fail to help, it demotes a page for the wrong country. Only two
+collided: `hong-kong` and `hongkong`, which China already held, so Hong Kong keeps `hk` alone and
+that predates this entry.
+
+**293 labels to 723**, and every `mission_labels` line rewritten in place so the file's header and
+layout survive.
+
+### What it costs, measured before shipping
+
+`mission_labels` feeds a **+30** for the traveller's own post and a **-45** for another country's,
+so more labels widens both. Entry 126 is the standing warning that removing pages from the pool is
+the dangerous direction, so that is what was measured.
+
+- **No page the oracle names as answering a role moved at all — 0 of 154 rose or fell.**
+- The selector's pool went **10,483 → 10,328**, and the loss is concentrated: Germany **-71** and
+  **-70** on its two corridors, Singapore **-7** and **-7**, everything else unchanged.
+- **All 71 pages that left Germany's pool are other countries' German missions** — `colombo`,
+  `taipei`, `windhuk`, `pakistan`, `wellington`, `addis-abeba`, `dublin`, `port-of-spain`, `harare`,
+  `accra`, `dhaka`, `seoul`, `maskat` — appointment pages, contact pages, and the Ethiopian post's
+  public holidays. None of them serves a traveller applying from Britain. **Nothing joined.**
+
+So the pool is smaller and more relevant, which is entry 72's rule finally reaching labels it could
+not see. And the positive half works: `saudiarabia.embassy.gov.au`, `sa.china-embassy.gov.cn` and
+`riad.diplo.de` all read **`None`** before and **`own`** after, for a traveller in Saudi Arabia.
+
+### The limit, stated plainly
+
+**The oracle cannot vouch for the 141 pages that left.** It names about seven pages per corridor, so
+"no answering page moved" is a real result about the pages a person judged and says nothing about
+the rest. The warrant for those 141 is that every one is a named post for a country that is neither
+the destination nor the residence — which is a rule, checked by reading the hosts, not a measurement
+of what they contained.
+
+**And the gain is unmeasurable from the current fixture.** Every oracle corridor is `IN/GB` or
+`PH/PH`, and the labels this entry adds pay off for a traveller applying from Riyadh or Abu Dhabi.
+Entry 133's sweep is where the effect would show, and re-running it is the honest way to price this
+— not done here.
 
 ---
 

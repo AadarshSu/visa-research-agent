@@ -303,12 +303,17 @@ and let the crawl take the family from there.
 > The second traveller also confirms the headline: `BD/SA` filled **135 of 156 roles, 87%**, with
 > **76% of what it read served from the corpus**, against `BD/AE`'s 88% and 75%.
 
-**One more thing to fix while here, and it is data.** `countries.yaml` gives Saudi Arabia **one**
-mission label (`sa`) and the UAE **six**. `mission_affinity` reads that field to decide whether a
-page belongs to the post serving the traveller, so for a Saudi-resident traveller the bonus can fire
-only on a host labelled `sa` — never on `riyadh…`, `jeddah…`, or Australia's own
-`saudiarabia.embassy.gov.au`. Same class as entry 65's missing markers, same fix: reviewed rows,
-never a wider pattern.
+**~~One more thing to fix while here, and it is data~~ — done 2026-09-05, entry 134.**
+`countries.yaml` gave **184 of 198 countries only their ISO code**; it now carries name forms for
+all of them and curated cities for 115, **293 labels to 723**, with any label two countries could
+claim dropped from both. Measured before shipping: **no oracle answering page moved, 0 of 154**, and
+the selector's pool went 10,483 → 10,328 — a loss of 141 in Germany alone, every one of them another
+country's German mission. `saudiarabia.embassy.gov.au` now reads as the traveller's own post where
+it read as no post at all.
+
+**What that leaves for this item is the crawl, not the data.** The labels let a corridor *recognise*
+a post it is shown; they do not put one in the corpus. Entry 133's finding stands untouched: 24 of
+27 corpora hold no post for either residence.
 
 **Why:** entries 132 and 133. It compounds with entry 126 — the residence signal scores a page for
 being about where they apply from, and here that page is not in the corpus to be scored.

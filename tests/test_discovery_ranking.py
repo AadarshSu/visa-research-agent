@@ -779,3 +779,68 @@ def test_no_new_overlapping_lexicon_terms() -> None:
         if inner.phrase != outer.phrase and inner.phrase in outer.phrase
     }
     assert found == known, f"new overlaps: {found - known}; resolved: {known - found}"
+
+
+def test_a_post_named_after_the_country_it_serves_is_recognised() -> None:
+    """`mission_labels` carried the ISO code and little else for 184 of 198 countries, so a post
+    named after its country or its city was invisible to `mission_affinity`.
+
+    Saudi Arabia is the case that found it: it held **one** label, `sa`, against the United Arab
+    Emirates' six, so Australia's own `saudiarabia.embassy.gov.au` — 35 pages of it in the corpus —
+    read as belonging to no post at all for a traveller applying from Riyadh. DECISIONS entry 134.
+    """
+
+    registry, lexicon = get_country_registry(), get_lexicon()
+    saudi = registry.require("SA")
+    others = foreign_post_labels(registry, "AU", saudi)
+
+    for url in (
+        "https://saudiarabia.embassy.gov.au/ryad/visas_and_migration.html",
+        "https://sa.china-embassy.gov.cn/eng/lsfw/x.htm",
+        "https://riad.diplo.de/sa-en/service/visa",
+    ):
+        assert mission_affinity(url, saudi, lexicon, other_posts=others) == "own", url
+
+
+def test_another_countrys_post_still_reads_as_another_post() -> None:
+    """The half that pays for the half above, and the half entry 72 broke 165 pages getting wrong.
+
+    Enriching the labels widens *both* rules: a page is likelier to be recognised as the traveller's
+    own post, and likelier to be recognised as somebody else's. Measured over Germany's corpus, 71
+    pages left the selector's pool and every one was another country's German mission — Colombo,
+    Taipei, Windhoek, Addis Ababa — appointment and contact pages for posts that do not serve a
+    British resident. No page the oracle names as answering a role lost a single point.
+    """
+
+    registry, lexicon = get_country_registry(), get_lexicon()
+    britain = registry.require("GB")
+    others = foreign_post_labels(registry, "DE", britain)
+
+    assert (
+        mission_affinity(
+            "https://uk.diplo.de/uk-en/02/visa/x", britain, lexicon, other_posts=others
+        )
+        == "own"
+    )
+    for url in (
+        "https://india.diplo.de/in-en/service/x",
+        "https://colombo.diplo.de/lk-en/service/x",
+        "https://addis-abeba.diplo.de/et-en/service/appointment",
+    ):
+        assert mission_affinity(url, britain, lexicon, other_posts=others) == "other", url
+
+
+def test_a_label_two_countries_could_claim_is_held_by_neither() -> None:
+    """`foreign_post_labels` turns a label no corridor endpoint claims into another post, worth -45
+    on the roles a checklist lives in. So an ambiguous label does not merely fail to help — it
+    demotes a page for the wrong country, and the enrichment drops any label two countries claim."""
+
+    registry = get_country_registry()
+    owners: dict[str, list[str]] = {}
+    for country in registry.countries:
+        for label in country.mission_labels:
+            owners.setdefault(label, []).append(country.code)
+
+    shared = {label: codes for label, codes in owners.items() if len(codes) > 1}
+    # Hong Kong's two forms predate this and are China's; they are the documented exception.
+    assert set(shared) <= {"hong-kong", "hongkong"}, shared

@@ -173,6 +173,11 @@ produces a serious defect.
   **International** Organization for Migration, which is the standing reminder that the own-TLD half
   is only half.
 
+  **`mission_labels` was 184 of 198 countries carrying only their ISO code, and is now 723 labels
+  (entry 134).** Name forms are derived from the file; cities are curated, because a post is usually
+  named after its city. **A label two countries could claim is dropped from both** — it would
+  otherwise demote a page for the wrong country through `foreign_post_labels`' -45.
+
   **Measured 2026-08-18: the governmental half fails for 19 of 51 countries; 16 since 2026-08-25** —
   Germany, Italy, the Netherlands, Sweden and most of Schengen have no governmental marker in their
   hostnames, so the whole government is refused (entry 33). Austria, Canada and Uruguay came back when
@@ -587,6 +592,8 @@ cause, and only running the thing showed it.
 | the corpus missed the UAE post because search never surfaced it | **24 of 27** hold no post for *either* residence tried (entry 133) |
 | a post absent from a corpus is a post the crawl could not reach | AU holds its Riyadh post and 0 on its Dubai one — same domain (entry 133) |
 | `Country.mission_labels` is even enough to measure posts with | AE carries six, SA carries **one** — it cannot match `saudiarabia.embassy.gov.au` (entry 133) |
+| enriching mission labels only helps, it is a lookup table | it widens the **-45** too; 141 pages left Germany's pool (entry 134) |
+| ...so enriching them cost recall | all 141 were other countries' German missions; 0 of 154 oracle pages moved (entry 134) |
 | the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
 | the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
 | the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |

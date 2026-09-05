@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-02 — update this line when you touch the handoff |
-| **Tests** | 679 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 682 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -127,6 +127,13 @@ a UAE post, two hold a Saudi one, and the sets are **disjoint**. Australia holds
 `saudiarabia.embassy.gov.au` and **0** on `uae.embassy.gov.au`; China 168 on
 `sa.china-embassy.gov.cn` and **0** on `ae.china-embassy.gov.cn` — same authority, same host pattern.
 So it is a **seeding** problem, and when the post is present the corridor reads it from the store.
+
+**Item 49's data half shipped on 2026-09-05 (entry 134).** `countries.yaml` gave 184 of 198 countries
+only their ISO code; it now carries name forms for all and curated cities for 115, **293 labels to
+723**, ambiguous labels dropped from both claimants. No oracle answering page moved (0 of 154) and
+the pool went 10,483 → 10,328 — 141 of that in Germany, every one another country's German mission.
+**The crawl half is untouched:** labels let a corridor recognise a post it is shown; they do not put
+one in the corpus.
 
 **Start at item 49, then 50.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
 items were starved of — every country that had a corpus and no run postdating it, one corridor each,
