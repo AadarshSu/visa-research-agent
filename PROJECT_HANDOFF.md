@@ -162,8 +162,12 @@ where nothing records them. `mission_index_seeds` promotes up to eight recorded 
 and `CORPUS_FAMILY_PATTERN` was widened to admit the mission family it had been refusing.
 
 **Start at item 49, and what is left of it is the measurement.** Nothing is priced: no corpus has
-been rebuilt and no corridor has read a post out of the store because of this. Three things a new
-session should know before running it:
+been rebuilt and no corridor has read a post out of the store because of this. What *is* shown is
+narrower and worth quoting exactly: crawling Australia from the eight mission seeds alone, no search,
+at a quarter of a build's page budget, reached **six mission hosts the corpus does not have** —
+`bangladesh.embassy.gov.au` with 19 pages, `croatia` with 13, plus Cyprus, Chile and Fiji.
+`uae.embassy.gov.au` was **not** among them, which says nothing about the UAE: the family has 194
+members and the run had 300 pages. Three things a new session should know before running it:
 
 - **Rebuild `AU` first — it is the honest test.** China's index forwards with
   `window.location.href` rather than a link, so it may yield nothing until something renders it.

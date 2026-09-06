@@ -273,6 +273,29 @@ held, none opened — and its remedy line already names the fix: *"only a crawl 
 addresses reaches them"*. **Canada's move also corrects a standing claim**: `coverage` used to
 report that Canada has no per-traveller dimension, and it has one.
 
+### The mechanism works and the named target is not yet reached
+
+Crawled from the eight Australian seeds alone — no search, `maximum_depth` 3, a **300**-page budget
+against a build's 1,200 — the run opened 183 pages and reached **six hosts the corpus does not
+have**, all of them Australian posts:
+
+```
+NEW    19  bangladesh.embassy.gov.au
+NEW    13  croatia.embassy.gov.au
+NEW     1  cyprus.embassy.gov.au
+NEW     1  chile.embassy.gov.au
+NEW     1  fiji.embassy.gov.au
+```
+
+**That is the mechanism doing exactly what it was built to do** — a mission host that no search seed
+surfaced, entered from the ministry's own list, with nineteen pages on it rather than a home page.
+
+**And `uae.embassy.gov.au` is not among them.** The family has 194 members and this run had a
+quarter of a build's budget, so which posts it reached is a function of how far the round-robin got,
+not of anything about the United Arab Emirates. **Quote this as "the mechanism reaches posts the
+corpus lacks", never as "item 49's success condition is met"** — that needs a real build and is
+step 1 of the item.
+
 ### What it is not, and what is still unmeasured
 
 **It is a keyword gate and it misses.** Nine of the 53 record nothing it recognises. China's index

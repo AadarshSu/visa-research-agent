@@ -190,7 +190,10 @@ produces a serious defect.
   pages at depth 4, where nothing records them. `CORPUS_FAMILY_PATTERN` was widened for the same
   reason it exists — `…/australian-embassy-{}` carries no visa word, so the gate built to find
   per-traveller families was refusing the largest one Australia publishes. **None of it is priced:
-  no corpus has been rebuilt.**
+  no corpus has been rebuilt.** What is shown is that the seed reaches posts search never surfaced —
+  a 300-page crawl from Australia's mission seeds alone found **six hosts the corpus lacks**,
+  `bangladesh.embassy.gov.au` with 19 pages — and **not** that it reaches `uae.embassy.gov.au`,
+  which the run had neither the budget nor the round-robin position for.
 
   **`mission_labels` was 184 of 198 countries carrying only their ISO code, and is now 723 labels
   (entry 134).** Name forms are derived from the file; cities are curated, because a post is usually

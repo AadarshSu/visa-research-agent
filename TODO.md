@@ -317,6 +317,13 @@ member linking straight to `uae.embassy.gov.au`. So this was **allocation, not d
 **Nothing has been priced.** The change is offline-measured and unit-tested; no corpus has been
 rebuilt and no corridor has read a post out of the store because of it.
 
+**One thing is shown and it is not the success condition.** Crawling Australia from the eight
+mission seeds alone, no search, at a quarter of a build's page budget, reached **six mission hosts
+the corpus does not have** — `bangladesh.embassy.gov.au` with **19 pages**, `croatia` with 13, plus
+Cyprus, Chile and Fiji. So the seed does reach posts search never surfaced, with real depth on them.
+**`uae.embassy.gov.au` was not among them**, which says nothing about the UAE: the family has 194
+members and the run had 300 pages. Entry 137.
+
 1. **Rebuild the two clearest countries first** — `visa-discover corpus --country AU` and
    `--country CN` — and check the one thing the item is about: does `uae.embassy.gov.au` appear, and
    with pages on it rather than only a home page? Australia is the honest test; China's index
