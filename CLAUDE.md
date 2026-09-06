@@ -173,6 +173,14 @@ produces a serious defect.
   **International** Organization for Migration, which is the standing reminder that the own-TLD half
   is only half.
 
+  **A build seeds from search results and lands on whichever missions the engine surfaced, so
+  24 of 27 corpora hold no post for the country a traveller applies from** (entry 133). Australia
+  holds 1,599 pages on `embassy.gov.au` and **0** on `uae.embassy.gov.au` while holding 35 on its
+  Riyadh post — same authority, same host pattern. That is TODO **item 49**, and the bar it has to
+  clear is in `corpus_queries`' own docstring: a traveller dimension may enter the offline job only
+  where it can be covered **exhaustively**, which is why purpose is swept in four passes. **Do not
+  add `{residence}` to `corpus_queries`.**
+
   **`mission_labels` was 184 of 198 countries carrying only their ISO code, and is now 723 labels
   (entry 134).** Name forms are derived from the file; cities are curated, because a post is usually
   named after its city. **A label two countries could claim is dropped from both** — it would

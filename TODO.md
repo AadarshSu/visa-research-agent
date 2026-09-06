@@ -284,9 +284,28 @@ Turkey shows the target is reachable: its corpus holds `dubai-bk.mfa.gov.tr` and
 patch.** A corpus is built with **no traveller** — that is what makes it a store of pages rather than
 of answers — so a build seeds on generic country queries and lands on whichever missions the search
 engine surfaced. Seeding "the mission for every residence" reintroduces a traveller dimension into
-the offline job, which is exactly what entry 44 took out. **Argue that before building it.** The
-cheap version that may not cross the line: seed the *mission index* each foreign ministry publishes,
-and let the crawl take the family from there.
+the offline job, which is exactly what entry 44 took out.
+
+> **The argument is already in the code, and it is `corpus_queries`' own docstring**
+> (`discovery/corpus_build.py:201`). It states the bar and then shows the one dimension that clears
+> it:
+>
+> > *"No nationality and no residence — those are 198-valued, and putting them here would tilt the
+> > corpus toward whoever it was built for."*
+> >
+> > *"So purpose is swept rather than omitted. There are **four** purposes against 198
+> > nationalities, so covering the dimension exhaustively costs four passes and leaves the corpus
+> > still corridor-independent: a corpus containing every purpose's pages favours no traveller,
+> > where a corpus containing one purpose's would."*
+>
+> **So the test is not "does a traveller dimension appear" but "is the dimension covered
+> exhaustively".** A corpus holding *every* purpose favours no traveller; one holding a single
+> purpose would. Residence fails that test as a **query** dimension — 198 residences is not four
+> passes — and passes it as a **seed** one: a ministry's own index of its missions is *one* seed per
+> domain and yields *every* post, so the corpus ends up holding all of them and favouring nobody.
+> That is the same shape as the purpose sweep and it is why the mission-index form is the one to
+> build. **Do not add `{residence}` to `corpus_queries`** — that is the form entry 44 forbids, and
+> it is 198 passes per domain besides.
 
 > **Measured 2026-09-05, and the answer is "every post" (entry 133).** The same sweep from Saudi
 > Arabia: **24 of 27 corpora hold no post for either residence.** Three hold a UAE post — Hungary
@@ -319,6 +338,31 @@ it read as no post at all.
 **What that leaves for this item is the crawl, not the data.** The labels let a corridor *recognise*
 a post it is shown; they do not put one in the corpus. Entry 133's finding stands untouched: 24 of
 27 corpora hold no post for either residence.
+
+### Where the code is, and how to measure it
+
+**The seed is built in three places, all in `discovery/corpus_build.py`:** `corpus_queries` (line
+201) writes one domain's queries, `all_corpus_queries` (242) runs the neutral pass then one pass per
+purpose, and `build_country_corpus` (478) turns the results into `seeds` and hands them to
+`crawler.crawl(destination, seeds)`. A seed is never itself a corpus entry — only links found *on* a
+fetched page are — so seeding an index page costs one fetch and yields its whole list.
+
+**The before/after measurement is the `BD/AE` and `BD/SA` sweeps, and `var/recall` is already the
+right baseline**: it currently holds those 53 corridors run *after* the labels and the render cap
+and *before* any seeding change. Two things that will otherwise waste the run:
+
+- **Copy `var/recall` aside first.** A recall log is keyed on its corridor, so a re-run overwrites
+  it (entry 118) and the baseline is gone.
+- **Do not clear `var/cache` for one arm only.** Entry 136 is the session that lost a whole
+  measurement that way: a cold arm against a warm baseline read as a two-point regression that the
+  code had nothing to do with, because `blocked` went 1 → 15 and `challenged` 15 → 27. Clear it for
+  both arms or neither.
+
+**What success looks like**, stated before the run so it cannot be moved afterwards: the corpora
+hold a post for the residence in more than the 3-of-27 and 2-of-27 they hold now, and the corridors
+that currently buy those pages from search read them from the store instead. `australia/BD/AE` and
+`china/BD/AE` are the two clearest cases — both currently take their UAE-post pages from search
+while holding the *Saudi* post of the same authority.
 
 **Why:** entries 132 and 133. It compounds with entry 126 — the residence signal scores a page for
 being about where they apply from, and here that page is not in the corpus to be scored.

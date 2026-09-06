@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-02 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-06 — update this line when you touch the handoff |
 | **Tests** | 685 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -150,7 +150,21 @@ defect worse: the corridor has **two** render budgets, and the pages that become
 and a page nobody rendered reported itself as a page with nothing to read — which is why the budget
 had never been measured. Both fixed; the **total stays at five** until a sweep reads the new reasons.
 
-**Start at item 49.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
+**Start at item 49, and it is written to be picked up cold.** Its argument, its code pointers, its
+measurement and its success condition are all in the item; nothing else in this file needs reading
+first. Three things a new session should know before touching it:
+
+- **The argument it needs is already in the code**, in `corpus_queries`' own docstring
+  (`discovery/corpus_build.py:201`). The bar is not "does a traveller dimension appear" but "is the
+  dimension covered **exhaustively**" — which is why purpose is swept in four passes and nationality
+  is not swept at all. Residence fails that test as a *query* dimension and passes it as a *seed*
+  one. **Do not add `{residence}` to `corpus_queries`.**
+- **`var/recall` is already the baseline.** It holds the 53 `BD/AE` and `BD/SA` corridors run after
+  the labels and the render cap and before any seeding change. **Copy it aside before re-running** —
+  a recall log is keyed on its corridor and a re-run overwrites it (entry 118).
+- **Do not clear `var/cache` for one arm only.** Entry 136 lost a whole measurement that way.
+
+**The state item 49 starts from.** A 27-country sweep on 2026-09-04 closed the evidence gap both lead
 items were starved of — every country that had a corpus and no run postdating it, one corridor each,
 for **`BD/AE`**, a traveller nothing here was tuned for (entry 132). **142 of 162 roles filled, 88%**,
 with **179 of 240 pages read served from the corpus (75%)** and 17 load-bearing search pages. That is
