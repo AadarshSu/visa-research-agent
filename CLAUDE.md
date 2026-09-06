@@ -192,8 +192,11 @@ produces a serious defect.
   per-traveller families was refusing the largest one Australia publishes. **None of it is priced:
   no corpus has been rebuilt.** What is shown is that the seed reaches posts search never surfaced —
   a 300-page crawl from Australia's mission seeds alone found **six hosts the corpus lacks**,
-  `bangladesh.embassy.gov.au` with 19 pages — and **not** that it reaches `uae.embassy.gov.au`,
-  which the run had neither the budget nor the round-robin position for.
+  `bangladesh.embassy.gov.au` with 19 pages — and, since the Australian rebuild of 2026-09-06,
+  that **a real build records the family and does not walk it** (entry 138): 1 member recorded
+  became 166, `uae.embassy.gov.au` stayed at **0**, `www.dfat.gov.au` timed out on 22 of the 25
+  members opened, and *which* 25 is document order because every member scores 0.0. **Do not read
+  that build's ten new hosts as the seed working** — every one arrived from its own search seed.
 
   **`mission_labels` was 184 of 198 countries carrying only their ISO code, and is now 723 labels
   (entry 134).** Name forms are derived from the file; cities are curated, because a post is usually
@@ -667,6 +670,9 @@ cause, and only running the thing showed it.
 | canada has no per-traveller family, `coverage` says so | it has one — `travel.gc.ca/assistance/embassies-consulates/{}`; the gate could not see it (entry 137) |
 | widening a crawl gate only changes the crawl | `coverage` shares it: `ungraded` went 42 → 37 and bulgaria became `incomplete` (entry 137) |
 | the mission index yields 194 members for the reservation | it groups **70**; 124 name their country mid-address and form no family (entry 137) |
+| seeding the index gets the post into the corpus | it gets the *family* in: 1 member recorded → 166, the post still 0 (entry 138) |
+| a rebuild's new mission hosts are the new seed working | all ten came from their own search seeds; one page came from a mission page (entry 138) |
+| a reserved family queue opens its members | all members score 0.0, so the order is the page's — the alphabet's tail is never reached (entry 138) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [138](#138-australia-rebuilt-on-the-mission-seed-the-family-is-recorded-the-walk-is-not-and-uaeembassygovau-is-still-absent) | **The rebuild records 166 family members and opens 25** — 22 of those time out, the order is the alphabet, and the UAE post is still absent |
 | [137](#137-the-mission-index-was-in-the-corpus-all-along-item-49-is-allocation-not-discovery) | **44 of 53 corpora already record the ministry's index of its own missions**, and 34 never opened it — item 49 is allocation, and depth is why the fix is a seed |
 | [136](#136-the-sweep-that-could-not-price-anything-clearing-the-cache-is-correct-and-makes-the-run-incomparable) | **A cold-cache re-run cannot be compared to a warm-cache baseline** — and the render cap does not recover the roles that motivated it |
 | [135](#135-one-host-may-not-spend-a-corridors-whole-render-allowance-and-a-page-nobody-rendered-stops-claiming-to-be-empty) | **The shortlist shares five renders, not twelve** — and an unrendered page reported itself as an empty one |
@@ -186,6 +187,81 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 138. Australia rebuilt on the mission seed: the family is recorded, the walk is not, and `uae.embassy.gov.au` is still absent
+
+**2026-09-06 · item 49 step 1, run — and its success condition is not met**
+
+Entry 137 shipped the mission-index seed and said plainly that nothing was priced. `visa-discover
+corpus --country AU` is that price, and **the answer is no**.
+
+```
+AU  70 queries, 359 seeds (7 from its own mission index), 2983 crawled
+    ->  689 new, 3563 held, 336 unreadable
+```
+
+| | before | after |
+| --- | --- | --- |
+| entries | 2,874 | 3,563 |
+| hosts | 62 | 72 |
+| pages opened | 1,045 | 1,325 |
+| per-country mission pages **recorded** | 168 | **361** — 166 of them found on the index pages themselves |
+| per-country mission pages **opened** | 0 | **25** |
+| `uae.embassy.gov.au` | **0** | **0** |
+
+### The half that worked
+
+**The seed did what it was built to do at the first hop.** The index was fetched, the family was
+seen, and the corpus went from holding **one** member of it to **166**. That is the defect entry 137
+diagnosed, closed: the addresses exist in the store now.
+
+### The half that did not, and it has two causes, both measured
+
+**One: 22 of the 25 members opened failed with `ReadTimeout`.** Not a challenge, not a block, not a
+policy — `www.dfat.gov.au` simply stops answering inside the 20s timeout under sustained crawling at
+`discovery_host_delay_seconds` of 0.5. Three members came back readable. Every one of the by-hand
+fetches in entry 137 succeeded against the same host at a 1s delay with nothing else in flight, so
+pace is implicated — but that run also had far fewer hosts competing, so **two variables differ and
+this is an observation, not a diagnosis.**
+
+**Two: which 25 is decided by document order, and the tail of the alphabet is never reached.** Every
+member of both families scores exactly 0.0 (entry 137 measured that), so the reserved queue's
+ordering falls through to the frontier's sequence number, which is the order the links appear on the
+page. The 25 opened are `australian-embassy-argentina` through `…-hungary` and
+`australian-high-commission-bangladesh` through `…-new-zealand` — both alphabetical heads.
+**`australian-embassy-united-arab-emirates` is recorded, at depth 1, status `unknown`**, and a
+single-host family whose budget is smaller than its membership will never reach it. So does
+`australian-consulate-general-in-dubai-united-arab-emirates`, which is in the unprotected 124 besides.
+
+**Together: 166 members recorded, 25 opened, 3 read, and the three yielded one page on one host that
+search had already brought in.**
+
+### And the ten new hosts are not this change's doing
+
+The rebuild added ten hosts — `philippines.embassy.gov.au` at 107 pages, `bangladesh` at 66, `chile`
+41, `peru` 34, `fiji` 25 — and it would be easy and wrong to read that as the seed working.
+`discovered_from` says otherwise: every one entered from **its own depth-0 search seed** or from a
+sibling that did, and **exactly one page on one host** came from a mission page. The build ran 359
+seeds where the previous one ran fewer, so this is **search variance**. Checked rather than assumed,
+because the headline number would have flattered the change by ten hosts.
+
+### What this costs the item, and what it does not
+
+**Item 49's success condition stands unmet and must not be quietly restated.** The corpus does not
+hold Australia's UAE post; no corridor can read it from the store.
+
+**The diagnosis has moved on, though, and that is worth the build.** It is no longer "the corpus
+cannot point at the post" — it can, at depth 1, by name. It is now **the per-host walk**: a family
+of 70 on one host, competing with that host's other pages inside a share of a 1,200-page budget,
+ordered by nothing, against a host that times out two times in three. Each of those is separately
+attackable and none is the seed.
+
+**One consequence for the measurement plan.** `var/corpus/AU.json` has changed, and ten of the hosts
+in it arrived by search variance. So a future `BD/AE` sweep's Australian row is no longer a clean
+before/after for *this* change — it is confounded, and the confound is now written down rather than
+discovered later.
 
 ---
 

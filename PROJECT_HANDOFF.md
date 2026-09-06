@@ -65,7 +65,7 @@ destinations.
 | | |
 | --- | --- |
 | **Reachable destinations** | **55 of 198** — *reachable*, which is stage 1 of three and not the same as working (entry 68). The binding limit is `config/authority_domains.yaml`, which holds **55 rows**; a country with no row is refused, never bootstrapped live (entry 38). **Every row now carries a confirmable domain** — Iceland and Liechtenstein were the last two and were fixed on 2026-08-29 (entry 110), so `audit` reads `row, no confirmable domain: 0`. `visa-discover audit` prints the split. |
-| **Countries with an offline page corpus** | **53 of the 55 reachable** — the ten of entry 85 plus the 43 built on 2026-08-30 (entry 116, ~13 hours). Only **BR and UY** have none, at one authority domain each. Median around 2,900 entries; Iceland 8,263 and Luxembourg 8,231 largest, **Egypt 45 and Lithuania 139 smallest — every thin one for a cause outside this program** (an expired certificate, a stated `Disallow`, unanswerable challenges, off-domain redirects), none of them a crawler setting. **A build opens 3–15% of what it records** (entry 88), and the page answering a specific traveller is usually one hop below something it recorded and never opened. The Netherlands is the only one rebuilt with a reserved share for per-traveller families; item 35. **Read a host count against the country's domain count, never alone** — Croatia and Slovenia came back on two hosts each and are healthy, having exactly two configured domains; Germany's symptom was one host against five (entry 116).
+| **Countries with an offline page corpus** | **53 of the 55 reachable** — the ten of entry 85 plus the 43 built on 2026-08-30 (entry 116, ~13 hours). Only **BR and UY** have none, at one authority domain each. Median around 2,900 entries; Iceland 8,263 and Luxembourg 8,231 largest, **Egypt 45 and Lithuania 139 smallest — every thin one for a cause outside this program** (an expired certificate, a stated `Disallow`, unanswerable challenges, off-domain redirects), none of them a crawler setting. **A build opens 3–15% of what it records** (entry 88), and the page answering a specific traveller is usually one hop below something it recorded and never opened. The Netherlands is the only one rebuilt with a reserved share for per-traveller families; item 35. **Australia was rebuilt on 2026-09-06 for the mission-index seed** — 2,874 → 3,563 entries, 62 → 72 hosts — and the ten hosts it gained are search variance rather than the seed (entry 138). **Read a host count against the country's domain count, never alone** — Croatia and Slovenia came back on two hosts each and are healthy, having exactly two configured domains; Germany's symptom was one host against five (entry 116).
 | **Verified working** | **All 55 reachable have a row; 53 have a corpus** (entry 116). Stage 2 cleared on 2026-08-25 (entry 70): 103 corridors over the 41 never-run destinations, every one resolving or refusing for a verified reason; **34 of the 41 answer at least one passport**. **A traveller nobody tuned for scores 87% on the original ten** (entry 112). **Nine corridors were run over the new stores on 2026-08-30 and all nine answered from the store without crawling** — Portugal filled six roles, Iceland and China five, Ireland four plus a named tool, Bulgaria two, Slovakia two, and **Liechtenstein and Lithuania none**. Three served a Nigerian traveller that country's own pages: China's Nigeria embassy, Portugal's and Slovakia's Abuja embassies. **The old claim that DK, LT and SK refuse every passport is now partly disproved** — with corpora Denmark fills four roles and Slovakia two; only Lithuania still fills none, behind a `robots.txt` `Disallow` that must not be worked around.
 | **Corridor phase** | median **27.4s**, range 8.8–48.3s, over 40 live runs, all corpus-routed, none crawling. |
 | **Full request** | `POST /visa-plans` measured at 33–43s on three corridors, each a corridor resolve *and* extraction, with the page cache warm. A fully cold request is still untimed. |
@@ -161,17 +161,24 @@ and `maximum_depth` is 3: opening the index where it lies puts the post's guidan
 where nothing records them. `mission_index_seeds` promotes up to eight recorded addresses per build,
 and `CORPUS_FAMILY_PATTERN` was widened to admit the mission family it had been refusing.
 
-**Start at item 49, and what is left of it is the measurement.** Nothing is priced: no corpus has
-been rebuilt and no corridor has read a post out of the store because of this. What *is* shown is
-narrower and worth quoting exactly: crawling Australia from the eight mission seeds alone, no search,
-at a quarter of a build's page budget, reached **six mission hosts the corpus does not have** —
-`bangladesh.embassy.gov.au` with 19 pages, `croatia` with 13, plus Cyprus, Chile and Fiji.
-`uae.embassy.gov.au` was **not** among them, which says nothing about the UAE: the family has 194
-members and the run had 300 pages. Three things a new session should know before running it:
+**Australia was rebuilt on it the same day and the result is a clear no (entry 138).** The corpus
+went 2,874 → 3,563 entries and **the family went from 1 member recorded to 166** — the defect entry
+137 diagnosed, closed — while **`uae.embassy.gov.au` stayed at 0 pages**. Two measured causes, and
+the seed is neither: `www.dfat.gov.au` returned `ReadTimeout` on **22 of the 25** members opened,
+and *which* 25 is document order, because every member scores 0.0 and the reserved queue's tie-break
+is the frontier sequence — `australian-embassy-argentina` through `…-hungary`, both alphabetical
+heads, with `united-arab-emirates` in the tail. **The rebuild's ten new hosts are search variance,
+not this change**: `discovered_from` puts every one on its own search seed, and exactly one page on
+one host came from a mission page.
 
-- **Rebuild `AU` first — it is the honest test.** China's index forwards with
-  `window.location.href` rather than a link, so it may yield nothing until something renders it.
-  That is a named expected miss, not a surprise.
+**Start at item 49, and what is left of it is the two causes above, not another rebuild.** Three
+things a new session should know before touching it:
+
+- **Do not rebuild the other 51 yet.** On this evidence a build buys recorded addresses that
+  nothing then walks, at 15 minutes and 70 search queries each. China is a named expected miss
+  besides: its index forwards with `window.location.href` rather than a link.
+- **Australia's row is now confounded** for any before/after sweep — ten of its hosts arrived by
+  search variance during the rebuild.
 - **`var/recall` is already the baseline.** It holds the 53 `BD/AE` and `BD/SA` corridors run after
   the labels and the render cap and before any seeding change. **Copy it aside before re-running** —
   a recall log is keyed on its corridor and a re-run overwrites it (entry 118).

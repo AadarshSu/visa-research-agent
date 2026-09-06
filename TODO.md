@@ -16,13 +16,15 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Item 49's seeding half shipped on 2026-09-06 and its premise was wrong, 2026-09-06.** The item
-proposed a **search query** for the ministry's index of its own missions; **44 of the 53 corpora
-already record one and 34 never opened it**, so this was allocation rather than discovery (entry
-137). Australia's index is at depth 1 with status `unknown`, and behind it are 194 per-country
-mission pages and then `uae.embassy.gov.au` — the host its corpus has zero pages on. A seed rather
-than a reservation, because the chain is three hops and `maximum_depth` is 3. **Nothing is priced
-yet: no corpus has been rebuilt, and that is all item 49 has left.**
+**Item 49's seeding half shipped on 2026-09-06, its premise was wrong, and the rebuild that priced
+it failed its own bar.** The item proposed a **search query** for the ministry's index of its own
+missions; **44 of the 53 corpora already record one and 34 never opened it**, so this was allocation
+rather than discovery (entry 137). The seed shipped, Australia was rebuilt, and **the family went
+from 1 member recorded to 166 while `uae.embassy.gov.au` stayed at 0** (entry 138). The corpus can
+now point at the post and still does not walk to it, for two measured reasons: `www.dfat.gov.au`
+times out on 22 of 25 opens, and every member scores 0.0 so the queue's order is the order the links
+sit on the page — both alphabetical heads, and `united-arab-emirates` is in the tail. **That, not
+another rebuild, is what item 49 has left.**
 
 **Item 50 is done (entry 135), 2026-09-05.** Item 50's own premise was wrong and
 checking it made the defect worse — the shortlist shares **five** renders, not twelve — so one
@@ -231,7 +233,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 49. Rebuild the corpora on the mission-index seed, and price it | `next` |
+| **Now** | 49. The family is recorded and not walked: order the queue, cap a timing-out host | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
@@ -275,7 +277,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 49. Rebuild the corpora on the mission-index seed, and price it — `next`, **start here**
+### 49. The family is recorded and not walked: order the queue, and cap a host that times out — `next`, **start here**
 
 **The corpus does not hold the destination's post in the country the traveller applies from, and a
 27-country sweep found it eight times (entry 132).** Australia holds **1,599** pages on
@@ -314,25 +316,46 @@ family — the same blind spot item 47 exists for, one level up. So this was **a
 > covered **exhaustively**" — which is why purpose is swept in four passes. Residence fails that as a
 > *query* dimension and passes it as a *seed* one: one index yields every post and favours nobody.
 
-### What is left, and it is the measurement
+### What is left, and the first step of it has been run
 
-**Nothing has been priced.** The change is offline-measured and unit-tested; no corpus has been
-rebuilt and no corridor has read a post out of the store because of it.
+**Step 1 is done and it failed its own bar (entry 138).** `visa-discover corpus --country AU`, on
+2026-09-06: the corpus went 2,874 → 3,563 entries and **the family went from 1 member recorded to
+166**, which is the defect entry 137 diagnosed, closed. **`uae.embassy.gov.au` is still 0 pages.**
 
-**One thing is shown and it is not the success condition.** Crawling Australia from the eight
-mission seeds alone, no search, at a quarter of a build's page budget, reached **six mission hosts
-the corpus does not have** — `bangladesh.embassy.gov.au` with **19 pages**, `croatia` with 13, plus
-Cyprus, Chile and Fiji. So the seed does reach posts search never surfaced, with real depth on them.
-**`uae.embassy.gov.au` was not among them**, which says nothing about the UAE: the family has 194
-members and the run had 300 pages. Entry 137.
+Two measured causes, and the seed is neither of them:
 
-1. **Rebuild the two clearest countries first** — `visa-discover corpus --country AU` and
-   `--country CN` — and check the one thing the item is about: does `uae.embassy.gov.au` appear, and
-   with pages on it rather than only a home page? Australia is the honest test; China's index
-   forwards with `window.location.href` rather than a link, so it may well yield nothing until
-   something renders it, and that is a named expected miss rather than a surprise.
-2. **Then the rest of the 53**, if 1 succeeds. A build is roughly 15 minutes and 70 search queries.
-3. **Then re-run the `BD/AE` and `BD/SA` sweeps** and compare. Two things will otherwise waste it:
+- **`www.dfat.gov.au` timed out on 22 of the 25 members opened** — plain `ReadTimeout` inside 20s,
+  not a challenge or a block, under sustained crawling at a 0.5s host delay. Three came back
+  readable.
+- **Which 25 is document order.** Every member scores 0.0, so the reserved queue falls through to
+  the frontier sequence, which is the order the links sit on the page: `australian-embassy-argentina`
+  through `…-hungary`, and `australian-high-commission-bangladesh` through `…-new-zealand`. Both
+  alphabetical heads. **A single-host family whose budget is smaller than its membership never
+  reaches its tail**, and `united-arab-emirates` is in the tail.
+
+**And do not read the rebuild's ten new hosts as this change working** — `philippines` at 107 pages,
+`bangladesh` 66, `chile` 41, `peru` 34, `fiji` 25. `discovered_from` says every one arrived from its
+own search seed or a sibling that did; **exactly one page on one host came from a mission page**. It
+is search variance, and it also means `var/corpus/AU.json` is now confounded as a before/after for
+this change.
+
+1. **~~Rebuild AU~~ — done 2026-09-06, entry 138. It records the family and does not walk it.**
+   Attack the two causes above before spending another build:
+   - **Order the family queue by something.** All members tie at 0.0, so the tie-break is document
+     order and the alphabet's tail is unreachable. This is entry 88's defect surviving its own fix:
+     the reservation stops the family being *outranked*, and does nothing about the family being
+     *internally unordered*. A residence signal would order it — entry 126 put one in `score_link`
+     and this is the queue it was built for — but nothing has been measured, so measure first.
+   - **Decide what a host that times out two times in three should cost.** `CHALLENGE_FAILURES_PER_HOST`
+     caps a host that cannot be *rendered*; nothing caps one that cannot be *reached*, and 22 wasted
+     opens is 22 members of a 70-member family. Slowing the host rather than dropping it may be the
+     answer, and that is item 11's question in a new place.
+2. **Do not rebuild the other 51 yet.** A build is roughly 15 minutes and 70 search queries, and on
+   this evidence it buys recorded addresses that nothing then walks. China is still a named expected
+   miss besides: its index forwards with `window.location.href` rather than a link.
+3. **Then re-run the `BD/AE` and `BD/SA` sweeps** and compare. Three things will otherwise waste it:
+   - **Australia's row is already confounded** — ten of its hosts arrived by search variance in the
+     rebuild, not by any change here.
    - **Copy `var/recall` aside first.** A recall log is keyed on its corridor, so a re-run
      overwrites it (entry 118) and the baseline is gone.
    - **Do not clear `var/cache` for one arm only.** Entry 136 lost a whole measurement that way: a
