@@ -207,8 +207,8 @@ backwards from that host, with the project's own fetcher and no search:
 | | |
 | --- | --- |
 | `www.dfat.gov.au/…/our-embassies-and-consulates-overseas` | **in the corpus, depth 1, status `unknown`** — recorded, never opened |
-| its links | **194** `…/missions/Pages/australian-embassy-{country}` pages — of which the corpus holds **one** |
-| `…/australian-embassy-united-arab-emirates` | links `uae.embassy.gov.au` — the host with zero pages |
+| its links | **194** per-country mission pages — of which the corpus holds **one** |
+| `…/missions/Pages/australian-embassy-united-arab-emirates` | links `uae.embassy.gov.au` — the host with zero pages |
 
 The same shape holds for China: `www.mfa.gov.cn/web/zwjg_674741/zwsg_674743` — 驻外使馆, its
 embassies abroad — is recorded at depth 1 and `www.mfa.gov.cn` was opened **0 times** in a build
@@ -273,6 +273,31 @@ held, none opened — and its remedy line already names the fix: *"only a crawl 
 addresses reaches them"*. **Canada's move also corrects a standing claim**: `coverage` used to
 report that Canada has no per-traveller dimension, and it has one.
 
+### How much of that list the reservation actually sees: 70 of 194
+
+Counted offline against the real index, with the crawl's own grouping — `country_family_keys` then
+`CORPUS_FAMILY_PATTERN` then the eight-member minimum:
+
+| | |
+| --- | --- |
+| links on the index | 398, of which **194** name a mission, all 194 followable, **1** already in the corpus |
+| grouped into families | **70**, in two: `…/missions/Pages/australian-embassy-{}` at **45** and `…/australian-high-commission-{}` at **25** |
+| in no family at all | **124** — `australian-consulate-general-in-dubai-united-arab-emirates` is one, its country token not being the address's tail |
+
+**The UAE embassy page is inside the 45**, so the reservation reaches it: two families against 40% of
+1,200 pages is 480 reserved slots for 70 members. **The Dubai consulate-general page is in the 124**
+and competes on the ordinary frontier — both link `uae.embassy.gov.au`, so the target is reachable
+either way, but only one route is protected.
+
+**Every one of the 70 scores 0.0**, top to bottom. That is entry 88's premise confirmed in a new
+place rather than assumed: the members cannot be told apart by score because a bare country name is
+all their anchor carries, which is exactly why a reservation and not a score bonus.
+
+**And 124 of 194 sitting outside any family is a real limit, written down rather than fixed here.**
+`country_family_keys` matches a country token that ends at a separator, so a list whose entries put
+the country in the middle — *"Australian Consulate-General in Dubai, United Arab Emirates"* — forms
+no family. It is the same blind spot item 47 exists for, one level up.
+
 ### The mechanism works and the named target is not yet reached
 
 Crawled from the eight Australian seeds alone — no search, `maximum_depth` 3, a **300**-page budget
@@ -290,11 +315,18 @@ NEW     1  fiji.embassy.gov.au
 **That is the mechanism doing exactly what it was built to do** — a mission host that no search seed
 surfaced, entered from the ministry's own list, with nineteen pages on it rather than a home page.
 
-**And `uae.embassy.gov.au` is not among them.** The family has 194 members and this run had a
+**And `uae.embassy.gov.au` is not among them.** The two families hold 70 members and this run had a
 quarter of a build's budget, so which posts it reached is a function of how far the round-robin got,
 not of anything about the United Arab Emirates. **Quote this as "the mechanism reaches posts the
 corpus lacks", never as "item 49's success condition is met"** — that needs a real build and is
 step 1 of the item.
+
+**The same probe at a build's full 1,200 pages was run and produced nothing**: it was still going at
+58 minutes and was killed. Almost every page of it is on `www.dfat.gov.au` behind a one-second
+politeness delay, and `_next_wave` takes at most one page per host per wave, so a crawl seeded only
+on mission indexes is serialised at roughly a page a second. A real build seeds dozens of hosts and
+overlaps them, so this is a fact about the probe and not about the build — but it is why the
+question above is answered by arithmetic here rather than by a second run.
 
 ### What it is not, and what is still unmeasured
 

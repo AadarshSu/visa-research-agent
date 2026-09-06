@@ -740,7 +740,8 @@ first. It is a **seed** and not a reserved share because the chain — index, pe
 the post's own host — is three hops, and from where the index sits the far end lands past
 `maximum_depth`. `CORPUS_FAMILY_PATTERN` admits the mission family for the same reason it exists:
 `…/missions/Pages/australian-embassy-{}` carries no visa word, so the gate built to find
-per-traveller families was refusing the largest one Australia publishes. Entry 137, and nothing about
+per-traveller families was refusing the largest one Australia publishes — 45 members of the index's
+194 mission links, with a second family of 25 beside it and 124 that group into none. Entry 137, and nothing about
 it is priced — no corpus has been rebuilt on it.
 
 **The corpus is read in the request path** (entry 47): a corridor's candidates are `corpus ∪ live

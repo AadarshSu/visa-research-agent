@@ -294,9 +294,11 @@ Labels let a corridor *recognise* a post it is shown; they do not put one in the
 proposed finding the missing posts with a **search query** for the ministry's index of its own
 missions. It did not need one. **44 of the 53 corpora already record such an index, and 34 never
 opened it** — Australia's `www.dfat.gov.au/…/our-embassies-and-consulates-overseas` sits at depth 1
-with status `unknown`, and opening it by hand yields **194** `…/missions/Pages/
-australian-embassy-{country}` pages, of which the corpus holds **one**, the United Arab Emirates
-member linking straight to `uae.embassy.gov.au`. So this was **allocation, not discovery** — item
+with status `unknown`, and opening it by hand yields **194** per-country mission pages, of which
+the corpus holds **one**, the United Arab Emirates member linking straight to
+`uae.embassy.gov.au`. The family gate groups **70** of the 194, in two families of 45 and 25, and
+the UAE embassy page is inside the 45; the other 124 name their country mid-address and form no
+family — the same blind spot item 47 exists for, one level up. So this was **allocation, not discovery** — item
 48's distinction, inside this item.
 
 > **And allocation alone could not have fixed it, which is what settled the shape.** That chain is

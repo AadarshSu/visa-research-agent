@@ -203,11 +203,13 @@ DEFAULT_CORPUS_FAMILY_SHARE = 0.4
 #
 # **The mission words were added on 2026-09-06, and they are the same shape one level up.** The
 # post that serves the country a traveller applies from is published as a country family too —
-# Australia's `…/missions/Pages/australian-embassy-{}` has 194 members, one per country, each
-# linking on to that post's own site — and not one of `visa`, `permit`, `immigrat`, `consular`,
-# `checklist` or `entry` appears in that address. So the largest per-traveller family Australia
-# publishes was refused by the gate built to find per-traveller families, and its members went to
-# the ordinary frontier where a bare country name scores at the floor. Entry 88's defect, again.
+# Australia's `…/missions/Pages/australian-embassy-{}` has 45 members, one per country, each linking
+# on to that post's own site, with `…/australian-high-commission-{}` at 25 beside it — and not one
+# of `visa`, `permit`, `immigrat`, `consular`, `checklist` or `entry` appears in either address. So
+# the largest per-traveller family Australia publishes was refused by the gate built to find
+# per-traveller families, and its members went to the ordinary frontier where a bare country name
+# scores at the floor — measured on the real index, all 70 of them score exactly 0.0, which is
+# entry 88's premise confirmed in a new place rather than assumed.
 #
 # Measured over all 53 corpora before the change, the way entry 88 measured its own: reconstructing
 # each page's link set from `discovered_from` and grouping by `country_family_keys`, the wider
@@ -229,10 +231,11 @@ CORPUS_FAMILY_PATTERN = re.compile(
 # not need one: measured 2026-09-06, **44 of the 53 corpora already record such a page**, and in 34
 # of them the best one was never opened — 156 of the 199 addresses this selects have status
 # `unknown`. Australia's is `www.dfat.gov.au/…/our-embassies-and-consulates-overseas`, sitting
-# at depth 1 with status `unknown`; opening it by hand yields **194** `…/missions/Pages/
-# australian-embassy-{country}` pages, of which the corpus holds **one**, and opening the United
-# Arab Emirates member yields `uae.embassy.gov.au` — the host Australia's corpus has zero pages on
-# while holding 35 on its Riyadh sibling.
+# at depth 1 with status `unknown`; opening it by hand yields **194** per-country mission pages, of
+# which the corpus holds **one**, and opening the United Arab Emirates member yields
+# `uae.embassy.gov.au` — the host Australia's corpus has zero pages on while holding 35 on its
+# Riyadh sibling. The family gate groups **70** of those 194; the other 124 name their country in
+# the middle of the address and form no family at all.
 #
 # **So this is allocation, not discovery — and allocation alone cannot reach it.** That chain is
 # three hops long. From depth 1 its far end lands at depth 4 and `maximum_depth` is 3, so merely

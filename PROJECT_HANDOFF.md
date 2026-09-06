@@ -153,9 +153,9 @@ had never been measured. Both fixed; the **total stays at five** until a sweep r
 **Item 49's seeding half shipped on 2026-09-06, and measuring the item first disproved its premise
 (entry 137).** It proposed finding the missing posts with a **search query** for the ministry's index
 of its own missions. **44 of the 53 corpora already record such an index, and 34 never opened it** —
-Australia's sits at depth 1 with status `unknown`, and behind it are 194
-`…/missions/Pages/australian-embassy-{country}` pages, of which the corpus holds one, the United
-Arab Emirates member linking straight to `uae.embassy.gov.au`. So this was **allocation, not
+Australia's sits at depth 1 with status `unknown`, and behind it are 194 per-country mission pages,
+of which the corpus holds one, the United Arab Emirates member linking straight to
+`uae.embassy.gov.au`. The family gate groups 70 of those 194, in two families of 45 and 25. So this was **allocation, not
 discovery**. It still had to be a *seed* rather than a reservation, because the chain is three hops
 and `maximum_depth` is 3: opening the index where it lies puts the post's guidance pages at depth 4,
 where nothing records them. `mission_index_seeds` promotes up to eight recorded addresses per build,

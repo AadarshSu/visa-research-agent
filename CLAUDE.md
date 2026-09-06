@@ -184,8 +184,8 @@ produces a serious defect.
   **The missing post is one the corpus can already point at, and the fix is a seed (entry 137).**
   **44 of the 53 corpora record the ministry's own index of its missions abroad and 34 never opened
   it** — Australia's is at depth 1, status `unknown`, and behind it are 194
-  `…/missions/Pages/australian-embassy-{country}` pages leading on to the post. So this was
-  allocation, not discovery. It had to be a **seed** rather than a reservation because the chain is
+  per-country mission pages leading on to the post — 70 of which the family gate groups, in two
+  families of 45 and 25. So this was allocation, not discovery. It had to be a **seed** rather than a reservation because the chain is
   three hops and `maximum_depth` is 3: opening the index where it lies leaves the post's guidance
   pages at depth 4, where nothing records them. `CORPUS_FAMILY_PATTERN` was widened for the same
   reason it exists — `…/australian-embassy-{}` carries no visa word, so the gate built to find
@@ -666,6 +666,7 @@ cause, and only running the thing showed it.
 | the family gate finds the per-traveller families a corpus holds | it refused Australia's largest: `…/australian-embassy-{}` has no visa word (entry 137) |
 | canada has no per-traveller family, `coverage` says so | it has one — `travel.gc.ca/assistance/embassies-consulates/{}`; the gate could not see it (entry 137) |
 | widening a crawl gate only changes the crawl | `coverage` shares it: `ungraded` went 42 → 37 and bulgaria became `incomplete` (entry 137) |
+| the mission index yields 194 members for the reservation | it groups **70**; 124 name their country mid-address and form no family (entry 137) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
