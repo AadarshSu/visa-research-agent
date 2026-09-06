@@ -950,8 +950,9 @@ async def run_corridor(
 
 def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
     print(
-        f"  {build.country_code}  {build.queries} queries, {build.seeds} seeds, "
-        f"{build.crawled} crawled  ->  {build.added} new, {build.total} held"
+        f"  {build.country_code}  {build.queries} queries, {build.seeds} seeds"
+        + (f" ({build.mission_seeds} from its own mission index)" if build.mission_seeds else "")
+        + f", {build.crawled} crawled  ->  {build.added} new, {build.total} held"
         + (f", {build.unreadable} unreadable" if build.unreadable else ""),
         file=stream,
     )

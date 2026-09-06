@@ -50,7 +50,12 @@ from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleSc
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
 from visa_research_agent.discovery.search import SearchProvider, search_all, usable_results
-from visa_research_agent.discovery.urls import canonicalise_url, is_crawlable, is_pdf_url
+from visa_research_agent.discovery.urls import (
+    canonicalise_url,
+    country_family_keys,
+    is_crawlable,
+    is_pdf_url,
+)
 from visa_research_agent.domain.models import (
     DestinationConfig,
     FailureOutcome,
@@ -195,7 +200,119 @@ DEFAULT_CORPUS_FAMILY_SHARE = 0.4
 # useless one. Excluding it needs a notion of territory this gate does not have. That is not fixed
 # here and is written down rather than papered over, because `coverage` is offline with no model by
 # design (entry 90) and entry 57's lesson is that a pattern cannot decide meaning.
-CORPUS_FAMILY_PATTERN = re.compile(r"visa|permit|immigrat|consular|checklist|entry", re.IGNORECASE)
+#
+# **The mission words were added on 2026-09-06, and they are the same shape one level up.** The
+# post that serves the country a traveller applies from is published as a country family too —
+# Australia's `…/missions/Pages/australian-embassy-{}` has 194 members, one per country, each
+# linking on to that post's own site — and not one of `visa`, `permit`, `immigrat`, `consular`,
+# `checklist` or `entry` appears in that address. So the largest per-traveller family Australia
+# publishes was refused by the gate built to find per-traveller families, and its members went to
+# the ordinary frontier where a bare country name scores at the floor. Entry 88's defect, again.
+#
+# Measured over all 53 corpora before the change, the way entry 88 measured its own: reconstructing
+# each page's link set from `discovered_from` and grouping by `country_family_keys`, the wider
+# pattern newly admits **five families and nothing else** — the Netherlands' 173 embassy pages,
+# Bulgaria's 156, Greece's 14, Canada's 12 and Malta's 11, every one an index of that country's own
+# posts abroad. Nothing resembling Canada's travel advisories or Japan's country-relations pages
+# crosses, because neither carries a mission word.
+CORPUS_FAMILY_PATTERN = re.compile(
+    r"visa|permit|immigrat|consular|checklist|entry"
+    r"|embass|consulate|ambassad|ambasad|botschaft|vertretung|mission",
+    re.IGNORECASE,
+)
+
+
+# **An index of a country's own posts abroad, and why it is worth a seed of its own.**
+#
+# The post that serves the country a traveller applies from is missing from 24 of 27 corpora
+# (entry 133), and the item that queued this work proposed finding it with a search query. It did
+# not need one: measured 2026-09-06, **44 of the 53 corpora already record such a page**, and in 34
+# of them the best one was never opened — 156 of the 199 addresses this selects have status
+# `unknown`. Australia's is `www.dfat.gov.au/…/our-embassies-and-consulates-overseas`, sitting
+# at depth 1 with status `unknown`; opening it by hand yields **194** `…/missions/Pages/
+# australian-embassy-{country}` pages, of which the corpus holds **one**, and opening the United
+# Arab Emirates member yields `uae.embassy.gov.au` — the host Australia's corpus has zero pages on
+# while holding 35 on its Riyadh sibling.
+#
+# **So this is allocation, not discovery — and allocation alone cannot reach it.** That chain is
+# three hops long. From depth 1 its far end lands at depth 4 and `maximum_depth` is 3, so merely
+# *opening* the index would record the post's home page and never a single guidance page on it. A
+# seed is depth 0, and depth 0 is what buys the three hops. That is the whole argument for promoting
+# a recorded address to a seed rather than reserving budget for it where it sits.
+#
+# **It is a keyword gate and it misses.** Nine countries record no match at all, and China's index
+# forwards with `window.location.href` rather than a link, so seeding it costs a fetch and yields
+# nothing until something renders it. Both are written down rather than papered over. The gate is
+# allowed to be a keyword one for the same reason `CORPUS_FAMILY_PATTERN` is: it decides which page
+# a crawl opens, never what a traveller is told, so entry 57's rule about patterns deciding meaning
+# does not reach it.
+MISSION_INDEX_NOUNS = (
+    r"(embassies|consulates|missions|representations|posts|embajadas|consulados|ambassades"
+    r"|ambasciate|botschaften|vertretungen|representaciones|misiones|beskickningar)"
+)
+MISSION_INDEX_QUALIFIERS = (
+    r"(abroad|overseas|worldwide|diplomatic|diplomatiques|diplomatique|diplomatiche"
+    r"|our|list|network|directory|find|all)"
+)
+MISSION_INDEX_PATTERN = re.compile(
+    rf"{MISSION_INDEX_NOUNS}[\W_]*(and|&|und|et|y)?[\W_]*{MISSION_INDEX_QUALIFIERS}"
+    rf"|{MISSION_INDEX_QUALIFIERS}[\W_]*(and|&|und|et|y)?[\W_]*{MISSION_INDEX_NOUNS}"
+    rf"|{MISSION_INDEX_NOUNS}[\W_]*(and|&)[\W_]*{MISSION_INDEX_NOUNS}"
+    # Site-specific forms observed in the 53 corpora, where the phrase above is not in the address:
+    # Germany, Iceland, Italy, Portugal, Japan, Bulgaria, Greece, Slovakia, Denmark and China.
+    r"|auslandsvertretungen|sendiskrifstofur|laretediplomatica|rede[\W_]*consular"
+    r"|emb[\W_]*cons|embassyinfo|missionsabroad|embassies-list|find[\W_]*us[\W_]*abroad"
+    r"|/zwjg|驻外使馆|驻外总领馆|驻外机构|在外公館",
+    re.IGNORECASE,
+)
+
+# How many recorded addresses one build may promote to seeds this way. Eight against a 1,200-page
+# allowance, because the pattern is noisy in the tail — Iceland matches 1,128 entries, most of them
+# a mission's own pages rather than the ministry's list of them — and the ordering below is what
+# does the work: a page the last build never opened, shallowest first.
+#
+# It is also a bound on a second cost that is easy to miss: `_budget_for` divides the page allowance
+# by the number of hosts **seeded**, so a seed on a host search did not reach makes every other
+# host's share slightly smaller. Eight cannot move that much; a hundred could.
+DEFAULT_CORPUS_MISSION_SEEDS = 8
+
+
+def mission_index_seeds(
+    corpus: CountryCorpus,
+    destination: DestinationConfig,
+    *,
+    slugs: frozenset[str],
+    limit: int = DEFAULT_CORPUS_MISSION_SEEDS,
+) -> list[str]:
+    """Addresses the corpus already holds that read as this country's own index of its missions.
+
+    **Members of the family are excluded, not the index of it.** `mfa.bg/en/embassyinfo/{country}`
+    matches the pattern 62 times over and is the list's *content*; seeding one of those spends a
+    fetch on a page a corridor could already reach. `country_family_keys` is what tells them apart,
+    and it is the same function the reservation groups on.
+
+    Unopened first, then shallowest, then by address. Unopened first because a page the last build
+    read has already contributed whatever it links to, and a page it recorded and skipped is the one
+    this exists for; deterministic throughout, because two builds of the same country must ask the
+    same things in the same order.
+    """
+
+    matched = [
+        entry
+        for entry in corpus.entries
+        if MISSION_INDEX_PATTERN.search(f"{entry.url} {entry.link_text} {entry.title}")
+        and not country_family_keys(entry.url, slugs)
+        and is_crawlable(canonicalise_url(entry.url), destination)
+    ]
+    matched.sort(key=lambda entry: (entry.status != "unknown", entry.depth, entry.url))
+    seeds: list[str] = []
+    for entry in matched:
+        url = canonicalise_url(entry.url)
+        if url not in seeds:
+            seeds.append(url)
+        if len(seeds) >= limit:
+            break
+    return seeds
 
 
 def corpus_queries(
@@ -261,6 +378,13 @@ class CorpusBuild(StrictModel):
     country_code: str
     queries: int = 0
     seeds: int = 0
+    mission_seeds: int = 0
+    """How many of those seeds were addresses the last build recorded and never opened.
+
+    Reported rather than inferred, because a build whose corpus is empty gets none of them and a
+    build whose country publishes no recognisable index gets none either — two very different
+    reasons for the post being missing, and the count is what tells them apart."""
+
     crawled: int = 0
     found: int = 0
     """Entries this crawl produced, before the merge."""
@@ -494,6 +618,7 @@ async def build_country_corpus(
     page_text: PageTextStore | None = None,
     maximum_pdfs: int = DEFAULT_CORPUS_PDFS,
     family_share: float = DEFAULT_CORPUS_FAMILY_SHARE,
+    maximum_mission_seeds: int = DEFAULT_CORPUS_MISSION_SEEDS,
 ) -> tuple[CountryCorpus, CorpusBuild]:
     """Search, crawl and fold the result into the country's corpus, adding but never removing.
 
@@ -531,6 +656,23 @@ async def build_country_corpus(
                 continue
             if url not in seeds:
                 seeds.append(url)
+
+    # Seeds the last build already found and did not open. A search seed lands wherever the engine
+    # surfaced a mission — which is how 24 of 27 corpora came to hold no post for the country a
+    # traveller applies from (entry 133) — while the authority's own index of its posts names every
+    # one of them. Promoting it to depth 0 is what puts its far end inside `maximum_depth`; see
+    # `mission_index_seeds`.
+    mission_seeds = 0
+    if existing is not None:
+        for url in mission_index_seeds(
+            existing,
+            destination,
+            slugs=frozenset(other.slug for other in every_country.countries),
+            limit=maximum_mission_seeds,
+        ):
+            if url not in seeds:
+                seeds.append(url)
+                mission_seeds += 1
 
     def score(link: PageLink) -> RoleScores:
         return score_role_vocabulary(link, words)
@@ -603,6 +745,7 @@ async def build_country_corpus(
         country_code=country.code,
         queries=len(queries),
         seeds=len(seeds),
+        mission_seeds=mission_seeds,
         crawled=len(crawled),
         page_budget=maximum_pages,
         found=len(entries),

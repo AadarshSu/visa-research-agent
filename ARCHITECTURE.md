@@ -589,7 +589,8 @@ search and no network in it anywhere. Like `audit` it prints two halves that are
 *covered*, *bounded by the authority* — the members are behind a selector and no crawl budget crosses
 one — *incomplete*, which means rebuild before promoting the country to stage 3, and **`ungraded`**,
 which means the country has no per-traveller family **and** no oracle row, so neither half said
-anything about it. That last one is the common case: **42 of the 53 built countries are `ungraded`**,
+anything about it. That last one is the common case: **37 of the 53 built countries are `ungraded`**, 42 until the
+mission words entered `CORPUS_FAMILY_PATTERN` on 2026-09-06 (entry 137),
 and they used to borrow the wording of a pass by deferring to an empty half. Half one's *content*
 still never votes; only its absence can withhold a verdict, and never grant one — which is why
 Portugal, outside the oracle but holding a family, is still graded *bounded by the authority*. `coverage.py` groups families across the
@@ -728,6 +729,19 @@ every request, and text would take Japan's from 1.4MB to ~35MB.
 > residence, so it has none of the post logic (`mission_host_bonus`, `other_mission_penalty`) that
 > entry 70 established is the dimension that actually varies. The blend is what keeps both: the link
 > score knows about posts, the body score knows what the page is.
+
+**An offline build seeds from search, and from what the last build wrote down.** Search seeds land on
+whichever missions the engine surfaced, which is how 24 of 27 corpora came to hold no post for the
+country a traveller applies from (entry 133) — Australia has 1,599 pages on `embassy.gov.au` and
+**0** on `uae.embassy.gov.au` while holding 35 on its Riyadh sibling. The authority's own index of
+its missions names every one of them, and **44 of the 53 corpora already record that index while 34
+never opened it**, so `mission_index_seeds` promotes up to eight such addresses per build, unopened
+first. It is a **seed** and not a reserved share because the chain — index, per-country mission page,
+the post's own host — is three hops, and from where the index sits the far end lands past
+`maximum_depth`. `CORPUS_FAMILY_PATTERN` admits the mission family for the same reason it exists:
+`…/missions/Pages/australian-embassy-{}` carries no visa word, so the gate built to find
+per-traveller families was refusing the largest one Australia publishes. Entry 137, and nothing about
+it is priced — no corpus has been rebuilt on it.
 
 **The corpus is read in the request path** (entry 47): a corridor's candidates are `corpus ∪ live
 discovery`, pages that already filled a role for that corridor keep their shortlist places, and what a

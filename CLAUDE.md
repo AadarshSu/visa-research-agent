@@ -181,6 +181,17 @@ produces a serious defect.
   where it can be covered **exhaustively**, which is why purpose is swept in four passes. **Do not
   add `{residence}` to `corpus_queries`.**
 
+  **The missing post is one the corpus can already point at, and the fix is a seed (entry 137).**
+  **44 of the 53 corpora record the ministry's own index of its missions abroad and 34 never opened
+  it** — Australia's is at depth 1, status `unknown`, and behind it are 194
+  `…/missions/Pages/australian-embassy-{country}` pages leading on to the post. So this was
+  allocation, not discovery. It had to be a **seed** rather than a reservation because the chain is
+  three hops and `maximum_depth` is 3: opening the index where it lies leaves the post's guidance
+  pages at depth 4, where nothing records them. `CORPUS_FAMILY_PATTERN` was widened for the same
+  reason it exists — `…/australian-embassy-{}` carries no visa word, so the gate built to find
+  per-traveller families was refusing the largest one Australia publishes. **None of it is priced:
+  no corpus has been rebuilt.**
+
   **`mission_labels` was 184 of 198 countries carrying only their ISO code, and is now 723 labels
   (entry 134).** Name forms are derived from the file; cities are curated, because a post is usually
   named after its city. **A label two countries could claim is dropped from both** — it would
@@ -647,6 +658,11 @@ cause, and only running the thing showed it.
 | Cyprus's `403` is a refusal, so entry 41 does not apply | Azure declares its challenge in the **body**; it is answerable (entry 73) |
 | three countries send a UK resident to their New Delhi post | Brazil sent them to Edinburgh; only one case was real (entry 72) |
 | treating another country's label as another post is the fix | it broke 165 correct pages — the destination's own code (entry 72) |
+| a build seeds from search, so seed the mission index from search | 44 of 53 corpora already record it and 34 never opened it (entry 137) |
+| so open the mission index where the corpus recorded it | its far end is depth 4 against a ceiling of 3 — only a seed reaches it (entry 137) |
+| the family gate finds the per-traveller families a corpus holds | it refused Australia's largest: `…/australian-embassy-{}` has no visa word (entry 137) |
+| canada has no per-traveller family, `coverage` says so | it has one — `travel.gc.ca/assistance/embassies-consulates/{}`; the gate could not see it (entry 137) |
+| widening a crawl gate only changes the crawl | `coverage` shares it: `ungraded` went 42 → 37 and bulgaria became `incomplete` (entry 137) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
@@ -692,7 +708,8 @@ prints a **pool audit** splitting a row's answers into pooled, outside, and abse
 list for applicants in the United Kingdom, at 0.0 for every role (entry 127). Do not read a zero in
 that audit as a result while every row still says `curated_from: pool`; the report says so itself.
 
-**`coverage` says `ungraded` when it cannot grade, and 42 of 53 countries are** (entry 120). A
+**`coverage` says `ungraded` when it cannot grade, and 37 of 53 countries are** (entry 120; 42
+until entry 137 widened the family gate, which moved BG, CA, GR, MT and NO). A
 country with no per-traveller family and no oracle row is graded by neither half; it used to borrow
 the wording of a pass. **Do not read that as 42 curation jobs** — the oracle grows one country at a
 time, when a specific question needs the store-versus-selector split and a corridor run has failed

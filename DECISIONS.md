@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [137](#137-the-mission-index-was-in-the-corpus-all-along-item-49-is-allocation-not-discovery) | **44 of 53 corpora already record the ministry's index of its own missions**, and 34 never opened it — item 49 is allocation, and depth is why the fix is a seed |
 | [136](#136-the-sweep-that-could-not-price-anything-clearing-the-cache-is-correct-and-makes-the-run-incomparable) | **A cold-cache re-run cannot be compared to a warm-cache baseline** — and the render cap does not recover the roles that motivated it |
 | [135](#135-one-host-may-not-spend-a-corridors-whole-render-allowance-and-a-page-nobody-rendered-stops-claiming-to-be-empty) | **The shortlist shares five renders, not twelve** — and an unrendered page reported itself as an empty one |
 | [134](#134-mission-labels-293-to-723-and-the-pool-gets-smaller-because-it-gets-righter) | **184 of 198 countries carried only their ISO code** — Saudi Arabia could not recognise its own post |
@@ -185,6 +186,109 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 137. The mission index was in the corpus all along: item 49 is allocation, not discovery
+
+**2026-09-06 · item 49, measured before implementing — and the item's premise was wrong**
+
+Item 49 said the corpus holds no post for the country a traveller applies from because *"a build
+seeds from search results and lands on whichever missions the engine surfaced"*, and proposed
+finding the missing posts by adding a **search query** for the ministry's index of its own missions.
+The first half is true and entry 133 measured it. **The second half is not the fix, because the
+index is not missing: 44 of the 53 corpora already record one, and 34 of them never opened it.**
+
+### The chain, verified end to end on the case the item names
+
+Australia holds **1,599** pages on `embassy.gov.au` and **0** on `uae.embassy.gov.au`. Walking
+backwards from that host, with the project's own fetcher and no search:
+
+| | |
+| --- | --- |
+| `www.dfat.gov.au/…/our-embassies-and-consulates-overseas` | **in the corpus, depth 1, status `unknown`** — recorded, never opened |
+| its links | **194** `…/missions/Pages/australian-embassy-{country}` pages — of which the corpus holds **one** |
+| `…/australian-embassy-united-arab-emirates` | links `uae.embassy.gov.au` — the host with zero pages |
+
+The same shape holds for China: `www.mfa.gov.cn/web/zwjg_674741/zwsg_674743` — 驻外使馆, its
+embassies abroad — is recorded at depth 1 and `www.mfa.gov.cn` was opened **0 times** in a build
+that recorded 134 of its pages.
+
+**So the address was never the problem.** Search had already found it; the crawl wrote it down and
+spent its budget elsewhere. That is entry 88's finding one level up — *a build opens 3–15% of what
+it records* — and it makes item 49 an **allocation** problem, which is exactly the distinction item
+48 exists to keep separate from discovery.
+
+### Why allocation alone cannot fix it either, which is what settles the shape
+
+The chain above is **three hops**. `maximum_depth` is 3 and the index sits at depth 1, so merely
+*opening* it where it lies puts the family at 2, the post's home page at 3 — fetchable but never
+expanded — and every guidance page on that post at **depth 4, which is never recorded at all**. A
+reservation like entry 88's, which is the obvious answer to "this page never wins the frontier",
+would therefore buy a home page and nothing on it.
+
+**A seed is depth 0, and depth 0 is what buys the three hops.** So the item's chosen mechanism —
+seeding — is right, for a reason it did not give, and the seed does not have to come from a search.
+
+### What shipped
+
+**`mission_index_seeds` promotes what the last build recorded and skipped.** Up to eight addresses
+per build, unopened first, shallowest first, then by address so two builds ask the same things in
+the same order. Members of the family are excluded from the promotion by `country_family_keys` —
+`mfa.bg/en/embassyinfo/{country}` matches the words 62 times over and is the list's *content*, not
+the list. Measured over all 53 corpora: **44 countries get at least one seed, 199 addresses in
+total, 156 of them pages the last build never opened.** Nine countries get none, and
+`CorpusBuild.mission_seeds` is reported so "this country publishes no index we recognise" is not
+confused with "this build had no corpus to read one from".
+
+**`CORPUS_FAMILY_PATTERN` now admits a mission family.** It had to: `…/missions/Pages/
+australian-embassy-{}` carries none of `visa`, `permit`, `immigrat`, `consular`, `checklist` or
+`entry`, so the largest per-traveller family Australia publishes was refused by the gate built to
+find per-traveller families, and its 194 members would have gone to the ordinary frontier where a
+bare country name scores at the floor. Measured before shipping, the way entry 88 measured its own
+gate — reconstructing each page's link set from `discovered_from` and grouping on
+`country_family_keys` — the wider pattern newly admits **five families and nothing else**: the
+Netherlands' 173 embassy pages, Bulgaria's 156, Greece's 14, Canada's 12, Malta's 11. Nothing
+resembling Canada's travel advisories or Japan's country-relations pages crosses, because neither
+carries a mission word.
+
+### Widening the family gate moved five `coverage` verdicts, and that is a gain not a cost
+
+`CORPUS_FAMILY_PATTERN` is shared: `coverage.py` groups families across the whole store with it, so
+widening it changes what the promotion gate can *see*. Measured by running `coverage` on both
+patterns over the same 53 corpora — **`ungraded` goes 42 to 37**:
+
+| | before | after |
+| --- | --- | --- |
+| BG | `ungraded` | **`incomplete`** — `mfa.bg/en/embassyinfo/{}`, **156 of 198 held, 0 opened** |
+| CA | *no per-traveller dimension* | *bounded by the authority* — `travel.gc.ca/assistance/embassies-consulates/{}` |
+| GR | `ungraded` | *bounded by the authority* — `mfa.gr/missionsabroad/{}`, 14 held, 0 opened |
+| MT | `ungraded` | *bounded by the authority* — `missions.foreign.gov.mt/embassies/{}` |
+| NO | `ungraded` | *bounded by the authority* — a **gateway** family, `norway.no/en/{}/for-nordmenn/om-ambassaden` |
+
+Every one of them is a page published once per country the traveller applies from, which is what a
+per-traveller family *is*; none is a travel advisory. Bulgaria's new `incomplete` is not a
+regression but the gate finally being able to say the thing this entry is about — 156 addresses
+held, none opened — and its remedy line already names the fix: *"only a crawl seeded from those
+addresses reaches them"*. **Canada's move also corrects a standing claim**: `coverage` used to
+report that Canada has no per-traveller dimension, and it has one.
+
+### What it is not, and what is still unmeasured
+
+**It is a keyword gate and it misses.** Nine of the 53 record nothing it recognises. China's index
+forwards with `window.location.href` rather than a link, so seeding it costs one fetch and yields
+nothing until something renders it. It is allowed to be a keyword gate for the reason
+`CORPUS_FAMILY_PATTERN` is: it decides which page a crawl opens, never what a traveller is told, so
+entry 57's rule about patterns deciding meaning does not reach it.
+
+**A cold build still gets none of this**, because there is no previous corpus to read. The query
+half of item 49 is therefore still open and is still the right thing for a country being built for
+the first time — with the caveat that nobody has measured whether such a query returns the index.
+
+**And item 49's own success condition is not met yet**: the corpora have to be rebuilt and the
+`BD/AE` and `BD/SA` sweeps re-run before anyone may say a corridor reads the post from the store.
+`var/recall` holds the baseline and a re-run overwrites it (entry 118); `var/cache` must be clear
+for both arms or neither (entry 136).
 
 ---
 

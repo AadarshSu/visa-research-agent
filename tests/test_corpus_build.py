@@ -27,13 +27,17 @@ from discovery_site import (
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.corpus_build import (
     CORPUS_EXPANSION_THRESHOLD,
+    CORPUS_FAMILY_PATTERN,
+    DEFAULT_CORPUS_MISSION_SEEDS,
     all_corpus_queries,
     build_country_corpus,
+    mission_index_seeds,
 )
 from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
 from visa_research_agent.discovery.lexicon import Country, get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, RoleScores, SearchResult
 from visa_research_agent.discovery.page_text import PageTextStore
+from visa_research_agent.domain.models import DestinationConfig
 
 NOW = datetime(2026, 8, 22, 9, 0, tzinfo=UTC)
 TRUSTED = ["immigration.gov.example", "uk.embassy.gov.example"]
@@ -478,3 +482,147 @@ async def test_a_build_follows_links_the_request_path_would_not() -> None:
         CORPUS_EXPANSION_THRESHOLD
         < LinkCrawler(fetcher([]), lambda _: RoleScores()).expansion_threshold
     )
+
+
+# --- The mission index a build recorded and never opened (DECISIONS entry 137) ---------------
+
+
+def entry(url: str, *, text: str = "", depth: int = 1, status: str = "unknown") -> CorpusEntry:
+    return CorpusEntry(
+        url=url,
+        link_text=text,
+        depth=depth,
+        status=status,  # type: ignore[arg-type]
+        first_seen=NOW,
+        last_seen=NOW,
+    )
+
+
+def held(*entries: CorpusEntry) -> CountryCorpus:
+    return CountryCorpus(
+        country_code="XX",
+        country_name="Example",
+        trusted_domains=TRUSTED,
+        built_at=NOW,
+        entries=list(entries),
+    )
+
+
+def destination() -> DestinationConfig:
+    return DestinationConfig(
+        slug="example",
+        display_name="Example",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=TRUSTED,
+    )
+
+
+def seeds_from(corpus: CountryCorpus, *, limit: int = DEFAULT_CORPUS_MISSION_SEEDS) -> list[str]:
+    slugs = frozenset(other.slug for other in get_country_registry().countries)
+    return mission_index_seeds(corpus, destination(), slugs=slugs, limit=limit)
+
+
+def test_the_index_of_a_countrys_own_posts_is_promoted_to_a_seed() -> None:
+    """The measured case, in miniature.
+
+    Australia's corpus records `…/our-embassies-and-consulates-overseas` at depth 1 and never opens
+    it; behind it are 194 per-country mission pages and, one hop further, the post that serves the
+    country a traveller applies from. Entry 137.
+    """
+
+    corpus = held(
+        entry(f"https://{AUTHORITY}/about/our-embassies-and-consulates-overseas"),
+        entry(f"https://{AUTHORITY}/visa/fees.html", text="Visa fees"),
+    )
+
+    assert seeds_from(corpus) == [
+        f"https://{AUTHORITY}/about/our-embassies-and-consulates-overseas"
+    ]
+
+
+def test_a_member_of_the_family_is_not_mistaken_for_the_index_of_it() -> None:
+    """`mfa.bg/en/embassyinfo/{country}` matches the words 62 times over and is the list's content.
+
+    Seeding one of those spends a fetch on a page a corridor could already reach, and would crowd
+    out the one page that names all of them. `country_family_keys` is what tells them apart, and it
+    is the same function the family reservation groups on.
+    """
+
+    index = f"https://{AUTHORITY}/embassyinfo"
+    corpus = held(
+        entry(f"{index}/india"),
+        entry(f"{index}/china"),
+        entry(index),
+    )
+
+    assert seeds_from(corpus) == [index]
+
+
+def test_a_page_the_last_build_never_opened_comes_first() -> None:
+    """A page already read has contributed whatever it links to; a recorded one has not."""
+
+    read = f"https://{AUTHORITY}/a/embassies-abroad"
+    skipped = f"https://{AUTHORITY}/z/embassies-abroad"
+    corpus = held(entry(read, status="readable"), entry(skipped))
+
+    assert seeds_from(corpus) == [skipped, read]
+
+
+def test_the_promotion_is_bounded_and_deterministic() -> None:
+    """The pattern is noisy in the tail — Iceland matches 1,128 entries — so the cap does the work.
+
+    Two builds of the same country must also ask the same things in the same order, which is why
+    the ordering falls back to the address rather than to corpus order.
+    """
+
+    corpus = held(*(entry(f"https://{AUTHORITY}/{n}/missions-abroad") for n in range(9, 0, -1)))
+
+    first = seeds_from(corpus, limit=3)
+    assert first == seeds_from(corpus, limit=3)
+    assert first == [f"https://{AUTHORITY}/{n}/missions-abroad" for n in (1, 2, 3)]
+
+
+def test_a_country_with_no_corpus_gets_none_of_this() -> None:
+    """Nine of the 53 record no recognisable index, and a first build records nothing at all.
+
+    Both are ordinary and neither is a failure; `CorpusBuild.mission_seeds` is what tells the two
+    apart from a build that simply found one.
+    """
+
+    assert seeds_from(held()) == []
+
+
+def test_the_family_gate_admits_a_mission_family_and_still_refuses_travel_advice() -> None:
+    """Entry 88's gate refused the largest per-traveller family Australia publishes.
+
+    `…/missions/Pages/australian-embassy-{}` carries none of `visa`, `permit`, `immigrat`,
+    `consular`, `checklist` or `entry`, so its 194 members went to the ordinary frontier where a
+    bare country name scores at the floor. Widened for the mission words, and measured over all 53
+    corpora before shipping: five families cross and nothing else, none of them travel advice.
+    """
+
+    assert CORPUS_FAMILY_PATTERN.search("/about-us/our-locations/missions/pages/embassy-{}")
+    assert CORPUS_FAMILY_PATTERN.search("https://mfa.example/en/embassyinfo/{}")
+    assert not CORPUS_FAMILY_PATTERN.search("https://travel.example/destinations/{}")
+    assert not CORPUS_FAMILY_PATTERN.search("https://mofa.example/region/asia/{}")
+
+
+@pytest.mark.anyio
+async def test_a_build_seeds_what_the_last_one_recorded_and_skipped() -> None:
+    """The whole point: the address is already in the store, so it costs no search to reach."""
+
+    previous = held(entry(MISSION_INDEX.replace("index.html", "our-missions-abroad.html")))
+
+    _corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX]),
+        fetcher([]),
+        existing=previous,
+        now=NOW,
+        maximum_pages=60,
+    )
+
+    assert report.mission_seeds == 1
+    assert report.seeds == 2

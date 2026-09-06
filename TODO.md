@@ -16,7 +16,15 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
-**Item 50 is done (entry 135) and item 49 leads, 2026-09-05.** Item 50's own premise was wrong and
+**Item 49's seeding half shipped on 2026-09-06 and its premise was wrong, 2026-09-06.** The item
+proposed a **search query** for the ministry's index of its own missions; **44 of the 53 corpora
+already record one and 34 never opened it**, so this was allocation rather than discovery (entry
+137). Australia's index is at depth 1 with status `unknown`, and behind it are 194 per-country
+mission pages and then `uae.embassy.gov.au` — the host its corpus has zero pages on. A seed rather
+than a reservation, because the chain is three hops and `maximum_depth` is 3. **Nothing is priced
+yet: no corpus has been rebuilt, and that is all item 49 has left.**
+
+**Item 50 is done (entry 135), 2026-09-05.** Item 50's own premise was wrong and
 checking it made the defect worse — the shortlist shares **five** renders, not twelve — so one
 client-rendered host could take the whole allowance, and a page nobody rendered was reporting itself
 as a page with nothing to read. Both fixed; the **total** deliberately stays at five until a sweep
@@ -223,7 +231,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 49. Seed a build with the missions serving each residence, not just the country | `next` |
+| **Now** | 49. Rebuild the corpora on the mission-index seed, and price it | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
@@ -267,105 +275,74 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 49. Seed a build with the missions serving each residence, not just the country — `next`, **start here**
+### 49. Rebuild the corpora on the mission-index seed, and price it — `next`, **start here**
 
 **The corpus does not hold the destination's post in the country the traveller applies from, and a
 27-country sweep found it eight times (entry 132).** Australia holds **1,599** pages on
 `embassy.gov.au` and **0** on `uae.embassy.gov.au`; China holds 3,523 on `china-embassy.gov.cn` plus
 2,280 on `china-consulate.gov.cn` and **0** on `ae.china-embassy.gov.cn` or
 `dubai.china-consulate.gov.cn`. Search supplied those pages on every corridor that needed them.
+Measured from a second residence (entry 133): **24 of 27 corpora hold no post for either**, and
+Australia holds 35 pages on its Riyadh post against 0 on its Dubai one — same authority, same host
+pattern, so the crawl never went there rather than being unable to.
 
-**It is a per-traveller family whose members are hosts.** Entry 88 built the reservation for
-`…/schengen-visa/apply-{country}` — one page per country, *within* a host — and
-`{residence}.embassy.gov.au` is the same shape one level up, where the reservation cannot see it.
-Turkey shows the target is reachable: its corpus holds `dubai-bk.mfa.gov.tr` and `dubai-cg.mfa.gov.tr`.
+**~~The data half~~ — done 2026-09-05, entry 134.** `countries.yaml` gave 184 of 198 countries only
+their ISO code; it now carries name forms for all and curated cities for 115, 293 labels to 723.
+Labels let a corridor *recognise* a post it is shown; they do not put one in the corpus.
 
-**And it is entry 44's design meeting its own limit, which is why this needs an argument and not a
-patch.** A corpus is built with **no traveller** — that is what makes it a store of pages rather than
-of answers — so a build seeds on generic country queries and lands on whichever missions the search
-engine surfaced. Seeding "the mission for every residence" reintroduces a traveller dimension into
-the offline job, which is exactly what entry 44 took out.
+**~~The seeding half~~ — done 2026-09-06, entry 137, and the item's premise was wrong.** This item
+proposed finding the missing posts with a **search query** for the ministry's index of its own
+missions. It did not need one. **44 of the 53 corpora already record such an index, and 34 never
+opened it** — Australia's `www.dfat.gov.au/…/our-embassies-and-consulates-overseas` sits at depth 1
+with status `unknown`, and opening it by hand yields **194** `…/missions/Pages/
+australian-embassy-{country}` pages, of which the corpus holds **one**, the United Arab Emirates
+member linking straight to `uae.embassy.gov.au`. So this was **allocation, not discovery** — item
+48's distinction, inside this item.
 
-> **The argument is already in the code, and it is `corpus_queries`' own docstring**
-> (`discovery/corpus_build.py:201`). It states the bar and then shows the one dimension that clears
-> it:
+> **And allocation alone could not have fixed it, which is what settled the shape.** That chain is
+> three hops and `maximum_depth` is 3, so from depth 1 the post's guidance pages land at depth 4 and
+> are never recorded at all. Reserving budget for the index where it lies — entry 88's answer to a
+> page that never wins the frontier — would buy a home page and nothing on it. **A seed is depth 0,
+> and depth 0 is what buys the three hops.** `mission_index_seeds` promotes up to eight recorded
+> addresses per build, unopened first; `CORPUS_FAMILY_PATTERN` was widened to admit the mission
+> family, which it had been refusing because `…/australian-embassy-{}` carries no visa word.
 >
-> > *"No nationality and no residence — those are 198-valued, and putting them here would tilt the
-> > corpus toward whoever it was built for."*
-> >
-> > *"So purpose is swept rather than omitted. There are **four** purposes against 198
-> > nationalities, so covering the dimension exhaustively costs four passes and leaves the corpus
-> > still corridor-independent: a corpus containing every purpose's pages favours no traveller,
-> > where a corpus containing one purpose's would."*
->
-> **So the test is not "does a traveller dimension appear" but "is the dimension covered
-> exhaustively".** A corpus holding *every* purpose favours no traveller; one holding a single
-> purpose would. Residence fails that test as a **query** dimension — 198 residences is not four
-> passes — and passes it as a **seed** one: a ministry's own index of its missions is *one* seed per
-> domain and yields *every* post, so the corpus ends up holding all of them and favouring nobody.
-> That is the same shape as the purpose sweep and it is why the mission-index form is the one to
-> build. **Do not add `{residence}` to `corpus_queries`** — that is the form entry 44 forbids, and
-> it is 198 passes per domain besides.
+> **Do not add `{residence}` to `corpus_queries`.** The bar in its own docstring
+> (`discovery/corpus_build.py`) is not "does a traveller dimension appear" but "is the dimension
+> covered **exhaustively**" — which is why purpose is swept in four passes. Residence fails that as a
+> *query* dimension and passes it as a *seed* one: one index yields every post and favours nobody.
 
-> **Measured 2026-09-05, and the answer is "every post" (entry 133).** The same sweep from Saudi
-> Arabia: **24 of 27 corpora hold no post for either residence.** Three hold a UAE post — Hungary
-> `abudhabi.mfa.gov.hu`, Luxembourg `abudhabi.mae.lu`, Turkey `dubai-bk`/`dubai-cg.mfa.gov.tr` — and
-> two hold a Saudi one, Australia `saudiarabia.embassy.gov.au` and China `sa.china-embassy.gov.cn`.
-> **The two sets are disjoint.**
->
-> **Australia holds 35 pages on its Riyadh post and 0 on its Dubai one; China holds 168 on
-> `sa.china-embassy.gov.cn` and 0 on `ae.china-embassy.gov.cn`.** Same authority, same host pattern,
-> one present and its sibling absent — so these posts are not unreachable or unrecognisable, the
-> crawl never went there. **It is a seeding problem, not a budget or reachability one**, which
-> settles the shape of the fix: seed the mission index, do not crawl deeper.
->
-> **And when the post is in the store the corridor uses it**: `china/BD/SA` filled 6 of 6 reading
-> five of its nine pages from `sa.china-embassy.gov.cn` **out of the corpus**, while `china/BD/AE`
-> filled 6 of 6 too and bought its UAE-post pages from search. The mechanism is demonstrated in both
-> directions on one authority.
->
-> The second traveller also confirms the headline: `BD/SA` filled **135 of 156 roles, 87%**, with
-> **76% of what it read served from the corpus**, against `BD/AE`'s 88% and 75%.
+### What is left, and it is the measurement
 
-**~~One more thing to fix while here, and it is data~~ — done 2026-09-05, entry 134.**
-`countries.yaml` gave **184 of 198 countries only their ISO code**; it now carries name forms for
-all of them and curated cities for 115, **293 labels to 723**, with any label two countries could
-claim dropped from both. Measured before shipping: **no oracle answering page moved, 0 of 154**, and
-the selector's pool went 10,483 → 10,328 — a loss of 141 in Germany alone, every one of them another
-country's German mission. `saudiarabia.embassy.gov.au` now reads as the traveller's own post where
-it read as no post at all.
+**Nothing has been priced.** The change is offline-measured and unit-tested; no corpus has been
+rebuilt and no corridor has read a post out of the store because of it.
 
-**What that leaves for this item is the crawl, not the data.** The labels let a corridor *recognise*
-a post it is shown; they do not put one in the corpus. Entry 133's finding stands untouched: 24 of
-27 corpora hold no post for either residence.
+1. **Rebuild the two clearest countries first** — `visa-discover corpus --country AU` and
+   `--country CN` — and check the one thing the item is about: does `uae.embassy.gov.au` appear, and
+   with pages on it rather than only a home page? Australia is the honest test; China's index
+   forwards with `window.location.href` rather than a link, so it may well yield nothing until
+   something renders it, and that is a named expected miss rather than a surprise.
+2. **Then the rest of the 53**, if 1 succeeds. A build is roughly 15 minutes and 70 search queries.
+3. **Then re-run the `BD/AE` and `BD/SA` sweeps** and compare. Two things will otherwise waste it:
+   - **Copy `var/recall` aside first.** A recall log is keyed on its corridor, so a re-run
+     overwrites it (entry 118) and the baseline is gone.
+   - **Do not clear `var/cache` for one arm only.** Entry 136 lost a whole measurement that way: a
+     cold arm against a warm baseline read as a two-point regression the code had nothing to do
+     with, because `blocked` went 1 → 15 and `challenged` 15 → 27.
 
-### Where the code is, and how to measure it
+**What success looks like**, unchanged and stated before the run so it cannot be moved afterwards:
+the corpora hold a post for the residence in more than the 3-of-27 and 2-of-27 they hold now, and
+the corridors that currently buy those pages from search read them from the store instead.
+`australia/BD/AE` and `china/BD/AE` are the two clearest cases — both currently take their UAE-post
+pages from search while holding the *Saudi* post of the same authority.
 
-**The seed is built in three places, all in `discovery/corpus_build.py`:** `corpus_queries` (line
-201) writes one domain's queries, `all_corpus_queries` (242) runs the neutral pass then one pass per
-purpose, and `build_country_corpus` (478) turns the results into `seeds` and hands them to
-`crawler.crawl(destination, seeds)`. A seed is never itself a corpus entry — only links found *on* a
-fetched page are — so seeding an index page costs one fetch and yields its whole list.
+**Two things this deliberately does not cover.** A **cold** build gets no mission seed, because
+there is no previous corpus to read one from; the search-query form is still the right answer there
+and nobody has measured whether such a query returns the index. And **nine of the 53** record no
+index this recognises — it is a keyword gate and it misses.
 
-**The before/after measurement is the `BD/AE` and `BD/SA` sweeps, and `var/recall` is already the
-right baseline**: it currently holds those 53 corridors run *after* the labels and the render cap
-and *before* any seeding change. Two things that will otherwise waste the run:
-
-- **Copy `var/recall` aside first.** A recall log is keyed on its corridor, so a re-run overwrites
-  it (entry 118) and the baseline is gone.
-- **Do not clear `var/cache` for one arm only.** Entry 136 is the session that lost a whole
-  measurement that way: a cold arm against a warm baseline read as a two-point regression that the
-  code had nothing to do with, because `blocked` went 1 → 15 and `challenged` 15 → 27. Clear it for
-  both arms or neither.
-
-**What success looks like**, stated before the run so it cannot be moved afterwards: the corpora
-hold a post for the residence in more than the 3-of-27 and 2-of-27 they hold now, and the corridors
-that currently buy those pages from search read them from the store instead. `australia/BD/AE` and
-`china/BD/AE` are the two clearest cases — both currently take their UAE-post pages from search
-while holding the *Saudi* post of the same authority.
-
-**Why:** entries 132 and 133. It compounds with entry 126 — the residence signal scores a page for
-being about where they apply from, and here that page is not in the corpus to be scored.
+**Why:** entries 132, 133 and 137. It compounds with entry 126 — the residence signal scores a page
+for being about where they apply from, and here that page is not in the corpus to be scored.
 
 ---
 
