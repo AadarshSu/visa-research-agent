@@ -93,6 +93,7 @@ from visa_research_agent.discovery.page_text import (
 from visa_research_agent.discovery.proposal import render_corridor_yaml
 from visa_research_agent.discovery.recall_log import (
     FileRecallLog,
+    ModelCall,
     RecallRecord,
     VarianceReport,
     compare_runs,
@@ -292,6 +293,28 @@ def print_phase_timings(phases: dict[str, float], stream: TextIO) -> None:
     for phase, seconds in known:
         share = f"{seconds / total:.0%}" if total else "--"
         print(f"    {phase:<12} {seconds:6.1f}s  {share:>4}", file=stream)
+
+
+def print_model_calls(calls: list[ModelCall], stream: TextIO) -> None:
+    """What each model call was given and what it cost.
+
+    The packet is printed apart from the prompt because only the packet varies with the corridor —
+    the system prompt is a file — so a combined figure would hide the variable behind a constant
+    (entry 144).
+    """
+
+    if not calls:
+        return
+    print("\n  model calls:", file=stream)
+    for call in calls:
+        packet = f"{call.packet_characters / 1000:.1f}k"
+        prompt = f"{call.prompt_characters / 1000:.1f}k"
+        failed = "  FAILED" if call.failed else ""
+        print(
+            f"    {call.call:<9} {call.seconds:6.1f}s   packet {packet:>7}"
+            f"   prompt {prompt:>6}{failed}",
+            file=stream,
+        )
 
 
 def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
@@ -934,6 +957,7 @@ async def run_corridor(
     resolved: ResolvedCorridor | None = None
 
     timings: dict[str, float] = {}
+    model_calls: list[ModelCall] = []
     for attempt in range(1, runs + 1):
         started = datetime.now(UTC)
         resolved = await resolve(destination, corridor, policy)
@@ -944,6 +968,7 @@ async def run_corridor(
             written = log.read(corridor)
             if written is not None and written.recorded_at >= started:
                 timings = written.phase_seconds
+                model_calls = written.model_calls
             continue
         outcomes.append("resolved" if resolved.is_usable else "refused")
         filled = ", ".join(sorted({role for s in resolved.sources for role in s.roles})) or "—"
@@ -968,6 +993,7 @@ async def run_corridor(
     else:
         print_corridor(resolved, stream)
         print_phase_timings(timings, stream)
+        print_model_calls(model_calls, stream)
 
     if args.format == "yaml":
         print(render_corridor_yaml(resolved))

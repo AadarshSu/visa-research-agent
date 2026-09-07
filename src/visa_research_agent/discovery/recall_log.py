@@ -51,6 +51,29 @@ class ConsideredCandidate(StrictModel):
     "why was this page not used", and it is invisible unless the two are recorded apart."""
 
 
+class ModelCall(StrictModel):
+    """One call to a model, with the input size that is the only handle on why it took as long.
+
+    **Added 2026-09-07 because a 4× spread had no explanation** (entry 143): `japan/IN/GB` spent
+    22.9s adjudicating where `australia/BD/AE` spent 5.4s for the same two calls, and nothing
+    recorded what either was given. Characters rather than tokens: tokens are the provider's unit
+    and are not knowable here without asking it, and the question is which *input* grows, for which
+    characters are an honest proxy this program can compute.
+
+    Prompt and packet are kept apart because only one of them varies with the corridor — the system
+    prompt is loaded from a file and is the same every run, so a total would hide the thing being
+    measured behind a constant.
+    """
+
+    call: Literal["select", "roles", "blocked"]
+    prompt_characters: int = Field(ge=0)
+    packet_characters: int = Field(ge=0)
+    seconds: float = Field(ge=0)
+    failed: bool = False
+    """A call that raised. Timed and kept, because a slow failure is a cost like any other and a
+    retry loop that hides them would under-report the runs worth reading."""
+
+
 class RecallRecord(StrictModel):
     """Everything one resolution considered, in the order a reader asks about it."""
 
@@ -123,6 +146,12 @@ class RecallRecord(StrictModel):
 
     A diagnostic like the rest of this record: nothing reads it back, and a phase missing from the
     map is one this run never reached."""
+
+    model_calls: list[ModelCall] = Field(default_factory=list)
+    """Every model call this run made, in order, with what it was given and what it cost.
+
+    Empty means the log predates the field, exactly as it does for `phase_seconds` — not a run that
+    made no calls, which is a real state a corridor reaches when it refuses before selection."""
 
     unreadable_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
     """Per URL, why it could not be read, as the typed outcome rather than the sentence.

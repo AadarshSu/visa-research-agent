@@ -841,13 +841,23 @@ absolute bound and must not become a multiple of the shortlist size.
 >
 > **What is next, in order:**
 >
-> - **Measure inside the model calls.** Japan spends **22.9s** adjudicating where Australia spends
->   **5.4s** for the same two calls — a **4× spread nothing explains**, and neither call has ever
->   been timed against its own input size. Until that is known, "make the model calls faster" has no
->   handle. This is the next measurement and it needs no new quota: the sizes are already in the
->   packets.
-> - **`select` is the input side of item 31.** Widening the pool that item wants widened makes this
->   call bigger. Price them together or the two items will fight.
+> - **~~Measure inside the model calls~~ — done 2026-09-07, entry 144, and the answer is negative.**
+>   `ModelCall` records each call's prompt and packet characters, seconds and whether it raised.
+>   **Input size does not explain the spread**: r=+0.33 for selection, +0.48 for roles, and the
+>   Netherlands sends the second-largest selection packet with the fastest selection. **And the same
+>   corridor swings a mean of 40% between two runs of identical code**, Germany by 69% — so most of
+>   what entry 143 wanted explained is provider-side noise, and **no model-latency change can be
+>   graded on single runs** (entry 81's rule, new place).
+>
+>   **What is left inside them is output, not input** — tokens and reasoning effort — and neither is
+>   visible at the call site. Reading them means asking the provider for its usage figures inside
+>   `adjudication.py` and `selection.py`. **`openai_reasoning_effort` is already `low`**: it is the
+>   one-line lever, and lowering it trades the judgement the safety rules rest on, so it does not
+>   move without an accuracy measurement beside it.
+> - **`select` is the input side of item 31**, and now has a number: its packet is **183k–481k
+>   characters per corridor**. Widening the pool item 31 wants widened makes that bigger. Latency
+>   will barely notice (entry 144); **spend will**, and nothing in this project has ever costed a
+>   corridor. Price them together.
 > - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
 >   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
 >   fetcher; nobody has asked it of `LiveSourceFetcher`.

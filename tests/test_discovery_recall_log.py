@@ -26,6 +26,7 @@ from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.recall_log import (
     ConsideredCandidate,
     FileRecallLog,
+    ModelCall,
     RecallRecord,
     compare_runs,
 )
@@ -490,4 +491,114 @@ def test_the_record_carries_the_phases_and_an_older_log_reads_as_unrecorded(
             outcome="resolved",
         ).phase_seconds
         == {}
+    )
+
+
+# --- What a model call was given, and what it cost (DECISIONS entry 144) ---------------------
+
+
+@pytest.mark.anyio
+async def test_a_model_call_records_its_input_size_and_what_it_cost(tmp_path: Path) -> None:
+    """The 4× adjudication spread of entry 143 had no handle because nothing recorded the input."""
+
+    clock = [0.0]
+    resolver = CorridorResolver(
+        StubSearchProvider([]),  # type: ignore[arg-type]
+        CrawlFetcher(host_delay_seconds=0.0),
+        LiveSourceFetcher(
+            FileSourceCache(tmp_path),
+            ttl_hours=24.0,
+            maximum_stale_hours=168.0,
+            timeout_seconds=5.0,
+            concurrency=2,
+            maximum_characters=20_000,
+            minimum_characters=10,
+            user_agent="VisaResearchAgent/test",
+        ),
+        monotonic=lambda: clock[0],
+    )
+
+    async with resolver._timed_model_call("select", "PROMPT", "PACKET-LONGER"):
+        clock[0] += 4.0
+
+    assert resolver.model_call_timings == [
+        ModelCall(
+            call="select",
+            prompt_characters=6,
+            packet_characters=13,
+            seconds=4.0,
+            failed=False,
+        )
+    ]
+
+
+@pytest.mark.anyio
+async def test_a_failed_model_call_is_timed_and_kept(tmp_path: Path) -> None:
+    """A slow failure costs the corridor exactly as much as a slow success, and a retry loop that
+    dropped them would under-report the runs worth reading."""
+
+    clock = [0.0]
+    resolver = CorridorResolver(
+        StubSearchProvider([]),  # type: ignore[arg-type]
+        CrawlFetcher(host_delay_seconds=0.0),
+        LiveSourceFetcher(
+            FileSourceCache(tmp_path),
+            ttl_hours=24.0,
+            maximum_stale_hours=168.0,
+            timeout_seconds=5.0,
+            concurrency=2,
+            maximum_characters=20_000,
+            minimum_characters=10,
+            user_agent="VisaResearchAgent/test",
+        ),
+        monotonic=lambda: clock[0],
+    )
+
+    with pytest.raises(SelectionQuotaExhausted):
+        async with resolver._timed_model_call("roles", "P", "K"):
+            clock[0] += 9.0
+            raise SelectionQuotaExhausted("no credit")
+
+    assert len(resolver.model_call_timings) == 1
+    assert resolver.model_call_timings[0].failed is True
+    assert resolver.model_call_timings[0].seconds == 9.0
+
+
+def test_the_record_keeps_model_calls_and_an_older_log_reads_as_unrecorded(
+    tmp_path: Path,
+) -> None:
+    """Empty means the log predates the field, not a run that made no calls — which is a real
+    state a corridor reaches when it refuses before selection."""
+
+    log = FileRecallLog(tmp_path)
+    corridor = Corridor(
+        destination_slug="japan",
+        passport_nationality="IN",
+        applying_from="GB",
+        purpose="tourism",
+    )
+    log.write(
+        RecallRecord(
+            corridor_key=corridor.key,
+            recorded_at=datetime(2026, 9, 7, 12, 0, tzinfo=UTC),
+            outcome="resolved",
+            model_calls=[
+                ModelCall(
+                    call="roles", prompt_characters=100, packet_characters=48000, seconds=22.9
+                )
+            ],
+        )
+    )
+
+    read = log.read(corridor)
+    assert read is not None
+    assert read.model_calls[0].packet_characters == 48000
+    assert read.model_calls[0].seconds == 22.9
+    assert (
+        RecallRecord(
+            corridor_key=corridor.key,
+            recorded_at=datetime(2026, 9, 7, 12, 0, tzinfo=UTC),
+            outcome="resolved",
+        ).model_calls
+        == []
     )

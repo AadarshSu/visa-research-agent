@@ -50,8 +50,21 @@ concluded fetch was the target; entry 143 withdraws that. Australia's 20.9s of f
 **And "read fewer pages" is not the obvious lever it looks.** The three page-related stages are 83%
 of a corridor, but per page they run 1.29s (Canada) to 2.78s (Germany, the Netherlands) — Canada
 reads 20 pages in 25.8s and Japan 16 in 43.0s. Entry 84's *"a fetch is cheap and a missed role is
-not"* is not refuted by this. **Japan's 22.9s adjudication against Australia's 5.4s for the same two
-calls is a 4× spread nothing yet explains**, and that is the next measurement.
+not"* is not refuted by this.
+
+**Inside the model calls, input size does not explain the spread either (entry 144).** `ModelCall`
+records each call's prompt and packet characters, its seconds, and whether it raised. Correlation of
+packet size with time is **+0.33** for selection and **+0.48** for roles; the Netherlands sends the
+*second-largest* selection packet and has the *fastest* selection, and the per-100k rate varies 4×.
+**"Send the model less" is not a latency lever** — though it is a spend one, and selection packets
+run **183k–481k characters per corridor**, which nothing here has ever costed.
+
+**A third of the variance is not the corridor at all.** The same six corridors, run twice on the same
+code, swing a mean of **40% (select) and 33% (roles)** — Germany moved 69% and 67%. So entry 143's
+"4× spread" is substantially provider-side noise, and **a model-latency change cannot be graded on
+single runs**, which is entry 81's rule arriving in a new place. What is left to measure is *output*
+— tokens and reasoning effort — which is only visible inside the two providers.
+**`openai_reasoning_effort` is already `low`; do not lower it without an accuracy measurement.**
 
 **A stage is the span between two numbered steps of `_resolve`, not the act it is named after.**
 That first run printed `crawl 2.0s` while its own notes said the crawl was skipped; both are true,
@@ -736,6 +749,9 @@ cause, and only running the thing showed it.
 | fetch is 43% of a corridor, optimise it | that was one corridor; over six it is **31%** and the model calls are 52% (entry 143) |
 | one corridor's timings say where the program spends time | fetch ranges 14–51% — every corridor names a different winner (entry 143) |
 | the page-related stages scale with pages read, so read fewer | CA reads 20 in 25.8s, JP 16 in 43.0s — page count is not the variable (entry 143) |
+| a slow model call was given more to read | r=+0.33 and +0.48; NL sends the 2nd-biggest packet and is fastest (entry 144) |
+| the 4× adjudication spread is a property of the corridor | the same corridor swings 40% between identical runs (entry 144) |
+| time a model change on one corridor before and after | germany moved 69% on its own — entry 81's rule, new place (entry 144) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

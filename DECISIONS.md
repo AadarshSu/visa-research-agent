@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [144](#144-inside-the-model-calls-input-size-does-not-explain-the-spread-and-a-third-of-it-is-not-the-corridor-at-all) | **Input size does not predict model latency** (r=+0.33, +0.48) — and the same corridor swings **40%** between identical runs |
 | [143](#143-six-corridors-not-one-the-model-calls-are-the-majority-and-fetch-was-an-outlier) | **Six corridors overturn entry 142's one** — the two model calls are **52%**, fetch 31%, and any single corridor names a different winner |
 | [142](#142-a-corridor-now-says-where-its-seconds-went-and-the-answer-is-fetching-and-two-model-calls) | **Phase timings, at last** — fetch 43%, the two model calls 39% with the *selector* the bigger half, search 12% |
 | [141](#141-the-pace-was-protecting-against-a-limit-65-tighter-than-the-real-one-190s-of-search-becomes-26s) | **Brave allows 50 q/s; the lock was pacing at 0.77** — search 19.0s → **2.6s** on identical results, at no extra spend |
@@ -192,6 +193,79 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 144. Inside the model calls: input size does not explain the spread, and a third of it is not the corridor at all
+
+**2026-09-07 · entry 143's open question, measured — and answered in the negative**
+
+Entry 143 left one thing to do: find what the 4× adjudication spread tracks, since *"neither call
+has ever been timed against its own input size"*. `ModelCall` now records, per call, the characters
+of prompt and packet, the seconds, and whether it raised — wrapped at the resolver's three call
+sites so it stays true of any provider and neither implementation knows it is timed. Prompt and
+packet are kept apart because the prompt is loaded from a file and never varies; a total would hide
+the variable behind a constant.
+
+### Input size barely predicts anything
+
+| | select packet | select | per 100k | roles packet | roles | per 100k |
+| --- | --- | --- | --- | --- | --- | --- |
+| `canada` | 481.5k | 9.6s | 1.99s | 136.4k | 10.0s | 7.33s |
+| `netherlands` | 453.9k | **4.9s** | 1.08s | 104.2k | 12.3s | 11.80s |
+| `germany` | 435.1k | **14.2s** | 3.26s | 87.7k | 14.9s | 16.99s |
+| `australia` | 225.1k | 5.6s | 2.49s | 7.3k | 6.5s | 89.04s |
+| `singapore` | 203.7k | 8.1s | 3.98s | 24.8k | 6.2s | 25.00s |
+| `japan` | 183.3k | 7.9s | 4.31s | 73.2k | **18.5s** | 25.27s |
+
+| correlation | |
+| --- | --- |
+| select packet vs select seconds | **+0.33** |
+| roles packet vs roles seconds | **+0.48** |
+| pages read vs roles seconds | **+0.13** |
+
+**The Netherlands sends the second-largest selection packet and has the fastest selection.** Germany
+sends a smaller one and takes nearly three times as long. The per-100k rate varies 4× on selection
+and 12× on roles. **So "send the model less" is not a latency lever**, and anyone reaching for it —
+including the version of this project that has been calling the selector "the cost of a second model
+call" since entry 85 — is reaching for the wrong one.
+
+### And a third of the variance is not the corridor
+
+The same six corridors were run twice, on the same code, hours apart:
+
+| | select r1 → r2 | swing | roles r1 → r2 | swing |
+| --- | --- | --- | --- | --- |
+| `japan` | 13.6 → 7.9s | 53% | 22.9 → 18.5s | 21% |
+| `canada` | 7.5 → 9.6s | 25% | 7.2 → 10.0s | 33% |
+| `singapore` | 5.1 → 8.1s | 45% | 3.9 → 6.2s | 46% |
+| `germany` | 6.9 → 14.2s | **69%** | 7.4 → 14.9s | **67%** |
+| `netherlands` | 5.1 → 4.9s | 4% | 10.6 → 12.3s | 15% |
+| `australia` | 8.7 → 5.6s | 43% | 5.4 → 6.5s | 18% |
+
+**Mean run-to-run swing: 40% on selection, 33% on roles.** Germany moved 69% and 67% between two
+runs of identical code — which is most of the range entry 143 asked to have explained.
+
+**So the "4× spread" is substantially provider-side variance, and this is entry 81 again**: a
+metric whose noise is comparable to the effect cannot grade a change. Entry 81 needed six runs of
+identical code to discover that role count could not see a ranking change; the same bar applies here.
+**Do not A/B a model-call latency change on single runs.**
+
+### What that leaves, and what was deliberately not touched
+
+**The remaining candidate is output, not input.** Generation is sequential where input is not, so
+output tokens and reasoning effort are where the seconds plausibly are — and neither is recorded,
+because neither is visible at the call site. Reading them means asking the provider for its usage
+figures inside `adjudication.py` and `selection.py`, which is the next instrument.
+
+**`openai_reasoning_effort` is already `low`.** It is the one-line latency lever, it is at its
+second-lowest setting, and lowering it further trades the judgement this project's safety rules rest
+on. **Not changed, and not to be changed without the accuracy measurement beside it.**
+
+**A cost finding nobody asked for, recorded because the numbers were in hand.** Selection packets run
+**183k to 481k characters** — very roughly 45k to 120k tokens — *per corridor*. Latency does not track
+that, but spend does, and nothing in this project has ever looked at what a corridor costs to run.
+That is a different question from this entry's and is not answered here.
 
 ---
 

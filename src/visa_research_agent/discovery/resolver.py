@@ -16,7 +16,8 @@ happen is a checklist appearing without a source behind it, which `VisaPlan` ref
 
 import re
 import time
-from collections.abc import Callable, Collection
+from collections.abc import AsyncIterator, Callable, Collection
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Literal
@@ -69,6 +70,7 @@ from visa_research_agent.discovery.models import (
 )
 from visa_research_agent.discovery.page_text import PageTextStore
 from visa_research_agent.discovery.recall_log import (
+    ModelCall,
     RecallLog,
     RecallRecord,
     considered,
@@ -506,6 +508,11 @@ class CorridorResolver:
         # Separate from `now` on purpose: durations need a clock that cannot step backwards, and
         # `now` is a wall clock whose job is stamping when a run happened.
         self.monotonic = monotonic
+        # Per-run like `selection_calls` beside it, and safe for the same reason: a resolver is
+        # built per corridor. Cleared at the top of `resolve` anyway, so a caller that reuses one
+        # gets this run's calls rather than every run's — entry 37 is the standing warning about
+        # per-run state on an object that might outlive the run.
+        self.model_call_timings: list[ModelCall] = []
 
     async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
         """Resolve the corridor, and write down what it considered on the way.
@@ -515,6 +522,7 @@ class CorridorResolver:
         """
 
         trace = ResolutionTrace(clock=self.monotonic)
+        self.model_call_timings = []
         # Kept on the resolver so a caller can read what this run considered without re-reading the
         # recall log, which is overwritten per corridor and deliberately depended on by nothing.
         # Safe as per-run state because a resolver is built per corridor; the mistake entry 37
@@ -898,7 +906,9 @@ class CorridorResolver:
         packet = build_selection_packet(corridor, by_id, text_by_id)
         try:
             self.selection_calls += 1
-            selection = await self.selector.select(load_selection_prompt(), packet)
+            selection_prompt = load_selection_prompt()
+            async with self._timed_model_call("select", selection_prompt, packet):
+                selection = await self.selector.select(selection_prompt, packet)
         except SelectionError as exc:
             # A failed selection is not a failed corridor: the heuristic still ranks, and saying so
             # is honest about which decider produced the answer. This is not entry 31's forbidden
@@ -1147,7 +1157,8 @@ class CorridorResolver:
         for attempt in range(1, ADJUDICATION_ATTEMPTS + 1):
             calls += 1
             try:
-                adjudication = await self.adjudicator.adjudicate(prompt, packet)
+                async with self._timed_model_call("blocked", prompt, packet):
+                    adjudication = await self.adjudicator.adjudicate(prompt, packet)
             except AdjudicationError as exc:
                 if attempt < ADJUDICATION_ATTEMPTS:
                     notes.append(f"judging the refused pages failed ({exc}); retrying once")
@@ -1459,9 +1470,12 @@ class CorridorResolver:
         while attempts < ADJUDICATION_ATTEMPTS:
             attempts += 1
             try:
-                return await self.adjudicator.adjudicate(  # type: ignore[union-attr]
-                    load_adjudication_prompt(), packet
-                ), attempts
+                roles_prompt = load_adjudication_prompt()
+                async with self._timed_model_call("roles", roles_prompt, packet):
+                    adjudicated = await self.adjudicator.adjudicate(  # type: ignore[union-attr]
+                        roles_prompt, packet
+                    )
+                return adjudicated, attempts
             except AdjudicationQuotaExhausted as exc:
                 raise AdjudicationRefusal(attempts, str(exc)) from exc
             except AdjudicationError as exc:
@@ -1588,6 +1602,35 @@ class CorridorResolver:
             )
         return sources, unresolved
 
+    @asynccontextmanager
+    async def _timed_model_call(
+        self, call: Literal["select", "roles", "blocked"], prompt: str, packet: str
+    ) -> AsyncIterator[None]:
+        """Time one model call and record what it was given, whether or not it succeeds.
+
+        Wrapped at the *call site* rather than inside the two providers on purpose: this measures
+        what the resolver waits for, which is what a corridor's latency is made of, and it stays
+        true of any provider without either implementation knowing it is being timed.
+        """
+
+        started = self.monotonic()
+        failed = False
+        try:
+            yield
+        except BaseException:
+            failed = True
+            raise
+        finally:
+            self.model_call_timings.append(
+                ModelCall(
+                    call=call,
+                    prompt_characters=len(prompt),
+                    packet_characters=len(packet),
+                    seconds=round(self.monotonic() - started, 3),
+                    failed=failed,
+                )
+            )
+
     def _write_recall_log(
         self,
         corridor: Corridor,
@@ -1643,6 +1686,7 @@ class CorridorResolver:
                     ),
                     unreadable=unreadable,
                     unreadable_outcomes=outcomes,
+                    model_calls=list(self.model_call_timings),
                     phase_seconds={
                         phase: round(seconds, 3) for phase, seconds in trace.phase_seconds.items()
                     },

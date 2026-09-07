@@ -70,6 +70,13 @@ pages read and 2 model calls. **And a corridor now says where its seconds go** (
 
 **The two model calls are 52% — the majority.** Search is 8%, from 69% two entries earlier.
 
+**Inside the model calls, input size explains almost none of it (entry 144).** Packet size correlates
+with time at **+0.33** (selection) and **+0.48** (roles); the Netherlands sends the second-largest
+selection packet and has the fastest selection. **And the same corridor swings a mean of 40% between
+two runs of identical code** — Germany moved 69% — so a model-latency change **cannot be graded on
+single runs**. What is left is *output* tokens and reasoning effort, visible only inside the two
+providers. `openai_reasoning_effort` is already `low`.
+
 **Never read this from one corridor.** The ranges are wider than the gaps: Australia names fetch,
 Japan names adjudication, Singapore names selection. Entry 142 concluded "fetch is the target" from
 Australia alone and entry 143 withdraws it — Australia's fetch is mostly *failing*, with a render
