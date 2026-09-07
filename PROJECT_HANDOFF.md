@@ -42,13 +42,19 @@ source, and the traveller is told plainly when something could not be verified. 
 scope: submitting applications, booking appointments, filling forms, driving an authority's
 questionnaire, or claiming approval is guaranteed.
 
-**The goal for the work in front of us, stated 2026-08-26.** A country is built **offline** — its
-corpus and its page-text index — and a corridor answers from that store. **Live search is acceptable
-where it is genuinely unavoidable; it is not acceptable as the ordinary source of recall.** The corpus
-has to be useful, and useful means a number: how often a corridor finds what it needs without
-searching. [TODO.md](TODO.md) **item 19** is that goal as a work item. **Item 34 is done** (entry
-87): selector work now has ground truth it did not build, so a measurement of item 19 can be
-believed.
+**The goal for the work in front of us — re-scoped by the owner 2026-09-07, entry 140.** A country
+is built **offline** — its corpus and its page-text index — and a corridor answers from that store
+**fast**. **The goal is latency, not the absence of search.** The corpus is general-purpose and the
+traveller arrives with the corridor, so search is the legitimate traveller-specific complement to a
+traveller-neutral store; every rule about what search may *do* is unchanged.
+[TODO.md](TODO.md) **item 19** is that goal as a work item.
+
+**The seconds are not where this file assumed.** `search_all` is **19.0s of a 27.4s corridor**, one
+query alone is **1.0s**, and **18.2s of that 19.0s is a pacing lock this program holds against
+itself** to protect a Brave quota (entry 74). `_resolve` blocks on it at step 1, so a corridor the
+corpus could answer alone still pays it. The claim that *"adjudication is ~60% of a corridor"* dates
+from two-domain destinations and six queries. **Nothing records where a corridor's time goes** — the
+recall log has no timings, which is the prerequisite for calling any of this fixed.
 
 **It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
 twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar

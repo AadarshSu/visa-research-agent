@@ -7,10 +7,14 @@ picked up cold.
 **Later** is real but not urgent; **Done** keeps finished work because what building it found is usually
 why the item after it exists; **Smaller things** are one-paragraph defects with no owner yet.
 
-**The goal this list serves.** A country is built offline — corpus plus page-text index — and a
-corridor answers from that store. Live search is acceptable where genuinely unavoidable, not as the
-ordinary source of recall. **Item 19 is that goal as a work item**, and it is now measured rather
-than argued: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
+**The goal this list serves, re-scoped by the owner on 2026-09-07 (entry 140).** A country is built
+offline — corpus plus page-text index — and a corridor answers from that store **fast**. The goal is
+**latency, not the absence of search**: the corpus is general-purpose and the traveller arrives with
+the corridor, so search is the legitimate traveller-specific complement to a traveller-neutral store.
+**Item 19 is that goal as a work item.** What it is not is a plan to delete search — and the seconds
+are not where it assumed: `search_all` is **19.0s of a 27.4s corridor**, and **18.2s of that is a
+pacing lock this program holds against itself**. The older measurement below still stands on its own
+terms: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
 corpus and all 59 came from search — 17 of them covering a role nothing else in the run covered**.
 So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,098 entries and
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
@@ -236,7 +240,7 @@ one-paragraph defects rather than items.
 | **Now** | 49. The family is walked at 25 members a build and has 169 — is that enough? | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
-|  | 19. Take search out of the request path too | `next` |
+|  | 19. Get a corridor under ten seconds; search may stay | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 47. Find out how much of the world the family detector cannot see | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
@@ -773,7 +777,53 @@ absolute bound and must not become a multiple of the shortlist size.
 </details>
 
 
-### 19. Take search out of the request path too — `next`, **and this is the project's goal**
+### 19. Get a corridor under ten seconds; search may stay — `next`, **re-scoped by the owner 2026-09-07**
+
+> **The goal is latency, and it always was (entry 140).** The owner:
+>
+> > *"I do want to remove search from the request path but that was because it took 50-70 seconds
+> > for each corridor. Since the corpus is general purpose it might not be able to hold everything
+> > and the traveller information comes through the corridor, so I'm not opposed to using search at
+> > some point in the flow to give correct information as long as we are speeding up the process and
+> > utilising the corpus for efficiency."*
+>
+> So **removal is not the deliverable and never was the point** — speed is, and search is the
+> traveller-specific complement to a traveller-neutral store. Nothing safety-bearing moves: search
+> still only generates candidates, nothing it returns is evidence until it passes the trust rules,
+> and entry 44's ban on *quietly* falling back after a corpus miss is untouched because nothing here
+> is conditional at request time.
+>
+> **And the seconds are not where this item assumed.** Measured on `australia/BD/AE` against a
+> 27.4s median corridor: `search_all` is **19.0s**, one query alone is **1.0s**, and 14 gaps at
+> `DEFAULT_QUERY_INTERVAL_SECONDS` are **18.2s**. **Search is ~69% of a corridor and 95% of that is
+> a pacing lock this program holds against itself** — `_resolve` step 1 blocks steps 2 to 5, so
+> every corridor pays it, including one the corpus could answer alone. The standing claim that
+> *"adjudication is ~60% of a corridor"* (entries 53–55) cannot hold on this corridor and was taken
+> when a destination had two domains and six queries, before the five-domain cap tripled it.
+>
+> **The lock is protecting a quota, not wasting time on purpose.** Entry 74 added it because Brave
+> answers `HTTP 402` when queried too fast on a capped plan. So the first question is about the
+> **plan**, and it is not answerable from this repository.
+>
+> **Four ways to the same second, cheapest first, none built and none measured:**
+>
+> 1. **Raise the pace** if the plan allows — one line, 19.0s → roughly 2–4s. Needs the plan's real
+>    rate limit, which the owner has and this repository does not.
+> 2. **Let the corpus decide how much search to buy** — the owner's "utilising the corpus for
+>    efficiency", literally. Fifteen queries are issued whether or not the store already covers the
+>    corridor; a country whose corpus out-covers a crawl already skips the *crawl* (entry 51) and
+>    the same test has never been applied to search.
+> 3. **Overlap search with the fetches** in step 4 rather than blocking on it in step 1. Overlapping
+>    it with the corpus read buys nothing — that path is 346ms (entry 50).
+> 4. **The per-country switch**, which is this item as entry 129 left it. Still valid, now clearly
+>    the *last* of the four: the most work, and not where the seconds are.
+>
+> **The prerequisite for all four: nothing records where a corridor's time goes.** The recall log
+> holds outcome, cause, selector, queries, seeds, candidates and unreadables, and no timings — which
+> is why a goal stated in seconds went weeks without a number. **Add phase timings first**, or none
+> of the four can be called a success.
+
+### The earlier framing, kept because its findings stand
 
 > **Re-scoped 2026-09-02 (entry 129), and the shape of the decision changes: this is a per-country
 > switch, not a global one.** Re-measured over 47 runs postdating their corpora: **450 pages read,

@@ -19,11 +19,23 @@ Each fact has one home. When one of these files summarises another, the two drif
 what has wasted the most time here — see the corrections table further down, whose hundred and twenty rows are
 mostly a written-down diagnosis that a run then contradicted.
 
-**The goal, stated so everything below reads against it.** A country is built **offline** — its
-corpus and its page-text index — and a corridor answers from that store. Live search is acceptable
-where it is genuinely unavoidable; it is not acceptable as the ordinary source of recall. The corpus
-has to be *useful*, and "useful" has a number: how often a corridor finds what it needs without
-searching. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34 feed it.
+**The goal, stated so everything below reads against it — re-scoped by the owner 2026-09-07 (entry
+140).** A country is built **offline** — its corpus and its page-text index — and a corridor answers
+from that store **fast**. **The goal is latency, not the absence of search.** The corpus is
+general-purpose and the traveller arrives with the corridor, so search is the legitimate
+traveller-specific complement to a traveller-neutral store; what it may *do* is unchanged, and every
+rule below still holds. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34
+feed it.
+
+**And the seconds are not where these files assumed.** Measured 2026-09-07 on `australia/BD/AE`
+against a 27.4s median corridor: `search_all` is **19.0s**, one query alone is **1.0s**, and the 14
+gaps at `DEFAULT_QUERY_INTERVAL_SECONDS` are **18.2s**. So **search is ~69% of a corridor and 95% of
+that is a pacing lock this program holds against itself** — `_resolve` step 1 blocks steps 2 to 5, so
+even a corridor the corpus could answer alone pays all of it. The lock is protecting a Brave quota
+(entry 74) and is a question about the **plan** before it is a constant to lower. The standing claim
+that *"adjudication is ~60% of a corridor"* was measured when a destination had two domains and six
+queries, before the five-domain cap tripled that to fifteen, and **nothing records where a corridor's
+time goes** — add phase timings before calling any latency change a success.
 
 **Where it stands, as of 2026-09-02.** The pipeline works end to end and passed a bar committed in
 advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
@@ -687,6 +699,10 @@ cause, and only running the thing showed it.
 | order the family queue by the traveller's residence | a corpus build has no traveller — order on what the **store** lacks (entry 139) |
 | giving up on a host that will not answer loses pages | it freed the budget: +445 entries, +14 hosts, reads 3 → 12 (entry 139) |
 | the ordering fix will reach the post it was built for | 6 of 11 new hosts came through the directory; the UAE is 169 members deep (entry 139) |
+| the goal is a corpus that answers without searching | the goal is **latency**; the owner's re-scoping keeps search in the flow (entry 140) |
+| adjudication is ~60% of a corridor, optimise there | `search_all` is 19.0s of 27.4s — it was timed at 2 domains, not 5 (entry 140) |
+| the search phase is the search engine | one query is 1.0s; 18.2s of the 19.0s is our own pacing lock (entry 140) |
+| a goal stated in seconds has seconds behind it | the recall log records no timings at all — nobody could produce the number (entry 140) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

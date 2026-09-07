@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [140](#140-the-goal-is-latency-not-purity--and-95-of-the-search-phase-is-a-lock-this-program-holds-against-itself) | **The owner re-scopes item 19: the goal is speed, and search may stay** — and search is 19.0s of a 27.4s corridor, 18.2s of it self-imposed pacing |
 | [139](#139-order-the-family-by-what-the-store-lacks-and-back-off-from-a-host-that-stops-answering) | **A corpus may order on what it lacks, never on a traveller** — family attempts 25 → 50, reads 3 → 12, and a host that stops answering is slowed then dropped |
 | [138](#138-australia-rebuilt-on-the-mission-seed-the-family-is-recorded-the-walk-is-not-and-uaeembassygovau-is-still-absent) | **The rebuild records 166 family members and opens 25** — 22 of those time out, the order is the alphabet, and the UAE post is still absent |
 | [137](#137-the-mission-index-was-in-the-corpus-all-along-item-49-is-allocation-not-discovery) | **44 of 53 corpora already record the ministry's index of its own missions**, and 34 never opened it — item 49 is allocation, and depth is why the fix is a seed |
@@ -188,6 +189,88 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 140. The goal is latency, not purity — and 95% of the search phase is a lock this program holds against itself
+
+**2026-09-07 · the owner's re-scoping of item 19, and the measurement it prompted**
+
+### The decision
+
+**Item 19 has been "take search out of the request path, and this is the project's goal" since entry
+44. The owner has re-scoped it, and the reason it was written that way was never purity:**
+
+> *"I do want to remove search from the request path but that was because it took 50-70 seconds for
+> each corridor. Since the corpus is general purpose it might not be able to hold everything and the
+> traveller information comes through the corridor, so I'm not opposed to using search at some point
+> in the flow to give correct information as long as we are speeding up the process and utilising the
+> corpus for efficiency."*
+
+So the goal is **latency**, and search is legitimate as the traveller-specific complement to a
+traveller-neutral store. That is not a relaxation of anything safety-bearing: every rule about what
+search may *do* is untouched — it generates candidates, nothing it returns is evidence until it
+passes the domain-trust rules, and entry 44's ban on *quietly* falling back after a corpus miss
+still stands, because nothing here is conditional at request time.
+
+**It is consistent with what this project already knew and had written down twice.** Entry 77's
+correction row reads *"the corpus exists to reach depth the request path cannot | it exists for
+**latency**"*, and entry 129 had already concluded search is irreplaceable for Lithuania, the United
+States and Liechtenstein, where it is the only legitimate way to name a page at all. The goal
+statement had drifted ahead of both.
+
+### And the measurement changes what to do about it
+
+Measured 2026-09-07 on `australia/BD/AE`, against a median corridor of **27.4s** (entry 58):
+
+| | |
+| --- | --- |
+| queries one corridor issues | **15** — `corridor_queries` writes 3 per trusted domain, and the cap is 5 domains |
+| `search_all` wall time | **19.0s** |
+| one query alone | **1.0s** |
+| 14 gaps × `DEFAULT_QUERY_INTERVAL_SECONDS` (1.3s) | **18.2s** |
+| predicted 1.0 + 18.2 = **19.2s** against measured **19.0s** | the pace *is* the phase |
+
+**Search is about 69% of a corridor, and 95% of that is a pacing lock this program holds against
+itself.** The engine answers in a second. `_resolve`'s step 1 blocks steps 2 to 5, so every corridor
+pays all of it — including one the corpus could answer entirely.
+
+**That inverts the standing figure.** These files have said since entries 53–55 that *"adjudication
+is now ~60% of a corridor and is where the next optimisation is"*. On this corridor it cannot be:
+19.0 of 27.4 seconds is spent before adjudication is reached. The old figure was taken when a
+hand-configured destination had two domains and six queries; the automatic path's five-domain cap
+(entry 22) tripled it and nobody re-timed it.
+
+**The lock is not waste, and must not be removed casually.** Entry 74 put it there because Brave
+answers `HTTP 402` both when out of credit *and* when queried too fast, and a capped plan tripped on
+`search_all`'s concurrency. It is protecting a quota, so what it should be is a **question about the
+plan**, not a constant to lower on a hunch.
+
+### What this opens, none of it built
+
+Four ways to the same second, cheapest first. **None is implemented and none is measured**; the
+first is a configuration question for the owner rather than a code change.
+
+1. **Ask fewer times, faster.** If the plan's real rate limit is above 1.3s/query, this is one line
+   and takes the phase from 19.0s to roughly 2–4s. It needs the plan's actual limit, which is not
+   in this repository.
+2. **Let the corpus decide how much search to buy.** This is the owner's *"utilising the corpus for
+   efficiency"* read literally: 15 queries are issued whether or not the store already covers the
+   corridor. A country whose corpus out-covers a crawl already skips the crawl (entry 51) — the
+   same test has never been applied to search.
+3. **Take search off the critical path** rather than out of the flow: overlap it with the fetches in
+   step 4 instead of blocking on it in step 1. Overlapping it with the *corpus read* would buy
+   nothing — that path is 346ms (entry 50).
+4. **Per-country switch**, which is item 19 as entry 129 left it. Still valid, now clearly the
+   *last* of the four rather than the first: it is the most work and, on these numbers, not where
+   the seconds are.
+
+### One instrument this needs and does not have
+
+**Nothing records where a corridor's time goes.** The recall log holds outcome, cause, selector,
+queries, seeds, candidates and unreadables — and no timings, which is why a goal stated in seconds
+has been pursued for weeks against a number nobody could produce. Phase timings in the recall log
+are the prerequisite for calling any of the four above a success.
 
 ---
 
