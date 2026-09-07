@@ -690,8 +690,10 @@ remember", so they are also worth reading in one place.
 
 The recall log also records **where a corridor's seconds went**, one duration per stage of `_resolve`
 (entry 142) — a stage being the span between two numbered steps rather than the act it is named
-after, so `crawl` on a run that skipped the crawl is the decision and the merge. Measured first on
-`australia/BD/AE`: `fetch` 43%, `select` 21%, `adjudicate` 18%, `search` 12%. An empty map means the
+after, so `crawl` on a run that skipped the crawl is the decision and the merge. Measured over six corridors
+(entry 143): `fetch` 31%, `adjudicate` 29%, `select` 23%, `search` 8%, `crawl` 7%, `corpus` 2% — so the
+two model calls are 52%. Read it as an aggregate: per corridor `fetch` ranges 14–51%, so any one run
+names a different winner. An empty map means the
 log predates the field, never a run that spent nothing.
 | **Page corpus** | **country** | **additive, never pruned** | **Yes** — the candidate source | `var/corpus/`, `discovery/corpus.py` |
 | **Page text** | **country** | **additive; replaced per URL** | **Yes** — the model selector reads it to choose what to fetch | `var/pagetext/`, `discovery/page_text.py` |

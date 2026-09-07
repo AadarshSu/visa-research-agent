@@ -777,7 +777,7 @@ absolute bound and must not become a multiple of the shortlist size.
 </details>
 
 
-### 19. Get a corridor under ten seconds; search may stay — `next`, **fetch is 43%, the model calls 39%**
+### 19. Get a corridor under ten seconds; search may stay — `next`, **the model calls are 52%**
 
 > **The goal is latency, and it always was (entry 140).** The owner:
 >
@@ -830,17 +830,33 @@ absolute bound and must not become a multiple of the shortlist size.
 > **34.5s**: `fetch` **14.7s (43%)**, `select` **7.3s (21%)**, `adjudicate` **6.1s (18%)**, `search`
 > 4.0s (12%), `crawl` 2.0s, `corpus` 0.4s.
 >
-> **That re-orders what is left, and option 2 is no longer the next thing.**
+> **Widened to six corridors, which withdrew that reading (entry 143).** Japan, Canada, Singapore,
+> Germany, the Netherlands and Australia, 199.8s in total: `fetch` **31%**, `adjudicate` **29%**,
+> `select` **23%**, `search` 8%, `crawl` 7%, `corpus` 2%. **The two model calls are 52% — the
+> majority.** Australia was an outlier at 51% fetch, and its fetch time is mostly *failing*: a
+> render budget exhausted, an `HTTP 500`, no new pages cached.
 >
-> - **`fetch` at 43% is the target, and it was never the suspect.** Eighteen pages against a shared
->   five-render budget, two hosts exhausting it. Nothing here has been tried; start by finding out
->   how much of the 14.7s is renders, how much is serial waiting, and how much is one slow host —
->   the same question entry 139 answered for the crawl fetcher and nobody has asked of this one.
-> - **`select` at 7.3s is second**, one model call over 53 pages of stored text, and it is the input
->   side of item 31: widening the pool that item wants widened makes *this* call bigger. Price them
->   together or the two items will fight.
-> - **Option 2 — let the corpus decide how much search to buy — is now worth at most 4.0s**, not
->   19.0s. Still right, no longer first.
+> **Never pick a target from one corridor.** `fetch` ranges 14–51% and `adjudicate` 13–50%, so
+> Australia names fetch, Japan names adjudication and Singapore names selection.
+>
+> **What is next, in order:**
+>
+> - **Measure inside the model calls.** Japan spends **22.9s** adjudicating where Australia spends
+>   **5.4s** for the same two calls — a **4× spread nothing explains**, and neither call has ever
+>   been timed against its own input size. Until that is known, "make the model calls faster" has no
+>   handle. This is the next measurement and it needs no new quota: the sizes are already in the
+>   packets.
+> - **`select` is the input side of item 31.** Widening the pool that item wants widened makes this
+>   call bigger. Price them together or the two items will fight.
+> - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
+>   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
+>   fetcher; nobody has asked it of `LiveSourceFetcher`.
+> - **Option 2 — let the corpus decide how much search to buy — is worth at most 8%.** Still right,
+>   now last.
+>
+> **And "read fewer pages" is not the shortcut it looks.** Those three stages are 83% of a corridor,
+> but per page they run 1.29s (Canada) to 2.78s (Germany), and Canada reads 20 pages in 25.8s where
+> Japan reads 16 in 43.0s. Entry 84's *"a fetch is cheap and a missed role is not"* is not refuted.
 
 ### The earlier framing, kept because its findings stand
 

@@ -56,18 +56,25 @@ alone is 1.0s. Brave's own headers say **50 queries a second**, so the lock was 
 identical 148 results **at identical spend**. A full `australia/BD/AE` now runs in **34.5s** with 18
 pages read and 2 model calls. **And a corridor now says where its seconds go** (entry 142):
 
-| stage | | |
-| --- | --- | --- |
-| `fetch` | **14.7s** | **43%** — the largest, and never the suspect |
-| `select` | 7.3s | 21% — one model call over 53 pages of stored text |
-| `adjudicate` | 6.1s | 18% |
-| `search` | 4.0s | 12% — was 19.0s |
-| `crawl` | 2.0s | 6% — the *stage*, on a run that skipped the crawl |
-| `corpus` | 0.4s | 1% |
+**Measured over six corridors** — Japan, Canada, Singapore, Germany, the Netherlands, Australia —
+199.8s in total, median 36.0s (entry 143):
 
-**The two model calls are 39% and the selector is the bigger half.** Entries 53–55's *"adjudication
-is ~60% of a corridor"* is wrong in a third way. A stage is the span between two numbered steps of
-`_resolve`, not the act it is named after.
+| stage | share | per-corridor range |
+| --- | --- | --- |
+| `fetch` | **31%** | 14% .. 51% |
+| `adjudicate` | **29%** | 13% .. 50% |
+| `select` | **23%** | 19% .. 34% |
+| `search` | 8% | 4% .. 14% |
+| `crawl` | 7% | 1% .. 15% |
+| `corpus` | 2% | 0% .. 4% |
+
+**The two model calls are 52% — the majority.** Search is 8%, from 69% two entries earlier.
+
+**Never read this from one corridor.** The ranges are wider than the gaps: Australia names fetch,
+Japan names adjudication, Singapore names selection. Entry 142 concluded "fetch is the target" from
+Australia alone and entry 143 withdraws it — Australia's fetch is mostly *failing*, with a render
+budget exhausted and an `HTTP 500` and no new pages cached. A stage is the span between two numbered
+steps of `_resolve`, not the act it is named after.
 
 **It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
 twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar

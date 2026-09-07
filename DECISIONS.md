@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [143](#143-six-corridors-not-one-the-model-calls-are-the-majority-and-fetch-was-an-outlier) | **Six corridors overturn entry 142's one** — the two model calls are **52%**, fetch 31%, and any single corridor names a different winner |
 | [142](#142-a-corridor-now-says-where-its-seconds-went-and-the-answer-is-fetching-and-two-model-calls) | **Phase timings, at last** — fetch 43%, the two model calls 39% with the *selector* the bigger half, search 12% |
 | [141](#141-the-pace-was-protecting-against-a-limit-65-tighter-than-the-real-one-190s-of-search-becomes-26s) | **Brave allows 50 q/s; the lock was pacing at 0.77** — search 19.0s → **2.6s** on identical results, at no extra spend |
 | [140](#140-the-goal-is-latency-not-purity--and-95-of-the-search-phase-is-a-lock-this-program-holds-against-itself) | **The owner re-scopes item 19: the goal is speed, and search may stay** — and search is 19.0s of a 27.4s corridor, 18.2s of it self-imposed pacing |
@@ -191,6 +192,75 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 143. Six corridors, not one: the model calls are the majority, and `fetch` was an outlier
+
+**2026-09-07 · entry 142's reading widened, and it does not survive**
+
+Entry 142 measured one corridor and concluded *"`fetch` at 43% is the next target"*. Six corridors say
+otherwise. **Australia was the outlier, and the majority of a corridor is the two model calls.**
+
+| corridor | total | search | corpus | crawl | select | fetch | adjudicate | pages |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `japan/IN/GB` | 45.6s | 2.0 | 0.2 | 0.4 | **13.6** | 6.5 | **22.9** | 16 |
+| `canada/IN/GB` | 36.0s | 3.8 | 1.3 | 5.3 | 7.5 | 11.1 | 7.2 | 20 |
+| `singapore/PH/PH` | 14.8s | 2.0 | 0.3 | 1.0 | 5.1 | 2.5 | 3.9 | 5 |
+| `germany/IN/GB` | 34.8s | 1.9 | 0.8 | 4.3 | 6.9 | 13.5 | 7.4 | 10 |
+| `netherlands/IN/GB` | 27.4s | 2.8 | 0.6 | 1.7 | 5.1 | 6.5 | 10.6 | 8 |
+| `australia/BD/AE` | 41.2s | 3.8 | 0.4 | 2.0 | 8.7 | **20.9** | 5.4 | 20 |
+
+| stage | sum | mean | share | per-corridor range |
+| --- | --- | --- | --- | --- |
+| `fetch` | 61.0s | 10.2s | **31%** | 14% .. 51% |
+| `adjudicate` | 57.4s | 9.6s | **29%** | 13% .. 50% |
+| `select` | 46.9s | 7.8s | **23%** | 19% .. 34% |
+| `search` | 16.3s | 2.7s | 8% | 4% .. 14% |
+| `crawl` | 14.7s | 2.4s | 7% | 1% .. 15% |
+| `corpus` | 3.6s | 0.6s | 2% | 0% .. 4% |
+
+**The two model calls are 104.3s of 199.8s — 52%.** Fetching is 31%. Search, which was 69% two
+entries ago, is **8%**.
+
+### What one corridor could not have told anyone
+
+**The per-corridor range is wider than the difference between the stages.** `fetch` runs from 14% to
+51% and `adjudicate` from 13% to 50%, so *any* single corridor names a different winner: Australia
+says fetch, Japan says adjudication, Singapore says selection. Entry 142's conclusion was not wrong
+about its corridor and was wrong about the program.
+
+**Australia is the outlier and its cause is known.** 20.9s of fetch with the cache count unchanged at
+357 — it read nothing new — and three read-failures including a render budget exhausted by
+`immi.homeaffairs.gov.au` and an `HTTP 500`. Its fetch time is mostly *failing*, not reading.
+
+### And the obvious next inference does not survive either
+
+`select`, `fetch` and `adjudicate` are 83% of a corridor and all three plausibly scale with how many
+pages a run reads, which would make "read fewer pages" the lever — against entry 84, which decided
+*"a fetch is cheap and a missed role is not"* and let the selector pick 20.
+
+**Checked, and they do not scale cleanly.** Per page of those three stages together: Canada 1.29s,
+Australia 1.75s, Singapore 2.30s, Japan 2.69s, Germany and the Netherlands 2.78s. **Canada reads 20
+pages in 25.8s and Japan reads 16 in 43.0s.** So page count is not the master variable and entry 84
+is not refuted by this. Something else varies — page size, render count, model latency against input
+length — and **`japan`'s 22.9s adjudication against `australia`'s 5.4s for the same two calls is a
+4× spread nothing here explains.**
+
+### What to do next, and what not to
+
+**Do not optimise `fetch` on entry 142's reading.** Its 43% was one corridor and the sweep puts it at
+31%, most of Australia's share being failure rather than work.
+
+**The model calls are the majority and the least understood.** The next measurement is *inside* them:
+what the 4× adjudication spread tracks — number of sources, characters of evidence, or the provider —
+because until that is known, "make the model calls faster" has no handle. Neither call has ever been
+timed against its own input size.
+
+**Two runs of six refused** (`netherlands`, `australia`) and one resolved with unfilled roles. **No
+conclusion is drawn from that here**: there is no matched baseline, the cache warmed unevenly across
+the sweep, and entry 136 is the standing rule about reading role counts across arms that faced a
+different web. It is recorded because a sweep that hid it would be worse.
 
 ---
 

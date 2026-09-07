@@ -35,13 +35,23 @@ about **65× more conservative than the ceiling**. `DEFAULT_QUERY_INTERVAL_SECON
 and the same fifteen queries take **2.6s** and return the identical 148 results, **at identical
 spend** — the account is pay-as-you-go at $5 per 1,000 queries, so pace costs nothing.
 
-**And a corridor now says where its seconds go (entry 142).** `ResolutionTrace` accumulates a
+**And a corridor now says where its seconds go (entries 142, 143).** `ResolutionTrace` accumulates a
 duration per stage, `RecallRecord.phase_seconds` keeps it and `visa-discover corridor` prints it.
-First reading, `australia/BD/AE` at **34.5s**: **fetch 14.7s (43%)**, **select 7.3s (21%)**,
-**adjudicate 6.1s (18%)**, search 4.0s (12%), crawl 2.0s, corpus 0.4s. So **the two model calls are
-39% and the *selector* is the bigger half** — a cost entry 85 shipped as "a second model call" and
-nobody had priced — while **fetching is the single largest stage and was never the suspect**.
-Entries 53–55's *"adjudication is ~60%"* is still wrong, now in a new way.
+**Measured over six corridors, 199.8s total:** `fetch` **31%**, `adjudicate` **29%**, `select`
+**23%**, `search` 8%, `crawl` 7%, `corpus` 2%. **So the two model calls are 52% — the majority — and
+search is 8% where two entries ago it was 69%.**
+
+**Read that as an aggregate and never from one corridor.** The per-corridor range is wider than the
+gap between the stages — `fetch` runs 14% to 51% and `adjudicate` 13% to 50% — so Australia names
+fetch, Japan names adjudication and Singapore names selection. Entry 142 measured Australia alone and
+concluded fetch was the target; entry 143 withdraws that. Australia's 20.9s of fetch is mostly
+*failing*: a render budget exhausted and an `HTTP 500`, with the page cache unchanged at 357.
+
+**And "read fewer pages" is not the obvious lever it looks.** The three page-related stages are 83%
+of a corridor, but per page they run 1.29s (Canada) to 2.78s (Germany, the Netherlands) — Canada
+reads 20 pages in 25.8s and Japan 16 in 43.0s. Entry 84's *"a fetch is cheap and a missed role is
+not"* is not refuted by this. **Japan's 22.9s adjudication against Australia's 5.4s for the same two
+calls is a 4× spread nothing yet explains**, and that is the next measurement.
 
 **A stage is the span between two numbered steps of `_resolve`, not the act it is named after.**
 That first run printed `crawl 2.0s` while its own notes said the crawl was skipped; both are true,
@@ -723,6 +733,9 @@ cause, and only running the thing showed it.
 | adjudication is the model cost in a corridor | **selection** is bigger — 7.3s against 6.1s, and nobody had priced it (entry 142) |
 | with search fixed, the rest is adjudication | **fetch is 43%** and was never the suspect (entry 142) |
 | a phase named `crawl` measures crawling | it is the span between two steps — 2.0s on a run that skipped the crawl (entry 142) |
+| fetch is 43% of a corridor, optimise it | that was one corridor; over six it is **31%** and the model calls are 52% (entry 143) |
+| one corridor's timings say where the program spends time | fetch ranges 14–51% — every corridor names a different winner (entry 143) |
+| the page-related stages scale with pages read, so read fewer | CA reads 20 in 25.8s, JP 16 in 43.0s — page count is not the variable (entry 143) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
