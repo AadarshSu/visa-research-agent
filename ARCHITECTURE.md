@@ -744,6 +744,16 @@ per-traveller families was refusing the largest one Australia publishes — 45 m
 194 mission links, with a second family of 25 beside it and 124 that group into none. Entry 137, and nothing about
 it is priced — no corpus has been rebuilt on it.
 
+**A family queue is ordered by what the store lacks, and a host that stops answering is slowed then
+dropped** (entry 139). Members of a per-traveller family tie by construction — a bare country name
+is all their anchor carries — so the reserved queue fell through to the order the links sit on the
+index, which is the alphabet, in every build. `family_revisit_ranks` reads the previous corpus and
+puts never-opened addresses first, then tried-and-failed, then read, so an additive store *sweeps* a
+family across builds. **It may not order on the traveller** — this job has none, and entry 44 is
+built on that. Alongside it, `CrawlFetcher` doubles a host's spacing on each consecutive transport
+failure to an 8s ceiling and stops asking after six, any response clearing the streak; the ordinary
+frontier and every healthy host are untouched by both.
+
 **The corpus is read in the request path** (entry 47): a corridor's candidates are `corpus ∪ live
 discovery`, pages that already filled a role for that corridor keep their shortlist places, and what a
 run discovers is folded back in additively. The property this buys is that a corridor's candidate set is

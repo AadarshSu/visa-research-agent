@@ -161,7 +161,18 @@ and `maximum_depth` is 3: opening the index where it lies puts the post's guidan
 where nothing records them. `mission_index_seeds` promotes up to eight recorded addresses per build,
 and `CORPUS_FAMILY_PATTERN` was widened to admit the mission family it had been refusing.
 
-**Australia was rebuilt on it the same day and the result is a clear no (entry 138).** The corpus
+**Both of that rebuild's causes are fixed and a second rebuild measured them (entry 139).** A
+corpus may order a family queue on **what it lacks** — never opened, then tried and failed, then
+read — and may never order it on a traveller, which is entry 44. A host that stops answering is now
+**slowed first** (spacing doubles per consecutive transport failure to an 8s ceiling) and **given up
+on after six in a row**, any response clearing the streak. Measured on Australia: family members
+attempted **25 → 50**, read **3 → 12**, entries 3,563 → **4,008**, hosts 72 → **86**, and **6 of 11**
+new mission hosts entered *through the directory* where the previous build managed **0 of 10**.
+**`uae.embassy.gov.au` is still 0**: `www.dfat.gov.au` is abandoned before the sweep reaches the U's.
+The family has 169 members and a build walks about 25, so what is left is a **budget** question —
+see item 49, which lists the three ways out and says none is measured.
+
+**What the first rebuild found, which the above corrects (entry 138).** The corpus
 went 2,874 → 3,563 entries and **the family went from 1 member recorded to 166** — the defect entry
 137 diagnosed, closed — while **`uae.embassy.gov.au` stayed at 0 pages**. Two measured causes, and
 the seed is neither: `www.dfat.gov.au` returned `ReadTimeout` on **22 of the 25** members opened,
@@ -171,8 +182,8 @@ heads, with `united-arab-emirates` in the tail. **The rebuild's ten new hosts ar
 not this change**: `discovered_from` puts every one on its own search seed, and exactly one page on
 one host came from a mission page.
 
-**Start at item 49, and what is left of it is the two causes above, not another rebuild.** Three
-things a new session should know before touching it:
+**Start at item 49, and what is left of it is a budget argument, not another fix.** Three things a
+new session should know before touching it:
 
 - **Do not rebuild the other 51 yet.** On this evidence a build buys recorded addresses that
   nothing then walks, at 15 minutes and 70 search queries each. China is a named expected miss

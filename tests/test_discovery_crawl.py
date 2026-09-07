@@ -670,3 +670,127 @@ async def test_a_redirect_to_an_untrusted_host_names_the_host_it_landed_on() -> 
     reason = fetcher.failures[guarded]
     assert "validate.example" in reason, reason
     assert "not an approved domain" in reason
+
+
+# --- A host that stops answering: slow down, then stop asking (DECISIONS entry 139) ----------
+
+
+def timing_out(answer_after: int = 0) -> tuple[object, list[str]]:
+    """A host that times out, optionally answering once it has been asked `answer_after` times."""
+
+    asked: list[str] = []
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404, text="not found")
+        asked.append(str(request.url))
+        if answer_after and len(asked) > answer_after:
+            return httpx.Response(200, text="<html><body></body></html>")
+        raise httpx.ReadTimeout("timed out")
+
+    return respond, asked
+
+
+@pytest.mark.anyio
+async def test_a_host_that_will_not_answer_is_given_up_on_rather_than_asked_forever() -> None:
+    """Measured on Australia, 2026-09-06: `www.dfat.gov.au` timed out on 22 of 25 pages opened,
+    which was most of that host's share of the budget and 22 full timeouts of wall time.
+
+    Six consecutive failures and this run stops asking. The pages it still held are lost, which is
+    the trade — a corpus is additive, so the next build asks again."""
+
+    respond, asked = timing_out()
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(respond),  # type: ignore[arg-type]
+        host_delay_seconds=0.0,
+        transport_failures_per_host=6,
+    )
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        for n in range(20):
+            await fetcher.fetch_html(client, f"https://{AUTHORITY}/page-{n}", destination())
+
+    assert len(asked) == 6, "the crawl kept asking a host that had stopped answering"
+    later = f"https://{AUTHORITY}/page-19"
+    assert fetcher.outcomes[later] == "unreachable"
+    assert "was not asked again" in fetcher.failures[later]
+    # The truth of the sentence matters more than the count: it says what this client did, and
+    # claims nothing about the authority or its guidance.
+    assert "failed to answer 6 times in a row" in fetcher.failures[later]
+
+
+@pytest.mark.anyio
+async def test_a_host_that_answers_again_is_never_given_up_on() -> None:
+    """Consecutive, cleared by any response. A site that fails intermittently keeps its place."""
+
+    respond, asked = timing_out(answer_after=3)
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(respond),  # type: ignore[arg-type]
+        host_delay_seconds=0.0,
+        transport_failures_per_host=6,
+    )
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        for n in range(10):
+            await fetcher.fetch_html(client, f"https://{AUTHORITY}/page-{n}", destination())
+
+    assert len(asked) == 10, "a host that came back was still given up on"
+    assert not fetcher.abandoned_hosts
+
+
+@pytest.mark.anyio
+async def test_a_failing_host_is_asked_less_often_before_it_is_given_up_on() -> None:
+    """Slow down first, because the two failures look identical at the first timeout: a host under
+    momentary load answers again if asked less often, and one that will not answer never does.
+
+    Backing off sends strictly less traffic, which is why it comes first and why it is not entry
+    35's forbidden retry — that rule governs an authority that has *stated* something."""
+
+    slept: list[float] = []
+    clock = [0.0]
+
+    async def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        clock[0] += seconds
+
+    respond, _asked = timing_out()
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(respond),  # type: ignore[arg-type]
+        sleep=sleep,
+        clock=lambda: clock[0],
+        host_delay_seconds=0.5,
+        transport_failures_per_host=6,
+        transport_backoff_ceiling_seconds=8.0,
+    )
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        for n in range(6):
+            await fetcher.fetch_html(client, f"https://{AUTHORITY}/page-{n}", destination())
+
+    # The first wait is the ordinary spacing — the slot is claimed before the request, so a host
+    # is only known to be failing from the second ask onward. Then it doubles to the ceiling.
+    assert slept == [0.5, 1.0, 2.0, 4.0, 8.0], slept
+
+
+@pytest.mark.anyio
+async def test_a_healthy_host_keeps_its_ordinary_spacing() -> None:
+    """The backoff must cost a site that works exactly nothing."""
+
+    slept: list[float] = []
+    clock = [0.0]
+
+    async def sleep(seconds: float) -> None:
+        slept.append(seconds)
+        clock[0] += seconds
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, text="<html><body></body></html>")
+
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(respond),
+        sleep=sleep,
+        clock=lambda: clock[0],
+        host_delay_seconds=0.5,
+    )
+    async with httpx.AsyncClient(transport=fetcher.transport) as client:
+        for n in range(4):
+            await fetcher.fetch_html(client, f"https://{AUTHORITY}/page-{n}", destination())
+
+    assert slept == [0.5, 0.5, 0.5]

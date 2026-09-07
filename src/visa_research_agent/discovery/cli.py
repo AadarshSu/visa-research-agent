@@ -970,6 +970,15 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
             "name but never read",
             file=stream,
         )
+    if build.abandoned_hosts:
+        # Named rather than counted, and separately from `lost_hosts`: a host given up on may still
+        # be the biggest in the corpus, and what it was still holding is what this costs.
+        print(
+            f"      {len(build.abandoned_hosts)} hosts stopped answering and were not asked again:",
+            file=stream,
+        )
+        for host, failures in sorted(build.abandoned_hosts.items()):
+            print(f"        {host:<42} after {failures} unanswered requests in a row", file=stream)
     if build.lost_hosts:
         # Named, not counted. A host that contributed nothing leaves no entry and no `unreadable`
         # tally — a seed never becomes an entry — so before this the gap was invisible, and a

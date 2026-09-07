@@ -13,7 +13,7 @@ import heapq
 import re
 import socket
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass, field
 
 import httpx
@@ -84,6 +84,30 @@ MAXIMUM_CRAWL_RENDERS = 12
 # page, a redirect caught mid-flight. Three consecutive failures on one host is a property of the
 # host. Successes reset it, so a site that mostly passes is never given up on.
 CHALLENGE_FAILURES_PER_HOST = 3
+
+# What a host that stops answering costs, and how long this crawl keeps asking.
+#
+# **Measured on the Australian rebuild of 2026-09-06 (entry 138).** `www.dfat.gov.au` returned
+# `ReadTimeout` on **22 of the 25** mission-directory pages this crawl opened — not a challenge, not
+# a refusal, just no answer inside `timeout_seconds`. Those 22 were most of what that host's share
+# of the page budget could buy, and every one of them cost the full timeout in wall time as well.
+# The family they belonged to has 166 members and three were read.
+#
+# **Slow down first, give up only if slowing down did not help**, because the two failures look
+# identical at the first timeout and are not the same thing: a host under momentary load answers
+# again if asked less often, and a host that will not answer this client never does. Backing off is
+# also the only move here that is unambiguously *polite* — it sends strictly less traffic — which is
+# why it comes first and why the give-up threshold is higher than the challenge one.
+#
+# This is not entry 35's forbidden retry. That rule governs an authority that has **stated**
+# something — a `401`, a bare `403`, a `429` — and none of those reach here: they are answers, and
+# they are recorded as refusals before this code runs. A transport failure is the absence of an
+# answer, and asking a struggling host less often is the opposite of working around it.
+TRANSPORT_BACKOFF_CEILING_SECONDS = 8.0
+# Six rather than the challenge cap's three, because five chances at widening spacing is the whole
+# point: at three the backoff has barely been tried. Successes reset it, so a host that answers
+# intermittently is never given up on.
+TRANSPORT_FAILURES_PER_HOST = 6
 
 
 # What a page contributes to a text index, matching `maximum_source_characters` in settings. The
@@ -272,6 +296,8 @@ class CrawlFetcher:
         maximum_renders: int = MAXIMUM_CRAWL_RENDERS,
         challenge_settle_milliseconds: int = settings.render_challenge_settle_milliseconds,
         challenge_failures_per_host: int = CHALLENGE_FAILURES_PER_HOST,
+        transport_failures_per_host: int = TRANSPORT_FAILURES_PER_HOST,
+        transport_backoff_ceiling_seconds: float = TRANSPORT_BACKOFF_CEILING_SECONDS,
         transport: httpx.AsyncBaseTransport | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         host_delay_seconds: float = 0.5,
@@ -297,6 +323,14 @@ class CrawlFetcher:
         self.challenge_failures_per_host = challenge_failures_per_host
         # Consecutive unanswered challenges per host, cleared by one that answers.
         self.challenge_failures: dict[str, int] = {}
+        self.transport_failures_per_host = transport_failures_per_host
+        self.transport_backoff_ceiling_seconds = transport_backoff_ceiling_seconds
+        # Consecutive transport failures per host, cleared by any response at all — including a
+        # refusal, because a host that says no has answered. Read twice: to widen that host's
+        # spacing, and past the threshold to stop asking it.
+        self.transport_failures: dict[str, int] = {}
+        # Hosts this run stopped asking, and after how many failures, so the reason can say so.
+        self.abandoned_hosts: dict[str, int] = {}
         self.renders = 0
         self.transport = transport
         self.sleep = sleep
@@ -396,6 +430,34 @@ class CrawlFetcher:
             if self.refusal_statuses.get(url, 0) in PERSISTENT_REFUSAL_STATUS_CODES
         }
 
+    def _delay_for(self, host: str) -> float:
+        """How long to leave between requests to this host, widened while it is failing.
+
+        Doubling per consecutive transport failure, capped. A host that answers resets to the
+        ordinary spacing, so this costs a healthy site nothing and only ever *reduces* the rate at
+        which a struggling one is asked. Entry 139.
+        """
+
+        failures = self.transport_failures.get(host, 0)
+        if not failures:
+            return self.host_delay_seconds
+        widened: float = self.host_delay_seconds * float(2**failures)
+        return min(widened, self.transport_backoff_ceiling_seconds)
+
+    def _note_transport_failure(self, host: str) -> None:
+        """Count one unanswered request, and stop asking this host once the count is spent.
+
+        The count is consecutive and any response clears it, so this only ever fires on a host that
+        is failing *now* and failing repeatedly. Giving up loses whatever that host still held —
+        the trade is deliberate and its price is written down in entry 139: a corpus is additive and
+        rebuilt, so a host abandoned in one build is asked again in the next.
+        """
+
+        failures = self.transport_failures.get(host, 0) + 1
+        self.transport_failures[host] = failures
+        if failures >= self.transport_failures_per_host:
+            self.abandoned_hosts.setdefault(host, failures)
+
     async def _wait_for_host(self, host: str) -> None:
         """Space this host's requests, without holding up any other host.
 
@@ -408,7 +470,7 @@ class CrawlFetcher:
             return
         now = self.clock()
         earliest = self.next_request_at.get(host, now)
-        self.next_request_at[host] = max(now, earliest) + self.host_delay_seconds
+        self.next_request_at[host] = max(now, earliest) + self._delay_for(host)
         if earliest > now:
             await self.sleep(earliest - now)
 
@@ -514,6 +576,19 @@ class CrawlFetcher:
         before they get one does not.
         """
 
+        host = host_of(url)
+        if host in self.abandoned_hosts:
+            # Not asked at all, so not recorded as asked. The sentence says what this client did
+            # and stops there: a host that would not answer six times running has stated nothing
+            # about its guidance, and neither does this.
+            self._record_failure(
+                url,
+                "unreachable",
+                f"{host} had already failed to answer {self.abandoned_hosts[host]} times in a row "
+                "in this run, so it was not asked again",
+            )
+            return None
+
         self.requested.append(url)
         try:
             # The host's own crawl policy, read before anything is asked of it. A `Disallow` is not
@@ -532,10 +607,14 @@ class CrawlFetcher:
             await self._wait_for_host(host_of(url))
             response = await client.get(url)
         except httpx.HTTPError as exc:
+            self._note_transport_failure(host)
             self._record_failure(url, "unreachable", transport_failure_reason(exc)[:120])
             if host_does_not_resolve(exc):
                 self.unresolvable_hosts.add(host_of(url))
             return None
+        # Any response clears the streak, a refusal included: the question this counter asks is
+        # whether the host is answering, not whether it is answering *yes*.
+        self.transport_failures.pop(host, None)
 
         # Redirects are followed, so the landing host must be re-checked exactly as retrieval does.
         final_url = str(response.url)
@@ -703,11 +782,32 @@ class FamilyQueues:
     purpose — and nothing distinguishes a gateway from a leaf before one is opened. Round-robin does
     not need to know: it gives every family its turn, so the gateway gets its share whatever it
     scores.
+
+    **Within a family the order was the page's, and that is a bug the alphabet hides** (entry 139).
+    Members tie by construction — a bare country name is all their anchor carries, so Australia's
+    166 mission pages all score exactly 0.0 — and a heap of ties falls through to the sequence
+    number, which is the order the links sit on the index. Measured on the Australian rebuild of
+    2026-09-06: the 25 members a build could afford were `australian-embassy-argentina` through
+    `…-hungary` and `australian-high-commission-bangladesh` through `…-new-zealand`. Both
+    alphabetical heads, in every build, for ever. `united-arab-emirates` is in the tail and was
+    structurally unreachable.
+
+    **`revisit` is what breaks that, and it is the only ordering a corpus is allowed.** This job has
+    no traveller (entry 44), so it may not prefer the countries some traveller came from — that is
+    the tilt the whole design exists to avoid. What it may prefer is what it has not got: an address
+    the last build never opened, then one it tried and failed, then one it read. A store that is
+    additive and rebuilt then *sweeps* a family across builds instead of re-walking its head.
     """
 
     minimum: int
     allowance: int
-    queues: dict[str, list[tuple[float, int, str, int, PageLink]]] = field(default_factory=dict)
+    revisit: Mapping[str, int] = field(default_factory=dict)
+    """How far a previous build got with an address: absent or 0 never opened, 1 tried and failed,
+    2 read. Empty is the ordinary case and restores the pre-2026-09-06 ordering exactly."""
+
+    queues: dict[str, list[tuple[int, float, int, str, int, PageLink]]] = field(
+        default_factory=dict
+    )
     order: list[str] = field(default_factory=list)
     turn: int = 0
     spent: int = 0
@@ -716,7 +816,7 @@ class FamilyQueues:
         if key not in self.queues:
             self.queues[key] = []
             self.order.append(key)
-        heapq.heappush(self.queues[key], entry)
+        heapq.heappush(self.queues[key], (self.revisit.get(entry[2], 0), *entry))
 
     def take(self) -> tuple[str, tuple[float, int, str, int, PageLink]] | None:
         """The next member and its family, from whichever family's turn it is."""
@@ -727,7 +827,8 @@ class FamilyQueues:
             key = self.order[self.turn % len(self.order)]
             self.turn += 1
             if self.queues.get(key):
-                return key, heapq.heappop(self.queues[key])
+                ranked = heapq.heappop(self.queues[key])
+                return key, (ranked[1], ranked[2], ranked[3], ranked[4], ranked[5])
         return None
 
     def put_back(self, key: str, entry: tuple[float, int, str, int, PageLink]) -> None:
@@ -740,7 +841,7 @@ class FamilyQueues:
         pool it was built to replace. Caught by a test rather than by a second Netherlands rebuild.
         """
 
-        heapq.heappush(self.queues[key], entry)
+        heapq.heappush(self.queues[key], (self.revisit.get(entry[2], 0), *entry))
         self.turn -= 1
 
 
@@ -763,6 +864,7 @@ class LinkCrawler:
         family_share: float = 0.0,
         family_minimum: int = DEFAULT_FAMILY_MINIMUM,
         family_pattern: re.Pattern[str] | None = None,
+        family_revisit: Mapping[str, int] | None = None,
         provider_domains: frozenset[str] = frozenset(),
         on_page: PageReader | None = None,
         maximum_text_characters: int = DEFAULT_KEPT_TEXT_CHARACTERS,
@@ -803,6 +905,10 @@ class LinkCrawler:
         # 176 travel-advisory pages and Japan's are 141 country-relations pages, none of them visa
         # guidance. Without a gate, a rebuild of either would hand 40% of its budget to those.
         self.family_pattern = family_pattern
+        # What a previous build already got out of each family member, so this one can start where
+        # that one stopped instead of at the alphabet. Empty on the request path and on a first
+        # build, which is the ordering every measurement before 2026-09-06 was taken under.
+        self.family_revisit = family_revisit or {}
         # Companies a government delegates its guidance to. A link from a trusted page to one of
         # these is **recorded and never followed** — `is_crawlable` still refuses it, as it must,
         # and `delegations` is not a candidate list. It exists because dropping the link silently,
@@ -854,6 +960,7 @@ class LinkCrawler:
         families = FamilyQueues(
             minimum=self.family_minimum,
             allowance=int(self.maximum_pages * self.family_share),
+            revisit=self.family_revisit,
         )
         counter = 0
 

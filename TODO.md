@@ -233,7 +233,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 49. The family is recorded and not walked: order the queue, cap a timing-out host | `next` |
+| **Now** | 49. The family is walked at 25 members a build and has 169 — is that enough? | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 19. Take search out of the request path too | `next` |
@@ -277,7 +277,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 49. The family is recorded and not walked: order the queue, and cap a host that times out — `next`, **start here**
+### 49. The family is walked at 25 members a build and has 169 — decide if that is enough — `next`, **start here**
 
 **The corpus does not hold the destination's post in the country the traveller applies from, and a
 27-country sweep found it eight times (entry 132).** Australia holds **1,599** pages on
@@ -318,7 +318,13 @@ family — the same blind spot item 47 exists for, one level up. So this was **a
 
 ### What is left, and the first step of it has been run
 
-**Step 1 is done and it failed its own bar (entry 138).** `visa-discover corpus --country AU`, on
+**Step 1 was run twice, and the second run fixed both of the first run's causes (entries 138 and
+139).** The corpus holds **4,008** entries on **86** hosts, the family is genuinely being walked —
+50 members attempted against 25, 12 read against 3, six new mission hosts entering *through the
+directory* rather than through search — and **`uae.embassy.gov.au` is still 0 pages**, because
+`www.dfat.gov.au` is given up on after six unanswered requests before the sweep reaches the U's.
+
+**Step 1 as it stood after the first build (entry 138).** `visa-discover corpus --country AU`, on
 2026-09-06: the corpus went 2,874 → 3,563 entries and **the family went from 1 member recorded to
 166**, which is the defect entry 137 diagnosed, closed. **`uae.embassy.gov.au` is still 0 pages.**
 
@@ -339,23 +345,29 @@ own search seed or a sibling that did; **exactly one page on one host came from 
 is search variance, and it also means `var/corpus/AU.json` is now confounded as a before/after for
 this change.
 
-1. **~~Rebuild AU~~ — done 2026-09-06, entry 138. It records the family and does not walk it.**
-   Attack the two causes above before spending another build:
-   - **Order the family queue by something.** All members tie at 0.0, so the tie-break is document
-     order and the alphabet's tail is unreachable. This is entry 88's defect surviving its own fix:
-     the reservation stops the family being *outranked*, and does nothing about the family being
-     *internally unordered*. A residence signal would order it — entry 126 put one in `score_link`
-     and this is the queue it was built for — but nothing has been measured, so measure first.
-   - **Decide what a host that times out two times in three should cost.** `CHALLENGE_FAILURES_PER_HOST`
-     caps a host that cannot be *rendered*; nothing caps one that cannot be *reached*, and 22 wasted
-     opens is 22 members of a 70-member family. Slowing the host rather than dropping it may be the
-     answer, and that is item 11's question in a new place.
-2. **Do not rebuild the other 51 yet.** A build is roughly 15 minutes and 70 search queries, and on
-   this evidence it buys recorded addresses that nothing then walks. China is still a named expected
-   miss besides: its index forwards with `window.location.href` rather than a link.
-3. **Then re-run the `BD/AE` and `BD/SA` sweeps** and compare. Three things will otherwise waste it:
+1. **~~Order the queue and cap a failing host~~ — done 2026-09-07, entry 139.** Family members
+   attempted went **25 → 50** and read **3 → 12**, and **6 of 11** new mission hosts entered
+   *through the directory* where entry 138's build managed 0 of 10. A corpus may order on what it
+   lacks — never opened, then tried and failed, then read — and may never order on a traveller,
+   which is entry 44 and is why the residence signal is not the answer here.
+2. **The open question is now a budget one, and it needs an argument before code.** The family has
+   **169** members and a build walks about **25**, because one host's share of one build's page
+   budget is smaller than one family. So the sweep completes in six or seven builds. Three ways out,
+   none measured:
+   - **Let it sweep.** It works, it is free, and it needs nothing built. Six builds is six nights of
+     a scheduled job and 420 search queries.
+   - **Give a family its own host allowance.** `_next_wave` refuses to exempt a family from the host
+     budget *on purpose* — "a family lives on one host by construction, so exempting it would hand
+     that host the whole crawl through the side door" — so this reopens a decision made
+     deliberately, and has to argue against that sentence rather than around it.
+   - **Seed the members directly**, as `mission_index_seeds` seeds the index. A seed is depth 0 and
+     escapes the family queue entirely, but 169 seeds against a 1,200-page budget is entry 101's
+     failure: the whole allowance spent fetching seeds.
+3. **Do not rebuild the other 51 yet.** A build is roughly 15 minutes and 70 search queries. China
+   is still a named expected miss: its index forwards with `window.location.href` rather than a link.
+4. **Then re-run the `BD/AE` and `BD/SA` sweeps** and compare. Three things will otherwise waste it:
    - **Australia's row is already confounded** — ten of its hosts arrived by search variance in the
-     rebuild, not by any change here.
+     first rebuild, not by any change here.
    - **Copy `var/recall` aside first.** A recall log is keyed on its corridor, so a re-run
      overwrites it (entry 118) and the baseline is gone.
    - **Do not clear `var/cache` for one arm only.** Entry 136 lost a whole measurement that way: a

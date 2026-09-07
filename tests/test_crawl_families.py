@@ -129,15 +129,13 @@ def build(requests: list[str], **kwargs: object) -> LinkCrawler:
         sleep=sleep_none,
         host_delay_seconds=0.0,
     )
-    return LinkCrawler(
-        fetcher,
-        score,
-        maximum_depth=3,
-        maximum_pages=20,
-        maximum_pages_per_host=20,
-        expansion_threshold=0.0,
-        **kwargs,  # type: ignore[arg-type]
-    )
+    defaults: dict[str, object] = {
+        "maximum_depth": 3,
+        "maximum_pages": 20,
+        "maximum_pages_per_host": 20,
+        "expansion_threshold": 0.0,
+    }
+    return LinkCrawler(fetcher, score, **{**defaults, **kwargs})  # type: ignore[arg-type]
 
 
 def target() -> object:
@@ -368,3 +366,95 @@ def test_the_pattern_still_admits_a_family_for_the_wrong_territory() -> None:
     caribbean = "https://www.netherlandsworldwide.nl/caribbean-visa/short-stay/apply-{}"
 
     assert CORPUS_FAMILY_PATTERN.search(caribbean), "known limitation, asserted so it stays visible"
+
+
+# --- Where the last build stopped, not where the alphabet starts (DECISIONS entry 139) -------
+
+
+@pytest.mark.anyio
+async def test_without_revisit_a_short_budget_always_reads_the_same_head() -> None:
+    """The defect, reproduced: ties fall through to the order the links sit on the page.
+
+    Measured on Australia, 2026-09-06: all 166 mission pages score 0.0, so the 25 a build could
+    afford were `australian-embassy-argentina` through `…-hungary`. Both alphabetical heads, in
+    every build, for ever — `united-arab-emirates` was structurally unreachable.
+    """
+
+    first: list[str] = []
+    second: list[str] = []
+    for requests in (first, second):
+        crawler = build(requests, family_slugs=SLUGS, family_share=0.5, maximum_pages=8)
+        await crawler.crawl(target(), [INDEX])  # type: ignore[arg-type]
+
+    members = [url for url in first if url in {apply_page(c) for c in COUNTRIES}]
+    assert members, "no family member was opened"
+    assert [url for url in second if url in {apply_page(c) for c in COUNTRIES}] == members, (
+        "two builds of the same site read a different head, so this is not the defect"
+    )
+
+
+@pytest.mark.anyio
+async def test_a_member_the_last_build_read_gives_way_to_one_it_did_not() -> None:
+    """The fix: a second build starts where the first stopped, so the store sweeps the family."""
+
+    first: list[str] = []
+    crawler = build(first, family_slugs=SLUGS, family_share=0.5, maximum_pages=8)
+    await crawler.crawl(target(), [INDEX])  # type: ignore[arg-type]
+    already = {url for url in first if url in {apply_page(c) for c in COUNTRIES}}
+
+    second: list[str] = []
+    crawler = build(
+        second,
+        family_slugs=SLUGS,
+        family_share=0.5,
+        maximum_pages=8,
+        family_revisit=dict.fromkeys(already, 2),
+    )
+    await crawler.crawl(target(), [INDEX])  # type: ignore[arg-type]
+
+    reached = {url for url in second if url in {apply_page(c) for c in COUNTRIES}}
+    assert reached, "the second build opened no member at all"
+    assert reached - already, "the second build re-read the same head the first one did"
+
+
+@pytest.mark.anyio
+async def test_a_member_that_failed_is_tried_again_before_one_that_was_read() -> None:
+    """Three tiers, not two. A timeout is not evidence the page holds nothing.
+
+    22 of Australia's 25 opened members failed on a `ReadTimeout`, and skipping those next time
+    would lose them permanently — the corpus only ever grows from what a build could read.
+    """
+
+    read = apply_page("germany")
+    failed = apply_page("france")
+    requests: list[str] = []
+    crawler = build(
+        requests,
+        family_slugs=SLUGS,
+        family_share=0.5,
+        maximum_pages=8,
+        family_revisit={read: 2, failed: 1},
+    )
+
+    await crawler.crawl(target(), [INDEX])  # type: ignore[arg-type]
+
+    order = [url for url in requests if url in {apply_page(c) for c in COUNTRIES}]
+    if read in order and failed in order:
+        assert order.index(failed) < order.index(read), "a read member outranked a failed one"
+    else:
+        assert read not in order or failed in order, "the read member was preferred outright"
+
+
+@pytest.mark.anyio
+async def test_an_empty_revisit_map_changes_nothing() -> None:
+    """The request path and every first build pass nothing, and must behave exactly as before."""
+
+    without: list[str] = []
+    crawler = build(without, family_slugs=SLUGS, family_share=0.5, maximum_pages=8)
+    await crawler.crawl(target(), [INDEX])  # type: ignore[arg-type]
+
+    empty: list[str] = []
+    crawler = build(empty, family_slugs=SLUGS, family_share=0.5, maximum_pages=8, family_revisit={})
+    await crawler.crawl(target(), [INDEX])  # type: ignore[arg-type]
+
+    assert without == empty

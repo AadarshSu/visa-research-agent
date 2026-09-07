@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [139](#139-order-the-family-by-what-the-store-lacks-and-back-off-from-a-host-that-stops-answering) | **A corpus may order on what it lacks, never on a traveller** — family attempts 25 → 50, reads 3 → 12, and a host that stops answering is slowed then dropped |
 | [138](#138-australia-rebuilt-on-the-mission-seed-the-family-is-recorded-the-walk-is-not-and-uaeembassygovau-is-still-absent) | **The rebuild records 166 family members and opens 25** — 22 of those time out, the order is the alphabet, and the UAE post is still absent |
 | [137](#137-the-mission-index-was-in-the-corpus-all-along-item-49-is-allocation-not-discovery) | **44 of 53 corpora already record the ministry's index of its own missions**, and 34 never opened it — item 49 is allocation, and depth is why the fix is a seed |
 | [136](#136-the-sweep-that-could-not-price-anything-clearing-the-cache-is-correct-and-makes-the-run-incomparable) | **A cold-cache re-run cannot be compared to a warm-cache baseline** — and the render cap does not recover the roles that motivated it |
@@ -187,6 +188,89 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 139. Order the family by what the store lacks, and back off from a host that stops answering
+
+**2026-09-07 · entry 138's two causes, both fixed and both measured on a second Australian rebuild**
+
+Entry 138 found the mission family recorded and not walked, for two reasons: `www.dfat.gov.au`
+timed out on 22 of the 25 members opened, and *which* 25 was decided by the order the links sit on
+the index, because every member scores 0.0. Both are addressed here. **Neither reaches
+`uae.embassy.gov.au`, and the reason is now a third thing.**
+
+### What ordering a corpus is allowed to use
+
+The obvious answer is the traveller — prefer the post that serves the country they apply from. **A
+corpus build has no traveller**, and that is not an oversight to route around: entry 44 is built on
+it, and `corpus_queries` refuses nationality and residence for exactly this reason. An ordering
+keyed on who was asked would make the store's contents a function of who happened to ask.
+
+What a store *may* prefer is what it has not got. `family_revisit_ranks` reads the previous corpus
+and ranks each address **0 never opened, 1 tried and failed, 2 read**, and `FamilyQueues` orders on
+that before score. Three tiers rather than two, because a timeout is not evidence a page holds
+nothing — skipping the 22 that failed would lose them permanently, since the corpus only grows from
+what a build could read.
+
+The effect is that an additive store **sweeps** a family across builds instead of re-walking its
+head. The ordinary frontier is untouched: it is ranked by score, and there the scores mean something.
+
+### Slow down first, give up second
+
+`CHALLENGE_FAILURES_PER_HOST` caps a host that cannot be *rendered*; nothing capped one that would
+not *answer*. Now: each consecutive transport failure doubles that host's spacing to a ceiling of 8s,
+and six in a row stops this run asking it at all. Any response clears the streak — a refusal
+included, because the question is whether the host is answering, not whether it is answering yes.
+
+**Backing off comes first because the two failures are indistinguishable at the first timeout**, and
+it is the only move here that is unambiguously polite: it sends strictly less traffic. **It is not
+entry 35's forbidden retry.** That rule governs an authority that has *stated* something — a `401`,
+a bare `403`, a `429` — and none of those reach this code; they are answers, recorded as refusals
+before it runs. A transport failure is the *absence* of an answer.
+
+Six rather than the challenge cap's three, because at three the backoff has barely been tried.
+
+### Measured, on a rebuild of the corpus entry 138 left behind
+
+| | entry 138's build | this one |
+| --- | --- | --- |
+| entries | 3,563 | **4,008** |
+| hosts | 72 | **86** |
+| family members attempted | 25 | **50** |
+| family members read | 3 | **12** |
+| alphabetical span reached | `argentina` … `zealand` | `africa` … `zealand` |
+| new mission hosts **entered from a mission page** | **0 of 10** | **6 of 11** |
+
+**The ordering fix is what the last column shows.** Entry 138's ten new hosts all arrived from their
+own search seeds and none from the directory; this build's `iraq`, `ireland`, `israel`, `nigeria`,
+`png` and `samoa` embassy sites came **through the family** — every one either past `hungary` in the
+alphabet or in the set that failed last time and was retried before the pages already read.
+
+**The backoff is what doubled the attempts and quadrupled the reads.** Twelve successes each reset
+the streak, so the host recovered repeatedly under wider spacing where before it simply burned the
+budget. Ten pages were refused outright with *"had already failed to answer 6 times in a row in this
+run, so it was not asked again"*, and the budget those would have wasted went to hosts that answer —
+which is the +445 entries and +14 hosts.
+
+### And the UAE post is still absent, for a third reason
+
+Both members are still recorded, at depth 1, **never attempted**: `www.dfat.gov.au` was abandoned
+after six unanswered requests before the sweep reached the U's. Five DFAT hosts were abandoned this
+run.
+
+**So the honest state is: the family is now being walked, at roughly 25 members per build, and it has
+169 members.** That is a sweep of six or seven builds to cover, which is a real mechanism and a slow
+one. The remaining question is no longer ordering or waste — it is that **one host's share of one
+build's budget is smaller than one family**, and whether that is worth changing is a separate
+argument from either of these.
+
+### What was deliberately not changed
+
+`LiveSourceFetcher` — the path that reads pages a traveller is actually shown — has no equivalent
+backoff or give-up. It has a different budget, a different lifetime (`lru_cache(maxsize=1)`, so a
+per-instance counter would leak across runs, which is the defect noted on `maximum_renders`) and no
+measurement behind it. Named here so its absence is a decision rather than an oversight.
 
 ---
 

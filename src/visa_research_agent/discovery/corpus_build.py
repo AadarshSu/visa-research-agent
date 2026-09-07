@@ -318,6 +318,36 @@ def mission_index_seeds(
     return seeds
 
 
+# How far a previous build got with an address, as the family queue's ordering key. Ordinary
+# `unknown` is absent from the map and defaults to 0, so only the two states worth deferring are
+# recorded and the map stays a fraction of the corpus.
+_REVISIT_RANKS: dict[str, int] = {"unreadable": 1, "readable": 2, "proven": 2}
+
+
+def family_revisit_ranks(corpus: CountryCorpus | None) -> dict[str, int]:
+    """What the last build already got out of each address, for `FamilyQueues` to order on.
+
+    **The only ordering a corpus is allowed to apply** (entry 139). This job has no traveller, so it
+    may not prefer the countries some traveller came from — that is the tilt entry 44 exists to
+    prevent, and it would make the store's contents a function of who happened to be asked about.
+    What it may prefer is what it does not yet have: an address the last build never opened, then
+    one it tried and failed, then one it read.
+
+    Applied to the reserved family queues alone. Members tie there by construction — all 166 of
+    Australia's mission pages score 0.0 — so a heap of ties falls through to the order the links sit
+    on the index, which is the alphabet, in every build, for ever. The ordinary frontier is ranked
+    by score and is deliberately untouched.
+    """
+
+    if corpus is None:
+        return {}
+    return {
+        entry.url: _REVISIT_RANKS[entry.status]
+        for entry in corpus.entries
+        if entry.status in _REVISIT_RANKS
+    }
+
+
 def corpus_queries(
     country_name: str, domain: str, *, purpose: TravelPurpose | None = None
 ) -> list[str]:
@@ -412,6 +442,15 @@ class CorpusBuild(StrictModel):
     """How far this crawl reached. A means rather than the point: the corpus exists so a live
     corridor does not re-fetch for 50+ seconds, and *which pages exist* does not vary by traveller
     (DECISIONS entry 44). Depth matters only where the pages a corridor needs lie deeper."""
+
+    abandoned_hosts: dict[str, int] = Field(default_factory=dict)
+    """Hosts this build stopped asking, and after how many consecutive unanswered requests.
+
+    Separate from `lost_hosts`, which names hosts that contributed nothing: a host can be given up
+    on and still be the largest in the corpus. `www.dfat.gov.au` is exactly that — 574 addresses
+    recorded, and it timed out on 22 of the 25 mission pages this crawl tried to open (entry 138).
+    Reported because giving up loses whatever that host still held, and a number nobody prints is a
+    trade nobody can review."""
 
     lost_hosts: dict[str, str] = Field(default_factory=dict)
     """Hosts that failed and contributed **nothing**, with the reason, worst kind of gap first.
@@ -712,6 +751,8 @@ async def build_country_corpus(
         family_slugs=frozenset(other.slug for other in every_country.countries),
         family_share=family_share,
         family_pattern=CORPUS_FAMILY_PATTERN,
+        # Where the last build stopped, so this one does not start at the alphabet again.
+        family_revisit=family_revisit_ranks(existing),
         provider_domains=(providers or get_service_providers()).domains,
     )
     crawled = await crawler.crawl(destination, seeds)
@@ -757,6 +798,7 @@ async def build_country_corpus(
         unreadable=sum(1 for entry in entries if entry.status == "unreadable"),
         delegated=len(after.delegations),
         by_depth=Counter(entry.depth for entry in entries),
+        abandoned_hosts=dict(crawl_fetcher.abandoned_hosts),
         lost_hosts=lost_reasons,
         lost_host_outcomes=lost_outcomes,
         indexed_text=indexed_text,

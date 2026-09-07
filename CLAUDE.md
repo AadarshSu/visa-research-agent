@@ -198,6 +198,17 @@ produces a serious defect.
   members opened, and *which* 25 is document order because every member scores 0.0. **Do not read
   that build's ten new hosts as the seed working** — every one arrived from its own search seed.
 
+  **Both of those are fixed and a second rebuild measured them (entry 139).** A corpus may order a
+  family queue on **what it lacks** — never opened, then tried and failed, then read — and **may
+  never order it on a traveller**, which is entry 44 and is why entry 126's residence signal is not
+  the answer here. A host that stops answering is **slowed first**, its spacing doubling per
+  consecutive transport failure to an 8s ceiling, and **given up on after six in a row**, any
+  response clearing the streak; that is not entry 35's forbidden retry, which governs an authority
+  that has *stated* something. Measured on Australia: members attempted **25 → 50**, read **3 →
+  12**, and **6 of 11** new mission hosts entered *through the directory* against the previous
+  build's **0 of 10**. `uae.embassy.gov.au` is **still 0** — the family has 169 members, a build
+  walks about 25, and that last gap is a budget argument rather than a defect.
+
   **`mission_labels` was 184 of 198 countries carrying only their ISO code, and is now 723 labels
   (entry 134).** Name forms are derived from the file; cities are curated, because a post is usually
   named after its city. **A label two countries could claim is dropped from both** — it would
@@ -673,6 +684,9 @@ cause, and only running the thing showed it.
 | seeding the index gets the post into the corpus | it gets the *family* in: 1 member recorded → 166, the post still 0 (entry 138) |
 | a rebuild's new mission hosts are the new seed working | all ten came from their own search seeds; one page came from a mission page (entry 138) |
 | a reserved family queue opens its members | all members score 0.0, so the order is the page's — the alphabet's tail is never reached (entry 138) |
+| order the family queue by the traveller's residence | a corpus build has no traveller — order on what the **store** lacks (entry 139) |
+| giving up on a host that will not answer loses pages | it freed the budget: +445 entries, +14 hosts, reads 3 → 12 (entry 139) |
+| the ordering fix will reach the post it was built for | 6 of 11 new hosts came through the directory; the UAE is 169 members deep (entry 139) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
