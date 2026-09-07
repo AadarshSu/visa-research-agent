@@ -7,14 +7,13 @@ picked up cold.
 **Later** is real but not urgent; **Done** keeps finished work because what building it found is usually
 why the item after it exists; **Smaller things** are one-paragraph defects with no owner yet.
 
-**The goal this list serves, re-scoped by the owner on 2026-09-07 (entry 140).** A country is built
-offline — corpus plus page-text index — and a corridor answers from that store **fast**. The goal is
-**latency, not the absence of search**: the corpus is general-purpose and the traveller arrives with
-the corridor, so search is the legitimate traveller-specific complement to a traveller-neutral store.
-**Item 19 is that goal as a work item.** What it is not is a plan to delete search — and the seconds
-are not where it assumed: `search_all` is **19.0s of a 27.4s corridor**, and **18.2s of that is a
-pacing lock this program holds against itself**. The older measurement below still stands on its own
-terms: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
+**The goal this list serves — the owner, 2026-09-07 (entry 147).** **The objective is providing the
+right information. Latency and cost are the constraint it fits inside, not the goal.** A country is
+built offline — corpus plus page-text index — and a corridor answers from that store; **search does
+not have to leave the request path, provided it can be justified as giving reliable information at a
+cost that is not high.** On cost and time it passes: **$0.075 of a $0.28 corridor, 27% of the money
+and 8% of the seconds.** On reliability nothing here can answer it — see item 19, now **paused**, and
+known problem 26. The older measurement below still stands on its own terms: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
 corpus and all 59 came from search — 17 of them covering a role nothing else in the run covered**.
 So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,098 entries and
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
@@ -240,7 +239,7 @@ one-paragraph defects rather than items.
 | **Now** | 49. The family is walked at 25 members a build and has 169 — is that enough? | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
-|  | 19. Get a corridor under ten seconds; search may stay | `next` |
+|  | 19. Get a corridor under ten seconds; search may stay | **paused** |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 47. Find out how much of the world the family detector cannot see | `next` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `next` |
@@ -777,7 +776,30 @@ absolute bound and must not become a multiple of the shortlist size.
 </details>
 
 
-### 19. Get a corridor under ten seconds; search may stay — `next`, **the model calls are 52%**
+### 19. Get a corridor under ten seconds; search may stay — **PAUSED 2026-09-07 by the owner**
+
+> **Paused, and the priority above it stated (entry 147).** The owner:
+>
+> > *"I care about providing the right information first before fixing latency and cost. The point I
+> > wanted to convey in this session was that search does not need to completely leave the live
+> > request path IF we can justify that we can use it to provide reliable information at not that
+> > high of a cost."*
+>
+> **So correctness is the objective and this item is the constraint around it.** Entries 140–146 read
+> as latency-then-cost being the goal; they are better read as **the constraint being sized**, which
+> is what they measured.
+>
+> **The search question now has two halves and only one is answered.** On **cost and time search
+> passes** — $0.075 of a $0.28 corridor, 27% of the money and 8% of the seconds. On **reliability
+> nothing in this repository can answer it**: everything measured so far is *recall* (78 pages the
+> corpus lacked, 25 load-bearing, entry 129), which says search **found** pages, not that a traveller
+> was told something **true**. That is known problem 26, and entry 68 puts correctness outside this
+> repository deliberately — **do not build a truth set, a correctness grader or an accuracy metric
+> without asking.**
+>
+> **What stays on while this is paused:** `RecallRecord.phase_seconds` and `RecallRecord.model_calls`
+> are recorded every run, so resuming does not mean re-deriving where the seconds and dollars went.
+> Everything below is the measurement as it stood when work stopped.
 
 > **The goal is latency, and it always was (entry 140).** The owner:
 >

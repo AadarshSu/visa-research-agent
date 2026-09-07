@@ -42,12 +42,22 @@ source, and the traveller is told plainly when something could not be verified. 
 scope: submitting applications, booking appointments, filling forms, driving an authority's
 questionnaire, or claiming approval is guaranteed.
 
-**The goal for the work in front of us — re-scoped by the owner 2026-09-07, entry 140.** A country
-is built **offline** — its corpus and its page-text index — and a corridor answers from that store
-**fast**. **The goal is latency, not the absence of search.** The corpus is general-purpose and the
-traveller arrives with the corridor, so search is the legitimate traveller-specific complement to a
-traveller-neutral store; every rule about what search may *do* is unchanged.
-[TODO.md](TODO.md) **item 19** is that goal as a work item.
+**The goal for the work in front of us — the owner, 2026-09-07, entry 147.** **The objective is
+providing the right information; latency and cost are the constraint it has to fit inside.** A
+country is built **offline** — corpus and page-text index — and a corridor answers from that store.
+**Search does not have to leave the request path, provided it can be justified as giving reliable
+information at a cost that is not high.** Every rule about what search may *do* is unchanged.
+
+**Half that justification is measured.** On cost and time **search passes**: $0.075 of a $0.28
+corridor (27%) and 8% of its seconds. On **reliability, nothing in this repository can answer it** —
+every number here measures whether it *answered*, not whether the answer was *right* (known problem
+26), and correctness is verified outside this repository on purpose (entry 68). **Do not build a
+truth set or a correctness grader without asking.**
+
+**Item 19's latency and cost work is paused** (entry 147), entry 146's cacheable prefix included.
+
+**The constraint, sized and then paused.** What follows is kept because it is measured, not because
+it is next.
 
 **16.4 seconds of every corridor were a pacing lock, and they are gone (entries 140, 141).**
 `search_all` was **19.0s of a 27.4s corridor** — fifteen queries serialised at 1.3s, where one query

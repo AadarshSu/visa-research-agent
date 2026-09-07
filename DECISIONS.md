@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [147](#147-right-information-first-latency-and-cost-are-the-constraint-not-the-objective) | **The owner pauses 140–146: correctness is the objective, latency and cost the constraint** — and search's cost half passes while its reliability half is unmeasured |
 | [146](#146-the-cacheable-prefix-reordering-alone-buys-nothing-and-the-whole-packet-is-reachable) | **Reordering alone is worth ~500 tokens; all five conditions make the whole 69,902-token packet cacheable** — and the fifth is item 31's pool gate |
 | [145](#145-what-a-corridor-costs-028-and-59-of-it-is-the-selection-calls-input) | **A corridor costs $0.28** — selection 59%, search 27%, roles 14%, and **input is 96% of the model bill** |
 | [144](#144-inside-the-model-calls-input-size-does-not-explain-the-spread-and-a-third-of-it-is-not-the-corridor-at-all) | **Input size does not predict model latency** (r=+0.33, +0.48) — and the same corridor swings **40%** between identical runs |
@@ -195,6 +196,65 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 147. Right information first: latency and cost are the constraint, not the objective
+
+**2026-09-07 · the owner, pausing entries 140–146 and re-ordering what they were serving**
+
+Entries 140 to 146 took the goal to be latency and then cost, and got somewhere on both: search fell
+from 19.0s to 2.6s, a corridor's seconds and dollars are recorded for the first time, and the largest
+cost line is priced with its fix scoped. **That work is paused here, by the owner, and the reason is
+a priority the earlier entries had the wrong way round:**
+
+> *"I care about providing the right information first before fixing latency and cost. The point I
+> wanted to convey in this session was that search does not need to completely leave the live request
+> path IF we can justify that we can use it to provide reliable information at not that high of a
+> cost."*
+
+**So the objective is correctness. Latency and cost are the constraint it has to fit inside**, and
+entry 140's framing — *"the goal is latency, not the absence of search"* — was right to remove the
+purity argument and wrong to promote latency in its place. Read entries 140–146 as **the constraint
+being sized**, which is what they actually did.
+
+### What that makes of the search question
+
+The case for keeping search in the request path has two halves, and only one is answered.
+
+**The cost half is answered, and search passes.** A corridor is **$0.28** and search is **$0.075** of
+it — **27%**, against the selection call's 59% (entry 145). Fifteen queries at $5/1,000 is not a
+number that forces search off the request path, and the latency half is now 8% (entry 143). **On
+cost and time, search is affordable.**
+
+**The reliability half is not answered, and nothing in this repository can answer it.** Everything
+measured about search so far is *recall*: 78 pages the corpus lacked, 25 of them covering a role
+nothing else covered (entry 129). That says search **found** pages. It does not say the traveller was
+told something **true** — and that distinction is already written down as known problem 26: *every
+number this project quotes about itself measures whether it answered, not whether the answer was
+right*. Entry 58's 75% is a rate of answering, and a pipeline replying "visa required" to everyone
+would score full marks on it.
+
+### The rule this bumps into, deliberately left standing
+
+**Entry 68 puts correctness outside this repository on purpose**, and known problem 26 spells out the
+consequence: *do not build a truth set, a correctness grader or an accuracy metric without asking*.
+The owner's statement here is a **priority**, not that instruction being lifted. Nothing of the kind
+is built, proposed in code, or queued as work by this entry.
+
+What it does change is that the question now has a reason to be asked, and a shape: **"can we justify
+search as providing reliable information" is a correctness question about the pages search
+contributes** — the 25 load-bearing ones — rather than a count of them.
+
+### What is paused, and what is kept
+
+**Paused:** item 19's latency and cost work, including entry 146's five-condition cacheable prefix,
+which was measured and deliberately not shipped.
+
+**Kept, because they cost nothing to keep and answer questions correctness work will also want:**
+`RecallRecord.phase_seconds` and `RecallRecord.model_calls` are recorded on every run from now on, so
+whenever this is picked up again the constraint is already instrumented rather than needing another
+week of finding out where the seconds and dollars went.
 
 ---
 

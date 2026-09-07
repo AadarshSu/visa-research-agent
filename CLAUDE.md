@@ -19,13 +19,27 @@ Each fact has one home. When one of these files summarises another, the two drif
 what has wasted the most time here — see the corrections table further down, whose hundred and twenty rows are
 mostly a written-down diagnosis that a run then contradicted.
 
-**The goal, stated so everything below reads against it — re-scoped by the owner 2026-09-07 (entry
-140).** A country is built **offline** — its corpus and its page-text index — and a corridor answers
-from that store **fast**. **The goal is latency, not the absence of search.** The corpus is
+**The goal, stated so everything below reads against it — the owner, 2026-09-07 (entry 147).**
+**The objective is providing the right information. Latency and cost are the constraint it has to fit
+inside, not the goal.** A country is built **offline** — its corpus and its page-text index — and a
+corridor answers from that store; **search does not have to leave the request path, provided it can
+be justified as giving reliable information at a cost that is not high.** The corpus is
 general-purpose and the traveller arrives with the corridor, so search is the legitimate
 traveller-specific complement to a traveller-neutral store; what it may *do* is unchanged, and every
-rule below still holds. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34
-feed it.
+rule below still holds.
+
+**Half of that justification is measured and half is not.** On **cost and time search passes**: a
+corridor is **$0.28** of which search is **$0.075 (27%)**, and 8% of its seconds (entries 143, 145).
+On **reliability nothing here can answer it** — every number this project quotes measures whether it
+*answered*, not whether the answer was *right* (known problem 26), and correctness is verified by the
+owner outside this repository on purpose (entry 68). **Do not build a truth set, a correctness grader
+or an accuracy metric without asking**; entry 147 is a priority, not that rule being lifted.
+
+**[TODO.md](TODO.md) item 19's latency and cost work is paused** (entry 147), including entry 146's
+measured-but-unshipped cacheable prefix. The instrumentation stays on: `phase_seconds` and
+`model_calls` are recorded every run, so the constraint is already measured whenever this resumes.
+
+**The constraint, sized — and paused (entry 147).** What follows is where a corridor's seconds and dollars go, kept because it is measured and whoever resumes should not re-derive it — not because it is the next thing to do.
 
 **The seconds were not where these files assumed, and 16.4 of them are now gone (entries 140, 141).**
 `search_all` was **19.0s of a 27.4s corridor** — fifteen queries, three per trusted domain against a
@@ -769,6 +783,11 @@ cause, and only running the thing showed it.
 | output tokens are the expensive half of a model bill | 588k in against 4k out — input is 96% of it (entry 145) |
 | a reasoning model bills reasoning on top of output | it is inside `output_tokens`: 185 out, 131 of them reasoning (entry 145) |
 | prompt caching will cut the selection bill | only for a corridor just run; six distinct ones cached 2,029 tokens (entry 145) |
+| put the country-stable part of the packet first and it caches | reordering alone is ~500 tokens, under the 1,024 minimum (entry 146) |
+| the traveller block is what breaks the cache prefix | it is five things; the fifth is the corridor-dependent pool gate (entry 146) |
+| a traveller-independent candidate set means showing far more | JP's three pools intersect at 93% of their union — about 7% more (entry 146) |
+| the goal is latency, so search should leave the request path | the goal is **right information**; latency and cost are the constraint (entry 147) |
+| search is justified because it finds pages nothing else does | that is recall; nothing here measures whether the answer was **true** (entry 147) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
