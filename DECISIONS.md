@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [146](#146-the-cacheable-prefix-reordering-alone-buys-nothing-and-the-whole-packet-is-reachable) | **Reordering alone is worth ~500 tokens; all five conditions make the whole 69,902-token packet cacheable** — and the fifth is item 31's pool gate |
 | [145](#145-what-a-corridor-costs-028-and-59-of-it-is-the-selection-calls-input) | **A corridor costs $0.28** — selection 59%, search 27%, roles 14%, and **input is 96% of the model bill** |
 | [144](#144-inside-the-model-calls-input-size-does-not-explain-the-spread-and-a-third-of-it-is-not-the-corridor-at-all) | **Input size does not predict model latency** (r=+0.33, +0.48) — and the same corridor swings **40%** between identical runs |
 | [143](#143-six-corridors-not-one-the-model-calls-are-the-majority-and-fetch-was-an-outlier) | **Six corridors overturn entry 142's one** — the two model calls are **52%**, fetch 31%, and any single corridor names a different winner |
@@ -194,6 +195,67 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 146. The cacheable prefix: reordering alone buys nothing, and the whole packet is reachable
+
+**2026-09-07 · entry 145's lead, measured offline before building anything — and it is five conditions, not one**
+
+Entry 145 noticed that the selection packet is mostly stored text about the *destination*, identical
+for every traveller going there, and that prompt caching had made a repeat corridor **4.4× cheaper**.
+The lead was: order the packet so its country-stable part comes first. **Measured on Japan's corpus
+across three travellers, offline, with no model call — reordering alone is worth nothing, and the
+full prize is the entire packet.**
+
+### What each step buys
+
+Common prefix between `japan` packets for `IN/GB`, `PH/PH` and `NG/NG`:
+
+| | shared prefix | |
+| --- | --- | --- |
+| **today** | **48 chars** | the `traveller` block is the first key, so nothing after it can match |
+| A. move `traveller` to the end | **~2,000 chars (~500 tokens)** | **below OpenAI's 1,024-token cache minimum — worth nothing** |
+| B. + a fixed excerpt budget | ~2,000 chars | `excerpt_budget` divides by candidate count, so 288 vs 275 candidates resizes *every* excerpt |
+| C. + candidates sorted by URL | ~2,000 chars | order was never the whole problem |
+| D. + the same candidate set | ~4,700 chars | still 2%, because `build_source_id` resolves collisions in iteration order |
+| **E. + ids assigned in that order** | **279,610 chars — 100%** | **~69,902 tokens, the entire packet** |
+
+**So it is all five or nothing.** Four of the five are mechanical. The fifth is not.
+
+### The fifth condition is the pool gate, and it is item 31
+
+`_choose_what_to_read` pools on `best_combined() > 0`, and that score takes the traveller — so two
+travellers into the same country are shown **different candidate sets**, and the prefix breaks at
+candidate #1.
+
+**But the sets are nearly identical anyway**: across the three travellers Japan's pools are 288, 275
+and 272 with an intersection of **272 and a union of 291 — the intersection is 93% of the union.** A
+traveller-independent gate would therefore show **about 7% more candidates**, not a different order of
+magnitude. The corridor-independent scorer already exists and is what the corpus build uses
+(`score_role_vocabulary`).
+
+### What it is worth
+
+Selection input is 69,902 tokens on this corridor: **$0.1398 uncached against $0.0140 cached.** A
+corridor would fall from **$0.28 to about $0.154** once a country is warm — roughly **45% off the
+whole bill**, and it lands on the single largest line.
+
+### Why nothing shipped
+
+**Every one of the five conditions changes what the selector is shown or the order it sees it in,
+and that is a recall change, not a formatting one.** Sorting by URL reorders the candidates; a fixed
+excerpt budget changes how much of each page the model reads; a traveller-independent set adds
+candidates and removes the traveller-specific filtering. Any of those can move which pages get
+fetched, and this project grades that with `oracle/selection_oracle.yaml` before believing it.
+
+**Reordering the top-level keys alone is genuinely harmless — and worth ~500 tokens, which is below
+the cache minimum.** Shipping it on its own would be churn in the packet that decides what a
+traveller is shown, in exchange for nothing measurable. So it waits for the rest.
+
+**The measurement is one country and three travellers.** It is enough to price the idea and to name
+its blocker; it is not enough to ship on, and the 93%-overlap figure in particular should be checked
+on a second country before anyone builds the traveller-independent gate on it.
 
 ---
 

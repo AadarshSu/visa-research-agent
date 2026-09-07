@@ -859,11 +859,23 @@ absolute bound and must not become a multiple of the shortlist size.
 >   of the model bill**. Widening the pool item 31 wants widened is **near-free in latency and
 >   near-linear in cost**. Price the two together.
 >
->   **And there is a lead nothing else on this list reaches.** The selection packet is mostly stored
->   text about the *destination*, identical for every traveller going there. Prompt caching is
->   automatic and measured at **4.4× cheaper** on a repeat corridor, but six distinct corridors
->   cached only the 2,029-token shared prompt — so a packet ordered to put its country-stable part
->   first would make the expensive 46–116k tokens a cacheable prefix. **Unmeasured and unbuilt.**
+>   **That lead was tried offline and it is five conditions, not one (entry 146).** Common prefix
+>   between Japan's packets for three travellers: today **48 chars**; moving `traveller` to the end
+>   **~500 tokens, below the 1,024 cache minimum**; plus a fixed excerpt budget, plus candidates
+>   sorted by URL, plus the same candidate set, plus ids assigned in that order — **279,610 chars,
+>   100% of the packet, ~69,902 tokens.** All five or nothing.
+>
+>   **The fifth is the pool gate, which is item 31.** `best_combined() > 0` takes the traveller, so
+>   the sets differ and the prefix breaks at candidate #1. **But they differ barely**: Japan's three
+>   pools are 288/275/272, intersection **272**, union **291** — the intersection is **93% of the
+>   union**, so a traveller-independent gate shows about **7% more** candidates, and the
+>   corridor-independent scorer already exists (`score_role_vocabulary`).
+>
+>   **Worth $0.1398 → $0.0140 on selection input**, taking a corridor from **$0.28 to ~$0.154** once
+>   a country is warm. **Nothing shipped**: all five conditions change what the selector is shown or
+>   in what order, which is a recall change and needs grading against
+>   `oracle/selection_oracle.yaml` first. Reordering alone is harmless *and* worth nothing, so it
+>   waits for the rest. Check the 93% overlap on a second country before building on it.
 > - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
 >   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
 >   fetcher; nobody has asked it of `LiveSourceFetcher`.
