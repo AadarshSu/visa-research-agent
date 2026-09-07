@@ -66,7 +66,11 @@ the pool the selector reads: that is near-free in seconds and near-linear in dol
 checked rather than assumed: reasoning tokens are *inside* `output_tokens` (185 out, 131 reasoning),
 so nothing is undercounted; and prompt caching is real but mostly unavailable — the same corridor
 re-run minutes later cost **4.4× less** with 48,395 of 48,398 select tokens cached, while six
-*distinct* corridors cached only the 2,029-token shared prompt.
+*distinct* corridors cached only the 2,029-token shared prompt. **Making it available is five
+changes and the fifth is item 31's pool gate** (entry 146): reordering alone buys ~500 tokens,
+under the 1,024 cache minimum, while all five make the whole **69,902-token** packet a prefix and
+take a corridor to **~$0.154**. Nothing shipped — every one of the five changes what the selector
+is shown or the order it sees it in, which is a recall change.
 
 **A third of the variance is not the corridor at all.** The same six corridors, run twice on the same
 code, swing a mean of **40% (select) and 33% (roles)** — Germany moved 69% and 67%. So entry 143's
