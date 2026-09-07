@@ -76,9 +76,30 @@ class SearchProvider(Protocol):
 # limit, and a burst that trips it turns a resolvable corridor into a refusal.
 DEFAULT_SEARCH_CONCURRENCY = 4
 
-# The pace one provider keeps, whatever the concurrency above asks for. Measured on a capped plan:
-# 70 queries fired four-at-a-time failed outright, and the same 70 at this interval ran cleanly.
-DEFAULT_QUERY_INTERVAL_SECONDS = 1.3
+# The pace one provider keeps, whatever the concurrency above asks for.
+#
+# **Was 1.3s, and that was 18.2 of a corridor's 27.4 seconds** (entry 141). A corridor issues three
+# queries per trusted domain against a five-domain cap, so fifteen queries serialised at 1.3s is
+# **19.0s measured** where one query alone is 1.0s — the pace *was* the phase, and `_resolve` blocks
+# on it at step 1, so a corridor the corpus could answer alone paid all of it.
+#
+# **The limit it was protecting does not exist on this account.** Asked directly, Brave answers
+# `x-ratelimit-policy: 50;w=1` — fifty queries per second. 1.3s is 0.77/s, about 65× more
+# conservative than the ceiling. This value is 20/s with `DEFAULT_SEARCH_CONCURRENCY` of 4 in front
+# of it, which is under half the stated limit and leaves the burst protection intact.
+#
+# **The old comment's evidence does not survive re-reading, and that is why this moved.** It said 70
+# queries fired four-at-a-time "failed outright" and the same 70 at 1.3s "ran cleanly" — but entry
+# 74, the entry that added this, also established that Brave returns `402` for **both** a spend cap
+# and a rate limit and that only `error.meta.current_spend` separates them. The outage it was
+# written during was a genuine spend cap, $25.01 against a $25.00 limit. A spend cap does not care
+# how fast you ask, so the account was most likely topped up between those two runs. Not provable
+# retrospectively; recorded so nobody re-derives 1.3s from a sentence that cannot support it.
+#
+# **This changes latency and not spend**: the same fifteen queries are sent, and they cost the same.
+# `SearchThrottled` still exists and still classifies a real rate limit from the body, which is the
+# mechanism that would catch it if this is ever set too low.
+DEFAULT_QUERY_INTERVAL_SECONDS = 0.05
 
 
 async def search_all(

@@ -27,15 +27,21 @@ traveller-specific complement to a traveller-neutral store; what it may *do* is 
 rule below still holds. [TODO.md](TODO.md) item 19 is that goal as a work item; items 30, 33 and 34
 feed it.
 
-**And the seconds are not where these files assumed.** Measured 2026-09-07 on `australia/BD/AE`
-against a 27.4s median corridor: `search_all` is **19.0s**, one query alone is **1.0s**, and the 14
-gaps at `DEFAULT_QUERY_INTERVAL_SECONDS` are **18.2s**. So **search is ~69% of a corridor and 95% of
-that is a pacing lock this program holds against itself** — `_resolve` step 1 blocks steps 2 to 5, so
-even a corridor the corpus could answer alone pays all of it. The lock is protecting a Brave quota
-(entry 74) and is a question about the **plan** before it is a constant to lower. The standing claim
-that *"adjudication is ~60% of a corridor"* was measured when a destination had two domains and six
-queries, before the five-domain cap tripled that to fifteen, and **nothing records where a corridor's
-time goes** — add phase timings before calling any latency change a success.
+**The seconds were not where these files assumed, and 16.4 of them are now gone (entries 140, 141).**
+`search_all` was **19.0s of a 27.4s corridor** — fifteen queries, three per trusted domain against a
+five-domain cap, serialised by a 1.3s lock, where one query alone is 1.0s. Asked directly, Brave
+answers `x-ratelimit-policy: 50;w=1`: **fifty queries a second**, so the lock was pacing at 0.77/s,
+about **65× more conservative than the ceiling**. `DEFAULT_QUERY_INTERVAL_SECONDS` is now **0.05s**
+and the same fifteen queries take **2.6s** and return the identical 148 results, **at identical
+spend** — the account is pay-as-you-go at $5 per 1,000 queries, so pace costs nothing.
+
+**What that leaves.** A full `australia/BD/AE` ran in **34.5s**, 18 pages read and 2 model calls, so
+the remaining time is fetching and adjudication — entries 53–55's *"adjudication is where the next
+optimisation is"* is true **now**, having been false before this change. **Nothing still records
+where a corridor's time goes**: phase timings in the recall log are unbuilt and are the prerequisite
+for calling any further latency change a success. And do not read that run's 1-of-6 role fill as a
+cost of this: its causes were a transient `HTTP 500` (the host answers `200` minutes later) and a
+spent render budget, and there is **no matched baseline** — entry 136's rule.
 
 **Where it stands, as of 2026-09-02.** The pipeline works end to end and passed a bar committed in
 advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
@@ -703,6 +709,10 @@ cause, and only running the thing showed it.
 | adjudication is ~60% of a corridor, optimise there | `search_all` is 19.0s of 27.4s — it was timed at 2 domains, not 5 (entry 140) |
 | the search phase is the search engine | one query is 1.0s; 18.2s of the 19.0s is our own pacing lock (entry 140) |
 | a goal stated in seconds has seconds behind it | the recall log records no timings at all — nobody could produce the number (entry 140) |
+| the search pace is protecting a rate limit | brave allows **50 q/s**; the lock paced at 0.77 — 65× too slow (entry 141) |
+| 70 queries failed four-at-a-time, so pacing fixed it | that outage was a **spend cap**, which pacing cannot affect (entry 141) |
+| going faster costs more | the same 15 queries are sent either way; pace is free (entry 141) |
+| a corridor's role count after a change is that change's doing | a transient 500 and a spent render budget, with no matched baseline (entry 141) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
@@ -841,8 +851,10 @@ by the body rather than the status, and **not retried**, because a second call a
 account cannot succeed and is billed the same (entry 79). Brave answers **`HTTP 402`** both when out
 of credit *and* when queried too fast. The
 program now tells those apart from `error.meta.current_spend` against `usage_limit` and says which it
-is (`SearchQuotaExhausted` / `SearchThrottled`), and the provider paces itself at 1.3s from one lock
-so `search_all`'s concurrency cannot trip a capped plan — entry 74. **A search outage no longer kills
+is (`SearchQuotaExhausted` / `SearchThrottled`), and the provider paces itself from one lock so
+`search_all`'s concurrency cannot trip a capped plan — entry 74. **That pace was 1.3s and is now
+0.05s** (entry 141): the account allows **50 queries a second**, so 1.3s was 65× too conservative and
+cost 18.2 seconds of every corridor for nothing. Pace does not affect spend. **A search outage no longer kills
 a country that has a corpus**: it falls back to the stored pages, says so, and is never kept for
 reuse. With no corpus the refusal stands, because *we could not look* must never become *there is
 nothing to find*.

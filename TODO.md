@@ -777,7 +777,7 @@ absolute bound and must not become a multiple of the shortlist size.
 </details>
 
 
-### 19. Get a corridor under ten seconds; search may stay — `next`, **re-scoped by the owner 2026-09-07**
+### 19. Get a corridor under ten seconds; search may stay — `next`, **search is now 2.6s of 34.5s**
 
 > **The goal is latency, and it always was (entry 140).** The owner:
 >
@@ -807,8 +807,11 @@ absolute bound and must not become a multiple of the shortlist size.
 >
 > **Four ways to the same second, cheapest first, none built and none measured:**
 >
-> 1. **Raise the pace** if the plan allows — one line, 19.0s → roughly 2–4s. Needs the plan's real
->    rate limit, which the owner has and this repository does not.
+> 1. **~~Raise the pace~~ — done 2026-09-07, entry 141.** Brave's own headers answer
+>    `x-ratelimit-policy: 50;w=1`, so the 1.3s lock was pacing at 0.77/s, **65× under the ceiling**.
+>    At 0.05s the same fifteen queries take **2.6s against 19.0s**, return the identical 148 results,
+>    and cost the identical amount. A full `australia/BD/AE` now runs in **34.5s**, so the remaining
+>    time is fetching and adjudication.
 > 2. **Let the corpus decide how much search to buy** — the owner's "utilising the corpus for
 >    efficiency", literally. Fifteen queries are issued whether or not the store already covers the
 >    corridor; a country whose corpus out-covers a crawl already skips the *crawl* (entry 51) and
@@ -818,10 +821,18 @@ absolute bound and must not become a multiple of the shortlist size.
 > 4. **The per-country switch**, which is this item as entry 129 left it. Still valid, now clearly
 >    the *last* of the four: the most work, and not where the seconds are.
 >
-> **The prerequisite for all four: nothing records where a corridor's time goes.** The recall log
+> **The prerequisite for what is left: nothing records where a corridor's time goes.** The recall log
 > holds outcome, cause, selector, queries, seeds, candidates and unreadables, and no timings — which
-> is why a goal stated in seconds went weeks without a number. **Add phase timings first**, or none
-> of the four can be called a success.
+> is why a goal stated in seconds went weeks without a number. Option 1 could be priced without them
+> because `search_all` is one call that can be timed on its own; **the fetch and adjudication halves
+> cannot**, so add phase timings before attempting 2, 3 or 4.
+
+> **Where it stands after option 1.** A corridor is **34.5s** on `australia/BD/AE`, of which search
+> is now **2.6s**. That makes fetching and adjudication the whole of the remaining problem — 18 pages
+> read and 2 model calls in that run — and entries 53–55's *"adjudication is where the next
+> optimisation is"* true for the first time. Option 2 is still the right next one on the search side,
+> because 15 queries are still issued whether or not the store already covers the corridor; it is now
+> worth **2.6s**, not 19.0s, so price it against options aimed at the other 32.
 
 ### The earlier framing, kept because its findings stand
 

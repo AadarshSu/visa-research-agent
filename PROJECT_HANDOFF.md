@@ -49,12 +49,14 @@ traveller arrives with the corridor, so search is the legitimate traveller-speci
 traveller-neutral store; every rule about what search may *do* is unchanged.
 [TODO.md](TODO.md) **item 19** is that goal as a work item.
 
-**The seconds are not where this file assumed.** `search_all` is **19.0s of a 27.4s corridor**, one
-query alone is **1.0s**, and **18.2s of that 19.0s is a pacing lock this program holds against
-itself** to protect a Brave quota (entry 74). `_resolve` blocks on it at step 1, so a corridor the
-corpus could answer alone still pays it. The claim that *"adjudication is ~60% of a corridor"* dates
-from two-domain destinations and six queries. **Nothing records where a corridor's time goes** — the
-recall log has no timings, which is the prerequisite for calling any of this fixed.
+**16.4 seconds of every corridor were a pacing lock, and they are gone (entries 140, 141).**
+`search_all` was **19.0s of a 27.4s corridor** — fifteen queries serialised at 1.3s, where one query
+alone is 1.0s. Brave's own headers say **50 queries a second**, so the lock was 65× too conservative;
+`DEFAULT_QUERY_INTERVAL_SECONDS` is now **0.05s** and the same fifteen queries take **2.6s** for the
+identical 148 results **at identical spend**. A full `australia/BD/AE` now runs in **34.5s** with 18
+pages read and 2 model calls, so **fetching and adjudication are now the latency**, which is where
+these files always said it was and where it had not been. **Nothing records where a corridor's time
+goes** — phase timings in the recall log are the prerequisite for the next step.
 
 **It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
 twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [141](#141-the-pace-was-protecting-against-a-limit-65-tighter-than-the-real-one-190s-of-search-becomes-26s) | **Brave allows 50 q/s; the lock was pacing at 0.77** — search 19.0s → **2.6s** on identical results, at no extra spend |
 | [140](#140-the-goal-is-latency-not-purity--and-95-of-the-search-phase-is-a-lock-this-program-holds-against-itself) | **The owner re-scopes item 19: the goal is speed, and search may stay** — and search is 19.0s of a 27.4s corridor, 18.2s of it self-imposed pacing |
 | [139](#139-order-the-family-by-what-the-store-lacks-and-back-off-from-a-host-that-stops-answering) | **A corpus may order on what it lacks, never on a traveller** — family attempts 25 → 50, reads 3 → 12, and a host that stops answering is slowed then dropped |
 | [138](#138-australia-rebuilt-on-the-mission-seed-the-family-is-recorded-the-walk-is-not-and-uaeembassygovau-is-still-absent) | **The rebuild records 166 family members and opens 25** — 22 of those time out, the order is the alphabet, and the UAE post is still absent |
@@ -189,6 +190,88 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 141. The pace was protecting against a limit 65× tighter than the real one: 19.0s of search becomes 2.6s
+
+**2026-09-07 · entry 140's first option, taken — and the evidence for the old value does not survive re-reading**
+
+### What the account actually allows
+
+Entry 140 found `search_all` costing **19.0s of a 27.4s corridor**, 18.2s of it the provider's own
+1.3s lock, and said the first question was about the plan rather than the constant. Asked directly,
+with the project's own key:
+
+```
+x-ratelimit-policy:    50;w=1, 0;w=2592000
+x-ratelimit-limit:     50, 0
+x-ratelimit-remaining: 49, 0
+```
+
+**Fifty queries per second.** `DEFAULT_QUERY_INTERVAL_SECONDS = 1.3` is 0.77/s — about **65× more
+conservative than the ceiling**. The monthly bucket reads `0` and the request returned `200`, so it
+is not enforced as a cap; the account is pay-as-you-go, metered by credit at $5 per 1,000 queries.
+
+**So there was no plan to change.** The owner is on free credits topped up as needed, and the
+finding is that this costs nothing extra to fix: the same fifteen queries are sent either way.
+
+### The evidence for 1.3s does not survive re-reading
+
+The constant's own comment said *"70 queries fired four-at-a-time failed outright, and the same 70 at
+this interval ran cleanly"*. But entry 74 — the entry that added it — establishes in the same breath
+that Brave returns `402` for **both** a spend cap and a rate limit, and that only
+`error.meta.current_spend` against `usage_limit` separates them. The outage it was written during was
+a **spend cap**: $25.01 against a $25.00 limit.
+
+**A spend cap does not care how fast you ask.** If that is what those 70 queries hit, pacing never
+fixed it and the account was topped up between the two runs. Not provable retrospectively, and it is
+recorded here rather than asserted — but it is why 1.3s is not defended by the sentence that has been
+carrying it.
+
+### Measured
+
+Same fifteen queries, same corridor, same code path:
+
+| | before | after |
+| --- | --- | --- |
+| `DEFAULT_QUERY_INTERVAL_SECONDS` | 1.3s | **0.05s** |
+| `search_all` on `australia/BD/AE` | **19.0s** | **2.6s** |
+| results returned | 148 | **148** |
+| errors | none | none |
+| queries sent, and therefore spend | 15 | **15** |
+
+**A 16.4-second saving on every corridor, for no money and no change in what search returns.** The
+new value is 20/s in front of `DEFAULT_SEARCH_CONCURRENCY` of 4 — under half the stated limit, with
+the burst protection and `SearchThrottled` both intact.
+
+### What the end-to-end run then showed, and what it does not show
+
+The full corridor ran in **34.5s**, reading 18 pages and making 2 model calls, with 301 pages already
+in `var/cache`. With search down to 2.6s, the remaining ~32s is fetching and adjudication — so
+entries 53–55's *"adjudication is where the next optimisation is"* is now true, where entry 140 found
+it false. **The next latency question is the fetch/model half, and it still has no instrument**:
+phase timings in the recall log remain unbuilt and remain the prerequisite.
+
+**That run filled 1 of 6 roles, and this entry does not claim that as a cost or a gain.** Its named
+causes are a transient `HTTP 500` on `uae.embassy.gov.au` — which answers `200` when asked again
+minutes later — and a render budget already spent on `immi.homeaffairs.gov.au`. Neither is reachable
+from a pacing constant. **There is no matched baseline**: comparing it to entry 132's 4 of 6 from
+2026-09-04 would be a different web, a different cache and different code, which is exactly the
+mistake entry 136 cost a whole measurement to learn.
+
+**And it confirms the store's known gap rather than closing it.** The page that filled
+`application_route` is `uae.embassy.gov.au/abud/visas_and_migration.html`, the corpus holds **0**
+pages of that host, and the crawl was skipped — so **search supplied it**, precisely as entries 138
+and 139 said it would. That is the owner's re-scoping working as intended: a traveller-neutral store
+plus traveller-specific search.
+
+### Not built
+
+**Deriving the pace from `x-ratelimit-policy` instead of a constant.** The header is on every
+response and would keep this correct if the plan ever changes. It is one more thing to get wrong at
+request time, nothing depends on it today, and it has not been measured — named so the option is not
+lost.
 
 ---
 
