@@ -671,7 +671,10 @@ class _RaisingModel:
     def __init__(self, error: Exception) -> None:
         self.error = error
 
-    async def ainvoke(self, _: object) -> object:
+    async def ainvoke(self, _: object, **kwargs: object) -> object:
+        # `**kwargs` because the real call passes `config=` to carry the usage recorder, and a
+        # fake that refused it would raise `TypeError` — which this class's own error handling
+        # catches and reports as invalid model output, hiding the error under test.
         raise self.error
 
 

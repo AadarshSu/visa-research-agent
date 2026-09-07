@@ -854,10 +854,16 @@ absolute bound and must not become a multiple of the shortlist size.
 >   `adjudication.py` and `selection.py`. **`openai_reasoning_effort` is already `low`**: it is the
 >   one-line lever, and lowering it trades the judgement the safety rules rest on, so it does not
 >   move without an accuracy measurement beside it.
-> - **`select` is the input side of item 31**, and now has a number: its packet is **183k–481k
->   characters per corridor**. Widening the pool item 31 wants widened makes that bigger. Latency
->   will barely notice (entry 144); **spend will**, and nothing in this project has ever costed a
->   corridor. Price them together.
+> - **`select` is the input side of item 31, and it is now costed (entry 145).** It is **59% of a
+>   corridor's $0.28** — 46k–116k input tokens against the roles call's 4k–29k, with input at **96%
+>   of the model bill**. Widening the pool item 31 wants widened is **near-free in latency and
+>   near-linear in cost**. Price the two together.
+>
+>   **And there is a lead nothing else on this list reaches.** The selection packet is mostly stored
+>   text about the *destination*, identical for every traveller going there. Prompt caching is
+>   automatic and measured at **4.4× cheaper** on a repeat corridor, but six distinct corridors
+>   cached only the 2,029-token shared prompt — so a packet ordered to put its country-stable part
+>   first would make the expensive 46–116k tokens a cacheable prefix. **Unmeasured and unbuilt.**
 > - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
 >   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
 >   fetcher; nobody has asked it of `LiveSourceFetcher`.
@@ -1883,6 +1889,16 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**A `TypeError` from the model call reports itself as bad model output.** Both providers wrap
+`ainvoke` in `except (ValidationError, ValueError, TypeError)` and raise *"The model returned invalid
+structured output"*. `with_structured_output(strict=True)` parses inside `ainvoke`, so catching
+`ValidationError` there is right — but a `TypeError` from the *call* (a wrong keyword, a bad
+argument) is not the model returning anything, and it is reported as though it were. Found on
+2026-09-07 when adding `config={"callbacks": ...}` to both calls: a test fake whose `ainvoke` refused
+the new keyword failed with a sentence about model output. The fix is to separate the invoke from the
+parse, and it is not done here because it changes error handling on the path that decides what a
+traveller is told, which deserves its own change rather than a footnote to a costing exercise.
 
 **Sweden's ranking is unexplained, and entry 126 did not explain it.** Carried over from item 1,
 which was otherwise finished on 2026-09-02. Sweden reads `migrationsverket.se`, fills

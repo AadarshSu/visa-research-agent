@@ -26,7 +26,9 @@ from functools import lru_cache
 from importlib.resources import files
 from typing import Any, Protocol
 
+from langchain_core.callbacks import AsyncCallbackHandler
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.outputs import LLMResult
 from langchain_openai import ChatOpenAI
 from pydantic import Field, SecretStr, ValidationError
 
@@ -115,6 +117,40 @@ class RoleAdjudication(StrictModel):
     this schema and ignores this field, which it must — there is no text on that path, so a claim
     about what a page *does* could not be grounded in anything.
     """
+
+
+class UsageRecorder(AsyncCallbackHandler):
+    """Catch what the provider says it billed, without touching the call it is billing.
+
+    Attached as a callback rather than read from the response, because the response on this path
+    goes through `with_structured_output`, which hands back the parsed object and drops the message
+    the usage lives on. Reading it there would mean `include_raw=True` and a second parsing branch
+    in the code that decides what a traveller is told — a real risk for a diagnostic.
+
+    Usage is reported per generation and a retry produces another, so the last one wins: it is the
+    call whose answer was used.
+    """
+
+    def __init__(self) -> None:
+        self.input_tokens: int | None = None
+        self.output_tokens: int | None = None
+        self.cached_input_tokens: int | None = None
+        self.reasoning_output_tokens: int | None = None
+
+    async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        for generations in response.generations:
+            for generation in generations:
+                usage = getattr(getattr(generation, "message", None), "usage_metadata", None)
+                if not usage:
+                    continue
+                self.input_tokens = usage.get("input_tokens")
+                self.output_tokens = usage.get("output_tokens")
+                details = usage.get("input_token_details") or {}
+                self.cached_input_tokens = details.get("cache_read")
+                # Recorded to settle whether `output_tokens` already contains it. It does on this
+                # provider, so the two must never be added — see entry 145.
+                produced = usage.get("output_token_details") or {}
+                self.reasoning_output_tokens = produced.get("reasoning")
 
 
 class RoleAdjudicator(Protocol):
@@ -509,6 +545,10 @@ class LangChainRoleAdjudicator:
         )
 
     async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+        # Replaced per call, so a reader of `last_usage` gets this call's figures and never the
+        # previous corridor's. Nothing decides anything from it; it exists to be counted.
+        recorder = UsageRecorder()
+        self.last_usage = recorder
         try:
             result: Any = await self._structured_model.ainvoke(
                 [
@@ -521,7 +561,8 @@ class LangChainRoleAdjudicator:
                             f"{packet}"
                         )
                     ),
-                ]
+                ],
+                config={"callbacks": [recorder]},
             )
             return RoleAdjudication.model_validate(result)
         except (ValidationError, ValueError, TypeError) as exc:

@@ -66,6 +66,17 @@ class ModelCall(StrictModel):
     """
 
     call: Literal["select", "roles", "blocked"]
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    cached_input_tokens: int | None = None
+    reasoning_output_tokens: int | None = None
+    """What the provider said it billed, or `None` where it did not say.
+
+    **Tokens rather than the characters beside them, because only tokens are what is charged**, and
+    the two do not stand in for each other: this model reasons, and reasoning tokens are billed as
+    output while appearing nowhere in the input. `None` is kept distinct from `0` — a call whose
+    provider reported nothing is not a free call, and averaging it as one would understate a
+    corridor."""
     prompt_characters: int = Field(ge=0)
     packet_characters: int = Field(ge=0)
     seconds: float = Field(ge=0)

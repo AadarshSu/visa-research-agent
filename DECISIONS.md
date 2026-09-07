@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [145](#145-what-a-corridor-costs-028-and-59-of-it-is-the-selection-calls-input) | **A corridor costs $0.28** — selection 59%, search 27%, roles 14%, and **input is 96% of the model bill** |
 | [144](#144-inside-the-model-calls-input-size-does-not-explain-the-spread-and-a-third-of-it-is-not-the-corridor-at-all) | **Input size does not predict model latency** (r=+0.33, +0.48) — and the same corridor swings **40%** between identical runs |
 | [143](#143-six-corridors-not-one-the-model-calls-are-the-majority-and-fetch-was-an-outlier) | **Six corridors overturn entry 142's one** — the two model calls are **52%**, fetch 31%, and any single corridor names a different winner |
 | [142](#142-a-corridor-now-says-where-its-seconds-went-and-the-answer-is-fetching-and-two-model-calls) | **Phase timings, at last** — fetch 43%, the two model calls 39% with the *selector* the bigger half, search 12% |
@@ -193,6 +194,77 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 145. What a corridor costs: $0.28, and 59% of it is the selection call's input
+
+**2026-09-07 · asked because entry 144 noticed nobody had ever costed one**
+
+`ModelCall` now records what the provider says it billed — input, output, cached input and reasoning
+tokens — caught with a LangChain callback rather than read off the response, because
+`with_structured_output` hands back the parsed object and drops the message the usage lives on.
+Reading it there would mean `include_raw=True` and a second parsing branch inside the code that
+decides what a traveller is told, which is too much risk for a diagnostic.
+
+**Model:** `gpt-5.6-terra`, priced $2.00/M input, $12.00/M output, $0.20/M cached input
+([OpenRouter](https://openrouter.ai/openai/gpt-5.6-terra),
+[pricepertoken](https://pricepertoken.com/pricing-page/model/openai-gpt-5.6-terra)).
+**Search:** Brave at $5/1,000 queries × 15 queries = **$0.075** a corridor.
+
+### Six corridors, measured
+
+| corridor | select | roles | model | search | **total** | select share |
+| --- | --- | --- | --- | --- | --- | --- |
+| `canada/IN/GB` | $0.2368 | $0.0573 | $0.2940 | $0.075 | **$0.3690** | 81% |
+| `germany/IN/GB` | $0.2220 | $0.0567 | $0.2787 | $0.075 | **$0.3537** | 80% |
+| `netherlands/IN/GB` | $0.2183 | $0.0601 | $0.2784 | $0.075 | **$0.3534** | 78% |
+| `japan/IN/GB` | $0.0975 | $0.0403 | $0.1378 | $0.075 | **$0.2128** | 71% |
+| `singapore/PH/PH` | $0.0995 | $0.0210 | $0.1206 | $0.075 | **$0.1956** | 83% |
+| `australia/BD/AE` | $0.1139 | $0.0056 | $0.1196 | $0.075 | **$0.1946** | 95% |
+
+**Mean $0.28 a corridor; $280 per thousand.** Where it goes: **selection 59%, search 27%, role
+adjudication 14%.**
+
+**Input is 96% of the model bill** — 588,363 input tokens against 4,191 output across the six. So the
+thing that costs money is what the *selector* is shown: 46k to 116k tokens of stored page text per
+corridor, against 4k to 29k for adjudication.
+
+### That is the exact opposite of the latency picture, and both are now measured
+
+Entry 144 found input size explains almost none of the *time* (r = +0.33, +0.48). It explains
+**96% of the money**. So the two levers pull in different directions and a change has to be priced
+on both — *"send the model less"* buys nothing in seconds and a great deal in dollars.
+
+**It also puts a number on item 31.** That item wants to widen the pool the selector is shown, and
+the pool is this call's input. Widening it is close to free in latency and close to linear in cost.
+
+### Two things checked rather than assumed
+
+**Reasoning tokens are inside `output_tokens`, not additional.** Measured directly: a selection call
+reporting 185 output tokens reported 131 of them as reasoning, and a roles call 420 with 137. Since
+each total exceeds its own reasoning count, the figures above do not undercount. Worth checking
+because this model reasons and reasoning is billed as output, so an "output" figure that excluded it
+would have understated every row.
+
+**Prompt caching is real and mostly unavailable.** Running `singapore/PH/PH` twice minutes apart, the
+second run had **48,395 of 48,398** selection input tokens served from cache, and the corridor cost
+**$0.0272 against $0.1206 — 4.4× cheaper**. Across six *distinct* corridors only the 2,029-token
+shared system prompt ever cached. So the discount is real, it is automatic, and a product serving
+different travellers gets almost none of it.
+
+> **And that is a lead rather than a curiosity.** The selection packet is mostly stored text about
+> *the destination*, which is identical for every traveller going there — it is only the traveller
+> dimensions that differ. A packet ordered so its country-stable part comes first would put the
+> expensive 46–116k tokens in a cacheable prefix. **Unmeasured, unbuilt, and named here** because it
+> attacks the single largest line in the bill and nothing else on the list does.
+
+### What this does not cover
+
+The **corpus builds**, which are the other spend: 70 queries at $5/1,000 is **$0.35** a build, so the
+53-country rebuild discussed under item 49 is about **$18.55** in search and no model cost at all.
+And the figures are one run each of six corridors on one day; the token counts are stable enough to
+trust for an order of magnitude, and entry 144's 40% run-to-run swing was in *seconds*, not tokens.
 
 ---
 

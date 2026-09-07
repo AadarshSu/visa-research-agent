@@ -53,11 +53,20 @@ reads 20 pages in 25.8s and Japan 16 in 43.0s. Entry 84's *"a fetch is cheap and
 not"* is not refuted by this.
 
 **Inside the model calls, input size does not explain the spread either (entry 144).** `ModelCall`
-records each call's prompt and packet characters, its seconds, and whether it raised. Correlation of
-packet size with time is **+0.33** for selection and **+0.48** for roles; the Netherlands sends the
-*second-largest* selection packet and has the *fastest* selection, and the per-100k rate varies 4×.
-**"Send the model less" is not a latency lever** — though it is a spend one, and selection packets
-run **183k–481k characters per corridor**, which nothing here has ever costed.
+records each call's prompt and packet characters, its seconds, whether it raised, and what the
+provider said it billed. Correlation of packet size with time is **+0.33** for selection and **+0.48**
+for roles; the Netherlands sends the *second-largest* selection packet and has the *fastest*
+selection, and the per-100k rate varies 4×. **"Send the model less" is not a latency lever.**
+
+**It is the whole of the money, though (entry 145).** A corridor costs **$0.28** on `gpt-5.6-terra`
+at $2/M in and $12/M out plus $0.075 of search — **selection 59%, search 27%, roles 14%** — and
+**input is 96% of the model bill**, 588,363 input tokens against 4,191 output over six corridors.
+So latency and cost pull opposite ways and a change must be priced on both. **Item 31 wants to widen
+the pool the selector reads: that is near-free in seconds and near-linear in dollars.** Two things
+checked rather than assumed: reasoning tokens are *inside* `output_tokens` (185 out, 131 reasoning),
+so nothing is undercounted; and prompt caching is real but mostly unavailable — the same corridor
+re-run minutes later cost **4.4× less** with 48,395 of 48,398 select tokens cached, while six
+*distinct* corridors cached only the 2,029-token shared prompt.
 
 **A third of the variance is not the corridor at all.** The same six corridors, run twice on the same
 code, swing a mean of **40% (select) and 33% (roles)** — Germany moved 69% and 67%. So entry 143's
@@ -752,6 +761,10 @@ cause, and only running the thing showed it.
 | a slow model call was given more to read | r=+0.33 and +0.48; NL sends the 2nd-biggest packet and is fastest (entry 144) |
 | the 4× adjudication spread is a property of the corridor | the same corridor swings 40% between identical runs (entry 144) |
 | time a model change on one corridor before and after | germany moved 69% on its own — entry 81's rule, new place (entry 144) |
+| input size does not matter, entry 144 measured it | that was latency; it is **96% of the money** (entry 145) |
+| output tokens are the expensive half of a model bill | 588k in against 4k out — input is 96% of it (entry 145) |
+| a reasoning model bills reasoning on top of output | it is inside `output_tokens`: 185 out, 131 of them reasoning (entry 145) |
+| prompt caching will cut the selection bill | only for a corridor just run; six distinct ones cached 2,029 tokens (entry 145) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

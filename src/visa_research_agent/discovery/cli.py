@@ -310,9 +310,18 @@ def print_model_calls(calls: list[ModelCall], stream: TextIO) -> None:
         packet = f"{call.packet_characters / 1000:.1f}k"
         prompt = f"{call.prompt_characters / 1000:.1f}k"
         failed = "  FAILED" if call.failed else ""
+        tokens = ""
+        if call.input_tokens is not None or call.output_tokens is not None:
+            cached = f" ({call.cached_input_tokens} cached)" if call.cached_input_tokens else ""
+            thinking = (
+                f" ({call.reasoning_output_tokens} reasoning)"
+                if call.reasoning_output_tokens
+                else ""
+            )
+            tokens = f"   in {call.input_tokens}{cached}  out {call.output_tokens}{thinking}"
         print(
             f"    {call.call:<9} {call.seconds:6.1f}s   packet {packet:>7}"
-            f"   prompt {prompt:>6}{failed}",
+            f"   prompt {prompt:>6}{tokens}{failed}",
             file=stream,
         )
 

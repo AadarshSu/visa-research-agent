@@ -1621,6 +1621,12 @@ class CorridorResolver:
             failed = True
             raise
         finally:
+            # Read off whichever object made the call, and only if it kept any. The two shipped
+            # implementations record it on `last_usage`; the fakes the tests use do not, and a
+            # protocol that demanded it would make every fake carry a field nothing asserts.
+            # `None` throughout is "the provider said nothing", which is not zero.
+            source = self.selector if call == "select" else self.adjudicator
+            usage = getattr(source, "last_usage", None)
             self.model_call_timings.append(
                 ModelCall(
                     call=call,
@@ -1628,6 +1634,10 @@ class CorridorResolver:
                     packet_characters=len(packet),
                     seconds=round(self.monotonic() - started, 3),
                     failed=failed,
+                    input_tokens=getattr(usage, "input_tokens", None),
+                    output_tokens=getattr(usage, "output_tokens", None),
+                    cached_input_tokens=getattr(usage, "cached_input_tokens", None),
+                    reasoning_output_tokens=getattr(usage, "reasoning_output_tokens", None),
                 )
             )
 

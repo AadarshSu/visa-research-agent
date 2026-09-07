@@ -70,7 +70,19 @@ pages read and 2 model calls. **And a corridor now says where its seconds go** (
 
 **The two model calls are 52% — the majority.** Search is 8%, from 69% two entries earlier.
 
-**Inside the model calls, input size explains almost none of it (entry 144).** Packet size correlates
+**A corridor costs $0.28 (entry 145).** `gpt-5.6-terra` at $2/M input and $12/M output, plus $0.075
+of Brave search — **selection 59%, search 27%, role adjudication 14%**, and **input is 96% of the
+model bill** (588,363 input tokens against 4,191 output over six corridors). Range $0.19 (Australia,
+Singapore) to $0.37 (Canada). A thousand corridors is **$280**; a corpus build is **$0.35** of search
+and no model cost, so item 49's 53-country rebuild is about **$18.55**.
+
+**Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
+*time* and ~all of the *money*, so a change must be priced on both — and **item 31, which wants to
+widen the pool the selector reads, is near-free in seconds and near-linear in dollars.** Prompt
+caching is real but mostly unavailable: the same corridor re-run minutes later cost 4.4× less, while
+six distinct corridors cached only the 2,029-token shared prompt.
+
+**Inside the model calls, input size explains almost none of the time (entry 144).** Packet size correlates
 with time at **+0.33** (selection) and **+0.48** (roles); the Netherlands sends the second-largest
 selection packet and has the fastest selection. **And the same corridor swings a mean of 40% between
 two runs of identical code** — Germany moved 69% — so a model-latency change **cannot be graded on

@@ -41,7 +41,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import Field, SecretStr, ValidationError
 
-from visa_research_agent.discovery.adjudication import _EXHAUSTED_MARKERS
+from visa_research_agent.discovery.adjudication import _EXHAUSTED_MARKERS, UsageRecorder
 from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corridor
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.research.errors import VisaResearchError
@@ -237,6 +237,11 @@ class LangChainCandidateSelector:
         )
 
     async def select(self, system_prompt: str, packet: str) -> Selection:
+        # Same recorder the adjudicator uses, for the same reason: `with_structured_output` drops
+        # the message the usage lives on, and adding a second parsing branch to read it would put
+        # a diagnostic inside the path that chooses what a traveller is shown.
+        recorder = UsageRecorder()
+        self.last_usage = recorder
         try:
             result: Any = await self._structured_model.ainvoke(
                 [
@@ -249,7 +254,8 @@ class LangChainCandidateSelector:
                             f"{packet}"
                         )
                     ),
-                ]
+                ],
+                config={"callbacks": [recorder]},
             )
             return Selection.model_validate(result)
         except (ValidationError, ValueError, TypeError) as exc:
