@@ -29,7 +29,7 @@ from visa_research_agent.discovery.recall_log import (
     RecallRecord,
     compare_runs,
 )
-from visa_research_agent.discovery.resolver import CorridorResolver
+from visa_research_agent.discovery.resolver import CorridorResolver, ResolutionTrace
 from visa_research_agent.discovery.selection import Selection, SelectionQuotaExhausted
 from visa_research_agent.domain.models import DestinationConfig
 from visa_research_agent.research.live_sources import LiveSourceFetcher
@@ -404,3 +404,90 @@ async def test_a_selection_that_chose_is_recorded_as_the_model(tmp_path: Path) -
 
     assert selector.calls == 1
     assert log.records[-1].selector == "model"
+
+
+# --- Where a corridor's seconds went (DECISIONS entry 142) -----------------------------------
+
+
+def test_a_phase_records_what_it_spent_and_the_clock_is_injected() -> None:
+    """Asserted without spending the seconds, which is why the clock is a seam."""
+
+    ticks = iter([0.0, 2.5, 2.5, 9.0])
+    trace = ResolutionTrace(clock=lambda: next(ticks))
+
+    trace.begin("search")
+    trace.begin("fetch")
+    trace.end()
+
+    assert trace.phase_seconds == {"search": 2.5, "fetch": 6.5}
+
+
+def test_a_phase_entered_twice_accumulates() -> None:
+    """A second visit replacing the first would under-report the slow runs worth reading."""
+
+    ticks = iter([0.0, 1.0, 10.0, 13.0])
+    trace = ResolutionTrace(clock=lambda: next(ticks))
+
+    trace.begin("fetch")
+    trace.end()
+    trace.begin("fetch")
+    trace.end()
+
+    assert trace.phase_seconds == {"fetch": 4.0}
+
+
+def test_closing_twice_is_safe_and_records_once() -> None:
+    """`end` runs in a `finally` on every exit path, including ones that already closed."""
+
+    ticks = iter([0.0, 3.0])
+    trace = ResolutionTrace(clock=lambda: next(ticks))
+
+    trace.begin("adjudicate")
+    trace.end()
+    trace.end()
+
+    assert trace.phase_seconds == {"adjudicate": 3.0}
+
+
+def test_a_run_that_never_started_a_phase_records_none() -> None:
+    """An empty map means unrecorded, never a run that spent nothing — the field is graded that
+    way because every log written before 2026-09-07 has one."""
+
+    trace = ResolutionTrace(clock=lambda: 0.0)
+    trace.end()
+
+    assert trace.phase_seconds == {}
+
+
+def test_the_record_carries_the_phases_and_an_older_log_reads_as_unrecorded(
+    tmp_path: Path,
+) -> None:
+    """The field is optional, so a log written before it existed still loads."""
+
+    log = FileRecallLog(tmp_path)
+    corridor = Corridor(
+        destination_slug="australia",
+        passport_nationality="BD",
+        applying_from="AE",
+        purpose="tourism",
+    )
+    log.write(
+        RecallRecord(
+            corridor_key=corridor.key,
+            recorded_at=datetime(2026, 9, 7, 12, 0, tzinfo=UTC),
+            outcome="resolved",
+            phase_seconds={"search": 2.6, "fetch": 18.4},
+        )
+    )
+
+    read = log.read(corridor)
+    assert read is not None
+    assert read.phase_seconds == {"search": 2.6, "fetch": 18.4}
+    assert (
+        RecallRecord(
+            corridor_key=corridor.key,
+            recorded_at=datetime(2026, 9, 7, 12, 0, tzinfo=UTC),
+            outcome="resolved",
+        ).phase_seconds
+        == {}
+    )

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [142](#142-a-corridor-now-says-where-its-seconds-went-and-the-answer-is-fetching-and-two-model-calls) | **Phase timings, at last** — fetch 43%, the two model calls 39% with the *selector* the bigger half, search 12% |
 | [141](#141-the-pace-was-protecting-against-a-limit-65-tighter-than-the-real-one-190s-of-search-becomes-26s) | **Brave allows 50 q/s; the lock was pacing at 0.77** — search 19.0s → **2.6s** on identical results, at no extra spend |
 | [140](#140-the-goal-is-latency-not-purity--and-95-of-the-search-phase-is-a-lock-this-program-holds-against-itself) | **The owner re-scopes item 19: the goal is speed, and search may stay** — and search is 19.0s of a 27.4s corridor, 18.2s of it self-imposed pacing |
 | [139](#139-order-the-family-by-what-the-store-lacks-and-back-off-from-a-host-that-stops-answering) | **A corpus may order on what it lacks, never on a traveller** — family attempts 25 → 50, reads 3 → 12, and a host that stops answering is slowed then dropped |
@@ -190,6 +191,74 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 142. A corridor now says where its seconds went, and the answer is fetching and two model calls
+
+**2026-09-07 · the instrument entries 140 and 141 both said was missing**
+
+The goal has been stated in seconds since entry 44 and **nothing in the program recorded one.**
+Entry 140 had to time `search_all` by hand, from outside, to discover it was 19.0s of a 27.4s
+corridor; entry 141 then removed 16.4 of those seconds and could only say the rest was "fetching and
+adjudication" because nothing could tell them apart. `ResolutionTrace.begin`/`end` now accumulate a
+duration per stage, `RecallRecord.phase_seconds` keeps it, and the corridor command prints it.
+
+### The first measurement, `australia/BD/AE`
+
+```
+  34.5s in the resolver, by stage:
+    search          4.0s   12%
+    corpus          0.4s    1%
+    crawl           2.0s    6%
+    select          7.3s   21%
+    fetch          14.7s   43%
+    adjudicate      6.1s   18%
+```
+
+| | |
+| --- | --- |
+| **`fetch` is the single largest stage** | 14.7s, 43%, for 18 pages — and it contains the render budget, which two hosts hit in this run |
+| **The two model calls together are 13.4s, 39%** | and **`select` is the bigger of them at 7.3s**, which nothing had ever priced. Entry 85 shipped it as *"the cost of a second model call per corridor"*; that cost is now a number |
+| **`search` is 12%** | 19.0s to 4.0s after entry 141. The 4.0s is more than `search_all`'s 2.6s because the stage also scores and rejects ~148 results |
+| **`corpus` is 0.4s** | consistent with entry 50's 346ms, re-confirmed rather than assumed |
+
+**So entries 53–55's *"adjudication is ~60% of a corridor"* is still not right, in a new way.** It is
+39%, it is two calls rather than one, and the larger half is the *selector* rather than the
+adjudicator.
+
+### One thing the first run got wrong, and it is a naming problem
+
+**`crawl 2.0s` appears on a run whose own notes say "the crawl was skipped".** Both are true: a phase
+here is the span between one numbered step of `_resolve` and the next, so that 2.0s is deciding the
+corpus out-covers a crawl and merging and scoring what remains — not fetching. Recorded in the field
+docstring and in the printed header (*"by stage"*) rather than left for someone to trip over, because
+a diagnostic that reads as its own contradiction is how this project's corrections table gets longer.
+
+### Choices worth keeping
+
+**A monotonic clock, injected, separate from `now`.** `CorridorResolver.now` is a wall clock whose
+job is stamping *when* a run happened; a wall clock can step backwards mid-run and report a negative
+phase. Injecting it is what lets four tests assert durations without spending them.
+
+**Accumulated, not replaced.** A stage entered twice sums, because a second visit overwriting the
+first would under-report exactly the slow runs worth reading.
+
+**Closed in the `finally` that writes the log**, so a corridor that refuses or raises still records
+the stage it died in — the same argument the trace itself is built on.
+
+**An empty map means unrecorded, never a fast run.** Every log written before today has one, and it
+is graded the way `cause` and `selector` are: absent rather than assumed.
+
+### What it opens
+
+**`fetch` at 43% is the next target and was never the suspect.** Eighteen pages read serially-ish
+against a shared five-render budget, with two hosts exhausting it. **`select` at 7.3s is second**, and
+it is one model call over 53 pages of stored text — worth knowing before anyone widens the pool that
+item 31 wants widened, because that pool is this call's input.
+
+Neither is acted on here. This entry adds the instrument and the first reading, and the reading is
+one corridor on one day.
 
 ---
 

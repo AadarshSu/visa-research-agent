@@ -54,9 +54,20 @@ traveller-neutral store; every rule about what search may *do* is unchanged.
 alone is 1.0s. Brave's own headers say **50 queries a second**, so the lock was 65× too conservative;
 `DEFAULT_QUERY_INTERVAL_SECONDS` is now **0.05s** and the same fifteen queries take **2.6s** for the
 identical 148 results **at identical spend**. A full `australia/BD/AE` now runs in **34.5s** with 18
-pages read and 2 model calls, so **fetching and adjudication are now the latency**, which is where
-these files always said it was and where it had not been. **Nothing records where a corridor's time
-goes** — phase timings in the recall log are the prerequisite for the next step.
+pages read and 2 model calls. **And a corridor now says where its seconds go** (entry 142):
+
+| stage | | |
+| --- | --- | --- |
+| `fetch` | **14.7s** | **43%** — the largest, and never the suspect |
+| `select` | 7.3s | 21% — one model call over 53 pages of stored text |
+| `adjudicate` | 6.1s | 18% |
+| `search` | 4.0s | 12% — was 19.0s |
+| `crawl` | 2.0s | 6% — the *stage*, on a run that skipped the crawl |
+| `corpus` | 0.4s | 1% |
+
+**The two model calls are 39% and the selector is the bigger half.** Entries 53–55's *"adjudication
+is ~60% of a corridor"* is wrong in a third way. A stage is the span between two numbered steps of
+`_resolve`, not the act it is named after.
 
 **It works end to end, and it has been measured against a bar committed in advance** (entry 35). Over
 twenty high-volume corridors run twice each on 2026-08-24: **75% confirm the visa decision** (bar

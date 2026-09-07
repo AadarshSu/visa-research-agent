@@ -15,6 +15,7 @@ happen is a checklist appearing without a source behind it, which `VisaPlan` ref
 """
 
 import re
+import time
 from collections.abc import Callable, Collection
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -297,6 +298,46 @@ class ResolutionTrace:
     there rather than set here, because a value recorded twice drifts.
     """
 
+    clock: Callable[[], float] = time.monotonic
+    """Monotonic, and injected so a test can assert a duration without spending one.
+
+    Deliberately not `CorridorResolver.now`: that is a wall clock for stamping *when* a run
+    happened, and a wall clock can step backwards mid-run and report a negative phase."""
+
+    phase_seconds: dict[str, float] = field(default_factory=dict)
+    """Where this corridor's seconds went, by phase, accumulated rather than replaced.
+
+    **The instrument entry 140 said was missing.** The goal has been stated in seconds since entry
+    44 and nothing recorded any: `search_all` was found to be 19.0s of a 27.4s corridor only by
+    timing it by hand outside the program, and the standing claim that adjudication dominated turned
+    out to have been taken on a two-domain destination and never re-measured (entries 140, 141).
+
+    Accumulated because a phase can be entered more than once, and a second visit replacing the
+    first would under-report exactly the slow runs worth reading."""
+
+    open_phase: tuple[str, float] | None = None
+    """The phase running now. Not a timing itself — `begin` and `end` are the only readers."""
+
+    def begin(self, phase: str) -> None:
+        """Close whichever phase was running and start this one."""
+
+        self.end()
+        self.open_phase = (phase, self.clock())
+
+    def end(self) -> None:
+        """Close the running phase, if any.
+
+        Safe to call twice and called on every exit path, so a corridor that refuses early still
+        records the phase it refused in — which is the run most worth reading, exactly as the class
+        docstring says of the rest of this object.
+        """
+
+        if self.open_phase is None:
+            return
+        phase, started = self.open_phase
+        self.phase_seconds[phase] = self.phase_seconds.get(phase, 0.0) + (self.clock() - started)
+        self.open_phase = None
+
 
 def _slugify(value: str, *, maximum: int = 24) -> str:
     cleaned = re.sub(r"[^a-z0-9]+", "_", value.lower()).strip("_")
@@ -417,6 +458,7 @@ class CorridorResolver:
         selector: CandidateSelector | None = None,
         pinned: list[str] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self.provider = provider
         self.crawl_fetcher = crawl_fetcher
@@ -461,6 +503,9 @@ class CorridorResolver:
         self.discovered: list[PageLink] = []
         self.trace = ResolutionTrace()
         self.now = now
+        # Separate from `now` on purpose: durations need a clock that cannot step backwards, and
+        # `now` is a wall clock whose job is stamping when a run happened.
+        self.monotonic = monotonic
 
     async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
         """Resolve the corridor, and write down what it considered on the way.
@@ -469,7 +514,7 @@ class CorridorResolver:
         refuses early still records how far it got — which is the run most worth reading.
         """
 
-        trace = ResolutionTrace()
+        trace = ResolutionTrace(clock=self.monotonic)
         # Kept on the resolver so a caller can read what this run considered without re-reading the
         # recall log, which is overwritten per corridor and deliberately depended on by nothing.
         # Safe as per-run state because a resolver is built per corridor; the mistake entry 37
@@ -480,6 +525,9 @@ class CorridorResolver:
             resolved = await self._resolve(destination, corridor, trace)
             return resolved
         finally:
+            # Closes whichever phase was open, so a corridor that raised or refused early still
+            # records where its seconds went rather than dropping the phase it died in.
+            trace.end()
             self._write_recall_log(corridor, trace, resolved)
 
     async def _resolve(
@@ -518,6 +566,7 @@ class CorridorResolver:
             return None
 
         # 1. Search to arrive.
+        trace.begin("search")
         queries = corridor_queries(corridor, destination, nationality, residence)
         trace.queries = queries
         seeds: list[str] = []
@@ -578,6 +627,7 @@ class CorridorResolver:
             notes.append("search returned nothing on an approved domain for this corridor")
 
         # 2. The country's known pages, which is what decides whether a crawl is worth running.
+        trace.begin("corpus")
         #
         # Union with search rather than replacement: the corpus is not a superset of what a live run
         # finds — measured 2026-08-22, five of twenty-four pages a Canada run fetched were absent
@@ -626,6 +676,7 @@ class CorridorResolver:
                 candidates[entry.url] = stored
 
         # 3. Crawl to pinpoint — only when the corpus has not already out-covered it.
+        trace.begin("crawl")
         crawled: list[CandidatePage] = []
         page_titles: dict[str, str] = {}
         if self._crawl_is_worth_running(from_corpus):
@@ -714,8 +765,12 @@ class CorridorResolver:
             )
 
         # 4. Choose what to read, then fetch it through the ordinary retrieval path.
+        # Timed apart because they fail and improve for different reasons: choosing is a model
+        # call over stored text, fetching is the network and the render budget.
+        trace.begin("select")
         shortlist = await self._choose_what_to_read(destination, corridor, candidates, notes, trace)
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
+        trace.begin("fetch")
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
         trace.fetched = {candidate.link.url for candidate in fetched.candidates}
         # Refusals met while reading the shortlist, folded in beside the crawl's. Both are
@@ -729,6 +784,7 @@ class CorridorResolver:
         refused = sorted(crawl_refused | fetch_refused)
 
         # 5. Assign roles from the combined evidence.
+        trace.begin("adjudicate")
         try:
             decision = await self._decide_roles(destination, corridor, fetched, notes)
             sources = decision.sources
@@ -1587,6 +1643,9 @@ class CorridorResolver:
                     ),
                     unreadable=unreadable,
                     unreadable_outcomes=outcomes,
+                    phase_seconds={
+                        phase: round(seconds, 3) for phase, seconds in trace.phase_seconds.items()
+                    },
                 )
             )
         except OSError:

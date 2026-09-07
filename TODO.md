@@ -777,7 +777,7 @@ absolute bound and must not become a multiple of the shortlist size.
 </details>
 
 
-### 19. Get a corridor under ten seconds; search may stay — `next`, **search is now 2.6s of 34.5s**
+### 19. Get a corridor under ten seconds; search may stay — `next`, **fetch is 43%, the model calls 39%**
 
 > **The goal is latency, and it always was (entry 140).** The owner:
 >
@@ -821,18 +821,26 @@ absolute bound and must not become a multiple of the shortlist size.
 > 4. **The per-country switch**, which is this item as entry 129 left it. Still valid, now clearly
 >    the *last* of the four: the most work, and not where the seconds are.
 >
-> **The prerequisite for what is left: nothing records where a corridor's time goes.** The recall log
-> holds outcome, cause, selector, queries, seeds, candidates and unreadables, and no timings — which
-> is why a goal stated in seconds went weeks without a number. Option 1 could be priced without them
-> because `search_all` is one call that can be timed on its own; **the fetch and adjudication halves
-> cannot**, so add phase timings before attempting 2, 3 or 4.
+> **~~The prerequisite: nothing records where a corridor's time goes~~ — built 2026-09-07, entry
+> 142.** `ResolutionTrace` accumulates a duration per stage, `RecallRecord.phase_seconds` keeps it,
+> and the corridor command prints it. A stage is the span between two numbered steps of `_resolve`,
+> not the act it is named after.
 
-> **Where it stands after option 1.** A corridor is **34.5s** on `australia/BD/AE`, of which search
-> is now **2.6s**. That makes fetching and adjudication the whole of the remaining problem — 18 pages
-> read and 2 model calls in that run — and entries 53–55's *"adjudication is where the next
-> optimisation is"* true for the first time. Option 2 is still the right next one on the search side,
-> because 15 queries are still issued whether or not the store already covers the corridor; it is now
-> worth **2.6s**, not 19.0s, so price it against options aimed at the other 32.
+> **Where it stands after option 1, measured rather than guessed (entry 142).** `australia/BD/AE` at
+> **34.5s**: `fetch` **14.7s (43%)**, `select` **7.3s (21%)**, `adjudicate` **6.1s (18%)**, `search`
+> 4.0s (12%), `crawl` 2.0s, `corpus` 0.4s.
+>
+> **That re-orders what is left, and option 2 is no longer the next thing.**
+>
+> - **`fetch` at 43% is the target, and it was never the suspect.** Eighteen pages against a shared
+>   five-render budget, two hosts exhausting it. Nothing here has been tried; start by finding out
+>   how much of the 14.7s is renders, how much is serial waiting, and how much is one slow host —
+>   the same question entry 139 answered for the crawl fetcher and nobody has asked of this one.
+> - **`select` at 7.3s is second**, one model call over 53 pages of stored text, and it is the input
+>   side of item 31: widening the pool that item wants widened makes *this* call bigger. Price them
+>   together or the two items will fight.
+> - **Option 2 — let the corpus decide how much search to buy — is now worth at most 4.0s**, not
+>   19.0s. Still right, no longer first.
 
 ### The earlier framing, kept because its findings stand
 

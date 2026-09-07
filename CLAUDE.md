@@ -35,13 +35,20 @@ about **65× more conservative than the ceiling**. `DEFAULT_QUERY_INTERVAL_SECON
 and the same fifteen queries take **2.6s** and return the identical 148 results, **at identical
 spend** — the account is pay-as-you-go at $5 per 1,000 queries, so pace costs nothing.
 
-**What that leaves.** A full `australia/BD/AE` ran in **34.5s**, 18 pages read and 2 model calls, so
-the remaining time is fetching and adjudication — entries 53–55's *"adjudication is where the next
-optimisation is"* is true **now**, having been false before this change. **Nothing still records
-where a corridor's time goes**: phase timings in the recall log are unbuilt and are the prerequisite
-for calling any further latency change a success. And do not read that run's 1-of-6 role fill as a
-cost of this: its causes were a transient `HTTP 500` (the host answers `200` minutes later) and a
-spent render budget, and there is **no matched baseline** — entry 136's rule.
+**And a corridor now says where its seconds go (entry 142).** `ResolutionTrace` accumulates a
+duration per stage, `RecallRecord.phase_seconds` keeps it and `visa-discover corridor` prints it.
+First reading, `australia/BD/AE` at **34.5s**: **fetch 14.7s (43%)**, **select 7.3s (21%)**,
+**adjudicate 6.1s (18%)**, search 4.0s (12%), crawl 2.0s, corpus 0.4s. So **the two model calls are
+39% and the *selector* is the bigger half** — a cost entry 85 shipped as "a second model call" and
+nobody had priced — while **fetching is the single largest stage and was never the suspect**.
+Entries 53–55's *"adjudication is ~60%"* is still wrong, now in a new way.
+
+**A stage is the span between two numbered steps of `_resolve`, not the act it is named after.**
+That first run printed `crawl 2.0s` while its own notes said the crawl was skipped; both are true,
+and the 2.0s is the decision plus the candidate merge. Do not read a stage name as a network act.
+And do not read that run's 1-of-6 role fill as a cost of anything here: its causes were a transient
+`HTTP 500` (the host answers `200` minutes later) and a spent render budget, with **no matched
+baseline** — entry 136's rule.
 
 **Where it stands, as of 2026-09-02.** The pipeline works end to end and passed a bar committed in
 advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
@@ -713,6 +720,9 @@ cause, and only running the thing showed it.
 | 70 queries failed four-at-a-time, so pacing fixed it | that outage was a **spend cap**, which pacing cannot affect (entry 141) |
 | going faster costs more | the same 15 queries are sent either way; pace is free (entry 141) |
 | a corridor's role count after a change is that change's doing | a transient 500 and a spent render budget, with no matched baseline (entry 141) |
+| adjudication is the model cost in a corridor | **selection** is bigger — 7.3s against 6.1s, and nobody had priced it (entry 142) |
+| with search fixed, the rest is adjudication | **fetch is 43%** and was never the suspect (entry 142) |
+| a phase named `crawl` measures crawling | it is the span between two steps — 2.0s on a run that skipped the crawl (entry 142) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

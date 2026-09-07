@@ -273,6 +273,27 @@ def print_bootstrap(report: BootstrapReport, stream: TextIO) -> None:
     )
 
 
+def print_phase_timings(phases: dict[str, float], stream: TextIO) -> None:
+    """Where the seconds went, in the order the pipeline spends them.
+
+    Printed rather than left in the recall log because the log is overwritten per corridor and read
+    by almost nobody, and a goal stated in seconds went weeks without a number for exactly that
+    reason (entry 142). A phase absent from the map was never entered — a corridor whose corpus
+    out-covered a crawl shows no `crawl` line — so nothing is printed as a zero it did not spend.
+    """
+
+    if not phases:
+        return
+    order = ["search", "corpus", "crawl", "select", "fetch", "adjudicate"]
+    known = [(phase, phases[phase]) for phase in order if phase in phases]
+    known += [(phase, seconds) for phase, seconds in sorted(phases.items()) if phase not in order]
+    total = sum(seconds for _, seconds in known)
+    print(f"\n  {total:.1f}s in the resolver, by stage:", file=stream)
+    for phase, seconds in known:
+        share = f"{seconds / total:.0%}" if total else "--"
+        print(f"    {phase:<12} {seconds:6.1f}s  {share:>4}", file=stream)
+
+
 def print_corridor(resolved: ResolvedCorridor, stream: TextIO) -> None:
     print(f"\nCorridor {resolved.corridor.key}\n", file=stream)
     for source in resolved.sources:
@@ -912,10 +933,17 @@ async def run_corridor(
     outcomes: list[str] = []
     resolved: ResolvedCorridor | None = None
 
+    timings: dict[str, float] = {}
     for attempt in range(1, runs + 1):
         started = datetime.now(UTC)
         resolved = await resolve(destination, corridor, policy)
         if runs == 1:
+            # Read back from the record this run just wrote, rather than from the resolver: the
+            # resolver is built inside `resolve` and never returned, and the log is the thing that
+            # has to be right anyway.
+            written = log.read(corridor)
+            if written is not None and written.recorded_at >= started:
+                timings = written.phase_seconds
             continue
         outcomes.append("resolved" if resolved.is_usable else "refused")
         filled = ", ".join(sorted({role for s in resolved.sources for role in s.roles})) or "—"
@@ -939,6 +967,7 @@ async def run_corridor(
         print_variance(compare_runs(outcomes, records), stream)
     else:
         print_corridor(resolved, stream)
+        print_phase_timings(timings, stream)
 
     if args.format == "yaml":
         print(render_corridor_yaml(resolved))

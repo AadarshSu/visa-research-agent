@@ -687,6 +687,12 @@ remember", so they are also worth reading in one place.
 | Source snapshot | URL | TTL 24h, refused past 168h | **Yes** — it is the evidence | `var/cache/`, `research/source_cache.py` |
 | Corridor resolution | full corridor | 3 weeks | **Yes** — it is what a warm request serves | `var/corridors/`, `discovery/corridor_store.py` |
 | Recall log | corridor | overwritten each run | **No** — deleting it costs a question | `var/recall/`, `discovery/recall_log.py` |
+
+The recall log also records **where a corridor's seconds went**, one duration per stage of `_resolve`
+(entry 142) — a stage being the span between two numbered steps rather than the act it is named
+after, so `crawl` on a run that skipped the crawl is the decision and the merge. Measured first on
+`australia/BD/AE`: `fetch` 43%, `select` 21%, `adjudicate` 18%, `search` 12%. An empty map means the
+log predates the field, never a run that spent nothing.
 | **Page corpus** | **country** | **additive, never pruned** | **Yes** — the candidate source | `var/corpus/`, `discovery/corpus.py` |
 | **Page text** | **country** | **additive; replaced per URL** | **Yes** — the model selector reads it to choose what to fetch | `var/pagetext/`, `discovery/page_text.py` |
 | **Selection oracle** | corridor | committed, hand-edited | **No** — it grades runs, it never serves one | `oracle/selection_oracle.yaml`, `discovery/selection_recall.py` |

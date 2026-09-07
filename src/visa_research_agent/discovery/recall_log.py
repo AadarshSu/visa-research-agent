@@ -105,6 +105,25 @@ class RecallRecord(StrictModel):
     refusal is met now, and it is merged in here.
     """
 
+    phase_seconds: dict[str, float] = Field(default_factory=dict)
+    """Where this run's seconds went — `search`, `corpus`, `crawl`, `select`, `fetch`, `adjudicate`.
+
+    **Empty means the log predates the field**, exactly as `None` does for `cause` and `selector`,
+    and it is graded as unrecorded rather than as a fast run. Added 2026-09-07 because the project's
+    goal has been stated in seconds since entry 44 and nothing in the program recorded one: entry
+    140 had to time `search_all` by hand from outside to find it was 19.0s of a 27.4s corridor, and
+    the standing belief that adjudication dominated turned out to date from a two-domain destination
+    and to have been false ever since the five-domain cap tripled the query count.
+
+    **A phase is a stage of `_resolve`, not the act it is named after**, and the difference shows on
+    the first run that used this: `australia/BD/AE` recorded `crawl 2.0s` on a run whose own notes
+    say *"the crawl was skipped"*. The 2.0s is the span between step 3 and step 4 — deciding the
+    corpus out-covers a crawl, and merging and scoring what that leaves. True and easy to misread,
+    so it is said here rather than left for someone to rediscover.
+
+    A diagnostic like the rest of this record: nothing reads it back, and a phase missing from the
+    map is one this run never reached."""
+
     unreadable_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
     """Per URL, why it could not be read, as the typed outcome rather than the sentence.
 
