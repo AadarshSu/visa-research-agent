@@ -169,10 +169,6 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
-**The OpenAI account is out of credit as of 2026-09-15.** It ran out partway through entry 159's
-sweep. Every corridor, and the web app, fails at candidate selection and role adjudication until it
-is topped up. Brave search still answers.
-
 **Item 51 was measured on 2026-09-15 and search stays on every corridor (entry 159).** The owner
 asked for the corpus first and search only to fill what it leaves. Nothing was built, because
 neither shape pays:
@@ -182,9 +178,13 @@ neither shape pays:
 - **Deciding per query from what the corpus holds** skips the searches that found 5–6 of the 8
   search-only pages that answered.
 
-**What remains of item 51 is the purpose query, and it needs credit.** Otherwise start at item 48.
-`var/recall` is as it was: the 20 oracle corridors' logs were backed up before the sweep and
-restored byte-identical. The 53 `BD/AE` and `BD/SA` baselines were never touched, and
+**And the purpose query stays, which closed item 51 the same day (entry 160).** The OpenAI account
+was topped up after running out mid-sweep. Matched runs then showed that without the purpose query,
+Japan `IN/GB` loses its London-embassy checklist and Norway `IN/IN` moves to an older checklist, the
+same way in both runs of each arm. **Start at item 48.**
+
+`var/recall` is as it was. The 20 oracle corridors' logs, and the four measured for entry 160, were
+backed up before each sweep and restored byte-identical. The 53 `BD/AE` and `BD/SA` baselines were never touched, and
 `czechia/IN/GB` still holds entry 158's run beside its
 `superseded-czechia-IN-GB-tourism-2026-08-25.json.bak`.
 

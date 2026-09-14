@@ -29,8 +29,13 @@ pays:
 - **Deciding per query from what the corpus holds** loses 5–6 of the 8 search-only pages that
   answered.
 
-What is left of item 51 is whether the purpose query may go, and that needs OpenAI credit — **the
-account ran out mid-sweep**.
+**Then the purpose query was measured, and it stays (entry 160), which closes item 51.**
+- **It finds pages no other query finds.** Of the 45 pages it was first to return, 28 are still
+  returned by it alone.
+- **It changes answers.** Without it, in both runs:
+  - Japan `IN/GB`'s checklist from the London embassy became a questionnaire, and its decision moved
+    to a general ministry page;
+  - Norway `IN/IN`'s January 2024 checklist was replaced by an older file.
 
 **Re-ordered 2026-09-14 by the owner's rule for the hybrid (entry 148).** **The corpus holds what
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
@@ -39,7 +44,8 @@ done the same day (entry 149), then item 53, which building it found and which w
 day (entry 150), then 17 — counted and closed that day too (entry 151) — then 8, read that day as
 well (entry 152), then 9 — re-scoped and closed that day (entries 153, 154) — then 54 (done that day, entry 155) and 21 (closed that day, entries 156 and 157) — and
 **optimisation** follows it: 31 (done that day, entry 158), then the new item 51 (5 of a corridor's 15
-live queries carry no traveller detail), then 48. **Item 49 stops where it is**, and 35 and 47 move
+live queries carry no traveller detail — closed 2026-09-15 with all three kept, entries 159 and 160),
+then 48. **Item 49 stops where it is**, and 35 and 47 move
 to Later: all three exist to make the store cover every traveller and residence offline, which the
 rule hands to request-time search. **Expansion** — item 2's rule question, the 143 countries with
 no registry row, deployment — comes after both.
@@ -261,8 +267,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 51. Search stays on every corridor; test whether the purpose query may go | `next` |
-|  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
+| **Now** | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 |  | 19. Get a corridor under ten seconds; search may stay | **paused** |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
@@ -301,73 +306,6 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
-
-### 51. Search stays on every corridor; test whether the purpose query may go — `next`, **needs OpenAI credit**
-
-> **Measured 2026-09-15 and re-scoped (entry 159).** The owner asked for the corpus first, with
-> search only filling what it leaves. That was measured two ways before building, and **search stays
-> on every corridor**:
->
-> - **Search only after the corpus leaves a role open.** Twenty oracle corridors were run with
->   search and corpus-only, back to back; five were lost when the OpenAI account ran out of credit.
->   Over the 15 that remain: today $0.322 and 38.2s, corpus-only $0.260 and 32.6s, projected
->   search-when-needed **$0.312 and 39.9s**. The corpus alone left a role open in 7 of 15, and each
->   of those would do select, fetch and adjudicate twice. And where the corpus filled a role with a
->   general page — Japan `PH/PH`'s MOFA checklist, UK `PH/PH`'s GOV.UK apply page — no role was
->   open, so the traveller's own embassy or fee-table page search had found would be lost.
-> - **Deciding per query, before the pass, from what the corpus holds.** It skips the searches that
->   found **5–6 of the 8** search-only pages that answered. Japan's corpus holds pages from both
->   embassies, and none of the ones that answered. Beyond dropping the purpose query it saves only
->   3–13% of queries.
->
-> **What is left is the narrow question this item started with**, and the logs do not settle it.
-> Over the 100 recall logs postdating their corpus, the purpose query was first to return **45 of
-> the 194** pages only search supplied, and **25 look like checklists** — Spain's London consulate,
-> Norway, Thailand, Bulgaria, New Zealand. A matched run with and without it, on `spain/BD/AE`,
-> `norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, both arms on the same cache state (entry
-> 136), is the measurement. Worth about **$0.018 a corridor** if it can go. The body below is the
-> item as written, and its two caveats about attribution still apply.
-
-**Why:** entry 148 — the corpus holds what every traveller shares, and live search fetches this
-traveller's specifics. `corridor_queries` (`discovery/search.py`) is not shaped that way. It issues
-three queries per trusted domain, before the corpus is read:
-
-| query | traveller-specific? |
-| --- | --- |
-| `site:{domain} {name} visa requirements {nationality}` | yes |
-| `site:{domain} {purpose} visa documents required` | **no** |
-| `site:{domain} visa application {residence}` | yes |
-
-The purpose query carries nothing the offline build does not already sweep in four passes, so a
-five-domain country spends **5 of its 15 live queries** on traveller-neutral pages the corpus exists to
-hold.
-
-**Measure before building — it is a recall change.** Every recall log records `discovered_from` for a
-search candidate, which is the query that found it. Count, over the logs that postdate their
-country's corpus, the pages attributed to the purpose query that were fetched, and of those how many
-covered a role nothing else in the run covered. **Read that count as an upper bound:**
-`discovered_from` names the **first** query to return a URL, and queries run nationality, purpose,
-residence per domain, so a page attributed to the purpose query may also have been returned by the
-residence query. If the bound is not zero, the settling measurement is a matched re-run with and
-without the query — both arms on the same cache state (entry 136).
-
-**Checked against the code on 2026-09-15, and two more things bend that count.** The first-query
-rule above is confirmed: `_resolve` walks results in query order and keeps a page under the first
-query that returned it. But the corpus merge straight after it **replaces a search candidate whenever
-the corpus copy of the same address scores higher**, and the replacement carries the corpus's
-`discovered_from`, not the query. So do not count by attribution alone — **first drop every page the
-corpus holds**, as entry 129 did, because a page the store has does not depend on search whichever
-record won. And **every log older than 2026-09-14 predates entry 158**, when the selector's pool
-began admitting corpus pages on their stored text, so a role only the purpose query filled then may
-be filled from the corpus now. Both push the count the same way: it stays an upper bound, and the
-matched re-run on current code is the number to act on.
-
-**What it is worth, so it is not oversold.** A third of **$0.075** is about **$0.025** a corridor,
-and search is 8% of a corridor's seconds. The point is the rule, not the money: live search stays the
-minority because it asks only what the store cannot know.
-
-**Careful:** the nationality and residence queries stay, and nothing here licenses adding
-`{residence}` to `corpus_queries` — its docstring's exhaustiveness bar is unchanged.
 
 ### 48. Test root seeding before building it, and separate discovery from allocation — `next`
 
@@ -1591,6 +1529,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 51. Make live search ask only for what is specific to this traveller | 09-15 | 159, 160 | **Nothing was built, and both results are measured.** The owner's corpus-first version was tried two ways (entry 159). Searching only after the corpus leaves a role open projects −3% money and +4% seconds, and misses the traveller's own embassy pages. Deciding per query from what the corpus holds loses 5–6 of 8 answering pages. **The purpose query was marked traveller-neutral and is not** (entry 160): it alone returns 28 of the 45 pages it was first to find, and in matched runs dropping it cost Japan `IN/GB` its London-embassy checklist and moved Norway `IN/IN` to an older checklist, the same way in both runs. It would have saved $0.030 a corridor. All three queries stay |
 | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | 09-14 | 123, 125–128, 158 | **The 94% held four fixture answers nothing in the pool could replace**, and every rule tried recovered them, so cost and safety chose. Admitting every page whose stored text scores cost +68% input and was mostly chaff; a cap the size of the pool displaced 1,813 pooled pages with no text and five the fixture names. **Shipped: the five best per role on stored text, added, nothing removed** — each recovered answer ranks second for its role, +16% selection input over 53 corpora, and no second scoring pass, because step 3b already scored every candidate and threw the scores away. Czechia's UK checklist filled live; Liechtenstein's pool went 2 → 21 and its challenge still refused |
 | 21. Fill the three provenance gaps | 09-14 | 156, 157 | **A claim now carries the sentence behind it**: the decision and every requirement get quotes the model writes and the application keeps only where the retrieved text holds them — 35 of 35 in a probe before building, 45 of 45 live after. A match proves the words exist, not that they fit the claim. **Every cited source carries its page's content hash and why discovery chose it**, attached when the plan is built because the retrieval cache is shared between corridors. Steps and `where_to_apply` still carry no quote |
 | 54. Say which refused page mattered, once per authority | 09-14 | 155 | **14 of 142** answered runs name refused pages and **9** name three or more, up to eight across four sites (Malta). Each named refusal now carries whether the refused-page judgement picked it as able to hold the decision — set from `decision_blocking_urls` by the application, never the model — and the caveats say one sentence per authority, those pages first, every link kept. The model is told the same and asked not to repeat every address |

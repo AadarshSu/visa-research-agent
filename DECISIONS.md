@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [160](#160-the-purpose-query-stays-it-finds-the-posts-own-checklist-which-neither-the-other-queries-nor-the-corpus-hold) | **The purpose query stays** — it alone returns 28 of 45 pages it found first; without it Japan lost its London-embassy checklist and Norway read an older one, the same way in both runs |
 | [159](#159-search-stays-on-every-corridor-waiting-for-the-corpus-costs-a-second-pass-and-the-corpus-cannot-say-when-search-is-needed) | **Search stays on every corridor** — search-only-when-needed projects −3% money and +4% seconds and misses the traveller's own embassy pages; deciding per query from the corpus loses 5–6 of 8 answering pages |
 | [158](#158-the-selectors-pool-admits-up-to-five-pages-per-role-on-their-stored-text-and-removes-nothing) | **The selector's pool also admits the five best per role on stored text, removing nothing** — all four hidden fixture answers recovered for +16% selection input over 53 corpora; a cap displaced 1,813 unread pages |
 | [157](#157-a-cited-source-carries-the-version-of-the-page-it-was-read-from-and-why-it-was-chosen) | **Every cited source carries its page's content hash and why discovery chose it** — attached when the plan is built, never in the shared retrieval cache |
@@ -208,6 +209,82 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 160. The purpose query stays: it finds the post's own checklist, which neither the other queries nor the corpus hold
+
+**2026-09-15 · TODO item 51 — measured, and closed with no code change**
+
+Entry 148 marked `corridor_queries`' purpose template, `site:{domain} {purpose} visa documents
+required`, as the one query carrying no traveller detail. Entry 159 left one question open: may it
+go? Over 100 recall logs it was the first query to return 45 of the 194 pages only search supplied,
+but a log keeps only the first query to return a page, so that was an upper bound. Two measurements
+followed, after the OpenAI account was topped up. **It stays.**
+
+### Does another query find the same pages? Almost never
+
+Today's `corridor_queries` were re-issued for the 32 corridors holding those 45 pages: 351 Brave
+queries, no model, no fetch.
+
+| the 45 purpose-first pages, searched again | |
+| --- | --- |
+| also returned by a nationality or residence query | **5** |
+| returned by the purpose query alone | **28** |
+| returned by no query this time | 12 |
+
+The upper bound was close to the true figure. Across those 32 corridors the purpose query also
+returned **421 pages that no other query returned and the corpus does not hold**.
+
+### Does it change what a traveller is told? In two of four corridors, the same way every run
+
+**Method.** Four corridors where it had found a checklist-shaped page. Each was run twice with all
+three queries (P) and twice without the purpose query (N), in the order P, N, N, P, on one cache.
+The N arm replaced `corridor_queries` in the resolver's namespace, so its recall logs show 8
+queries against 12. Logs were backed up and restored byte-identical; all 16 runs made every model
+call cleanly.
+
+| corridor | with the purpose query (both runs) | without it (both runs) |
+| --- | --- | --- |
+| `japan/IN/GB` | checklist: London embassy's `itpr_en/sightseeing.html`; decision: London embassy's `index_000025.html` | checklist: **named as a questionnaire**, none filled; decision: MOFA's general `novisa.html` |
+| `norway/IN/IN` | checklist: `tourist-visa-document-checklist-january-2024.pdf` | checklist: `tourist-visa-document-checklist-july-18.pdf`, an older file |
+| `spain/BD/AE` | decision only, from the corpus | the same; the London consulate checklist was never used in either arm |
+| `thailand/IN/GB` | no decision; 2 and 3 other roles | no decision; 4 other roles in both runs |
+
+**Japan's decision moved although its page was still read.** `index_000025.html` came from the
+residence query and was shortlisted and fetched in all four runs. Without the checklist page beside
+it, the adjudicator took the ministry's general page both times. So the loss is not only the page the
+purpose query finds; it also changes what the rest of the evidence reads as.
+
+**Norway's corpus holds the wrong vintage.** It records dozens of `norway.no` checklist PDFs,
+including India's `visa-document-checklist---no-c-questionnaire---july-2018.pdf` and
+`family-and-friends-visa-checklist-january-2025.pdf`, but not the January 2024 tourist checklist the
+purpose query returns. Without it, the nationality query's July 2018 file was what got read.
+
+Thailand is the noise case (entry 81): the arm without the query filled more roles, and the arm with
+it varied between runs.
+
+| mean over 8 runs each | cost | seconds | queries |
+| --- | --- | --- | --- |
+| with the purpose query | $0.272 | 34.1 | 12 |
+| without it | $0.242 | 25.8 | 8 |
+
+**$0.030 a corridor, 11%.** The seconds difference is mostly noise: Spain's two with-query runs took
+52s and 67s.
+
+### Decided: all three templates stay, and "traveller-neutral" was the wrong label
+
+A `site:` query on a post's own domain returns that **post's** documents — Japan's London embassy,
+Norway's India pages — because the post publishes them there. The purpose query carries no
+nationality or residence words, but the domain does the narrowing, so for a mission domain it is a
+traveller-specific query. Entry 148's table read the template and not what it returns.
+
+Three things this does not license:
+- **Adding `{residence}` or `{nationality}` to `corpus_queries`.** Its exhaustiveness bar is unchanged.
+- **Reading these pages as corpus gaps to chase with a crawl.** Entry 148 hands per-post pages to
+  search, and this is search doing that.
+- **Reading four corridors as a rate.** Two of four changed, identically in both runs, which is
+  enough to refuse a $0.030 saving on a correctness project. It is not a measured frequency.
 
 ---
 

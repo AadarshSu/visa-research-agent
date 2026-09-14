@@ -55,8 +55,10 @@ and searching only to fill what it leaves was tried two ways, and neither pays:
   search-only pages that answered.
 
 Search is $0.054 of a $0.322 corridor; the model calls are the rest. **Do not re-propose conditional
-search without a new argument against both.** What is left of item 51 is whether the purpose query
-may go — the first to return 45 of 194 search-only pages read, 25 of them checklist-shaped.
+search without a new argument against both.** **The purpose query stays too (entry 160).** It
+alone returns 28 of the 45 pages it was first to find. Without it, Japan `IN/GB`'s London-embassy
+checklist became a questionnaire and Norway `IN/IN` moved to an older checklist, in both runs of
+each arm. All three of `corridor_queries`' templates are kept.
 
 **The constraint, sized — and paused (entry 147).** What follows is where a corridor's seconds and dollars go, kept because it is measured and whoever resumes should not re-derive it — not because it is the next thing to do.
 
@@ -837,6 +839,9 @@ cause, and only running the thing showed it.
 | a corpus holding pages from a post holds that post's answer | Japan holds 5 London-embassy pages and none of the 4 that answered (entry 159) |
 | a role a corpus-only run leaves open is a page the corpus lacks | 6 of 9 were on pages it holds — the model picked differently (entry 159) |
 | the purpose query only finds what the corpus already holds | first to return 45 of 194 search-only reads, 25 checklist-shaped (entry 159) |
+| the purpose query carries no traveller detail, so it finds nothing traveller-specific | `site:` a post's domain, it returns that post's checklist — Japan's London embassy, Norway's India PDF (entry 160) |
+| "first query to return a page" overstates what a query alone finds | re-issued, 28 of 45 purpose-first pages came back from the purpose query alone (entry 160) |
+| role counts show what dropping a query costs | it swapped pages: Norway's checklist became an older file, Japan's a questionnaire (entry 160) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
