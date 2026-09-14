@@ -274,7 +274,7 @@ one-paragraph defects rather than items.
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
-|  | 55. Take the traveller from the hosting platform's identity, through one adapter | `soon` |
+|  | 55. Take the traveller from Ofself's shared identity, through one adapter | `soon` |
 | **Later** | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
@@ -990,8 +990,8 @@ makes **every** request cold. That is item 20, which this item should be planned
 4. **Keep `render_mode: never`** unless the host can carry Chromium (~150MB plus system libraries).
    Vietnam will refuse without it, which is correct rather than broken.
 5. **Put a key or a rate limit on `POST /visa-plans`.** It is unauthenticated and a cold corridor spends
-   real money — search plus two model calls — so a public URL is a public wallet. The hosting
-   platform's login is the likely answer; plan this step with item 55.
+   real money — search plus two model calls — so a public URL is a public wallet. Ofself's login
+   is the likely answer; plan this step with item 55.
 
 **Do not** deploy with `source_mode: fixtures`: it only knows Singapore, and would look like a working
 product that answers exactly one corridor.
@@ -1035,14 +1035,18 @@ off-domain redirect is caught and the country flagged.
 **Careful:** `content_hash` is already computed over the *cleaned* text, so drift detection is less noisy
 than item 14 assumes. Do not add a second hash over raw bytes; it would fire on every nav timestamp.
 
-### 55. Take the traveller from the hosting platform's identity, through one adapter — `soon`
+### 55. Take the traveller from Ofself's shared identity, through one adapter — `soon`
 
-**Why — the owner, 2026-09-15.** The project will probably be hosted on a platform that provides
-login, and with it the platform's own schema for a person's identity: passport, residence and so on.
-Today the traveller is typed into a form on every request. Behind a login it should come from the
-account, and that schema is the platform's to define, not ours. The aim is that integrating it means
-**one new module mapping their schema onto ours**, not edits spread across the API, extraction and
-the page.
+**Why — the owner, 2026-09-15.** This project is to become one app in **Ofself**, a platform whose
+apps all share one identity data structure per person. Each app reads it, and each app updates it
+as the person uses that app. Ofself will give this project **a subset of that structure, through a
+schema for the details this project needs**. "Hosted" here means a member of that ecosystem; it
+says nothing yet about where the server runs, which is still item 7.
+
+Today the traveller is typed into a form on every request. Inside Ofself it should come from the
+shared identity, and the field names and format are Ofself's to define, not ours. The aim is that
+integrating it means **one new module mapping their schema onto ours**, not edits spread across the
+API, extraction and the page.
 
 **How a traveller is wired today, checked against the code 2026-09-15.** Most of the seam already
 exists, which is why this is sized small:
@@ -1067,38 +1071,54 @@ exists, which is why this is sized small:
    already how the plan service and automatic destinations reach the route, so this follows the
    pattern in `api/dependencies.py`.
 2. **Move `normalise_country` out of `api/schemas.py`** to where both adapters can use it, so an
-   identity from the platform passes the same "no reference data, refused" check a typed one does.
-3. **When the platform is chosen, write its adapter as one module**, platform identity to
-   `TravellerProfile`, tested on fixture identities with no network. Nothing past the edge should
-   change.
+   identity from Ofself passes the same "no reference data, refused" check a typed one does.
+3. **Once Ofself's schema for this project exists, write its adapter as one module**, Ofself
+   identity to `TravellerProfile`, tested on fixture identities with no network. Nothing past the
+   edge should change.
 
-**Do not build the platform adapter before its schema is known.** A seam designed against a guessed
-schema lands in the wrong place. Steps 1 and 2 can go ahead now if they stay small; step 3 waits.
+**What this project asks Ofself for is ours to state now; the adapter is not.** The list is
+`TravellerProfile`'s fields and no more: passport nationality and passport type, country of
+residence, and the optional city, residence status and permission expiry. **Purpose stays a
+question on the page**, because it belongs to a trip, not to a person. Field names and format are
+Ofself's, and a seam designed against a guessed schema lands in the wrong place, so steps 1 and 2
+can go ahead now if they stay small and step 3 waits.
 
-**Five things an adapter must not lose, each easy to lose by mapping fields one to one:**
-1. **Only the fields that select guidance cross into the program.** A platform identity will carry
-   a name, a date of birth, a passport number, an address. `build_research_packet`
+**Open, and for the owner to settle with Ofself:** whether this project writes the requested schema
+or Ofself does, and whether a field says which app wrote it and when.
+
+**Six things an adapter must not lose, each easy to lose by mapping fields one to one:**
+1. **Ask for only the fields that select guidance, and drop anything else that arrives.** The shared
+   identity will hold a name, a date of birth, a passport number, an address. `build_research_packet`
    (`research/openai_extraction.py:108`) sends `traveller_profile.model_dump()` to OpenAI **whole**,
-   so any field added to `TravellerProfile` goes to a third party on every plan. The adapter drops
-   what the plan does not use; `TravellerProfile` is not widened to hold it. Keep
-   `StrictModel`'s `extra="forbid"`, which stops a stray field at construction.
+   so any field added to `TravellerProfile` goes to a third party on every plan. Request the list
+   above; the adapter drops what the plan does not use, and `TravellerProfile` is not widened to
+   hold it. Keep `StrictModel`'s `extra="forbid"`, which stops a stray field at construction.
 2. **A passport type the program cannot research is refused, never coerced.** `to_profile()`
    hard-codes `passport_type="ordinary"`, which is safe only because the form has no type field. A
-   platform recording a diplomatic or official passport must be refused at the adapter, as
+   shared identity recording a diplomatic or official passport must be refused at the adapter, as
    `test_a_diplomatic_passport_cannot_be_requested` refuses it at the schema, or it is answered with
    the ordinary-passport rules (entry 20).
 3. **A traveller with more than one passport chooses which; the adapter never picks.** Dual
    nationality is one of the two questions entry 59 found a corridor does not carry, and a silent
-   pick changes the answer. Residence is the same: an address on file is a default to confirm, not
-   proof of the country applied from.
-4. **A logged-in traveller with no usable identity is asked, never given the default.**
+   pick changes the answer. Residence is the same, and more so in a shared structure: another Ofself
+   app may have written it from how the person used that app, which is not the person telling this
+   one where they apply from. **Show what Ofself holds as a default the traveller confirms**, never
+   as the corridor.
+4. **A traveller whose identity lacks a deciding field is asked, never given the default.**
    `create_visa_plan` falls back to `DEFAULT_TRAVELLER_PROFILE`, an Indian passport resident in
-   Edinburgh, when no traveller is described. That suits the anonymous form. Behind a login it would
+   Edinburgh, when no traveller is described. That suits the anonymous form. Inside Ofself it would
    answer someone else's corridor for them without saying so.
-5. **After the adapter a country is an ISO alpha-2 code**, whether the platform stores alpha-3, a
-   name or its own enum. It is normalised once, at the edge.
+5. **After the adapter a country is an ISO alpha-2 code**, whether Ofself stores alpha-3, a name or
+   its own enum. It is normalised once, at the edge.
+6. **Nothing is written back to the shared identity without a decision entry first.** Ofself apps
+   update the structure as it is used, so this one will be expected to. What the pipeline
+   *concludes* — a visa decision, a checklist, a route — must never go there: a plan is a rendering,
+   never a stored fact (entry 44), and a wrong "needs a visa" sitting in a store every other app
+   reads, with no citation and no age, is the alarming-wrong-answer class entry 6 forbids. The most
+   that could be argued for is what the traveller *stated* here, such as which passport they chose,
+   and that argument has not been made.
 
-**Plan it with item 7.** A login is also the likely answer to item 7's fifth step: `POST
+**Plan it with item 7.** Ofself's login is also the likely answer to item 7's fifth step: `POST
 /visa-plans` is unauthenticated and a cold corridor spends real money.
 
 ---
