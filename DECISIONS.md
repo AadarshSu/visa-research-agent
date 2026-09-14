@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [150](#150-a-null-visa-decision-is-never-verified-whatever-left-it-null--and-the-plan-enforces-it) | **A null visa decision is never `verified`** — extraction downgraded only a block or a questionnaire, so a model's own null was graded verified; now held in extraction and in `VisaPlan` |
 | [149](#149-a-hand-written-destination-answers-only-when-research-is-off-because-singapore-and-japan-refused-everyone-they-were-not-written-for) | **Singapore and Japan served one traveller's pages to everyone, and refused the rest with a 503 blaming the model** — a hand-written entry now answers only under `configured`; Japan's `IN/GB` checklist fills 1 of 3 automatic runs |
 | [148](#148-the-corpus-holds-what-every-traveller-shares-live-search-fetches-what-this-traveller-needs) | **The owner settles the hybrid: the corpus holds what every traveller shares, live search fetches this traveller's specifics** — item 49 stops, 35 and 47 move to Later, and 5 of 15 live queries carry no traveller detail |
 | [147](#147-right-information-first-latency-and-cost-are-the-constraint-not-the-objective) | **The owner pauses 140–146: correctness is the objective, latency and cost the constraint** — and search's cost half passes while its reliability half is unmeasured |
@@ -201,6 +202,43 @@ not — and stored text ranks, it never speaks).
 
 ---
 
+## 150. A null visa decision is never `verified`, whatever left it null — and the plan enforces it
+
+**2026-09-14 · implemented, TODO item 53**
+
+`resolve_plan_status`'s docstring has said since entry 27 that *a plan whose visa decision could not
+be confirmed is never verified*. The code held that for one cause only. `OpenAIVisaPlanExtractor`
+passed `decision_is_unverified=destination.decision_is_unverified`, which is set when a **block or a
+questionnaire** stood in for the decision — so a model that returned `visa_required: null` on its
+own, from pages it read cleanly, was graded on the checklist, failure and staleness clauses and could
+come out `verified`. Seen live on `japan/IN/GB` (entry 149): *"route and need for a visa not fully
+established"*, `status: verified`, and the interface would have shown **Uncertain** beside
+**Evidence verified**.
+
+**Decided, in two places, because one of them is what already failed.**
+
+- **Extraction grades on the decision it is about to publish**: `decision_is_unverified=visa_required
+  is None`. That is strictly wider than before — a block or a questionnaire already forces
+  `visa_required` to `None` — so nothing that was `partial` can become `verified`.
+- **`VisaPlan.validate_status_matches_evidence` refuses `verified` with a null decision**, beside its
+  existing refusals of a verified plan with unavailable sources, stale evidence or a decision tool.
+  Entry 27's reason applies again: the prompt asking for the right thing was not what kept the
+  answer right, and here the application code was not either. No correct plan is lost to it — a
+  stated decision is `True` or `False`, and every path that leaves it `None` is by definition one
+  where nobody confirmed it.
+
+**Tested against the defect first.** Both new tests — a model returning null over the Singapore
+fixture, and a verified plan re-validated with its decision removed — failed on the unfixed code
+(`'verified' == 'partial'`, and no `ValidationError`) and pass on the fix.
+
+**What it does not change.** The interface needs nothing: a `partial` plan already says *"Some
+evidence is incomplete"* above the guidance, and the model's unresolved question carries the reason.
+No earlier *resolution* figure moves either — entry 58's 75% and the sweeps count whether a corridor
+resolved, not the plan's status — but any plan status recorded by hand before today may have been a
+`verified` that should have read `partial`.
+
+---
+
 ## 149. A hand-written destination answers only when research is off, because Singapore and Japan refused everyone they were not written for
 
 **2026-09-14 · implemented, TODO item 52**
@@ -276,7 +314,8 @@ served the pinned pages. Read entries 84–106's Singapore and Japan rows with t
 the decision; a model that returns `visa_required: null` on its own is graded on the other clauses.
 Seen on the third `japan/IN/GB` run above — *"route and need for a visa not fully established"*,
 graded `verified` — and the function's own docstring says such a plan never is. It applies to every
-automatic corridor, so it is item 53 rather than a footnote to this change.
+automatic corridor, so it is item 53 rather than a footnote to this change. **Fixed the same day
+as entry 150.**
 
 ---
 

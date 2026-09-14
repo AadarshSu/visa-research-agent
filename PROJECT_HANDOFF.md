@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 712 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 714 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -173,8 +173,8 @@ corpus holds what every traveller shares, live search fetches this traveller's s
 the minority. Correctness comes first, then optimisation, then expansion. **Item 52 was done the
 same day (entry 149)**: the web app served Singapore and Japan from hand-written pages and refused
 every traveller they were not written for, and now researches them like every other country.
-**Start at item 53** — a plan whose visa decision is null can still be graded `verified` (known
-problem 40). **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+**Item 53 was done that day too (entry 150)**: a plan whose visa decision is null can no longer be
+graded `verified`. **Start at item 17.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -833,18 +833,14 @@ re-add the amendment history here.
    corpus not rebuilt since 2026-08-28 still carries them — FR and SE are clean, the other eight are
    not.
 
-40. **A plan whose visa decision is null can still be graded `verified`.** `resolve_plan_status`
-   downgrades a plan only when a block or a questionnaire stood in for the decision; a model that
-   returns `visa_required: null` on its own is graded on the other clauses. Seen live on
-   `japan/IN/GB` on 2026-09-14 — *"need for a visa not fully established"*, `verified` — and it
-   applies to every automatic corridor. TODO item 53.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source
 plan never run live — entries 56, 57), **18** (the excerpt silently deciding corridors — entry 42),
 **25** (entry 27's exception not firing on the corpus path — entries 56, 57), **28** (selection graded
 against an oracle the arms built — entry 87 replaces it with a curated one), **39** (the web app
-serving Singapore and Japan from hand-written pages — entry 149). Also removed as fixed: a
+serving Singapore and Japan from hand-written pages — entry 149), **40** (a null visa decision graded
+`verified` — entry 150). Also removed as fixed: a
 block resolving a corridor it had nothing to do with (entry 32), the unverified `conflicts` field
 (entry 30), and a failed model call substituting the heuristic (entry 31).
 

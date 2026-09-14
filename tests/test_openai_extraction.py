@@ -4,10 +4,11 @@ from typing import Any
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
 from visa_research_agent.config.loader import load_destination_registry
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
-from visa_research_agent.domain.models import DestinationConfig, VisaPlanDraft
+from visa_research_agent.domain.models import DestinationConfig, VisaPlan, VisaPlanDraft
 from visa_research_agent.research.errors import (
     InsufficientEvidenceError,
     LLMExtractionError,
@@ -391,6 +392,50 @@ async def test_an_unverified_decision_is_never_reported_as_a_decision() -> None:
     assert plan.visa_required is None
     # And it can never wear the badge of a checked answer.
     assert plan.status == "partial"
+
+
+@pytest.mark.anyio
+async def test_a_decision_the_model_could_not_confirm_is_never_verified() -> None:
+    """Item 53. The guard above fires only when a block or a questionnaire stood in for a decision.
+
+    A model can return null on its own, from pages that were all read cleanly — `japan/IN/GB` did,
+    *"route and need for a visa not fully established"* — and that plan was graded `verified`.
+    Whatever the reason nobody confirmed it, the traveller is being told the one thing they most
+    need is unknown, and "Evidence verified" cannot sit beside that.
+    """
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={
+                "visa_required": None,
+                "unresolved_questions": ["The sources do not establish whether a visa is needed."],
+            }
+        )
+    )
+    destination = singapore_config()
+    assert not destination.decision_is_unverified, "this is the case no block or tool explains"
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.visa_required is None
+    assert plan.status == "partial"
+
+
+@pytest.mark.anyio
+async def test_a_verified_plan_cannot_be_built_around_an_open_decision() -> None:
+    """The same rule held by the plan itself, so no other path to a `VisaPlan` can skip it."""
+
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(load_golden_draft()), maximum_input_characters=80_000
+    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+    assert plan.status == "verified"
+
+    with pytest.raises(ValidationError, match="visa decision"):
+        VisaPlan.model_validate({**plan.model_dump(), "visa_required": None})
 
 
 @pytest.mark.anyio

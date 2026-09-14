@@ -89,7 +89,10 @@ def resolve_plan_status(
     below is checked first so a caller that got both wrong still refuses the label.
 
     A plan whose visa decision could not be confirmed is never verified either, for the same reason
-    and more strongly: it is the one thing a traveller most needs to be right.
+    and more strongly: it is the one thing a traveller most needs to be right. **"Could not be
+    confirmed" means a null decision for any reason** — until 2026-09-14 extraction passed only the
+    case where a block or a questionnaire stood in for it, so a model leaving the decision open from
+    cleanly read pages was graded verified (TODO item 53). `VisaPlan` now refuses that combination.
     """
 
     if decision_is_unverified:

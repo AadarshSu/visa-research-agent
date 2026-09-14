@@ -840,6 +840,10 @@ class VisaPlan(StrictModel):
                 raise ValueError("a verified plan cannot rest on stale evidence")
             if self.decision_tools:
                 raise ValueError("a verified plan cannot rest on a decision nobody read off a page")
+            if self.visa_required is None:
+                # Held here as well as in extraction, which missed it: it downgraded only a
+                # decision a block or a questionnaire stood in for (TODO item 53).
+                raise ValueError("a verified plan cannot leave the visa decision unconfirmed")
         return self
 
     @model_validator(mode="after")

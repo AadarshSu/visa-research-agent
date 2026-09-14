@@ -799,7 +799,7 @@ cause, and only running the thing showed it.
 | a corpus gap search already covers is next in the queue | per-traveller pages are search's job; the corpus holds what all share (entry 148) |
 | `visa-discover corridor` measured what the web app served | for SG and JP the app served hand-pinned pages, the command ran discovery (entry 149) |
 | a hand-pinned checklist hands a Filipino London's list | the model declined it and a guard turned that into a 503 (entry 149) |
-| a plan with an unconfirmed decision is never `verified` | only a block or a tool downgrades it; a model's own null does not (item 53) |
+| a plan with an unconfirmed decision is never `verified` | only a block or a tool downgraded it; a model's own null did not (entry 150) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

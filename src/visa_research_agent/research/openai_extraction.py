@@ -288,7 +288,10 @@ class OpenAIVisaPlanExtractor:
                 status=resolve_plan_status(
                     report,
                     has_checklist_source=bool(application_source_ids) and not entry_only,
-                    decision_is_unverified=destination.decision_is_unverified,
+                    # Null for any reason, not only a block or a questionnaire: a model can leave
+                    # the decision open from pages it read cleanly, and `japan/IN/GB` was graded
+                    # `verified` doing so. TODO item 53.
+                    decision_is_unverified=visa_required is None,
                     no_visa_required=visa_required is False,
                 ),
                 unavailable_sources=[*report.failures, *refused],
