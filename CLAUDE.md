@@ -818,6 +818,8 @@ cause, and only running the thing showed it.
 | capping the pool is the most attractive fix for the gate | it displaced 1,813 pooled pages with no text, and 5 the fixture names (entry 158) |
 | reading stored text at the gate adds seconds to every corridor | step 3b already scored every candidate's text, then threw it away (entry 158) |
 | admitting every page whose text scores fixes the gate | it recovers the same 4 answers at +68% input, mostly chaff — five per role costs +16% (entry 158) |
+| czechia has never been run, so it has no recall log | it had one from 08-25, before its corpus and before logs named a selector — ungradable, not absent (entry 158) |
+| a search page's recall log names the query that found it | not if the corpus holds the same page scoring higher — the corpus record replaces it (item 51) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

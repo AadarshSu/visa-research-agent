@@ -313,6 +313,17 @@ residence per domain, so a page attributed to the purpose query may also have be
 residence query. If the bound is not zero, the settling measurement is a matched re-run with and
 without the query — both arms on the same cache state (entry 136).
 
+**Checked against the code on 2026-09-15, and two more things bend that count.** The first-query
+rule above is confirmed: `_resolve` walks results in query order and keeps a page under the first
+query that returned it. But the corpus merge straight after it **replaces a search candidate whenever
+the corpus copy of the same address scores higher**, and the replacement carries the corpus's
+`discovered_from`, not the query. So do not count by attribution alone — **first drop every page the
+corpus holds**, as entry 129 did, because a page the store has does not depend on search whichever
+record won. And **every log older than 2026-09-14 predates entry 158**, when the selector's pool
+began admitting corpus pages on their stored text, so a role only the purpose query filled then may
+be filled from the corpus now. Both push the count the same way: it stays an upper bound, and the
+matched re-run on current code is the number to act on.
+
 **What it is worth, so it is not oversold.** A third of **$0.075** is about **$0.025** a corridor,
 and search is 8% of a corridor's seconds. The point is the rule, not the money: live search stays the
 minority because it asks only what the store cannot know.

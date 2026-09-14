@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-14 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-15 — update this line when you touch the handoff |
 | **Tests** | 747 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -172,6 +172,14 @@ follows is only the state a cold session needs to read the queue.
 **Start at item 51**, the next optimisation item. Item 31 and everything above it in the queue were
 closed on 2026-09-14; the reasoning is in DECISIONS, and the one line on each is here so a cold
 session knows what changed under it.
+
+**Two things were checked for item 51 on 2026-09-15, before anyone measures it.** Its method was
+read against `_resolve` and needed two amendments, now in its body: drop the pages the corpus holds
+before counting by query, and read every log older than entry 158 as an upper bound. And
+`var/recall` has changed: the 53 `BD/AE` and `BD/SA` baseline logs are untouched,
+`liechtenstein/IN/GB` is new, and `czechia/IN/GB` now holds entry 158's run. Its 2026-08-25
+predecessor, which predates Czechia's corpus, is kept beside it as
+`superseded-czechia-IN-GB-tourism-2026-08-25.json.bak`, a name no reader globs.
 
 **The order and the rule it follows (entry 148).** Correctness first, then optimisation, then
 expansion. The corpus holds what every traveller shares; live search fetches this traveller's

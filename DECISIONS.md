@@ -310,7 +310,11 @@ latency work is paused (entry 147).
 
 ### Two live runs, read as runs and not as a measurement
 
-**`czechia/IN/GB/tourism`**, never run before, so there is no before. The model was shown 299
+**`czechia/IN/GB/tourism`**. Its only earlier log was from 2026-08-25, before Czechia's corpus
+existed and before a log recorded which selector ran, so there is no comparable before — and entry
+128's "Czechia, which has never been run" was wrong the same way: there was a log, and it could not
+be graded. It is kept as `var/recall/superseded-czechia-IN-GB-tourism-2026-08-25.json.bak`, because
+this run overwrote it. The model was shown 299
 candidates, **25 admitted on their text**, and chose 14. The adjudicator filled `document_checklist`
 from `mzv.gov.cz/…/4835385_2943205_UK_EN.PDF` — the page entry 127 found the gate hiding — and
 `general_entry` from the Los Angeles consulate's EES page, another zero-anchor page. Five roles
