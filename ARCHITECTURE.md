@@ -361,6 +361,9 @@ this is automated while per-country trust is not.
 > later. **Built as entries 46, 47 and 51** — `var/corpus/`, read in the request path, and as of
 > 2026-08-23 a country whose corpus out-covers a crawl no longer crawls at all. **Search still runs**
 > ([TODO.md](TODO.md) item 19), so the middle column is `corpus ∪ search` rather than the corpus alone.
+> **That is now measured rather than left over (entry 159).** Searching only where the corpus leaves
+> a role open, or only where it holds nothing for this traveller's post, was tried both ways. Neither
+> pays, and the second loses the traveller's own embassy pages.
 
 > **The left column is committed data (entries 34 and 38).** `config/authority_domains.yaml` is
 > generated offline by `visa-discover registry`, read once at construction, and consulted in place of a

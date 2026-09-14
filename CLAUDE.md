@@ -43,9 +43,20 @@ measured-but-unshipped cacheable prefix. The instrumentation stays on: `phase_se
 shares; live search fetches what this traveller needs, and stays the minority** of what a corridor
 reads and pays for. Making the store cover every nationality and residence offline is not the
 corpus's job, so **item 49 stopped where it was and items 35 and 47 moved to Later**; a
-traveller-neutral gap, like a host entered below its root, still is (item 48). And live search is not
-yet shaped like the rule: one of `corridor_queries`' three per-domain queries carries no traveller
-detail — item 51. **The order is correctness, then optimisation, then expansion.**
+traveller-neutral gap, like a host entered below its root, still is (item 48). **The order is
+correctness, then optimisation, then expansion.**
+
+**Search stays on every corridor, measured — 2026-09-15 (entry 159).** Letting the corpus answer first
+and searching only to fill what it leaves was tried two ways, and neither pays:
+- **Searching after the corpus leaves a role open** projects −3% money and **+4% seconds**, because
+  7 of 15 corridors would do select, fetch and adjudicate twice. It also never searches where the
+  corpus filled a role with a general page while search held the traveller's own embassy page.
+- **Deciding per query from what the corpus holds** skips the searches that found 5–6 of the 8
+  search-only pages that answered.
+
+Search is $0.054 of a $0.322 corridor; the model calls are the rest. **Do not re-propose conditional
+search without a new argument against both.** What is left of item 51 is whether the purpose query
+may go — the first to return 45 of 194 search-only pages read, 25 of them checklist-shaped.
 
 **The constraint, sized — and paused (entry 147).** What follows is where a corridor's seconds and dollars go, kept because it is measured and whoever resumes should not re-derive it — not because it is the next thing to do.
 
@@ -820,6 +831,12 @@ cause, and only running the thing showed it.
 | admitting every page whose text scores fixes the gate | it recovers the same 4 answers at +68% input, mostly chaff — five per role costs +16% (entry 158) |
 | czechia has never been run, so it has no recall log | it had one from 08-25, before its corpus and before logs named a selector — ungradable, not absent (entry 158) |
 | a search page's recall log names the query that found it | not if the corpus holds the same page scoring higher — the corpus record replaces it (item 51) |
+| searching only when the corpus leaves a gap saves what search costs | a gap corridor redoes select, fetch and adjudicate — projected −3% money, +4% seconds (entry 159) |
+| a corridor without search is a much cheaper corridor | search is $0.054 of $0.322; the model calls barely shrink without it (entry 159) |
+| a role the corpus fills needs no search | Japan and UK `PH/PH` filled it with a general page; search held the traveller's own (entry 159) |
+| a corpus holding pages from a post holds that post's answer | Japan holds 5 London-embassy pages and none of the 4 that answered (entry 159) |
+| a role a corpus-only run leaves open is a page the corpus lacks | 6 of 9 were on pages it holds — the model picked differently (entry 159) |
+| the purpose query only finds what the corpus already holds | first to return 45 of 194 search-only reads, 25 checklist-shaped (entry 159) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
@@ -877,8 +894,9 @@ to settle it.
 unanswered challenge was stored as the page and marked `readable`. Fixed, and the stores were
 purged; **if a country ranks strangely, check for it before blaming the vocabulary.**
 
-**Live search still runs on every corridor, including from the webpage** — `_resolve` searches
-before it reads the corpus, and the corpus can only suppress the *crawl*. Measured 2026-08-30: of
+**Live search still runs on every corridor, including from the webpage, and that is now a measured
+decision (entry 159)** — `_resolve` searches before it reads the corpus, and the corpus can only
+suppress the *crawl*. Measured 2026-08-30: of
 382 pages read by runs postdating their corpus, 59 were not in the corpus and **all 59 came from
 search**, 17 covering a role nothing else in the run covered. So the corpus is not a superset even
 where it is large, and **search may not be switched off for a country without measuring that

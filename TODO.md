@@ -19,6 +19,19 @@ So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,
 still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
 off for anything.
 
+**Item 51 was measured on 2026-09-15, and search stays on every corridor (entry 159).** The owner
+asked for search to run only where the corpus could not answer. Two shapes were tried and neither
+pays:
+- **Searching after the corpus leaves a role open** projects −3% money and **+4% seconds**, because
+  7 of 15 corridors would do the whole pass twice. It also never searches where the corpus filled a
+  role with a general page and search had the traveller's own embassy page (Japan `PH/PH`, UK
+  `PH/PH`).
+- **Deciding per query from what the corpus holds** loses 5–6 of the 8 search-only pages that
+  answered.
+
+What is left of item 51 is whether the purpose query may go, and that needs OpenAI credit — **the
+account ran out mid-sweep**.
+
 **Re-ordered 2026-09-14 by the owner's rule for the hybrid (entry 148).** **The corpus holds what
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
 the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
@@ -248,7 +261,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 51. Make live search ask only for what is specific to this traveller | `next` |
+| **Now** | 51. Search stays on every corridor; test whether the purpose query may go | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 |  | 19. Get a corridor under ten seconds; search may stay | **paused** |
@@ -288,7 +301,31 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 51. Make live search ask only for what is specific to this traveller — `next`
+### 51. Search stays on every corridor; test whether the purpose query may go — `next`, **needs OpenAI credit**
+
+> **Measured 2026-09-15 and re-scoped (entry 159).** The owner asked for the corpus first, with
+> search only filling what it leaves. That was measured two ways before building, and **search stays
+> on every corridor**:
+>
+> - **Search only after the corpus leaves a role open.** Twenty oracle corridors were run with
+>   search and corpus-only, back to back; five were lost when the OpenAI account ran out of credit.
+>   Over the 15 that remain: today $0.322 and 38.2s, corpus-only $0.260 and 32.6s, projected
+>   search-when-needed **$0.312 and 39.9s**. The corpus alone left a role open in 7 of 15, and each
+>   of those would do select, fetch and adjudicate twice. And where the corpus filled a role with a
+>   general page — Japan `PH/PH`'s MOFA checklist, UK `PH/PH`'s GOV.UK apply page — no role was
+>   open, so the traveller's own embassy or fee-table page search had found would be lost.
+> - **Deciding per query, before the pass, from what the corpus holds.** It skips the searches that
+>   found **5–6 of the 8** search-only pages that answered. Japan's corpus holds pages from both
+>   embassies, and none of the ones that answered. Beyond dropping the purpose query it saves only
+>   3–13% of queries.
+>
+> **What is left is the narrow question this item started with**, and the logs do not settle it.
+> Over the 100 recall logs postdating their corpus, the purpose query was first to return **45 of
+> the 194** pages only search supplied, and **25 look like checklists** — Spain's London consulate,
+> Norway, Thailand, Bulgaria, New Zealand. A matched run with and without it, on `spain/BD/AE`,
+> `norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, both arms on the same cache state (entry
+> 136), is the measurement. Worth about **$0.018 a corridor** if it can go. The body below is the
+> item as written, and its two caveats about attribution still apply.
 
 **Why:** entry 148 — the corpus holds what every traveller shares, and live search fetches this
 traveller's specifics. `corridor_queries` (`discovery/search.py`) is not shaped that way. It issues
@@ -549,7 +586,10 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 >    At 0.05s the same fifteen queries take **2.6s against 19.0s**, return the identical 148 results,
 >    and cost the identical amount. A full `australia/BD/AE` now runs in **34.5s**, so the remaining
 >    time is fetching and adjudication.
-> 2. **Let the corpus decide how much search to buy** — the owner's "utilising the corpus for
+> 2. **~~Let the corpus decide how much search to buy~~ — measured 2026-09-15 and rejected, entry
+>    159.** Searching after the corpus leaves a role open projects +4% seconds, and deciding per
+>    query from the corpus loses the pages that answered. The original framing:
+>    the owner's "utilising the corpus for
 >    efficiency", literally. Fifteen queries are issued whether or not the store already covers the
 >    corridor; a country whose corpus out-covers a crawl already skips the *crawl* (entry 51) and
 >    the same test has never been applied to search.
@@ -617,8 +657,10 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
 >   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
 >   fetcher; nobody has asked it of `LiveSourceFetcher`.
-> - **Option 2 — let the corpus decide how much search to buy — is worth at most 8%.** Still right,
->   now last.
+> - **Option 2 — let the corpus decide how much search to buy — is worth at most 8%.** ~~Still
+>   right, now last.~~ **Measured and rejected on 2026-09-15 (entry 159)**: waiting for the corpus
+>   makes a gap corridor do the pass twice, and the corpus cannot tell from addresses whether it
+>   holds the traveller's page.
 >
 > **And "read fewer pages" is not the shortcut it looks.** Those three stages are 83% of a corridor,
 > but per page they run 1.29s (Canada) to 2.78s (Germany), and Canada reads 20 pages in 25.8s where

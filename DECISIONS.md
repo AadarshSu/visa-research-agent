@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [159](#159-search-stays-on-every-corridor-waiting-for-the-corpus-costs-a-second-pass-and-the-corpus-cannot-say-when-search-is-needed) | **Search stays on every corridor** — search-only-when-needed projects −3% money and +4% seconds and misses the traveller's own embassy pages; deciding per query from the corpus loses 5–6 of 8 answering pages |
 | [158](#158-the-selectors-pool-admits-up-to-five-pages-per-role-on-their-stored-text-and-removes-nothing) | **The selector's pool also admits the five best per role on stored text, removing nothing** — all four hidden fixture answers recovered for +16% selection input over 53 corpora; a cap displaced 1,813 unread pages |
 | [157](#157-a-cited-source-carries-the-version-of-the-page-it-was-read-from-and-why-it-was-chosen) | **Every cited source carries its page's content hash and why discovery chose it** — attached when the plan is built, never in the shared retrieval cache |
 | [156](#156-a-claim-carries-the-sentence-behind-it-kept-only-where-the-retrieved-page-holds-it) | **The decision and every requirement carry a quote, kept only where the retrieved page holds it** — 45 of 45 kept live; a match proves the words exist, not that they fit the claim |
@@ -207,6 +208,156 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 159. Search stays on every corridor: waiting for the corpus costs a second pass, and the corpus cannot say when search is needed
+
+**2026-09-15 · TODO item 51, re-scoped by the owner — measured live and offline, not built**
+
+Item 51 proposed dropping the one traveller-neutral query. The owner asked for more than that:
+
+> *"Currently, live search runs on all corridors regardless of if the corpus alone has all the pages
+> needed to answer the corridor. I want to always use the corpus where possible and only then use
+> the live search to fill in because live search costs time and tokens."*
+
+That would have amended entry 47's union, which is never conditional. So it was measured before
+anything was built, and two shapes were tried. **Neither pays, and search stays on every corridor.**
+Entries 47 and 148 stand, now on a measurement rather than an assumption.
+
+### Shape 1 — search only after the corpus leaves a role open
+
+The design that was planned:
+- **Pass 1:** answer from the corpus alone — select, fetch, adjudicate.
+- **Gap test:** a role counts as open when no page fills it and no tool or delegate is named for it,
+  across all six roles.
+- **Pass 2:** only for an open role — search, select over the new candidates, fetch, then one final
+  adjudication over both passes' pages.
+
+**Method.** The 20 corridors in `oracle/selection_oracle.yaml` (ten countries × `IN/GB` and `PH/PH`)
+were each run twice back to back:
+- **S:** today's pipeline.
+- **C:** the same pipeline with the search provider replaced by a stub returning nothing. That makes
+  C corpus-only without a code change.
+
+The arm that went first alternated per corridor, and both ran on the same cache, per entry 136. The
+20 recall logs were backed up first and restored afterwards, and all 20 were verified
+byte-identical. Pass 2 was **not built**; its cost is a projection sized from S:
+- S's search spend;
+- a selection priced at the search-only share of S's pool;
+- a fetch at the search-only share of S's reads;
+- a full roles call.
+
+**The OpenAI account ran out of credit mid-sweep.** From `sweden/PH/PH` onwards both arms failed
+every model call, so five corridors are excluded — Sweden `PH/PH`, Singapore ×2 and the United
+States ×2. **Fifteen are graded.**
+
+| over 15 corridors | cost | seconds |
+| --- | --- | --- |
+| S, today (search always) | **$0.322** — $0.268 model + $0.054 search | **38.2** |
+| C, corpus only | $0.260 | 32.6 |
+| search only when a role is open (projected) | $0.312, −3% | 39.9, **+4%** |
+
+**Why it does not pay.** Search is 17% of the money and about 8% of the seconds. The model calls
+barely shrink without it, because search adds 1–36 candidates to pools of 132–646. The corpus
+alone filled every role in **8 of 15**, each saving about $0.06 and 6s. The other **7** would pay
+for a whole corpus pass and then search, select, fetch and adjudicate again. Three examples,
+projected:
+
+| corridor | today | search when needed |
+| --- | --- | --- |
+| `canada/IN/GB`, no gap | $0.41, 40s | $0.31, 33s |
+| `japan/IN/GB`, `fees` open | $0.25, 25s | $0.30, 40s |
+| `united-arab-emirates/PH/PH`, five open | $0.38, 52s | $0.43, 73s |
+
+**Some of the gaps are not gaps.** Of the 9 roles S filled and C left open, **6 were on pages the
+corpus holds**: four in UAE `PH/PH`, Germany's `general_entry` and France's `fees`. That is selection
+and adjudication variance (entry 81), and pass 2 would pay full price to re-roll it. The Netherlands
+found no decision in either arm, so pass 2 would buy nothing there either.
+
+**And the trigger misses what search is for.** In S, 194 pages were read and **19 were search-only**.
+Eight of those filled **10 of the 90 role slots**, in four corridors, and every one is a page for this
+traveller:
+
+| corridor | what search supplied | what corpus-only used instead |
+| --- | --- | --- |
+| `japan/IN/GB` | London embassy: decision, checklist, route, fees, processing times | general MOFA pages; a checklist tool; `fees` open |
+| `japan/PH/PH` | Manila embassy checklist PDF and application page | MOFA's general checklist PDF and online-visa page |
+| `united-kingdom/PH/PH` | the Philippines row of the Home Office fee table | the general GOV.UK apply page |
+| `france/PH/PH` | `france-visas.gouv.fr/en/philippines` for route and processing times | a near-identical corpus copy for route; processing times open |
+
+**In Japan `PH/PH` and UK `PH/PH` the corpus filled those roles with general pages and left no role
+open, so "a role is open" would never have searched.** Whether the embassy page is the more correct
+answer is the owner's to judge (entry 68). The role prompt prefers the post serving the traveller's
+residence.
+
+### Shape 2 — decide per query, before the pass, from what the corpus holds
+
+Asking *before* the pass removes the second pass, so it cannot be slower than today. The rule, per
+trusted domain:
+- **Nationality query:** skipped where the corpus holds a page on that domain that
+  `_describes_country` the nationality.
+- **Residence query:** skipped where the corpus holds a page from the residence's own post
+  (`mission_affinity == "own"`) or one that describes the residence.
+- **Purpose query:** dropped.
+
+Two strictnesses were tried: R1, any such page; R2, such a page that also scores for some role.
+Offline, no model, no network.
+
+| | queries sent | skipped, of pages only search supplied |
+| --- | --- | --- |
+| **Stage A, 20 corridors** (228 today; 8 search-only pages filled a role) | R1 76 · R2 109 | **R1 6 of 8 · R2 5 of 8** role-filling pages |
+| **100 recall logs postdating their corpus** (996 today) | R1 532 · R2 632 | R1 85 · R2 69 of 194 pages read |
+
+The pages it loses are Japan's London-embassy pages and Manila's application page, which are the
+point of searching. **Japan's corpus holds five pages on `uk.emb-japan.go.jp` and three on
+`ph.emb-japan.go.jp`, and none of them is a page that answered.** "The corpus has this post" was true
+and uninformative, which is entry 133's Australia shape: holding a post's host is not holding the
+page.
+
+And beyond dropping the purpose query, the rule saves little. Over the 100 logs, the purpose query is
+332 of the 996 queries. After it is dropped, R1 saves only **132 more (13%)**, while skipping 40 more
+pages only search had found; R2 saves **32 more (3%)**, while skipping 24.
+
+### Decided
+
+- **Search runs on every corridor**, beside the corpus, as entry 47 built it. The corpus already
+  supplies about 90% of what a corridor reads (175 of 194 here) and removes the crawl. Search is the
+  traveller-specific minority entry 148 describes, and in about a quarter of corridors it is how the
+  traveller's own post or nationality page is found.
+- **Neither conditional shape is built.** Only reading pages tells whether the corpus holds the
+  right one:
+  - read first, and a corridor that needs search does everything twice;
+  - decide from addresses first, and the decision is wrong.
+- **The cost lever is the model, not search.** Here $0.268 of $0.322 is model calls, and selection is
+  most of that (entry 145). The cacheable prefix of entry 146 is that lever, paused under entry 147.
+
+### Not decided: whether the purpose query may go
+
+It is not safe to assume. Over the 100 logs it was the **first** query to return **45 of the 194**
+pages only search supplied. **25 of those look like checklists or document guides**, among them:
+- Spain's London consulate tourism checklist
+- Norway's checklist PDF
+- Thailand's checklists
+- Bulgaria's `VISA_C_en.pdf`
+- New Zealand's visitor-visa guide
+
+That is an upper bound, because a log keeps only the first query to return a page. The settling
+measurement is a matched run with and without it, on the corridors where it found those pages. That
+is TODO item 51 now, and it needs the OpenAI account topped up.
+
+### What to read these numbers against
+
+- **One run per arm.** Entry 81's ±2 roles and entry 144's 40% swing in model seconds apply to every
+  per-corridor figure. The aggregate and the direction are what the decision rests on.
+- **Pass 2 was projected, not run.** Its seconds assume a second roles call as long as the first; it
+  would judge more pages, so the projection is if anything generous.
+- **The sample is one fixture.** Ten countries with large corpora and two travellers, which is also
+  why shape 2 skips more on Stage A (67%) than on the 100 logs (47%).
+- **A corridor costs more than entry 145's $0.28.** That figure was six corridors before entry 158's
+  +16% selection input, and Canada alone is $0.41.
+- **Nothing measured correctness.** Every figure is whether a role was answered and by which page,
+  never whether the answer was true (known problem 26, entry 68).
 
 ---
 

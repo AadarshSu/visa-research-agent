@@ -169,17 +169,27 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
-**Start at item 51**, the next optimisation item. Item 31 and everything above it in the queue were
-closed on 2026-09-14; the reasoning is in DECISIONS, and the one line on each is here so a cold
-session knows what changed under it.
+**The OpenAI account is out of credit as of 2026-09-15.** It ran out partway through entry 159's
+sweep. Every corridor, and the web app, fails at candidate selection and role adjudication until it
+is topped up. Brave search still answers.
 
-**Two things were checked for item 51 on 2026-09-15, before anyone measures it.** Its method was
-read against `_resolve` and needed two amendments, now in its body: drop the pages the corpus holds
-before counting by query, and read every log older than entry 158 as an upper bound. And
-`var/recall` has changed: the 53 `BD/AE` and `BD/SA` baseline logs are untouched,
-`liechtenstein/IN/GB` is new, and `czechia/IN/GB` now holds entry 158's run. Its 2026-08-25
-predecessor, which predates Czechia's corpus, is kept beside it as
-`superseded-czechia-IN-GB-tourism-2026-08-25.json.bak`, a name no reader globs.
+**Item 51 was measured on 2026-09-15 and search stays on every corridor (entry 159).** The owner
+asked for the corpus first and search only to fill what it leaves. Nothing was built, because
+neither shape pays:
+- **Searching after the corpus leaves a role open** projects −3% money and +4% seconds over 15
+  oracle corridors. Seven of fifteen would do the pass twice, and it never searches where the corpus
+  answered with a general page and search had the traveller's own embassy page.
+- **Deciding per query from what the corpus holds** skips the searches that found 5–6 of the 8
+  search-only pages that answered.
+
+**What remains of item 51 is the purpose query, and it needs credit.** Otherwise start at item 48.
+`var/recall` is as it was: the 20 oracle corridors' logs were backed up before the sweep and
+restored byte-identical. The 53 `BD/AE` and `BD/SA` baselines were never touched, and
+`czechia/IN/GB` still holds entry 158's run beside its
+`superseded-czechia-IN-GB-tourism-2026-08-25.json.bak`.
+
+Item 31 and everything above it in the queue were closed on 2026-09-14; the reasoning is in
+DECISIONS, and the one line on each is here so a cold session knows what changed under it.
 
 **The order and the rule it follows (entry 148).** Correctness first, then optimisation, then
 expansion. The corpus holds what every traveller shares; live search fetches this traveller's
