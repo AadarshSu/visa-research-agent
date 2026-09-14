@@ -500,9 +500,12 @@ def corridor_destination(slug: str, corridor: Corridor, stream: TextIO) -> Desti
     therefore to be run from a throwaway script — which is why nobody had a candidate list until
     entry 43, and why nobody has yet counted how often a corridor flips (TODO item 17).
 
-    A configured destination still wins where it has domains, because its hand-written sources and
-    appointed providers carry authorisations the registry knows nothing about: Singapore's VFS
-    provider is named by an official page, and that naming exists only in `destinations.yaml`.
+    **A configured destination wins only under `destination_mode: configured`**, because that is
+    the only mode in which the web app serves one (entry 149). Under `automatic` the API researches
+    Singapore and Japan like any other country, so resolving them here against their hand-written
+    domains measured a path no traveller was served — which every Singapore and Japan corridor run
+    before 2026-09-14 did. Singapore's VFS provider, named only in `destinations.yaml`, goes with
+    it; entry 89's delegate naming is the automatic path's equivalent, and it names, never reads.
 
     Deliberately **not** the automatic service, and so deliberately not the corridor store either.
     A stored corridor would answer the second and third runs from the first, which is precisely the
@@ -510,7 +513,11 @@ def corridor_destination(slug: str, corridor: Corridor, stream: TextIO) -> Desti
     """
 
     configured = get_destination_registry().get(slug)
-    if configured is not None and configured.trusted_domains:
+    if (
+        get_runtime_policy().destination_mode == "configured"
+        and configured is not None
+        and configured.trusted_domains
+    ):
         return configured
     try:
         return prepare_destination(slug, corridor).config

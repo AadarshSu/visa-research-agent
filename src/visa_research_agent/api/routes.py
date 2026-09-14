@@ -169,14 +169,18 @@ async def resolve_destination(
     traveller: TravellerProfile,
     automatic: AutomaticDestinationService | None,
 ) -> DestinationConfig:
-    """Use the configured destination when there is one, otherwise research it."""
+    """Research the destination, or use its hand-written entry when research is switched off."""
 
     registry = get_destination_registry()
     destination = registry.get(requested)
-    if destination is not None and destination.implementation_status == "available":
-        return destination
-
     if automatic is None:
+        # Only here may a hand-written entry answer. Under `automatic` it answered every traveller
+        # from the pages written for one — Singapore's checklist is ICA's page for Indian travel
+        # documents, Japan's the London embassy's — so a Filipino asking about Japan and a
+        # Nigerian asking about Singapore were refused while discovery answers both from their own
+        # post. DECISIONS entry 149.
+        if destination is not None and destination.implementation_status == "available":
+            return destination
         if destination is not None:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

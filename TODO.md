@@ -21,8 +21,9 @@ off for anything.
 
 **Re-ordered 2026-09-14 by the owner's rule for the hybrid (entry 148).** **The corpus holds what
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
-the Now section leads with **correctness** — item 52 first, a defect found in the same survey, then
-17, 8, 9 and 21 — and **optimisation** follows it: 31, then the new item 51 (5 of a corridor's 15
+the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
+done the same day (entry 149), then item 53, which building it found, then 17, 8, 9 and 21 — and
+**optimisation** follows it: 31, then the new item 51 (5 of a corridor's 15
 live queries carry no traveller detail), then 48. **Item 49 stops where it is**, and 35 and 47 move
 to Later: all three exist to make the store cover every traveller and residence offline, which the
 rule hands to request-time search. **Expansion** — item 2's rule question, the 143 countries with
@@ -245,7 +246,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 52. The two hand-configured destinations answer every traveller from one traveller's pages | `next` |
+| **Now** | 53. A plan whose visa decision is null can still be graded `verified` | `next` |
 |  | 17. Decide what a corridor that flips between runs should do | `next` |
 |  | 8. Confirm a blocked authority actually reads usefully | `next` |
 |  | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
@@ -291,44 +292,26 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 52. The two hand-configured destinations answer every traveller from one traveller's pages — `next`, **start here**
+### 53. A plan whose visa decision is null can still be graded `verified` — `next`, **start here**
 
-**Found 2026-09-14, in the survey that produced entry 148.** `resolve_destination` in
-`api/routes.py` returns a `destinations.yaml` entry whenever its `implementation_status` is
-`available`, **before** it asks the automatic service — so under the committed
-`destination_mode: automatic`, **Singapore and Japan never reach discovery, the corpus or the
-page-text index from the web app.** They are the only two entries marked `available`, and each is a
-hand-written source list designating one traveller's checklist for everyone:
+**Found 2026-09-14 while measuring item 52 (entry 149).** A third automatic run of `japan/IN/GB`
+came back `visa_required: null` — *"route and need for a visa not fully established"* — **and
+`status: verified`**. `resolve_plan_status` (`research/outcomes.py`) says in its own docstring that a
+plan whose visa decision could not be confirmed is never verified, and the code does not do that:
+`OpenAIVisaPlanExtractor.extract` passes `decision_is_unverified=destination.decision_is_unverified`,
+which is set only when a **block or a questionnaire** stood in for the decision. A model returning
+null on its own is graded on the checklist, failure and staleness clauses alone.
 
-| destination | `application_document_source_ids` | whose page it is |
-| --- | --- | --- |
-| Singapore | `sg_ica_india_visa_details` | ICA's page for **Indian** travel documents |
-| Japan | `jp_embassy_uk_tourism_documents` | the **London** embassy's tourism checklist, beside four more London pages |
+**Why it is correctness work.** `verified` is the label a traveller reads as *this plan is complete
+and current*, and it sat beside *"the need for a visa is not established"* — the one thing
+`CLAUDE.md` says a traveller most needs to be right. It applies to **every automatic corridor**, not
+only to the two countries that surfaced it.
 
-So a Filipino in Manila asking about Japan is handed the London embassy's checklist as the
-designated source — the wrong-checklist failure this project exists to prevent, with a citation on
-it. Entry 98 saw the Singapore half reach a plan (*"the listed India-specific document checklist
-does not apply to this traveller"*) and filed it under smaller things, where it stayed.
-
-**And the measurements do not describe what the web app serves for these two.**
-`visa-discover corridor` takes a configured entry's *domains* and runs the resolver over them
-(`corridor_destination` in `discovery/cli.py`), so every Singapore and Japan corridor in
-`var/recall/`, both oracle rows and entries 84–106 measured **discovery** — a path the web app does
-not take for either country.
-
-**Do, in order:**
-
-1. **Establish the current behaviour for a traveller the pages were not written for**, rather than
-   reasoning about it — the two configurations are exactly the kind of claim this file has been
-   wrong about.
-2. **Decide precedence.** The shape to argue for: under `automatic`, a destination is resolved like
-   every other; the hand-written pages serve `destination_mode: configured`, which is what the
-   offline Singapore fixture and its API tests run under.
-3. **Check what the configuration carries that the automatic path does not.** Singapore's
-   `appointed_providers` names VFS, and `corridor_destination`'s docstring gives that as the reason a
-   configured entry wins in the command. Entry 89's delegate naming is the automatic path's
-   equivalent, and it names rather than reads — which is the later and stricter rule.
-4. **Make the command measure what the product serves**, so the two cannot drift apart again.
+**Do:** the fix looks like one condition — grade on `visa_required is None` as well as on
+`destination.decision_is_unverified` — but confirm first that no correct plan carries a null
+decision and should be verified (by the docstring's own definition none can), then pin it with a
+test through a fake generator returning `visa_required: None`. The interface reads the status, so
+check `static/app.js` shows a null-decision plan the way it shows a blocked one.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`
 
@@ -1986,6 +1969,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 52. Stop hand-configured destinations answering every traveller from one traveller's pages | 09-14 | 149 | **The item's own claim was wrong.** Nobody was handed London's checklist: the model declined another traveller's list and a guard turned that into a 503 *"could not be generated safely"*, for a Filipino asking about Japan and a Nigerian asking about Singapore. Through the automatic path both are `verified` from their own post. The cost is Japan for `IN/GB`, whose pinned checklist fills in **1 of 3** automatic runs — the page fetched every time, the adjudicator naming the eVISA questionnaire instead. Every SG and JP corridor run from the command had measured a path the web app did not serve. Found item 53 |
 | 1. Score a page for being about where the traveller applies from | 09-02 | 126 | **The scorer's ordering is consumed by nothing** — the pool goes to the model unsorted with scores withheld, so `score_link` reaches a corridor as a *boolean*. Shipped as a swap and cut back to adding only: the withdrawal removed **25 pages from the pool and added none**. Admits 35 of 186,596, and 3 of its 4 families already held the answer in stored text — which is the argument for item 31. Also: `_describes_country` could not read `united-kingdom` in a path, so every multi-word country was invisible unless the anchor said it |
 | 50. Cap renders per host on the request path | 09-05 | 135, 136 | The item's own number was wrong and checking it made the defect worse: the shortlist shares **5** renders, not 12 — `MAXIMUM_CRAWL_RENDERS` is the *crawl's*. Two faults: one host could take all five, and a page nobody rendered reported itself as a page with nothing to read, which is why nobody had measured it. Three consecutive empty renders and a host is dropped, as `CHALLENGE_FAILURES_PER_HOST` does on the crawl; **the total stays at five**. A sweep then read the new reasons (136) and could price nothing — the cache was cleared for the after-arm only — and showed the cap does **not** recover Australia's roles: it stops a host starving *others* |
 | 45. Re-run the five countries last measured before their corpus existed | 09-01 | 121, 122 | **Romania fills 5 of 6** off `eviza.mae.ro`, Austria 2 — both were predictions this item said would stand. Morocco refuses with an `HTTP 200` reported as `unusable` (item 46), and Romania's 58 Romanian-named checklist PDFs are invisible to the family detector (item 47) |
@@ -2107,8 +2091,8 @@ most, which holds 236 delegations.
 
 
 **~~Singapore's hand-written configuration is India-specific~~ — promoted to item 52 on
-2026-09-14.** Checking the other hand-configured destinations found Japan has the same shape, and
-that the web app serves both from those pages rather than from discovery.
+2026-09-14 and done the same day (entry 149).** Japan had the same shape, and the web app served
+both from those pages rather than from discovery.
 
 **`www.ph.emb-japan.go.jp` answers 404, twice.** Seen on both `japan/PH/PH` runs on 2026-08-28, so
 it is a stable fact about that host rather than a transient. Japan's Manila embassy is exactly where

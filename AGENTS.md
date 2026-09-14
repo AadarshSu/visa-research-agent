@@ -147,8 +147,9 @@ the CLI does not offer it.
 - **Trust is granted by a rule rather than by a person, and the rule is narrow.** A destination
   nobody configured is researched at request time, trusting only domains that are governmental *and*
   under that country's own top-level domain, capped at five and ordered by the hostname's authority
-  hint (DECISIONS entries 19 and 22). `destinations.yaml` still holds hand-approved domains for the
-  destinations that have them. Discovery may narrow trust; it may never widen it — never relax the
+  hint (DECISIONS entries 19 and 22). `destinations.yaml` still holds hand-approved domains and pages
+  for a few destinations, and they answer only under `destination_mode: configured` — under
+  `automatic` those destinations are researched like any other (entry 149). Discovery may narrow trust; it may never widen it — never relax the
   rule to "looks official", and never trust a domain because a page reads convincingly.
 - **A page an authority refused may be named, never read.** Reporting its URL so a traveller can open
   it themselves is allowed and is not a workaround; reading it, inferring from it, retrying it, or

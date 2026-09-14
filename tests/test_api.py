@@ -1,4 +1,6 @@
 from collections.abc import AsyncIterator
+from types import SimpleNamespace
+from typing import cast
 
 import httpx
 import pytest
@@ -8,8 +10,15 @@ from visa_research_agent.api.dependencies import (
     get_automatic_destinations,
     get_visa_plan_service,
 )
+from visa_research_agent.api.routes import resolve_destination
+from visa_research_agent.discovery.automatic import AutomaticDestinationService
 from visa_research_agent.discovery.lexicon import get_country_registry
-from visa_research_agent.domain.models import RuntimePolicy
+from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.domain.models import (
+    DestinationConfig,
+    RuntimePolicy,
+    TravellerProfile,
+)
 
 OFFLINE_POLICY = RuntimePolicy(
     schema_version=1,
@@ -160,6 +169,62 @@ async def test_the_interface_lets_a_traveller_be_described(client: httpx.AsyncCl
     assert '<option value="IN" selected>' in response.text
     assert '<option value="GB" selected>' in response.text
     assert '<option value="business"' in response.text
+
+
+class RecordingAutomatic:
+    """Stands in for request-time discovery, and records what it was asked for."""
+
+    def __init__(self, config: DestinationConfig) -> None:
+        self.config = config
+        self.asked: list[tuple[str, Corridor]] = []
+
+    def country_named(self, name: str) -> object:
+        return get_country_registry().by_slug(name.lower())
+
+    async def destination_for(self, name: str, corridor: Corridor) -> SimpleNamespace:
+        self.asked.append((name, corridor))
+        return SimpleNamespace(config=self.config)
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("slug", ["singapore", "japan"])
+async def test_a_configured_destination_is_researched_when_research_is_on(slug: str) -> None:
+    """Entry 149: a hand-written entry answered every traveller from the pages written for one.
+
+    Singapore's checklist is ICA's page for Indian travel documents and Japan's the London
+    embassy's, so under `automatic` a Filipino asking about Japan and a Nigerian asking about
+    Singapore were refused while discovery answers both from their own post.
+    """
+
+    discovered = DestinationConfig(
+        slug=slug,
+        display_name=slug.title(),
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["example.gov.sg"],
+    )
+    automatic = RecordingAutomatic(discovered)
+    traveller = TravellerProfile(
+        passport_nationality="PH", passport_type="ordinary", country_of_residence="PH"
+    )
+
+    chosen = await resolve_destination(
+        slug, traveller, cast(AutomaticDestinationService, automatic)
+    )
+
+    assert chosen is discovered
+    assert [corridor.passport_nationality for _, corridor in automatic.asked] == ["PH"]
+
+
+@pytest.mark.anyio
+async def test_a_configured_destination_is_used_as_written_when_research_is_off() -> None:
+    traveller = TravellerProfile(
+        passport_nationality="IN", passport_type="ordinary", country_of_residence="GB"
+    )
+
+    chosen = await resolve_destination("japan", traveller, None)
+
+    assert chosen.sources, "the hand-written entry's own pages were lost"
 
 
 @pytest.mark.anyio

@@ -22,6 +22,7 @@ from visa_research_agent.discovery.models import (
 )
 from visa_research_agent.discovery.proposal import render_corridor_yaml
 from visa_research_agent.discovery.recall_log import CandidateVariance, VarianceReport
+from visa_research_agent.domain.models import DestinationMode, RuntimePolicy
 
 RESOLVED_AT = datetime(2026, 8, 15, 9, 0, tzinfo=UTC)
 
@@ -156,13 +157,50 @@ async def test_an_unknown_destination_is_a_configuration_error() -> None:
     assert await run_corridor(args, io.StringIO()) == 3
 
 
-def test_a_configured_destination_with_domains_is_used_as_written() -> None:
-    """Japan has hand-written sources, so the registry must not displace them."""
+def policy_with(mode: DestinationMode) -> RuntimePolicy:
+    return RuntimePolicy(
+        schema_version=1,
+        source_mode="fixtures",
+        extraction_mode="fixture",
+        source_cache_ttl_hours=24.0,
+        source_maximum_stale_hours=168.0,
+        destination_mode=mode,
+    )
+
+
+def test_a_configured_destination_is_used_as_written_only_when_research_is_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Under `configured` the web app serves Japan's hand-written entry, so the command must too."""
+
+    monkeypatch.setattr(
+        "visa_research_agent.discovery.cli.get_runtime_policy", lambda: policy_with("configured")
+    )
 
     destination = corridor_destination("japan", corridor(), io.StringIO())
 
     assert destination is not None
     assert destination.sources, "the configured destination's own sources were lost"
+
+
+def test_a_configured_destination_is_researched_like_any_other_when_research_is_on(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Entry 149: under `automatic` the web app researches Japan, so the command measures that.
+
+    Resolving against the hand-written entry here measured a path no traveller was served — every
+    Japan and Singapore corridor before 2026-09-14 did.
+    """
+
+    monkeypatch.setattr(
+        "visa_research_agent.discovery.cli.get_runtime_policy", lambda: policy_with("automatic")
+    )
+
+    destination = corridor_destination("japan", corridor(), io.StringIO())
+
+    assert destination is not None
+    assert not destination.sources, "the registry supplies domains, never pages"
+    assert "mofa.go.jp" in destination.trusted_domains
 
 
 def test_a_destination_with_no_configured_domains_falls_back_to_the_registry() -> None:

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 685 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 712 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -170,10 +170,12 @@ follows is only the state a cold session needs to read the queue.
 
 **The queue was re-ordered on 2026-09-14 around the owner's rule for the hybrid (entry 148)**: the
 corpus holds what every traveller shares, live search fetches this traveller's specifics and stays
-the minority. Correctness comes first, then optimisation, then expansion. **Start at item 52** —
-Singapore and Japan are served by the web app from hand-written pages that pin one traveller's
-checklist for everyone (known problem 39). **Item 49 stopped where it is**; what follows about it
-is the state it was left in, not the next step.
+the minority. Correctness comes first, then optimisation, then expansion. **Item 52 was done the
+same day (entry 149)**: the web app served Singapore and Japan from hand-written pages and refused
+every traveller they were not written for, and now researches them like every other country.
+**Start at item 53** — a plan whose visa decision is null can still be graded `verified` (known
+problem 40). **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
 generated from the headings and therefore could not, which was false. On 2026-08-30 the table listed
@@ -831,19 +833,18 @@ re-add the amendment history here.
    corpus not rebuilt since 2026-08-28 still carries them — FR and SE are clean, the other eight are
    not.
 
-39. **The web app serves Singapore and Japan from hand-written pages that pin one traveller's
-   checklist for everyone.** `resolve_destination` returns a `destinations.yaml` entry marked
-   `available` before it asks the automatic service, so those two never reach discovery or the
-   corpus from the web app. Singapore designates ICA's page for *Indian* travel documents as every
-   traveller's checklist, Japan the *London* embassy's. And `visa-discover corridor` runs discovery
-   over the same entries' domains, so every Singapore and Japan measurement describes a path the web
-   app does not take. TODO item 52.
+40. **A plan whose visa decision is null can still be graded `verified`.** `resolve_plan_status`
+   downgrades a plan only when a block or a questionnaire stood in for the decision; a model that
+   returns `visa_required: null` on its own is graded on the other clauses. Seen live on
+   `japan/IN/GB` on 2026-09-14 — *"need for a visa not fully established"*, `verified` — and it
+   applies to every automatic corridor. TODO item 53.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source
 plan never run live — entries 56, 57), **18** (the excerpt silently deciding corridors — entry 42),
 **25** (entry 27's exception not firing on the corpus path — entries 56, 57), **28** (selection graded
-against an oracle the arms built — entry 87 replaces it with a curated one). Also removed as fixed: a
+against an oracle the arms built — entry 87 replaces it with a curated one), **39** (the web app
+serving Singapore and Japan from hand-written pages — entry 149). Also removed as fixed: a
 block resolving a corridor it had nothing to do with (entry 32), the unverified `conflicts` field
 (entry 30), and a failed model call substituting the heuristic (entry 31).
 

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [149](#149-a-hand-written-destination-answers-only-when-research-is-off-because-singapore-and-japan-refused-everyone-they-were-not-written-for) | **Singapore and Japan served one traveller's pages to everyone, and refused the rest with a 503 blaming the model** — a hand-written entry now answers only under `configured`; Japan's `IN/GB` checklist fills 1 of 3 automatic runs |
 | [148](#148-the-corpus-holds-what-every-traveller-shares-live-search-fetches-what-this-traveller-needs) | **The owner settles the hybrid: the corpus holds what every traveller shares, live search fetches this traveller's specifics** — item 49 stops, 35 and 47 move to Later, and 5 of 15 live queries carry no traveller detail |
 | [147](#147-right-information-first-latency-and-cost-are-the-constraint-not-the-objective) | **The owner pauses 140–146: correctness is the objective, latency and cost the constraint** — and search's cost half passes while its reliability half is unmeasured |
 | [146](#146-the-cacheable-prefix-reordering-alone-buys-nothing-and-the-whole-packet-is-reachable) | **Reordering alone is worth ~500 tokens; all five conditions make the whole 69,902-token packet cacheable** — and the fifth is item 31's pool gate |
@@ -197,6 +198,85 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 149. A hand-written destination answers only when research is off, because Singapore and Japan refused everyone they were not written for
+
+**2026-09-14 · implemented, TODO item 52**
+
+`resolve_destination` in `api/routes.py` returned a `destinations.yaml` entry marked `available`
+**before** it asked the automatic service. Under the committed `destination_mode: automatic` that
+meant **Singapore and Japan never reached discovery, the corpus or the page-text index from the web
+app**. They were served from hand-written source lists, each designating one traveller's checklist
+for everyone: Singapore's is ICA's page for **Indian** travel documents, Japan's the **London**
+embassy's tourism checklist.
+
+### What item 52 said, and what a run showed
+
+Item 52 was written the same morning saying a Filipino asking about Japan *"is handed the London
+embassy's checklist"*. **That was a reading, and a run contradicted it.** In-process, under the
+committed runtime:
+
+| corridor | through the hand-written entry |
+| --- | --- |
+| `japan/IN/GB` | `verified`, nine requirements from London's checklist — the traveller it was written for |
+| `japan/PH/PH` | **HTTP 503**, *"The visa plan could not be generated safely."* |
+| `singapore/NG/NG` | **HTTP 503**, the same sentence |
+
+Both refusals are one exception: `LLMExtractionError("Model output contains no source-backed
+application documents")`. **The model declined to list another traveller's checklist, and the guard
+in `OpenAIVisaPlanExtractor.extract` — a designated checklist source with no requirements under it is
+a failed extraction — read that correct refusal as a model fault.** Entry 98 conditioned the same
+guard for a stated "no visa"; it was never conditioned for a checklist that belongs to somebody else.
+
+So it failed safe, and for two reasons that are not good enough. The traveller was refused with a
+sentence that blames the model, and **what kept a wrong checklist off the page was the model
+declining, every time** — not anything structural.
+
+### Measured through the automatic path before changing precedence
+
+Run with the corridor store and recall log redirected to the scratchpad and the corpus opened
+read-only, so `var/` was left as found (checked with `diff -r` against a copy of `var/recall`).
+
+| corridor | automatic path |
+| --- | --- |
+| `japan/PH/PH` | **`verified`**, fourteen requirements from `ph.emb-japan.go.jp/files/100508281.pdf` — the Manila embassy's own checklist |
+| `singapore/NG/NG` | **`verified`**, six requirements from ICA's Nigeria page |
+| `singapore/IN/GB` | **`verified`**, ICA's India page and the London High Commission |
+| `japan/IN/GB` | three runs: **`partial`, `partial`, `verified`** — London's checklist designated once |
+
+**Japan for the traveller it was written for is the cost, and it is real.** In the first run
+`sightseeing.html` — the page `oracle/selection_oracle.yaml` names for this role — was shortlisted
+**and fetched**; the adjudicator named Japan's eVISA questionnaire as where the document list lives
+instead. So recall held and adjudication varied, which is known problem 10 and item 17's ground, not
+this change. A pin gives the same checklist every time. **It was accepted anyway**: the pin answered
+one residence and refused the others with a false reason, and a hand-pinned page per destination is
+a stored answer for one corridor, which is exactly what entry 44 declines to keep.
+
+### Decided
+
+- **Under `automatic`, a hand-written entry never answers**; the API researches Singapore and Japan
+  like every other country. **Under `configured` it does**, which is what the offline Singapore
+  fixture and its API tests run under, and they are unchanged.
+- **`corridor_destination` follows the same policy**, so the command measures what the product
+  serves. Singapore's VFS `appointed_providers` is unused under `automatic`; entry 89's delegate
+  naming is the equivalent there, and it names rather than reads.
+
+### What it does to earlier measurements
+
+**Every Singapore and Japan corridor run from `visa-discover corridor` measured discovery over the
+hand-written entry's two domains**, not the registry's five, and the web app served neither: it
+served the pinned pages. Read entries 84–106's Singapore and Japan rows with that.
+
+### Found on the way, and not fixed here
+
+**A plan whose visa decision is null can be graded `verified`.** `resolve_plan_status` is passed
+`destination.decision_is_unverified`, which is set only when a block or a questionnaire stood in for
+the decision; a model that returns `visa_required: null` on its own is graded on the other clauses.
+Seen on the third `japan/IN/GB` run above — *"route and need for a visa not fully established"*,
+graded `verified` — and the function's own docstring says such a plan never is. It applies to every
+automatic corridor, so it is item 53 rather than a footnote to this change.
 
 ---
 
