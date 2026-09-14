@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-06 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-14 — update this line when you touch the handoff |
 | **Tests** | 685 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -168,6 +168,13 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
+**The queue was re-ordered on 2026-09-14 around the owner's rule for the hybrid (entry 148)**: the
+corpus holds what every traveller shares, live search fetches this traveller's specifics and stays
+the minority. Correctness comes first, then optimisation, then expansion. **Start at item 52** —
+Singapore and Japan are served by the web app from hand-written pages that pin one traveller's
+checklist for everyone (known problem 39). **Item 49 stopped where it is**; what follows about it
+is the state it was left in, not the next step.
+
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
 generated from the headings and therefore could not, which was false. On 2026-08-30 the table listed
 its items in a different order from the bodies below it, and **eleven finished items were still
@@ -237,8 +244,8 @@ heads, with `united-arab-emirates` in the tail. **The rebuild's ten new hosts ar
 not this change**: `discovered_from` puts every one on its own search seed, and exactly one page on
 one host came from a mission page.
 
-**Start at item 49, and what is left of it is a budget argument, not another fix.** Three things a
-new session should know before touching it:
+**Item 49 is stopped (entry 148); what was left of it was a budget argument, not another fix.**
+Things a session should know if it is ever reopened:
 
 - **Do not rebuild the other 51 yet.** On this evidence a build buys recorded addresses that
   nothing then walks, at 15 minutes and 70 search queries each. China is a named expected miss
@@ -267,8 +274,7 @@ per-traveller family whose members are *hosts*, one level above the reservation 
 readable text"* was the top failure at 34 of 74, 12 of them `immi.homeaffairs.gov.au` in one
 corridor, where the crawl has capped this since entry 92 and the request path never has (item 50).
 
-**Then item 48: test root seeding before building it, and separate discovery from allocation.**
-The queue was re-prioritised on 2026-09-02 and the Now order is **48, 31, 19, 17, 47, 35, 9, 2, 5**.
+**Item 48: test root seeding before building it, and separate discovery from allocation.**
 Item 48 exists because entry 130 found a cheap-looking fix — 51.7% of hosts were entered below a
 root nobody visited — and Thailand showed that shipping it blind could make a second, separate
 problem worse. It also carries two findings worth acting on independently: the crawl's per-host fair
@@ -824,6 +830,14 @@ re-add the amendment history here.
    the crawler records what it opened. The stale reasons clear on each country's next build, so any
    corpus not rebuilt since 2026-08-28 still carries them — FR and SE are clean, the other eight are
    not.
+
+39. **The web app serves Singapore and Japan from hand-written pages that pin one traveller's
+   checklist for everyone.** `resolve_destination` returns a `destinations.yaml` entry marked
+   `available` before it asks the automatic service, so those two never reach discovery or the
+   corpus from the web app. Singapore designates ICA's page for *Indian* travel documents as every
+   traveller's checklist, Japan the *London* embassy's. And `visa-discover corridor` runs discovery
+   over the same entries' domains, so every Singapore and Japan measurement describes a path the web
+   app does not take. TODO item 52.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (the unmeasured-product question —
 entry 58), **3** ("who to believe" decided per request — entries 34, 38), **4** (the blocked-source

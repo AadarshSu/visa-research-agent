@@ -39,6 +39,14 @@ or an accuracy metric without asking**; entry 147 is a priority, not that rule b
 measured-but-unshipped cacheable prefix. The instrumentation stays on: `phase_seconds` and
 `model_calls` are recorded every run, so the constraint is already measured whenever this resumes.
 
+**The hybrid, settled — the owner, 2026-09-14 (entry 148).** **The corpus holds what every traveller
+shares; live search fetches what this traveller needs, and stays the minority** of what a corridor
+reads and pays for. Making the store cover every nationality and residence offline is not the
+corpus's job, so **item 49 stopped where it was and items 35 and 47 moved to Later**; a
+traveller-neutral gap, like a host entered below its root, still is (item 48). And live search is not
+yet shaped like the rule: one of `corridor_queries`' three per-domain queries carries no traveller
+detail — item 51. **The order is correctness, then optimisation, then expansion.**
+
 **The constraint, sized — and paused (entry 147).** What follows is where a corridor's seconds and dollars go, kept because it is measured and whoever resumes should not re-derive it — not because it is the next thing to do.
 
 **The seconds were not where these files assumed, and 16.4 of them are now gone (entries 140, 141).**
@@ -117,9 +125,9 @@ outside it (8.6%), in 2 of 21 corridors — the other 19 lose nothing** (entry 1
 **marginal** cost that way, never "is there a relevant page out there": a corridor already filling
 six roles from the pool gains nothing from widening it. It took a new fixture to see any of this —
 the oracle was curated from inside that same 6% and so agreed with the gate by construction (entry
-127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. The queue is ordered around this: **item 31** (the gate
-itself), then **item 19**, whose search-dependence figure is an upper bound because the gate admits
-49% of search results against 5.5% of corpus pages.
+127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. **Item 31** (the gate itself) leads the
+optimisation work, behind the correctness items (entry 148); item 19's search-dependence figure is an
+upper bound because the gate admits 49% of search results against 5.5% of corpus pages.
 
 **And what the scorer's number is actually used for is a boolean (entry 126).**
 `_choose_what_to_read` pools on `best_combined() > 0` and hands that pool to the model **unsorted**;
@@ -788,6 +796,8 @@ cause, and only running the thing showed it.
 | a traveller-independent candidate set means showing far more | JP's three pools intersect at 93% of their union — about 7% more (entry 146) |
 | the goal is latency, so search should leave the request path | the goal is **right information**; latency and cost are the constraint (entry 147) |
 | search is justified because it finds pages nothing else does | that is recall; nothing here measures whether the answer was **true** (entry 147) |
+| a corpus gap search already covers is next in the queue | per-traveller pages are search's job; the corpus holds what all share (entry 148) |
+| `visa-discover corridor` measures what the web app serves | for SG and JP the app serves hand-pinned pages; the command runs discovery (item 52) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

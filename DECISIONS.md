@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [148](#148-the-corpus-holds-what-every-traveller-shares-live-search-fetches-what-this-traveller-needs) | **The owner settles the hybrid: the corpus holds what every traveller shares, live search fetches this traveller's specifics** — item 49 stops, 35 and 47 move to Later, and 5 of 15 live queries carry no traveller detail |
 | [147](#147-right-information-first-latency-and-cost-are-the-constraint-not-the-objective) | **The owner pauses 140–146: correctness is the objective, latency and cost the constraint** — and search's cost half passes while its reliability half is unmeasured |
 | [146](#146-the-cacheable-prefix-reordering-alone-buys-nothing-and-the-whole-packet-is-reachable) | **Reordering alone is worth ~500 tokens; all five conditions make the whole 69,902-token packet cacheable** — and the fifth is item 31's pool gate |
 | [145](#145-what-a-corridor-costs-028-and-59-of-it-is-the-selection-calls-input) | **A corridor costs $0.28** — selection 59%, search 27%, roles 14%, and **input is 96% of the model bill** |
@@ -196,6 +197,78 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 148. The corpus holds what every traveller shares; live search fetches what this traveller needs
+
+**2026-09-14 · the owner, settling what the hybrid is for**
+
+Entry 147 said search may stay in the request path if it can be justified. A survey of the queue
+then called items 49, 48, 35 and 47 optimisation rather than correctness, on the grounds that search
+already supplies the pages they would put in the store. The owner's answer is the design rule those
+items had been missing:
+
+> *"We can use search where necessary as long as we are mainly relying on the corpus. Making the
+> corpus work for EVERY traveller + residence is truly tough and hard to test, but we know during
+> request time the exact traveller details — using search here to retrieve specifics is fine as long
+> as we don't do the majority of searching here because we want to retrieve results quickly (and also
+> not have unnecessary costs we can defer to the offline corpus). The point of the offline corpus is
+> to make each corridor cheaper to run on our end and faster. I'm fine with a hybrid search + corpus
+> approach to give answers as long as it makes sense."*
+
+**So the hybrid is the design, not a stage on the way to a corpus-only product.** The corpus holds
+what does not vary by traveller and is built offline, where time and search spend are cheap. Live
+search is the traveller-specific complement — the passport page, the post for the country they apply
+from — and it stays the **minority** of what a corridor reads and pays for. Entry 47's shape
+(`corpus ∪ live search`, never conditional) already satisfies entry 44's ban on quietly falling
+back, so nothing safety-bearing moves, and every rule about what search may *do* stands.
+
+**Where it stands against that today, measured rather than targeted:** 75% of the pages a corridor
+read came from the corpus over 27 countries (entry 132), and search is 27% of a corridor's money and
+8% of its seconds (entries 143, 145). "Mainly the corpus" already holds on pages read. No threshold
+is set here.
+
+### What it changes in the queue
+
+**1. Item 49 stops where it is.** The mission-index seed (entry 137) and the family ordering and host
+back-off (entry 139) shipped and stay. What was left — walking all 169 of Australia's mission pages so
+the store holds a post for every residence — is exactly the exhaustive per-residence coverage this
+rule hands to request-time search. Its budget question does not need answering. **Items 35 and 47
+move to Later for the same reason**: both exist to make the store cover the per-traveller dimension
+offline.
+
+**2. Live search is not shaped like the rule, and that is new work.** `corridor_queries` issues three
+queries per trusted domain, before the corpus is read:
+
+| query | traveller-specific? |
+| --- | --- |
+| `site:{domain} {name} visa requirements {nationality}` | yes |
+| `site:{domain} {purpose} visa documents required` | **no** |
+| `site:{domain} visa application {residence}` | yes |
+
+The purpose query carries nothing the offline build does not already sweep in four passes, so on a
+five-domain country **5 of 15 live queries fetch traveller-neutral pages the corpus exists to hold**.
+Item 51. It is a recall change, so it is measured before it is built — and the instrument has a
+bound worth stating now: a recall log's `discovered_from` names the **first** query that returned a
+URL, and queries run nationality, purpose, residence per domain, so a page attributed to the purpose
+query may also have been returned by the residence query. Counting from the logs gives an **upper
+bound** on what dropping it loses.
+
+**3. Item 31 leads the optimisation work.** The selector's pool admits **49% of search results and
+5.5% of corpus pages** (entry 125), so a corridor leans on search for pages the store already holds.
+Under this rule that bias is the most direct thing standing between "the corpus holds it" and "the
+corridor reads it from the corpus".
+
+**4. Item 48 stays.** A trusted host entered below its root is a traveller-neutral gap — Thailand's
+arrival-card form is the same page for everyone — which is the corpus's job by this rule.
+
+### And the order around it, from entry 147
+
+Correctness still comes first, so the Now section leads with the correctness items — item 52 (the
+two hand-configured destinations pinning one traveller's checklist for everyone, found in the same
+survey), then 17, 8, 9 and 21 — and the optimisation items above follow them. Expansion — item 2's
+rule question, the 143 countries with no registry row, deployment — comes after both.
 
 ---
 
