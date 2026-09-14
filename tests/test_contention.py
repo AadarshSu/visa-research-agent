@@ -7,11 +7,13 @@ implementation that drifts would produce ground truth describing a pipeline the 
 """
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 from visa_research_agent.discovery.contention import Contention, contention_for, ranked_for_role
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.domain.models import DestinationConfig
 
 NOW = datetime(2026, 8, 28, tzinfo=UTC)
@@ -235,3 +237,62 @@ def test_the_unpooled_are_ordered_by_their_text_and_never_by_their_anchor() -> N
         f"{HOST}/b/staff-list.html",
         f"{HOST}/a/telephone-directory.html",
     ]
+
+
+def test_given_the_index_the_pool_is_the_one_the_resolver_shows_the_selector(
+    tmp_path: Path,
+) -> None:
+    """Entry 158, rebuilt offline exactly as the resolver applies it, or the pool audit would grade
+    a gate the product no longer has.
+
+    Both addresses carry a label no role wants, so the link scorer rates both zero for every role.
+    The first one's stored text is a checklist and it joins the pool; the second's is office hours
+    and it stays out. The three sets still account for every corpus entry."""
+
+    checklist = f"{HOST}/notice/a1.html"
+    notice = f"{HOST}/notice/a2.html"
+    entries = [
+        entry(f"{HOST}/visa/short-term-stay.html", text="Visa for temporary visitor"),
+        entry(checklist, text="Download"),
+        entry(notice, text="Download"),
+    ]
+    store = PageTextStore(tmp_path)
+    store.write(
+        "JP",
+        [
+            StoredPage(
+                url=checklist,
+                fetched_at=NOW,
+                body="Checklist of documents required: a passport, a bank statement, proof of "
+                "accommodation and a return ticket. " * 5,
+            ),
+            StoredPage(
+                url=notice,
+                fetched_at=NOW,
+                body="The office is open from nine until five on weekdays. " * 10,
+            ),
+        ],
+    )
+    corridor = Corridor(
+        destination_slug="japan",
+        passport_nationality="PH",
+        applying_from="PH",
+        purpose="tourism",
+    )
+
+    linked_only = contention(entries)
+    built = contention_for(
+        japan(entries),
+        destination(),
+        corridor,
+        countries=get_country_registry(),
+        lexicon=get_lexicon(),
+        destination_code="JP",
+        page_text=store,
+    )
+
+    assert checklist in {candidate.link.url for candidate in linked_only.unpooled}
+    assert checklist in {candidate.link.url for candidate in built.candidates}
+    assert built.admitted_on_text == (checklist,)
+    assert [candidate.link.url for candidate in built.unpooled] == [notice]
+    assert len(built.candidates) + len(built.unpooled) + built.rejected == len(entries)

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 740 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 747 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -87,8 +87,9 @@ Singapore) to $0.37 (Canada). A thousand corridors is **$280**; a corpus build i
 and no model cost, so item 49's 53-country rebuild is about **$18.55**.
 
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
-*time* and ~all of the *money*, so a change must be priced on both — and **item 31, which wants to
-widen the pool the selector reads, is near-free in seconds and near-linear in dollars.** Prompt
+*time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened
+the pool the selector reads, was priced that way before it shipped: +16% selection input over 53
+corpora and no second scoring pass** (entry 158). Prompt
 caching is real but mostly unavailable: the same corridor re-run minutes later cost 4.4× less, while
 six distinct corridors cached only the 2,029-token shared prompt.
 
@@ -168,9 +169,9 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
-**Start at item 31**, the first optimisation item. Everything above it in the queue was closed on
-2026-09-14; the reasoning is in DECISIONS, and the one line on each is here so a cold session knows
-what changed under it.
+**Start at item 51**, the next optimisation item. Item 31 and everything above it in the queue were
+closed on 2026-09-14; the reasoning is in DECISIONS, and the one line on each is here so a cold
+session knows what changed under it.
 
 **The order and the rule it follows (entry 148).** Correctness first, then optimisation, then
 expansion. The corpus holds what every traveller shares; live search fetches this traveller's
@@ -193,6 +194,10 @@ specifics and stays the minority. So item 49 stopped where it was, and items 35 
 - **21** (entries 156, 157) — the decision and every requirement carry a quote checked word for word
   against the retrieved page, and every cited source carries its page's content hash and why
   discovery chose it.
+- **31** (entry 158) — the selector's pool also admits the five best candidates per role that the
+  link scored zero, ranked by their own stored text, and removes nothing. All four fixture answers
+  the gate hid are recovered, for +16% selection input over 53 corpora and no second scoring pass.
+  A cap was measured and rejected: it displaced 1,813 pooled pages that had no text to be judged on.
 
 What follows about item 49 is the state it was left in, not the next step.
 
@@ -307,6 +312,8 @@ Bot Manager, a CAPTCHA — so it is a **permanent ceiling** and its pages may be
 That makes **21 of the 24 load-bearing search pages countries with a named permanent ceiling**, up
 from 18. Item 1
 sat at the top of it for part of that day and is **done** (entry 126).
+
+**What follows about item 31 is how it reached entry 158, which closed it — not the next step.**
 
 **Item 31's first deliverable is built and it changed the item's premise (entry 127).** Its own
 question 2 — *is the gate bad, or is the 94% chaff?* — could not be asked, because the oracle was
@@ -557,9 +564,10 @@ re-add the amendment history here.
    again. **It matters more than that wording suggested and the mechanism has moved**: it no longer
    builds the shortlist the model chooses from, it builds the **pool the model is allowed to see at
    all**, and measured over 24 runs that pool is **6% of the candidate set** — Liechtenstein 2 of
-   7,482 (entry 123). Whether the discarded 94% contains answers is unmeasured and
-   `selection-recall` cannot say, because its ground truth was curated from the pool. TODO item 31
-   owns that; it rests on English vocabulary and per-country city labels, so it will keep degrading
+   7,482 (entry 123). **Since entry 158 the pool also admits the five best candidates per role
+   that the link scored zero, ranked by their stored text**, which recovered all four answers the
+   fixture had found in the discarded 94% — so what the link scorer still gates alone is the 77%
+   of the corpus with no stored text. It rests on English vocabulary and per-country city labels, so it will keep degrading
    on new countries and languages. It remains the offline regression baseline. A sharply defined residual: for an Indian
    national applying from Great Britain the scorer rates `checklist-schengen-visa-tourism/india`
    **113.0** against **73.0** for `/united-kingdom`, when for a consular checklist the **post** governs;

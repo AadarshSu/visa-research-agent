@@ -39,7 +39,7 @@ from visa_research_agent.discovery.models import (
     DiscoveryRole,
     PageLink,
 )
-from visa_research_agent.discovery.page_text import TextMatch
+from visa_research_agent.discovery.page_text import PageTextStore, TextMatch
 from visa_research_agent.discovery.scoring import (
     foreign_post_labels,
     is_archived,
@@ -49,6 +49,7 @@ from visa_research_agent.discovery.scoring import (
     wrong_country,
 )
 from visa_research_agent.discovery.search import resolve_corridor_countries
+from visa_research_agent.discovery.selection import admitted_on_text
 from visa_research_agent.domain.models import DestinationConfig
 
 
@@ -64,10 +65,12 @@ class Contention:
 
     corridor: Corridor
     candidates: tuple[CandidatePage, ...]
-    """Everything `best_combined() > 0` — the pool `_choose_what_to_read` shows the selector."""
+    """The pool `_choose_what_to_read` shows the selector: everything `best_combined() > 0`, plus
+    what stored text put back when `contention_for` was given the index (entry 158)."""
 
     unpooled: tuple[CandidatePage, ...]
-    """Everything that survived the rejection rules and scored zero for every role.
+    """Everything that survived the rejection rules, scored zero for every role, and was not put
+    back on its stored text.
 
     **This is the 94% and it is here so a fixture can name a page inside it.** Until 2026-09-02 this
     set was discarded where it was computed, so `oracle/selection_oracle.yaml` was curated "from
@@ -87,6 +90,10 @@ class Contention:
 
     text_held: int
 
+    admitted_on_text: tuple[str, ...] = ()
+    """The members of `candidates` that are there on their stored text alone, the link scorer having
+    rated them zero for every role. Empty when `contention_for` was not given the index."""
+
     @property
     def key(self) -> str:
         corridor = self.corridor
@@ -105,12 +112,17 @@ def contention_for(
     lexicon: Lexicon,
     destination_code: str,
     indexed: frozenset[str] = frozenset(),
+    page_text: PageTextStore | None = None,
 ) -> Contention:
     """The corridor's whole contention set, rebuilt from the store.
 
     Deliberately takes no fetcher and no search provider. A curator needs the set a *ranking* would
     see, and the one thing that must not happen while building ground truth is a live call whose
     result nobody can reproduce next month.
+
+    **With `page_text` the pool is the one the resolver shows the selector**: the link test, plus
+    what `admitted_on_text` puts back from stored text (entry 158). Without it the pool is the link
+    test alone, which is the gate every oracle row curated before that entry was read against.
     """
 
     nationality, residence = resolve_corridor_countries(corridor, countries)
@@ -141,6 +153,24 @@ def contention_for(
         else:
             outside.append(candidate)
 
+    admitted: list[CandidatePage] = []
+    if page_text is not None and outside:
+        # The resolver's own admission, imported rather than restated (entry 61), over the same
+        # stored text it reads.
+        admitted = admitted_on_text(
+            outside,
+            page_text.score_held(
+                destination_code,
+                [candidate.link.url for candidate in outside],
+                corridor=corridor,
+                nationality=nationality,
+                lexicon=lexicon,
+            ),
+        )
+        taken = {candidate.link.url for candidate in admitted}
+        kept.extend(admitted)
+        outside = [candidate for candidate in outside if candidate.link.url not in taken]
+
     kept.sort(key=lambda candidate: (-candidate.best_combined()[1], candidate.link.url))
     outside.sort(key=lambda candidate: candidate.link.url)
     return Contention(
@@ -149,6 +179,7 @@ def contention_for(
         unpooled=tuple(outside),
         rejected=rejected,
         text_held=sum(1 for candidate in kept if candidate.link.url in indexed),
+        admitted_on_text=tuple(sorted(candidate.link.url for candidate in admitted)),
     )
 
 

@@ -40,14 +40,15 @@ the CLI does not offer it.
   their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
   the trusted set is checked before blaming ranking for anything.
 - **First, check whether the page was ever a candidate at all.** With `discovery_selector: model`
-  the model only sees `[c for c in candidates.values() if c.best_combined()[1] > 0]`, which over 24
-  runs is **6% of the candidate set** — Liechtenstein offers 2 of 7,482 (entry 123). A page scoring
-  zero for every role is invisible to the selector however good it is, so *"the model did not pick
-  it"* and *"the model never saw it"* look identical from the outside. `var/recall/<corridor>.json`
-  distinguishes them: `best_score` of `0.0` means the second, and
-  `visa-discover contention --outside-pool --role <role>` is how you look at that set — it ranks the
-  zero-scoring candidates by their own stored text, which is the only ordering the anchor scorer
-  cannot bias (entry 127). **What matters is whether the score
+  the model sees every candidate whose link scores above zero for some role — which over 24 runs was
+  **6% of the candidate set** (entry 123) — **plus up to five per role that the link scored zero and
+  their own stored text puts back** (`admitted_on_text`, entry 158). A page scoring zero on its link
+  and holding no stored text, or text that scores nothing, is still invisible however good it is, so
+  *"the model did not pick it"* and *"the model never saw it"* look identical from the outside.
+  `var/recall/<corridor>.json` distinguishes them: `best_score` of `0.0` **and** `admitted_on_text`
+  false means the second, and `visa-discover contention --outside-pool --role <role>` is how you look
+  at that set — it ranks what is still outside by its own stored text, the only ordering the anchor
+  scorer cannot bias (entry 127). **What matters is whether the score
   crossed zero, not where it ranked** — the pool goes to the model unsorted with the scores withheld,
   so ordering is consumed only by the heuristic fallback (entry 126). **And read the signals for
   `residence:`** — on the four `POST_SPECIFIC_ROLES` a page about where the traveller applies from
@@ -113,7 +114,8 @@ the CLI does not offer it.
   bug: the fixture was curated "from every candidate that scored above zero" (`contention.py`), so
   no page outside the pool can appear in it — 88 of 88 oracle-named answering pages are in the pool,
   which is a tautology rather than a result (entry 123). Anything touching `_choose_what_to_read`'s
-  filter needs a fixture curated from the **whole** candidate set first; item 31 owns that. Reads
+  filter needs a fixture curated from the **whole** candidate set first; three rows now are
+  (`curated_from: whole_corpus`), and entry 158's text admission was graded on them. Reads
   two files, calls nothing. **A recall log that cannot say which selector fetched its pages is
   refused, not graded** (entry 91): a run's fetched URLs are read as the model's picks, so grading a
   heuristic run that way puts the heuristic in the model's own arm. Every log written before

@@ -16,7 +16,7 @@ happen is a checklist appearing without a source behind it, which `VisaPlan` ref
 
 import re
 import time
-from collections.abc import AsyncIterator, Callable, Collection
+from collections.abc import AsyncIterator, Callable, Collection, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -96,6 +96,7 @@ from visa_research_agent.discovery.search import (
 from visa_research_agent.discovery.selection import (
     CandidateSelector,
     SelectionError,
+    admitted_on_text,
     build_selection_packet,
     load_selection_prompt,
     selected_candidates,
@@ -304,6 +305,8 @@ class ResolutionTrace:
     candidates: dict[str, CandidatePage] = field(default_factory=dict)
     shortlisted: set[str] = field(default_factory=set)
     fetched: set[str] = field(default_factory=set)
+    admitted_on_text: set[str] = field(default_factory=set)
+    """Candidates offered to the model selector on their stored text alone (entry 158)."""
     crawl_failures: dict[str, str] = field(default_factory=dict)
     fetch_failures: list[SourceFailure] = field(default_factory=list)
     """What reading the shortlist could not read, kept typed rather than flattened to a sentence.
@@ -803,7 +806,11 @@ class CorridorResolver:
         # its text read at all. Measured on Japan: the page that fills `document_checklist` for
         # `japan/IN/GB` scores 22.0 as `visa_decision` from its anchor and is not a candidate for
         # the right role at any shortlist depth. Entry 78.
-        scored_from_text = self._score_from_text(destination, corridor, nationality, candidates)
+        #
+        # The same scores decide what stored text may put back into the selector's pool at step 4
+        # (entry 158), so they are computed once here and kept whether or not they may rank.
+        stored_scores = self._stored_text_scores(destination, corridor, nationality, candidates)
+        scored_from_text = self._score_from_text(stored_scores, candidates)
         if scored_from_text:
             notes.append(
                 f"{scored_from_text} candidates were ranked on the text of the page as well as the "
@@ -814,7 +821,9 @@ class CorridorResolver:
         # Timed apart because they fail and improve for different reasons: choosing is a model
         # call over stored text, fetching is the network and the render budget.
         trace.begin("select")
-        shortlist = await self._choose_what_to_read(destination, corridor, candidates, notes, trace)
+        shortlist = await self._choose_what_to_read(
+            destination, corridor, candidates, stored_scores, notes, trace
+        )
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         trace.begin("fetch")
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
@@ -906,6 +915,7 @@ class CorridorResolver:
         destination: DestinationConfig,
         corridor: Corridor,
         candidates: dict[str, CandidatePage],
+        stored_scores: Mapping[str, RoleScores],
         notes: list[str],
         trace: ResolutionTrace,
     ) -> list[CandidatePage]:
@@ -919,10 +929,21 @@ class CorridorResolver:
         Falling back is deliberate and **reported, never silent** — a country with no stored text
         would otherwise have its selection made from anchors alone, which is the weak version of
         this idea wearing the strong version's name.
+
+        **The model is shown every candidate the link scorer rates above zero, plus the few their
+        own stored text puts back** (entry 158). The link test alone showed it 6% of the candidate
+        set and hid answers nothing in that 6% could replace (entries 123, 127, 128). The admission
+        adds and never displaces, and is bounded per role so the packet stays bounded. The scores
+        are the ones step 3b already computed for every candidate, so nothing is scored twice.
         """
 
-        pool = [c for c in candidates.values() if c.best_combined()[1] > 0]
-        if self.selector is None or self.page_text is None or not pool:
+        if self.selector is None or self.page_text is None:
+            return self._shortlist(list(candidates.values()))
+        admitted = admitted_on_text(
+            [c for c in candidates.values() if c.best_combined()[1] <= 0], stored_scores
+        )
+        pool = [c for c in candidates.values() if c.best_combined()[1] > 0] + admitted
+        if not pool:
             return self._shortlist(list(candidates.values()))
 
         code = self._destination_code(destination)
@@ -948,6 +969,8 @@ class CorridorResolver:
                 text_by_id[source_id] = held[candidate.link.url]
 
         packet = build_selection_packet(corridor, by_id, text_by_id)
+        # Recorded once the packet exists, whatever the call then does: these pages were offered.
+        trace.admitted_on_text = {candidate.link.url for candidate in admitted}
         try:
             self.selection_calls += 1
             selection_prompt = load_selection_prompt()
@@ -968,9 +991,16 @@ class CorridorResolver:
                 "candidate selection named no page, so the heuristic ranking chose instead"
             )
             return self._shortlist(list(candidates.values()))
+        admitted_note = (
+            f"; {len(admitted)} of those were offered on their stored text, the links to them "
+            "having scored nothing for any role"
+            if admitted
+            else ""
+        )
         notes.append(
             f"{len(chosen)} of {len(pool)} candidates were chosen to read by a model shown what "
             f"{len(text_by_id)} of them say, rather than by ranking the links to them"
+            f"{admitted_note}"
         )
         # The only exit where a model picked the pages. Every `return self._shortlist(...)` above
         # is the heuristic doing the choosing, and each leaves the trace's default alone — which is
@@ -1004,35 +1034,47 @@ class CorridorResolver:
 
         return candidates > 0 and scored >= candidates * self.text_scoring_coverage_bar
 
-    def _score_from_text(
+    def _stored_text_scores(
         self,
         destination: DestinationConfig,
         corridor: Corridor,
         nationality: Country,
         candidates: dict[str, CandidatePage],
-    ) -> int:
-        """Attach `text_scores` to every candidate whose page text the index holds.
-
-        Returns how many were scored, for the corridor's notes — a traveller-facing count of how
-        much of this ranking rested on reading pages rather than reading links.
+    ) -> dict[str, RoleScores]:
+        """Score, by stored text, every candidate whose page text the index holds.
 
         **Every candidate is offered, not a promising subset.** Narrowing first would put the link
         scorer back in front of the text scorer, which is the defect this exists to remove, and the
         same one `MAXIMUM_SCORED_MATCHES` records being made inside `rank` itself.
+
+        Two things read the result, and their bars differ on purpose. `_score_from_text` may *rank*
+        with it only where the index covers half the candidate set. `admitted_on_text` may put a
+        page into the selector's pool on it anywhere, because a page scoring on its own text is
+        worth showing whether or not its neighbours have text (entry 158).
         """
 
         if self.page_text is None:
-            return 0
+            return {}
         code = self._destination_code(destination)
         if code is None:
-            return 0
-        scored = self.page_text.score_held(
+            return {}
+        return self.page_text.score_held(
             code,
             candidates.keys(),
             corridor=corridor,
             nationality=nationality,
             lexicon=self.lexicon,
         )
+
+    def _score_from_text(
+        self, scored: dict[str, RoleScores], candidates: dict[str, CandidatePage]
+    ) -> int:
+        """Attach `text_scores` to every candidate the index holds text for, where that is fair.
+
+        Returns how many were scored, for the corridor's notes — a traveller-facing count of how
+        much of this ranking rested on reading pages rather than reading links.
+        """
+
         if not self._text_scoring_is_fair(len(scored), len(candidates)):
             return 0
         for url, scores in scored.items():
@@ -1737,6 +1779,7 @@ class CorridorResolver:
                         trace.candidates,
                         shortlisted=trace.shortlisted,
                         fetched=trace.fetched,
+                        admitted_on_text=trace.admitted_on_text,
                     ),
                     unreadable=unreadable,
                     unreadable_outcomes=outcomes,

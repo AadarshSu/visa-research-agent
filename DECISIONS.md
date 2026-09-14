@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [158](#158-the-selectors-pool-admits-up-to-five-pages-per-role-on-their-stored-text-and-removes-nothing) | **The selector's pool also admits the five best per role on stored text, removing nothing** — all four hidden fixture answers recovered for +16% selection input over 53 corpora; a cap displaced 1,813 unread pages |
 | [157](#157-a-cited-source-carries-the-version-of-the-page-it-was-read-from-and-why-it-was-chosen) | **Every cited source carries its page's content hash and why discovery chose it** — attached when the plan is built, never in the shared retrieval cache |
 | [156](#156-a-claim-carries-the-sentence-behind-it-kept-only-where-the-retrieved-page-holds-it) | **The decision and every requirement carry a quote, kept only where the retrieved page holds it** — 45 of 45 kept live; a match proves the words exist, not that they fit the claim |
 | [155](#155-refused-pages-are-named-once-per-authority-with-the-pages-that-may-hold-the-decision-first) | **Refused pages grouped per authority, the judged decision pages first, every link kept** — and which pages lead varies between runs, because the judgement does |
@@ -206,6 +207,138 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 158. The selector's pool admits up to five pages per role on their stored text, and removes nothing
+
+**2026-09-14 · TODO item 31, question 3 — measured offline, then built**
+
+Entries 123, 127 and 128 answered the item's first two questions. `_choose_what_to_read` pooled on
+`best_combined() > 0`, a boolean on a score computed from a URL and an anchor, so the model was shown
+6% of the corpus. And the 94% it never saw held answers the pool could not replace: **4 role-cells
+in the 21-corridor fixture**, Czechia's supporting-documents list for applicants in the United
+Kingdom (`document_checklist` and `general_entry`) and the Dutch EES leaflet (`general_entry`, in
+both Dutch rows). This entry is the third question: what to do about it, priced before building.
+
+### Four rules, measured with no model and no network
+
+Every fixture corridor's contention set was rebuilt with `contention_for`, each candidate's stored
+text scored with `PageTextStore.score_held`, and each rule's pool built into a real packet with
+`build_selection_packet`. Corpus-only, so absolute pool sizes are below a live run's, and priced at
+entry 145's $2/M input tokens with entry 146's four characters a token.
+
+| rule | pool | selection input | fixture answers outside |
+| --- | --- | --- | --- |
+| link score > 0 (what shipped) | 7,160 | $3.66 | **4** |
+| + every page whose stored text scores > 0 | 12,712 | $6.16, +68% | 0 |
+| + every page whose stored text scores ≥ 20 | 10,647 | $5.40, +48% | 0 |
+| cap at the same size, ranked on the better of link and text | 7,160 | $4.75, +30% | 0 |
+| **+ the best 3 per role on stored text** | 7,495 | $3.89, +6% | 0 |
+| **+ the best 5 per role on stored text** | **7,693** | **$4.01, +10%** | **0** |
+| + the best 10 per role on stored text | 8,122 | $4.28, +17% | 0 |
+| + the best 20 per role on stored text | 8,789 | $4.64, +27% | 0 |
+
+**Every rule recovers all four, so recall does not choose between them. Cost and safety do.**
+
+**Admitting everything that scores on its text is mostly chaff.** The Netherlands took 356 pages,
+led by `business.gov.nl` permit pages at 45.0, which is the document-noun bonus firing on pages that
+list employment paperwork. Czechia took 170, including five copies of the Sydney consulate's
+appointment calendar at 76.0. A threshold halves the noise and keeps the cost.
+
+**The cap, which item 31 had called the most attractive, is rejected.** It holds the pool's size by
+letting text-bearing pages push link-scored ones out, and measured it displaced **2,820 pooled
+pages, 1,813 of them with no stored text to be judged on**, including five pages the fixture names:
+`u.ae`'s where-to-apply page, `france-visas.gouv.fr/en/lieu-de-depot`, `london.mfa.gov.sg/visa-information`,
+`ica.gov.sg/enter-depart/entry_requirements` and `uk.usembassy.gov/visas`. That is entry 80's defect,
+ranking by who was crawled, and the pages it costs are the ones `no_stored_text` exists to protect.
+It also costs more than an addition of the same recall, because the pages it brings in carry
+excerpts the pages it drops did not.
+
+### Decided: add the best five per role on stored text, and never remove
+
+`selection.admitted_on_text` takes the candidates the link test left out and, for each role, adds the
+`DEFAULT_TEXT_ADMISSIONS_PER_ROLE` best by that role's `score_body` over stored text, ties by
+address, a page two roles want counted once. A page with no stored text cannot be admitted and a page
+whose text scores nothing is not. The link pool is untouched, so nothing a corridor was shown before
+can be lost.
+
+**Five rather than three, and the margin is measured.** Each of the four recovered answers ranks
+**second** for its role among the pages outside the pool — the Czech list behind a combined India and
+Morocco list at 125.0, the EES leaflet behind one page for `general_entry`. Three would leave each
+one place from being lost. Five leaves three places and is the shortlist's own per-role depth
+(entry 61).
+
+**What it costs, over all 53 corpora for one `IN/GB` traveller:**
+
+| | pool | selection input |
+| --- | --- | --- |
+| link only | 9,642 | — |
+| + 3 per role | 10,341 | +11% |
+| **+ 5 per role** | **10,731** | **+16%** |
+| + 10 per role | 11,573 | +28% |
+| + 20 per role | 12,746 | +44% |
+
+At entry 145's split, selection being 59% of a $0.28 corridor, +16% is roughly **three cents a
+corridor**. The share is larger across all 53 than across the fixture because the fixture's countries
+have large link pools and the thin ones gain most: Liechtenstein 0 → 19, Bulgaria 5 → 22, Slovenia 39
+→ 69.
+
+**It adds no scoring pass.** Step 3b of `_resolve` has always scored every candidate's stored text,
+through `_score_from_text`, and thrown the scores away wherever the index covers less than half the
+set — which is everywhere. That pass was the cost: 0.5 to 6.6 seconds a corridor, median 1.4, 89% of
+it `score_body` rather than SQLite. `_stored_text_scores` now computes it once and both readers use
+it — the ranking lift behind its coverage bar, unchanged, and the admission, which has no such bar
+because a page that scores on its own text is worth showing whether or not its neighbours have text.
+A full-text pre-filter could cut those seconds and was not built: it would put a cheaper filter in
+front of `score_body`, which `MAXIMUM_SCORED_MATCHES` records going wrong once already, and item 19's
+latency work is paused (entry 147).
+
+### What moved with it
+
+- **`contention_for` applies the same rule when given the index**, and the CLI gives it, so
+  `selection-recall`'s pool audit and `contention --outside-pool` describe the gate the product has.
+  Run afterwards, the audit reads **0 of 164 answering pages outside the pool**.
+- **The recall log says why a zero-scoring page was shown.** `ConsideredCandidate.admitted_on_text`;
+  until now a `best_score` of 0.0 meant the selector never saw the page, and for a row with this set
+  it did.
+- **The corridor's note counts them**: *"25 of those were offered on their stored text, the links to
+  them having scored nothing for any role"*.
+- **Nothing a traveller reads changed.** The scores are `score_body` over stored text, which ranks and
+  never speaks (entry 78). Admission returns candidates, the packet withholds scores as before, and an
+  admitted page is fetched through `LiveSourceFetcher` before a word of it is used.
+
+### Two live runs, read as runs and not as a measurement
+
+**`czechia/IN/GB/tourism`**, never run before, so there is no before. The model was shown 299
+candidates, **25 admitted on their text**, and chose 14. The adjudicator filled `document_checklist`
+from `mzv.gov.cz/…/4835385_2943205_UK_EN.PDF` — the page entry 127 found the gate hiding — and
+`general_entry` from the Los Angeles consulate's EES page, another zero-anchor page. Five roles
+filled. Whether they are right is verified outside this repository (entry 68). Selection input was
+110,205 tokens and the resolver took 29.1s.
+
+**`liechtenstein/IN/GB/tourism`**. The link test offers 2 candidates of 7,456; admission made it 21.
+The model chose two, both on `www.llv.li`, whose challenge could not be answered, and the corridor
+refused. Entry 123 said a corridor choosing from 2 pages of 7,482 is not evidence about Cloudflare.
+It now chooses from 21 and still meets it. That is one run and suggests the challenge is binding,
+without showing that nothing else in the 21 answers.
+
+### What it does not reach
+
+**A page with no stored text is exactly where it was.** The index holds bodies for 23% of the
+corpus, so Canada's `?country=GB&lob=visit` stays out: it has no text and its anchor names no role.
+That is item 35's end of the bottleneck, now parked (entry 148).
+
+**The fixture is still 21 corridors and two travellers**, three rows of them curated from the whole
+corpus. So "0 outside" says the rule recovers every hidden answer anyone has named, not that none
+remain.
+
+**Entry 146's fifth cache condition is untouched.** `score_body` adds a nationality and purpose bonus,
+so the admitted set can still differ between two travellers into one country.
+
+**Entry 125's 49%-against-5.5% admission gap was not re-measured.** Admission can only raise the
+corpus side, so item 19's "load-bearing search pages" figure stays an upper bound, and probably a
+looser one than it was.
 
 ---
 

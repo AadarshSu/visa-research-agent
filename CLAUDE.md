@@ -83,8 +83,9 @@ selection, and the per-100k rate varies 4×. **"Send the model less" is not a la
 **It is the whole of the money, though (entry 145).** A corridor costs **$0.28** on `gpt-5.6-terra`
 at $2/M in and $12/M out plus $0.075 of search — **selection 59%, search 27%, roles 14%** — and
 **input is 96% of the model bill**, 588,363 input tokens against 4,191 output over six corridors.
-So latency and cost pull opposite ways and a change must be priced on both. **Item 31 wants to widen
-the pool the selector reads: that is near-free in seconds and near-linear in dollars.** Two things
+So latency and cost pull opposite ways and a change must be priced on both. **Item 31 widened the
+pool the selector reads, priced on both before it shipped: +16% selection input over 53 corpora, and
+no second scoring pass (entry 158).** Two things
 checked rather than assumed: reasoning tokens are *inside* `output_tokens` (185 out, 131 reasoning),
 so nothing is undercounted; and prompt caching is real but mostly unavailable — the same corridor
 re-run minutes later cost **4.4× less** with 48,395 of 48,398 select tokens cached, while six
@@ -125,9 +126,11 @@ outside it (8.6%), in 2 of 21 corridors — the other 19 lose nothing** (entry 1
 **marginal** cost that way, never "is there a relevant page out there": a corridor already filling
 six roles from the pool gains nothing from widening it. It took a new fixture to see any of this —
 the oracle was curated from inside that same 6% and so agreed with the gate by construction (entry
-127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. **Item 31** (the gate itself) leads the
-optimisation work, behind the correctness items (entry 148); item 19's search-dependence figure is an
-upper bound because the gate admits 49% of search results against 5.5% of corpus pages.
+127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. **Item 31 is done (entry 158):** the pool
+now also admits the five best candidates per role that the link scored zero, ranked by their own
+stored text, and removes nothing — all four hidden fixture answers recovered, for +16% selection input
+over 53 corpora. Item 19's search-dependence figure is still an upper bound, because the link test
+admits 49% of search results against 5.5% of corpus pages and that gap was not re-measured.
 
 **And what the scorer's number is actually used for is a boolean (entry 126).**
 `_choose_what_to_read` pools on `best_combined() > 0` and hands that pool to the model **unsorted**;
@@ -187,7 +190,7 @@ both arms filter on `> 0` and raced over the same 6%. What is narrower than it r
 recall: the oracle was curated "from every candidate that scored above zero", so it **cannot detect
 the filter it shares**, and whether the discarded 94% holds any answer is unmeasured. The gate is
 also not neutral between sources — **49% of search results are admitted against 5.5% of corpus
-pages** (entry 125), so item 19's search-dependence figure is an upper bound. TODO item 31.
+pages** (entry 125), so item 19's search-dependence figure is an upper bound. Item 31 closed as entry 158.
 `visa-discover selection-recall` stays as an offline regression check, and entries 87, 100 and 106
 say how to read it: it measures agreement with pages a person named, not corridor health, and its
 known errors run against the model so the figure is a floor.
@@ -812,6 +815,9 @@ cause, and only running the thing showed it.
 | the refused-page judgement picks the same pages each run | 08-29 marked `visitor.html`; 09-14 marked the India page and not it (entry 155) |
 | a model's copied quotes need fuzzy matching to verify | 80 of 80 matched after normalising only spacing, quote marks, dashes and case (entry 156) |
 | a quote found on the cited page supports its claim | it proves the words exist, not that they fit — one decision quote was a caveat (entry 156) |
+| capping the pool is the most attractive fix for the gate | it displaced 1,813 pooled pages with no text, and 5 the fixture names (entry 158) |
+| reading stored text at the gate adds seconds to every corridor | step 3b already scored every candidate's text, then threw it away (entry 158) |
+| admitting every page whose text scores fixes the gate | it recovers the same 4 answers at +68% input, mostly chaff — five per role costs +16% (entry 158) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
@@ -927,8 +933,9 @@ retrieval cache for nothing. It is **ranking input only** — see the rule above
 **Two different things read this index and only one of them is on.** `discovery_selector: model`
 **is on** (entry 85): a model reads stored text for every candidate in contention and picks up to 20
 pages to fetch, replacing the shortlist as the recall gate, at the cost of a second model call per
-corridor. **What "every candidate in contention" means is `best_combined() > 0` — 6% of the corpus,
-and the pages below it are never shown (entry 123).** Graded against `oracle/selection_oracle.yaml` —
+corridor. **What "every candidate in contention" means is `best_combined() > 0` — 6% of the corpus
+(entry 123) — plus the five best per role that the link scored zero and their own stored text puts
+back (entry 158). A page scoring zero on its link with no stored text is still never shown.** Graded against `oracle/selection_oracle.yaml` —
 ground truth neither selector helped build, though curated from that same 6%
 — it reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the
 heuristic is allowed its shipped 35 places and 3.1× the fetches (entry 87; entries 85 and 86 read

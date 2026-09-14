@@ -480,21 +480,32 @@ What it may do is bounded hard, and the bounds are the safety story:
   authority refusing to be read. A refusal reports the calls it paid for.
 
 The heuristic is not replaced, and **what it now gates is larger than "the shortlist"**. With
-`discovery_selector: model`, `_choose_what_to_read` builds the model's pool as
-`[c for c in candidates.values() if c.best_combined()[1] > 0]` — so a candidate the heuristic scores
-zero for **every** role is never shown to the selector, never fetched and never judged. Measured over
-24 runs on current stores, that pool is **6% of the candidate set**: 4,450 of 71,798, with
-Liechtenstein offering 2 of 7,482 (entry 123). It also answers when no adjudicator is configured, and
-its score is recorded beside the model's choice so a reviewer can see where the two disagreed.
+`discovery_selector: model`, `_choose_what_to_read` builds the model's pool from every candidate with
+`best_combined() > 0` — which over 24 runs was **6% of the candidate set**, 4,450 of 71,798, with
+Liechtenstein offering 2 of 7,482 (entry 123) — **plus what `admitted_on_text` puts back**: for each
+role, the five best candidates the link scored zero, ranked by `score_body` over their stored text
+(entry 158). It adds and never removes. A candidate that scores zero on its link and has no stored
+text, or text that scores nothing, is still never shown, fetched or judged. The link score also
+answers when no adjudicator is configured, and it is recorded beside the model's choice so a reviewer
+can see where the two disagreed.
+
+**Why five per role on text, and not a wider or a capped pool.** The 94% the link test discarded held
+four answers in the 21-corridor fixture that nothing in the pool could replace — Czechia's
+supporting-documents list for applicants in the United Kingdom, the Dutch EES leaflet (entries 127,
+128). Admitting every page whose text scores recovers them at +68% selection input, mostly chaff. A
+cap of the same size recovers them too, and displaced 1,813 pooled pages that had no text to be
+judged on, five of them pages the fixture names. Five per role recovers all four, each of which ranks
+second for its role, for **+16% selection input over 53 corpora**. The scores are the ones step 3b
+already computed for every candidate and used to discard, so no second scoring pass is added.
 
 **Two consequences a reader should carry.** First, the arm comparison of entries 84–87 is unaffected —
-both selectors filter on `> 0`, so they raced over the same 6% — but the absolute figures share that
+both selectors filtered on `> 0`, so they raced over the same 6% — but the absolute figures share that
 denominator, because `oracle/selection_oracle.yaml` was curated "from every candidate that scored
-above zero" and **cannot detect the filter it shares** (88 of 88 oracle-named pages are in the pool,
-which is a tautology). Second, the gate is not neutral between sources: it admits **49% of search
-results and 5.5% of corpus pages**, because search returns pages whose URL and title already match
-the vocabulary the scorer rewards (entry 125). Both are [TODO.md](TODO.md) item 31, and whether the
-discarded 94% contains any answer is **unmeasured**.
+above zero" and **cannot detect the filter it shares** (88 of 88 oracle-named pages were in the pool,
+which is a tautology); three rows are now curated from the whole corpus. Second, the link test is not
+neutral between sources: it admits **49% of search results and 5.5% of corpus pages**, because search
+returns pages whose URL and title already match the vocabulary the scorer rewards (entry 125). Text
+admission can only raise the corpus side, and that gap has not been re-measured.
 
 **The scorer had no signal for where the traveller applies from, and now has one** (entries 124 and
 126). `score_link` added `lexicon.nationality_weight` for a page about the **passport** country and
@@ -513,8 +524,8 @@ because a visa rule is the same at every consulate (entry 72).
 on `best_combined() > 0` and passes the pool to the model **unsorted**, and `build_selection_packet`
 withholds the scores deliberately. `score_link` therefore decides **admission** and nothing else on
 the shipped path; its ordering governs only the heuristic fallback. The whole residence change
-admits **35 pages of 186,596**, which is why item 31 — the boolean gate itself — is the open work
-and further weighting is not.
+admits **35 pages of 186,596**, which is why the boolean gate itself was the work and further
+weighting was not — closed by the text admission above (entry 158).
 
 **Every run also writes down what it considered** (`discovery/recall_log.py`, entry 43): all candidates
 with their scores, whether each was shortlisted and fetched, the queries, the seeds, and each unreadable

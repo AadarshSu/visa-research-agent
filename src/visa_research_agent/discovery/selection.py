@@ -33,7 +33,7 @@ the recall gate this module exists to remove, one layer up.
 """
 
 import json
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from importlib.resources import files
 from typing import Any, Protocol
 
@@ -42,7 +42,7 @@ from langchain_openai import ChatOpenAI
 from pydantic import Field, SecretStr, ValidationError
 
 from visa_research_agent.discovery.adjudication import _EXHAUSTED_MARKERS, UsageRecorder
-from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corridor
+from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corridor, RoleScores
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.research.errors import VisaResearchError
 
@@ -61,6 +61,20 @@ MINIMUM_EXCERPT_CHARACTERS = 200
 # one candidate, far below the 35 the heuristic shortlist fetches today — the saving that pays for
 # the extra call.
 DEFAULT_SELECTION_SIZE = 20
+
+# How many candidates the link scorer rated zero for every role may still be shown to the selector,
+# per role, on the strength of their own stored text. DECISIONS entry 158.
+#
+# **The pool was `best_combined() > 0` and nothing else, and that showed the model 6% of the
+# corpus** (entry 123) while hiding answers nothing in the pool could replace — Czechia's list of
+# supporting documents for applicants in the United Kingdom, and the Dutch EES leaflet (entries
+# 127, 128). **Added, never displacing.** A cap that let text-bearing pages push link-scored ones
+# out was measured and rejected: it displaced 2,820 pooled pages, 1,813 of them with no stored text
+# to be judged on, and five pages the selection fixture names. Five rather than three because every
+# recovered answer ranks second for its role outside the pool, so three would leave it one place
+# from being lost; five is also the shortlist's own per-role depth (entry 61). Priced over all 53
+# corpora for an `IN/GB` traveller: 9,642 candidates become 10,731, and selection input rises 16%.
+DEFAULT_TEXT_ADMISSIONS_PER_ROLE = 5
 
 
 class SelectionError(VisaResearchError):
@@ -204,6 +218,40 @@ def selected_candidates(
     chosen: Sequence[str], candidates: dict[str, CandidatePage]
 ) -> list[CandidatePage]:
     return [candidates[source_id] for source_id in chosen]
+
+
+def admitted_on_text(
+    unpooled: Sequence[CandidatePage],
+    text_scores: Mapping[str, RoleScores],
+    *,
+    per_role: int = DEFAULT_TEXT_ADMISSIONS_PER_ROLE,
+) -> list[CandidatePage]:
+    """The candidates the link scorer left out that their own stored text puts back in.
+
+    For each role, the `per_role` best by that role's stored-text score, ties broken by address, and
+    a page two roles want counted once. Only members of `unpooled` can come back, whatever else
+    `text_scores` holds. A page whose text scores nothing is never admitted, and a page with no
+    stored text cannot be: there is nothing to judge it on, and admitting it anyway is the unbounded
+    widening the per-role bound exists to prevent.
+
+    **This decides who is shown, never what anyone is told.** The scores are `score_body` over
+    stored text, which ranks and never speaks (entry 78): what comes back is candidates, the packet
+    withholds scores as it always has, and a page chosen from here is fetched through
+    `LiveSourceFetcher` before a word of it is used.
+    """
+
+    admitted: dict[str, CandidatePage] = {}
+    for role in ROLE_ORDER:
+        scored = [
+            (scores.score_for(role), candidate)
+            for candidate in unpooled
+            if (scores := text_scores.get(candidate.link.url)) is not None
+            and scores.score_for(role) > 0
+        ]
+        scored.sort(key=lambda pair: (-pair[0], pair[1].link.url))
+        for _, candidate in scored[:per_role]:
+            admitted.setdefault(candidate.link.url, candidate)
+    return list(admitted.values())
 
 
 class LangChainCandidateSelector:

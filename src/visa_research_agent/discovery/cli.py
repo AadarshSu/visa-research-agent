@@ -787,9 +787,10 @@ def print_pool_audit(audits: list[PoolAudit], stream: TextIO) -> None:
     """How many of the pages a curator named the selector is never shown.
 
     **The one number in this command that grades the gate rather than the selector.** Every arm
-    replays what a run chose *out of the pool*, so a page the anchor scorer excluded is invisible to
-    all of them at once and reads as though no selector could have found it. A non-zero `outside`
-    is a confirmed answer inside the discarded 94%, which is what TODO item 31 is waiting for.
+    replays what a run chose *out of the pool*, so a page the gate excluded is invisible to all of
+    them at once and reads as though no selector could have found it. The pool here is the one the
+    resolver shows: the link test plus what stored text puts back (entry 158). A non-zero `outside`
+    is an answer the selector cannot be shown even so.
     """
 
     outside = sum(len(audit.outside) for audit in audits)
@@ -823,8 +824,8 @@ def print_pool_audit(audits: list[PoolAudit], stream: TextIO) -> None:
     elif not outside:
         print(
             f"\n  {len(whole)} row(s) were curated from the whole corpus and still name no page\n"
-            "  outside the pool. That is a real answer and it is the one item 31 expects most\n"
-            "  often: the discarded set is chaff. It is bounded by what the text index holds.",
+            "  outside the pool. That is a real answer: the gate, with what stored text puts\n"
+            "  back, hides none of their answers. It is bounded by what the text index holds.",
             file=stream,
         )
 
@@ -865,6 +866,9 @@ def contentions_for(oracle: SelectionOracle, stream: TextIO) -> dict[str, Conten
     countries = get_country_registry()
     corpora = FileCorpusStore(settings.corpus_directory)
     lexicon = get_lexicon()
+    # The same admission the resolver applies, so the audit grades the gate the product has rather
+    # than the link-only one it replaced (entry 158).
+    page_text = PageTextStore(settings.page_text_directory)
     built: dict[str, Contention] = {}
     for row in oracle.corridors:
         slug, nationality, residence, purpose = row.corridor.split("/")
@@ -890,6 +894,7 @@ def contentions_for(oracle: SelectionOracle, stream: TextIO) -> dict[str, Conten
             countries=countries,
             lexicon=lexicon,
             destination_code=country.code,
+            page_text=page_text,
         )
     return built
 
@@ -1490,6 +1495,7 @@ def run_contention(args: argparse.Namespace, stream: TextIO) -> int:
         lexicon=get_lexicon(),
         destination_code=destination.code,
         indexed=frozenset(held),
+        page_text=text,
     )
     if args.outside_pool:
         nationality, _ = resolve_corridor_countries(corridor, countries)

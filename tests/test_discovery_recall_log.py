@@ -12,6 +12,7 @@ from pathlib import Path
 import httpx
 import pytest
 from discovery_site import (
+    AUTHORITY,
     DETAIL_INDIA,
     INDEX,
     MISSION_INDEX,
@@ -405,6 +406,70 @@ async def test_a_selection_that_chose_is_recorded_as_the_model(tmp_path: Path) -
 
     assert selector.calls == 1
     assert log.records[-1].selector == "model"
+
+
+class OfferRecordingSelector:
+    """Names the first candidate offered, and keeps the addresses of every page it was shown."""
+
+    def __init__(self) -> None:
+        self.offered: list[set[str]] = []
+
+    async def select(self, system_prompt: str, packet: str) -> Selection:
+        entries = json.loads(packet)["candidates"]
+        self.offered.append({entry["url"] for entry in entries})
+        return Selection(source_ids=[entries[0]["source_id"]])
+
+
+ZERO_LABEL_CHECKLIST = f"https://{AUTHORITY}/notice/a1.html"
+ZERO_LABEL_NOTICE = f"https://{AUTHORITY}/notice/a2.html"
+
+
+async def test_a_page_its_link_scores_zero_for_is_shown_to_the_selector_on_its_stored_text(
+    tmp_path: Path,
+) -> None:
+    """TODO item 31's defect and its fix, through a whole corridor (entries 123, 127, 158).
+
+    Neither address says anything a link scorer can use, so both score zero for every role, and the
+    pool used to exclude both however good the page. The first one's stored text is a checklist;
+    the second's is office hours. Only the first is shown — admission reads what a page says, it
+    does not open the gate to everything — and the recall log says why a zero-scoring page was,
+    because until now a `best_score` of 0.0 meant the selector never saw it.
+    """
+
+    log = RecordingLog()
+    resolver = build_resolver(
+        tmp_path, [INDEX, MISSION_INDEX, ZERO_LABEL_CHECKLIST, ZERO_LABEL_NOTICE], log
+    )
+    selector = OfferRecordingSelector()
+    resolver.selector = selector
+    store = text_store(tmp_path, [INDEX, MISSION_INDEX, DETAIL_INDIA])
+    store.write(
+        "JP",
+        [
+            StoredPage(
+                url=ZERO_LABEL_CHECKLIST,
+                fetched_at=RESOLVED_AT,
+                body="Checklist of documents required from every applicant: a passport, a bank "
+                "statement, proof of accommodation and a return ticket. " * 5,
+            ),
+            StoredPage(
+                url=ZERO_LABEL_NOTICE,
+                fetched_at=RESOLVED_AT,
+                body="The office is open from nine until five on weekdays. " * 10,
+            ),
+        ],
+    )
+    resolver.page_text = store
+
+    resolved = await resolver.resolve(indexed_destination(), corridor())
+
+    assert ZERO_LABEL_CHECKLIST in selector.offered[0]
+    assert ZERO_LABEL_NOTICE not in selector.offered[0]
+    rows = {row.url: row for row in log.records[-1].candidates}
+    assert rows[ZERO_LABEL_CHECKLIST].best_score == 0.0
+    assert rows[ZERO_LABEL_CHECKLIST].admitted_on_text
+    assert not rows[ZERO_LABEL_NOTICE].admitted_on_text
+    assert any("on their stored text" in note for note in resolved.notes)
 
 
 # --- Where a corridor's seconds went (DECISIONS entry 142) -----------------------------------

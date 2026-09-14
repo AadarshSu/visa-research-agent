@@ -49,6 +49,13 @@ class ConsideredCandidate(StrictModel):
     fetched: bool = False
     """Shortlisted *and* readable. A shortlisted page that could not be read is the third answer to
     "why was this page not used", and it is invisible unless the two are recorded apart."""
+    admitted_on_text: bool = False
+    """Shown to the model selector on the strength of its stored text, the link to it having scored
+    nothing for any role (entry 158).
+
+    Until then a `best_score` of 0.0 meant the selector never saw the page; on a row with this set
+    it did. False on every log written before the field existed, which is true of them — nothing was
+    admitted that way."""
 
 
 class ModelCall(StrictModel):
@@ -199,6 +206,7 @@ def considered(
     *,
     shortlisted: set[str],
     fetched: set[str],
+    admitted_on_text: set[str] | frozenset[str] = frozenset(),
 ) -> list[ConsideredCandidate]:
     """Flatten the candidate set, best-scoring first, which is the order it was cut in."""
 
@@ -214,6 +222,7 @@ def considered(
             scores={role: score for role, score in candidate.link_scores.scores.items() if score},
             shortlisted=url in shortlisted,
             fetched=url in fetched,
+            admitted_on_text=url in admitted_on_text,
         )
         for url, candidate in candidates.items()
     ]
