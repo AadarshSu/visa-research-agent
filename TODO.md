@@ -269,6 +269,7 @@ one-paragraph defects rather than items.
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
+|  | 55. Take the traveller from the hosting platform's identity, through one adapter | `soon` |
 | **Later** | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
@@ -1051,7 +1052,8 @@ makes **every** request cold. That is item 20, which this item should be planned
 4. **Keep `render_mode: never`** unless the host can carry Chromium (~150MB plus system libraries).
    Vietnam will refuse without it, which is correct rather than broken.
 5. **Put a key or a rate limit on `POST /visa-plans`.** It is unauthenticated and a cold corridor spends
-   real money — search plus two model calls — so a public URL is a public wallet.
+   real money — search plus two model calls — so a public URL is a public wallet. The hosting
+   platform's login is the likely answer; plan this step with item 55.
 
 **Do not** deploy with `source_mode: fixtures`: it only knows Singapore, and would look like a working
 product that answers exactly one corridor.
@@ -1094,6 +1096,72 @@ off-domain redirect is caught and the country flagged.
 
 **Careful:** `content_hash` is already computed over the *cleaned* text, so drift detection is less noisy
 than item 14 assumes. Do not add a second hash over raw bytes; it would fire on every nav timestamp.
+
+### 55. Take the traveller from the hosting platform's identity, through one adapter — `soon`
+
+**Why — the owner, 2026-09-15.** The project will probably be hosted on a platform that provides
+login, and with it the platform's own schema for a person's identity: passport, residence and so on.
+Today the traveller is typed into a form on every request. Behind a login it should come from the
+account, and that schema is the platform's to define, not ours. The aim is that integrating it means
+**one new module mapping their schema onto ours**, not edits spread across the API, extraction and
+the page.
+
+**How a traveller is wired today, checked against the code 2026-09-15.** Most of the seam already
+exists, which is why this is sized small:
+- **The edge is `TravellerRequest`** (`api/schemas.py`). It turns whatever a person wrote into ISO
+  codes and refuses a country with no reference data (entry 20), then `to_profile()` builds the
+  domain model.
+- **`TravellerProfile`** (`domain/models.py`) is what the rest of the program depends on: passport
+  nationality, passport type, country of residence, purpose, and three optional residence details.
+  It is imported by `api/routes.py` and by `research/` — `service.py`, `interfaces.py`,
+  `openai_extraction.py`, `fixtures.py`.
+- **Discovery never sees the profile.** `corridor_for` (`api/routes.py`) reduces it to a `Corridor`
+  of destination, passport, country applied from and purpose. That is all search, the corpus,
+  selection and adjudication read, and corridor store keys hold codes only.
+- **Three places assume the one input path:** `create_visa_plan` reads `request.traveller` directly,
+  the page's form pre-selects from `DEFAULT_TRAVELLER_PROFILE` (`api/routes.py:49`), and `app.js`
+  posts three form fields.
+
+**Do:**
+1. **Make where the profile comes from an injected dependency.** A small protocol with one method
+   returning this request's `TravellerProfile`, whose first implementation is today's request body.
+   `create_visa_plan` asks the dependency instead of reading `request.traveller`. `Depends` is
+   already how the plan service and automatic destinations reach the route, so this follows the
+   pattern in `api/dependencies.py`.
+2. **Move `normalise_country` out of `api/schemas.py`** to where both adapters can use it, so an
+   identity from the platform passes the same "no reference data, refused" check a typed one does.
+3. **When the platform is chosen, write its adapter as one module**, platform identity to
+   `TravellerProfile`, tested on fixture identities with no network. Nothing past the edge should
+   change.
+
+**Do not build the platform adapter before its schema is known.** A seam designed against a guessed
+schema lands in the wrong place. Steps 1 and 2 can go ahead now if they stay small; step 3 waits.
+
+**Five things an adapter must not lose, each easy to lose by mapping fields one to one:**
+1. **Only the fields that select guidance cross into the program.** A platform identity will carry
+   a name, a date of birth, a passport number, an address. `build_research_packet`
+   (`research/openai_extraction.py:108`) sends `traveller_profile.model_dump()` to OpenAI **whole**,
+   so any field added to `TravellerProfile` goes to a third party on every plan. The adapter drops
+   what the plan does not use; `TravellerProfile` is not widened to hold it. Keep
+   `StrictModel`'s `extra="forbid"`, which stops a stray field at construction.
+2. **A passport type the program cannot research is refused, never coerced.** `to_profile()`
+   hard-codes `passport_type="ordinary"`, which is safe only because the form has no type field. A
+   platform recording a diplomatic or official passport must be refused at the adapter, as
+   `test_a_diplomatic_passport_cannot_be_requested` refuses it at the schema, or it is answered with
+   the ordinary-passport rules (entry 20).
+3. **A traveller with more than one passport chooses which; the adapter never picks.** Dual
+   nationality is one of the two questions entry 59 found a corridor does not carry, and a silent
+   pick changes the answer. Residence is the same: an address on file is a default to confirm, not
+   proof of the country applied from.
+4. **A logged-in traveller with no usable identity is asked, never given the default.**
+   `create_visa_plan` falls back to `DEFAULT_TRAVELLER_PROFILE`, an Indian passport resident in
+   Edinburgh, when no traveller is described. That suits the anonymous form. Behind a login it would
+   answer someone else's corridor for them without saying so.
+5. **After the adapter a country is an ISO alpha-2 code**, whether the platform stores alpha-3, a
+   name or its own enum. It is normalised once, at the edge.
+
+**Plan it with item 7.** A login is also the likely answer to item 7's fifth step: `POST
+/visa-plans` is unauthenticated and a cold corridor spends real money.
 
 ---
 
