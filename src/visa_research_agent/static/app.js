@@ -194,8 +194,10 @@ function delegatesFor(plan, topic) {
 function delegateCallout(service) {
   const gives = DELEGATE_TOPICS[service.topic] || "the answer for your own trip";
   const callout = element("div", "decision-tool decision-tool--delegated");
-  callout.append(element("p", "decision-tool-title", `Published by ${service.provider}, not by the government`));
-  const body = element("p", "", `The authority does not publish ${gives} on its own website. Its own page at `);
+  callout.append(element("p", "decision-tool-title", `Published by ${service.provider}, a company rather than a government site`));
+  // What was seen is a government page linking to the company for this topic. Whether the authority
+  // also publishes it somewhere of its own is not something anyone here established (TODO item 9).
+  const body = element("p", "", `For ${gives}, the authority's own page at `);
   body.append(externalLink(service.appointed_by, service.appointed_by));
   body.append(document.createTextNode(" sends you to "));
   body.append(externalLink(service.url, service.url));
@@ -351,13 +353,15 @@ function renderRequirements(plan, ctx) {
     }
     const viaTool = toolsFor(plan, "document_checklist").length > 0;
     const viaDelegate = delegatesFor(plan, "document_checklist").length > 0;
-    let why = "No official page lists the documents for this application.";
+    // Said as what we found, never as what the authority publishes: the same empty list arises when a
+    // checklist exists and could not be found or read, and nobody can show that one does not exist.
+    let why = "We did not find an official page listing the documents for this application among the pages we could read.";
     if (viaTool && viaDelegate) {
-      why += " The authority publishes them through its own questionnaire and through a company it contracts with.";
+      why += " The authority sets them out through its own questionnaire, and sends applicants to a company it contracts with.";
     } else if (viaTool) {
-      why += " The authority publishes them through its own questionnaire instead.";
+      why += " The authority sets them out through its own questionnaire.";
     } else if (viaDelegate) {
-      why += " The authority does not publish them itself \u2014 it sends applicants to a company it contracts with.";
+      why += " The authority sends applicants to a company it contracts with for them.";
     }
     container.append(element("p", "lead", why));
     appendTools(container, plan, "document_checklist");

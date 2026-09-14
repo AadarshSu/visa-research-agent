@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [153](#153-nobody-can-show-a-checklist-does-not-exist-so-a-plan-says-what-was-found--and-the-per-country-declaration-is-withdrawn) | **A missing checklist is said as what was found, never that none exists** — the prompt, the panel and the delegate box all asserted absence; the per-country declaration is withdrawn |
 | [152](#152-a-blocked-authority-plan-reads-as-we-could-not-check--and-a-stored-corridor-withheld-the-embassy-a-fresh-run-names) | **Read as a traveller, a blocked-decision plan says "we could not check"** — but it repeats one sentence per refused page, and a 16-day-old stored corridor withheld the London embassy a fresh run names |
 | [151](#151-the-united-states-corridor-did-not-flip-in-three-runs-entry-118s-flip-was-never-the-judgement-and-a-refusal-is-retried-by-the-next-request) | **The US corridor did not flip in 3 runs; entry 118's flip was a run that filled nothing, not the judgement** — and because a refusal is never stored, the next request retries it until one resolves and that answer is kept three weeks |
 | [150](#150-a-null-visa-decision-is-never-verified-whatever-left-it-null--and-the-plan-enforces-it) | **A null visa decision is never `verified`** — extraction downgraded only a block or a questionnaire, so a model's own null was graded verified; now held in extraction and in `VisaPlan` |
@@ -201,6 +202,76 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 153. Nobody can show a checklist does not exist, so a plan says what was found — and the per-country declaration is withdrawn
+
+**2026-09-14 · TODO item 9, first part implemented; the owner's framing**
+
+Item 9 asked to tell *"no checklist exists"* apart from *"we failed to find it"*, by a reviewed
+per-country declaration — the design entry 14 held in reserve. The owner started it with the
+constraint that decides it: **it may be very hard to conclusively say that no checklist exists.**
+
+### Measured first, from the recall logs, no network and no model
+
+Of 211 logs, 142 corridors resolved and **60 have no checklist**. Sorted by what the run itself shows,
+using link scores for `document_checklist` as the measure of a *likely* page:
+
+| what the run shows | corridors |
+| --- | --- |
+| read at least one likely page, and none was assigned the role | **48** |
+| met likely pages and could not read them — challenged, unreachable, unusable | **7** (Cyprus ×2, Egypt ×3, `germany/NG/NG`, `south-korea/BD/SA`) |
+| held likely pages and read none | **2** (`china/GB/GB`, `singapore/PH/PH`) |
+| no likely page at all | **3** (`germany/IN/IN`, Luxembourg ×2) |
+
+**The 48 is not one thing and the log cannot split it.** It holds visa-free corridors where no checklist
+arises — 18 of the 48 are `US/US` — and corridors where a real checklist was read and judged the wrong
+post, purpose or traveller, and `japan/IN/GB`'s London checklist designated in 1 run of 3 (entry 149).
+`RecallRecord` records neither the plan's visa decision nor the adjudicator's reasons. What the table
+does establish is that **"we could not read it" is observable and small — 7 of 60 — and "none exists"
+is observable in no row at all.**
+
+### What the product was saying, and it was the unprovable one
+
+- **Rule 8a told the model** that an empty `application_document_source_ids` means *"this authority
+  publishes no document checklist"*, and to record that none *"was published"*. Real plans followed it:
+  *"No official visa-application document checklist was published in the readable research packet."*
+- **The documents panel said** *"No official page lists the documents for this application."*
+- **The delegate box said** *"The authority does not publish {the documents} on its own website."* What
+  was seen is a government page linking to a company for that topic, which is all it may say.
+
+### Decided
+
+1. **A missing checklist is stated as what was found, never as what an authority publishes.** Rule 8a
+   now says the empty list describes what this run found and read, forbids saying or implying none
+   exists, and asks for the question as *"no official document checklist for this application was found
+   among the pages that could be read"*. The panel says *"We did not find an official page listing the
+   documents for this application among the pages we could read"*, and the delegate box says the
+   authority's page sends the traveller to the company. A test pins the prompt.
+2. **The per-country declaration is withdrawn, not deferred.** A reviewer can no more prove a checklist
+   does not exist than the pipeline can, and a declaration would put that unprovable claim in committed
+   data and serve it to every traveller of a country for as long as the file says so. What a page
+   *states* about where the documents live — Vietnam's upload fields inside the form (entry 13), a
+   questionnaire (entry 60), a contractor (entry 89) — is already carried, and is the strong form of the
+   same information.
+
+### What is left of item 9
+
+**Say which observed case applies, from the run rather than the model.** Seven corridors met likely
+checklist pages they could not read, and a plan could name those pages with links exactly as it names a
+refused decision page; the others could say whether likely pages were read and none fitted, or none
+was found. That needs the resolver to carry checklist-candidate outcomes to the plan, the way
+`decision_blocking_urls` carries the decision's.
+
+**Verified live on one corridor.** A fresh `united-states/IN/GB` plan, resolved the same day before
+and after the prompt change, went from *"No official visa-application document checklist was
+published in the readable research packet"* to *"No official document checklist for this application
+was found among the pages that could be read"*, followed by where to confirm it. One run, so it shows
+the rule is followed, not how reliably. The panel and delegate sentences were read in the running
+interface from a constructed plan, with no console errors. A delegated checklist with no questionnaire gets **no documents panel**
+at all — `renderRequirements` returns early unless a tool exists — though rule 8d still names the
+company under unresolved questions. Recorded, not fixed.
 
 ---
 

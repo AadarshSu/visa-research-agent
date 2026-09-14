@@ -248,7 +248,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
+| **Now** | 9. Say why a checklist is missing without claiming none exists | `next` |
 |  | 54. Say which refused page mattered, once per authority | `next` |
 |  | 21. Fill the three provenance gaps | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
@@ -292,7 +292,23 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 9. Tell "no checklist exists" apart from "we failed to find it" — `next`, **promoted 2026-09-02**, **start here**
+### 9. Say why a checklist is missing without claiming none exists — `next`, **re-scoped 2026-09-14 (entry 153)**, **start here**
+
+> **Re-scoped by the owner's constraint, 2026-09-14: it may be very hard to conclusively say that no
+> checklist exists.** So this item no longer tries to tell *none exists* from *we failed to find it*,
+> and the reviewed per-country declaration below is **withdrawn** — a reviewer cannot prove absence
+> either, and committed data would serve that claim to every traveller.
+>
+> **Part 1 is done (entry 153).** The product *was* asserting absence: rule 8a told the model the
+> authority "publishes no document checklist", the panel said "No official page lists the documents",
+> and the delegate box said the authority "does not publish" them. All three now say what was found
+> among the pages that could be read.
+>
+> **Part 2 is what is left: say which observed case applies, from the run.** Of 60 resolved corridors
+> with no checklist, **7** met likely checklist pages they could not read, **48** read likely pages and
+> assigned none (visa-free corridors included, which the log cannot separate), **2** read none and
+> **3** had none. A plan could name the unreadable pages with links, as it names a refused decision
+> page, which needs checklist-candidate outcomes carried from the resolver to the plan.
 
 > **Carried over from item 17 when it closed on 2026-09-14**, because it is this item's question:
 >

@@ -805,6 +805,9 @@ cause, and only running the thing showed it.
 | a refusal is not retried, only re-searching on refusal would do that | refusals are not stored, so the next request retries them (entry 151) |
 | a stored corridor only risks serving an older page | the US plan came from one 16 days old and omitted the London embassy (entry 152) |
 | a corridor's notes tell the traveller what was not requested | notes never reach a plan or the interface (entry 152) |
+| a missing checklist means none exists or we failed to find it | nobody can show none exists — say what was found among pages read (entry 153) |
+| a plan with no checklist only hedges about what it could not find | the prompt told the model the authority "publishes no document checklist" (entry 153) |
+| a reviewed per-country declaration can settle that none exists | a reviewer can no more prove absence than the pipeline — withdrawn (entry 153) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

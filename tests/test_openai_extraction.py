@@ -217,9 +217,10 @@ async def test_openai_extractor_stops_before_call_when_input_is_too_large() -> N
 def checklist_less(destination: DestinationConfig) -> DestinationConfig:
     """The same destination with no page designated as its document checklist.
 
-    What discovery produces when a country publishes no checklist, or publishes one behind a block
-    we are not permitted to read. `required_source_ids` still names the decision source, so the plan
-    is not resting on nothing.
+    What discovery produces whenever no page could be confirmed as the checklist — a country that
+    publishes none, one we failed to find, or one behind a block we are not permitted to read — and
+    nothing in the pipeline can tell those apart. `required_source_ids` still names the decision
+    source, so the plan is not resting on nothing.
     """
 
     payload = destination.model_dump(mode="json")
@@ -539,6 +540,22 @@ async def test_the_model_is_told_where_the_question_is_settled_never_what_it_set
     named = packet["destination"]["official_tools"]
     assert named[0]["url"] == "https://www.gov.uk/check-uk-visa"
     assert "untrusted_content" not in named[0]
+
+
+def test_a_missing_checklist_is_never_turned_into_a_claim_that_none_exists() -> None:
+    """Item 9. An empty checklist source says what a run found and read, never what an authority
+    publishes: the same plan arises when a checklist exists and could not be found or read.
+
+    Rule 8a used to tell the model the authority "publishes no document checklist" and to write that
+    none "was published", which is a claim about the world nothing in the pipeline can establish.
+    """
+
+    prompt = load_extraction_prompt()
+
+    assert "publishes no document checklist" not in prompt
+    assert "saying no official checklist was published" not in prompt
+    assert "Never say or imply that the authority publishes no" in prompt
+    assert "found among the pages that could be read" in prompt
 
 
 def test_the_extraction_prompt_separates_a_block_from_a_questionnaire() -> None:

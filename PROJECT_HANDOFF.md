@@ -177,7 +177,9 @@ every traveller they were not written for, and now researches them like every ot
 graded `verified`. Item 17 closed the same day: its counting is done (entry 151), and the
 storing decision it turned up is deferred to item 7, before deploying. Item 8 was read the same day
 (entry 152): a blocked-decision plan reads as *we could not check*, and it found item 54 and a stored
-corridor withholding the London embassy. **Start at item 9.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+corridor withholding the London embassy. Item 9 was re-scoped the same day (entry 153): a missing
+checklist is now said as what was found rather than that none exists. **Start at item 9's second
+part** — naming which observed case applies. **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -526,7 +528,11 @@ re-add the amendment history here.
 8. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."** Both
    produce an empty checklist, and since a missing one no longer refuses the corridor, a find-or-read
    failure now yields a plan with a visibly empty list. The plan says so — `VisaPlan` enforces it — but
-   not *which* case it is. Now attached to Germany and the United States, 0/8 checklists each, rather
+   not *which* case it is. **Re-scoped 2026-09-14 (entry 153):** nobody can show a checklist does not
+   exist, so the aim is no longer to tell the two apart. The product had been asserting the first — the
+   prompt, the panel and the delegate box all said none was published — and now says what was found
+   among the pages it could read; the per-country declaration is withdrawn. What is left is saying which
+   observed case applies (7 of 60 resolved corridors met likely checklist pages they could not read). Now attached to Germany and the United States, 0/8 checklists each, rather
    than to a hypothetical. **And a third answer is on the table for Germany**: `visa-discover audit`
    records seven pages on `www.auswaertiges-amt.de` fetched and holding too little readable text to
    trust, which is neither of the two cases this problem names. Entry 14, entry 63; TODO item 9.
