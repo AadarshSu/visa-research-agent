@@ -99,6 +99,18 @@ function hasIncompleteEvidence(plan) {
   );
 }
 
+// A passage copied from the page, shown only because the application found it in the text it
+// retrieved (TODO item 21). It answers "which sentence", where the link card answers "which page".
+function appendQuotes(container, quotes, ctx) {
+  (quotes || []).forEach((quote) => {
+    const source = ctx.sourceMap.get(quote.source_id);
+    const figure = element("figure", "source-quote");
+    figure.append(element("blockquote", "", `“${quote.text}”`));
+    if (source) figure.append(element("figcaption", "", `— ${source.title}`));
+    container.append(figure);
+  });
+}
+
 function appendLinks(item, failures) {
   failures.forEach((failure, index) => {
     if (index) item.append(document.createTextNode(", "));
@@ -309,6 +321,7 @@ function renderDecision(plan, ctx) {
     ? plan.explanation
     : `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`;
   container.append(element("p", "lead", lead));
+  appendQuotes(container, plan.decision_quotes, ctx);
   appendTools(container, plan, "visa_decision");
   appendDelegates(container, plan, "visa_decision");
   appendIfFilled(container, renderEvidence(plan.decision_source_ids, ctx, "decision"));
@@ -429,6 +442,7 @@ function renderRequirements(plan, ctx) {
       element("p", "", requirement.description),
       element("p", "reason", `Source context: ${requirement.reason_it_applies}`),
     );
+    appendQuotes(card, requirement.supporting_quotes, ctx);
     list.append(card);
   });
   container.append(list);

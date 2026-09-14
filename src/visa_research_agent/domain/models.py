@@ -654,6 +654,20 @@ class RetrievalReport(StrictModel):
         return self
 
 
+class SupportingQuote(StrictModel):
+    """A passage copied from a source a claim cites, kept only where that source's text holds it.
+
+    The model writes it and the application checks it against the text this run retrieved,
+    dropping any that does not match (TODO item 21, `research/quotes.py`). An unverified quote
+    attributed to a government page is worse than none, so nothing here is shown on the model's
+    word. No length bounds on the fields: a bad quote is discarded by the check, never allowed to
+    refuse the whole plan through a validation error.
+    """
+
+    source_id: str
+    text: str
+
+
 class VisaRequirement(StrictModel):
     """One evidence-backed document requirement."""
 
@@ -661,6 +675,9 @@ class VisaRequirement(StrictModel):
     description: str = Field(min_length=1)
     reason_it_applies: str = Field(min_length=1)
     source_ids: list[str] = Field(min_length=1)
+    supporting_quotes: list[SupportingQuote]
+    """Verified passages from `source_ids`. Required rather than defaulted because this model is
+    part of the strict structured-output schema, which needs every field present."""
 
 
 class ApplicationLocation(StrictModel):
@@ -769,6 +786,7 @@ class VisaPlanDraft(StrictModel):
     visa_type: str | None
     explanation: str = Field(min_length=1)
     decision_source_ids: list[str] = Field(min_length=1)
+    decision_quotes: list[SupportingQuote]
     where_to_apply: ApplicationLocationDraft | None
     requirements: list[VisaRequirement]
     application_steps: list[ApplicationStep] = Field(max_length=8)
@@ -788,6 +806,9 @@ class VisaPlan(StrictModel):
     visa_type: str | None
     explanation: str = Field(min_length=1)
     decision_source_ids: list[str] = Field(min_length=1)
+    decision_quotes: list[SupportingQuote] = Field(default_factory=list)
+    """Verified passages behind the visa decision, from `decision_source_ids`. See
+    `SupportingQuote`: it answers *which sentence*, where a citation answers only *which page*."""
     where_to_apply: ApplicationLocation | None
     requirements: list[VisaRequirement]
     application_document_source_ids: list[str]
@@ -957,4 +978,14 @@ class VisaPlan(StrictModel):
         if unknown_ids:
             unknown = ", ".join(sorted(unknown_ids))
             raise ValueError(f"visa plan cites unknown source IDs: {unknown}")
+
+        # A quote is evidence for one claim, so it must come from a page that claim cites: a true
+        # sentence from some other page would still be a misattribution.
+        for quote in self.decision_quotes:
+            if quote.source_id not in self.decision_source_ids:
+                raise ValueError("a decision quote must come from a source the decision cites")
+        for requirement in self.requirements:
+            for quote in requirement.supporting_quotes:
+                if quote.source_id not in requirement.source_ids:
+                    raise ValueError("a requirement quote must come from a source it cites")
         return self

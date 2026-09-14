@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [156](#156-a-claim-carries-the-sentence-behind-it-kept-only-where-the-retrieved-page-holds-it) | **The decision and every requirement carry a quote, kept only where the retrieved page holds it** — 45 of 45 kept live; a match proves the words exist, not that they fit the claim |
 | [155](#155-refused-pages-are-named-once-per-authority-with-the-pages-that-may-hold-the-decision-first) | **Refused pages grouped per authority, the judged decision pages first, every link kept** — and which pages lead varies between runs, because the judgement does |
 | [154](#154-a-likely-checklist-page-the-run-could-not-open-is-named-the-way-a-refused-decision-page-is) | **A likely checklist page the run could not open is named with its link** — set by the application, never the model, re-checked against the approved domains, and only where no checklist was found |
 | [153](#153-nobody-can-show-a-checklist-does-not-exist-so-a-plan-says-what-was-found--and-the-per-country-declaration-is-withdrawn) | **A missing checklist is said as what was found, never that none exists** — the prompt, the panel and the delegate box all asserted absence; the per-country declaration is withdrawn |
@@ -204,6 +205,63 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 156. A claim carries the sentence behind it, kept only where the retrieved page holds it
+
+**2026-09-14 · TODO item 21, first part**
+
+A plan could say *which page* a claim came from and never *which sentence* (known problem 20).
+Correctness is checked by the owner outside this repository (entry 68), and the sentence is what
+makes that check fast. The item carried one warning, and it is the design: **a model-written quote
+must be checked against the retrieved text, because an unverified quote attributed to a government
+page is worse than none.**
+
+### Measured before building
+
+A throwaway probe took three corridors resolved earlier that day — `japan/PH/PH`, `singapore/NG/NG`,
+`singapore/IN/GB` — refetched their pages from the warm cache, and asked the model, in a separate
+call, for verbatim quotes backing each saved plan's decision and requirements. **35 offered, 35 passed
+the check, 29 of 29 claims covered**, at 3–6k input tokens a call. So a strict check was affordable
+rather than something to loosen until it passed.
+
+### Decided
+
+- **`SupportingQuote`** — a `source_id` and the copied `text` — on the visa decision
+  (`decision_quotes`) and on every document requirement (`supporting_quotes`). Required in the draft,
+  because strict structured output needs every field present; defaulted on the final plan's decision.
+- **`research/quotes.py`'s `QuoteChecker` keeps a quote only if** it cites a source its claim cites,
+  is 20 to 300 characters, and is found in that source's retrieved `content` — the same text the
+  model read — after normalising **only** whitespace, quotation marks, dashes, Unicode forms and case.
+  At most two per claim. **A quote that fails is dropped, never allowed to refuse the plan**: the
+  claim stands on its citation exactly as it did before quotes existed.
+- **`VisaPlan` refuses a quote from a page its claim does not cite**, structurally, since a true
+  sentence from another page is still a misattribution.
+- **The fixture path runs the same check**, the Singapore golden plan's quotes are copied verbatim
+  from its snapshots, and a test shows an invented quote — for a requirement and for the decision —
+  dropped while the real ones survive. Prompt rule 6a asks for the quotes; the interface shows each
+  under its claim with the source's title.
+
+### Verified live, through the real extraction
+
+Four corridors, the three above plus `japan/IN/GB`: **45 quotes written, 45 kept, 32 of 32 claims
+carrying at least one.**
+
+### What the check does not establish, said plainly
+
+**A verbatim match proves the words are on the page, not that they support the claim they are
+attached to.** Relevance is still the model's judgement. Singapore's second decision quote — *"holders
+of diplomatic, official and service passports do not need a visa for entry"* — is true and on the page,
+and is a caveat rather than the decision. The check stops invented and drifted quotes; it does not stop
+a real sentence being attached to the wrong claim, and nothing here measures how often that happens.
+
+### Not done
+
+Application steps and `where_to_apply` carry no quote. `SourceReference.supporting_excerpt` is left as
+the fixture-only field it was, superseded by the per-claim quotes. What the quotes add to a corridor's
+output tokens was not measured inside the combined extraction call. Parts 2 and 3 of item 21 — the
+content hash and the discovery reasoning reaching the plan — are untouched.
 
 ---
 

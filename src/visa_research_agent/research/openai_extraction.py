@@ -23,6 +23,7 @@ from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LLMExtractionError, VisaResearchError
 from visa_research_agent.research.interfaces import StructuredPlanGenerator
 from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
+from visa_research_agent.research.quotes import QuoteChecker
 
 
 def load_extraction_prompt() -> str:
@@ -268,8 +269,17 @@ class OpenAIVisaPlanExtractor:
             ]
         )
 
+        # Every quote is checked against the text this run retrieved, and one the page does not hold
+        # never reaches the plan (item 21). Checked against `content`, which is what the model read.
+        quotes = QuoteChecker({item.source.source_id: item.content for item in fetched_sources})
         requirements = [
-            requirement
+            requirement.model_copy(
+                update={
+                    "supporting_quotes": quotes.keep(
+                        requirement.supporting_quotes, requirement.source_ids
+                    )
+                }
+            )
             for requirement in draft.requirements
             if application_source_ids.intersection(requirement.source_ids)
         ]
@@ -298,6 +308,7 @@ class OpenAIVisaPlanExtractor:
                 visa_type=draft.visa_type,
                 explanation=draft.explanation,
                 decision_source_ids=draft.decision_source_ids,
+                decision_quotes=quotes.keep(draft.decision_quotes, draft.decision_source_ids),
                 where_to_apply=where_to_apply,
                 requirements=requirements,
                 # Emptied for an entry plan, because a designated checklist source with nothing

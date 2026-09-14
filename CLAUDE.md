@@ -810,6 +810,8 @@ cause, and only running the thing showed it.
 | a reviewed per-country declaration can settle that none exists | a reviewer can no more prove absence than the pipeline — withdrawn (entry 153) |
 | a recall log's `fetched` marks every page a run tried to read | only pages it read; a refused page is not `fetched`, so count failures apart (entry 153) |
 | the refused-page judgement picks the same pages each run | 08-29 marked `visitor.html`; 09-14 marked the India page and not it (entry 155) |
+| a model's copied quotes need fuzzy matching to verify | 80 of 80 matched after normalising only spacing, quote marks, dashes and case (entry 156) |
+| a quote found on the cited page supports its claim | it proves the words exist, not that they fit — one decision quote was a caveat (entry 156) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

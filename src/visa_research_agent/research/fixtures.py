@@ -22,6 +22,7 @@ from visa_research_agent.domain.models import (
 )
 from visa_research_agent.research.errors import FixtureDataError
 from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
+from visa_research_agent.research.quotes import QuoteChecker
 
 
 class FixtureSourceEntry(StrictModel):
@@ -148,6 +149,9 @@ class FixtureVisaPlanExtractor:
 
         references = [fetched_source.source for fetched_source in fetched_sources]
         last_checked = max(reference.retrieved_at for reference in references)
+        # The same check as the live path, so a fixture quote that drifts from its snapshot is
+        # dropped rather than shown, and the offline plan cannot demonstrate a guarantee it skips.
+        quotes = QuoteChecker({item.source.source_id: item.content for item in fetched_sources})
         where_to_apply = (
             ApplicationLocation.model_validate(template.where_to_apply.model_dump())
             if template.where_to_apply is not None
@@ -159,8 +163,18 @@ class FixtureVisaPlanExtractor:
             visa_type=template.visa_type,
             explanation=template.explanation,
             decision_source_ids=template.decision_source_ids,
+            decision_quotes=quotes.keep(template.decision_quotes, template.decision_source_ids),
             where_to_apply=where_to_apply,
-            requirements=template.requirements,
+            requirements=[
+                requirement.model_copy(
+                    update={
+                        "supporting_quotes": quotes.keep(
+                            requirement.supporting_quotes, requirement.source_ids
+                        )
+                    }
+                )
+                for requirement in template.requirements
+            ],
             application_document_source_ids=destination.application_document_source_ids,
             application_steps=template.application_steps,
             sources=references,

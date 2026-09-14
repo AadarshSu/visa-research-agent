@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 730 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 739 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -181,7 +181,9 @@ corridor withholding the London embassy. Item 9 was re-scoped the same day (entr
 checklist is now said as what was found rather than that none exists, and its second part closed it
 (entry 154): a likely checklist page the run could not open is named with its link. Item 54 then
 grouped a plan's refused pages into one sentence per authority, the pages that may hold the decision
-first (entry 155). **Start at item 21.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+first (entry 155). Item 21's first part followed (entry 156): the visa decision and every document
+requirement now carry a quote checked word for word against the retrieved page. **Start at item
+21's remaining parts.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -651,11 +653,11 @@ re-add the amendment history here.
    minutes apart, and the original divergence was two days apart. Every run writes
    `var/recall/<corridor>.json` so it is diagnosable (entry 43). TODO item 17.
 
-20. **A live plan cites a URL with no supporting quote.** `SourceReference.supporting_excerpt` is
-   written only by `FixtureSourceFetcher`; on the live path it is always `None`. *"Why did you say an
-   Indian passport holder needs this visa?"* is answerable as *which page*, never *which sentence*.
-   **Careful when fixing:** a model-produced excerpt must be checked against the retrieved text, because
-   an unverified quote attributed to a government page is worse than no quote. TODO item 21.
+20. **Application steps and `where_to_apply` still cite a URL with no supporting quote.** Since
+   2026-09-14 (entry 156) the visa decision and every document requirement carry quotes the model
+   wrote and the application kept only where the retrieved text holds them; the route and the steps
+   do not. `SourceReference.supporting_excerpt` is still written only by `FixtureSourceFetcher` and is
+   superseded by the per-claim quotes. TODO item 21.
 
 21. **A plan cannot be tied to the text it was read from.** `content_hash` is on `FetchedSource`;
    `SourceReference` has no hash field, so nothing in a `VisaPlan` identifies the version of the page

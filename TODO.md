@@ -292,6 +292,12 @@ careful reading and were wrong.
 
 ### 21. Fill the three provenance gaps — `next`, **promoted 2026-09-14 for its first part**, **start here**
 
+> **Part 1 is done, 2026-09-14 (entry 156).** A plan now carries a supporting quote for the visa
+> decision and for every document requirement, written by the model and **kept only where the text
+> this run retrieved holds it** (`research/quotes.py`), then shown under the claim. Measured before
+> building: 35 of 35 quotes offered over three corridors passed the check. **Application steps and
+> `where_to_apply` carry no quote yet**, and parts 2 and 3 below are untouched.
+
 > **Its first part was promoted 2026-09-14 (entry 148), as correctness work.** Correctness is
 > verified by the owner outside this repository (entry 68), and a live plan cites a page with no
 > sentence — `supporting_excerpt` is still set only by `research/fixtures.py`. A quote checked

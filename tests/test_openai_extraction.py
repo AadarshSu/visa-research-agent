@@ -8,7 +8,12 @@ from pydantic import ValidationError
 
 from visa_research_agent.config.loader import load_destination_registry
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
-from visa_research_agent.domain.models import DestinationConfig, VisaPlan, VisaPlanDraft
+from visa_research_agent.domain.models import (
+    DestinationConfig,
+    SupportingQuote,
+    VisaPlan,
+    VisaPlanDraft,
+)
 from visa_research_agent.research.errors import (
     InsufficientEvidenceError,
     LLMExtractionError,
@@ -575,6 +580,67 @@ async def test_the_refused_page_that_may_hold_the_decision_is_marked_for_the_tra
     assert generator.research_packet is not None
     named = json.loads(generator.research_packet)["destination"]["unreadable_authorities"]
     assert [entry["may_hold_decision"] for entry in named] == [True, False]
+
+
+@pytest.mark.anyio
+async def test_a_quote_the_page_does_not_hold_never_reaches_the_plan() -> None:
+    """Item 21. The model writes quotes; only the ones found in the retrieved text are shown.
+
+    An invented or drifted quote attributed to a government page is worse than no quote, so it is
+    dropped and the claim stands on its citation alone, as it did before quotes existed.
+    """
+
+    golden = load_golden_draft()
+    first = golden.requirements[0]
+    invented = SupportingQuote(
+        source_id="sg_ica_india_visa_details",
+        text="Applicants must show six months of bank statements.",
+    )
+    wrong_decision = SupportingQuote(
+        source_id="sg_ica_india_visa_details",
+        text="Indian nationals may enter Singapore without a visa.",
+    )
+    draft = golden.model_copy(
+        update={
+            "decision_quotes": [wrong_decision, *golden.decision_quotes],
+            "requirements": [
+                first.model_copy(
+                    update={"supporting_quotes": [invented, *first.supporting_quotes]}
+                ),
+                *golden.requirements[1:],
+            ],
+        }
+    )
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(draft), maximum_input_characters=80_000
+    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    assert plan.decision_quotes == golden.decision_quotes
+    assert plan.requirements[0].supporting_quotes == first.supporting_quotes
+    # The golden plan's own quotes are real, so every one of them survives the same check.
+    assert all(requirement.supporting_quotes for requirement in plan.requirements)
+
+
+@pytest.mark.anyio
+async def test_a_plan_refuses_a_quote_from_a_page_its_claim_does_not_cite() -> None:
+    """A true sentence from another page is still a misattribution."""
+
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(load_golden_draft()), maximum_input_characters=80_000
+    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+    payload = plan.model_dump(mode="json")
+    payload["decision_quotes"] = [
+        {
+            "source_id": "sg_mfa_check_visa",
+            "text": "MFA identifies ICA as the authority for visa matters.",
+        }
+    ]
+
+    with pytest.raises(ValidationError, match="decision quote must come from a source"):
+        VisaPlan.model_validate(payload)
 
 
 def test_the_model_is_told_to_point_at_the_page_that_may_hold_the_decision() -> None:

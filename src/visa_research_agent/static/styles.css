@@ -466,6 +466,26 @@ button:disabled {
   font-size: 14px;
 }
 
+/* A passage copied from an official page and checked against it, set apart so it never reads as
+   this program's own wording. */
+.source-quote {
+  margin: 10px 0 4px;
+  padding: 6px 12px;
+  border-left: 3px solid var(--line);
+}
+
+.source-quote blockquote {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.source-quote figcaption {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
 /* One card for every outgoing link. Action and evidence share the same shape;
    only the role label and a subtle left accent tell them apart. */
 .link-cards {

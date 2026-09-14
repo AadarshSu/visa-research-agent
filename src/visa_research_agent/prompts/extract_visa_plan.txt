@@ -13,6 +13,12 @@ Follow these rules:
    says. Do not silently select a preferred version, and do not assert one is correct.
 6. Use only source_id values present in the research packet. Cite the visa decision, application
    location, every document requirement and every application step with supporting source IDs.
+6a. For the visa decision (decision_quotes) and for every document requirement (supporting_quotes),
+   copy one or two passages VERBATIM from the untrusted_content of a source that claim cites, each
+   20 to 300 characters and each directly supporting the claim. Copy character for character: no
+   paraphrase, no ellipses, no joining separate sentences. Every quote is checked against the page
+   text and any that does not match is discarded, so an empty list is better than an approximate
+   quote.
 7. Extract the visa-application documents supported for this traveller and route by sources listed
    in destination.application_document_source_ids. Do not target a fixed number of documents and do
    not classify them as mandatory, conditional or recommended. For each document, explain any
