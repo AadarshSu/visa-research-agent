@@ -222,13 +222,19 @@ not assumed.
   a refusal, but the absence must be carried rather than smoothed over: `VisaPlan` rejects any plan
   that lists document requirements without a document source behind them, and rejects one that
   stays silent about the gap. The model is never left to infer a checklist from a page that is not
-  one. See [DECISIONS.md](DECISIONS.md) entry 14.
+  one. See [DECISIONS.md](DECISIONS.md) entry 14. **And the plan never says none exists** — nobody
+  can show that — only that none was found among the pages that could be read; a likely checklist
+  page this run could not open is named with its link (entries 153 and 154).
 - Any failure or any stale source → plan status `partial`. The interface says so *above* the
   guidance in one line, and sets out the reasons and links at the end: a partial plan must not look
   complete, and a wall of caveats above the answer buries the answer. A section with nothing in it —
   a checklist with no source behind it — is not rendered at all, because the absence is already
   stated under unresolved questions, which such a plan is structurally required to carry.
-- Everything present and current → `verified`.
+- Everything present and current, and a visa decision a page stated → `verified`. A null decision is
+  `partial` whatever left it null, held in extraction and in `VisaPlan` itself (entry 150).
+- Each claim's supporting quotes are kept only where the retrieved text holds them, and each cited
+  source carries its page's content hash and why discovery chose it, attached when the plan is built
+  rather than in the shared retrieval cache (entries 156 and 157).
 
 ### The trust boundary at the model
 

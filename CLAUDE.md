@@ -16,7 +16,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose hundred and twenty rows are
+what has wasted the most time here — see the corrections table further down, whose rows — over two hundred and fifty now — are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it — the owner, 2026-09-07 (entry 147).**

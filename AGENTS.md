@@ -80,7 +80,7 @@ the CLI does not offer it.
   holds the answer is **`visa-discover coverage`**; whether the *corridor* then finds it is selection
   recall, below. A single number covering both would hide which half failed, which is the mistake
   `visa-discover audit` exists not to make.
-- **A visa-free plan is an entry plan** (entry 95 — decided, not yet built, TODO item 39). The
+- **A visa-free plan is an entry plan** (entry 95 — built and produced by a model, entries 96 and 98). The
   traveller still has duties; they are just not an application. Expect `application_steps` to hold
   entry steps, `where_to_apply` to be `None` and `requirements` to be empty — and expect it only
   where a source *states* `visa_required is False`.
@@ -89,7 +89,8 @@ the CLI does not offer it.
   Philippine row is 2 answered and 4 that do not arise, against the Indian row's 6 answered, because
   India is on the same list the Philippines is absent from. The oracle records it as
   `not_applicable` and refuses the claim unless a page answers `visa_decision`: **"we could not find
-  the checklist" must never become "there is no checklist".** The plan cannot say this yet — item 39.
+  the checklist" must never become "there is no checklist".** Since entry 153 the plan says a missing
+  checklist was not found among the pages that could be read, never that none exists.
 - **A role an official questionnaire settles is answered, and is counted apart** (entry 93). The
   distinction is *direct* answer — "Filipino citizens residing in the Philippines need a visa" —
   against *tool-mediated* — "France-Visas' Visa Wizard determines whether you need a visa; use it

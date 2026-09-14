@@ -29,7 +29,7 @@ and each kind of question has one home:
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has a hundred and twenty rows; three of them are *this file's* known
+corrections table in [CLAUDE.md](CLAUDE.md) has over two hundred and fifty rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 
@@ -168,24 +168,33 @@ found. No human approves anything per request. Seven destinations are also hand-
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
-**The queue was re-ordered on 2026-09-14 around the owner's rule for the hybrid (entry 148)**: the
-corpus holds what every traveller shares, live search fetches this traveller's specifics and stays
-the minority. Correctness comes first, then optimisation, then expansion. **Item 52 was done the
-same day (entry 149)**: the web app served Singapore and Japan from hand-written pages and refused
-every traveller they were not written for, and now researches them like every other country.
-**Item 53 was done that day too (entry 150)**: a plan whose visa decision is null can no longer be
-graded `verified`. Item 17 closed the same day: its counting is done (entry 151), and the
-storing decision it turned up is deferred to item 7, before deploying. Item 8 was read the same day
-(entry 152): a blocked-decision plan reads as *we could not check*, and it found item 54 and a stored
-corridor withholding the London embassy. Item 9 was re-scoped the same day (entry 153): a missing
-checklist is now said as what was found rather than that none exists, and its second part closed it
-(entry 154): a likely checklist page the run could not open is named with its link. Item 54 then
-grouped a plan's refused pages into one sentence per authority, the pages that may hold the decision
-first (entry 155). Item 21's first part followed (entry 156): the visa decision and every document
-requirement now carry a quote checked word for word against the retrieved page, and its last two parts
-closed it (entry 157): every cited source carries its page's content hash and why discovery chose
-it. **Start at item 31**, the first of the optimisation items. **Item 49 stopped where it is**; what follows about it is the state it was left in, not
-the next step.
+**Start at item 31**, the first optimisation item. Everything above it in the queue was closed on
+2026-09-14; the reasoning is in DECISIONS, and the one line on each is here so a cold session knows
+what changed under it.
+
+**The order and the rule it follows (entry 148).** Correctness first, then optimisation, then
+expansion. The corpus holds what every traveller shares; live search fetches this traveller's
+specifics and stays the minority. So item 49 stopped where it was, and items 35 and 47 moved to Later.
+
+**Closed that day, in the order they were done:**
+
+- **52** (entry 149) — the web app served Singapore and Japan from hand-written pages and refused
+  every traveller they were not written for; both are now researched like every other country.
+- **53** (entry 150) — a plan whose visa decision is null can no longer be graded `verified`.
+- **17** (entry 151) — the US corridor did not flip in three runs. The storing decision it turned up —
+  a refusal is retried by the next request, a resolution kept three weeks — waits for item 7.
+- **8** (entry 152) — a blocked-decision plan reads as *we could not check*; it also found a stored
+  corridor withholding the London embassy a fresh run names.
+- **9** (entries 153, 154) — a missing checklist is said as what was found, never that none exists;
+  the per-country declaration is withdrawn, and a likely checklist page that could not be opened is
+  named with its link.
+- **54** (entry 155) — refused pages are grouped into one sentence per authority, the pages that may
+  hold the decision first.
+- **21** (entries 156, 157) — the decision and every requirement carry a quote checked word for word
+  against the retrieved page, and every cited source carries its page's content hash and why
+  discovery chose it.
+
+What follows about item 49 is the state it was left in, not the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
 generated from the headings and therefore could not, which was false. On 2026-08-30 the table listed
