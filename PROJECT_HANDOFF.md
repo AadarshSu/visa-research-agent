@@ -174,8 +174,8 @@ the minority. Correctness comes first, then optimisation, then expansion. **Item
 same day (entry 149)**: the web app served Singapore and Japan from hand-written pages and refused
 every traveller they were not written for, and now researches them like every other country.
 **Item 53 was done that day too (entry 150)**: a plan whose visa decision is null can no longer be
-graded `verified`. **Start at item 17**, whose counting is done (entry 151) and whose remaining
-step is the owner's decision on storing refusals. **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+graded `verified`. Item 17 closed the same day: its counting is done (entry 151), and the
+storing decision it turned up is deferred to item 7, before deploying. **Start at item 8.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -575,7 +575,7 @@ re-add the amendment history here.
    search was involved in both. Counted on 2026-09-14 it resolved **3 of 3** back to back. What makes
    such a corridor fragile is a resolution resting on three readable pages; and because a refusal is
    never stored while a resolution is kept three weeks, the next request retries a refusal until one
-   run resolves. That trade is TODO item 17's open decision.
+   run resolves. That trade is decided before deploying — TODO item 7.
 
 11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
    was, and that is now handled (entries 58–61). **Counted rather than assumed since entry 63**:

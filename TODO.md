@@ -23,7 +23,8 @@ off for anything.
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
 the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
 done the same day (entry 149), then item 53, which building it found and which was also done that
-day (entry 150), then 17, 8, 9 and 21 — and
+day (entry 150), then 17 — counted and closed that day too (entry 151) — then 8, 9 and 21 —
+and
 **optimisation** follows it: 31, then the new item 51 (5 of a corridor's 15
 live queries carry no traveller detail), then 48. **Item 49 stops where it is**, and 35 and 47 move
 to Later: all three exist to make the store cover every traveller and residence offline, which the
@@ -247,8 +248,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 17. Decide what a corridor that flips between runs should do | `next` |
-|  | 8. Confirm a blocked authority actually reads usefully | `next` |
+| **Now** | 8. Confirm a blocked authority actually reads usefully | `next` |
 |  | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
 |  | 21. Fill the three provenance gaps | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
@@ -292,124 +292,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 17. Decide what a corridor that flips between runs should do — `next`, **start here**
-
-> **Counted on 2026-09-14 (entry 151), and what is left is a decision for the owner.**
-> `united-states/IN/GB` ran three times back to back: **`resolved_decision_blocked` every time**,
-> the same two roles, the same 2,478 candidates. Two things below are corrected by it: the repeat
-> **does** spend search (15 queries a run), and entry 118's flip was **not** the refused-page
-> judgement answering both ways — its refusing run filled no role, and a corridor with no sources
-> refuses whatever that judgement says.
->
-> **The decision the counting turned up is not among the four options below.** A refusal is never
-> stored and a resolution is kept for three weeks, so a corridor that resolves on some runs is
-> retried by every next request until one resolves, and that run is then served to everyone — option
-> 1 happening across requests, unchosen. Keep it, store refusals for a short window, or require
-> agreement before storing: entry 151 sets out the trade, and nothing is built until it is chosen.
-
-**Why:** measured 2026-08-21, and it changes how every other number in this file should be read.
-`canada/GB/GB/tourism`, run cold twice within the hour on the same code against the same five domains,
-**refused once and resolved once.** The difference was not scoring: on the resolving run
-`entry-requirements-country.html` was candidate **15 of 470** at 53.4, comfortably inside 25 shortlist
-places, arriving both as a `site:canada.ca` search seed and by crawl at depth 1. On the refusing run
-search did not return it at all. Entry 43, known problem 19.
-
-**So a resolved corridor is not evidence the pipeline is reliable, only that this run of it was.** And
-the corridor store then keeps the lucky answer for three weeks, which hides the flip until it expires —
-a traveller in week one and a traveller in week four get different products from identical code.
-
-**This is a decision to argue before it is code**, which is why it sits here rather than in a fix. The
-options are not equal and at least two are wrong:
-
-1. **Re-search on refusal.** Cheap to write and the worst of them: it turns a refusal into "search until
-   something answers", which is how a pipeline talks itself into an answer. Rejected unless argued.
-2. **Widen or vary the queries.** Fifteen queries against five domains is already the cold-path cost
-   (known problem 5). More queries is more surface, more latency and more quota, for an unknown gain.
-3. **Keep what was found.** The candidate *set* could persist per corridor the way the resolution does,
-   so a page found once is not lost when search forgets it. This makes runs sticky rather than lucky,
-   and its risk is the opposite one: a page that has since been withdrawn stays in the set. The evidence
-   TTL still governs whether it can be read, so the risk is bounded, but it needs saying out loud.
-4. **Accept it and report it.** A corridor could state that its sources were what this run could find,
-   which is honest and does nothing for the traveller who got the unlucky run.
-
-**Do:** run one corridor three times and count, so the rate is a number rather than an anecdote — the
-recall log makes this cheap to read now. Then write the decision entry. **Note it changes item 3:** one
-run per corridor cannot distinguish a corridor that works from one that works half the time, so the
-20-corridor measurement should either run each corridor twice or say plainly that it did not.
-
-**Answered 2026-08-21 as [DECISIONS.md](DECISIONS.md) entry 44 — option 3, widened from per corridor to
-per country.** The candidate set persists as a **corpus of official pages per country**, populated by an
-offline job, and search leaves the request path for a populated country. A page found for
-`canada/GB/GB/tourism` then also serves `canada/IN/IN/business`, which per-corridor persistence would
-not. Options 1, 2 and 4 are rejected there in the terms above. **What is left of this item is the
-counting**, which the entry does not replace and which sizes everything after it: run one corridor three
-times, count the flips, and write the rate down. Items 18 and 19 are the implementation.
-
-**The tooling for the counting landed 2026-08-22 (entry 45), so this is now one command and some
-credit:**
-
-```bash
-.venv/bin/visa-discover corridor --destination canada --nationality GB --from GB --runs 3
-```
-
-It resolves the corridor three times and reports which candidates only some runs saw, ordered by how
-far each got — a page one run actually *read* and another never saw is the case that decides
-corridors, so it sorts to the top. It does **not** go through `AutomaticDestinationService`, because
-that reads the corridor store and a stored corridor would answer runs two and three from run one.
-Registry destinations now work from the command at all, which they did not before; that is what had
-forced every previous live check into a throwaway script.
-
-**Clear `var/cache/` first** if the point is to measure cold recall, and note the honest limit: this
-measures *search and crawl* variance. The adjudication is still a model call, so two runs with an
-identical candidate set can still disagree (known problem 10), and the report does not separate
-those.
-
-**Run 2026-08-22, and the flip did not reproduce.** `canada/GB/GB/tourism`, three runs, source cache
-cleared beforehand, ~43s each:
-
-| | |
-| --- | --- |
-| Outcome | **resolved, all three** — `visa_decision` and `general_entry` |
-| Candidates | **471, and every run saw all 471.** Nothing varied at all |
-| `entry-requirements-country.html` | found every run — **both** as a `site:canada.ca` search seed *and* by crawl at depth 1 from `check-visa-eta.html`; 53.4, shortlisted, fetched |
-| `document_checklist` | unfilled all three times |
-
-**So the flip rate is not 0 — it is "0 of 3 back-to-back", which is a weaker claim and must not be
-written up as the stronger one.** The runs were ~2 minutes apart; the flip entry 43 measured was an
-hour apart, and the 08-19/08-21 difference was two days. A search API can serve a stable result set
-within a short window, so this cannot distinguish *"recall is stable"* from *"recall is stable over
-two minutes"*.
-
-**What is left of this item:** re-run the same corridor after a gap of hours or a day and compare
-against `var/recall/` — that is the measurement that would actually establish a rate. Until then the
-one observed flip stands as a single observation, and **entry 44 should be read with that in mind**;
-its case now rests mainly on crawl depth and latency rather than on a measured frequency.
-
-**A second flip, 2026-09-01, and it is not the same one — it has no search in it (entry 118).**
-`united-states/IN/GB/tourism`, twice within seven minutes, corpus-routed with the crawl skipped:
-run 1 read 9 pages, filled nothing and refused `decision_not_found`; run 2 read 14, filled
-`application_route` and `general_entry`, and resolved **`resolved_decision_blocked`**. The refused
-set was the same three `travel.state.gov` URLs both times and all three were in `candidates`, so
-`_decision_blocking_judged` was asked the same question about the same pages — `visitor.html`
-labelled *"Visitor Visa"* among them — and answered it both ways.
-
-**That moves this item's centre of gravity.** Entry 43's flip was *recall*, which entry 44's corpus
-was built to remove, and the 2026-08-22 counting found nothing. This one is the model, on the call
-that decides **whether the corridor resolves at all** rather than which roles fill — known problem
-10 reaching further than that problem has ever recorded. Options 1–4 above are all about recall and
-none of them addresses it. ~~**Count this one before designing anything:** `--runs 3` on
-`united-states/IN/GB` is corpus-routed, so it costs no search quota and isolates the model~~ —
-**counted 2026-09-14 (entry 151): three resolutions, no flip, and the premise was wrong twice.**
-Search runs on every corridor (15 queries here), and the 09-01 refusal filled no role, so it was never
-the judgement answering both ways.
-
-**One finding that is not about variance at all:** `document_checklist` went unfilled on every run
-even though `.../visit-canada/supporting-documents` scored **64.0** for exactly that role and was
-fetched. The adjudicator declined it three times running. That is item 9's question — "no checklist
-exists" versus "we failed to find it" — with a third answer visible: *we found and read a plausible
-one and the decider said no*. Worth reading its reason before assuming recall is the problem.
-
-### 8. Confirm a blocked authority actually reads usefully — `next`, **promoted 2026-09-14**
+### 8. Confirm a blocked authority actually reads usefully — `next`, **promoted 2026-09-14**, **start here**
 
 > **Promoted 2026-09-14 (entry 148), as correctness work.** The interface shows **"Uncertain"**
 > when a decision could not be confirmed (`static/app.js`, the `decision` constant). Whether a
@@ -442,6 +325,14 @@ silently dropping it.
 never whether it may be *reported* — every block is still reported, and that must stay true.
 
 ### 9. Tell "no checklist exists" apart from "we failed to find it" — `next`, **promoted 2026-09-02**
+
+> **Carried over from item 17 when it closed on 2026-09-14**, because it is this item's question:
+>
+> **One finding that is not about variance at all:** `document_checklist` went unfilled on every run
+> even though `.../visit-canada/supporting-documents` scored **64.0** for exactly that role and was
+> fetched. The adjudicator declined it three times running. That is item 9's question — "no checklist
+> exists" versus "we failed to find it" — with a third answer visible: *we found and read a plausible
+> one and the decider said no*. Worth reading its reason before assuming recall is the problem.
 
 **Why:** `document_checklist` is not load-bearing (entry 14), so a corridor resolves without one. Right
 for Vietnam, which publishes none. Wrong for a country that publishes one we failed to find or read —
@@ -1505,6 +1396,13 @@ makes **every** request cold. That is item 20, which this item should be planned
 **Do not** deploy with `source_mode: fixtures`: it only knows Singapore, and would look like a working
 product that answers exactly one corridor.
 
+**Decide how the corridor store treats a corridor that resolves on some runs and not others — before
+deploying (entry 151, the owner's call on 2026-09-14).** A refusal is never stored and a resolution
+is kept three weeks, so behind a public URL every refused request is retried by the next traveller
+until one run resolves, and that run is served to everyone. Keep it, store refusals for a short
+window, or require two agreeing runs before storing. Nothing is at risk while nothing is deployed,
+which is why it waits here.
+
 **Say it on the page:** this shows official guidance with citations and promises nothing about
 correctness or currency. That framing is what makes the product safe to publish, so it belongs in the
 interface rather than only in these files.
@@ -1963,6 +1861,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 17. Decide what a corridor that flips between runs should do | 09-14 | 43, 44, 118, 151 | Recall-side flips were answered by the corpus (entry 44). The US flip was counted: **0 in 3** back-to-back runs, and entry 118's flip was a run that filled no role, not the refused-page judgement. Its premise that a repeat spends no search was false. The counting found an unchosen retry: a refusal is never stored, so the next request retries it until one resolves, and that run is kept three weeks — deferred by the owner to item 7 |
 | 53. A plan whose visa decision is null can still be graded `verified` | 09-14 | 150 | The docstring stated the rule and the code held it for one cause: only a block or a questionnaire downgraded a null decision, so a model's own null from cleanly read pages was graded `verified` — seen on `japan/IN/GB`. Now graded on the decision itself and refused by `VisaPlan`, with both tests shown failing on the unfixed code first. The interface needed nothing |
 | 52. Stop hand-configured destinations answering every traveller from one traveller's pages | 09-14 | 149 | **The item's own claim was wrong.** Nobody was handed London's checklist: the model declined another traveller's list and a guard turned that into a 503 *"could not be generated safely"*, for a Filipino asking about Japan and a Nigerian asking about Singapore. Through the automatic path both are `verified` from their own post. The cost is Japan for `IN/GB`, whose pinned checklist fills in **1 of 3** automatic runs — the page fetched every time, the adjudicator naming the eVISA questionnaire instead. Every SG and JP corridor run from the command had measured a path the web app did not serve. Found item 53 |
 | 1. Score a page for being about where the traveller applies from | 09-02 | 126 | **The scorer's ordering is consumed by nothing** — the pool goes to the model unsorted with scores withheld, so `score_link` reaches a corridor as a *boolean*. Shipped as a swap and cut back to adding only: the withdrawal removed **25 pages from the pool and added none**. Admits 35 of 186,596, and 3 of its 4 families already held the answer in stored text — which is the argument for item 31. Also: `_describes_country` could not read `united-kingdom` in a path, so every multi-word country was invisible unless the anchor said it |

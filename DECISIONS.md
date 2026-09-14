@@ -268,6 +268,11 @@ usable, so it is stored, and every plan rendered from it for three weeks lacks t
 window so a refusal is as sticky as a resolution; or require agreement before storing. Each changes
 what a traveller is served, and none should be built before the choice is written down.
 
+**The owner's call, the same day: decide it before deploying, not now.** Nothing is deployed, so no
+second request has ever retried a refusal and the selection described above has never run on a real
+traveller. It is recorded as a prerequisite of TODO item 7, beside the cold-request timing and the
+rate limit, and item 17 closes with its counting done.
+
 ---
 
 ## 150. A null visa decision is never `verified`, whatever left it null — and the plan enforces it
