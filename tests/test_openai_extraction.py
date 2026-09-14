@@ -540,6 +540,50 @@ async def test_the_model_is_told_where_the_guidance_lives_but_never_quoted_it() 
     assert "untrusted_content" not in named[0]
 
 
+@pytest.mark.anyio
+async def test_the_refused_page_that_may_hold_the_decision_is_marked_for_the_traveller() -> None:
+    """Item 54. A US plan named nine refused pages at equal weight; the judged ones now say so.
+
+    Both reach the plan, because every refusal is still reported (entry 32): the mark decides what
+    leads, never what is shown.
+    """
+
+    payload = decision_unverified(singapore_config()).model_dump(mode="json")
+    fees = "https://france-visas.gouv.fr/en/web/france-visas/fees"
+    payload["unreadable_authorities"] = [
+        {**payload["unreadable_authorities"][0], "may_hold_decision": True},
+        {**payload["unreadable_authorities"][0], "url": fees},
+    ]
+    destination = DestinationConfig.model_validate(payload)
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={"requirements": [], "unresolved_questions": ["Could not be verified."]}
+        )
+    )
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    refused = {
+        str(source.attempted_url): source.may_hold_decision
+        for source in plan.unavailable_sources
+        if source.outcome == "blocked"
+    }
+    assert refused == {"https://france-visas.gouv.fr/en/web/france-visas": True, fees: False}
+    assert generator.research_packet is not None
+    named = json.loads(generator.research_packet)["destination"]["unreadable_authorities"]
+    assert [entry["may_hold_decision"] for entry in named] == [True, False]
+
+
+def test_the_model_is_told_to_point_at_the_page_that_may_hold_the_decision() -> None:
+    prompt = load_extraction_prompt()
+
+    assert "may_hold_decision" in prompt
+    assert "do not list every refused address" in prompt
+
+
 def decision_behind_a_tool(destination: DestinationConfig) -> DestinationConfig:
     """A destination whose visa decision is published only inside an official questionnaire.
 

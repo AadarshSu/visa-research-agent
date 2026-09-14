@@ -38,8 +38,10 @@ Follow these rules:
    it be read. Do not decide the question from anything else. Set visa_required to null, explain in
    one plain sentence that the decision could not be verified and which authority publishes it, and
    record an unresolved question telling the traveller to check that authority themselves. The
-   authority and its URL are in destination.unreadable_authorities. Never treat those entries as
-   evidence of what they contain: you have not read them. Steps may still describe the route where a
+   authority and its URL are in destination.unreadable_authorities. Point the traveller at the
+   entries marked may_hold_decision, and do not list every refused address: the plan already lists
+   them all with links. Never treat those entries as evidence of what they contain: you have not
+   read them. Steps may still describe the route where a
    readable page states it, and the first step should be to check that authority.
 8c. destination.official_tools lists pages that were read successfully and do not state their
    answer, because the authority publishes it as an interactive questionnaire that works it out from

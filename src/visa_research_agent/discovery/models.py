@@ -539,6 +539,9 @@ class ResolvedCorridor(StrictModel):
                     "refused automated retrieval, so its guidance could not be independently "
                     "verified here"
                 ),
+                # Every refusal is still named (entry 32 bounds what may resolve a corridor, never
+                # what is reported); this only marks which ones could have held the decision.
+                "may_hold_decision": url in self.decision_blocking_urls,
             }
             for url in self.inaccessible_urls
         ]

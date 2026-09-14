@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 727 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 730 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -179,8 +179,9 @@ storing decision it turned up is deferred to item 7, before deploying. Item 8 wa
 (entry 152): a blocked-decision plan reads as *we could not check*, and it found item 54 and a stored
 corridor withholding the London embassy. Item 9 was re-scoped the same day (entry 153): a missing
 checklist is now said as what was found rather than that none exists, and its second part closed it
-(entry 154): a likely checklist page the run could not open is named with its link. **Start at item
-54.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+(entry 154): a likely checklist page the run could not open is named with its link. Item 54 then
+grouped a plan's refused pages into one sentence per authority, the pages that may hold the decision
+first (entry 155). **Start at item 21.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was

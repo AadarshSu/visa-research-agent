@@ -72,6 +72,7 @@ def build_research_packet(
                     "url": str(authority.url),
                     "authority": authority.authority,
                     "detail": authority.detail,
+                    "may_hold_decision": authority.may_hold_decision,
                 }
                 for authority in destination.unreadable_authorities
             ],
@@ -231,6 +232,7 @@ class OpenAIVisaPlanExtractor:
                 outcome="blocked",
                 detail=authority.detail,
                 attempted_url=authority.url,
+                may_hold_decision=authority.may_hold_decision,
             )
             for index, authority in enumerate(destination.unreadable_authorities)
         ]

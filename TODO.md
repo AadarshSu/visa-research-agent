@@ -24,7 +24,7 @@ every traveller shares; live search fetches what this traveller needs, and stays
 the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
 done the same day (entry 149), then item 53, which building it found and which was also done that
 day (entry 150), then 17 — counted and closed that day too (entry 151) — then 8, read that day as
-well (entry 152), then 9 — re-scoped and closed that day (entries 153, 154) — then 54 and 21 — and
+well (entry 152), then 9 — re-scoped and closed that day (entries 153, 154) — then 54 (done that day, entry 155) and 21 — and
 **optimisation** follows it: 31, then the new item 51 (5 of a corridor's 15
 live queries carry no traveller detail), then 48. **Item 49 stops where it is**, and 35 and 47 move
 to Later: all three exist to make the store cover every traveller and residence offline, which the
@@ -248,8 +248,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 54. Say which refused page mattered, once per authority | `next` |
-|  | 21. Fill the three provenance gaps | `next` |
+| **Now** | 21. Fill the three provenance gaps | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 51. Make live search ask only for what is specific to this traveller | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
@@ -291,25 +290,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 54. Say which refused page mattered, once per authority — `next`, **start here**
-
-**Why:** entry 152, which read a blocked-decision plan as a traveller would. The caveats repeat
-*"does not permit automated retrieval"* once per refused page — **nine lines** on a fresh
-`united-states/IN/GB` plan — all at the same weight, and the unresolved questions list the same
-addresses again. The three pages the refused-page judgement qualified as holding the decision cannot be
-told from a fee table or a wait-times page, because `decision_blocking_urls` stops at
-`ResolvedCorridor`: `to_destination_config` builds `unreadable_authorities` from every refused URL,
-and `SourceFailure` has no field to say which of them mattered.
-
-**Do:** carry the judged set through `to_destination_config` to the synthetic `blocked_N` failures that
-`OpenAIVisaPlanExtractor.extract` builds — set by the application from the resolved corridor, never by
-the model — then group the caveat per host: one sentence, the decision-bearing pages linked first, the
-rest counted beneath. Then read the fresh US plan again as a traveller.
-
-**Careful:** every refusal is still reported. Entry 32's bound governs what may *resolve* a corridor,
-never what is *reported*, so grouping may shorten the list and must never drop a page from it.
-
-### 21. Fill the three provenance gaps — `next`, **promoted 2026-09-14 for its first part**
+### 21. Fill the three provenance gaps — `next`, **promoted 2026-09-14 for its first part**, **start here**
 
 > **Its first part was promoted 2026-09-14 (entry 148), as correctness work.** Correctness is
 > verified by the owner outside this repository (entry 68), and a live plan cites a page with no
@@ -1815,6 +1796,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 54. Say which refused page mattered, once per authority | 09-14 | 155 | **14 of 142** answered runs name refused pages and **9** name three or more, up to eight across four sites (Malta). Each named refusal now carries whether the refused-page judgement picked it as able to hold the decision — set from `decision_blocking_urls` by the application, never the model — and the caveats say one sentence per authority, those pages first, every link kept. The model is told the same and asked not to repeat every address |
 | 9. Tell "no checklist exists" apart from "we failed to find it" | 09-14 | 153, 154 | **Re-scoped: nobody can show a checklist does not exist.** The product was asserting it — the prompt, the documents panel and the delegate box — and now says what was found among the pages read; the per-country declaration is withdrawn. Of 60 resolved corridors without a checklist, 7 met likely pages they could not open, and a plan now names those with their links, set by the application and never the model. Item 17's Canada finding, a 64.0 checklist page fetched and declined three times, is recorded in entry 153's 48 rather than solved |
 | 8. Confirm a blocked authority actually reads usefully | 09-14 | 152 | It reads as **we could not check**, not *no visa needed*, and the first step hands over the decision page. Two defects: one caveat sentence per refused page at equal weight, with the judged decision pages indistinguishable (item 54); and the web app served a corridor stored 16 days earlier that never named the London embassy a fresh run names, because corridor notes never reach a plan (item 7's storing decision). Whether the links open was left to a person — this session may not read a refused page |
 | 17. Decide what a corridor that flips between runs should do | 09-14 | 43, 44, 118, 151 | Recall-side flips were answered by the corpus (entry 44). The US flip was counted: **0 in 3** back-to-back runs, and entry 118's flip was a run that filled no role, not the refused-page judgement. Its premise that a repeat spends no search was false. The counting found an unchosen retry: a refusal is never stored, so the next request retries it until one resolves, and that run is kept three weeks — deferred by the owner to item 7 |

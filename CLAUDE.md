@@ -809,6 +809,7 @@ cause, and only running the thing showed it.
 | a plan with no checklist only hedges about what it could not find | the prompt told the model the authority "publishes no document checklist" (entry 153) |
 | a reviewed per-country declaration can settle that none exists | a reviewer can no more prove absence than the pipeline — withdrawn (entry 153) |
 | a recall log's `fetched` marks every page a run tried to read | only pages it read; a refused page is not `fetched`, so count failures apart (entry 153) |
+| the refused-page judgement picks the same pages each run | 08-29 marked `visitor.html`; 09-14 marked the India page and not it (entry 155) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

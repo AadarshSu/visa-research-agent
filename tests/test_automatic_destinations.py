@@ -658,6 +658,25 @@ def test_the_refused_page_reaches_the_destination_it_will_be_planned_from() -> N
     assert "france-visas.gouv.fr" in config.unreadable_authorities[0].authority
     # It is not a source: there is no content behind it, so nothing may cite it as evidence.
     assert [source.source_id for source in config.sources] == ["fr_route"]
+    # Judged able to hold the decision, so a plan can lead with it (TODO item 54).
+    assert config.unreadable_authorities[0].may_hold_decision
+
+
+def test_a_refusal_that_could_not_hold_the_decision_is_still_named_and_not_marked() -> None:
+    """Item 54 changes what leads, never what is shown: every refusal is still reported."""
+
+    base = DestinationConfig(
+        slug="france",
+        display_name="France",
+        route_type="national",
+        implementation_status="available",
+        trusted_domains=["diplomatie.gouv.fr", "france-visas.gouv.fr"],
+    )
+
+    config = partly_resolved(blocked=True, held_the_decision=False).to_destination_config(base)
+
+    assert [str(authority.url) for authority in config.unreadable_authorities] == [BLOCKED_PAGE]
+    assert not config.unreadable_authorities[0].may_hold_decision
 
 
 # --- the decision behind an official tool -----------------------------------------------------

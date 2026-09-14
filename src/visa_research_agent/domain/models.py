@@ -240,6 +240,11 @@ class UnreadableAuthority(StrictModel):
     detail: str = Field(min_length=1)
     """A safe summary of what happened. Never carries retrieved page text."""
 
+    may_hold_decision: bool = False
+    """True when the refused-page judgement named this page as one that could have stated whether a
+    visa is needed (entry 57). Set by the application from `decision_blocking_urls`, never by the
+    extraction model, so a plan can point the traveller at it first (TODO item 54)."""
+
 
 # What an official page can answer for a traveller. The same vocabulary discovery assigns to pages,
 # minus `irrelevant`, which is a verdict rather than a topic. `DiscoveryRole` is built from this so
@@ -610,6 +615,10 @@ class SourceFailure(StrictModel):
     attempted_url: AnyHttpUrl
     final_url: AnyHttpUrl | None = None
     """Where the request actually landed, recorded when a redirect left the trusted domains."""
+
+    may_hold_decision: bool = False
+    """Only on a named refusal: the page could have stated whether a visa is needed. Copied from
+    `UnreadableAuthority.may_hold_decision`, so the interface can lead with it (TODO item 54)."""
 
     http_status: int | None = Field(default=None, ge=MINIMUM_HTTP_STATUS, le=MAXIMUM_HTTP_STATUS)
     """The status the authority answered with, when there was one.

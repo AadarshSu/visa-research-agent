@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [155](#155-refused-pages-are-named-once-per-authority-with-the-pages-that-may-hold-the-decision-first) | **Refused pages grouped per authority, the judged decision pages first, every link kept** — and which pages lead varies between runs, because the judgement does |
 | [154](#154-a-likely-checklist-page-the-run-could-not-open-is-named-the-way-a-refused-decision-page-is) | **A likely checklist page the run could not open is named with its link** — set by the application, never the model, re-checked against the approved domains, and only where no checklist was found |
 | [153](#153-nobody-can-show-a-checklist-does-not-exist-so-a-plan-says-what-was-found--and-the-per-country-declaration-is-withdrawn) | **A missing checklist is said as what was found, never that none exists** — the prompt, the panel and the delegate box all asserted absence; the per-country declaration is withdrawn |
 | [152](#152-a-blocked-authority-plan-reads-as-we-could-not-check--and-a-stored-corridor-withheld-the-embassy-a-fresh-run-names) | **Read as a traveller, a blocked-decision plan says "we could not check"** — but it repeats one sentence per refused page, and a 16-day-old stored corridor withheld the London embassy a fresh run names |
@@ -203,6 +204,45 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 155. Refused pages are named once per authority, with the pages that may hold the decision first
+
+**2026-09-14 · TODO item 54**
+
+Entry 152 read a blocked-decision plan as a traveller and found *"does not permit automated
+retrieval"* repeated once per refused page — nine lines on a fresh `united-states/IN/GB` plan — with
+the fee table and the wait-times page at the same weight as the pages the refused-page judgement had
+picked, because that judgement stopped at `ResolvedCorridor`.
+
+**Sized first, from the recall logs:** 14 of 142 answered runs name refused pages, **9 name three or
+more**, and the most is Malta's eight across four sites. A real minority, not a corner.
+
+**Decided.**
+
+- **The judgement's result travels with each refusal.** `to_destination_config` sets
+  `UnreadableAuthority.may_hold_decision` from `decision_blocking_urls`, and the extractor copies it
+  onto the named `SourceFailure`. **The application sets it; the extraction model only reads it.**
+- **The caveats say one sentence per authority.** Pages that may hold the decision lead — *"Start with
+  the page that may say whether you need a visa"*, "may" because nobody read them — and the rest follow
+  as *"Other pages it refused"*. **Every page keeps its link**: entry 32 bounds what may resolve a
+  corridor, never what is reported, so grouping shortens the list and never drops from it. Eight
+  refusals across two sites rendered in the running interface as two sentences carrying all eight
+  links, with no console errors.
+- **The model is told the same**: rule 8b now says to point the traveller at the entries marked
+  `may_hold_decision` and not to list every refused address, since the plan lists them with links.
+
+**Verified live on one corridor.** A fresh `united-states/IN/GB` plan named ten refused pages across
+`travel.state.gov` and `uk.usembassy.gov`, four marked — including the London embassy's visa
+navigator — and its unresolved question pointed at **one** page where the plan read on 2026-09-14
+morning listed five addresses in a row.
+
+**And it showed a limit worth saying plainly: which pages lead is only as stable as the judgement.**
+The corridor stored on 2026-08-29 marked `tourism-visit.html`, `visa-waiver-program.html` and
+`visitor.html`; this run marked the India reciprocity page and the Visa Waiver Program page and **not**
+`visitor.html`. Known problem 10, again. It fails soft — the unmarked pages are still linked in the
+same sentence — but a traveller in one week and in the next may be told to start at a different page.
 
 ---
 

@@ -99,6 +99,45 @@ function hasIncompleteEvidence(plan) {
   );
 }
 
+function appendLinks(item, failures) {
+  failures.forEach((failure, index) => {
+    if (index) item.append(document.createTextNode(", "));
+    item.append(externalLink(failure.attempted_url, failure.attempted_url));
+  });
+}
+
+// One authority's refusals as one sentence. The pages judged able to hold the visa decision lead,
+// said as "may" because nobody read them; the rest follow, linked, never dropped (entry 32 bounds
+// what may resolve a corridor, never what is reported).
+function refusalItem(authority, failures) {
+  const decision = failures.filter((failure) => failure.may_hold_decision);
+  const others = failures.filter((failure) => !failure.may_hold_decision);
+  const item = element(
+    "li",
+    "",
+    `${authority} does not permit automated retrieval, so its guidance could not be verified here.`,
+  );
+  if (decision.length) {
+    item.append(document.createTextNode(
+      decision.length === 1
+        ? " Start with the page that may say whether you need a visa: "
+        : " Start with the pages that may say whether you need a visa: ",
+    ));
+    appendLinks(item, decision);
+    item.append(document.createTextNode(decision.length === 1 ? " — open it yourself to check." : " — open them yourself to check."));
+    if (others.length) {
+      item.append(document.createTextNode(others.length === 1 ? " It also refused " : " Other pages it refused: "));
+      appendLinks(item, others);
+      item.append(document.createTextNode("."));
+    }
+    return item;
+  }
+  item.append(document.createTextNode(others.length === 1 ? " It is published at " : " The refused pages are at "));
+  appendLinks(item, others);
+  item.append(document.createTextNode(others.length === 1 ? " — open it yourself to check." : " — open them yourself to check."));
+  return item;
+}
+
 // A partial plan is still useful, but it must never look as complete as a verified one.
 function renderEvidenceBanner(plan) {
   const staleSources = plan.sources.filter((source) => source.is_stale);
@@ -109,21 +148,18 @@ function renderEvidenceBanner(plan) {
   banner.append(element("p", "evidence-banner-title", "Evidence is incomplete"));
 
   const list = element("ul");
+  // An authority refusing this program is the one gap a traveller can close themselves, so it gets
+  // the sentence that says so and links they can open — once per authority. One US plan said it
+  // nine times, the fee table beside the visitor-visa page (TODO item 54). Every page keeps its link.
+  const refusals = new Map();
   missing.forEach((failure) => {
-    // An authority refusing this program is the one gap a traveller can close themselves, so it
-    // gets the sentence that says so and a link they can open. Everything else stays a statement.
-    if (failure.outcome === "blocked" && failure.attempted_url) {
-      const item = element(
-        "li",
-        "",
-        `${failure.authority} does not permit automated retrieval, so its guidance could not be `
-          + "verified here. It is published at ",
-      );
-      item.append(externalLink(failure.attempted_url, failure.attempted_url));
-      item.append(document.createTextNode(" — open it yourself to check."));
-      list.append(item);
-      return;
-    }
+    if (failure.outcome !== "blocked" || !failure.attempted_url) return;
+    if (!refusals.has(failure.authority)) refusals.set(failure.authority, []);
+    refusals.get(failure.authority).push(failure);
+  });
+  refusals.forEach((failures, authority) => list.append(refusalItem(authority, failures)));
+  missing.forEach((failure) => {
+    if (failure.outcome === "blocked" && failure.attempted_url) return;
     const item = element("li", "", `${failure.title} (${failure.authority}) — ${failure.detail}`);
     // An official page we could not read is still one the traveller can open, so it gets its link.
     if (failure.attempted_url) {
