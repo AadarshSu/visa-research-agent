@@ -24,7 +24,7 @@ every traveller shares; live search fetches what this traveller needs, and stays
 the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
 done the same day (entry 149), then item 53, which building it found and which was also done that
 day (entry 150), then 17 — counted and closed that day too (entry 151) — then 8, read that day as
-well (entry 152), then 9 — re-scoped and closed that day (entries 153, 154) — then 54 (done that day, entry 155) and 21 — and
+well (entry 152), then 9 — re-scoped and closed that day (entries 153, 154) — then 54 (done that day, entry 155) and 21 (closed that day, entries 156 and 157) — and
 **optimisation** follows it: 31, then the new item 51 (5 of a corridor's 15
 live queries carry no traveller detail), then 48. **Item 49 stops where it is**, and 35 and 47 move
 to Later: all three exist to make the store cover every traveller and residence offline, which the
@@ -248,8 +248,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 21. Fill the three provenance gaps | `next` |
-|  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
+| **Now** | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 51. Make live search ask only for what is specific to this traveller | `next` |
 |  | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
@@ -290,36 +289,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 21. Fill the three provenance gaps — `next`, **promoted 2026-09-14 for its first part**, **start here**
-
-> **Part 1 is done, 2026-09-14 (entry 156).** A plan now carries a supporting quote for the visa
-> decision and for every document requirement, written by the model and **kept only where the text
-> this run retrieved holds it** (`research/quotes.py`), then shown under the claim. Measured before
-> building: 35 of 35 quotes offered over three corridors passed the check. **Application steps and
-> `where_to_apply` carry no quote yet**, and parts 2 and 3 below are untouched.
-
-> **Its first part was promoted 2026-09-14 (entry 148), as correctness work.** Correctness is
-> verified by the owner outside this repository (entry 68), and a live plan cites a page with no
-> sentence — `supporting_excerpt` is still set only by `research/fixtures.py`. A quote checked
-> against the retrieved text is what makes that outside check fast. Parts 2 and 3 can follow it.
-
-**Why:** the system cannot answer *"why did you say an Indian passport holder needs this visa?"* with
-more than a URL and a timestamp. Found while tracing entry 44, and **explicitly not an argument for the
-store** — all three are schema and plumbing, worth fixing either way, and folding them into the corpus
-work would let a large change borrow justification from a small one. Known problems 20, 21 and 22.
-
-1. **`SourceReference.supporting_excerpt` is never populated on the live path.** Written only by
-   `FixtureSourceFetcher` from the Singapore manifest; `LiveSourceFetcher._build` does not set it and
-   `OpenAIVisaPlanExtractor` passes references through unchanged. Every live plan cites a URL with **no
-   supporting quote**. The excerpt has to come from the model naming the sentence it read, and it must
-   then be **checked against the retrieved text** rather than trusted — an unverified quote attributed to
-   a government page is worse than none.
-2. **`content_hash` never reaches `VisaPlan`.** It is on `FetchedSource`; `SourceReference` has no hash
-   field, so a plan cannot be tied to the exact text it was read from.
-3. **`decided_by`, `score` and `signals` never leave `ResolvedCorridor`.** Why a page was chosen for a
-   role is on disk and invisible in the response.
-
-### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **re-scoped 2026-09-02**
+### 31. The anchor scorer is a hard recall gate on 94% of the corpus: measure it, scope a fix, test it — `next`, **re-scoped 2026-09-02**, **start here**
 
 > **Leads the optimisation work since 2026-09-14 (entry 148)**, behind the correctness items. Under
 > the owner's rule the corpus should be what a corridor mainly reads, and this gate admits search
@@ -1802,6 +1772,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 21. Fill the three provenance gaps | 09-14 | 156, 157 | **A claim now carries the sentence behind it**: the decision and every requirement get quotes the model writes and the application keeps only where the retrieved text holds them — 35 of 35 in a probe before building, 45 of 45 live after. A match proves the words exist, not that they fit the claim. **Every cited source carries its page's content hash and why discovery chose it**, attached when the plan is built because the retrieval cache is shared between corridors. Steps and `where_to_apply` still carry no quote |
 | 54. Say which refused page mattered, once per authority | 09-14 | 155 | **14 of 142** answered runs name refused pages and **9** name three or more, up to eight across four sites (Malta). Each named refusal now carries whether the refused-page judgement picked it as able to hold the decision — set from `decision_blocking_urls` by the application, never the model — and the caveats say one sentence per authority, those pages first, every link kept. The model is told the same and asked not to repeat every address |
 | 9. Tell "no checklist exists" apart from "we failed to find it" | 09-14 | 153, 154 | **Re-scoped: nobody can show a checklist does not exist.** The product was asserting it — the prompt, the documents panel and the delegate box — and now says what was found among the pages read; the per-country declaration is withdrawn. Of 60 resolved corridors without a checklist, 7 met likely pages they could not open, and a plan now names those with their links, set by the application and never the model. Item 17's Canada finding, a 64.0 checklist page fetched and declined three times, is recorded in entry 153's 48 rather than solved |
 | 8. Confirm a blocked authority actually reads usefully | 09-14 | 152 | It reads as **we could not check**, not *no visa needed*, and the first step hands over the decision page. Two defects: one caveat sentence per refused page at equal weight, with the judged decision pages indistinguishable (item 54); and the web app served a corridor stored 16 days earlier that never named the London embassy a fresh run names, because corridor notes never reach a plan (item 7's storing decision). Whether the links open was left to a person — this session may not read a refused page |

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [157](#157-a-cited-source-carries-the-version-of-the-page-it-was-read-from-and-why-it-was-chosen) | **Every cited source carries its page's content hash and why discovery chose it** — attached when the plan is built, never in the shared retrieval cache |
 | [156](#156-a-claim-carries-the-sentence-behind-it-kept-only-where-the-retrieved-page-holds-it) | **The decision and every requirement carry a quote, kept only where the retrieved page holds it** — 45 of 45 kept live; a match proves the words exist, not that they fit the claim |
 | [155](#155-refused-pages-are-named-once-per-authority-with-the-pages-that-may-hold-the-decision-first) | **Refused pages grouped per authority, the judged decision pages first, every link kept** — and which pages lead varies between runs, because the judgement does |
 | [154](#154-a-likely-checklist-page-the-run-could-not-open-is-named-the-way-a-refused-decision-page-is) | **A likely checklist page the run could not open is named with its link** — set by the application, never the model, re-checked against the approved domains, and only where no checklist was found |
@@ -205,6 +206,48 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 157. A cited source carries the version of the page it was read from, and why it was chosen
+
+**2026-09-14 · TODO item 21, parts 2 and 3 — closes the item**
+
+Entry 156 gave a claim its sentence. Two provenance gaps were left, both schema and plumbing, and
+both found while tracing entry 44:
+
+- **A plan could not be tied to the text it was read from** (known problem 21). `content_hash` —
+  the SHA-256 of the cleaned text, item 14's hash — sat on `FetchedSource`, and `SourceReference`
+  had no field for it.
+- **Why a page was chosen for a role never left discovery** (known problem 22). `decided_by`, `score`
+  and `signals` lived on `ResolvedSource` and `to_configured_source` dropped them.
+
+**Decided.**
+
+- `SourceReference.content_hash` carries this run's hash for every source a plan cites.
+- A new `SourceSelection` — the roles a page filled, whether the model or the heuristic chose it, its
+  score and its signals — travels `ResolvedSource` → `ConfiguredSource.selection` →
+  `SourceReference.selection`. `irrelevant` is a verdict rather than a role and never travels, and a
+  hand-written source has `None`: a person chose it, and it says nothing rather than inventing a score.
+
+**Where they are attached is the part that matters, and it is not where a page is retrieved.** Both
+are set by `plan_references` in `research/outcomes.py`, which both extractors call when a plan is
+built. The retrieval cache is shared between corridors, and a page one corridor chose as its
+checklist can be another's fee table — so a choice written into a cached reference would be served
+to a traveller it was never made for. `LiveSourceFetcher` builds each `SourceReference` field by field,
+so the new field on `ConfiguredSource` cannot leak into the cache either.
+
+**In the API response only.** The interface shows neither: a hash and a score are for whoever checks a
+plan, not for a traveller, and the signals come from links and anchor text — never a page's stored body
+(entry 78). A corridor stored before today gains the reasoning at request time, because
+`ResolvedSource` always held it.
+
+**Tested, not run live**, because nothing a model or a network does changed: the destination carries a
+resolved page's choice through, a plan's hashes equal the retrieval's, a hand-written source carries no
+choice, and every source in the offline API plan has a 64-character hash.
+
+**What stays open from item 21's area:** application steps and `where_to_apply` carry no quote (known
+problem 20, recorded rather than queued).
 
 ---
 

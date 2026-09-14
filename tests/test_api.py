@@ -146,6 +146,8 @@ async def test_singapore_fixture_plan_is_returned(
     # Item 21: the sentence behind each claim, checked against the page before it is shown.
     assert plan["decision_quotes"]
     assert all(requirement["supporting_quotes"] for requirement in plan["requirements"])
+    # And every source names the version of the page it was read from.
+    assert all(len(source["content_hash"]) == 64 for source in plan["sources"])
     assert plan["last_checked"] == "2026-08-06T11:30:00Z"
 
 

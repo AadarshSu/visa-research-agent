@@ -18,6 +18,7 @@ from visa_research_agent.domain.models import (
     SourceFailure,
     SourceKind,
     SourcePass,
+    SourceSelection,
     StrictModel,
     TravelPurpose,
 )
@@ -269,8 +270,14 @@ class ResolvedSource(StrictModel):
     signals: list[str] = Field(default_factory=list)
 
     def to_configured_source(self) -> ConfiguredSource:
-        """Drop the discovery-only fields, leaving what the registry understands."""
+        """Carry the page into the registry's shape, with why it was chosen kept beside it.
 
+        The choice used to be dropped here, so why a page was picked for a role lived only in the
+        stored corridor and never reached a plan (TODO item 21, known problem 22). `irrelevant` is a
+        verdict, not a role a traveller can be told a page fills, so it never travels.
+        """
+
+        roles = [role for role in self.roles if role != "irrelevant"]
         return ConfiguredSource(
             source_id=self.source_id,
             title=self.title,
@@ -278,6 +285,16 @@ class ResolvedSource(StrictModel):
             authority=self.authority,
             kind=self.kind,
             research_pass=self.research_pass,
+            selection=(
+                SourceSelection(
+                    roles=roles,
+                    decided_by=self.decided_by,
+                    score=self.score,
+                    signals=self.signals,
+                )
+                if roles
+                else None
+            ),
         )
 
 

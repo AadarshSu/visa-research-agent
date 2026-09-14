@@ -6,10 +6,35 @@ about what counts as sufficient evidence.
 
 from visa_research_agent.domain.models import (
     DestinationConfig,
+    FetchedSource,
     PlanStatus,
     RetrievalReport,
+    SourceReference,
 )
 from visa_research_agent.research.errors import InsufficientEvidenceError
+
+
+def plan_references(
+    destination: DestinationConfig, fetched_sources: list[FetchedSource]
+) -> list[SourceReference]:
+    """The sources a plan cites, each tied to the text it was read from and to why it was chosen.
+
+    TODO item 21, parts 2 and 3. Done here, when the plan is built, rather than where a page is
+    retrieved: the retrieval cache is shared between corridors, and a page one corridor chose for
+    its checklist may be another's fee table. The hash is this run's; the choice is this
+    destination's.
+    """
+
+    selections = {source.source_id: source.selection for source in destination.sources}
+    return [
+        fetched.source.model_copy(
+            update={
+                "content_hash": fetched.content_hash,
+                "selection": selections.get(fetched.source.source_id),
+            }
+        )
+        for fetched in fetched_sources
+    ]
 
 
 def describe_failures(report: RetrievalReport) -> list[str]:

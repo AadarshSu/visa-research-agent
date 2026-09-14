@@ -212,6 +212,8 @@ class ConfiguredSource(StrictModel):
     authority: str = Field(min_length=1)
     kind: SourceKind
     research_pass: SourcePass = "primary"
+    selection: "SourceSelection | None" = None
+    """Why discovery chose this page. `None` for a hand-written source, which a person chose."""
 
 
 class AppointedProvider(StrictModel):
@@ -578,6 +580,21 @@ class RuntimePolicy(StrictModel):
         return self
 
 
+class SourceSelection(StrictModel):
+    """Why discovery chose a page, carried to the plan so a reader can see it (TODO item 21).
+
+    It stopped at the resolved corridor before, so *why was this page used for the checklist?* was
+    answerable on disk and nowhere in a response (known problem 22). A diagnostic for whoever checks
+    a plan, not a claim to a traveller: the score and signals come from links and anchors, never
+    from a page's stored body text (entry 78).
+    """
+
+    roles: list[GuidanceTopic] = Field(min_length=1)
+    decided_by: Literal["heuristic", "model"]
+    score: float
+    signals: list[str] = Field(default_factory=list)
+
+
 class SourceReference(StrictModel):
     """A source actually consulted during a research run."""
 
@@ -589,6 +606,16 @@ class SourceReference(StrictModel):
     supporting_excerpt: str | None = None
     is_stale: bool = False
     """True when a refresh failed and cached text was served past its freshness window."""
+
+    content_hash: str | None = None
+    """The SHA-256 of the cleaned text this plan was read from, so a plan can be tied to the exact
+    version of a page behind a claim (TODO item 21, known problem 21). Set when the plan is built,
+    from this run's retrieval; `None` only on a reference that never became part of a plan."""
+
+    selection: SourceSelection | None = None
+    """Why discovery chose this page, from the destination the plan was built against. Set when the
+    plan is built, never inside the retrieval cache, which corridors that chose differently
+    share."""
 
     _validate_retrieved_at = field_validator("retrieved_at")(_require_aware_datetime)
 

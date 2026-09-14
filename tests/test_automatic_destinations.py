@@ -660,6 +660,15 @@ def test_the_refused_page_reaches_the_destination_it_will_be_planned_from() -> N
     assert [source.source_id for source in config.sources] == ["fr_route"]
     # Judged able to hold the decision, so a plan can lead with it (TODO item 54).
     assert config.unreadable_authorities[0].may_hold_decision
+    # And why the readable page was chosen travels with it, instead of stopping at the corridor
+    # (TODO item 21, known problem 22).
+    selection = config.sources[0].selection
+    assert selection is not None
+    assert (selection.roles, selection.decided_by, selection.score) == (
+        ["application_route"],
+        "model",
+        42.8,
+    )
 
 
 def test_a_refusal_that_could_not_hold_the_decision_is_still_named_and_not_marked() -> None:

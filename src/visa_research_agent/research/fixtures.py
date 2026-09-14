@@ -21,7 +21,11 @@ from visa_research_agent.domain.models import (
     VisaPlanDraft,
 )
 from visa_research_agent.research.errors import FixtureDataError
-from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
+from visa_research_agent.research.outcomes import (
+    plan_references,
+    require_load_bearing_sources,
+    resolve_plan_status,
+)
 from visa_research_agent.research.quotes import QuoteChecker
 
 
@@ -147,7 +151,7 @@ class FixtureVisaPlanExtractor:
         ):
             raise FixtureDataError("Fixture checklist contains a non-application document source")
 
-        references = [fetched_source.source for fetched_source in fetched_sources]
+        references = plan_references(destination, fetched_sources)
         last_checked = max(reference.retrieved_at for reference in references)
         # The same check as the live path, so a fixture quote that drifts from its snapshot is
         # dropped rather than shown, and the offline plan cannot demonstrate a guarantee it skips.

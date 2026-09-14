@@ -22,7 +22,11 @@ from visa_research_agent.domain.models import (
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LLMExtractionError, VisaResearchError
 from visa_research_agent.research.interfaces import StructuredPlanGenerator
-from visa_research_agent.research.outcomes import require_load_bearing_sources, resolve_plan_status
+from visa_research_agent.research.outcomes import (
+    plan_references,
+    require_load_bearing_sources,
+    resolve_plan_status,
+)
 from visa_research_agent.research.quotes import QuoteChecker
 
 
@@ -220,7 +224,7 @@ class OpenAIVisaPlanExtractor:
         if draft.destination != destination.display_name:
             raise LLMExtractionError("Model output does not match the configured destination")
 
-        references = [fetched_source.source for fetched_source in fetched_sources]
+        references = plan_references(destination, fetched_sources)
         # Named in the plan so the traveller gets the URL and can open it themselves. Synthetic
         # because there is no retrieval to report: the block was observed while the corridor was
         # being resolved, and `unavailable_sources` is where a plan already says what it could not

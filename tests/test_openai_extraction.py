@@ -643,6 +643,40 @@ async def test_a_plan_refuses_a_quote_from_a_page_its_claim_does_not_cite() -> N
         VisaPlan.model_validate(payload)
 
 
+@pytest.mark.anyio
+async def test_a_plan_ties_each_source_to_the_text_it_was_read_from_and_why_it_was_chosen() -> None:
+    """Item 21, parts 2 and 3. A plan could name a page and not the version of it, and why the page
+    was picked for a role stopped at the resolved corridor.
+
+    Attached when the plan is built, from this run's retrieval and this destination's sources —
+    never from the retrieval cache, which is shared between corridors that chose a page differently.
+    """
+
+    payload = singapore_config().model_dump(mode="json")
+    for source in payload["sources"]:
+        if source["source_id"] == "sg_ica_india_visa_details":
+            source["selection"] = {
+                "roles": ["visa_decision", "document_checklist"],
+                "decided_by": "model",
+                "score": 113.0,
+                "signals": ["url:india+40"],
+            }
+    destination = DestinationConfig.model_validate(payload)
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(load_golden_draft()), maximum_input_characters=80_000
+    ).extract(destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    hashes = {item.source.source_id: item.content_hash for item in fetched_sources.fetched}
+    assert {source.source_id: source.content_hash for source in plan.sources} == hashes
+    chosen = {source.source_id: source.selection for source in plan.sources}
+    selection = chosen["sg_ica_india_visa_details"]
+    assert selection is not None and selection.decided_by == "model"
+    # A hand-written source was chosen by a person, and says nothing rather than inventing a score.
+    assert chosen["sg_ica_visa_requirement_overview"] is None
+
+
 def test_the_model_is_told_to_point_at_the_page_that_may_hold_the_decision() -> None:
     prompt = load_extraction_prompt()
 

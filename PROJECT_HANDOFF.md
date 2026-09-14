@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 739 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 740 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -182,8 +182,9 @@ checklist is now said as what was found rather than that none exists, and its se
 (entry 154): a likely checklist page the run could not open is named with its link. Item 54 then
 grouped a plan's refused pages into one sentence per authority, the pages that may hold the decision
 first (entry 155). Item 21's first part followed (entry 156): the visa decision and every document
-requirement now carry a quote checked word for word against the retrieved page. **Start at item
-21's remaining parts.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+requirement now carry a quote checked word for word against the retrieved page, and its last two parts
+closed it (entry 157): every cited source carries its page's content hash and why discovery chose
+it. **Start at item 31**, the first of the optimisation items. **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -657,14 +658,7 @@ re-add the amendment history here.
    2026-09-14 (entry 156) the visa decision and every document requirement carry quotes the model
    wrote and the application kept only where the retrieved text holds them; the route and the steps
    do not. `SourceReference.supporting_excerpt` is still written only by `FixtureSourceFetcher` and is
-   superseded by the per-claim quotes. TODO item 21.
-
-21. **A plan cannot be tied to the text it was read from.** `content_hash` is on `FetchedSource`;
-   `SourceReference` has no hash field, so nothing in a `VisaPlan` identifies the version of the page
-   behind a claim. TODO item 21.
-
-22. **Why a page was chosen for a role never leaves discovery.** `decided_by`, `score` and `signals`
-   live in `ResolvedCorridor` and appear nowhere in the API response. TODO item 21.
+   superseded by the per-claim quotes. Recorded rather than queued.
 
 23. **The interface offers 198 destinations and can reach 53.** `researchable_destinations()` lists
    every country with `status="available"`, but 143 have no row in `authority_domains.yaml` and are
@@ -849,7 +843,8 @@ plan never run live — entries 56, 57), **18** (the excerpt silently deciding c
 against an oracle the arms built — entry 87 replaces it with a curated one), **39** (the web app
 serving Singapore and Japan from hand-written pages — entry 149), **40** (a null visa decision graded
 `verified` — entry 150), **7** (nobody had read a blocked-authority plan as a traveller would —
-entry 152). Also removed as fixed: a
+entry 152), **21** and **22** (a plan tied to no version of its pages, and to no reason a page was
+chosen — entry 157). Also removed as fixed: a
 block resolving a corridor it had nothing to do with (entry 32), the unverified `conflicts` field
 (entry 30), and a failed model call substituting the heuristic (entry 31).
 
