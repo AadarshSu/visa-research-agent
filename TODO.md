@@ -294,6 +294,19 @@ careful reading and were wrong.
 
 ### 17. Decide what a corridor that flips between runs should do — `next`, **start here**
 
+> **Counted on 2026-09-14 (entry 151), and what is left is a decision for the owner.**
+> `united-states/IN/GB` ran three times back to back: **`resolved_decision_blocked` every time**,
+> the same two roles, the same 2,478 candidates. Two things below are corrected by it: the repeat
+> **does** spend search (15 queries a run), and entry 118's flip was **not** the refused-page
+> judgement answering both ways — its refusing run filled no role, and a corridor with no sources
+> refuses whatever that judgement says.
+>
+> **The decision the counting turned up is not among the four options below.** A refusal is never
+> stored and a resolution is kept for three weeks, so a corridor that resolves on some runs is
+> retried by every next request until one resolves, and that run is then served to everyone — option
+> 1 happening across requests, unchosen. Keep it, store refusals for a short window, or require
+> agreement before storing: entry 151 sets out the trade, and nothing is built until it is chosen.
+
 **Why:** measured 2026-08-21, and it changes how every other number in this file should be read.
 `canada/GB/GB/tourism`, run cold twice within the hour on the same code against the same five domains,
 **refused once and resolved once.** The difference was not scoring: on the resolving run
@@ -384,9 +397,11 @@ labelled *"Visitor Visa"* among them — and answered it both ways.
 was built to remove, and the 2026-08-22 counting found nothing. This one is the model, on the call
 that decides **whether the corridor resolves at all** rather than which roles fill — known problem
 10 reaching further than that problem has ever recorded. Options 1–4 above are all about recall and
-none of them addresses it. **Count this one before designing anything:** `--runs 3` on
-`united-states/IN/GB` is corpus-routed, so it costs no search quota and isolates the model, which is
-exactly what the 2026-08-22 run could not do.
+none of them addresses it. ~~**Count this one before designing anything:** `--runs 3` on
+`united-states/IN/GB` is corpus-routed, so it costs no search quota and isolates the model~~ —
+**counted 2026-09-14 (entry 151): three resolutions, no flip, and the premise was wrong twice.**
+Search runs on every corridor (15 queries here), and the 09-01 refusal filled no role, so it was never
+the judgement answering both ways.
 
 **One finding that is not about variance at all:** `document_checklist` went unfilled on every run
 even though `.../visit-canada/supporting-documents` scored **64.0** for exactly that role and was

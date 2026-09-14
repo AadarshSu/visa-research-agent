@@ -800,6 +800,9 @@ cause, and only running the thing showed it.
 | `visa-discover corridor` measured what the web app served | for SG and JP the app served hand-pinned pages, the command ran discovery (entry 149) |
 | a hand-pinned checklist hands a Filipino London's list | the model declined it and a guard turned that into a 503 (entry 149) |
 | a plan with an unconfirmed decision is never `verified` | only a block or a tool downgraded it; a model's own null did not (entry 150) |
+| the US flip was the blocked-page judgement answering both ways | the refusing run filled no role, so it refused whatever that said (entry 151) |
+| a repeat corpus-routed US run spends no search | search runs on every corridor — 15 queries a run (entry 151) |
+| a refusal is not retried, only re-searching on refusal would do that | refusals are not stored, so the next request retries them (entry 151) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

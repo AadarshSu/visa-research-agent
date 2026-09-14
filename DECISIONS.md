@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [151](#151-the-united-states-corridor-did-not-flip-in-three-runs-entry-118s-flip-was-never-the-judgement-and-a-refusal-is-retried-by-the-next-request) | **The US corridor did not flip in 3 runs; entry 118's flip was a run that filled nothing, not the judgement** — and because a refusal is never stored, the next request retries it until one resolves and that answer is kept three weeks |
 | [150](#150-a-null-visa-decision-is-never-verified-whatever-left-it-null--and-the-plan-enforces-it) | **A null visa decision is never `verified`** — extraction downgraded only a block or a questionnaire, so a model's own null was graded verified; now held in extraction and in `VisaPlan` |
 | [149](#149-a-hand-written-destination-answers-only-when-research-is-off-because-singapore-and-japan-refused-everyone-they-were-not-written-for) | **Singapore and Japan served one traveller's pages to everyone, and refused the rest with a 503 blaming the model** — a hand-written entry now answers only under `configured`; Japan's `IN/GB` checklist fills 1 of 3 automatic runs |
 | [148](#148-the-corpus-holds-what-every-traveller-shares-live-search-fetches-what-this-traveller-needs) | **The owner settles the hybrid: the corpus holds what every traveller shares, live search fetches this traveller's specifics** — item 49 stops, 35 and 47 move to Later, and 5 of 15 live queries carry no traveller detail |
@@ -199,6 +200,73 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 151. The United States corridor did not flip in three runs, entry 118's flip was never the judgement, and a refusal is retried by the next request
+
+**2026-09-14 · measured, TODO item 17 — the counting half; the decision is left open**
+
+Item 17 asked for the flip entry 118 recorded on `united-states/IN/GB/tourism` to be counted before
+anything was designed. It was:
+
+```bash
+.venv/bin/visa-discover corridor --destination united-states --nationality IN --from GB --runs 3
+```
+
+| run | outcome | pages read | roles filled |
+| --- | --- | --- | --- |
+| 1 | `resolved_decision_blocked` | 11 | `application_route`, `general_entry` |
+| 2 | `resolved_decision_blocked` | 12 | `application_route`, `general_entry` |
+| 3 | `resolved_decision_blocked` | 11 | `application_route`, `general_entry` |
+
+**2,478 candidates, every one seen by all three runs.** The last run's log shows three model calls —
+selection, roles, and the refused-page judgement — so the judgement was asked and qualified pages each
+time. **So: 0 flips in 3 back-to-back runs**, which is the same weak claim entry 44's Canada count
+made and must be read the same way — minutes apart is not hours or days apart.
+
+### Two written claims this corrects
+
+**"Corpus-routed, so it costs no search quota and isolates the model" is false.** Entry 47 put search
+on every corridor and it runs here: the 2026-09-01 log this measurement overwrote records **15
+queries, 82 seeds**, and two of its four readable pages came from search. A repeat costs about $0.28.
+The count isolates nothing, which is why the candidate set matters: it was identical.
+
+**Entry 118's flip was not the judgement answering both ways.** Its run 1 read 9 pages and filled
+**no role**; its run 2 read 14 and filled two. `ResolvedCorridor.outcome_cause` returns
+`decision_not_found` for any corridor with no sources, **whatever `decision_blocking_urls` holds**, and
+`is_usable` requires a source beside a blocked decision. So run 1 would have refused if the judgement
+had qualified every page, and nothing recorded what it said: `RecallRecord` has no field for the
+verdict. What varied was what was read and what was filled — five fewer pages, and zero roles from
+them — which is known problem 10 or fetch variance, not entry 57's call. Its stated mechanism was an
+inference from two outcome sentences, and it was the wrong one.
+
+**The shape that makes it fragile is still there.** The corridor resolves on two roles filled from
+**three readable pages** — `usa.gov/tourist-visa`, `dhs.gov/visit-united-states`, `i94.cbp.dhs.gov` —
+beside eight it may not read. One of those three missing, or declined, and it refuses. And one thing
+moved since 09-01: `uk.usembassy.gov`'s visa pages now come back `blocked` (a `403`) where that run
+recorded `disallowed`. Noted, not investigated.
+
+### What the counting turned up for the decision, and it is not in item 17's options
+
+**A refusal is never stored and a resolution is kept for three weeks.**
+`AutomaticDestinationService.destination_for` raises before `self.store.store(...)` when
+`resolved.is_usable` is false, and serves any stored corridor younger than
+`corridor_maximum_age_hours`. So for a corridor that resolves on some runs and not others, **every
+refused request is followed by a fresh attempt from the next traveller, until one resolves — and that
+one is served to everyone for three weeks.**
+
+That is item 17's option 1, *"re-search on refusal … how a pipeline talks itself into an answer"*,
+happening across requests rather than inside one, and nobody chose it. Whether it costs correctness is
+unmeasured and depends on what varies: where it is fetch variance (a transient failure), retrying is
+exactly right; where it is an adjudicator sometimes accepting a page it usually declines, the store
+selects for the permissive run and keeps it. Today's `japan/IN/GB` checklist — designated in 1 of 3
+runs (entry 149) — is the same selection one level down: a corridor missing only its checklist is
+usable, so it is stored, and every plan rendered from it for three weeks lacks the checklist.
+
+**Left open, because it is the owner's call and it is a trade:** keep it; store refusals for a short
+window so a refusal is as sticky as a resolution; or require agreement before storing. Each changes
+what a traveller is served, and none should be built before the choice is written down.
 
 ---
 

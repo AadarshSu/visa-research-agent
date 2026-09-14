@@ -174,7 +174,8 @@ the minority. Correctness comes first, then optimisation, then expansion. **Item
 same day (entry 149)**: the web app served Singapore and Japan from hand-written pages and refused
 every traveller they were not written for, and now researches them like every other country.
 **Item 53 was done that day too (entry 150)**: a plan whose visa decision is null can no longer be
-graded `verified`. **Start at item 17.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+graded `verified`. **Start at item 17**, whose counting is done (entry 151) and whose remaining
+step is the owner's decision on storing refusals. **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -568,14 +569,13 @@ re-add the amendment history here.
    corridor can be `is_usable` with a role unfilled for a purely model-side reason, indistinguishable
    from item 8. It also reaches which *tools* get named (entry 60).
 
-   **And it reaches whether the corridor resolves at all, which is new (entry 118).**
-   `united-states/IN/GB/tourism`, twice within seven minutes, corpus-routed so no search was
-   involved: run 1 refused `decision_not_found`, run 2 resolved `resolved_decision_blocked`. The
-   same three `travel.state.gov` URLs were refused in both and all three were in `candidates`, so
-   `_decision_blocking_judged` answered the same question about the same pages both ways. Every
-   earlier observation of this problem was about which roles fill; this one is the load-bearing
-   decision. It fails safe — a lost plan, never an invented one — and it is now the counting item 17
-   asks for, at no search cost.
+   **It can reach whether a corridor resolves, though not the way entry 118 said (entry 151).**
+   `united-states/IN/GB/tourism` refused once and resolved once on 2026-09-01; the refusing run
+   read 9 pages and filled **no role**, so it refused whatever the refused-page judgement said, and
+   search was involved in both. Counted on 2026-09-14 it resolved **3 of 3** back to back. What makes
+   such a corridor fragile is a resolution resting on three readable pages; and because a refusal is
+   never stored while a resolution is kept three weeks, the next request retries a refusal until one
+   run resolves. That trade is TODO item 17's open decision.
 
 11. **Bot-blocked official portals are a real limit, but not the largest one** — measured, the wizard
    was, and that is now handled (entries 58–61). **Counted rather than assumed since entry 63**:
