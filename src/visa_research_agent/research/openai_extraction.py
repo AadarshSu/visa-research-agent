@@ -243,6 +243,29 @@ class OpenAIVisaPlanExtractor:
         visa_required = None if destination.decision_is_unverified else draft.visa_required
         entry_only = visa_required is False
 
+        # Likely checklist pages discovery could not open, named so the traveller can (item 9). Only
+        # where this plan has no checklist and there is an application to have one for, and never a
+        # second time for a page something above already names. Titled "possible" because a link
+        # score is all that makes one likely: nobody read it.
+        already_named = {str(failure.attempted_url) for failure in [*report.failures, *refused]}
+        unread_checklists = (
+            []
+            if entry_only or application_source_ids
+            else [
+                page.model_copy(
+                    update={
+                        "source_id": f"checklist_unread_{index + 1}",
+                        "title": f"Possible document checklist: {page.title}",
+                    }
+                )
+                for index, page in enumerate(
+                    page
+                    for page in destination.unread_checklist_pages
+                    if str(page.attempted_url) not in already_named
+                )
+            ]
+        )
+
         requirements = [
             requirement
             for requirement in draft.requirements
@@ -294,7 +317,7 @@ class OpenAIVisaPlanExtractor:
                     decision_is_unverified=visa_required is None,
                     no_visa_required=visa_required is False,
                 ),
-                unavailable_sources=[*report.failures, *refused],
+                unavailable_sources=[*report.failures, *refused, *unread_checklists],
                 # Straight from the configuration, never from the draft: the traveller is being
                 # sent to this URL, so it has to be one an authority published.
                 official_tools=destination.official_tools,

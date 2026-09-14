@@ -229,6 +229,82 @@ def checklist_less(destination: DestinationConfig) -> DestinationConfig:
     return DestinationConfig.model_validate(payload)
 
 
+UNREAD_CHECKLIST = "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/documents"
+
+
+def with_unread_checklist(destination: DestinationConfig) -> DestinationConfig:
+    """Discovery met a likely checklist page for this corridor and could not read it."""
+
+    payload = destination.model_dump(mode="json")
+    payload["unread_checklist_pages"] = [
+        {
+            "source_id": "singapore_www_documents",
+            "title": "Documents required",
+            "authority": "Singapore authority (www.ica.gov.sg)",
+            "outcome": "challenged",
+            "detail": "asked this client to prove it is a browser, and that could not be answered",
+            "attempted_url": UNREAD_CHECKLIST,
+        }
+    ]
+    return DestinationConfig.model_validate(payload)
+
+
+@pytest.mark.anyio
+async def test_a_plan_with_no_checklist_names_the_likely_page_it_could_not_read() -> None:
+    """Item 9. The traveller can open a page this program could not, so the plan hands it over."""
+
+    draft = load_golden_draft().model_copy(
+        update={
+            "requirements": [],
+            "unresolved_questions": ["No official document checklist was found."],
+        }
+    )
+    destination = with_unread_checklist(checklist_less(singapore_config()))
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(draft), maximum_input_characters=80_000
+    ).extract(destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    named = [
+        source for source in plan.unavailable_sources if source.source_id.startswith("checklist")
+    ]
+    assert [str(source.attempted_url) for source in named] == [UNREAD_CHECKLIST]
+    assert named[0].title.startswith("Possible document checklist"), "nobody read it"
+    assert plan.requirements == [], "naming a page never permits listing what it might say"
+    assert plan.status == "partial"
+
+
+@pytest.mark.anyio
+async def test_no_checklist_page_is_named_where_no_application_arises() -> None:
+    """A stated "no visa" has no checklist to be missing, so there is nothing to point at."""
+
+    golden_draft = load_golden_draft()
+    draft = golden_draft.model_copy(
+        update={
+            "visa_required": False,
+            "visa_type": None,
+            "where_to_apply": None,
+            "requirements": [],
+            "unresolved_questions": [],
+            "application_steps": [
+                step
+                for step in golden_draft.application_steps
+                if step.link_target != "application_route"
+            ][:3],
+        }
+    )
+    destination = with_unread_checklist(checklist_less(singapore_config()))
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(draft), maximum_input_characters=80_000
+    ).extract(destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    assert plan.unavailable_sources == []
+    assert plan.status == "verified"
+
+
 @pytest.mark.anyio
 async def test_a_corridor_with_no_checklist_source_still_produces_a_plan() -> None:
     """DECISIONS entry 14 stopped a missing checklist refusing the corridor, and built

@@ -808,6 +808,7 @@ cause, and only running the thing showed it.
 | a missing checklist means none exists or we failed to find it | nobody can show none exists — say what was found among pages read (entry 153) |
 | a plan with no checklist only hedges about what it could not find | the prompt told the model the authority "publishes no document checklist" (entry 153) |
 | a reviewed per-country declaration can settle that none exists | a reviewer can no more prove absence than the pipeline — withdrawn (entry 153) |
+| a recall log's `fetched` marks every page a run tried to read | only pages it read; a refused page is not `fetched`, so count failures apart (entry 153) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

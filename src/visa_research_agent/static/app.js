@@ -124,9 +124,14 @@ function renderEvidenceBanner(plan) {
       list.append(item);
       return;
     }
-    list.append(
-      element("li", "", `${failure.title} (${failure.authority}) — ${failure.detail}`),
-    );
+    const item = element("li", "", `${failure.title} (${failure.authority}) — ${failure.detail}`);
+    // An official page we could not read is still one the traveller can open, so it gets its link.
+    if (failure.attempted_url) {
+      item.append(document.createTextNode(". It is at "));
+      item.append(externalLink(failure.attempted_url, failure.attempted_url));
+      item.append(document.createTextNode(" — open it yourself to check."));
+    }
+    list.append(item);
   });
   staleSources.forEach((source) => {
     const checked = new Date(source.retrieved_at).toLocaleDateString();

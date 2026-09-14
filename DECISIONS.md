@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [154](#154-a-likely-checklist-page-the-run-could-not-open-is-named-the-way-a-refused-decision-page-is) | **A likely checklist page the run could not open is named with its link** — set by the application, never the model, re-checked against the approved domains, and only where no checklist was found |
 | [153](#153-nobody-can-show-a-checklist-does-not-exist-so-a-plan-says-what-was-found--and-the-per-country-declaration-is-withdrawn) | **A missing checklist is said as what was found, never that none exists** — the prompt, the panel and the delegate box all asserted absence; the per-country declaration is withdrawn |
 | [152](#152-a-blocked-authority-plan-reads-as-we-could-not-check--and-a-stored-corridor-withheld-the-embassy-a-fresh-run-names) | **Read as a traveller, a blocked-decision plan says "we could not check"** — but it repeats one sentence per refused page, and a 16-day-old stored corridor withheld the London embassy a fresh run names |
 | [151](#151-the-united-states-corridor-did-not-flip-in-three-runs-entry-118s-flip-was-never-the-judgement-and-a-refusal-is-retried-by-the-next-request) | **The US corridor did not flip in 3 runs; entry 118's flip was a run that filled nothing, not the judgement** — and because a refusal is never stored, the next request retries it until one resolves and that answer is kept three weeks |
@@ -202,6 +203,44 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 154. A likely checklist page the run could not open is named, the way a refused decision page is
+
+**2026-09-14 · TODO item 9, second part — kept small at the owner's steer that it is not that important**
+
+Entry 153 stopped plans claiming a checklist does not exist. Its table left one case a traveller can
+act on: **7 of 60** resolved corridors without a checklist met likely checklist pages and could not
+read them. A plan now names those pages, with their address and the reason, under *Evidence and
+caveats*.
+
+**What qualifies, and each bound is deliberate.**
+
+- **Likely** means the page's link score for `document_checklist` is above zero — the measure entry
+  153 counted with. It is a reason to name a page and never evidence of what it says, so the plan
+  titles it *"Possible document checklist: …"*.
+- **Could not open** means the shortlist fetch recorded it `challenged`, `unreachable`, `unusable` or
+  `disallowed`, with that run's own detail. `blocked` is left out because a settled refusal is
+  already named as an unreadable authority, and `untrusted` because it landed off the approved
+  domains and is not an address to send anyone to.
+- **Only when it matters**: no page filled the checklist, the plan has no checklist source, and the
+  plan is not a visa-free entry plan. A page is named once, and never beside the same address
+  already named elsewhere in the plan.
+
+**How it travels, on the route refusals already take.** `unread_checklist_pages` in the resolver →
+`ResolvedCorridor.unread_checklist_pages` → `to_destination_config`, where `DestinationConfig`
+re-checks every address against the approved domains → the extractor adds them to
+`unavailable_sources`. **The application sets them; the model never sees them**, so nothing about a
+page nobody read can reach a sentence, and naming one lists no requirement —
+`validate_absent_checklist` is untouched. The interface now links **every** unreadable page that has
+an address, where it used to link only a refusal.
+
+**Deliberately not done.** Crawl-stage failures are not carried: they have no typed outcome, and all
+seven measured corridors met their likely pages at the fetch. The other three cases in entry 153's
+table get entry 153's wording and nothing more. A corridor stored before today names nothing until
+it expires. And it is **not verified on a live corridor** — twelve tests and the evidence banner
+rendered in the running interface from a constructed plan, with no console errors.
 
 ---
 

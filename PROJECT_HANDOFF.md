@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-14 — update this line when you touch the handoff |
-| **Tests** | 714 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 727 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -178,8 +178,9 @@ graded `verified`. Item 17 closed the same day: its counting is done (entry 151)
 storing decision it turned up is deferred to item 7, before deploying. Item 8 was read the same day
 (entry 152): a blocked-decision plan reads as *we could not check*, and it found item 54 and a stored
 corridor withholding the London embassy. Item 9 was re-scoped the same day (entry 153): a missing
-checklist is now said as what was found rather than that none exists. **Start at item 9's second
-part** — naming which observed case applies. **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+checklist is now said as what was found rather than that none exists, and its second part closed it
+(entry 154): a likely checklist page the run could not open is named with its link. **Start at item
+54.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -531,8 +532,9 @@ re-add the amendment history here.
    not *which* case it is. **Re-scoped 2026-09-14 (entry 153):** nobody can show a checklist does not
    exist, so the aim is no longer to tell the two apart. The product had been asserting the first — the
    prompt, the panel and the delegate box all said none was published — and now says what was found
-   among the pages it could read; the per-country declaration is withdrawn. What is left is saying which
-   observed case applies (7 of 60 resolved corridors met likely checklist pages they could not read). Now attached to Germany and the United States, 0/8 checklists each, rather
+   among the pages it could read; the per-country declaration is withdrawn. The one case a traveller
+   can act on — 7 of 60 resolved corridors met likely checklist pages they could not read — now names
+   those pages with their links (entry 154). The rest of this problem stands as a limit, not a task. Now attached to Germany and the United States, 0/8 checklists each, rather
    than to a hypothetical. **And a third answer is on the table for Germany**: `visa-discover audit`
    records seven pages on `www.auswaertiges-amt.de` fetched and holding too little readable text to
    trust, which is neither of the two cases this problem names. Entry 14, entry 63; TODO item 9.

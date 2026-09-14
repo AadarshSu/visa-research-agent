@@ -331,6 +331,10 @@ class DestinationConfig(StrictModel):
     unreadable_authorities: list[UnreadableAuthority] = Field(default_factory=list)
     """The destination's own authorities that refused this program, for the plan to point at."""
 
+    unread_checklist_pages: list["SourceFailure"] = Field(default_factory=list)
+    """Likely document-checklist pages discovery tried and could not read, for the plan to name.
+    Never evidence of what they say — see `ResolvedCorridor.unread_checklist_pages`."""
+
     official_tools: list[InteractiveTool] = Field(default_factory=list)
     """Official questionnaires that answer a question this destination publishes no page for."""
 
@@ -424,6 +428,12 @@ class DestinationConfig(StrictModel):
         # The same rule, for the same reason. A tool's page *was* read, but nothing in its text is
         # what makes it official — entry 2 — and a traveller is being sent there to get an answer
         # this plan could not state, which is the last place to start trusting prose.
+        for page in self.unread_checklist_pages:
+            if not self.trusts_host(host_of(str(page.attempted_url))):
+                raise ValueError(
+                    f"unread checklist page {page.attempted_url} is not on an approved domain"
+                )
+
         for tool in self.official_tools:
             if not self.trusts_host(host_of(str(tool.url))):
                 raise ValueError(f"official tool {tool.url} is not on an approved domain")

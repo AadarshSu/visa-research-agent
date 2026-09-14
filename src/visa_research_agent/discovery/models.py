@@ -15,6 +15,7 @@ from visa_research_agent.domain.models import (
     ConfiguredSource,
     DestinationConfig,
     GuidanceTopic,
+    SourceFailure,
     SourceKind,
     SourcePass,
     StrictModel,
@@ -360,6 +361,14 @@ class ResolvedCorridor(StrictModel):
     prevent. See DECISIONS entry 32.
     """
 
+    unread_checklist_pages: list[SourceFailure] = Field(default_factory=list)
+    """Pages that looked like this traveller's document checklist and could not be read here.
+
+    Empty whenever a page filled the checklist. Named so the traveller can open them, never read or
+    cited, exactly as a refused decision page is (entry 27): nobody can show a checklist does not
+    exist (entry 153), but this run can show it met a likely one it could not open. TODO item 9.
+    """
+
     delegated_services: list["ResolvedDelegate"] = Field(default_factory=list)
     """Where the authority sends this traveller for a role it does not publish itself."""
 
@@ -532,6 +541,11 @@ class ResolvedCorridor(StrictModel):
                 ),
             }
             for url in self.inaccessible_urls
+        ]
+        # Carried whole: the outcome and detail are what this run saw, and the destination's
+        # validator re-checks every address against the approved domains like the refusals above.
+        payload["unread_checklist_pages"] = [
+            page.model_dump(mode="json") for page in self.unread_checklist_pages
         ]
         # Read, not refused, so it is neither a source nor an unreadable authority. It is a page
         # the traveller can finish themselves, and the detail says exactly that — never a guess at

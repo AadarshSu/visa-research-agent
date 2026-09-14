@@ -215,6 +215,44 @@ DEFAULT_EXCERPT_WINDOW_CHARACTERS = 3_000
 # is not what DECISIONS entry 18 forbids; that is about an authority refusing to be read.
 ADJUDICATION_ATTEMPTS = 2
 
+# Why a likely checklist page may be named. `blocked` is named already, as an unreadable authority,
+# whenever the refusal was settled; `untrusted` landed off the approved domains, so its address is
+# not one to send a traveller to.
+NAMEABLE_CHECKLIST_OUTCOMES = frozenset({"challenged", "unreachable", "unusable", "disallowed"})
+
+
+def unread_checklist_pages(
+    failures: list[SourceFailure],
+    candidates: dict[str, CandidatePage],
+    *,
+    checklist_filled: bool,
+    already_named: list[str],
+) -> list[SourceFailure]:
+    """Likely document-checklist pages this run tried and could not read, for a plan to name.
+
+    TODO item 9. Nobody can show a checklist does not exist (entry 153), but a run can show it met a
+    page that looked like one and could not open it — and the traveller can. "Likely" is the page's
+    link score for the role, which is a reason to name it and never evidence of what it says.
+    """
+
+    if checklist_filled:
+        return []
+    named = set(already_named)
+    pages: list[SourceFailure] = []
+    for failure in sorted(failures, key=lambda item: str(item.attempted_url)):
+        url = str(failure.attempted_url)
+        candidate = candidates.get(url)
+        if (
+            url in named
+            or failure.outcome not in NAMEABLE_CHECKLIST_OUTCOMES
+            or candidate is None
+            or candidate.link_scores.score_for("document_checklist") <= 0
+        ):
+            continue
+        named.add(url)
+        pages.append(failure)
+    return pages
+
 
 class AdjudicationRefusal(AdjudicationError):
     """Every adjudication attempt failed, so the corridor is refused rather than guessed at.
@@ -849,6 +887,12 @@ class CorridorResolver:
             inaccessible_domains=inaccessible,
             inaccessible_urls=refused,
             decision_blocking_urls=blocking,
+            unread_checklist_pages=unread_checklist_pages(
+                fetched.failures,
+                candidates,
+                checklist_filled="document_checklist" in filled,
+                already_named=refused,
+            ),
             interactive_tools=tools,
             delegated_services=delegates,
             queries=queries,
