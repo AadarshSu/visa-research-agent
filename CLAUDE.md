@@ -43,7 +43,8 @@ measured-but-unshipped cacheable prefix. The instrumentation stays on: `phase_se
 shares; live search fetches what this traveller needs, and stays the minority** of what a corridor
 reads and pays for. Making the store cover every nationality and residence offline is not the
 corpus's job, so **item 49 stopped where it was and items 35 and 47 moved to Later**; a
-traveller-neutral gap, like a host entered below its root, still is (item 48). **The order is
+traveller-neutral gap still is — item 48, where the gap turned out to be pages a build's own search
+found and discarded (entry 161). **The order is
 correctness, then optimisation, then expansion.**
 
 **Search stays on every corridor, measured — 2026-09-15 (entry 159).** Letting the corpus answer first
@@ -842,6 +843,10 @@ cause, and only running the thing showed it.
 | the purpose query carries no traveller detail, so it finds nothing traveller-specific | `site:` a post's domain, it returns that post's checklist — Japan's London embassy, Norway's India PDF (entry 160) |
 | "first query to return a page" overstates what a query alone finds | re-issued, 28 of 45 purpose-first pages came back from the purpose query alone (entry 160) |
 | role counts show what dropping a query costs | it swapped pages: Norway's checklist became an older file, Japan's a questionnaire (entry 160) |
+| seeding a host's root reaches the pages a build entered sideways | 0 of 9 targets from 8 roots — Thailand's root *is* the form, Japan London's answers 404 (entry 161) |
+| a page a build's search returned is a page its corpus holds | a seed was kept only if something linked to it — Norway's rebuild kept 174 of 198 (entry 161) |
+| the corpus lacks what only live search supplies | the build's own search returned Norway's checklist and TDAC's form, and threw them away (entry 161) |
+| a PDF a build's search returns is read in the PDF pass | that pass read only linked PDFs; a PDF seed was never read at all (entry 161) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

@@ -37,6 +37,12 @@ pays:
     to a general ministry page;
   - Norway `IN/IN`'s January 2024 checklist was replaced by an older file.
 
+**Item 48 was worked the same day and is half done (entry 161).** Root seeding was probed and
+rejected: 0 of 9 target pages were reached from their roots. The gap it was chasing turned out to be
+a build discarding its own search seeds — a seed became an entry only if another page linked to it.
+That is fixed, and Norway, Thailand and Japan were rebuilt with it. **Whether it changes a
+traveller's answer is not measured**, so item 48 stays first until it is.
+
 **Re-ordered 2026-09-14 by the owner's rule for the hybrid (entry 148).** **The corpus holds what
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
 the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
@@ -267,7 +273,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 48. Test root seeding before building it, and separate discovery from allocation | `next` |
+| **Now** | 48. A build now keeps its own search seeds; measure what that buys before rebuilding the rest | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 |  | 19. Get a corridor under ten seconds; search may stay | **paused** |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
@@ -307,7 +313,39 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 48. Test root seeding before building it, and separate discovery from allocation — `next`
+### 48. A build now keeps its own search seeds; measure what that buys before rebuilding the rest — `next`
+
+> **Worked 2026-09-15 (entry 161): root seeding rejected, a different discovery defect fixed, and its
+> benefit not yet measured.**
+>
+> - **Root seeding, probed on eight hosts** with the build's own crawler and nothing written: **0 of
+>   9 target pages reached**. Thailand's root *is* the arrival-card form and links nothing; Japan's
+>   London embassy root answers `404`; Spain read 57 pages and found nothing that scores; the UK fee
+>   host drifted into 147 GOV.UK pages. By the rule below that is "worse", and Thailand's positive did
+>   not appear. Not built.
+> - **The gap was a build discarding its own search seeds.** `crawl` records links found on pages,
+>   never the seeds, and a PDF seed was never read. Today's build queries return 146 of Norway's 194
+>   seeds, 122 of Thailand's 152 and 167 of Japan's 282 that the corpora did not hold — including
+>   Norway's January 2024 checklist, Thailand's arrival card and Japan's London-embassy tourism page,
+>   all pages corridors had been getting only from live search. **Fixed in `corpus_build.py`**, with
+>   two tests shown failing on the old code; the request path is unchanged.
+> - **Norway, Thailand and Japan were rebuilt with the fix**: 174, 127 and 156 seeds kept, and all
+>   three pages are now held.
+>
+> **What is left, in order:**
+>
+> 1. **Measure whether it changes an answer, before rebuilding anything else.** `norway/IN/IN`,
+>    `thailand/IN/GB` and `japan/IN/GB`, twice each on the old and new corpus with search stubbed out
+>    (the case the fix is for), and twice each with search on (regression, and selection input). One
+>    cache, about 24 runs, about $6. The old corpora are `var/corpus/pre-seeds-{NO,TH,JP}.json.bak`
+>    with matching `var/pagetext/pre-seeds-*.sqlite3.bak` — swap them in for the old arm and back
+>    afterwards. Count a corpus-only gain as the fix's only where a depth-0 entry fills the role: the
+>    rebuild also crawled differently.
+> 2. **Then the owner decides the other 50 rebuilds**, about 13 hours and $17 of search.
+> 3. **The two allocation findings below** — fair shares between unequal hosts, and `www.` counted as
+>    its own host — are untouched.
+>
+> The item as first written follows; its root-seeding experiment is the part now answered.
 
 **Entry 130 proposed seeding every trusted host's root and deliberately did not build it.** This is
 that experiment, plus the thing measuring it turned up: **item 35 is two problems, and the fix for

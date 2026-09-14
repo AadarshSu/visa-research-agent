@@ -307,8 +307,8 @@ async def test_china_and_india_pages_both_survive_a_rebuild() -> None:
 async def test_a_host_that_gives_the_build_nothing_is_named() -> None:
     """The gap that was invisible, and stayed invisible because nothing could see it.
 
-    A seed never becomes a corpus entry — only the links found *on* a fetched page do — so a seeded
-    host whose own fetch fails leaves no entry, no `unreadable` count and no trace of any kind.
+    A seeded host whose own fetch fails leaves at most an `unreadable` seed entry — before entry 161
+    not even that — so without this report it leaves no trace a reader would notice.
     Japan's London embassy went missing through a transient `403` during a build, and the corpus has
     lacked the whole host ever since while live search returns it and a live corridor reads a
     document checklist from it. DECISIONS entry 77.
@@ -344,6 +344,76 @@ async def test_a_host_that_gives_the_build_nothing_is_named() -> None:
     assert "403" in report.lost_hosts[MISSION]
     # A host the build did read is not "lost", however many of its individual pages failed.
     assert AUTHORITY not in report.lost_hosts
+
+
+@pytest.mark.anyio
+async def test_a_search_seed_nothing_links_to_is_kept_as_an_entry() -> None:
+    """A page the build's own search found is kept, not only the pages that link to it.
+
+    `crawl` returns what it found on pages, never its seeds, so a seed nothing else linked to was
+    dropped: 75% of Norway's seeds, 80% of Thailand's and 59% of Japan's were absent from their
+    corpora, among them pages live corridors could get only from search (entry 161).
+    `FULL_CHECKLIST` is linked from nothing in the fixture, which is exactly that shape.
+    """
+
+    corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX, FULL_CHECKLIST, ARCHIVED]),
+        fetcher([]),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+    )
+
+    kept = corpus.find("tourism-checklist.html")
+    assert [entry.url for entry in kept] == [FULL_CHECKLIST]
+    assert kept[0].depth == 0
+    assert kept[0].status == "readable"
+    assert kept[0].discovered_from.startswith("site:"), "where it came from is the query"
+    assert report.seeds_kept >= 1
+    # A superseded page is refused as a seed exactly as it is as a link.
+    assert ARCHIVED not in {entry.url for entry in corpus.entries}
+    # Kept seeds are not crawl reach, so they must not dilute the shallow-crawl measure.
+    assert 0 not in report.by_depth
+
+
+@pytest.mark.anyio
+async def test_a_pdf_seed_is_kept_and_read_for_its_text(tmp_path: Path) -> None:
+    """A PDF seed was lost twice: the crawl refuses PDFs, and the PDF pass read only linked ones.
+
+    Norway's January 2024 tourist checklist is a PDF that the build's own search returns and the
+    corpus did not hold (entry 161).
+    """
+
+    index = PageTextStore(tmp_path)
+
+    corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX, TOURISM_CHECKLIST_PDF]),
+        fetcher([]),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+        page_text=index,
+    )
+
+    assert [entry.depth for entry in corpus.find("tourism-checklist.pdf")] == [0]
+    assert report.pdfs_read == 1
+    matches = index.rank(
+        "XX",
+        role="document_checklist",
+        corridor=Corridor(
+            destination_slug="example",
+            passport_nationality="IN",
+            applying_from="GB",
+            purpose="tourism",
+        ),
+        nationality=get_country_registry().require("IN"),
+        lexicon=get_lexicon(),
+    )
+    assert TOURISM_CHECKLIST_PDF in [match.url for match in matches]
 
 
 @pytest.mark.anyio

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-15 — update this line when you touch the handoff |
-| **Tests** | 747 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 749 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -181,7 +181,17 @@ neither shape pays:
 **And the purpose query stays, which closed item 51 the same day (entry 160).** The OpenAI account
 was topped up after running out mid-sweep. Matched runs then showed that without the purpose query,
 Japan `IN/GB` loses its London-embassy checklist and Norway `IN/IN` moves to an older checklist, the
-same way in both runs of each arm. **Start at item 48.**
+same way in both runs of each arm.
+
+**Item 48 was then worked, and is half done (entry 161).** Root seeding was probed on eight hosts and
+rejected — none of nine target pages was reached. The gap was a corpus build discarding its own search
+seeds: a seed became an entry only if another page linked to it, and a PDF seed was never read. That
+is fixed in `corpus_build.py`, and Norway, Thailand and Japan were rebuilt with it — 174, 127 and 156
+seeds kept, and Norway's 2024 checklist, Thailand's arrival card and Japan's London-embassy tourism
+page are now held. **Whether it changes an answer is not measured, and the other 50 corpora are not
+rebuilt.** **Start at item 48's matched test** (about $6). The pre-rebuild corpora are kept as
+`var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and `var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`, names
+no reader globs.
 
 `var/recall` is as it was. The 20 oracle corridors' logs, and the four measured for entry 160, were
 backed up before each sweep and restored byte-identical. The 53 `BD/AE` and `BD/SA` baselines were never touched, and

@@ -1028,6 +1028,7 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
     print(
         f"  {build.country_code}  {build.queries} queries, {build.seeds} seeds"
         + (f" ({build.mission_seeds} from its own mission index)" if build.mission_seeds else "")
+        + (f", {build.seeds_kept} kept that nothing linked to" if build.seeds_kept else "")
         + f", {build.crawled} crawled  ->  {build.added} new, {build.total} held"
         + (f", {build.unreadable} unreadable" if build.unreadable else ""),
         file=stream,
@@ -1056,9 +1057,9 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
         for host, failures in sorted(build.abandoned_hosts.items()):
             print(f"        {host:<42} after {failures} unanswered requests in a row", file=stream)
     if build.lost_hosts:
-        # Named, not counted. A host that contributed nothing leaves no entry and no `unreadable`
-        # tally — a seed never becomes an entry — so before this the gap was invisible, and a
-        # corpus only ever grows, which makes it permanent. DECISIONS entry 77.
+        # Named, not counted. A host that contributed nothing leaves at most an unreadable seed —
+        # before entry 161 not even that — so without this the gap was invisible, and a corpus only
+        # ever grows, which makes it permanent. DECISIONS entry 77.
         print(
             f"      {len(build.lost_hosts)} hosts gave this build nothing and are absent from the "
             "corpus:",

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 174 of Norway's 198 seeds kept by the fix, 0 of 9 targets reached from roots; whether an answer changes is unmeasured |
 | [160](#160-the-purpose-query-stays-it-finds-the-posts-own-checklist-which-neither-the-other-queries-nor-the-corpus-hold) | **The purpose query stays** — it alone returns 28 of 45 pages it found first; without it Japan lost its London-embassy checklist and Norway read an older one, the same way in both runs |
 | [159](#159-search-stays-on-every-corridor-waiting-for-the-corpus-costs-a-second-pass-and-the-corpus-cannot-say-when-search-is-needed) | **Search stays on every corridor** — search-only-when-needed projects −3% money and +4% seconds and misses the traveller's own embassy pages; deciding per query from the corpus loses 5–6 of 8 answering pages |
 | [158](#158-the-selectors-pool-admits-up-to-five-pages-per-role-on-their-stored-text-and-removes-nothing) | **The selector's pool also admits the five best per role on stored text, removing nothing** — all four hidden fixture answers recovered for +16% selection input over 53 corpora; a cap displaced 1,813 unread pages |
@@ -209,6 +210,116 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 161. A build kept only the pages something linked to, so it discarded what its own search found
+
+**2026-09-15 · TODO item 48 — root seeding probed and rejected; a different discovery defect fixed;
+whether the fix changes an answer is not yet measured**
+
+### Why item 48 was still worth doing after entries 159 and 160
+
+Search now stays on every corridor, so a corpus gap matters only where live search does not reliably
+cover it — and it does not: re-issuing today's queries, **12 of 45 pages search had once supplied came
+back from no query at all** (entry 160). Entry 148 gives traveller-neutral pages to the corpus. And of
+the 12 search-only pages that filled a role in entries 159 and 160's runs, **8 sit on a host whose root
+the corpus never visited** — Japan's London embassy (4), its Manila embassy (2), Thailand's arrival
+card and the UK fee table. So the item's premise still pointed somewhere.
+
+### Root seeding, probed: 0 of 9 target pages reached
+
+Each host was crawled from its root alone with the corpus build's own crawler settings — depth 3,
+`score_role_vocabulary`, the family reservation, 150 pages — and nothing was written.
+
+| host | from its root |
+| --- | --- |
+| `tdac.immigration.go.th` | the root redirects to `/arrival-card/`, **the form itself** — an Angular app with no links, and a seed is never recorded |
+| `www.uk.emb-japan.go.jp` | the root answers **`404`** |
+| `www.ph.emb-japan.go.jp` | read, and no link recorded from it |
+| `visa-fees.homeoffice.gov.uk` | redirects to GOV.UK: 147 `www.gov.uk` pages read, 29 new scoring pages, all noise — appointment commissions, student finance |
+| `www.interior.gob.es` | 57 pages read, 211 new addresses, **0** scoring |
+| `um.fi` | 4 read, 146 failures |
+| `portal.immigration.gov.gr` | 19 read, 0 scoring |
+| `mfa.bg` (negative control) | bot manager, as entry 131 found; 0 scoring |
+
+**By the rule item 48 set in advance** — pages fetched on a host rising without role-scoring pages
+rising — Spain and the UK fee host are *worse*, and the known positive, Thailand, did not appear. So
+section-aware crawling is not indicated either. **Not built.** Two things the probe showed on the
+side: of the 86 search-only reads in the recall logs on never-visited-root hosts, the largest groups are
+named ceilings (the UK fee form 12, Lithuania's `Disallow` 9, Bulgaria 4) and per-post hosts, which
+entry 148 gives to search; and Japan's corpus already records the London embassy's English top page,
+`itprtop_en/index.html`, at depth 2, where the four answering pages hang, and never opened it — which
+is allocation, not discovery.
+
+### The defect: a seed became an entry only if something linked to it
+
+**`LinkCrawler.crawl` returns the links it found on the pages it read, never the seeds it started
+from.** `test_a_host_that_gives_the_build_nothing_is_named` stated it — "a seed never becomes a corpus
+entry" — as the cause of one blind spot (entry 77), and entry 130 counted 20 roots "crawled as a seed
+but never recorded", but nothing had argued for it. Search returns a page, not a site, and most such
+pages are not linked from whatever else a crawl reads, so **a build discarded most of what its own
+search found**. A PDF seed was lost twice: `fetch_html` refuses PDFs, and `_read_pdfs` read only PDFs
+the crawl had found as links. Norway, Thailand and Japan hold **no** seed entries at all; the depth-0
+entries in Canada and the United Kingdom came from corridor write-back.
+
+**Measured by re-issuing each country's corpus queries against its stored corpus** (154 Brave queries,
+no crawl):
+
+| | seeds today | not in the corpus | of which score for a role |
+| --- | --- | --- | --- |
+| Norway | 194 | **146 (75%)** | 68 |
+| Thailand | 152 | **122 (80%)** | 89 |
+| Japan | 282 | **167 (59%)** | 59 |
+
+**And three pages corridors had been getting only from live search are among them**: Norway's
+`tourist-visa-document-checklist-january-2024.pdf`, Thailand's `tdac.immigration.go.th/arrival-card`
+and Japan's `uk.emb-japan.go.jp/itpr_en/sightseeing.html` — each a seed of the build's own search
+today, none held. That table compares today's seeds with corpora built weeks ago, so part of it is
+search returning different pages; the rebuilds below measure the defect itself.
+
+### Fixed in the build, and only there
+
+`_search_seed_candidates` keeps every search seed the crawl did not record by a link, the way a live
+corridor records a search result: depth 0, the engine's title as the link text, the query as where it
+came from, and rejected on the same archived-or-furniture grounds as a crawled link. PDF seeds go into
+the PDF pass. Two things were kept from changing meaning: `by_depth` counts only what the crawl
+reached, so kept seeds cannot trip the shallow-crawl warning, and a seed that could not be fetched
+does not stop its host being reported as lost. `CorpusBuild.seeds_kept` and the command's output say
+how many. **The request path is untouched** — `_resolve` already turns every search result into a
+candidate — and so is trust: a seed passed `usable_results` and `is_crawlable` before it was one, and
+entries are filtered against the registry when read. Two tests, both shown failing on the unfixed code.
+
+**Norway, Thailand and Japan were rebuilt with it:**
+
+| | seeds | kept that nothing linked to | entries before → after | now held |
+| --- | --- | --- | --- | --- |
+| Norway | 198 | **174** | 1,856 → 2,569 | the January 2024 checklist |
+| Thailand | 154 | **127** | 4,393 → 4,702 | the arrival card, read |
+| Japan | 289 | **156** | 4,803 → 6,272 | the London tourism page; its decision, route and fee pages arrived as ordinary links this build |
+
+**The kept column is the defect measured directly**: every one of those seeds would have been dropped.
+Japan's two Manila pages were not seeds this time and are still absent. The growth is not all seeds —
+a rebuild also crawls differently — so the new corpora differ from the old by more than this fix.
+
+### What is not established, and what would establish it
+
+**Whether any traveller is told something different.** Corridors already get these pages from live
+search on most runs; the fix matters when search misses a page that day, and when the selector is
+shown a page with stored text rather than none. It also costs: more corpus pages is a larger pool for
+the selection call, and extra candidates can distract as well as help.
+
+**The measurement, designed and deliberately not run on 2026-09-15 (the owner's call):**
+`norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, twice each on the old and the new corpus with
+search stubbed out — the case the fix is for — and twice each with search on, for regression and for
+selection input. One cache, about 24 runs, about $6. Read a corpus-only gain as the fix's only where
+the role is filled by a depth-0 entry, because of the rebuild variance above. The old corpora are
+kept as `var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and `var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`,
+names no reader globs.
+
+**Not decided: rebuilding the other 50 corpora** (about 13 hours and $17 of search), which waits for
+that measurement. Item 48's two allocation findings — fair shares between unequal hosts, and `www.`
+counted as a separate host — are untouched.
 
 ---
 

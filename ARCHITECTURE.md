@@ -772,6 +772,14 @@ per-traveller families was refusing the largest one Australia publishes — 45 m
 194 mission links, with a second family of 25 beside it and 124 that group into none. Entry 137, and nothing about
 it is priced — no corpus has been rebuilt on it.
 
+**A search seed is kept as an entry even when nothing the crawl read links to it** (entry 161). The
+crawl records the links it finds on pages, never the seeds it starts from, so until 2026-09-15 a
+build discarded most of what its own search surfaced — Norway's rebuild kept 174 of 198 seeds that
+would otherwise have been dropped, among them the January 2024 checklist corridors had only been
+getting from live search. Kept seeds sit at depth 0 with the query as where they came from, PDF seeds
+are read in the PDF pass, and neither the depth report nor `lost_hosts` counts them. Root seeding was
+probed first and rejected: from eight hosts' roots, none of nine target pages was reached.
+
 **A family queue is ordered by what the store lacks, and a host that stops answering is slowed then
 dropped** (entry 139). Members of a per-traveller family tie by construction — a bare country name
 is all their anchor carries — so the reserved queue fell through to the order the links sit on the

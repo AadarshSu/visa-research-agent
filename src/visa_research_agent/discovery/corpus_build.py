@@ -418,6 +418,13 @@ class CorpusBuild(StrictModel):
     build whose country publishes no recognisable index gets none either — two very different
     reasons for the post being missing, and the count is what tells them apart."""
 
+    seeds_kept: int = 0
+    """Search seeds kept as depth-0 entries because nothing the crawl read linked to them.
+
+    Until 2026-09-15 these were dropped: a seed became an entry only by being linked, which lost
+    75% of Norway's, 80% of Thailand's and 59% of Japan's (entry 161). Not in `by_depth`, which
+    measures how far the crawl reached."""
+
     crawled: int = 0
     found: int = 0
     """Entries this crawl produced, before the merge."""
@@ -455,11 +462,11 @@ class CorpusBuild(StrictModel):
     lost_hosts: dict[str, str] = Field(default_factory=dict)
     """Hosts that failed and contributed **nothing**, with the reason, worst kind of gap first.
 
-    A seed never becomes a corpus entry — only the links found *on* a fetched page do — so a seeded
-    host whose own fetch fails leaves no trace whatever: not an entry, not an `unreadable` count,
-    nothing. Japan's London embassy went missing exactly that way, through a transient Akamai `403`
-    during a build, and the corpus has lacked the host ever since while live search returns it and
-    the live path reads a document checklist from it (DECISIONS entry 77).
+    A seeded host whose own fetch fails leaves at most an `unreadable` seed entry, which is not
+    something the host gave, so it still counts as lost. Until entry 161 it left no trace whatever,
+    because a seed never became an entry. Japan's London embassy went missing exactly that way,
+    through a transient Akamai `403` during a build, and the corpus has lacked the host ever since
+    while live search returns it and the live path reads a document checklist from it (entry 77).
 
     A corpus is additive and rebuilt rarely, so a hole opened by a moment's failure stays open. This
     is the field that makes it visible; retrying these on the next build is not yet built.
@@ -564,6 +571,48 @@ def _entry(
         status="unreadable" if reason else ("readable" if url in read else "unknown"),
         detail=reason or "",
     )
+
+
+def _search_seed_candidates(
+    searched: dict[str, tuple[str, str]],
+    crawled: list[CandidatePage],
+    score: Callable[[PageLink], RoleScores],
+    lexicon: Lexicon,
+) -> list[CandidatePage]:
+    """The pages this build's own search pointed at that the crawl did not record by a link.
+
+    **`LinkCrawler.crawl` returns only links found on pages it read, never the seeds it started
+    from**, so until 2026-09-15 a seed became an entry only if some other crawled page happened to
+    link to it. Search returns a page, not a site, and most of those pages are not linked from
+    whatever else the crawl read. Measured by re-issuing today's corpus queries: **75% of Norway's
+    seeds, 80% of Thailand's and 59% of Japan's were absent from the corpus**, 216 of them scoring
+    for a role. Three were pages a live corridor could get only from search: Norway's January 2024
+    tourist checklist, Thailand's arrival card, and the London embassy's tourism page for Japan.
+    A PDF seed was lost twice over — the crawl refuses PDFs and `_read_pdfs` read only linked ones.
+    DECISIONS entry 161.
+
+    Recorded the way a live corridor records a search result (`resolver._resolve`): depth 0, the
+    engine's title as the link text, and the query as where it came from. Rejected on the same
+    corridor-independent grounds as a crawled link. The request path is not changed by this: it
+    already turns every search result into a candidate itself.
+    """
+
+    recorded = {candidate.link.url for candidate in crawled}
+    kept: list[CandidatePage] = []
+    for url, (query, title) in searched.items():
+        if url in recorded:
+            continue
+        link = PageLink(
+            url=url, text=title[:300], heading="", depth=0, discovered_from=query[:2000]
+        )
+        if _reject(link, lexicon) is not None:
+            continue
+        kept.append(
+            CandidatePage(
+                link=link, link_scores=score(link), title=title or None, found_by="search"
+            )
+        )
+    return kept
 
 
 def _lost_hosts(
@@ -691,6 +740,9 @@ async def build_country_corpus(
     found = await search_all(provider, queries, count=results_per_query)
 
     seeds: list[str] = []
+    # Which query first returned each seed, and the title it came back under: kept so a seed the
+    # crawl does not reach again by a link can still become an entry. See `_search_seed_candidates`.
+    searched: dict[str, tuple[str, str]] = {}
     for query in queries:
         for result in usable_results(found[query], destination):
             url = canonicalise_url(result.url)
@@ -698,6 +750,7 @@ async def build_country_corpus(
                 continue
             if url not in seeds:
                 seeds.append(url)
+                searched[url] = (query, result.title)
 
     # Seeds the last build already found and did not open. A search seed lands wherever the engine
     # surfaced a mission — which is how 24 of 27 corpora came to hold no post for the country a
@@ -756,17 +809,25 @@ async def build_country_corpus(
         provider_domains=(providers or get_service_providers()).domains,
     )
     crawled = await crawler.crawl(destination, seeds)
+    seeded = _search_seed_candidates(searched, crawled, score, words)
     pdfs_read = 0
     if page_text is not None:
+        # The seeds go in too: a PDF seed is never fetched by the crawl, which refuses PDFs, so this
+        # pass is the only place its text can be read.
         pdfs_read = await _read_pdfs(
-            crawled, destination, crawl_fetcher, keep, maximum_pdfs=maximum_pdfs
+            [*crawled, *seeded], destination, crawl_fetcher, keep, maximum_pdfs=maximum_pdfs
         )
     indexed_text = page_text.write(country.code, kept) if page_text is not None else 0
 
-    entries = [
+    crawl_entries = [
         _entry(candidate, crawler.titles, crawl_fetcher.failures, now, crawler.read)
         for candidate in crawled
     ]
+    seed_entries = [
+        _entry(candidate, crawler.titles, crawl_fetcher.failures, now, crawler.read)
+        for candidate in seeded
+    ]
+    entries = [*crawl_entries, *seed_entries]
     before = existing or CountryCorpus(
         country_code=country.code,
         country_name=country.name,
@@ -774,7 +835,12 @@ async def build_country_corpus(
         built_at=now,
         entries=[],
     )
-    lost_reasons, lost_outcomes = _lost_hosts(entries, crawl_fetcher)
+    # A seed that could not be fetched is kept as an `unreadable` entry, which is not something the
+    # host gave this build: counting it would hide exactly the hole `lost_hosts` exists to name.
+    lost_reasons, lost_outcomes = _lost_hosts(
+        [*crawl_entries, *(entry for entry in seed_entries if entry.status != "unreadable")],
+        crawl_fetcher,
+    )
     known = {entry.url for entry in before.entries}
     # The domains are refreshed to what the registry says now, so the file records the set actually
     # used. The entries are not filtered by it: `entries_within` applies trust when the corpus is
@@ -790,6 +856,7 @@ async def build_country_corpus(
         queries=len(queries),
         seeds=len(seeds),
         mission_seeds=mission_seeds,
+        seeds_kept=len(seed_entries),
         crawled=len(crawled),
         page_budget=maximum_pages,
         found=len(entries),
@@ -797,7 +864,9 @@ async def build_country_corpus(
         total=len(after.entries),
         unreadable=sum(1 for entry in entries if entry.status == "unreadable"),
         delegated=len(after.delegations),
-        by_depth=Counter(entry.depth for entry in entries),
+        # How far the *crawl* reached. Kept seeds sit at depth 0 and are not reach, so counting them
+        # here would lower `deep_share` and warn of a shallow crawl that did not happen.
+        by_depth=Counter(entry.depth for entry in crawl_entries),
         abandoned_hosts=dict(crawl_fetcher.abandoned_hosts),
         lost_hosts=lost_reasons,
         lost_host_outcomes=lost_outcomes,
