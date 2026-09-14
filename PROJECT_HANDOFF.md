@@ -175,7 +175,9 @@ same day (entry 149)**: the web app served Singapore and Japan from hand-written
 every traveller they were not written for, and now researches them like every other country.
 **Item 53 was done that day too (entry 150)**: a plan whose visa decision is null can no longer be
 graded `verified`. Item 17 closed the same day: its counting is done (entry 151), and the
-storing decision it turned up is deferred to item 7, before deploying. **Start at item 8.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
+storing decision it turned up is deferred to item 7, before deploying. Item 8 was read the same day
+(entry 152): a blocked-decision plan reads as *we could not check*, and it found item 54 and a stored
+corridor withholding the London embassy. **Start at item 9.** **Item 49 stopped where it is**; what follows about it is the state it was left in, not
 the next step.
 
 **Its index table is hand-maintained, and it does drift** — this line used to claim the table was
@@ -521,11 +523,6 @@ re-add the amendment history here.
    six or more loses one, and `withheld_domains` is the only warning. Five is calibrated against
    corridors run, not derived.
 
-7. **Nobody has read a blocked-authority plan as a traveller would.** The mechanism is confirmed live
-   on real corridors (entries 55–57): the decision is stated unknown and the page handed over as a URL.
-   What is unverified is the *wording* — whether "Uncertain" reads as *we could not check* rather than
-   *no visa needed*. Do not fix the mechanism before reading a real plan. TODO item 8.
-
 8. **Nothing distinguishes "this country publishes no checklist" from "we failed to find it."** Both
    produce an empty checklist, and since a missing one no longer refuses the corridor, a find-or-read
    failure now yields a plan with a visibly empty list. The plan says so — `VisaPlan` enforces it — but
@@ -840,7 +837,8 @@ plan never run live — entries 56, 57), **18** (the excerpt silently deciding c
 **25** (entry 27's exception not firing on the corpus path — entries 56, 57), **28** (selection graded
 against an oracle the arms built — entry 87 replaces it with a curated one), **39** (the web app
 serving Singapore and Japan from hand-written pages — entry 149), **40** (a null visa decision graded
-`verified` — entry 150). Also removed as fixed: a
+`verified` — entry 150), **7** (nobody had read a blocked-authority plan as a traveller would —
+entry 152). Also removed as fixed: a
 block resolving a corridor it had nothing to do with (entry 32), the unverified `conflicts` field
 (entry 30), and a failed model call substituting the heuristic (entry 31).
 

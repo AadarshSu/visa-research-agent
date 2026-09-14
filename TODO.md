@@ -23,8 +23,8 @@ off for anything.
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
 the Now section leads with **correctness** — item 52 first, a defect found in the same survey and
 done the same day (entry 149), then item 53, which building it found and which was also done that
-day (entry 150), then 17 — counted and closed that day too (entry 151) — then 8, 9 and 21 —
-and
+day (entry 150), then 17 — counted and closed that day too (entry 151) — then 8, read that day as
+well (entry 152), then 9, 54 and 21 — and
 **optimisation** follows it: 31, then the new item 51 (5 of a corridor's 15
 live queries carry no traveller detail), then 48. **Item 49 stops where it is**, and 35 and 47 move
 to Later: all three exist to make the store cover every traveller and residence offline, which the
@@ -248,8 +248,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 8. Confirm a blocked authority actually reads usefully | `next` |
-|  | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
+| **Now** | 9. Tell "no checklist exists" apart from "we failed to find it" | `next` |
+|  | 54. Say which refused page mattered, once per authority | `next` |
 |  | 21. Fill the three provenance gaps | `next` |
 |  | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | `next` |
 |  | 51. Make live search ask only for what is specific to this traveller | `next` |
@@ -292,39 +292,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 8. Confirm a blocked authority actually reads usefully — `next`, **promoted 2026-09-14**, **start here**
-
-> **Promoted 2026-09-14 (entry 148), as correctness work.** The interface shows **"Uncertain"**
-> when a decision could not be confirmed (`static/app.js`, the `decision` constant). Whether a
-> traveller reads that as *we could not check* or as *no visa needed* is the question, and it needs
-> reading, not code.
-
-**Why, and this item changed on 2026-08-18.** It used to say a blocked authority was named *only* when it
-cost the decision, and that the US plan therefore never mentioned `travel.state.gov`. **Checking the code
-showed that is wrong:** `to_destination_config` fills `unreadable_authorities` from `inaccessible_urls`
-unconditionally, the extractor carries them into `unavailable_sources` whatever `decision_is_unverified`
-says, retrieval-time blocks arrive separately through `RetrievalReport.failures`, and the interface already
-gives any `blocked` failure with a URL the sentence *"does not permit automated retrieval"* plus a link.
-
-**~~And that sentence is false for France.~~ Fixed by entry 75 and verified 2026-09-02.**
-`challenged` became its own `FailureOutcome` and never becomes `blocked`, and `static/app.js`
-branches on `failure.outcome === "blocked"` — so a challenged authority already renders its true
-detail sentence instead. Read a real plan for a genuine refusal — `travel.state.gov` is one — rather
-than for France, or this item will measure the wrong sentence.
-
-So there is **no plumbing left to do**, and writing some would have been work against a problem that did
-not exist. What is unverified is whether it *reads* as useful — which no test can answer.
-
-**Do, during item 3's live runs:** read a real plan for a corridor with a blocked page whose decision
-resolved elsewhere, and check the authority is named, the link works, and the sentence sits where a
-traveller will see it. Also check the narrower question entry 24 left open: the two `travel.state.gov`
-places were never crawled, so confirm the US corridor records that block **somewhere** rather than
-silently dropping it.
-
-**Careful:** the causality requirement from entry 32 governs whether a block may *resolve a corridor*,
-never whether it may be *reported* — every block is still reported, and that must stay true.
-
-### 9. Tell "no checklist exists" apart from "we failed to find it" — `next`, **promoted 2026-09-02**
+### 9. Tell "no checklist exists" apart from "we failed to find it" — `next`, **promoted 2026-09-02**, **start here**
 
 > **Carried over from item 17 when it closed on 2026-09-14**, because it is this item's question:
 >
@@ -356,6 +324,24 @@ judgement belongs.
 
 **Do not** try to infer the difference heuristically. "No checklist found" and "no checklist exists" look
 identical from inside the crawler, which is the whole problem.
+
+### 54. Say which refused page mattered, once per authority — `next`
+
+**Why:** entry 152, which read a blocked-decision plan as a traveller would. The caveats repeat
+*"does not permit automated retrieval"* once per refused page — **nine lines** on a fresh
+`united-states/IN/GB` plan — all at the same weight, and the unresolved questions list the same
+addresses again. The three pages the refused-page judgement qualified as holding the decision cannot be
+told from a fee table or a wait-times page, because `decision_blocking_urls` stops at
+`ResolvedCorridor`: `to_destination_config` builds `unreadable_authorities` from every refused URL,
+and `SourceFailure` has no field to say which of them mattered.
+
+**Do:** carry the judged set through `to_destination_config` to the synthetic `blocked_N` failures that
+`OpenAIVisaPlanExtractor.extract` builds — set by the application from the resolved corridor, never by
+the model — then group the caveat per host: one sentence, the decision-bearing pages linked first, the
+rest counted beneath. Then read the fresh US plan again as a traveller.
+
+**Careful:** every refusal is still reported. Entry 32's bound governs what may *resolve* a corridor,
+never what is *reported*, so grouping may shorten the list and must never drop a page from it.
 
 ### 21. Fill the three provenance gaps — `next`, **promoted 2026-09-14 for its first part**
 
@@ -1401,7 +1387,9 @@ deploying (entry 151, the owner's call on 2026-09-14).** A refusal is never stor
 is kept three weeks, so behind a public URL every refused request is retried by the next traveller
 until one run resolves, and that run is served to everyone. Keep it, store refusals for a short
 window, or require two agreeing runs before storing. Nothing is at risk while nothing is deployed,
-which is why it waits here.
+which is why it waits here. **The same store freezes what was refused and what was said about it**:
+the web app served `united-states/IN/GB` from a corridor stored 16 days earlier that never named the
+London embassy a fresh resolution names (entry 152).
 
 **Say it on the page:** this shows official guidance with citations and promises nothing about
 correctness or currency. That framing is what makes the product safe to publish, so it belongs in the
@@ -1861,6 +1849,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 8. Confirm a blocked authority actually reads usefully | 09-14 | 152 | It reads as **we could not check**, not *no visa needed*, and the first step hands over the decision page. Two defects: one caveat sentence per refused page at equal weight, with the judged decision pages indistinguishable (item 54); and the web app served a corridor stored 16 days earlier that never named the London embassy a fresh run names, because corridor notes never reach a plan (item 7's storing decision). Whether the links open was left to a person — this session may not read a refused page |
 | 17. Decide what a corridor that flips between runs should do | 09-14 | 43, 44, 118, 151 | Recall-side flips were answered by the corpus (entry 44). The US flip was counted: **0 in 3** back-to-back runs, and entry 118's flip was a run that filled no role, not the refused-page judgement. Its premise that a repeat spends no search was false. The counting found an unchosen retry: a refusal is never stored, so the next request retries it until one resolves, and that run is kept three weeks — deferred by the owner to item 7 |
 | 53. A plan whose visa decision is null can still be graded `verified` | 09-14 | 150 | The docstring stated the rule and the code held it for one cause: only a block or a questionnaire downgraded a null decision, so a model's own null from cleanly read pages was graded `verified` — seen on `japan/IN/GB`. Now graded on the decision itself and refused by `VisaPlan`, with both tests shown failing on the unfixed code first. The interface needed nothing |
 | 52. Stop hand-configured destinations answering every traveller from one traveller's pages | 09-14 | 149 | **The item's own claim was wrong.** Nobody was handed London's checklist: the model declined another traveller's list and a guard turned that into a 503 *"could not be generated safely"*, for a Filipino asking about Japan and a Nigerian asking about Singapore. Through the automatic path both are `verified` from their own post. The cost is Japan for `IN/GB`, whose pinned checklist fills in **1 of 3** automatic runs — the page fetched every time, the adjudicator naming the eVISA questionnaire instead. Every SG and JP corridor run from the command had measured a path the web app did not serve. Found item 53 |

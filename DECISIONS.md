@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [152](#152-a-blocked-authority-plan-reads-as-we-could-not-check--and-a-stored-corridor-withheld-the-embassy-a-fresh-run-names) | **Read as a traveller, a blocked-decision plan says "we could not check"** — but it repeats one sentence per refused page, and a 16-day-old stored corridor withheld the London embassy a fresh run names |
 | [151](#151-the-united-states-corridor-did-not-flip-in-three-runs-entry-118s-flip-was-never-the-judgement-and-a-refusal-is-retried-by-the-next-request) | **The US corridor did not flip in 3 runs; entry 118's flip was a run that filled nothing, not the judgement** — and because a refusal is never stored, the next request retries it until one resolves and that answer is kept three weeks |
 | [150](#150-a-null-visa-decision-is-never-verified-whatever-left-it-null--and-the-plan-enforces-it) | **A null visa decision is never `verified`** — extraction downgraded only a block or a questionnaire, so a model's own null was graded verified; now held in extraction and in `VisaPlan` |
 | [149](#149-a-hand-written-destination-answers-only-when-research-is-off-because-singapore-and-japan-refused-everyone-they-were-not-written-for) | **Singapore and Japan served one traveller's pages to everyone, and refused the rest with a 503 blaming the model** — a hand-written entry now answers only under `configured`; Japan's `IN/GB` checklist fills 1 of 3 automatic runs |
@@ -200,6 +201,54 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 152. A blocked-authority plan reads as "we could not check" — and a stored corridor withheld the embassy a fresh run names
+
+**2026-09-14 · TODO item 8, read rather than tested**
+
+Item 8 asked the one thing no test can answer: whether a plan for a corridor whose decision an
+authority refused reads usefully to a traveller. `united-states/IN/GB/tourism` was requested through
+the running web app and its rendered page read top to bottom. The Browser pane was hidden, so
+screenshots came back blank; the page text is what a traveller reads, and in the order they read it.
+
+### What works
+
+- **The decision panel opens *Uncertain · Evidence partial*,** then *"Some evidence is incomplete —
+  see Evidence and caveats below before relying on this"*, then *"The visa decision could not be
+  verified because the United States authority (travel.state.gov) publishes the relevant guidance on
+  pages that could not be read here."* That reads as **we could not check**, not as *no visa needed*,
+  which is the misreading known problem 7 was worried about.
+- **The first step is the one action that matters**: open travel.state.gov's visitor-visa page and
+  check the decision, with its address. The first unresolved question says it again.
+- *"Does not permit automated retrieval"* is true of what was seen: a `403`, not a challenge
+  (entry 109).
+
+### What does not
+
+1. **One sentence per refused page, all at the same weight.** Six lines on the stored plan, nine on a
+   fresh one. The fee table and the wait-times page sit beside the three pages the refused-page
+   judgement actually qualified, and nothing tells them apart, because `decision_blocking_urls` never
+   reaches `VisaPlan`. The unresolved questions then list the same addresses again. TODO item 54.
+2. **The web app served a corridor stored on 2026-08-29, and it withheld the London embassy.** That
+   corridor mentioned `uk.usembassy.gov` only in its notes — *"robots.txt is larger than the size
+   limit … not requested"*, the sentence entry 119 corrected on 09-01 — and **notes never reach a plan
+   or the interface**: nothing in `app.js`, the extractor or `VisaPlan` reads them. Resolved fresh the
+   same day with the corridor store bypassed, the plan names four `uk.usembassy.gov` pages as refused,
+   its explanation names both hosts, and step 2 sends the traveller to *"the U.S. Embassy London visa
+   navigator"*. So for up to three weeks a stored corridor serves an older picture of which
+   authorities refused and what was said about them — here, the post this traveller applies at.
+   Added to item 7's storing decision.
+3. **The decision panel's evidence is `usa.gov/tourist-visa`,** beside a decision it says could not be
+   verified. A plan must cite a decision source and this page is honest — it defers to the State
+   Department — but a citation in that place can read as confirmation. Recorded, not queued.
+
+### Not checked, deliberately
+
+**Whether the handed-over links open.** This program cannot open them, because the authority refused
+it, and checking one in a browser from this session would be an automated client reading a page the
+authority refused automated clients. A person clicking one is the check, and it is the owner's.
 
 ---
 

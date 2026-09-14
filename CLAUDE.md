@@ -803,6 +803,8 @@ cause, and only running the thing showed it.
 | the US flip was the blocked-page judgement answering both ways | the refusing run filled no role, so it refused whatever that said (entry 151) |
 | a repeat corpus-routed US run spends no search | search runs on every corridor — 15 queries a run (entry 151) |
 | a refusal is not retried, only re-searching on refusal would do that | refusals are not stored, so the next request retries them (entry 151) |
+| a stored corridor only risks serving an older page | the US plan came from one 16 days old and omitted the London embassy (entry 152) |
+| a corridor's notes tell the traveller what was not requested | notes never reach a plan or the interface (entry 152) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
