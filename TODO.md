@@ -281,6 +281,7 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
+|  | 60. Decide where Fast mode goes | `next` |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
@@ -398,6 +399,35 @@ What was **not** changed is the verdict for a *small* HTML page at that path: it
 empty ruleset and the host is crawled. Closing it would stop crawling hosts crawled today, so it
 needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
 sweep over `authority_domains.yaml`, one GET per host, no model and no search.
+
+### 60. Decide where Fast mode goes — `next`, **added 2026-09-16 (entry 176)**
+
+**Why it matters.** It is the one latency lever measured that is both large and safe.
+- **The plan call is 39–48% faster** on Fast mode, with no decision changed: Japan open, Germany
+  "visa required" and Singapore "no visa" in every call.
+- **Selection is 23% faster and roles 13%**, because selection's seconds are mostly fixed.
+- **It costs twice the standard price** of whatever it is turned on for.
+
+**The choice — the owner's.**
+
+| option | fresh request | repeat | model cost, fresh | model cost, repeat |
+| --- | --- | --- | --- | --- |
+| today | ~55s | ~24s | $0.251 | ~$0.035 |
+| Fast mode on the plan call | ~42s | ~14s | ~$0.30 | ~$0.07 |
+| Fast mode on every call | ~39s | ~14s | ~$0.50 | ~$0.07 |
+
+Projected from entry 171's split, not timed end to end.
+
+**If it ships.**
+- **Make the tier reviewable policy, per call** — a setting beside `openai_reasoning_effort`, never a
+  hidden default, so each call's tier can be chosen on its own.
+- **Record the tier each call was served** in `var/usage/`. OpenAI downgrades to the standard tier
+  when traffic grows past its ramp limit and says so only in `service_tier`.
+- **Time real requests afterwards, several each**, on fresh and repeated corridors, before quoting the
+  new seconds. The table above is arithmetic.
+
+**Do not take the cheaper shortcuts instead.** Reasoning `none` answered Japan "visa required" where
+no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 176).
 
 ## Next up
 
@@ -766,6 +796,9 @@ could appear seconds after the plan call starts rather than when it ends. **Item
 - **A refusal can arrive after text has started to appear**, and the interface would need an honest
   way to take it back.
 
+**Measured, 2026-09-16 (entry 176).** The plan call's first visible token arrives 7–15s in today and
+4–7s on Fast mode, so streaming would put text on the screen that early.
+
 **Open for whoever picks it up:** whether streaming progress alone is enough, and whether any plan
 content can be shown before validation without breaking entry 6's rule against unverified claims that
 would alarm a traveller if wrong.
@@ -817,6 +850,9 @@ log's `phase_seconds`.
   $0.11–0.19 again. Storing one briefly is a freshness question as much as a cost one.
 - **Entry 146's reusable country-stable packet waits for traffic.** OpenAI's cache lives 30 minutes,
   a write costs 1.25×, and pools overlap 79–99% across travellers (entry 164).
+
+**Fast mode was measured on every call (entry 176)** — plan −43%, selection −23%, roles −13%, at
+twice the price. Where it goes is item 60.
 
 **Research latency, ~25s — none of it decided.** Means over five fresh corridors (entry 171): roles
 8.2s, selection 6.6s, search 3.5s, the crawl stage 3.2s, fetch 2.7s. Fetch was measured on a warm page

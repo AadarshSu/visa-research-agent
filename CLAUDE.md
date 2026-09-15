@@ -895,6 +895,9 @@ cause, and only running the thing showed it.
 | rule 8e's bounds are proven, Singapore checked them | Japan's exemption list held 16 of 16 — and a packet change broke it twice (entry 174) |
 | trim 2 shortens a quote by quoting the checklist heading | it drops the second quote: under-40-character quotes 7% → 5%, mean 86 → 81 characters (entry 175) |
 | a prompt that shortens the plan's prose shortens its wait as much | visible plan −5–13%, billed output ~150 tokens: hidden reasoning did not shrink with it (entry 175) |
+| a faster, cheaper model is a safe latency lever for the plan call | `gpt-5.6-luna` halved it and wrote Japan a "no visa required" plan (entry 176) |
+| reasoning effort `none` only costs detail | Japan answered "visa required" 3 of 3 where no page states it (entry 176) |
+| Fast mode speeds every call about the same | plan −43%, selection −23%, roles −13% — it speeds generation, and selection is mostly fixed (entry 176) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

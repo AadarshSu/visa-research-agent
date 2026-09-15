@@ -143,6 +143,15 @@ a plan is never stored (entry 44).
 
 **Item 57**, streaming the plan to the screen as it is written, is what is left of that wait.
 
+**What would make a real difference to latency was measured on 2026-09-16 (entry 176).**
+- **Fast mode** takes the plan call 39–48% faster with no decision changed, at twice its price.
+  Projected, a fresh request goes from ~55s to ~42s and a repeat from ~24s to ~14s. Where it goes is
+  **TODO item 60, the owner's decision.**
+- **The cheaper shortcuts broke Japan's decision.** Reasoning `none` answered "visa required" where no
+  page states it, and `gpt-5.6-luna` answered "no visa required".
+- **Fast mode helps research less** — selection −23%, roles −13% — because selection's seconds are
+  mostly fixed.
+
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
 *time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened
 the pool the selector reads, was priced that way before it shipped: +16% selection input over 53

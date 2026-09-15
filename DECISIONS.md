@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [176](#176-where-a-requests-seconds-go-fast-mode-takes-43-off-the-plan-call-and-the-two-cheaper-shortcuts-broke-a-decision) | **Where a request's seconds go, and what moves them** — the plan and roles calls are generation (R² 0.99, 0.98); Fast mode takes the plan call −43% at 2× its price and selection −23%, roles −13%; reasoning `none` and `gpt-5.6-luna` each broke Japan's decision; nothing shipped, item 60 |
 | [175](#175-trims-2-and-3-ship-one-short-quote-a-claim-a-few-words-where-nothing-conditions-a-document--about-a-second-and-a-half) | **Trims 2 and 3 ship, at the owner's choice** — decisions held in every call and nothing refused; the plan says 5–13% less but hidden reasoning did not shrink, so the call is ~150 output tokens and ~1.5s shorter; entry 174's quote-heading claim withdrawn |
 | [174](#174-the-written-plan-measured-live-short-source-ids-refuse-and-mislead-and-the-wording-trims-save-a-sixth) | **The written plan, measured live** — short source ids gave two refused plans and two wrong "no visa" answers for Japan in 48 calls, none in 48 without them, and are declined; the three wording trims take the call from 25.1s to 21.4s and wait on the owner's read |
 | [173](#173-item-19-closes-search-stays-refusing-on-a-miss-is-dropped-and-what-is-left-is-split-into-items-58-and-59) | **Item 19 closes** — ten seconds was never reachable as defined; search stays; refusing on a miss is dropped; the 2026-08-30 search-dependence method and the web-only write-back are kept here; the rest is items 58 and 59 |
@@ -255,6 +256,109 @@ reached only through a redirect, or not on every request. The fix does not depen
 - **`LiveSourceFetcher`** reports it the same way in both places it follows redirects.
 
 Two tests send that header, one through the crawler and one through retrieval.
+
+---
+
+## 176. Where a request's seconds go: Fast mode takes 43% off the plan call, and the two cheaper shortcuts broke a decision
+
+**2026-09-16 · the owner asked for methods that would make a significant difference**
+
+### What decides a call's seconds
+
+A fit over the usage log — every successful call, leaving out entry 174 and 175's experiments:
+
+| call | calls | mean | fixed | reasoning | visible output | R² |
+| --- | --- | --- | --- | --- | --- | --- |
+| plan | 29 | 23.9s | 3.2s | 7.1s | 13.4s | **0.99** |
+| roles | 11 | 7.9s | 1.7s | 3.5s | 3.5s | **0.98** |
+| selection | 12 | 6.2s | 3.9s | 0.5s | 0.4s | 0.10 |
+
+- **The plan and roles calls are generation.** Their seconds are the tokens they produce, at about
+  9–15 ms each; uncached input adds almost nothing.
+- **Selection is about six seconds whatever it holds.** It reads 57–103K input tokens and writes
+  about 200, and its seconds barely follow either.
+- **So a lever must make generation faster, produce fewer tokens, or run generation in parallel.**
+  Shortening the plan's prose is the weakest of these, because hidden reasoning does not shrink with
+  it (entry 175).
+
+### The plan call: tier, reasoning effort and model
+
+Streamed plan calls through the real extractor on Japan, Germany and Singapore's fixed packets from
+entry 174 — three calls an arm, arms interleaved, 36 calls, 17:17–17:22 UTC on 2026-09-15, **$0.96**.
+
+| arm | Japan | Germany | Singapore | first visible token | decisions J / G / S |
+| --- | --- | --- | --- | --- | --- |
+| today — `terra`, reasoning `low` | 33.7s | 34.4s | 11.5s | 15.0 / 14.2 / 6.6s | `---` `YYY` `NNN` |
+| **Fast mode** | **19.4s (−42%)** | **17.8s (−48%)** | **7.0s (−39%)** | 7.2 / 6.3 / 4.0s | `---` `YYY` `NNN` |
+| reasoning `none` | 17.8s (−47%) | 22.3s (−35%) | 7.1s (−38%) | 2.8 / 3.2 / 2.7s | **`YYY`** `YYY` `NNN` |
+| `gpt-5.6-luna` | 18.2s (−46%) | 16.9s (−51%) | 8.3s (−27%) | 5.8 / 4.4 / 4.0s | **`-N-`** `YYY` `NNN` |
+
+`Y` needs a visa, `N` no visa, `-` left open.
+
+- **Fast mode changed no decision.** It is what priority processing was renamed on 2026-07-30:
+  `service_tier: "fast"` or `"priority"`, at **twice the standard price** — `terra` $4 input and $24
+  output a million tokens. Visible output came at 156–180 tokens a second against 98–107, and every
+  call reported `service_tier: priority`.
+- **Fast mode can fall back quietly.** OpenAI downgrades a request to the standard tier and price when
+  traffic grows faster than its ramp limit, which applies from 1M tokens a minute, and reports it as
+  `default`. Anything that relies on Fast mode has to read the tier it was served.
+- **Reasoning `none` answered Japan "visa required" in 3 of 3.** Every `terra` call on reasoning `low`
+  left that decision open, because no page Japan's corridor reads states it for India. The answer is
+  true; the rule is that a plan says only what a page says (entries 27 and 150). CLAUDE.md forbids
+  lowering the effort without an accuracy measurement, and this is why.
+- **`gpt-5.6-luna` wrote Japan a "no visa required" plan** with three steps and no documents, at a
+  tenth of the price. It is entry 174's wrong answer again. Not for the plan call.
+
+### The research calls: Fast mode
+
+`visa-discover corridor` with every model call on the chosen tier, Japan and Germany `IN/GB`, standard
+and Fast alternating, two runs each, 17:19–17:23 UTC on 2026-09-15. **$2.49** of model calls and about
+$0.43 of search. Six of six logged Fast calls were served `priority`; the first Japan Fast run
+predates that log. The two recall logs the command overwrote were restored from a backup (entry 118).
+
+| | standard | Fast | change |
+| --- | --- | --- | --- |
+| selection, 4 runs a tier | 8.7s | 6.7s | **−23%** |
+| roles, 4 runs a tier | 9.8s | 8.5s | **−13%** |
+
+- **Japan barely moved** (selection −7%, roles +1%). Germany moved −36% and −27%.
+- **About three seconds off a ~25s research phase, for twice the price of its two costliest calls.**
+  Selection alone is ~63% of the model bill. Its seconds are mostly fixed, which a faster generation
+  tier touches least.
+
+### What that adds up to — a projection, not a timed request
+
+From entry 171's split: a fresh request is ~25s of research and ~29s of plan, a repeat ~24s of plan.
+Model cost is split selection 63%, roles 19%, plan 18%.
+
+| change | fresh request | repeat | model cost, fresh | model cost, repeat |
+| --- | --- | --- | --- | --- |
+| today | ~55s | ~24s | $0.251 | ~$0.035 |
+| **Fast mode on the plan call** | **~42s** | **~14s** | ~$0.30 | ~$0.07 |
+| Fast mode on every call | ~39s | ~14s | ~$0.50 | ~$0.07 |
+
+### Levers not measured
+
+- **Stream the plan (item 57).** Under Fast mode the first visible token came 4–7s into the plan call
+  rather than 7–15s. What may be shown before validation is still item 57's question.
+- **Split the plan call into concurrent parts** — documents, steps, the rest. Estimated from entry 175's
+  drafts and the fit above, a visa-required plan's ~26–32s becomes ~19–25s, assuming each part reasons
+  as much as the whole. It triples the plan's input cost, and parts could disagree on the decision
+  the rest depends on, so the decision would have to come first.
+- **Reuse a plan written minutes earlier from an identical packet.** A repeat is ~24s of writing the
+  same plan again. Entry 44 says a plan is a rendering, never a stored fact, so this needs a decision
+  entry before anyone builds it.
+
+### Not decided
+
+**Nothing shipped.** Fast mode doubles the price of whatever it is turned on for, so where it goes is
+the owner's call — TODO item 60.
+
+### Spent
+
+$0.96 for the plan-call probe, about $3.00 for the corridor trial, and a few cents for the two smoke
+tests. The probe's calls are in `var/usage/model-calls-2026-09-15.jsonl`; the trial's selection and
+roles calls are there too, between 17:19 and 17:23 UTC.
 
 ---
 
