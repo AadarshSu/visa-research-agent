@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [162](#162-a-corpus-build-goes-on-without-a-failed-search-query-and-names-it) | **A corpus build goes on without a failed search query, and names it** — one failed query of 70 used to discard the build; an exhausted account or every query failing still stops it |
 | [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 0 of 9 targets reached from roots; with seeds kept, Thailand `IN/GB` went from no decision to resolved in 4 of 4 runs on a page live search never returns, for ~9% more a corridor |
 | [160](#160-the-purpose-query-stays-it-finds-the-posts-own-checklist-which-neither-the-other-queries-nor-the-corpus-hold) | **The purpose query stays** — it alone returns 28 of 45 pages it found first; without it Japan lost its London-embassy checklist and Norway read an older one, the same way in both runs |
 | [159](#159-search-stays-on-every-corridor-waiting-for-the-corpus-costs-a-second-pass-and-the-corpus-cannot-say-when-search-is-needed) | **Search stays on every corridor** — search-only-when-needed projects −3% money and +4% seconds and misses the traveller's own embassy pages; deciding per query from the corpus loses 5–6 of 8 answering pages |
@@ -210,6 +211,37 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 162. A corpus build goes on without a failed search query, and names it
+
+**2026-09-15 · a *Smaller things* note in TODO, done before item 48's 50-country rebuild**
+
+**The defect.** `build_country_corpus` called `search_all`, which raises if any query fails, and
+`visa-discover`'s command turns a `SearchError` into exit code 3. So one failed query of up to 70
+discarded a whole country's build — Japan's, to a DNS blip on 2026-08-23. The rebuild item 48
+decided on is **2,436 queries over 50 countries, run unattended**, where a single blip per country is
+more likely than not somewhere; left as it was, it would have lost whole countries and needed
+re-running.
+
+**Decided, for the corpus path only.** `_search_tolerating_failures` runs the same queries at the same
+concurrency. A failed query contributes no results, and its reason is kept in
+`CorpusBuild.failed_queries` and printed by the command — the exception's text, or its type where a
+timeout left none (entry 122). **Two failures still stop a build**, because going on would not be a
+partial build but none: an account out of credit (`SearchQuotaExhausted`), which no later query can
+succeed against, and every query failing, where "we could not look" must not turn into a crawl of
+only what the last build recorded.
+
+**Why this is safe here and not for a corridor.** A corpus is additive and never claims to be
+complete: a missed query means fewer seeds this build, named in its output, and the next build asks
+again. A corridor *serves* what it searched, so `search_all`'s contract — raise, and let entry 74
+fall back to the stored corpus and say so — is unchanged there. A throttle (`SearchThrottled`) is
+tolerated per query like any other failure and reported the same way.
+
+**Tests.** Three. The first two fail against the old behaviour, patched back in for the check: one
+failed query no longer costs the build, and a build whose every query failed raises its own error.
+The third, that an exhausted account still stops the build, is a guard and passes either way.
 
 ---
 

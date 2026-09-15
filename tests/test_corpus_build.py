@@ -37,6 +37,7 @@ from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
 from visa_research_agent.discovery.lexicon import Country, get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, RoleScores, SearchResult
 from visa_research_agent.discovery.page_text import PageTextStore
+from visa_research_agent.discovery.search import SearchError, SearchQuotaExhausted
 from visa_research_agent.domain.models import DestinationConfig
 
 NOW = datetime(2026, 8, 22, 9, 0, tzinfo=UTC)
@@ -70,8 +71,70 @@ class FakeSearch:
         ]
 
 
+class FailingSearch(FakeSearch):
+    """Fails every query containing `fail_on` with the error given, and answers the rest."""
+
+    def __init__(self, urls: list[str], *, fail_on: str, error: SearchError) -> None:
+        super().__init__(urls)
+        self.fail_on = fail_on
+        self.error = error
+
+    async def search(self, query: str, *, count: int) -> list[SearchResult]:
+        if self.fail_on in query:
+            self.queries.append(query)
+            raise self.error
+        return await super().search(query, count=count)
+
+
 async def sleep_none(_: float) -> None:
     return None
+
+
+@pytest.mark.anyio
+async def test_one_failed_search_query_does_not_cost_the_build() -> None:
+    """A DNS blip on 2026-08-23 lost Japan's whole build: `search_all` raises on any failed query.
+
+    Right for a corridor, which serves what it searched, and wrong for a corpus, which is additive
+    and never claims to be complete. The build goes on without the failed queries and names them
+    (entry 162). The reason is the exception's own text, or its type where a timeout left none.
+    """
+
+    search = FailingSearch(
+        [INDEX], fail_on="business", error=SearchError("The search request failed ()")
+    )
+
+    corpus, report = await build_country_corpus(
+        country(), TRUSTED, search, fetcher([]), existing=None, now=NOW, maximum_pages=60
+    )
+
+    assert corpus.entries, "the queries that answered still built a corpus"
+    assert report.failed_queries, "and the ones that did not are named"
+    assert all("business" in query for query in report.failed_queries)
+    assert len(report.failed_queries) < report.queries
+
+
+@pytest.mark.anyio
+async def test_a_search_account_out_of_credit_still_stops_the_build() -> None:
+    """No later query can succeed against an empty account, so going on would only crawl blind."""
+
+    search = FailingSearch([INDEX], fail_on="business", error=SearchQuotaExhausted("out of credit"))
+
+    with pytest.raises(SearchQuotaExhausted):
+        await build_country_corpus(
+            country(), TRUSTED, search, fetcher([]), existing=None, now=NOW, maximum_pages=60
+        )
+
+
+@pytest.mark.anyio
+async def test_a_build_whose_every_query_failed_raises() -> None:
+    """A build that searched nothing is not a partial build: "we could not look" stays an error."""
+
+    search = FailingSearch([INDEX], fail_on="site:", error=SearchError("down"))
+
+    with pytest.raises(SearchError, match="every one"):
+        await build_country_corpus(
+            country(), TRUSTED, search, fetcher([]), existing=None, now=NOW, maximum_pages=60
+        )
 
 
 def fetcher(requests: list[httpx.Request]) -> CrawlFetcher:

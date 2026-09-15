@@ -1033,6 +1033,16 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
         + (f", {build.unreadable} unreadable" if build.unreadable else ""),
         file=stream,
     )
+    if build.failed_queries:
+        # Named, because a partly-searched build is still a good build and a person reading it
+        # should know which part is missing rather than find out from a gap weeks later.
+        print(
+            f"      {len(build.failed_queries)} of {build.queries} search queries failed and the "
+            "build went on without them:",
+            file=stream,
+        )
+        for query, reason in sorted(build.failed_queries.items()):
+            print(f"        {query}: {reason}", file=stream)
     depths = ", ".join(f"depth {d}: {n}" for d, n in sorted(build.by_depth.items()))
     print(f"      {depths}", file=stream)
     if build.indexed_text:

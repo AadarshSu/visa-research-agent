@@ -23,6 +23,7 @@ found. A crawl that finds less than last time is ordinary, and treating that as 
 rebuild the exact failure the corpus exists to prevent.
 """
 
+import asyncio
 import re
 from collections import Counter
 from collections.abc import Callable
@@ -46,10 +47,16 @@ from visa_research_agent.discovery.lexicon import (
     get_country_registry,
     get_lexicon,
 )
-from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores
+from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores, SearchResult
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
 from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
-from visa_research_agent.discovery.search import SearchProvider, search_all, usable_results
+from visa_research_agent.discovery.search import (
+    DEFAULT_SEARCH_CONCURRENCY,
+    SearchError,
+    SearchProvider,
+    SearchQuotaExhausted,
+    usable_results,
+)
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
     country_family_keys,
@@ -418,6 +425,13 @@ class CorpusBuild(StrictModel):
     build whose country publishes no recognisable index gets none either — two very different
     reasons for the post being missing, and the count is what tells them apart."""
 
+    failed_queries: dict[str, str] = Field(default_factory=dict)
+    """Search queries that failed, with the reason, which this build went on without (entry 162).
+
+    Empty on a build where every query answered. A build with every query failed raises instead, and
+    one whose account is out of credit raises on the first, so a non-empty value here always means
+    a corpus that was searched in part and says which part."""
+
     seeds_kept: int = 0
     """Search seeds kept as depth-0 entries because nothing the crawl read linked to them.
 
@@ -571,6 +585,55 @@ def _entry(
         status="unreadable" if reason else ("readable" if url in read else "unknown"),
         detail=reason or "",
     )
+
+
+async def _search_tolerating_failures(
+    provider: SearchProvider,
+    queries: list[str],
+    *,
+    count: int,
+    concurrency: int = DEFAULT_SEARCH_CONCURRENCY,
+) -> tuple[dict[str, list[SearchResult]], dict[str, str]]:
+    """Run a build's queries, going on without any that fail, and say which did.
+
+    **`search_all` raises if any query fails, and that is right for a corridor and wrong here.** Its
+    own docstring says tolerating a failure is a separate decision about serving partly-searched
+    evidence, and a corridor serves evidence. A corpus does not: it is additive and never claims to
+    be complete, so one failed query of up to 70 cost a whole build — Japan's, to a DNS blip on
+    2026-08-23 — for nothing it was protecting. DECISIONS entry 162.
+
+    Two failures still stop the build, because going on would not be a partial build but none:
+    an account out of credit (`SearchQuotaExhausted`), which no later query can succeed against, and
+    every query failing, where "we could not look" must not become a crawl of nothing but what the
+    last build recorded.
+    """
+
+    limit = asyncio.Semaphore(max(1, concurrency))
+
+    async def run(query: str) -> tuple[list[SearchResult], str | None]:
+        async with limit:
+            try:
+                return await provider.search(query, count=count), None
+            except SearchQuotaExhausted:
+                raise
+            except SearchError as exc:
+                # A timeout can carry an empty message (entry 122), so the type stands in for it.
+                return [], str(exc).strip() or type(exc).__name__
+
+    completed = await asyncio.gather(*(run(query) for query in queries))
+    found = {query: results for query, (results, _) in zip(queries, completed, strict=True)}
+    failed = {
+        query: reason
+        for query, (_, reason) in zip(queries, completed, strict=True)
+        if reason is not None
+    }
+    if queries and len(failed) == len(queries):
+        first = next(iter(failed.values()))
+        raise SearchError(
+            f"every one of this build's {len(queries)} search queries failed, so nothing was "
+            f"searched; the first said: {first}"
+        )
+    return found, failed
 
 
 def _search_seed_candidates(
@@ -737,7 +800,9 @@ async def build_country_corpus(
     )
 
     queries = all_corpus_queries(country.name, trusted)
-    found = await search_all(provider, queries, count=results_per_query)
+    found, failed_queries = await _search_tolerating_failures(
+        provider, queries, count=results_per_query
+    )
 
     seeds: list[str] = []
     # Which query first returned each seed, and the title it came back under: kept so a seed the
@@ -856,6 +921,7 @@ async def build_country_corpus(
         queries=len(queries),
         seeds=len(seeds),
         mission_seeds=mission_seeds,
+        failed_queries=failed_queries,
         seeds_kept=len(seed_entries),
         crawled=len(crawled),
         page_budget=maximum_pages,

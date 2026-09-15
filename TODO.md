@@ -1816,11 +1816,9 @@ seeds → 9% beyond depth 1, France 176 → 6%, Singapore 295 → 3%. The budget
 seed count rather than fixed — the flag already reports the failure, so the data to calibrate it is
 being printed and ignored.
 
-**A corpus build loses everything to one failed search query.** `search_all` raises if any query
-fails, and a corpus build runs up to 70. One DNS blip on 2026-08-23 lost Japan's whole build. That
-contract is right for a *corridor* — its docstring says tolerating a failure is a separate decision
-about serving partly-searched evidence — but a corpus is additive and never claims completeness, so
-the same rule costs far more than it protects. Decide it for the corpus path only.
+**~~A corpus build loses everything to one failed search query~~ — fixed 2026-09-15, DECISIONS entry
+162.** A build now goes on without a failed query and names it in its output. An account out of
+credit, or every query failing, still stops the build. Corridors are unchanged.
 
 **`CorpusEntry` holds one `link_text`/`heading` per URL, and pages are linked from many sections.**
 Sweden's visa-decision page is stored under the heading *"I will be studying in Sweden for less than
