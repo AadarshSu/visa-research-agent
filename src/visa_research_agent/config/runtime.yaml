@@ -65,3 +65,11 @@ source_cache_ttl_hours: 24
 # The refusal threshold. Once cached evidence is older than this and cannot be refreshed, the
 # source is refused rather than served, so out-of-date guidance can never look current.
 source_maximum_stale_hours: 168
+
+# How long a plan the model wrote may be reused, in hours, for a request whose inputs are exactly the
+# same: the same traveller, the same pages with the same text and retrieval time, the same prompt and
+# model settings. 0 turns reuse off. Only the model's draft is reused — every request still checks
+# its quotes, runs every validator and grades its status on its own retrieval — and a refusal is
+# never reused. It may not exceed source_cache_ttl_hours, so a plan cannot outlive the freshness
+# window of its pages (DECISIONS entry 178, amending entry 44).
+plan_reuse_hours: 24

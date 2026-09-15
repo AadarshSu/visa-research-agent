@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [178](#178-a-plan-the-model-wrote-is-reused-for-identical-inputs-within-the-page-ttl--the-owners-decision-amending-entry-44) | **A plan the model wrote is reused for identical inputs within the page TTL** — the owner's decision, amending entry 44: the draft is kept, never the plan, keyed on everything the model is shown; every request still validates and grades it; a refusal is never kept; the key is stable on real requests; not yet timed live, the account ran out of credits |
 | [177](#177-where-a-requests-seconds-go-fast-mode-takes-43-off-the-plan-call-and-the-two-cheaper-shortcuts-broke-a-decision) | **Where a request's seconds go, and what moves them** — the plan and roles calls are generation (R² 0.99, 0.98); Fast mode takes the plan call −43% at 2× its price and selection −23%, roles −13%; reasoning `none` and `gpt-5.6-luna` each broke Japan's decision; nothing shipped, item 60 |
 | [175](#175-trims-2-and-3-ship-one-short-quote-a-claim-a-few-words-where-nothing-conditions-a-document--about-a-second-and-a-half) | **Trims 2 and 3 ship, at the owner's choice** — decisions held in every call and nothing refused; the plan says 5–13% less but hidden reasoning did not shrink, so the call is ~150 output tokens and ~1.5s shorter; entry 174's quote-heading claim withdrawn |
 | [174](#174-the-written-plan-measured-live-short-source-ids-refuse-and-mislead-and-the-wording-trims-save-a-sixth) | **The written plan, measured live** — short source ids gave two refused plans and two wrong "no visa" answers for Japan in 48 calls, none in 48 without them, and are declined; the three wording trims take the call from 25.1s to 21.4s and wait on the owner's read |
@@ -226,6 +227,96 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 178. A plan the model wrote is reused for identical inputs within the page TTL — the owner's decision, amending entry 44
+
+**2026-09-16 · the owner, after entry 177 listed it as a lever needing a decision**
+
+### Decided, by the owner
+
+**Reuse plans written for the same inputs.** Entry 44 said a plan is a rendering, never a stored
+fact, and entry 177 said this needed a decision entry before anyone built it. This is that entry.
+
+### What is kept, and what is not
+
+- **The model's draft, never the plan.** Every request rebuilds the plan from it: the quote check
+  against its own retrieved text, every validator, its status from its own retrieval (stale pages,
+  failures), its sources, and the tools and delegates from configuration.
+- **The key is everything the model is shown**: the instructions, the words the packet is sent under,
+  the research packet — traveller, destination policy, every page's text and retrieval time — and the
+  model, its reasoning effort, its output ceiling and the output schema. `PLAN_REUSE_VERSION` covers a
+  change the key cannot see, such as how the messages are assembled.
+- **Only a draft that became a plan is stored.** A refusal is never kept, so a refused request asks the
+  model again next time (entry 151).
+- **The window is reviewable policy.** `plan_reuse_hours: 24` in `runtime.yaml`; `RuntimePolicy`
+  refuses a value above `source_cache_ttl_hours`, and 0 turns reuse off.
+- **Anything doubtful is a miss.** An unreadable, reshaped or expired draft is ignored, and a store that
+  cannot be read or written costs a model call, never the plan.
+- **A reuse makes no model call and records none** in `var/usage/`.
+
+### Why this does not reopen what entry 44 closed
+
+Entry 44's worry was a wrong answer frozen in a store for weeks and served with a citation, where a
+wrong pick today is ephemeral.
+- **The lifetime is the evidence's, not a store's.** A re-checked page moves its retrieval time and so
+  changes the key — a `304` moves `fetched_at` (entry 4). The page cache re-checks every 24 hours, and
+  the window may not be longer.
+- **It is not precomputation.** Only a request that already happened is reused, and only for the same
+  traveller over the same pages.
+
+### The risk it does take, said plainly
+
+A plan call is a draw from a distribution. Entry 174 saw a confident wrong "no visa required" for Japan
+in 2 of 16 calls under a packet change that was never shipped, and both were graded `verified`.
+**Today a bad draw reaches one request; with reuse it reaches every identical request for up to 24
+hours.** A good draw does too. The validators and quote check still run on a reused draft, but they
+are not what stops a wrong decision — they let those two through. What reuse removes is the chance
+that a repeat corrects a bad first draw, and the chance that it spoils a good one.
+
+### What it saves
+
+- **A repeat inside the window skips the plan call.** Entry 171 measured a repeat at ~24s, nearly all
+  of it that call, and ~$0.035 of model cost that becomes nothing. What is left is loading the stored
+  corridor and reading its pages from the cache. Not yet timed live — see below.
+- **A fresh request is unchanged**, and so is a repeat after the window.
+
+### Checked
+
+- **15 new tests.**
+  - Identical inputs reuse the draft, with no model call and no usage record.
+  - Changed page text, a re-checked page, another traveller, another prompt and another model each
+    ask again.
+  - A draft is reused inside the window and not at its edge.
+  - A refused plan is never kept.
+  - A stale page on a reused draft still grades the plan `partial`.
+  - An unreadable stored draft costs a call, not the plan, and a key that is not a digest never
+    reaches the filesystem.
+  - The policy bound holds, and the generator fingerprint changes with model and effort.
+- **The whole suite** is 806 tests, 805 passing and 1 skipped (the opt-in browser test).
+- **The key is stable on real requests.** Two consecutive real packet builds for the stored Japan,
+  Germany and Singapore corridors — from the corridor store and the page cache, with no search and no
+  model — gave identical keys all three times.
+
+### Not checked: a live repeat, blocked on credits
+
+The live check — Japan `IN/GB` requested twice through the service the API builds — failed on its first
+plan call with `429 credit_balance_exhausted`. The OpenAI account ran out of credits during this
+session. Nothing was stored. **Re-run it once the account is topped up**: the second request should
+make no plan call and return the same plan.
+
+### Consequences
+
+- **Item 60's repeat figure is superseded inside the window.** Fast mode's gain now matters for fresh
+  requests and for repeats after 24 hours.
+- **Clear `var/plans/`** when testing a change to how the plan call is sent (CLAUDE.md, AGENTS.md).
+- **Nothing is evicted.** As with the corridor store, an expired draft is ignored rather than deleted,
+  so the directory only grows.
+- **Item 55 is unaffected.** A draft is kept locally for identical inputs; nothing concluded is written
+  to a shared identity, which that item's rule still forbids.
+- **Numbering.** This session's latency entry was first committed as a second entry 176 while another
+  session's redirect entry already held that number, and was renumbered 177 in its own commit.
 
 ---
 

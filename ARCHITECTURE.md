@@ -709,6 +709,7 @@ remember", so they are also worth reading in one place.
 | Corridor resolution | full corridor | 3 weeks | **Yes** — it is what a warm request serves | `var/corridors/`, `discovery/corridor_store.py` |
 | Recall log | corridor | overwritten each run | **No** — deleting it costs a question | `var/recall/`, `discovery/recall_log.py` |
 | Model usage log | UTC day | appended, one line per model call | **No** — deleting it costs a question | `var/usage/`, `research/model_usage.py` |
+| Plan draft | everything the model is shown — prompt, packet, schema, model settings | `plan_reuse_hours`, never past the page TTL | **No** — deleting it costs a model call; a reused draft is still validated and graded on every request (entry 178) | `var/plans/`, `research/plan_store.py` |
 
 The recall log also records **where a corridor's seconds went**, one duration per stage of `_resolve`
 (entry 142) — a stage being the span between two numbered steps rather than the act it is named

@@ -135,6 +135,8 @@ the CLI does not offer it.
 - **Clear `var/cache/` when testing a retrieval change and `var/corridors/` when testing a discovery
   change**, or a pre-change result is served and the fix appears not to work. **`var/corpus/` is
   deliberately not cleared** — it is the store, not a cache, and rebuilding one costs search quota.
+  Clear `var/plans/` when testing a change to how the plan call is sent, which its reuse key cannot
+  see (DECISIONS entry 178).
 - **Both providers meter, and they fail differently.** OpenAI answers `429 credit_balance_exhausted`;
   Brave answers **`HTTP 402`** both when out of credit *and* when queried too fast, so a `402` is not
   proof the account is empty — check a single query before believing it.

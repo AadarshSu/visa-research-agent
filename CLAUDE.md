@@ -481,7 +481,9 @@ produces a serious defect.
   even with residence reduced to post selection, roughly 2.9M searches per refresh cycle, and the layer
   it would freeze is the one with the most inference in it. What *is* stored is a country's **page
   corpus**, because *which pages exist* does not vary by corridor; only which one answers a given
-  traveller does, and that stays live. A **plan is a rendering, never a stored fact.** A `visa_rule`
+  traveller does, and that stays live. A **plan is a rendering, never a stored fact**:
+  only the model's *draft* may be reused, for byte-identical inputs inside the page TTL, and every
+  request still checks its quotes, validates it and grades its status itself (entry 178). A `visa_rule`
   decision table is deliberately not built: one page names ~200 nationalities, so a wrong row would sit
   in a store for weeks and be served with a citation, where a wrong pick today is ephemeral. If it is
   ever built, a nationality the page did not name yields **no row**, never a false one.
@@ -1005,7 +1007,7 @@ for both arms or for neither**: a cold-cache run faces a different web from a wa
 measured 2026-09-05, `blocked` went 1 → 15 and `challenged` 15 → 27 across 53 corridors, which was
 enough to read as a two-point regression the code had nothing to do with (entry 136). A stored
 corridor is kept for three weeks. **`var/corpus/` and `var/pagetext/` are deliberately not cleared
-between runs**; they are stores, not caches, and rebuilding one costs search quota.
+between runs**; they are stores, not caches, and rebuilding one costs search quota. Clear `var/plans/` too when testing a change to the plan call that its reuse key cannot see — the key covers the prompt, the packet, the schema and the model settings, not how the call is sent (entry 178).
 
 `var/pagetext/` holds the body text of pages already fetched, one SQLite/FTS5 file per country, and
 is filled two ways: `visa-discover corpus` keeps what it reads, and `pagetext --backfill` indexes the

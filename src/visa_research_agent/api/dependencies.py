@@ -17,6 +17,7 @@ from visa_research_agent.research.openai_extraction import (
     LangChainStructuredPlanGenerator,
     OpenAIVisaPlanExtractor,
 )
+from visa_research_agent.research.plan_store import FilePlanStore, PlanReuse
 from visa_research_agent.research.rendering import build_page_renderer
 from visa_research_agent.research.service import VisaPlanService
 from visa_research_agent.research.source_cache import FileSourceCache
@@ -66,6 +67,15 @@ def build_visa_plan_service(policy: RuntimePolicy) -> VisaPlanService:
         generator,
         maximum_input_characters=settings.maximum_model_input_characters,
         usage_log=FileModelUsageLog(settings.model_usage_directory),
+        reuse=(
+            PlanReuse(
+                store=FilePlanStore(settings.plan_directory),
+                maximum_age_hours=policy.plan_reuse_hours,
+                fingerprint=generator.fingerprint,
+            )
+            if policy.plan_reuse_hours > 0
+            else None
+        ),
     )
     return VisaPlanService(source_fetcher, extractor)
 

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-15 — update this line when you touch the handoff |
-| **Tests** | 793: 792 passing and 1 skipped, run 2026-09-15 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 806: 805 passing and 1 skipped, run 2026-09-16 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -129,7 +129,8 @@ over five that resolved, plus about $0.054 of Brave search (entry 159).
 
 **How long it takes (entry 171).** A fresh corridor took about **55s**: roughly 25s of research
 and 29s of writing the plan. The same corridor again took about **24s**, all of it the plan, because
-a plan is never stored (entry 44).
+a plan was never stored (entry 44). Since entry 178 a repeat within 24 hours reuses the model's
+draft instead; that is not yet timed live.
 
 **TODO item 56 is closed (entries 174 and 175).**
 - **Short source ids were declined.** They gave two refused plans and two confident, wrong "no visa
@@ -151,6 +152,19 @@ a plan is never stored (entry 44).
   page states it, and `gpt-5.6-luna` answered "no visa required".
 - **Fast mode helps research less** — selection −23%, roles −13% — because selection's seconds are
   mostly fixed.
+
+**A plan is reused for identical inputs since 2026-09-16 — the owner's decision, amending entry 44
+(entry 178).**
+- **What is kept:** the model's draft, keyed on everything the model is shown, for up to
+  `plan_reuse_hours` (24, never past the page TTL).
+- **What still runs:** every request checks the quotes, runs the validators and grades the status on
+  its own retrieval. A refusal is never kept.
+- **Checked:** offline by 15 tests, and by identical keys on two real consecutive requests for three
+  stored corridors. **Not timed live.**
+
+**The OpenAI account ran out of credits on 2026-09-16.** Every model call fails with `429
+credit_balance_exhausted` until it is topped up — so does every web request that needs one. The live
+reuse check in entry 178 waits on it.
 
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
 *time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened

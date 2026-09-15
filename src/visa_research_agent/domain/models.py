@@ -572,11 +572,21 @@ class RuntimePolicy(StrictModel):
     destination_mode: DestinationMode = "configured"
     source_cache_ttl_hours: float = Field(gt=0)
     source_maximum_stale_hours: float = Field(gt=0)
+    plan_reuse_hours: float = Field(default=0, ge=0)
+    """How long the model's draft of a plan may be reused for the same inputs; 0 turns reuse off.
+
+    DECISIONS entry 178, amending entry 44. Only the draft is reused — every request still checks
+    its quotes, runs every validator and grades its status on its own retrieval — and never for
+    longer than the cache TTL, so a plan cannot outlive the freshness window of the pages it was
+    written from.
+    """
 
     @model_validator(mode="after")
     def validate_freshness_window(self) -> "RuntimePolicy":
         if self.source_maximum_stale_hours < self.source_cache_ttl_hours:
             raise ValueError("the stale ceiling cannot be shorter than the cache TTL")
+        if self.plan_reuse_hours > self.source_cache_ttl_hours:
+            raise ValueError("plan reuse cannot outlast the cache TTL of the pages behind it")
         return self
 
 

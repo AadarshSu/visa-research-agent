@@ -416,7 +416,9 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 | Fast mode on the plan call | ~42s | ~14s | ~$0.30 | ~$0.07 |
 | Fast mode on every call | ~39s | ~14s | ~$0.50 | ~$0.07 |
 
-Projected from entry 171's split, not timed end to end.
+Projected from entry 171's split, not timed end to end. Since entry 178 a repeat inside the
+24-hour reuse window makes no plan call at all, so Fast mode's gain is for fresh requests and for
+repeats after the window.
 
 **If it ships.**
 - **Make the tier reviewable policy, per call** — a setting beside `openai_reasoning_effort`, never a
@@ -778,7 +780,8 @@ or Ofself does, and whether a field says which app wrote it and when.
 
 ### 57. Stream the plan to the screen as it is written — `soon`, **a UX improvement, added 2026-09-15**
 
-**Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171), and the
+**Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171) — a repeat within
+24 hours now reuses its plan instead (entry 178) — and the
 traveller sees nothing until the whole plan arrives. More than half of a fresh request, and nearly
 all of a repeat, is the model writing the plan. Streaming would not shorten any of that, but text
 could appear seconds after the plan call starts rather than when it ends. **Item 56 took about 1.5s off the plan call (entry 175); this makes the rest feel shorter.**
@@ -1299,6 +1302,7 @@ in the DECISIONS entry; this is the one-line index.
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
 | 48. Test root seeding before building it, and separate discovery from allocation | 09-15 | 161–163, 176 | **Root seeding was probed and rejected**: 0 of 9 target pages reached from eight hosts' roots. **The gap was a build discarding its own search seeds**, kept only if another page linked to them; fixed, and a matched test found Thailand `IN/GB` resolving in 4 of 4 runs where it had refused in 4 of 4, for ~9% more a corridor. Before rebuilding, a failed search query stopped costing a build (162) and a `www.`/bare host pair became one budget share (163). **All 53 corpora rebuilt the same day**: 190,491 → 237,283 entries, 7,289 seeds kept, no failed queries, ~2,590 queries (~$13) over ~10 hours two at a time. China crashed on a redirect to an address that is not a URL (176); fixed and rebuilt. Equal budget shares for unequal hosts moved to *Smaller things* |
+| — Reuse a plan written for the same inputs | 09-16 | 178 | **The owner's decision, amending entry 44.** The model's draft is kept, never the plan, keyed on everything the model is shown — prompt, packet with every page's text and retrieval time, schema, model settings — for up to `plan_reuse_hours` (24, never past the page TTL). Every request still checks quotes, validates and grades on its own retrieval, and a refusal is never kept. The risk it takes: a bad draw reaches every identical request for up to a day, as a good one does. 15 tests, and identical keys on two real consecutive requests for three corridors. **Not timed live: the OpenAI account ran out of credits** — re-run Japan `IN/GB` twice once it is topped up |
 | 56. Make the written plan shorter | 09-15 | 174, 175 | **Short source ids were declined**: 2 refused plans and 2 wrong "no visa required" answers for Japan in 48 calls, none in 48 without them. **The owner shipped trims 2 and 3** — one quote of at most 150 characters, and a few words of why an unconditional document applies — and not trim 4. The visible plan fell 5–13% but billed output only about 150 tokens, because hidden reasoning did not shrink with it: about 1.5s of a ~25s call, too little for measured seconds to show. Japan's decision stayed open and Singapore's "no visa" held in every call. Rule 8e's bounds live only in the prompt, so any change to this call re-runs both first |
 | 19. Get a corridor under ten seconds; search may stay | 09-15 | 140–146, 159–173 | **Closed, not reached: ten seconds was set against the research stage alone.** A fresh request measures ~55s end to end, ~29s of it writing a plan that is never stored. Delivered: search pace 19.0s → 2.6s at identical spend; every corridor's seconds and every model call's tokens, cache writes and retries recorded; search kept on every corridor, measured twice; model calls $0.394 → $0.251 a fresh corridor, after finding every call was writing its whole prompt to a cache billed at 1.25×. Refusing on a miss dropped. What is left is items 58 and 59; the plan's wait is 56 and 57 |
 | 51. Make live search ask only for what is specific to this traveller | 09-15 | 159, 160 | **Nothing was built, and both results are measured.** The owner's corpus-first version was tried two ways (entry 159). Searching only after the corpus leaves a role open projects −3% money and +4% seconds, and misses the traveller's own embassy pages. Deciding per query from what the corpus holds loses 5–6 of 8 answering pages. **The purpose query was marked traveller-neutral and is not** (entry 160): it alone returns 28 of the 45 pages it was first to find, and in matched runs dropping it cost Japan `IN/GB` its London-embassy checklist and moved Norway `IN/IN` to an older checklist, the same way in both runs. It would have saved $0.030 a corridor. All three queries stay |
