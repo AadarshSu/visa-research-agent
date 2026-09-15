@@ -11,8 +11,8 @@ why the item after it exists; **Smaller things** are one-paragraph defects with 
 right information. Latency and cost are the constraint it fits inside, not the goal.** A country is
 built offline — corpus plus page-text index — and a corridor answers from that store; **search does
 not have to leave the request path, provided it can be justified as giving reliable information at a
-cost that is not high.** On cost and time it passes: **$0.075 of a $0.28 corridor, 27% of the money
-and 8% of the seconds.** On reliability nothing here can answer it — see item 19, now **paused**, and
+cost that is not high.** On cost and time it passes: **search is $0.054 of a $0.322 corridor, 17% of
+the money and 8% of the seconds, and the model calls are the other 83%** (entry 159). On reliability nothing here can answer it — see item 19, now **paused**, and
 known problem 26. The older measurement below still stands on its own terms: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
 corpus and all 59 came from search — 17 of them covering a role nothing else in the run covered**.
 So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,098 entries and
@@ -410,7 +410,8 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > is what they measured.
 >
 > **The search question now has two halves and only one is answered.** On **cost and time search
-> passes** — $0.075 of a $0.28 corridor, 27% of the money and 8% of the seconds. On **reliability
+> passes** — $0.054 of a $0.322 corridor over fifteen corridors, **17% of the money**, and 8% of the
+> seconds (entries 159 and 143; entry 145's six corridors read $0.075 of $0.28, 27%). On **reliability
 > nothing in this repository can answer it**: everything measured so far is *recall* (78 pages the
 > corpus lacked, 25 load-bearing, entry 129), which says search **found** pages, not that a traveller
 > was told something **true**. That is known problem 26, and entry 68 puts correctness outside this
@@ -420,6 +421,27 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > **What stays on while this is paused:** `RecallRecord.phase_seconds` and `RecallRecord.model_calls`
 > are recorded every run, so resuming does not mean re-deriving where the seconds and dollars went.
 > Everything below is the measurement as it stood when work stopped.
+
+> **The money goes to the model calls, not to search. Two experiments show it (entries 145 and 159).**
+> This item was opened assuming search *"is still the whole of the remaining live cost"* (see
+> **Why:** below). Both measurements say otherwise:
+>
+> | | corridors | model calls | search | total |
+> | --- | --- | --- | --- | --- |
+> | entry 145, one run each | 6 | **$0.205 (73%)**: selection 59%, roles 14% | $0.075 (27%) | $0.28 |
+> | entry 159, arm S | 15 | **$0.268 (83%)** | $0.054 (17%) | $0.322 |
+>
+> **Turning search off does not make a corridor cheap.** Entry 159's corpus-only arm cost **$0.260**
+> against $0.322. The model calls barely shrink, because search adds only 1–36 candidates to pools
+> of 132–646. The two rows differ in sample as well as code: six corridors against fifteen, with
+> entry 158's +16% selection input shipped between them, and fewer than fifteen queries sent a
+> corridor (228 over the fixture's 20). So rely on where the two agree, not on either exact share.
+>
+> **Most of the model bill is the selection call, and most of that is input.** In entry 145's
+> split, selection is 59% of a corridor and role adjudication 14%, and input tokens are 96% of the
+> model bill. **So the cost lever is entry 146's cacheable prefix, not anything done to search**,
+> and it is paused along with the rest of this item. Do not propose trimming search to save money
+> unless you have a new argument against these two measurements.
 
 > **The goal is latency, and it always was (entry 140).** The owner:
 >
@@ -650,13 +672,17 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > fallback when search is down, and it is reported rather than silent.
 
 
-**Why:** the crawl half of this is done (entry 51) and search is what remains. It is the largest
-live component of a corridor — roughly 3s and **three queries per trusted domain**, so a five-domain
-country like China spends fifteen live queries on every page load, paced at 1.3s each. `_resolve`
+**Why:** the crawl half of this is done (entry 51) and search is what remains. ~~It is the largest
+live component of a corridor~~ — roughly 3s and **three queries per trusted domain**, so a five-domain
+country like China spends fifteen live queries on every page load, paced at 1.3s each (0.05s since
+entry 141). `_resolve`
 searches *before* reading the corpus, unconditionally; the corpus can only suppress the **crawl**
 (`_crawl_is_worth_running`), which is what the "the crawl was skipped" note in a corridor means.
 Search is no longer a single point of failure — entry 74 gives a corpus country a reported fallback
-when the provider is down — but it is still the whole of the remaining live cost.
+when the provider is down — ~~but it is still the whole of the remaining live cost~~.
+**Measurement has since shown this premise was wrong on both counts.** Search is 8% of a corridor's
+seconds (entry 143) and 17% of its money (entry 159). The two model calls are the majority of both.
+See the cost table at the top of this item.
 
 **The bar for doing it is unchanged and has not been met.** `corridor_queries` interpolates purpose
 *and* nationality; purpose is swept offline (four values), and **nationality is 198-valued and still
