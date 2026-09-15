@@ -235,6 +235,19 @@ def find_country(name: str, countries: CountryRegistry) -> Country | None:
     )
 
 
+def unknown_country(name: str) -> AutomaticDiscoveryError:
+    """The refusal for a destination no country in the registry answers to.
+
+    One wording for the resolver and the `corridor` command, for the reason `prepare_destination`
+    gives: a country one caller cannot research and a country another cannot are one fact.
+    """
+
+    return AutomaticDiscoveryError(
+        f"{name} is not a country this agent knows how to research. Its own government "
+        "domains cannot be told apart from other countries' pages about it."
+    )
+
+
 def trusted_domains_for(
     country: Country, authorities: AuthorityRegistry
 ) -> tuple[list[str], dict[str, str]]:
@@ -319,10 +332,7 @@ def prepare_destination(
     registry = countries or get_country_registry()
     country = find_country(name, registry)
     if country is None:
-        raise AutomaticDiscoveryError(
-            f"{name} is not a country this agent knows how to research. Its own government "
-            "domains cannot be told apart from other countries' pages about it."
-        )
+        raise unknown_country(name)
     trusted, withheld = trusted_domains_for(country, authorities or get_authority_registry())
     return PreparedDestination(
         config=base_config_for(country, corridor, trusted),
@@ -380,10 +390,7 @@ class AutomaticDestinationService:
 
         country = self.country_named(name)
         if country is None:
-            raise AutomaticDiscoveryError(
-                f"{name} is not a country this agent knows how to research. Its own government "
-                "domains cannot be told apart from other countries' pages about it."
-            )
+            raise unknown_country(name)
 
         cached = self.store.load(corridor)
         if cached is not None and cached.age_hours(self.now()) < self.maximum_age_hours:

@@ -1723,14 +1723,6 @@ in the DECISIONS entry; this is the one-line index.
 
 ## Smaller things
 
-**`visa-discover corridor` crashes on a destination written as a name.** Found 2026-09-15 beside
-entry 168. `run_corridor` builds `Corridor(destination_slug=args.destination.strip().lower())`, so
-`--destination "united states"` raises pydantic's `ValidationError` as a traceback — reproduced
-offline through the `resolve` seam, which it never reaches. The API route had the same shape and now
-keys the corridor on the slug of the country `find_country` returns; the command should do the same,
-and exit 3 on a name it cannot map, as `contention` already does for an unknown slug. Left out of
-the API fix because it is a different entry point with its own exit-code contract.
-
 **A `TypeError` from the model call reports itself as bad model output.** Both providers wrap
 `ainvoke` in `except (ValidationError, ValueError, TypeError)` and raise *"The model returned invalid
 structured output"*. `with_structured_output(strict=True)` parses inside `ainvoke`, so catching

@@ -22,7 +22,7 @@ from visa_research_agent.discovery.models import (
 )
 from visa_research_agent.discovery.proposal import render_corridor_yaml
 from visa_research_agent.discovery.recall_log import CandidateVariance, VarianceReport
-from visa_research_agent.domain.models import DestinationMode, RuntimePolicy
+from visa_research_agent.domain.models import DestinationConfig, DestinationMode, RuntimePolicy
 
 RESOLVED_AT = datetime(2026, 8, 15, 9, 0, tzinfo=UTC)
 
@@ -155,6 +155,70 @@ async def test_an_unknown_destination_is_a_configuration_error() -> None:
     )
 
     assert await run_corridor(args, io.StringIO()) == 3
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    "written", ["united states", "United States", "USA", "usa", "united-states"]
+)
+async def test_a_destination_written_as_a_name_is_researched_as_its_country(
+    written: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Entry 168, for the command: the corridor is keyed on the country, not the argument.
+
+    `"united states"` crashed the command with pydantic's `ValidationError`. `"usa"` fitted the slug
+    pattern and ran as a destination with the slug `usa`, which `corpus_for` finds no country under,
+    so the run went without the United States corpus and kept a recall log of its own.
+    """
+
+    monkeypatch.setattr(
+        "visa_research_agent.discovery.cli.get_runtime_policy", lambda: policy_with("automatic")
+    )
+    args = build_parser().parse_args(
+        ["corridor", "--destination", written, "--nationality", "IN", "--from", "GB"]
+    )
+    seen: list[tuple[str, str]] = []
+
+    async def record(
+        destination: DestinationConfig, wanted: Corridor, policy: RuntimePolicy
+    ) -> ResolvedCorridor:
+        seen.append((destination.slug, wanted.key))
+        return resolved()
+
+    assert await run_corridor(args, io.StringIO(), resolve=record) == 0
+    assert seen == [("united-states", "united-states/IN/GB/tourism")]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("argv", "named"),
+    [
+        (["--destination", "Narnia", "--nationality", "IN", "--from", "GB"], "Narnia is not"),
+        (["--destination", "united_states", "--nationality", "IN", "--from", "GB"], "united_s"),
+        (["--destination", "japan", "--nationality", "India", "--from", "GB"], "--nationality"),
+        (["--destination", "japan", "--nationality", "XX", "--from", "GB"], "--nationality"),
+        (["--destination", "japan", "--nationality", "IN", "--from", "United Kingdom"], "--from"),
+    ],
+)
+async def test_an_argument_naming_no_country_exits_3_before_anything_is_resolved(
+    argv: list[str], named: str
+) -> None:
+    """A name given for the passport crashed the command the same way as the destination did.
+
+    An unknown code such as `XX` fitted the pattern and reached the resolver, with a corridor for a
+    country the registry does not hold.
+    """
+
+    args = build_parser().parse_args(["corridor", *argv])
+    stream = io.StringIO()
+
+    async def never(
+        destination: DestinationConfig, wanted: Corridor, policy: RuntimePolicy
+    ) -> ResolvedCorridor:
+        raise AssertionError("a corridor naming no country must not be resolved")
+
+    assert await run_corridor(args, stream, resolve=never) == 3
+    assert named in stream.getvalue()
 
 
 def policy_with(mode: DestinationMode) -> RuntimePolicy:

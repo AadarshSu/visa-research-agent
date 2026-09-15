@@ -45,6 +45,7 @@ from visa_research_agent.discovery.automatic import (
     find_country,
     prepare_destination,
     trusted_domains_for,
+    unknown_country,
 )
 from visa_research_agent.discovery.bootstrap import (
     BootstrapReport,
@@ -964,13 +965,30 @@ async def run_corridor(
     convention and the seam back each other up.
     """
 
+    # Every argument is mapped to a country before a corridor is built, and the corridor is keyed on
+    # the destination's slug rather than on the argument as written, as the API is (entry 168).
+    # "united states" and a passport given as "India" raised a validation error; "usa" fitted the
+    # pattern but ran under a slug `corpus_for` finds no country for, so without its corpus.
+    countries = get_country_registry()
+    country = find_country(args.destination, countries)
+    if country is None:
+        print(str(unknown_country(args.destination)), file=stream)
+        return 3
+    nationality = _country(countries, args.nationality)
+    if nationality is None:
+        print(f"--nationality {args.nationality} is not a known ISO code, e.g. IN.", file=stream)
+        return 3
+    residence = _country(countries, getattr(args, "from"))
+    if residence is None:
+        print(f"--from {getattr(args, 'from')} is not a known ISO code, e.g. GB.", file=stream)
+        return 3
     corridor = Corridor(
-        destination_slug=args.destination.strip().lower(),
-        passport_nationality=args.nationality.upper(),
-        applying_from=getattr(args, "from").upper(),
+        destination_slug=country.slug,
+        passport_nationality=nationality.code,
+        applying_from=residence.code,
         purpose=args.purpose,
     )
-    destination = corridor_destination(args.destination, corridor, stream)
+    destination = corridor_destination(country.slug, corridor, stream)
     if destination is None:
         return 3
 
@@ -1767,7 +1785,9 @@ def build_parser() -> argparse.ArgumentParser:
     corridor = commands.add_parser(
         "corridor", help="find the pages one traveller needs within approved domains"
     )
-    corridor.add_argument("--destination", required=True, help="destination slug, e.g. japan")
+    corridor.add_argument(
+        "--destination", required=True, help='destination slug or name, e.g. japan or "Japan"'
+    )
     corridor.add_argument("--nationality", required=True, help="ISO code, e.g. IN")
     corridor.add_argument("--from", required=True, help="ISO code of where they apply, e.g. GB")
     corridor.add_argument(

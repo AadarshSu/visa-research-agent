@@ -213,7 +213,7 @@ not — and stored text ranks, it never speaks).
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
 | [37](#37-a-per-run-allowance-may-not-be-counted-on-an-object-that-outlives-the-run) | A per-run allowance may not live on an object that outlives the run |
-| [168](#168-a-destination-is-keyed-on-the-country-it-names-never-on-how-the-request-wrote-it) | **A destination is keyed on the country it names** — `"United States"` crashed the API with a 500, and `"usa"` was stored as a corridor of its own |
+| [168](#168-a-destination-is-keyed-on-the-country-it-names-never-on-how-the-request-wrote-it) | **A destination is keyed on the country it names** — `"United States"` crashed the API with a 500, and `"usa"` was stored as a corridor of its own; the `corridor` command crashed the same way and ran `usa` without its corpus |
 
 ### Whether this is a product
 | | |
@@ -226,7 +226,7 @@ not — and stored text ranks, it never speaks).
 
 ## 168. A destination is keyed on the country it names, never on how the request wrote it
 
-**2026-09-15 · the `HTTP 500` entry 167's sweep met, fixed**
+**2026-09-15 · the `HTTP 500` entry 167's sweep met, fixed — and the same defect in the `corridor` command**
 
 **The defect.** `POST /visa-plans` for `"United States"` crashed with `HTTP 500` before any search or
 model call. `VisaPlanRequest.normalize_destination` only strips and lowercases, and under
@@ -261,9 +261,21 @@ country are 422 with discovery never called; and all 198 country slugs construct
 fix cannot become this 500 for one country. The first two failed on the unfixed code — with the
 `ValidationError` from the log, and with `['usa']` for the synonym.
 
-**Not fixed here.** `visa-discover corridor --destination "united states"` raises the same
-`ValidationError` as a traceback, reproduced offline: `run_corridor` builds its corridor from the
-argument as written. A command-line crash rather than a traveller-facing one — TODO, Smaller things.
+**The `corridor` command had it too, and one case worse.** `run_corridor` built its corridor from
+the arguments as written. Each of these was shown by a test that failed first:
+- `--destination "united states"` and `--nationality India` raised the `ValidationError` as a
+  traceback;
+- `--destination usa` ran against a config with the slug `usa`. `corpus_for` looks a country up by
+  slug, found none, and the run resolved **without the United States corpus** — a quietly worse run
+  — and kept a recall log under a key of its own;
+- `--nationality XX` fitted the pattern and reached the resolver, for a country the registry does
+  not hold.
+
+The destination now goes through `find_country` and the corridor takes that country's slug.
+`--nationality` and `--from` must be known ISO codes, as the help always said and `pagetext` already
+checks. Anything else exits 3, naming the argument, before a corridor is built. The destination's
+refusal is `unknown_country`: the resolver's own wording, which `automatic.py` had written out twice.
+`contention` needed nothing, because it looks the slug up first and exits 3 on a miss.
 
 ---
 
