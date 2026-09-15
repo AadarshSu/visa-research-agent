@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-15 — update this line when you touch the handoff |
-| **Tests** | 791: 790 passing and 1 skipped, run 2026-09-15 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 793: 792 passing and 1 skipped, run 2026-09-15 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -124,8 +124,8 @@ over five that resolved, plus about $0.054 of Brave search (entry 159).
   cache-write charge (entries 167–170).
 - **At volume:** a thousand fresh corridors is about **$305**, and a request served from the corridor
   store about **$0.035**, the plan call alone.
-- **Corpus builds:** a build is **$0.35** of search and no model cost, so a 53-country rebuild is about
-  **$18.55**.
+- **Corpus builds:** a build is 28–70 search queries and no model cost. The 53-country rebuild of
+  2026-09-15 was about 2,590 queries, **about $13**, over roughly ten hours two at a time (entry 161).
 
 **How long it takes (entry 171).** A fresh corridor took about **55s**: roughly 25s of research
 and 29s of writing the plan. The same corridor again took about **24s**, all of it the plan, because
@@ -245,7 +245,7 @@ was topped up after running out mid-sweep. Matched runs then showed that without
 Japan `IN/GB` loses its London-embassy checklist and Norway `IN/IN` moves to an older checklist, the
 same way in both runs of each arm.
 
-**Item 48 was then worked, and is half done (entry 161).** Root seeding was probed on eight hosts and
+**Item 48 was then worked and closed (entries 161–163, 176).** Root seeding was probed on eight hosts and
 rejected — none of nine target pages was reached. The gap was a corpus build discarding its own search
 seeds: a seed became an entry only if another page linked to it, and a PDF seed was never read. That
 is fixed in `corpus_build.py`, and Norway, Thailand and Japan were rebuilt with it — 174, 127 and 156
@@ -259,12 +259,20 @@ search off and on:
 - **Japan gains its London-embassy pages when search misses them.**
 - **Norway does not change.**
 
-It costs about 9% more a corridor. **The owner decided to rebuild the other 50 and parked it until
-model adjudication moves to a new OpenAI API key** — item 48, now in Later. A build itself calls no
-model, so the key gates the corridors run afterwards rather than the build. **Start at item 5**, the
-next item in Now. The pre-rebuild corpora are kept as
-`var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and `var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`, names
-no reader globs.
+It costs about 9% more a corridor.
+
+**All 53 corpora were then rebuilt the same day.** Two defects were fixed first, so it would not need
+doing twice: a failed search query no longer discards a build (entry 162), and a `www.` host and its
+bare host now share one crawl budget (entry 163). The rebuild took entries from **190,491 to
+237,283**, kept 7,289 seeds and lost no search query. China crashed on a redirect to an address that
+is not a URL; that is fixed for builds and corridors alike (entry 176), and China was rebuilt. **No
+corridor beyond the three measured has been re-run on its new corpus**, so the wider gain is expected,
+not shown.
+
+**Start at item 5**, the next item in Now. The pre-rebuild copies of Norway, Thailand and Japan are
+still kept as `var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and
+`var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`, names no reader globs. They can be deleted now that
+the matched test is recorded.
 
 `var/recall` is as it was. The 20 oracle corridors' logs, and the four measured for entry 160, were
 backed up before each sweep and restored byte-identical. The 53 `BD/AE` and `BD/SA` baselines were never touched, and

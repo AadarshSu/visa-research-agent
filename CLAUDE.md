@@ -876,6 +876,7 @@ cause, and only running the thing showed it.
 | one failed search query costs a corpus build one query | `search_all` raised and the command exited — Japan's whole build lost to a DNS blip (entry 162) |
 | a host is a site for a crawl's budget | `host_of` keeps `www.` — 44 of 53 corpora held a split site taking two shares (entry 163) |
 | catching `httpx.HTTPError` catches every way a fetch can fail | a malformed redirect raises `httpx.InvalidURL`, which is not one — it ended China's rebuild (entry 176) |
+| a 53-country corpus rebuild is about $18.55 of search | measured 2026-09-15: ~2,590 queries, ~$13, ten hours two at a time (entry 161) |
 | a corridor's model cost is the selection and roles calls | the plan-writing call runs on every web request, stored corridors too, and was never priced (entry 164) |
 | the recorded tokens price the model calls exactly | OpenAI bills cache writes at 1.25× on GPT-5.6+ and the recorder never reads them (entry 164) |
 | japan's 93% pool overlap makes a traveller-independent pool cheap | across four travellers JP, DE and GB overlap 79–80% (entry 164) |

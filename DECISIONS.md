@@ -1487,11 +1487,28 @@ That is about $0.03 more a corridor, and across the three countries one corridor
 to resolving, stably, on a page nothing else supplied. Read every cell as two runs (entry 81):
 Thailand's 4 of 4 against 0 of 4 is the only difference large enough to rest on.
 
-**Decided and parked the same day, by the owner.** The results are conclusive, and the other 50
-corpora will be rebuilt with kept seeds (about 13 hours and $17 of search, with the same roughly 9%
-on their corridors). The rebuild waits until model adjudication moves to a new OpenAI API key. A
-build itself calls no model, so the key gates the corridors run afterwards, not the build. TODO
-item 48, now in Later.
+**Decided the same day by the owner, and run that evening.** The results were conclusive. The owner
+first parked the rebuild on a new OpenAI API key, then chose not to wait once it was clear a build
+calls no model. Two defects were fixed before it ran, so the rebuild would not need repeating: a
+failed search query no longer discards a build (entry 162), and a `www.` host and its bare host share
+one budget share (entry 163).
+
+**All 53 corpora were rebuilt**, two at a time. That was about 2,590 queries (about $13) over roughly
+ten hours:
+
+| | |
+| --- | --- |
+| entries | **190,491 → 237,283** (+46,792) |
+| seeds kept that nothing linked to | **7,289** |
+| failed search queries | **0** |
+| shallow-crawl warnings | 0 |
+| builds that crashed | **1 — China**, on a redirect to an address that is not a URL (entry 176). Fixed, then rebuilt: 7,675 → 10,437 entries, 252 seeds kept |
+
+Largest relative growth: Egypt 45 → 154, Cyprus 620 → 1,483, Lithuania 139 → 303.
+
+**What this rebuild has not been measured to change.** The matched test covered three corridors.
+No corridor outside them has been re-run against its rebuilt corpus, so the gain beyond Thailand is
+expected, not shown. The pre-rebuild copies of Norway, Thailand and Japan remain as `.bak` files.
 
 ---
 

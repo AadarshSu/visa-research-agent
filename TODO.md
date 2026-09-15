@@ -45,9 +45,10 @@ pays:
 - **A matched test found Thailand `IN/GB` resolving in 4 of 4 runs where it had refused in 4 of 4**,
   for about 9% more a corridor.
 
-**The owner decided to rebuild the other 50 and parked it until model adjudication moves to a new
-OpenAI API key** — item 48, now in Later. A build itself calls no model; the key gates the
-corridors run afterwards.
+**The owner then chose not to wait for the new key, and all 53 corpora were rebuilt the same day**,
+which closed item 48. Preparing and running it fixed three more defects: a failed search query no
+longer costs a build (entry 162), a `www.` host and its bare host share one crawl budget (entry 163),
+and a malformed redirect no longer ends a build or a corridor (entry 176).
 
 **Re-ordered 2026-09-14 by the owner's rule for the hybrid (entry 148).** **The corpus holds what
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
@@ -288,7 +289,6 @@ one-paragraph defects rather than items.
 |  | 57. Stream the plan to the screen as it is written | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 | **Later** | 58. What is left of model-call cost and research latency | `later` |
-|  | 48. Rebuild the other 50 corpora so they keep their search seeds — parked until the new OpenAI key | `later` |
 |  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
@@ -838,131 +838,6 @@ cache, and Canada still took 12s.
 
 **Do not re-propose** conditional search (entries 159 and 160) or refusing on a miss (entry 173).
 
-### 48. Rebuild the other 50 corpora so they keep their search seeds — `later`, **parked 2026-09-15 by the owner until the new OpenAI key**
-
-> **Parked 2026-09-15 by the owner.** The matched test is conclusive enough to rebuild, and the
-> rebuild waits until model adjudication moves to a new OpenAI API key. **A corpus build calls no
-> model** — it spends Brave search and crawl time, about $17 and 13 hours for the 50 — so the key is
-> not what the build uses; it is what every corridor run afterwards uses, including any
-> re-measurement. When it is in: `visa-discover corpus --country XX` for each of the 50 still on
-> the old build (NO, TH and JP are done), then the `pre-seeds-*.bak` copies in `var/corpus/` and
-> `var/pagetext/` can go once nobody needs the old arm.
-
-> **Worked 2026-09-15 (entry 161): root seeding rejected, a different discovery defect fixed, and its
-> benefit not yet measured.**
->
-> - **Root seeding, probed on eight hosts** with the build's own crawler and nothing written: **0 of
->   9 target pages reached**. Thailand's root *is* the arrival-card form and links nothing; Japan's
->   London embassy root answers `404`; Spain read 57 pages and found nothing that scores; the UK fee
->   host drifted into 147 GOV.UK pages. By the rule below that is "worse", and Thailand's positive did
->   not appear. Not built.
-> - **The gap was a build discarding its own search seeds.** `crawl` records links found on pages,
->   never the seeds, and a PDF seed was never read. Today's build queries return 146 of Norway's 194
->   seeds, 122 of Thailand's 152 and 167 of Japan's 282 that the corpora did not hold — including
->   Norway's January 2024 checklist, Thailand's arrival card and Japan's London-embassy tourism page,
->   all pages corridors had been getting only from live search. **Fixed in `corpus_build.py`**, with
->   two tests shown failing on the old code; the request path is unchanged.
-> - **Norway, Thailand and Japan were rebuilt with the fix**: 174, 127 and 156 seeds kept, and all
->   three pages are now held.
->
-> **What is left, in order:**
->
-> 1. **~~Measure whether it changes an answer~~ — done the same day (entry 161).** 24 matched runs
->    over `norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, old corpus against new, with search
->    off and on:
->    - **Thailand went from no decision to resolved in 4 of 4 runs.** The decision came from the Thai
->      foreign ministry's 2026 visa-exemption summary, a kept seed that live search never returned.
->    - **Japan filled every role from its London embassy with search off**, where the old corpus
->      could not.
->    - **Norway did not change.**
->
->    Cost with search on: **about +9% a corridor**, all of it selection input.
-> 2. **Decided by the owner: rebuild the other 50 — parked until the new OpenAI API key is in**,
->    per the note at the top of this item.
-> 3. **The two allocation findings below** — fair shares between unequal hosts, and `www.` counted as
->    its own host — are untouched.
->
-> The item as first written follows; its root-seeding experiment is the part now answered.
-
-**Entry 130 proposed seeding every trusted host's root and deliberately did not build it.** This is
-that experiment, plus the thing measuring it turned up: **item 35 is two problems, and the fix for
-the first can make the second worse.**
-
-> **Discovery** — the build enters a host below the page that matters. **1,148 of 2,222 hosts
-> across all 53 corpora (51.7%) have pages and their root was never visited at all**; only 20 roots
-> were seeds. A build seeds from search results, and a search result is a **page, not a site**, so a
-> host enters the corpus wherever the engine pointed. Thailand is the worked case: three
-> `tdac.immigration.go.th` pages, all children of one seed at `/manual/en/`, and the arrival-card
-> form linked from none of them.
->
-> **Allocation** — once inside a large site, the budget goes to the wrong part of it. **These are
-> not the same problem and must not be merged**: the first is about where a crawl starts, the second
-> about what it spends. Seeding roots without fixing allocation feeds the second one more frontier.
-
-**Measure these five, and the fifth is the one that can veto the change.**
-
-1. How many pages does root seeding newly **discover** — recorded entries that no previous build held?
-2. How many of those are **relevant**, scored offline by role vocabulary rather than by eye?
-3. How many previously **search-only load-bearing** pages become corpus-reachable? Entry 129's
-   24 are the list to check against, and it is the only measurement that maps to a traveller.
-4. What does it **cost**: pages fetched per useful page found, against `DEFAULT_CORPUS_PAGES` of
-   1,200 and `DEFAULT_CORPUS_PAGES_PER_HOST` of 400.
-5. **Does it make allocation worse** by giving a huge irrelevant subtree more frontier to expand?
-
-**The control set, chosen so each case can fail differently.**
-
-| | why it is in the set |
-| --- | --- |
-| **Thailand** | the known positive: TDAC's form is one hop from a root nobody visited |
-| **Bulgaria** | the **negative** control: `mfa.bg` refuses this client at every address (entry 131), so nothing here should move it |
-| **Spain** | `www.interior.gob.es` holds 1,930 pages and **109 were opened**; the sample is press-release pagination |
-| **Finland** | `um.fi` holds 1,736 and opened 173; a parameterised asset-publisher space |
-| **Greece** | `portal.immigration.gov.gr`, 428 pages on sequential numeric ids |
-
-**What "worse" would look like, decided in advance:** a root seed that raises pages fetched on a
-host without raising role-scoring pages found on it. If Spain and Finland show that and Thailand
-shows the positive, the answer is **not** "seed roots" but section-aware crawling — a notion of
-*part of a site* the crawler does not currently have.
-
----
-
-**Three things measuring this turned up that are separable from the experiment.**
-
-**A per-host fair share treats unequal hosts equally.** Thailand opened 1,041 pages across 63
-hosts and the top hosts each got **41 or 42** — Uthai Thani province, population ~330,000, took the
-same share as the national immigration service. 31 of those 63 hosts are provincial offices, so
-Thailand's national guidance was diluted 31-fold: **44 pages for `www.immigration.go.th`, 3 for
-TDAC, 2,615 recorded for the provinces.** The provincial sites are WordPress installations whose
-category and archive pages present an effectively unbounded link graph. **The crawler is not being
-greedy; it is being fair between things that are not equal.**
-
-**~~`host_of` does not fold `www.`, so one authority can take several shares~~ — fixed 2026-09-15,
-DECISIONS entry 163.** Bulgaria opened 587 pages: `www.mvr.bg` 149, `mvr.bg` 161, `e-uslugi.mvr.bg`
-110 — 420 of 587 on the interior ministry across three spellings — while `mfa.bg` opened 0. Nothing
-documented it as deliberate, and 44 of 53 corpora held such a pair. The crawl budget now folds a
-leading `www.`; trust, politeness and reporting keep the exact host.
-
-**~~And Bulgaria's zero may be a stale failure~~ — re-run on 2026-09-04, and it is not (entry
-131).** The hypothesis was that its 175 `mfa.bg` failures were stale, because three of those URLs
-answered `200` in a browser. The rebuild crawled **7,149 pages for 193 new addresses and 21 newly
-opened**, `mfa.bg` stayed at **0 opened of 399**, and the failure count went **up to 176**.
-
-Asked with this program's own user agent, `https://mfa.bg/en` redirects to
-`validate.perfdrive.com` — **Radware Bot Manager, serving a CAPTCHA**. It is rate-shaped, so
-`/en/155` answers `200` in the same session, which is why a browser check could not see it: **a
-browser passes the bot check, so looking with one cannot tell you whether your crawler is being
-intercepted.**
-
-So Bulgaria is a **permanent ceiling**, not a crawl gap — completing a bot check is prohibited
-outright, and this interception lands on a third-party domain that could never be evidence anyway.
-It stays in the control set below only as a **negative** control: no crawl change should move it.
-The reason string is fixed (the crawl now names the landing host); the refusal is not, and must not
-be.
-
-**Why:** entries 129 and 130. Item 35 owns the crawl; this is the measurement that says which half
-of it to change, and entry 82 is the standing warning — "a surplus goes to the largest host" was
-found by measuring a budget change that looked obviously good.
-
 ### 49. The family is walked at 25 members a build and has 169 — decide if that is enough — `later`, **stopped 2026-09-14 (entry 148)**
 
 > **Stopped here on 2026-09-14 by the owner's rule (entry 148).** The corpus holds what every
@@ -1387,6 +1262,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 48. Test root seeding before building it, and separate discovery from allocation | 09-15 | 161–163, 176 | **Root seeding was probed and rejected**: 0 of 9 target pages reached from eight hosts' roots. **The gap was a build discarding its own search seeds**, kept only if another page linked to them; fixed, and a matched test found Thailand `IN/GB` resolving in 4 of 4 runs where it had refused in 4 of 4, for ~9% more a corridor. Before rebuilding, a failed search query stopped costing a build (162) and a `www.`/bare host pair became one budget share (163). **All 53 corpora rebuilt the same day**: 190,491 → 237,283 entries, 7,289 seeds kept, no failed queries, ~2,590 queries (~$13) over ~10 hours two at a time. China crashed on a redirect to an address that is not a URL (176); fixed and rebuilt. Equal budget shares for unequal hosts moved to *Smaller things* |
 | 56. Make the written plan shorter | 09-15 | 174, 175 | **Short source ids were declined**: 2 refused plans and 2 wrong "no visa required" answers for Japan in 48 calls, none in 48 without them. **The owner shipped trims 2 and 3** — one quote of at most 150 characters, and a few words of why an unconditional document applies — and not trim 4. The visible plan fell 5–13% but billed output only about 150 tokens, because hidden reasoning did not shrink with it: about 1.5s of a ~25s call, too little for measured seconds to show. Japan's decision stayed open and Singapore's "no visa" held in every call. Rule 8e's bounds live only in the prompt, so any change to this call re-runs both first |
 | 19. Get a corridor under ten seconds; search may stay | 09-15 | 140–146, 159–173 | **Closed, not reached: ten seconds was set against the research stage alone.** A fresh request measures ~55s end to end, ~29s of it writing a plan that is never stored. Delivered: search pace 19.0s → 2.6s at identical spend; every corridor's seconds and every model call's tokens, cache writes and retries recorded; search kept on every corridor, measured twice; model calls $0.394 → $0.251 a fresh corridor, after finding every call was writing its whole prompt to a cache billed at 1.25×. Refusing on a miss dropped. What is left is items 58 and 59; the plan's wait is 56 and 57 |
 | 51. Make live search ask only for what is specific to this traveller | 09-15 | 159, 160 | **Nothing was built, and both results are measured.** The owner's corpus-first version was tried two ways (entry 159). Searching only after the corpus leaves a role open projects −3% money and +4% seconds, and misses the traveller's own embassy pages. Deciding per query from what the corpus holds loses 5–6 of 8 answering pages. **The purpose query was marked traveller-neutral and is not** (entry 160): it alone returns 28 of the 45 pages it was first to find, and in matched runs dropping it cost Japan `IN/GB` its London-embassy checklist and moved Norway `IN/IN` to an older checklist, the same way in both runs. It would have saved $0.030 a corridor. All three queries stay |
@@ -1436,6 +1312,15 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**A per-host fair share treats unequal hosts equally.** Moved here from item 48, closed
+2026-09-15; unmeasured, and it changes what a build spends, so it needs its own rebuild. Thailand opened 1,041 pages across 63
+hosts and the top hosts each got **41 or 42** — Uthai Thani province, population ~330,000, took the
+same share as the national immigration service. 31 of those 63 hosts are provincial offices, so
+Thailand's national guidance was diluted 31-fold: **44 pages for `www.immigration.go.th`, 3 for
+TDAC, 2,615 recorded for the provinces.** The provincial sites are WordPress installations whose
+category and archive pages present an effectively unbounded link graph. **The crawler is not being
+greedy; it is being fair between things that are not equal.**
 
 **A `TypeError` from the model call reports itself as bad model output.** Both providers wrap
 `ainvoke` in `except (ValidationError, ValueError, TypeError)` and raise *"The model returned invalid
