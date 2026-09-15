@@ -369,9 +369,13 @@ read its July 2018 sibling instead — the same vintage the old corpus answers w
 
 That is about $0.03 more a corridor, and across the three countries one corridor went from refusing
 to resolving, stably, on a page nothing else supplied. Read every cell as two runs (entry 81):
-Thailand's 4 of 4 against 0 of 4 is the only difference large enough to rest on. **Still the owner's
-decision: rebuilding the other 50**, at about 13 hours and $17 of search, with the same roughly 9% on
-their corridors.
+Thailand's 4 of 4 against 0 of 4 is the only difference large enough to rest on.
+
+**Decided and parked the same day, by the owner.** The results are conclusive, and the other 50
+corpora will be rebuilt with kept seeds (about 13 hours and $17 of search, with the same roughly 9%
+on their corridors). The rebuild waits until model adjudication moves to a new OpenAI API key. A
+build itself calls no model, so the key gates the corridors run afterwards, not the build. TODO
+item 48, now in Later.
 
 ---
 

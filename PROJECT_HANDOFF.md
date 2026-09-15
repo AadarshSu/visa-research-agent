@@ -197,8 +197,10 @@ search off and on:
 - **Japan gains its London-embassy pages when search misses them.**
 - **Norway does not change.**
 
-It costs about 9% more a corridor. **The other 50 corpora are not rebuilt — that is the owner's
-decision, and item 48 is where it waits.** The pre-rebuild corpora are kept as
+It costs about 9% more a corridor. **The owner decided to rebuild the other 50 and parked it until
+model adjudication moves to a new OpenAI API key** — item 48, now in Later. A build itself calls no
+model, so the key gates the corridors run afterwards rather than the build. **Start at item 5**, the
+next item in Now. The pre-rebuild corpora are kept as
 `var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and `var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`, names
 no reader globs.
 
