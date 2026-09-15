@@ -519,6 +519,17 @@ produces a serious defect.
   extraction forces `visa_required` to `None` whenever `decision_is_unverified`, so `False` on a
   final plan already means a page said so.
 
+  **One silence counts as saying so — the owner's decision, entry 172.** Absence from the
+  authority's own visa-required list states that an unlisted passport needs no visa. It holds only
+  within the bounds written into `extract_visa_plan.txt` rule 8e:
+  - the whole list was read;
+  - every name, footnote and exception was checked;
+  - it is a list of who *needs* a visa and nothing else;
+  - no other source says a visa is needed, or the decision stays null.
+
+  The bounds live in the prompt, not in code, and they are all that stands between a silence and a
+  confident wrong "no". **Do not widen them to another kind of silence without a decision entry.**
+
   **The entry-step floor is no floor, and that is a decision rather than an omission (entry 96).**
   Three visa-free corridors state **3**, **~5** and **~7** entry duties, so the honest list has no
   natural minimum and its low end is already under the application's four. A floor there would be a

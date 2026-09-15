@@ -476,9 +476,10 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 >    selection input and 39 of 48 roles in both arms over ten corridors, one run each. Stripping
 >    boilerplate was **declined**: excerpts are cut to a budget, so it saved 0–4% and would only
 >    have changed what the selector reads. **Measured live with step 4 (entry 171): a fresh
->    corridor $0.394 → $0.251.** Open, and small: Singapore `PH/PH`'s plan left its decision open
->    more often after entry 169's message shape (5 of 6 decided before, 2 of 7 after), too few calls
->    to settle.
+>    corridor $0.394 → $0.251.** Singapore `PH/PH`'s plan was deciding its visa question by chance
+>    in either message shape. **Entry 172's rule settles it:** absence from the authority's
+>    visa-required list states no visa is needed — 4 of 4 "no visa", and India, which is on the
+>    list, 2 of 2 "required".
 > 4. ~~Stop paying to write packets nothing reads~~ — **done 2026-09-15, entry 169**: every call
 >    caches only its instructions, projected $0.394 → $0.323 a fresh corridor. Still waiting for
 >    traffic: entry 146's reusable country-stable packet, and a cheaper model for selection only.

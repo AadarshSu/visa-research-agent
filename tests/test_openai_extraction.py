@@ -936,6 +936,21 @@ def test_a_missing_checklist_is_never_turned_into_a_claim_that_none_exists() -> 
     assert "found among the pages that could be read" in prompt
 
 
+def test_absence_from_a_visa_required_list_is_an_answer_only_within_its_bounds() -> None:
+    """The owner's rule (entry 172): Singapore lists who needs a visa and never names the rest, and
+    the plan call answered a Filipino passport "no visa" or "undecided" by chance. The rule settles
+    it, and each bound is what keeps a silence from becoming a confident wrong "no"."""
+
+    prompt = load_extraction_prompt()
+
+    assert "Absence from the authority's visa-required list states no visa is needed." in prompt
+    assert "The whole list must be in the source text." in prompt
+    assert "every footnote, exception" in prompt
+    assert "It applies only to a list of who NEEDS a visa." in prompt
+    assert "rule 5 governs and visa_required is" in prompt
+    assert "The one silence that is an answer" in prompt, "rule 4 must not contradict it"
+
+
 def test_the_extraction_prompt_separates_a_block_from_a_questionnaire() -> None:
     """Two reasons a decision can be unverified, and they need different sentences: one page was
     withheld, the other was read and asks questions."""

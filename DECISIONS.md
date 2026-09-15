@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [172](#172-absence-from-the-authoritys-visa-required-list-states-that-no-visa-is-needed) | **Absence from the authority's visa-required list states no visa is needed** — the owner's rule, bounded in the plan prompt; Singapore `PH/PH` 4 of 4 "no visa" after it, India 2 of 2 still "required" |
 | [171](#171-measured-live-the-two-changes-take-a-fresh-corridor-from-0394-to-0251--and-singapores-decision-is-borderline-either-way) | **Measured live: a fresh corridor $0.394 → $0.251** — entries 169 and 170 through the web app; Singapore `PH/PH`'s plan left its decision open in both message shapes, 13 calls too few to say more |
 | [170](#170-the-selection-packet-says-each-thing-once-31-of-its-input-and-the-same-roles-found) | **The selection packet says each thing once** — notes as flags, compact JSON, identical excerpts pointed at: −31% input, 39 of 48 roles in both arms over ten corridors; stripping boilerplate declined |
 | [169](#169-every-call-caches-only-its-instructions-so-no-packet-is-written-to-a-cache-nothing-reads) | **Every call caches only its instructions** — explicit caching with a breakpoint after the system prompt, so no packet is written; projected $0.394 → $0.323 a fresh corridor, +$0.015 on a stored corridor repeated within 30 minutes |
@@ -263,6 +264,77 @@ fix cannot become this 500 for one country. The first two failed on the unfixed 
 **Not fixed here.** `visa-discover corridor --destination "united states"` raises the same
 `ValidationError` as a traceback, reproduced offline: `run_corridor` builds its corridor from the
 argument as written. A command-line crash rather than a traveller-facing one — TODO, Smaller things.
+
+---
+
+## 172. Absence from the authority's visa-required list states that no visa is needed
+
+**2026-09-15 · the owner's decision, after entry 171 found Singapore's visa decision being made by chance**
+
+### The question
+
+Singapore publishes its answer as a list: *"If you hold a travel document issued by one of the
+countries or places listed below, you will require a valid Singapore entry visa"*, followed by the
+countries. The Philippines is not on it, and no sentence says an unlisted passport needs no visa.
+
+The plan call read that two ways:
+- **the list is the authority's whole answer**, so an unlisted passport needs no visa;
+- **the page says nothing about who is not listed**, so the decision stays open. Rule 4 says "do not
+  fill gaps with assumptions", and rule 8e says to "cite the page that says so".
+
+Over 13 calls on the same pages it decided "no visa" 7 times and left the question open 6 times
+(entry 171). The instructions did not say which reading was right.
+
+### Decided, by the owner
+
+**"Absence from the authority's visa-required list states no visa is needed."** It amends, by one
+case, what CLAUDE.md's rule for a visa-free plan counts as a *stated* decision (entries 95 and 96).
+
+### The risk it takes, said plainly
+
+**A wrong "no visa" is the most damaging answer this program can give.** A visa-free plan drops the
+checklist question and leaves the traveller nothing to notice the error with. Reading a silence as
+"no" makes that answer depend on the list being complete and current. So the rule sits inside rule
+8e with bounds that keep a silence from being read where it is not the authority's answer:
+- **The whole list must be in the source text.** Page text is capped at 50,000 characters, so a list
+  that runs to the end of the text may be cut, and a cut list says nothing about who is missing.
+- **The passport country is looked for under every name, and in every footnote, exception and
+  condition.** A country named anywhere on the list as needing a visa, even for some of its travel
+  documents only, is on it.
+- **Only a list of who *needs* a visa counts.** A list of who does not, a list for another purpose or
+  passport type, or a page about one other nationality says nothing about a country it leaves out.
+- **Any other source saying a visa is needed** sends the decision to rule 5, and it stays null.
+- **The plan cites the list, quotes its visa-required sentence, and says the traveller's country is
+  not on it**, so they can check the list themselves.
+
+**What stays exactly as it was:** rules 8b and 8c still leave the decision null for a refused page or a
+questionnaire, and extraction still forces `visa_required` to `None` whenever
+`decision_is_unverified`.
+
+**The bounds are in the prompt, not in code.** Nothing checks that a list was complete or that the
+country was really absent. The model's own reading is what applies them.
+
+### Checked
+
+- **Offline:** a test that the rule and each of its bounds are in the prompt, and that rule 4 points
+  at it.
+- **Live, on Singapore's two pages** as the stored resolution fetches them: six plan calls, about
+  $0.09.
+
+| passport | on ICA's list | `visa_required` |
+| --- | --- | --- |
+| Philippines | no | `false`, **4 of 4** — against 7 of 13 before the rule |
+| India | yes | `true`, **2 of 2** |
+
+Each "no" cited the list page, quoted its visa-required sentence and said the Philippines is not on
+the list. Each "yes" quoted India's place on it.
+
+### Not checked
+
+- **Any destination but Singapore**, and any list longer than the 50,000-character cap.
+- **A passport on a list only for some travel documents** — the footnote bound.
+- **Whether ICA's list is complete or current.** Correctness is the owner's to verify, outside this
+  repository (entry 68).
 
 ---
 

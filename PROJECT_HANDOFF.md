@@ -85,6 +85,10 @@ requests it took.
   `PH/PH`'s plan left its visa decision open on all three calls. Its pages were unchanged, and on one
   fixed packet the old message shape did the same 1 time in 4. So it is a borderline page, not a
   shown regression.
+- **Entry 172, the owner's rule: absence from the authority's visa-required list states no visa is
+  needed.** It is bounded in the plan prompt's rule 8e. Singapore `PH/PH` answered "no visa" 4 of 4
+  after it, and an Indian passport, which is on the list, still "visa required" 2 of 2. Checked on
+  Singapore only.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.
