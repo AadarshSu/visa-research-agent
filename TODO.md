@@ -281,11 +281,13 @@ one-paragraph defects rather than items.
 | --- | --- | --- |
 | **Now** | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 |  | 19. Get a corridor under ten seconds; search may stay | **paused** |
+|  | 56. Make the written plan shorter | `next` |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
 |  | 55. Take the traveller from Ofself's shared identity, through one adapter | `soon` |
+|  | 57. Stream the plan to the screen as it is written | `soon` |
 | **Later** | 48. Rebuild the other 50 corpora so they keep their search seeds — parked until the new OpenAI key | `later` |
 |  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
@@ -776,6 +778,83 @@ queue**, which is observability the current system has none of.
 and still fetched through `LiveSourceFetcher`, so `validate_route` still runs and a corpus entry cannot
 survive a later narrowing of the domain registry.
 
+### 56. Make the written plan shorter — `next`, **added 2026-09-15 for a fresh session to judge**
+
+**Why it matters.**
+- **Writing the plan is the longest single wait in a request, and it happens on every request**,
+  because a plan is never stored (entry 44). Entry 171 measured it live: about **29s of a fresh
+  corridor's ~55s**, and nearly all of a repeat's ~24s.
+- **The call's time tracks what it writes**, at about 11 ms a token. Germany's 3,526 output tokens
+  took 38.7s.
+- **Money is the smaller reason.** The plan call is about 18% of a fresh corridor's $0.251 of model
+  calls, and about 69% of its own cost is output. A quarter shorter would take a fresh request to
+  about $0.244 and a repeat from about $0.035 to about $0.028.
+
+**What a plan is made of.** Japan `IN/GB` is a typical visa-required plan: 2,579 output tokens in
+29s. About 516 of those are hidden reasoning, and about 2,271 are the plan itself:
+
+| part | share of the visible plan |
+| --- | --- |
+| document requirements, nine | **55%** — the verbatim quotes alone are 22%, descriptions 10%, "why it applies" 8% |
+| steps, six | 26% — actions 215 tokens, timings 84 |
+| open questions, explanation, where to apply, visa type | the rest |
+
+- **Source ids repeat through every field.** Labels such as `japan_www_sightseeing` come to about 200
+  tokens in all.
+- **A visa-free plan is different.** Singapore `PH/PH` is 1,271 output tokens, over half of them
+  hidden reasoning.
+- **Existing limits:** `ApplicationStep` caps a plan at eight steps, and a step's title, action and
+  timing at 70, 320 and 160 characters. Nothing caps a requirement.
+
+**Candidate trims, estimated offline on those two plans only.** They are cumulative, made by cutting
+text out of the saved plans and counting tokens. **They are estimates, not measurements**: cutting
+text stands in for an instruction the model may not follow exactly.
+
+| # | trim | changes what the traveller reads? | Japan | Singapore |
+| --- | --- | --- | --- | --- |
+| 1 | short source ids in the plan packet (`s1`, `s2`), mapped back by code before validation | no | −8% | −8% |
+| 2 | one quote per claim, at most ~150 characters, instead of up to two | a little | −17% | −9% |
+| 3 | a brief "why it applies" where a document carries no condition — 8 of Japan's 9 | a little | −22% | — |
+| 4 | tighter step wording, through word limits in the prompt | a little | −25% | −13% |
+
+At 11 ms a token that is about 6 seconds off Japan's plan, and under a second off Singapore's.
+
+**Open for the session that picks this up — none of it is decided.**
+- **Whether any trim is worth what it changes.** The only claim made here is that trim 1 changes
+  nothing a traveller or the owner reads. Trims 2–4 are judgement calls.
+- **Quotes exist so the owner can check a plan quickly** (entry 156). Whether one short quote per
+  claim still serves that is the owner's judgement. A shorter quote is, if anything, likelier to
+  survive `QuoteChecker`'s exact match.
+- **Whether "why it applies" earns its full length** where it only restates that a document is on the
+  checklist, or whether travellers read it in a way that matters.
+- **Whether tighter steps lose detail travellers need.** It was the smallest saving and the likeliest
+  to cost something.
+- **Whether there are better levers than these four** — fields the application could fill itself
+  rather than asking the model to write them, for instance. Measure before proposing, as the table
+  was built.
+- **Whether shortening is worth doing at all next to item 57**, which does not shorten the wait but
+  makes it feel much shorter.
+
+**Constraints that do not move.**
+- **Do not lower `openai_reasoning_effort`** to cut the hidden reasoning without an accuracy
+  measurement (CLAUDE.md).
+- **A visa-free plan still lists only the entry duties its sources state**, with no minimum, and must
+  not gain one (entries 95 and 96).
+- **Every quote is still checked against the retrieved text** (entry 156), and a requirement still needs
+  a designated document source (`validate_absent_checklist`).
+- **Correctness is the owner's to verify** (entry 68). Read shortened plans side by side with today's
+  before shipping anything that changes wording.
+
+**How to measure it.**
+- **Offline.** The two plans behind the estimates were saved outside the repository and are gone. To
+  reproduce, ask the web app for a stored corridor, keep the JSON it returns, and count the fields
+  `VisaPlanDraft` names with tiktoken's `o200k_base`.
+- **Live.** Make plan calls on one fixed research packet, alternating the old and new prompt, as entry
+  171's Singapore A/B did. Every call lands in `var/usage/model-calls-YYYY-MM-DD.jsonl` with its
+  output tokens and seconds, and costs about $0.02–0.05.
+- **One run is noise** (entries 81 and 144). Compare several calls per arm, on output tokens as well as
+  seconds.
+
 ## Next up
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`, **and Germany is the worked example**
@@ -1122,6 +1201,31 @@ or Ofself does, and whether a field says which app wrote it and when.
 
 **Plan it with item 7.** Ofself's login is also the likely answer to item 7's fifth step: `POST
 /visa-plans` is unauthenticated and a cold corridor spends real money.
+
+### 57. Stream the plan to the screen as it is written — `soon`, **a UX improvement, added 2026-09-15**
+
+**Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171), and the
+traveller sees nothing until the whole plan arrives. More than half of a fresh request, and nearly
+all of a repeat, is the model writing the plan. Streaming would not shorten any of that, but text
+could appear seconds after the plan call starts rather than when it ends. **Item 56 shortens the
+wait; this makes it feel shorter, and the two do not compete.**
+
+**What stands in the way — to be designed, not assumed.**
+- **The plan is validated as a whole before anyone sees it:** `VisaPlan`'s validators,
+  `QuoteChecker`, the rule that a null decision is never `verified`, and the entry-plan shape
+  (entries 95, 150 and 156). A half-written plan has passed none of them. Nothing streamed may show
+  a claim the finished plan could still drop or refuse — the visa decision above all.
+- **One safe shape streams progress rather than content**: which stage the request has reached —
+  searching, choosing pages, reading them, writing the plan. Another streams only the parts that are
+  already final. Which parts qualify is the design question.
+- **The call uses strict structured output** (`with_structured_output`, `json_schema`). Streaming
+  partial JSON through LangChain and FastAPI to `static/app.js` is a real change at both ends.
+- **A refusal can arrive after text has started to appear**, and the interface would need an honest
+  way to take it back.
+
+**Open for whoever picks it up:** whether streaming progress alone is enough, and whether any plan
+content can be shown before validation without breaking entry 6's rule against unverified claims that
+would alarm a traveller if wrong.
 
 ---
 
