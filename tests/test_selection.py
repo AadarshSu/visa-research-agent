@@ -4,6 +4,7 @@ Offline throughout. The test that matters is `test_a_selection_cannot_carry_a_wo
 it is the barrier that lets `page_text.text_for_selection` exist at all (DECISIONS entry 83).
 """
 
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -129,6 +130,57 @@ def test_every_candidate_reaches_the_packet(count: int) -> None:
 
     for i in range(count):
         assert f'"id{i}"' in packet
+
+
+def test_a_candidate_carries_only_what_differs_from_the_next() -> None:
+    """Two sentences repeated on every candidate, empty labels and indentation were 13–40% of a
+    packet that is most of the bill (entry 164). Each is said once now, or not at all."""
+
+    candidates = {
+        "known": candidate("https://a.gov.example/known.html"),
+        "unknown": candidate("https://a.gov.example/unknown.html", text="Visa checklist"),
+    }
+
+    packet = build_selection_packet(corridor(), candidates, {"known": "Checklist for tourism..."})
+    entries = {entry["source_id"]: entry for entry in json.loads(packet)["candidates"]}
+
+    assert "\n" not in packet and '": ' not in packet, "compact: whitespace is billed too"
+    assert "stored_excerpt_note" not in packet
+    assert entries["unknown"]["no_stored_text"] is True
+    assert entries["unknown"]["link_text"] == "Visa checklist"
+    assert "heading" not in entries["unknown"] and "title" not in entries["unknown"]
+    assert entries["known"]["stored_excerpt"] == "Checklist for tourism..."
+    assert "link_text" not in entries["known"], "an empty label is left out, not sent empty"
+
+
+def test_an_identical_excerpt_is_shown_once_and_every_candidate_is_still_offered() -> None:
+    """The same page at several addresses carried its excerpt once per address — 37% of
+    Thailand's excerpt text (entry 164). The copies point at the first instead."""
+
+    candidates = {
+        "first": candidate("https://a.gov.example/checklist"),
+        "copy": candidate("http://a.gov.example/checklist"),
+        "other": candidate("https://a.gov.example/fees"),
+    }
+    text = {"first": "Checklist: passport", "copy": "Checklist: passport", "other": "Fees: £4"}
+
+    entries = {
+        entry["source_id"]: entry
+        for entry in json.loads(build_selection_packet(corridor(), candidates, text))["candidates"]
+    }
+
+    assert set(entries) == {"first", "copy", "other"}
+    assert entries["first"]["stored_excerpt"] == "Checklist: passport"
+    assert entries["copy"]["stored_excerpt_same_as"] == "first"
+    assert "stored_excerpt" not in entries["copy"]
+    assert entries["other"]["stored_excerpt"] == "Fees: £4"
+
+
+def test_the_prompt_explains_an_excerpt_that_points_at_another() -> None:
+    prompt = load_selection_prompt()
+
+    assert "stored_excerpt_same_as" in prompt
+    assert "not a reason to reject it" in prompt
 
 
 # --- what stored text may put back into the pool, TODO item 31 ---------------------------------

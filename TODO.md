@@ -471,9 +471,11 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 >
 >    **New threshold:** above 272K input tokens OpenAI bills the whole request at 2× input and 1.5×
 >    output. Canada's selection is already 149K, and nothing caps the packet as a whole.
-> 2. State the notes once and send compact JSON.
-> 3. When building the packet, strip repeated boilerplate and show identical excerpts once — never
->    in the stored index.
+> 2. ~~State the notes once and send compact JSON~~ — **done 2026-09-15, entry 170.**
+> 3. ~~Show identical excerpts once~~ — **done, entry 170**, with step 2 graded together: −31% of
+>    selection input and 39 of 48 roles in both arms over ten corridors, one run each. Stripping
+>    boilerplate was **declined**: excerpts are cut to a budget, so it saved 0–4% and would only
+>    have changed what the selector reads.
 > 4. ~~Stop paying to write packets nothing reads~~ — **done 2026-09-15, entry 169**: every call
 >    caches only its instructions, projected $0.394 → $0.323 a fresh corridor. Still waiting for
 >    traffic: entry 146's reusable country-stable packet, and a cheaper model for selection only.

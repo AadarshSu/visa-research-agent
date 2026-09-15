@@ -173,40 +173,51 @@ def build_selection_packet(
         },
         "roles_to_fill": list(ROLE_ORDER),
         "choose_at_most": choose,
-        "candidates": [
-            _candidate_entry(source_id, candidate, stored_text.get(source_id), budget)
-            for source_id, candidate in candidates.items()
-        ],
+        "candidates": _candidate_entries(candidates, stored_text, budget),
     }
-    return json.dumps(packet, indent=2, ensure_ascii=False)
+    # Without indentation: whitespace is billed like any other input, and was 5–14% of a packet
+    # nobody reads but the model (entry 164).
+    return json.dumps(packet, ensure_ascii=False, separators=(",", ":"))
 
 
-def _candidate_entry(
-    source_id: str, candidate: CandidatePage, text: str | None, budget: int
-) -> dict[str, object]:
-    entry: dict[str, object] = {
-        "source_id": source_id,
-        "url": candidate.link.url,
-        "link_text": candidate.link.text,
-        "heading": candidate.link.heading,
-        "title": candidate.title or "",
-    }
-    if text:
-        # Head of the page only. Unlike the adjudicator's excerpt this is not anchored on the
-        # traveller's country: this call decides what is worth *reading*, and a page whose head
-        # does not say what it is will not be saved by a window three thousand characters in.
-        entry["stored_excerpt"] = text[:budget]
-        entry["stored_excerpt_note"] = (
-            "Text from a previous fetch, kept only to decide what is worth reading now. It may be "
-            "out of date and must not be quoted or relied on."
+def _candidate_entries(
+    candidates: dict[str, CandidatePage], stored_text: dict[str, str], budget: int
+) -> list[dict[str, object]]:
+    """One entry per candidate, carrying only what differs from one candidate to the next.
+
+    **Three things used to be repeated on every candidate** (entry 164): a sentence saying an
+    excerpt may be out of date, another saying nothing is stored about a page, and empty labels.
+    The first is said once, in the prompt and the message around the packet; the second is now a
+    flag the prompt explains; the third is left out. And **an excerpt identical to an earlier one is
+    not repeated** — the same page at several addresses, or near-identical pages — but pointed at.
+    Every candidate is still listed: the module's rule that none is dropped for want of room holds.
+    """
+
+    first_with: dict[str, str] = {}
+    entries: list[dict[str, object]] = []
+    for source_id, candidate in candidates.items():
+        entry: dict[str, object] = {"source_id": source_id, "url": candidate.link.url}
+        labels = (
+            ("link_text", candidate.link.text),
+            ("heading", candidate.link.heading),
+            ("title", candidate.title or ""),
         )
-    else:
-        entry["no_stored_text"] = (
-            "Nothing is stored about what this page says. Judge it on its address and the words "
-            "linking to it, and treat that as much weaker evidence than an excerpt — not as a "
-            "reason to reject it."
-        )
-    return entry
+        entry.update({field: value for field, value in labels if value})
+        text = stored_text.get(source_id)
+        if not text:
+            entry["no_stored_text"] = True
+        else:
+            # Head of the page only. Unlike the adjudicator's excerpt this is not anchored on the
+            # traveller's country: this call decides what is worth *reading*, and a page whose head
+            # does not say what it is will not be saved by a window three thousand characters in.
+            excerpt = text[:budget]
+            earlier = first_with.setdefault(excerpt, source_id)
+            if earlier == source_id:
+                entry["stored_excerpt"] = excerpt
+            else:
+                entry["stored_excerpt_same_as"] = earlier
+        entries.append(entry)
+    return entries
 
 
 def validated_selection(

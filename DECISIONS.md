@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [170](#170-the-selection-packet-says-each-thing-once-31-of-its-input-and-the-same-roles-found) | **The selection packet says each thing once** — notes as flags, compact JSON, identical excerpts pointed at: −31% input, 39 of 48 roles in both arms over ten corridors; stripping boilerplate declined |
 | [169](#169-every-call-caches-only-its-instructions-so-no-packet-is-written-to-a-cache-nothing-reads) | **Every call caches only its instructions** — explicit caching with a breakpoint after the system prompt, so no packet is written; projected $0.394 → $0.323 a fresh corridor, +$0.015 on a stored corridor repeated within 30 minutes |
 | [167](#167-the-first-live-read-of-model-call-usage-every-call-writes-its-whole-prompt-to-the-cache-and-the-plan-call-is-small-and-made-of-output) | **The first live read of model-call usage** — 15 web requests cost $2.41: every call wrote its whole uncached prompt to the cache, which OpenAI bills at $2.50/M against $2.00 input; the plan call is 13% of a fresh request and 69% output |
 | [166](#166-every-model-call-goes-into-one-daily-log-with-its-retries-counted-and-its-usage-handed-in-per-call) | **Every model call goes into one daily log** — retries counted by a request hook, usage handed in per call so concurrent requests cannot swap figures; tested against a mocked Responses API, not live |
@@ -261,6 +262,71 @@ fix cannot become this 500 for one country. The first two failed on the unfixed 
 **Not fixed here.** `visa-discover corridor --destination "united states"` raises the same
 `ValidationError` as a traceback, reproduced offline: `run_corridor` builds its corridor from the
 argument as written. A command-line crash rather than a traveller-facing one — TODO, Smaller things.
+
+---
+
+## 170. The selection packet says each thing once: −31% of its input, and the same roles found
+
+**2026-09-15 · entry 164's second and third steps — graded before shipping, on a budget the owner chose**
+
+Selection is 70% of a fresh corridor's model cost (entry 167), and entry 164 measured how much of
+its packet says nothing about any candidate. This removes that part. It changes what the selector
+reads, so it was graded against the oracle before it shipped.
+
+### What changed, all in `build_selection_packet`
+
+- **A candidate with no stored text carries `"no_stored_text": true`**, not a sentence, and
+  `stored_excerpt_note` is gone. Both sentences sat on every candidate. The prompt's rule 4 and the
+  message around the packet already said them.
+- **Compact JSON**, with no indentation.
+- **Empty `link_text`, `heading` and `title` are left out**, not sent as empty strings.
+- **An excerpt identical to an earlier candidate's is replaced by
+  `stored_excerpt_same_as: <that id>`.** This is usually the same page at another address. Every
+  candidate is still listed, so the module's rule that none is dropped for want of room holds. The
+  prompt's new rule 10 explains the pointer.
+- **Declined: stripping leading boilerplate** — cookie banners, navigation. An excerpt is cut to a
+  character budget, so removing lines only changes which text fills it. Measured offline it saved
+  0–4% of tokens, and it would have changed what the selector reads for nothing.
+
+### Measured offline
+
+Over all 21 oracle corridors, the packet went from **2,246,376 to 1,534,898 tokens (−32%)**: −18%
+in Japan's small pool, −40% in Canada's and the United States', −42% in France's.
+
+### Graded
+
+- **Method.** One run of each arm over the ten `IN/GB` corridors of entry 87's fixture. Czechia's
+  row came later and was left out of the priced budget. Only the selection call was made: both arms
+  got the same corpus-only contention set, the committed packet and prompt against the trimmed ones,
+  and the order alternated by corridor. A role counts as hit when a page the oracle names for it
+  was chosen.
+
+| | committed packet | trimmed packet |
+| --- | --- | --- |
+| roles hit | **39 of 48 (81%)** | **39 of 48 (81%)** |
+| input tokens | 1,080,797 | 741,655, **−31%** |
+| cost of the ten calls | $2.20 | $1.52 |
+| pages chosen | 143 | 129 |
+| cache writes | 0 | 0 — entry 169, at full size |
+| failed calls | 0 | 0 |
+
+- **Nine of ten corridors hit exactly the same roles.** The United Kingdom traded one:
+  `general_entry` in the committed arm for `document_checklist` in the trimmed one.
+- **Spent: $3.72.**
+
+### Read it against
+
+- **One run per arm.** The two arms' chosen pages overlap 45–91%, and with no second run of either
+  arm there is no way to say how much of that is ordinary run-to-run variance (entries 81 and 144).
+  The role counts agree; the page lists are not the same.
+- **One traveller, corpus-only contention.** Live packets also carry search's candidates.
+- **Agreement with pages a person named, not correctness** (entries 99 and 100).
+- **Fewer pages chosen (129 against 143) was not followed through** to role adjudication.
+
+### What it is worth, projected — not re-run through the web app
+
+Selection's input was already billed at $2.00 a million after entry 169; 31% less of it takes a
+fresh corridor from about **$0.323 to about $0.26**.
 
 ---
 

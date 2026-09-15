@@ -860,6 +860,8 @@ cause, and only running the thing showed it.
 | a corridor priced at $2/M input is priced completely | written prompt tokens bill at $2.50/M and this model writes nearly all of them — a fifth low (entry 167) |
 | the usage dashboard can check one sweep | it buckets by day, and its costs implied fewer tokens than the window alone logged (entry 167) |
 | a cache only pays for itself once there is traffic | implicit caching was *costing* a fifth on every call; explicit mode stops that with no traffic at all (entry 169) |
+| stripping boilerplate from excerpts cuts selection cost | excerpts are cut to a budget, so it saves 0–4%; the repeated notes and layout were the cost (entry 170) |
+| a leaner selection packet costs recall | 39 of 48 roles with either packet over ten corridors, at −31% input — one run each (entry 170) |
 | a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,

@@ -78,6 +78,9 @@ requests it took.
 - **Since entry 169 no call writes its packet to the cache.** Every call uses explicit caching with a
   breakpoint after its instructions — checked live — projected to take a fresh corridor to about
   $0.323. A stored corridor repeated within 30 minutes pays about $0.015 more for its plan call.
+- **Since entry 170 the selection packet says each thing once.** Notes are flags, the JSON is
+  compact, and identical excerpts are pointed at. It is 31% less input, and ten graded corridors hit
+  39 of 48 roles with either packet (one run each). A fresh corridor is projected at about $0.26.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.
