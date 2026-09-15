@@ -1429,9 +1429,8 @@ the selection call, and extra candidates can distract as well as help.
 `norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, twice each on the old and the new corpus with
 search stubbed out — the case the fix is for — and twice each with search on, for regression and for
 selection input. One cache, about 24 runs, about $6. Read a corpus-only gain as the fix's only where
-the role is filled by a depth-0 entry, because of the rebuild variance above. The old corpora are
-kept as `var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and `var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`,
-names no reader globs.
+the role is filled by a depth-0 entry, because of the rebuild variance above. The old corpora were
+kept as `.bak` copies for the test, and deleted once its results were recorded.
 
 **Not decided: rebuilding the other 50 corpora** (about 13 hours and $17 of search), which waits for
 that measurement. Item 48's two allocation findings — fair shares between unequal hosts, and `www.`
@@ -1508,7 +1507,8 @@ Largest relative growth: Egypt 45 → 154, Cyprus 620 → 1,483, Lithuania 139 �
 
 **What this rebuild has not been measured to change.** The matched test covered three corridors.
 No corridor outside them has been re-run against its rebuilt corpus, so the gain beyond Thailand is
-expected, not shown. The pre-rebuild copies of Norway, Thailand and Japan remain as `.bak` files.
+expected, not shown. The pre-rebuild copies of Norway, Thailand and Japan were deleted after this was
+recorded, so that comparison cannot be re-run from them.
 
 ---
 

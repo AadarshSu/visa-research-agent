@@ -269,10 +269,9 @@ is not a URL; that is fixed for builds and corridors alike (entry 176), and Chin
 corridor beyond the three measured has been re-run on its new corpus**, so the wider gain is expected,
 not shown.
 
-**Start at item 5**, the next item in Now. The pre-rebuild copies of Norway, Thailand and Japan are
-still kept as `var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and
-`var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`, names no reader globs. They can be deleted now that
-the matched test is recorded.
+**Start a new session at item 5**, the next item in Now. The pre-rebuild copies of Norway, Thailand
+and Japan that the matched test compared against were deleted on 2026-09-15, once the test was
+recorded; `var/corpus/` and `var/pagetext/` hold only the rebuilt stores.
 
 `var/recall` is as it was. The 20 oracle corridors' logs, and the four measured for entry 160, were
 backed up before each sweep and restored byte-identical. The 53 `BD/AE` and `BD/SA` baselines were never touched, and
