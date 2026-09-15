@@ -862,6 +862,8 @@ cause, and only running the thing showed it.
 | a cache only pays for itself once there is traffic | implicit caching was *costing* a fifth on every call; explicit mode stops that with no traffic at all (entry 169) |
 | stripping boilerplate from excerpts cuts selection cost | excerpts are cut to a budget, so it saves 0–4%; the repeated notes and layout were the cost (entry 170) |
 | a leaner selection packet costs recall | 39 of 48 roles with either packet over ten corridors, at −31% input — one run each (entry 170) |
+| a plan that turns `partial` after a selection change was caused by selection | Singapore's pages were identical; its plan call leaves the decision open in both message shapes (entry 171) |
+| time windows alone attribute a sweep's calls to its requests | a request's last call lands in the second the next starts — match on corridor too (entry 171) |
 | a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,

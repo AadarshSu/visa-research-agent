@@ -80,7 +80,11 @@ requests it took.
   $0.323. A stored corridor repeated within 30 minutes pays about $0.015 more for its plan call.
 - **Since entry 170 the selection packet says each thing once.** Notes are flags, the JSON is
   compact, and identical excerpts are pointed at. It is 31% less input, and ten graded corridors hit
-  39 of 48 roles with either packet (one run each). A fresh corridor is projected at about $0.26.
+  39 of 48 roles with either packet (one run each).
+- **Measured live with both changes (entry 171): a fresh corridor $0.394 → $0.251.** Singapore
+  `PH/PH`'s plan left its visa decision open on all three calls. Its pages were unchanged, and on one
+  fixed packet the old message shape did the same 1 time in 4. So it is a borderline page, not a
+  shown regression.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.

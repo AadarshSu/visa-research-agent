@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [171](#171-measured-live-the-two-changes-take-a-fresh-corridor-from-0394-to-0251--and-singapores-decision-is-borderline-either-way) | **Measured live: a fresh corridor $0.394 → $0.251** — entries 169 and 170 through the web app; Singapore `PH/PH`'s plan left its decision open in both message shapes, 13 calls too few to say more |
 | [170](#170-the-selection-packet-says-each-thing-once-31-of-its-input-and-the-same-roles-found) | **The selection packet says each thing once** — notes as flags, compact JSON, identical excerpts pointed at: −31% input, 39 of 48 roles in both arms over ten corridors; stripping boilerplate declined |
 | [169](#169-every-call-caches-only-its-instructions-so-no-packet-is-written-to-a-cache-nothing-reads) | **Every call caches only its instructions** — explicit caching with a breakpoint after the system prompt, so no packet is written; projected $0.394 → $0.323 a fresh corridor, +$0.015 on a stored corridor repeated within 30 minutes |
 | [167](#167-the-first-live-read-of-model-call-usage-every-call-writes-its-whole-prompt-to-the-cache-and-the-plan-call-is-small-and-made-of-output) | **The first live read of model-call usage** — 15 web requests cost $2.41: every call wrote its whole uncached prompt to the cache, which OpenAI bills at $2.50/M against $2.00 input; the plan call is 13% of a fresh request and 69% output |
@@ -262,6 +263,88 @@ fix cannot become this 500 for one country. The first two failed on the unfixed 
 **Not fixed here.** `visa-discover corridor --destination "united states"` raises the same
 `ValidationError` as a traceback, reproduced offline: `run_corridor` builds its corridor from the
 argument as written. A command-line crash rather than a traveller-facing one — TODO, Smaller things.
+
+---
+
+## 171. Measured live, the two changes take a fresh corridor from $0.394 to $0.251 — and Singapore's decision is borderline either way
+
+**2026-09-15 · the owner asked to confirm entry 170's projection through the web app**
+
+### Method
+
+The same fifteen requests as entry 167, from 08:46 to 08:55 UTC, on the code after entries 168–170.
+The five corridors the first sweep stored were moved out of the corridor store first, so they
+resolved fresh again, without pins, as they had the first time. `var/recall/` was backed up and
+restored. Two things differ and could not be put back: the first sweep's write-back added pages to
+those countries' corpora, and its fetches warmed the page cache. Everything is priced at list
+prices, with writes at $2.50 a million.
+
+### Cost
+
+| | first sweep | re-run | change |
+| --- | --- | --- | --- |
+| **a fresh corridor that resolved**, mean of five | $0.394 | **$0.251** | **−36%**; entry 170 projected $0.26 |
+| a stored corridor, the plan call only, mean of three | $0.023 | $0.022 | −5% |
+| a warm repeat within 30 minutes, mean of five | $0.035 | $0.041 | +18%, entry 169's trade-off |
+| the six selection calls | $1.57 | $0.89 | cache writes 620,418 → 0, input −29% |
+| the whole window | $2.41 | $1.66 | the request mix differs slightly, below |
+
+- **Selection input per fresh corridor:** Japan 68,742 → 56,856, Canada 149,313 → 92,219, Germany
+  137,399 → 102,535, the Netherlands 113,212 → 79,808, Singapore 75,794 → 56,192, Australia
+  75,976 → 50,492.
+- **Cache writes:** 2,996 tokens across all 26 calls — the plan's instructions, once. Roles read its
+  2,029 tokens of instructions and the plan its 2,996 on every later call.
+- **The warm repeat's cost** was projected at +$0.015 and measured at +$0.006. Plan output varies
+  more between calls than the packet reads it lost.
+
+### Resolutions
+
+- **Japan and Singapore chose the same page for every role** as the first sweep.
+- **Germany lost `processing_times`** (its visa FAQ page), and **Canada took its decision from
+  `entry-requirements-country.html`** rather than `check-visa-eta.html`. The Netherlands named a
+  different page as its `general_entry` questionnaire.
+- **Fewer pages were read:** Japan 20 → 13, Canada 18 → 16, Singapore 14 → 10, the Netherlands
+  9 → 8. That is the same direction as entry 170's 143 → 129 chosen.
+
+### Outcomes, and the one worth reading
+
+Three plans changed grade:
+- **United States `IN/GB`:** `500` → `partial`, entry 168's fix.
+- **Japan `IN/GB`:** `verified` → `partial` on the fresh request. Its warm repeat and a third call,
+  on the same resolution, were `verified`.
+- **Singapore `PH/PH`:** `verified` → `partial` on the fresh request, the warm repeat and a third call.
+
+**Singapore's plan left `visa_required` null.** Its reason: the ICA page lists the travel documents
+that need a visa and *"does not explicitly give an outcome for the Philippines"*. The resolution was
+identical, so selection is not the cause. The one change on the plan call's path is entry 169's: the
+system prompt is sent as a content block with a cache breakpoint, in explicit caching mode.
+
+**So that was tested directly, on one fixed research packet, four calls a shape, alternating:**
+
+| message shape | decided `false` | left `null` |
+| --- | --- | --- |
+| before entry 169: plain string, implicit caching | 3 | 1 |
+| after: content block, explicit caching | 2 | 2 |
+
+**The old shape leaves the decision open too**, so this is not a behaviour the change introduced.
+Pooled with the live calls, the old shape decided 5 of 6 times and the new one 2 of 7. That is
+suggestive, not established: one-sided p ≈ 0.08 on 13 calls, on a page that is borderline for the
+model.
+
+**A null here is the output the rules require** of a decision no page stated (entries 27 and 150).
+Whether a list of visa-requiring countries states "no visa" for a country it omits is the owner's
+judgement (entry 68).
+
+### How to measure this next time
+
+**Attribute a call by corridor as well as by time.** A request's last call is logged in the second
+the request ends, which is the second the next request starts. The first cut of this comparison
+matched on time alone, counted those calls twice, and showed a plan call on a refused request.
+
+### Spent
+
+About $1.82: $1.66 for the re-run, then two plan calls reading Singapore's and Japan's reasons, and
+the eight A/B calls.
 
 ---
 
