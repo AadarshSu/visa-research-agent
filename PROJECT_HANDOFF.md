@@ -65,8 +65,14 @@ TODO item 19 carries the order to take it in when the work resumes.
 **Its first step is done except the live check (entries 165 and 166).** Every model call —
 selection, roles, blocked pages and the plan, from the web app and the command line — appends what
 it cost to `var/usage/model-calls-YYYY-MM-DD.jsonl`, with its cache writes and the number of HTTP
-requests it took. It is tested against a mocked OpenAI API; no live response has gone through it
-yet.
+requests it took.
+
+**Read live on 2026-09-15 (entry 167).**
+- **Fifteen web requests cost $2.01** at entry 145's prices, or $2.41 if OpenAI charges cache
+  writes at 1.25×. Every call wrote its whole uncached prompt to the cache, so the OpenAI dashboard
+  for 07:20–07:29 UTC that day decides which, and whether every corridor figure here is a fifth low.
+- **A fresh corridor that resolved** cost $0.323 in model calls: selection 68%, roles 17%, plan 14%.
+- **A corridor served from the store** cost $0.035, all of it the plan call, which is 73% output.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.

@@ -462,8 +462,12 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > **When this resumes, in this order:**
 > 1. ~~Record every call's usage, cache writes and retries~~ — **done 2026-09-15, entries 165 and
 >    166**: every model call, from the web app and the command line, appends to
->    `var/usage/model-calls-YYYY-MM-DD.jsonl` with its cache writes and HTTP requests. Still open:
->    reading one live day through it and checking the bill, which needs a key with credit.
+>    `var/usage/model-calls-YYYY-MM-DD.jsonl` with its cache writes and HTTP requests. **Read live
+>    on 2026-09-15 (entry 167):** 15 web requests cost $2.01 at entry 145's prices, or $2.41 if
+>    cache writes carry the 1.25× charge. Every call wrote its whole uncached prompt to the cache.
+>    The plan call is 14% of a fresh corridor and 73% output, so trimming its input is not a lever.
+>    **Still open: the OpenAI dashboard for 07:20–07:29 UTC that day**, which decides between the
+>    two prices.
 > 2. State the notes once and send compact JSON.
 > 3. When building the packet, strip repeated boilerplate and show identical excerpts once — never
 >    in the stored index.

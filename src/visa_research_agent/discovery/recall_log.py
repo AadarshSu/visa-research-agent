@@ -82,8 +82,8 @@ class ModelCall(StrictModel):
     cached_input_tokens: int | None = None
     cache_write_input_tokens: int | None = None
     """What the call wrote to the provider's prompt cache, which OpenAI bills at 1.25× the input
-    rate on GPT-5.6 and later (entry 164). Reported beside `input_tokens`; whether it is counted
-    inside that figure, as `cached_input_tokens` is, has not been checked on a live response."""
+    rate on GPT-5.6 and later (entry 164). Counted inside `input_tokens`, as `cached_input_tokens`
+    is: on 24 live calls the input was always cached plus written plus 3 (entry 167)."""
     reasoning_output_tokens: int | None = None
     """What the provider said it billed, or `None` where it did not say.
 

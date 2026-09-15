@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [167](#167-the-first-live-read-of-model-call-usage-every-call-writes-its-whole-prompt-to-the-cache-and-the-plan-call-is-small-and-made-of-output) | **The first live read of model-call usage** — 15 web requests, $2.01, or $2.41 if writes carry 1.25×; every call wrote its whole uncached prompt to the cache; the plan call is 14% of a fresh request and 73% output |
 | [166](#166-every-model-call-goes-into-one-daily-log-with-its-retries-counted-and-its-usage-handed-in-per-call) | **Every model call goes into one daily log** — retries counted by a request hook, usage handed in per call so concurrent requests cannot swap figures; tested against a mocked Responses API, not live |
 | [165](#165-the-plan-writing-call-records-what-it-cost-and-every-call-records-its-cache-writes) | **The plan call records what it cost, and every call its cache writes** — appended per day to `var/usage/`, with a recorder handed in per call; the shared roles adjudicator can still mix up usage between concurrent requests |
 | [164](#164-what-a-model-call-is-made-of-three-costs-nobody-records-and-much-of-a-selection-packet-says-nothing-about-a-candidate) | **What a model call is made of** — the plan call runs on every request and was never priced, cache writes may bill 1.25×, 13–40% of a selection packet is notes and layout, and entry 146's overlap is 79–80% in three countries |
@@ -215,6 +216,101 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 167. The first live read of model-call usage: every call writes its whole prompt to the cache, and the plan call is small and made of output
+
+**2026-09-15 · entry 164's second step, measured live through the web app — the bill comparison is still open**
+
+The first real traffic through entries 165 and 166's recording. **One run of each request, on one
+day.** Every figure is priced at entry 145's rates for `gpt-5.6-terra` — $2/M input, $0.20/M cached,
+$12/M output — and cache writes are priced both ways, because whether OpenAI charges them 1.25× is
+the one thing this run cannot see.
+
+### What was run
+
+Fifteen `POST /visa-plans` requests, one at a time, from 07:20:05 to 07:28:39 UTC, making 24 model
+calls. `var/recall/` was backed up first and restored afterwards (entry 159's practice); the sweep's
+own recall logs are kept outside the repository.
+
+| pass | requests | what it makes | model cost each |
+| --- | --- | --- | --- |
+| A — corridors already in the store, 16–17 days old | France `GB/GB`, China `GB/GB`, France `IN/GB` | the plan call only | $0.021 mean |
+| B — fresh corridors | Japan, Canada, Germany, the Netherlands `IN/GB`; Singapore `PH/PH` | selection, roles, plan | **$0.323** mean |
+| B — a refusal | Australia `BD/AE` | selection only, then `503` | $0.156 |
+| C — the same five again, minutes later, from the store | as B | the plan call only | **$0.035** mean |
+
+A fourth pass-A request, `United States`, crashed with `HTTP 500` before any call: the route builds a
+corridor from the name as written, and `"united states"` fails the slug pattern. The interface sends
+a slug, so it is an API-caller defect, filed separately.
+
+### Every call wrote its whole uncached prompt to the cache
+
+On all 24 calls, **input = cached + written + 3**, with no exception. So:
+- **cache writes are counted inside `input_tokens`**, as cached reads are;
+- **every call writes everything it did not read from cache**, on this model, whether or not
+  anything will read it back — selection wrote 620,418 tokens and read 0.
+
+**Whether a write carries the 1.25× charge decides the real price**, and only the bill can say:
+
+| window total | tokens | at entry 145's prices | if writes are billed 1.25× |
+| --- | --- | --- | --- |
+| 24 calls | 884,882 in — 84,470 cached, 800,340 written — and 32,331 out | **$2.01** | **$2.41** |
+| a fresh corridor that resolved | | $0.323 | $0.394, **+22%** |
+
+**If writes are billed, every corridor figure in this project is about a fifth low**, entry 145's
+$0.28 and entry 159's $0.322 included. And entry 164's caching arithmetic flips: the write is already
+being paid on every call, so a reuse would be pure saving. **If they are not billed, nothing
+changes.** No selection call reused anything: its shared prefix stays under the 1,024-token minimum
+(entry 146), while the roles call reused 2,029 tokens across corridors and the plan call 2,996.
+
+### The plan call is small, and it is output
+
+| call | n | mean input | mean output | mean cost | mean seconds |
+| --- | --- | --- | --- | --- | --- |
+| selection | 6 | 103,406 | 275 | $0.210 | 5.9 |
+| roles | 5 | 26,515 | 511 | $0.056 | 8.0 |
+| plan | 13 | 10,144 | **2,164** | $0.036 | **24.6** |
+
+- **It is 14% of a fresh corridor that resolved.** Selection $0.221 (68%), roles $0.056 (17%), plan
+  $0.046 (14%). Entry 164 guessed $0.02–0.05, and it is in that range.
+- **73% of its cost is output**, so caching its input barely moves it. The five warm repeats read
+  their whole prompt from the cache and still cost about what the first call did, because their
+  output varied: Japan's first plan call was 2,299 output tokens and its repeat 3,052.
+- **It is the slowest call.** The time tracks output length — 705 tokens took 9.6s and 3,661 took
+  41.1s — so a warm request is mostly waiting on the plan being written. Latency work is paused
+  (entry 147); this is recorded, not acted on.
+- **A corridor served from the store costs $0.035 in model calls**, against $0.323 for a fresh one.
+
+### What else it confirmed
+
+- **Retries:** all 24 calls took exactly one HTTP request. The counting works live, and nothing was
+  retried in this window.
+- **Selection has grown:** Canada's packet was 149,313 tokens and Germany's 137,399, against 116,486
+  and 109,422 in entry 145. Both corpora and entry 158's admission changed in between, so that is
+  not attributed here.
+- **A refusal is not cheap:** Australia paid for selection and then refused. Refusals are not stored
+  (entry 151), so a repeated request pays again.
+
+### What it changes in entry 164's order
+
+- **Trimming the plan call's input is not the next lever.** It is 14% of a request, and most of it is
+  output.
+- **Selection is still most of the bill**, so step 3 stays as written: the selection packet's form,
+  then its content.
+- **If the bill shows write charges**, one more lever opens: OpenAI's guide describes an
+  explicit-only caching mode, where content after the last breakpoint is billed without a write
+  charge. Selection packets that no call reads back could stop paying for writes. Not examined.
+
+### Still open
+
+- **The bill comparison.** It needs the OpenAI dashboard for 2026-09-15 around 07:20–07:29 UTC —
+  $2.01 or $2.41, less any other use of the account that day.
+- **Search spend** was not recorded. Six fresh corridors ran searches, the five warm and three stored
+  requests ran none.
+- **One run per request.** Entries 81 and 144's variance applies to every per-corridor figure; token
+  counts are steadier than seconds.
 
 ---
 

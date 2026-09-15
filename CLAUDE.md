@@ -855,6 +855,9 @@ cause, and only running the thing showed it.
 | the recorded tokens price the model calls exactly | OpenAI bills cache writes at 1.25× on GPT-5.6+ and the recorder never reads them (entry 164) |
 | japan's 93% pool overlap makes a traveller-independent pool cheap | across four travellers JP, DE and GB overlap 79–80% (entry 164) |
 | a selection packet's tokens are candidate evidence | 13–40% is repeated notes and JSON layout; half the UK's excerpt text is lines repeated across pages (entry 164) |
+| a cache write happens only where a prefix gets reused | on gpt-5.6-terra all 24 live calls wrote every uncached input token but 3 (entry 167) |
+| the plan call could be a large share of a request | 14% of a fresh corridor, and 73% of its own cost is output (entry 167) |
+| a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
