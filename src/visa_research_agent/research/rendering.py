@@ -6,13 +6,13 @@ than sentences. Neither is an empty requirement list, and neither can be reached
 
 Rendering is the narrow remedy, and it is deliberately hemmed in:
 
-  * it runs **only** when an ordinary fetch has already failed to produce readable text, so the
-    pages that work today are never slowed down or exposed to a browser. **A refusal is not such a
-    fetch, and neither — today — is a challenge:** both callers return at `BLOCKING_STATUS_CODES`
-    before reaching this, so a `403` never arrives here. DECISIONS entry 41 decided a Cloudflare
-    challenge should, because this renderer answers one under our own user agent with nothing
-    spoofed and no trust widened (the challenge scripts are same-origin). Unimplemented — item 5.
-    Pointing it at an actual refusal stays forbidden by entry 18;
+  * it runs **only** when an ordinary fetch has already failed to produce readable text — a thin
+    page, or a **challenge** — so the pages that work today are never slowed down or exposed to a
+    browser. Both callers ask `is_challenge` before treating a `403` as a refusal, and only a
+    challenge comes here: this renderer answers one under our own user agent with nothing spoofed
+    and no trust widened, because the challenge scripts are same-origin (DECISIONS entries 41, 73
+    and 75). Pointing it at an actual refusal — a bare `401` or `403`, a `429`, or a page saying the
+    client is blocked — stays forbidden by entry 18;
   * it widens nothing. Every request the page makes, document or subresource, is aborted unless its
     host is already trusted for this destination, so no byte from an unapproved domain can
     influence what is read;

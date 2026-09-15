@@ -43,6 +43,7 @@ not — and stored text ranks, it never speaks).
 ### Refusal, blocks, and how we behave as a client
 | | |
 | --- | --- |
+| [179](#179-item-5-closes-half-the-challenges-met-today-need-a-script-the-render-gate-refuses-and-a-web-page-at-robotstxt-stays-read-as-no-policy) | **Item 5 closes** — 12 of 24 challenges needed `challenges.cloudflare.com`, which the render gate aborts, and all 12 stayed unanswered; France loses its portal to five renders, not the challenge; 401 origins serve a web page at `/robots.txt` and the verdict stays |
 | [122](#122-one-failure-reason-for-both-paths-because-the-traveller-facing-one-had-neither-case) | One transport-failure reason for both paths — a timeout with an empty message read as `the request failed ()` |
 | [119](#119-a-web-page-served-at-robotstxt-is-not-an-outsized-crawl-policy) | **A web page at `/robots.txt` is not an outsized policy** — 5 of 5 such hosts served markup; the verdict holds, the reason did not |
 | [118](#118-re-measuring-the-nine-three-improvements-three-corrected-diagnoses-and-a-corridor-that-flips) | **Re-measuring the nine** — NO, ID and TH improve; the US corridor flips between two runs of identical code |
@@ -227,6 +228,125 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 179. Item 5 closes: half the challenges met today need a script the render gate refuses, and a web page at `/robots.txt` stays read as no policy
+
+**2026-09-16 · TODO item 5, closes it. Measured with no model and no search**
+
+### What item 5 still asked for
+
+Its first four steps were built on 2026-08-25 (entry 75): `challenged` is its own outcome, both
+paths render one, and the interface says *"does not permit automated retrieval"* only of `blocked`.
+The item still called them undone, and so did `rendering.py`'s docstring, CLAUDE.md, ARCHITECTURE.md
+and known problem 11. All four are corrected. Its France half was settled by entries 92 and 93: the
+checklist is behind the Visa Wizard, which is named and never driven.
+
+Two things were left: step 5, **what answering a challenge actually buys**, and entry 119's count of
+**hosts serving a web page at `/robots.txt`**.
+
+### What corridors lose to a challenge, from the logs
+
+`visa-discover audit` counts 183 `challenged` pages over 212 runs. The 60 runs since 2026-09-05 say
+which bound stopped each page (entry 135), and their 30 challenged pages split three ways:
+
+| why the page was not read | pages |
+| --- | --- |
+| the run had already spent its five renders | 16 |
+| rendered, and still a challenge at the deadline | 11 |
+| the host had already failed three renders | 3 |
+
+- **France loses to the budget, not the challenge.** `france/BD/AE` read five `france-visas.gouv.fr`
+  pages through the renderer and left ten more unrendered; `BD/SA` left four of five. Both resolve by
+  naming the Wizard.
+- **Cyprus turns on the challenge itself.** `cyprus/BD/SA` answered Azure's three times and resolved;
+  `BD/AE` failed three renders on the same host, read nothing and refused.
+
+The corpora rebuilt on 2026-09-15, with 400 renders a build, hold **1,035 unanswered challenges** in
+14 countries — Malta 193, Slovakia 132, Cyprus 125, Norway 125, the Philippines 92, Lithuania 90,
+France 64.
+
+### The probe: one render per page, as retrieval does it
+
+One or two challenged pages per host were taken from those corpora — 27 pages in 14 countries. Each
+was fetched once, then rendered once through `PlaywrightPageRenderer` with the 20s challenge settle,
+under our own user agent and the unchanged trust gate.
+
+- **Every page was a real challenge or a real refusal.** 24 carried `cf-mitigated: challenge` and
+  `_cf_chl_opt`, or Azure's WAF JS challenge. The three US hosts — `travel.state.gov`,
+  `egov.uscis.gov`, `ceac.state.gov` — answered Cloudflare's block page, `is_challenge` read it as a
+  refusal, and they were not rendered. Entry 109's guard holds.
+- **12 of 24 challenges were answered**, in 4.0–12.6s each once the browser was up: France 3 of 3,
+  Cyprus 2 of 2, Malta 4 of 4, Sweden, Spain and `www.mzv.sk`.
+- **12 were still a challenge at the deadline**: Norway, Liechtenstein, Finland, Indonesia, Thailand
+  twice, Lithuania twice, the Philippines three times, and `ezov.mzv.sk`.
+- **The 12 unanswered share one thing, and the 12 answered do not.** In each of the 12, the only
+  request the trust gate aborted was to `challenges.cloudflare.com`. None of the 12 answered asked
+  for that host.
+
+**So entry 41's "no trust widened, because the challenge scripts are same-origin" is true of half.**
+Cloudflare's other challenge loads its script from its own domain, and the render gate aborts every
+request to a host not approved for the destination (entry 13), so that challenge cannot complete
+however long it is given. A plain GET cannot tell the two apart beforehand: every *"Just a moment…"*
+page references `challenges.cloudflare.com`, Malta's included, and Malta's were answered.
+
+Two smaller things the probe showed:
+- **An answered challenge is not a readable page.** Malta's `consularplus.gov.mt` came back with 200
+  characters of text, under the 400-character floor.
+- **What a host serves can change between requests.** The corpus records 18 US pages as challenged,
+  and the 2026-09-14 US corridor one `ceac.state.gov` page. The refusal check runs first over the
+  whole body, so those requests were served a challenge; today all three hosts serve the block page.
+
+### Not changed, because both are the owner's
+
+- **Letting a challenge render load `challenges.cloudflare.com`.** On this sample it is the whole
+  difference between the two halves. It is also an exception to entry 13's rule that a render trusts
+  nothing new, which exists because script running in the page decides what the evidence says.
+  **Whether it would work is not measured and was deliberately not tried**, because trying it is the
+  change. If Cloudflare shows an interactive check — a checkbox or a puzzle — that is a CAPTCHA, and
+  it stays out of bounds whatever is decided. TODO item 61.
+- **The five renders a corridor has.** An answered challenge costs 4–13s and a failing one the full
+  20s. France would have read ten more pages, at about five seconds each. Nothing here shows those
+  pages would change an answer. Also item 61.
+
+### A web page at `/robots.txt`: counted, and the verdict stays
+
+One GET of `/robots.txt` per origin the corpora hold — 3,471 of them, under our own user agent, 16 at
+a time, nothing else requested:
+
+| what `/robots.txt` answered | origins | what happens today |
+| --- | --- | --- |
+| `2xx`, a policy | 1,633 | parsed and obeyed |
+| `4xx` | 957 | no policy, crawled |
+| **`2xx`, a small web page** | **401** | **parsed into no rules, crawled** |
+| connection failed or timed out | 350 | reported unreachable |
+| `5xx` | 123 | closed, permission unknown |
+| `2xx`, a web page over the size cap | 7 | closed, and the reason says so (entry 119) |
+
+**Closing the 401 would stop crawling 26,324 corpus entries, 4,687 of them read, in 31 countries.**
+The largest are Liechtenstein's `regierung.li` (676 read, over two spellings), `e-proxeneio.mfa.gr`,
+`vissparmigraciju.pmlp.gov.lv` and `www.mofa.gov.sa`. It would also have cost **171 pages read by 32
+of the 212 latest corridor runs**, most of them China's missions and Korea's `overseas.mofa.go.kr`.
+What those hosts send is not a policy: a home page after a redirect (`www.mfa.gov.cn`,
+`gb.china-embassy.gov.cn`), a "not found" page (`regierung.li`), or a queue page
+(`*.mofa.go.kr/waitingroom/main.html`).
+
+**One of the 401 is a policy.** `www.report-error-evisa.homeoffice.gov.uk` sends
+`User-agent: * / Disallow: /` as 26 bytes labelled `text/html`, and it is obeyed today because the
+parser reads the body, not the label. A rule reading any `text/html` as *no policy* would walk past
+it; a rule closing every `text/html` would gain nothing a policy states and cost the 4,687 pages. So
+the present behaviour — parse whatever a `2xx` returns and let a web page yield no rules — is right
+for both, and nothing changed.
+
+### Consequences
+
+- **Item 5 closes, and item 61 is new.** It holds the two spending decisions above.
+- **Entry 75's Lithuania diagnosis is not what was seen today.** It said the challenge *"fingerprints
+  past the user agent"*; both Lithuanian pages aborted `challenges.cloudflare.com` and nothing else.
+  Whether they would pass with it is untested.
+- **Known problems 11 and 30 are updated.** The scripts are in the session's scratchpad and were not
+  committed; the sweep is one GET per origin and can be re-run from the corpora.
 
 ---
 

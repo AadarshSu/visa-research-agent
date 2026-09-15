@@ -368,9 +368,11 @@ produces a serious defect.
   challenge is its own outcome, may be answered by the renderer, and — like a `Disallow` — **may never
   resolve a corridor**. **The line is "did the authority state anything", not "which status came
   back".** A `401`, a bare `403` with no challenge markers, and a `429` are refusals and this rule
-  governs them in full. Not yet implemented: see [TODO.md](TODO.md) item 5, and note the interface
-  still tells travellers a challenged authority *"does not permit automated retrieval"*, which is
-  false.
+  governs them in full. Built in entry 75: `challenged` is its own outcome, both paths render one
+  under the run's render budget, and the interface says *"does not permit automated retrieval"*
+  only of `blocked`. **Half the challenges met on 2026-09-16 cannot be answered**: they load
+  Cloudflare's script from `challenges.cloudflare.com`, which the render gate refuses, so they stay
+  `challenged` — TODO item 61, the owner's decision (entry 179).
 
   **What is allowed, and is not a workaround: naming it.** A blocked page may be reported with its
   URL so the traveller can open it themselves, which is the one thing they can act on. The line is
@@ -900,6 +902,11 @@ cause, and only running the thing showed it.
 | a faster, cheaper model is a safe latency lever for the plan call | `gpt-5.6-luna` halved it and wrote Japan a "no visa required" plan (entry 177) |
 | reasoning effort `none` only costs detail | Japan answered "visa required" 3 of 3 where no page states it (entry 177) |
 | Fast mode speeds every call about the same | plan −43%, selection −23%, roles −13% — it speeds generation, and selection is mostly fixed (entry 177) |
+| item 5 is undone — a `403` never reaches the renderer | built 08-25; four files kept saying otherwise (entry 179) |
+| the challenge scripts are same-origin, so answering one trusts nothing new | 12 of 24 need `challenges.cloudflare.com`; the gate aborts it and all 12 stay challenged (entry 179) |
+| france's corridor loses its portal to the challenge | to the budget — 14 of 17 challenged pages were never rendered (entry 179) |
+| lithuania's challenge fingerprints past the user agent | what was seen is the gate aborting cloudflare's script; passing with it is untested (entry 179) |
+| a web page at `/robots.txt` should close the host | 401 origins, 4,687 read pages; the one real policy among them is already obeyed (entry 179) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

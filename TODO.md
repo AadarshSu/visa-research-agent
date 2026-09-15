@@ -280,9 +280,9 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
-|  | 60. Decide where Fast mode goes | `next` |
-| **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
+| **Now** | 60. Decide where Fast mode goes | `next` |
+| **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
+|  | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
@@ -322,84 +322,6 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France — `next`
-
-**Why:** DECISIONS entry 41. `france-visas.gouv.fr` was never refusing this program — it serves a
-Cloudflare challenge (`cf-mitigated: challenge`, *"enable JavaScript and cookies to continue"*), and it
-serves the same challenge for `/robots.txt`, so no policy was ever stated. The project's own renderer,
-under our own user agent with nothing spoofed, reads the page: 221,476 bytes, 2,277 visible characters,
-`blocked_hosts: []`, ~7s. Three corridors' worth of coverage sits behind this, and one sentence
-currently shipping to travellers is false because of it.
-
-**A `403` reaches neither renderer today, so turning `render_mode: on_demand` on changes nothing.**
-Both paths return at the blocking branch before the render branch: in `live_sources.py` the
-`BLOCKING_STATUS_CODES` check precedes the `self._render(...)` call, and in `crawl.py` it precedes
-`_render_if_empty`. Rendering is only ever attempted on a thin `200`. **Named by symbol rather than by
-line, deliberately** — the line numbers written here on 2026-08-19 had drifted by seven within three
-days, and a stale pointer reads as a claim about code that has moved. This is the first thing to fix and the easiest to get subtly wrong.
-
-**Do, in this order:**
-
-1. **Separate a challenge from a refusal at the point of detection.** A `403` carrying
-   `cf-mitigated: challenge`, or a body carrying `cf_chl_opt` / `/cdn-cgi/challenge-platform/`, is a
-   challenge. A `401`, a bare `403`, and a `429` are refusals and keep every rule entry 18 gives them.
-   Detect it from the response, not from the host, so it cannot become "France gets special treatment".
-2. **Add `challenged` as its own `FailureOutcome`**, beside `blocked` and `disallowed`. It must sit
-   **outside** `blocked_urls()` and `persistent_refusals()` for the same reason `disallowed` does
-   (entry 36): it may never reach `inaccessible_urls` or `decision_blocking_urls`, and it may never
-   resolve a corridor. France's present resolution is exactly this bug and flips between runs.
-3. **Let a challenge trigger the renderer**, in both `live_sources.py` and `crawl.py`, under the
-   existing per-run render budget (entry 37) and the existing trust gate — which needs no widening,
-   because the challenge scripts are same-origin. A render that comes back still challenged stays
-   `challenged`; it is not retried.
-4. **Fix the false sentence.** `static/app.js` gives every `blocked` failure with a URL
-   *"does not permit automated retrieval"*. That is untrue of a challenge, and every reason reported
-   has to be true of what was seen (entries 33 and 36). A challenge reads as *an automated-access
-   check stood in front of this page and we could not answer it* — and once step 3 lands, the pages we
-   *did* read this way are ordinary evidence and say nothing at all.
-5. **Then measure what it actually buys**, per corridor, before believing any of it: France, Singapore's
-   VFS page, and `travel.state.gov`.
-
-**The checklist is not on the page, and this is the part to read before promising one.** Measured after
-rendering: `/en/demande-de-visa` carries three generic items (passport, "photocopies according to your
-situation", 2 ICAO photos); `/en/assistant-visa` is a four-step wizard with a nationality dropdown;
-`/en/visa-de-court-sejour` defines the visa without saying who needs one; and
-`www.france-visas.gouv.fr/en/web/france-visas/india` — the top-scoring France-Visas candidate at 74.4 —
-is a **404** the challenge had been hiding. So steps 1–4 make France *honest and readable*; they do not
-by themselves produce a corridor checklist.
-
-**Getting the checklist needs the wizard, and that needs its own decision entry first.** The France-Visas
-assistant is a read-only questionnaire that returns published guidance, not an application — but
-`CLAUDE.md` puts *form filling* on the permanent out-of-scope list, and the distinction between
-"answering four questions to be shown the published rules" and "filling in an application" is exactly
-the kind of thing that must be argued in writing rather than assumed by whoever is holding the
-keyboard. **Do not write wizard-driving code before that entry exists.**
-
-**Entry 59 is now half of that argument, and it went the other way.** It measured GOV.UK's checker —
-server-rendered, addressable, robots-allowed, answerable with plain GETs under our own user agent —
-and still declined to drive it, because two of its questions are not in a corridor and answering them
-means inventing traveller input. France's assistant has a nationality dropdown the corridor *does*
-answer, so it is not settled by that reasoning alone; what entry 59 settles is that "it is technically
-retrievable" is not the argument, and that naming the tool is the outcome to fall back to when driving
-it is declined. Whatever France's entry concludes, it lands on top of that floor rather than instead of
-it. Note it interacts with the
-excerpt (entry 42): a wizard result is per-corridor by construction, so it would arrive as text nobody
-else can re-derive, and it would be short enough to sit inside the head of the excerpt whatever else the
-page holds.
-
-**Careful:** the two prohibitions are unchanged and are what keep this from being circumvention — no
-user-agent spoofing, and no retrying past a rate limit. And `robots.txt` outranks all of it: a
-`Disallow`ed path is still not fetched, a policy that could not be read is still reported as unread
-rather than as permission, and a `Disallow` still may not resolve a corridor.
-
-**One `robots.txt` question is open and is deliberately not folded in here (entry 119).** Five of
-five hosts that ever tripped the size cap answer `/robots.txt` with `200 text/html` and a web page —
-a "Technical Difficulties" notice or an app shell — and the reason reported is now true of that.
-What was **not** changed is the verdict for a *small* HTML page at that path: it is parsed into an
-empty ruleset and the host is crawled. Closing it would stop crawling hosts crawled today, so it
-needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
-sweep over `authority_domains.yaml`, one GET per host, no model and no search.
-
 ### 60. Decide where Fast mode goes — `next`, **added 2026-09-16 (entry 177)**
 
 **Why it matters.** It is the one latency lever measured that is both large and safe.
@@ -432,6 +354,30 @@ repeats after the window.
 no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 177).
 
 ## Next up
+
+### 61. Decide what a corridor may spend answering a challenge — `soon`, **added 2026-09-16 (entry 179)**
+
+**Why it matters.** Half the challenges met today cannot be answered, and France's corridor stops
+reading its own portal after five pages.
+- **12 of 24 sampled challenges stayed a challenge**: Norway, Liechtenstein, Finland, Indonesia,
+  Thailand, Lithuania, the Philippines and `ezov.mzv.sk`. In every one, the only request the render
+  gate aborted was `challenges.cloudflare.com`. None of the 12 answered asked for it.
+- **France's two latest corridors left 14 of 17 challenged pages unrendered**, because the run's five
+  renders were spent. The challenge itself is answered in about five seconds.
+
+**Two decisions, both the owner's.**
+1. **May a challenge render load Cloudflare's own challenge script?** Entry 13 says a render trusts
+   nothing new, because script running in the page decides what the evidence says. The exception
+   would be that one host, only while answering a challenge, never on a thin-page render.
+   - **Whether it works is not measured, on purpose**: trying it is the change.
+   - **An interactive check — a checkbox or a puzzle — is a CAPTCHA** and stays out of bounds whatever
+     is decided here.
+2. **Should a corridor's five renders grow, or be kept for pages a challenge guards?** An answered
+   challenge costs 4–13s and a failing one the full 20s. Priced in seconds only: nothing yet shows the
+   extra pages change an answer.
+
+**Before either ships**, run France `BD/AE` and a Liechtenstein corridor several times in each arm,
+with the cache warm in both (entry 136), and count roles rather than pages.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`, **and Germany is the worked example**
 
@@ -1301,6 +1247,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | 09-16 | 75, 92, 93, 109, 179 | **Steps 1–4 were built on 08-25 (entry 75), and the item still called them undone**, as did four other files. France's checklist is behind the Visa Wizard — named, never driven (92, 93). Step 5, measured: **12 of 24 challenges answered, and the 12 that were not all needed `challenges.cloudflare.com`**, which the render gate aborts. France's corridors lose 14 of 17 challenged pages to the five-render total, not to the challenge. The `robots.txt` count: **401 of 3,471 origins serve a web page there**, holding 4,687 read pages and 171 corridor reads; one is a real policy labelled `text/html`, already obeyed, so the verdict stays. Both spending decisions are item 61 |
 | 48. Test root seeding before building it, and separate discovery from allocation | 09-15 | 161–163, 176 | **Root seeding was probed and rejected**: 0 of 9 target pages reached from eight hosts' roots. **The gap was a build discarding its own search seeds**, kept only if another page linked to them; fixed, and a matched test found Thailand `IN/GB` resolving in 4 of 4 runs where it had refused in 4 of 4, for ~9% more a corridor. Before rebuilding, a failed search query stopped costing a build (162) and a `www.`/bare host pair became one budget share (163). **All 53 corpora rebuilt the same day**: 190,491 → 237,283 entries, 7,289 seeds kept, no failed queries, ~2,590 queries (~$13) over ~10 hours two at a time. China crashed on a redirect to an address that is not a URL (176); fixed and rebuilt. Equal budget shares for unequal hosts moved to *Smaller things* |
 | — Reuse a plan written for the same inputs | 09-16 | 178 | **The owner's decision, amending entry 44.** The model's draft is kept, never the plan, keyed on everything the model is shown — prompt, packet with every page's text and retrieval time, schema, model settings — for up to `plan_reuse_hours` (24, never past the page TTL). Every request still checks quotes, validates and grades on its own retrieval, and a refusal is never kept. The risk it takes: a bad draw reaches every identical request for up to a day, as a good one does. 15 tests, and identical keys on two real consecutive requests for three corridors. **Not timed live: the OpenAI account ran out of credits** — re-run Japan `IN/GB` twice once it is topped up |
 | 56. Make the written plan shorter | 09-15 | 174, 175 | **Short source ids were declined**: 2 refused plans and 2 wrong "no visa required" answers for Japan in 48 calls, none in 48 without them. **The owner shipped trims 2 and 3** — one quote of at most 150 characters, and a few words of why an unconditional document applies — and not trim 4. The visible plan fell 5–13% but billed output only about 150 tokens, because hidden reasoning did not shrink with it: about 1.5s of a ~25s call, too little for measured seconds to show. Japan's decision stayed open and Singapore's "no visa" held in every call. Rule 8e's bounds live only in the prompt, so any change to this call re-runs both first |

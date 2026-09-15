@@ -95,7 +95,7 @@ VisaPlanExtractor.extract(destination, traveller, report) ──▶ VisaPlan
 
 ### Evidence outcomes
 
-Every configured source resolves to exactly one outcome. Two carry content; four do not.
+Every configured source resolves to exactly one outcome. Two carry content; six do not.
 
 | Outcome | Usable | Meaning |
 | --- | --- | --- |
@@ -106,15 +106,17 @@ Every configured source resolves to exactly one outcome. Two carry content; four
 | `unusable` | no | Retrieved but not evidence — client-rendered shell, unreadable PDF, JSON API, too little text |
 | `blocked` | no | The authority refused automated retrieval (`401`, `403`, `429`) |
 | `disallowed` | no | The host's `robots.txt` excluded this client, or could not be read at all |
+| `challenged` | no | A browser check stood in front of the page and was not answered — the render failed, or the run's renders or the host's three tries were spent |
 
-> **`blocked` currently over-claims, and the fix is decided but unimplemented (entry 41,
-> [TODO.md](TODO.md) item 5).** It reads every `403` as *the authority refused us*. Measured
-> 2026-08-19, `france-visas.gouv.fr` returns `cf-mitigated: challenge` — a Cloudflare interstitial
-> saying *"enable JavaScript and cookies to continue"*, served for `/robots.txt` too, so the authority
-> stated nothing. That is a capability test, not a refusal, and a real browser under our own user agent
-> answers it. A challenge becomes its own outcome, may be answered by the renderer, and may never
-> resolve a corridor. Until then, France's `blocked` failures are described to travellers in words that
-> are not true of what was seen.
+**A `403` is one of two things, and which is decided from the response (entries 41, 73, 75, 109).**
+A **challenge** — Cloudflare's `cf-mitigated: challenge` header or `_cf_chl_opt`, or Azure's WAF JS
+challenge in the body — asks whether the client is a browser, so the authority stated nothing. The
+renderer answers it under our own user agent, and a page read that way is ordinary evidence. One it
+cannot answer stays `challenged`: never `blocked`, never a resolution. Everything else is a
+**refusal**, and a body saying *"you have been blocked"* or *"attention required"* is checked first,
+so Cloudflare's block page is never rendered past. **Half the challenges met on 2026-09-16 cannot be
+answered at all**: they load Cloudflare's script from `challenges.cloudflare.com`, which the render
+gate aborts like every host not approved for the destination (entry 179).
 
 `blocked` is the subtle one and is kept apart on purpose. A site refusing automated clients is not
 saying its guidance is wrong or missing — it is saying this program may not read it. The only claim

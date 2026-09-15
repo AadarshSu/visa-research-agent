@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-15 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-16 — update this line when you touch the handoff |
 | **Tests** | 806: 805 passing and 1 skipped, run 2026-09-16 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -292,7 +292,10 @@ is not a URL; that is fixed for builds and corridors alike (entry 176), and Chin
 corridor beyond the three measured has been re-run on its new corpus**, so the wider gain is expected,
 not shown.
 
-**Start a new session at item 5**, the next item in Now. The pre-rebuild copies of Norway, Thailand
+**Item 5 closed on 2026-09-16 (entry 179).** It was mostly built already. What was left measured
+two things, and both are now the owner's decision as **item 61**: half the challenges met today need a
+Cloudflare script the render gate refuses, and France's corridor runs out of renders before it runs
+out of pages. **Now holds only item 60**, also the owner's decision. The pre-rebuild copies of Norway, Thailand
 and Japan that the matched test compared against were deleted on 2026-09-15, once the test was
 recorded; `var/corpus/` and `var/pagetext/` hold only the rebuilt stores.
 
@@ -765,9 +768,9 @@ re-add the amendment history here.
    posture was never itself decided. `robots.txt` is now read and obeyed (entry 36) and buys nothing
    here — those hosts answer `403` to their own `robots.txt`. **And France's `403` is not a refusal at
    all**: it carries `cf-mitigated: challenge`, so no policy was ever stated, and our own renderer reads
-   the page under our own user agent. Decided as entry 41, **not implemented** — TODO item 5 — and the
-   interface still tells travellers a challenged authority "does not permit automated retrieval", which
-   is untrue of what was seen.
+   the page under our own user agent. Decided as entry 41 and built in entry 75: a challenge is
+   `challenged`, the renderer answers it, and the interface says "does not permit automated
+   retrieval" only of a refusal. **What it buys today is entry 179**.
 
 12. **Discovered pages have no staleness check.** A publication date is read from the path and
    *reported* to the adjudicator, deliberately not a veto — two of China's correct picks carry dated
@@ -907,7 +910,8 @@ re-add the amendment history here.
    text. Both are honest, and both mean the denominator is a floor rather than the truth: France sits
    at 21 readable candidates of 206 because its portal answers a Cloudflare challenge, so an arm that
    picks the right France page gets no credit for it. A recall number computed on it is therefore
-   "recall over what is legible", and item 5 moves the bound rather than the metric.
+   "recall over what is legible". Rendering moved France's corpus bound (entry 92); a France
+   corridor is now bounded by its five renders and by the Visa Wizard (entry 179).
 
 
 31. **A corpus serves the travellers whose pages an authority publishes, and no more.** Entry 88
