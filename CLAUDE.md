@@ -856,7 +856,9 @@ cause, and only running the thing showed it.
 | japan's 93% pool overlap makes a traveller-independent pool cheap | across four travellers JP, DE and GB overlap 79–80% (entry 164) |
 | a selection packet's tokens are candidate evidence | 13–40% is repeated notes and JSON layout; half the UK's excerpt text is lines repeated across pages (entry 164) |
 | a cache write happens only where a prefix gets reused | on gpt-5.6-terra all 24 live calls wrote every uncached input token but 3 (entry 167) |
-| the plan call could be a large share of a request | 14% of a fresh corridor, and 73% of its own cost is output (entry 167) |
+| the plan call could be a large share of a request | 13% of a fresh corridor, and 69% of its own cost is output (entry 167) |
+| a corridor priced at $2/M input is priced completely | written prompt tokens bill at $2.50/M and this model writes nearly all of them — a fifth low (entry 167) |
+| the usage dashboard can check one sweep | it buckets by day, and its costs implied fewer tokens than the window alone logged (entry 167) |
 | a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,

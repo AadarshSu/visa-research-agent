@@ -68,11 +68,13 @@ it cost to `var/usage/model-calls-YYYY-MM-DD.jsonl`, with its cache writes and t
 requests it took.
 
 **Read live on 2026-09-15 (entry 167).**
-- **Fifteen web requests cost $2.01** at entry 145's prices, or $2.41 if OpenAI charges cache
-  writes at 1.25×. Every call wrote its whole uncached prompt to the cache, so the OpenAI dashboard
-  for 07:20–07:29 UTC that day decides which, and whether every corridor figure here is a fifth low.
-- **A fresh corridor that resolved** cost $0.323 in model calls: selection 68%, roles 17%, plan 14%.
-- **A corridor served from the store** cost $0.035, all of it the plan call, which is 73% output.
+- **Fifteen web requests cost $2.41.** Every call wrote its whole uncached prompt to the cache, and
+  OpenAI bills cache writes at $2.50/M against $2.00 input — on its price sheet and as its own line
+  on the dashboard. So every corridor cost priced before entry 167 is up to a fifth low.
+- **A fresh corridor that resolved** cost $0.394 in model calls: selection 70%, roles 17%, plan 13%.
+- **A corridor served from the store** cost $0.035, all of it the plan call, which is 69% output.
+- **Above 272K input tokens** OpenAI bills the whole request at 2× input and 1.5× output. Canada's
+  selection is 149K, and nothing caps the packet as a whole.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.

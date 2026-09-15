@@ -122,7 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
-| [167](#167-the-first-live-read-of-model-call-usage-every-call-writes-its-whole-prompt-to-the-cache-and-the-plan-call-is-small-and-made-of-output) | **The first live read of model-call usage** — 15 web requests, $2.01, or $2.41 if writes carry 1.25×; every call wrote its whole uncached prompt to the cache; the plan call is 14% of a fresh request and 73% output |
+| [167](#167-the-first-live-read-of-model-call-usage-every-call-writes-its-whole-prompt-to-the-cache-and-the-plan-call-is-small-and-made-of-output) | **The first live read of model-call usage** — 15 web requests cost $2.41: every call wrote its whole uncached prompt to the cache, which OpenAI bills at $2.50/M against $2.00 input; the plan call is 13% of a fresh request and 69% output |
 | [166](#166-every-model-call-goes-into-one-daily-log-with-its-retries-counted-and-its-usage-handed-in-per-call) | **Every model call goes into one daily log** — retries counted by a request hook, usage handed in per call so concurrent requests cannot swap figures; tested against a mocked Responses API, not live |
 | [165](#165-the-plan-writing-call-records-what-it-cost-and-every-call-records-its-cache-writes) | **The plan call records what it cost, and every call its cache writes** — appended per day to `var/usage/`, with a recorder handed in per call; the shared roles adjudicator can still mix up usage between concurrent requests |
 | [164](#164-what-a-model-call-is-made-of-three-costs-nobody-records-and-much-of-a-selection-packet-says-nothing-about-a-candidate) | **What a model call is made of** — the plan call runs on every request and was never priced, cache writes may bill 1.25×, 13–40% of a selection packet is notes and layout, and entry 146's overlap is 79–80% in three countries |
@@ -221,7 +221,7 @@ not — and stored text ranks, it never speaks).
 
 ## 167. The first live read of model-call usage: every call writes its whole prompt to the cache, and the plan call is small and made of output
 
-**2026-09-15 · entry 164's second step, measured live through the web app — the bill comparison is still open**
+**2026-09-15 · entry 164's second step, measured live through the web app — the write price was settled the same day; the dashboard could not isolate the window**
 
 The first real traffic through entries 165 and 166's recording. **One run of each request, on one
 day.** Every figure is priced at entry 145's rates for `gpt-5.6-terra` — $2/M input, $0.20/M cached,
@@ -303,10 +303,43 @@ changes.** No selection call reused anything: its shared prefix stays under the 
   explicit-only caching mode, where content after the last breakpoint is billed without a write
   charge. Selection packets that no call reads back could stop paying for writes. Not examined.
 
-### Still open
+### Settled the same day: writes are billed at 1.25×
 
-- **The bill comparison.** It needs the OpenAI dashboard for 2026-09-15 around 07:20–07:29 UTC —
-  $2.01 or $2.41, less any other use of the account that day.
+**OpenAI's price sheet and the model's own page agree**, read 2026-09-15: `gpt-5.6-terra` is $2.00
+input, $0.20 cached input, **$2.50 cache writes**, $12.00 output per million tokens. Entry 145's
+rates were right for input, cached input and output; what no figure priced was the write.
+
+**The owner's dashboard for 2026-09-15 bills the same way.** It shows `cache writes` $1.652,
+`output` $0.275, `cached input` $0.013 and `input` $0. So a written prompt token is billed as a
+write, and uncached input that is not written costs nothing, which matches the 3 unwritten tokens a
+call left above.
+
+**So the corrected figures are the right-hand column above:**
+
+| | cost | split |
+| --- | --- | --- |
+| the window, 24 calls | **$2.41** | |
+| a fresh corridor that resolved | **$0.394** | selection 70%, roles 17%, plan 13% |
+| a plan call | **$0.038** | 69% output |
+| a corridor served from the store | $0.035 | the plan call alone, fully cached |
+
+**Every corridor cost priced before this entry is low.** Entry 145's $0.28 and entry 159's $0.322
+priced written tokens at $2.00/M where OpenAI bills $2.50/M, on nearly all uncached input. In this
+window that was +22% on a fresh corridor.
+
+**The dashboard could not check the window itself, and should not be read as having done so.** It
+buckets by day. It counted 66 requests and 3,198,224 tokens — more than the window's 24 and 917,213,
+so the account was used for something else that day. Yet its cost lines imply, at list prices, about
+661k written, 65k cached and 23k output tokens: fewer than the window alone logged (800k, 84k, 32k).
+Its costs were therefore not complete, or cover a different span from its counters. Not resolved.
+
+**One more price rule, found on the model page:** a prompt over 272K input tokens is billed at 2×
+input and 1.5× output for the whole request. Canada's selection was 149,313 tokens. The excerpt
+budget is bounded, but every candidate still brings its address, labels and note, and each excerpt
+keeps at least 200 characters, so nothing caps the packet as a whole. How close any country comes is
+unmeasured.
+
+### Still open
 - **Search spend** was not recorded. Six fresh corridors ran searches, the five warm and three stored
   requests ran none.
 - **One run per request.** Entries 81 and 144's variance applies to every per-corridor figure; token
