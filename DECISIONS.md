@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [173](#173-item-19-closes-search-stays-refusing-on-a-miss-is-dropped-and-what-is-left-is-split-into-items-58-and-59) | **Item 19 closes** — ten seconds was never reachable as defined; search stays; refusing on a miss is dropped; the 2026-08-30 search-dependence method and the web-only write-back are kept here; the rest is items 58 and 59 |
 | [172](#172-absence-from-the-authoritys-visa-required-list-states-that-no-visa-is-needed) | **Absence from the authority's visa-required list states no visa is needed** — the owner's rule, bounded in the plan prompt; Singapore `PH/PH` 4 of 4 "no visa" after it, India 2 of 2 still "required" |
 | [171](#171-measured-live-the-two-changes-take-a-fresh-corridor-from-0394-to-0251--and-singapores-decision-is-borderline-either-way) | **Measured live: a fresh corridor $0.394 → $0.251** — entries 169 and 170 through the web app; Singapore `PH/PH`'s plan left its decision open in both message shapes, 13 calls too few to say more |
 | [170](#170-the-selection-packet-says-each-thing-once-31-of-its-input-and-the-same-roles-found) | **The selection packet says each thing once** — notes as flags, compact JSON, identical excerpts pointed at: −31% input, 39 of 48 roles in both arms over ten corridors; stripping boilerplate declined |
@@ -276,6 +277,76 @@ The destination now goes through `find_country` and the corridor takes that coun
 checks. Anything else exits 3, naming the argument, before a corridor is built. The destination's
 refusal is `unknown_country`: the resolver's own wording, which `automatic.py` had written out twice.
 `contention` needed nothing, because it looks the slug up first and exits 3 on a miss.
+
+---
+
+## 173. Item 19 closes: search stays, refusing on a miss is dropped, and what is left is split into items 58 and 59
+
+**2026-09-15 · the owner's decision**
+
+### Why it closes
+
+- **Its title was never reachable as defined.** "A corridor under ten seconds" was set against the
+  research stage alone. Measured end to end (entry 171), a fresh request is ~55s — ~25s of research
+  and ~29s of writing the plan — and a repeat is ~24s, because a plan is never stored (entry 44).
+- **Its question about search is settled.** Search stays on every corridor (entries 148, 159, 160).
+- **Its model-call cost steps are done.** A fresh corridor went from $0.394 to $0.251 in model calls
+  (entries 164–171).
+- **It had grown to 456 lines** of four successive framings, several superseded, repeating facts
+  these entries already hold. The item as it stood is in git at `cb8e891:TODO.md`.
+
+### What it delivered
+
+- **Search pace 19.0s → 2.6s, at identical spend** (entry 141).
+- **Where a corridor's seconds and dollars go, recorded every run** (entries 142–146), and every model
+  call in a daily log with its cache writes and retries (entries 165 and 166).
+- **Search kept on every corridor, measured twice** (entries 159 and 160).
+- **Model calls $0.394 → $0.251 a fresh corridor.** Written prompt tokens were found billed at 1.25×
+  (entry 167), only instructions are cached now (entry 169), selection lost a third of its input
+  (entry 170), and it was confirmed live (entry 171).
+
+### Dropped: refusing on a miss
+
+**Entry 44 wanted a corridor to refuse when the corpus could not answer it**, rather than quietly fall
+back to that day's search. Entry 47 met the same constraint another way — `corpus ∪ search` on every
+corridor, nothing conditional — and refusing on a miss stayed "wanted", on the condition that it
+*"only becomes safe once search has left the request path"*.
+
+**Entries 148 and 159 decided search stays, so that condition will not arise.** Refusing on a miss is
+dropped rather than left as a wish, and so is the per-country search switch that entry 129 framed,
+for the same reason.
+
+**Entry 44's constraint itself stands:** a corpus miss must never be answered by *quietly* falling
+back. Search is never conditional, so nothing falls back.
+
+### Kept here, because item 19 recorded it and no entry did
+
+**The search-dependence measurement of 2026-08-30.**
+- **Method:** for every recall log newer than its country's corpus, take the pages the run fetched
+  and ask whether the corpus holds them, comparing on `canonical_key`. There is no model and no
+  adjudicator in it: it grades what a corridor read, not what its plan said.
+- **Result:** 36 runs, 382 pages read. **59 (15.4%) were not in the corpus, all 59 came from search,
+  and 17 covered a role nothing else in that run covered** — among them the PDF Bulgaria's visa
+  decision came from, Denmark's Nigeria checklist page and the UK's per-nationality fee table. 13 of
+  the 36 runs read nothing the corpus lacked.
+- **What it does not measure:** whether a page the corpus lacked would have been replaced by an
+  adequate corpus page. 42 of the 59 had their role covered by a corpus page in the same run, so 17
+  is the floor. Entry 129 re-measured it over 47 runs: 78 of 450 pages, 25 of them load-bearing.
+
+**The write-back runs on the web path only**, as recorded on 2026-08-30 and not re-checked here. The
+automatic destination service's `_write_back` is its one call site, so `visa-discover corridor` folds
+nothing back. Whether the command line should write back is open, and carried into item 58.
+
+**Two store rules that were designed and not built**, also carried into item 58: eviction, so the
+corpus stops only growing, and a dead pin that must never silently degrade.
+
+### Split
+
+- **Item 58, `later`:** a cheaper model for selection only, trimming the roles packet, storing refusals
+  briefly, entry 146's reusable packet, the ~25s of research, and the carried-over store questions.
+- **Item 59, `soon`:** a guard for the 272K-token threshold, above which OpenAI bills a whole request at
+  2× input.
+- **The plan call's wait** was already items 56 and 57.
 
 ---
 

@@ -54,13 +54,15 @@ every number here measures whether it *answered*, not whether the answer was *ri
 26), and correctness is verified outside this repository on purpose (entry 68). **Do not build a
 truth set or a correctness grader without asking.**
 
-**Item 19's latency and cost work is paused** (entry 147), entry 146's cacheable prefix included.
+**TODO item 19 is closed (entry 173).** What is left of its cost and latency work is item 58, the
+272K-token price threshold is item 59, and the plan call's wait is items 56 and 57. Refusing on a
+miss is dropped: search stays on every corridor.
 **What the model calls are made of was sized offline on 2026-09-15 (entry 164)**:
 - the plan-writing call runs on every web request and has never been priced;
 - OpenAI may bill cache writes at 1.25×, which nothing records;
 - 13–40% of a selection packet is repeated notes and JSON layout.
 
-TODO item 19 carries the order to take it in when the work resumes.
+That order was followed; entries 165–172 record each step.
 
 **Its first step is done except the live check (entries 165 and 166).** Every model call —
 selection, roles, blocked pages and the plan, from the web app and the command line — appends what
@@ -423,7 +425,8 @@ nobody may read, 2 are Germany declining to name a document, and **12 are the wh
 crawl could address.** Alongside it, search dependence re-measured: **450 pages read, 78 not in the
 corpus, all from search, 25 load-bearing** — and **every one of the 78 is on a host the corpus
 already crawls**, concentrated in Lithuania (12, behind a `Disallow`), the UK fee form (3) and
-Bulgarian PDFs (3). **So item 19 is a per-country switch, not a global one**: 18 of the 25 are
+Bulgarian PDFs (3). **So removing search would have had to be per country, not global** — moot since search stays
+on every corridor (entries 159 and 173): 18 of the 25 are
 countries capped by a policy, challenge, block or form, three of them permanently.
 
 **Thailand was the one undiagnosed row and it produced the cheapest corpus fix on the list (entry
@@ -446,7 +449,7 @@ with its caveat: nineteen of those rows were curated *from* the pool, and of the
 the whole corpus **both** lose something. The gap is closed by triage — all 38 open cells were
 listed and the plausible ones read — which is real but weaker than a curated row.
 
-**Why item 31 sits ahead of the project's own goal (entry 125).** The selector's pool admits **49% of search results and 5.5% of corpus pages** — a 9× gap, because search returns pages whose URL and title already match visa vocabulary, which is what the anchor scorer scores. Item 19 asks whether search can leave the request path while measuring the corpus through a filter biased nine to one against it, so its "17 load-bearing search-only pages" is an upper bound on search's necessity. Item 31 tightens it.
+**Why item 31 sits ahead of the project's own goal (entry 125).** The selector's pool admits **49% of search results and 5.5% of corpus pages** — a 9× gap, because search returns pages whose URL and title already match visa vocabulary, which is what the anchor scorer scores. Item 19, since closed (entry 173), asked whether search could leave the request path while measuring the corpus through a filter biased nine to one against it, so its "17 load-bearing search-only pages" is an upper bound on search's necessity. Item 31 tightens it.
 
 **Item 1 was measured, promoted, finished and then cut back, all on 2026-09-02 (entries 124 and
 126).** `score_link` rewarded a page for being about the traveller's **passport** country and had no
@@ -552,11 +555,12 @@ Items 43, 44 and 45 are done; see below.
   (114); the shallow-crawl warning gave the same advice to two opposite failures (115); and
   `is_challenge` truncated the body at 20,000 characters while Cloudflare's marker sat at 24,915,
   so unanswered challenges were stored as guidance and **retrieval could cite one** (117).
-- **Item 19 is measured rather than argued, and the answer is "not yet".** Of 382 pages read by runs
+- **Whether search could leave the request path was measured on 2026-08-30, and the answer was "not
+  yet"** — entry 159 later kept it on every corridor. Of 382 pages read by runs
   that postdate their country's corpus, **59 were not in the corpus and all 59 came from search — 17
   of them covering a role nothing else in that run covered**, including the page Bulgaria's visa
   decision comes from and the UK's form-gated fee table. Neither obvious shortcut works: a corpus is
-  not a superset even where it is large. See item 19 for the method and what it does not measure.
+  not a superset even where it is large. Entry 173 keeps the method and what it does not measure.
 - **The write-back only runs on the API path.** `automatic.py:414` is its one call site, so
   `visa-discover corridor` folds nothing back (`cli.py:744`). Bulgaria has `proven` entries: **0**.
   Whether the CLI should write back is an open decision, because it would mutate the store between
@@ -626,7 +630,7 @@ re-add the amendment history here.
 
 5. **The full cold request has never been timed.** Every figure quoted is the corridor phase; plan
    extraction sits on top. The remaining lever is **search**, roughly 3s per corridor at three queries
-   per trusted domain — TODO item 19. Warm is instant, and the local `var/` stores are what make it warm.
+   per trusted domain — entries 141 and 159. Warm is instant, and the local `var/` stores are what make it warm.
 
 6. **The trust rule's audit was survivorship, and the cap is uncalibrated.** The rule reproduces all 22
    recorded human decisions, but every country in that audit was one `looks_governmental` already

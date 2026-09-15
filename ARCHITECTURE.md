@@ -332,7 +332,7 @@ cold and it never warms the store for the API (`resolve_once`, entry 61).
 > **36.2s** and **42.7s** on three corridors, each a corridor resolve *and* extraction — but with the
 > page cache warm, so a fully cold request is still untimed. The largest remaining
 > live component is **search**, at roughly 3s and three queries per trusted domain — see known problem 5
-> and [TODO.md](TODO.md) item 19.
+> and entries 141 and 159.
 
 Weeks is deliberately a much longer life than the evidence
 cache's hours: which *pages* answer a corridor changes when a site is redesigned, not when its
@@ -360,7 +360,7 @@ this is automated while per-country trust is not.
 > `canada/GB/GB/tourism` finding its answering page fifteenth of 470 on one run and not at all an hour
 > later. **Built as entries 46, 47 and 51** — `var/corpus/`, read in the request path, and as of
 > 2026-08-23 a country whose corpus out-covers a crawl no longer crawls at all. **Search still runs**
-> ([TODO.md](TODO.md) item 19), so the middle column is `corpus ∪ search` rather than the corpus alone.
+> (entries 148 and 159), so the middle column is `corpus ∪ search` rather than the corpus alone.
 > **That is now measured rather than left over (entry 159).** Searching only where the corpus leaves
 > a role open, or only where it holds nothing for this traveller's post, was tried both ways. Neither
 > pays, and the second loses the traveller's own embassy pages.
@@ -821,7 +821,7 @@ smaller, which is what lost Canada its answer.
 > entry 116, **186,596 addresses between them**, of which the page-text index holds bodies for
 > **43,153 (23%)**; a build opens 3–15% of what it records (entry 88). The count grows as live runs
 > write back what they found, but **only on the API path** — `visa-discover corridor` folds nothing
-> back (item 19). Only **Brazil and Uruguay** have none, and a country without one crawls exactly as
+> back (entry 173). Only **Brazil and Uruguay** have none, and a country without one crawls exactly as
 > before: a corpus is a speed optimisation, not a prerequisite. Formerly ten as of 2026-08-24, 16,375
 > pages.
 >

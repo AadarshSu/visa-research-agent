@@ -13,11 +13,11 @@ built offline — corpus plus page-text index — and a corridor answers from th
 not have to leave the request path, provided it can be justified as giving reliable information at a
 cost that is not high.** On cost and time it passes: **search is about $0.054 of a $0.31 corridor,
 roughly 18% of the money and 8% of the seconds; the model calls are $0.251, measured live** (entries
-159 and 171). On reliability nothing here can answer it — see item 19, now **paused**, and
+159 and 171). On reliability nothing here can answer it — see entry 147, and
 known problem 26. The older measurement below still stands on its own terms: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
 corpus and all 59 came from search — 17 of them covering a role nothing else in the run covered**.
 So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,098 entries and
-still gets its visa decision from a search-only PDF. Read item 19 before proposing to switch search
+still gets its visa decision from a search-only PDF. Read entries 159 and 160 before proposing to switch search
 off for anything.
 
 **Item 51 was measured on 2026-09-15, and search stays on every corridor (entry 159).** The owner
@@ -190,7 +190,7 @@ regression corridors correct), and the challenge (entry 75, Cyprus and India rec
 pages a corridor actually reads even in the ten best corpus countries, and none of the seven remaining
 refusals can be fixed by a crawl, because every one of them fails at *retrieval* — the corpus builder
 hits the same wall. Stage 3 buys latency, passport-stability and outage tolerance. **The next coverage
-win is search recall, which nobody has measured** — see item 19 and known problem 13.
+win is search recall, which nobody has measured** — see entries 159 and 160 and known problem 13.
 
 **Item 5's challenge half is done** (entry 75): `challenged` is its own outcome, detected from headers
 **and body**, answered by the renderer under our own user agent, and `render_mode` is now `on_demand`.
@@ -264,8 +264,8 @@ there is and it was not the one this file had been assuming — every United Kin
 *after* finding the checklist, the route, the times and per-nationality fees, because the decision
 lives inside a wizard. Item 24 gave a corridor the words to say so, entry 60 widened it to every role,
 and item 25 got the answering page into the shortlist it was falling five-deep out of. Items 17, 18 and
-19 are the corpus work item 22 grew out of, and 19 is now half done — the crawl has gone, search has
-not.
+19 are the corpus work item 22 grew out of, and 19 closed on 2026-09-15 — the crawl went, and search stays (entries 159
+and 173).
 
 Status: `next` · `soon` · `later` — the label on each heading matches the section it sits in, so the two
 can never disagree. There is no **Blocked** section at the moment; give one its own section again if an
@@ -280,7 +280,6 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
-|  | 19. Get a corridor under ten seconds; search may stay | **paused** |
 |  | 56. Make the written plan shorter | `next` |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -288,7 +287,9 @@ one-paragraph defects rather than items.
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
 |  | 55. Take the traveller from Ofself's shared identity, through one adapter | `soon` |
 |  | 57. Stream the plan to the screen as it is written | `soon` |
-| **Later** | 48. Rebuild the other 50 corpora so they keep their search seeds — parked until the new OpenAI key | `later` |
+|  | 59. Guard the 272K-token price threshold | `soon` |
+| **Later** | 58. What is left of model-call cost and research latency | `later` |
+|  | 48. Rebuild the other 50 corpora so they keep their search seeds — parked until the new OpenAI key | `later` |
 |  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
@@ -398,385 +399,6 @@ What was **not** changed is the verdict for a *small* HTML page at that path: it
 empty ruleset and the host is crawled. Closing it would stop crawling hosts crawled today, so it
 needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
 sweep over `authority_domains.yaml`, one GET per host, no model and no search.
-
-### 19. Get a corridor under ten seconds; search may stay — **PAUSED 2026-09-07 by the owner**
-
-> **Paused, and the priority above it stated (entry 147).** The owner:
->
-> > *"I care about providing the right information first before fixing latency and cost. The point I
-> > wanted to convey in this session was that search does not need to completely leave the live
-> > request path IF we can justify that we can use it to provide reliable information at not that
-> > high of a cost."*
->
-> **So correctness is the objective and this item is the constraint around it.** Entries 140–146 read
-> as latency-then-cost being the goal; they are better read as **the constraint being sized**, which
-> is what they measured.
->
-> **The search question now has two halves and only one is answered.** On **cost and time search
-> passes** — $0.054 of a $0.322 corridor over fifteen corridors, **17% of the money**, and 8% of the
-> seconds (entries 159 and 143; entry 145's six corridors read $0.075 of $0.28, 27%). On **reliability
-> nothing in this repository can answer it**: everything measured so far is *recall* (78 pages the
-> corpus lacked, 25 load-bearing, entry 129), which says search **found** pages, not that a traveller
-> was told something **true**. That is known problem 26, and entry 68 puts correctness outside this
-> repository deliberately — **do not build a truth set, a correctness grader or an accuracy metric
-> without asking.**
->
-> **What stays on while this is paused:** `RecallRecord.phase_seconds` and `RecallRecord.model_calls`
-> are recorded every run, so resuming does not mean re-deriving where the seconds and dollars went.
-> Everything below is the measurement as it stood when work stopped.
-
-> **The money goes to the model calls, not to search. Two experiments show it (entries 145 and 159).**
-> This item was opened assuming search *"is still the whole of the remaining live cost"* (see
-> **Why:** below). Both measurements say otherwise:
->
-> | | corridors | model calls | search | total |
-> | --- | --- | --- | --- | --- |
-> | entry 145, one run each | 6 | **$0.205 (73%)**: selection 59%, roles 14% | $0.075 (27%) | $0.28 |
-> | entry 159, arm S | 15 | **$0.268 (83%)** | $0.054 (17%) | $0.322 |
->
-> **Turning search off does not make a corridor cheap.** Entry 159's corpus-only arm cost **$0.260**
-> against $0.322. The model calls barely shrink, because search adds only 1–36 candidates to pools
-> of 132–646. The two rows differ in sample as well as code: six corridors against fifteen, with
-> entry 158's +16% selection input shipped between them, and fewer than fifteen queries sent a
-> corridor (228 over the fixture's 20). So rely on where the two agree, not on either exact share.
->
-> **Most of the model bill is the selection call, and most of that is input.** In entry 145's
-> split, selection is 59% of a corridor and role adjudication 14%, and input tokens are 96% of the
-> model bill. **So the cost lever is entry 146's cacheable prefix, not anything done to search**,
-> and it is paused along with the rest of this item. Do not propose trimming search to save money
-> unless you have a new argument against these two measurements.
-
-> **What those model calls are made of — measured offline on 2026-09-15, nothing built (entry 164).**
->
-> - **Three costs are not recorded.**
->   - The plan-writing call runs on every web request, including a corridor served from the store,
->     where it is the whole model bill, and no run has priced it.
->   - OpenAI's guide says cache writes on GPT-5.6 and later cost 1.25× and happen automatically,
->     and nothing reads them, so selection may be priced up to 25% low.
->   - The selection call alone keeps the OpenAI client's two silent retries.
-> - **13–40% of a selection packet is notes and layout.** A fixed note repeated on every candidate is
->   8–26% of its tokens, and indented JSON another 5–14%. Inside the excerpts, lines repeated across
->   pages — cookie banners, navigation — are 9–51% of the text, and identical excerpts up to 37%.
-> - **Entry 146's 93% overlap does not hold everywhere.** Across four travellers it is 79–80% for
->   Japan, Germany and the UK. With a 30-minute cache lifetime and the write charge, caching pays only
->   where more than about 22% of a country's selection calls arrive within 30 minutes of the previous
->   one, so it is a lever for after deployment.
->
-> **When this resumes, in this order:**
-> 1. ~~Record every call's usage, cache writes and retries~~ — **done 2026-09-15, entries 165 and
->    166**: every model call, from the web app and the command line, appends to
->    `var/usage/model-calls-YYYY-MM-DD.jsonl` with its cache writes and HTTP requests. **Read live
->    on 2026-09-15 (entry 167):** 15 web requests cost **$2.41**. Every call wrote its whole
->    uncached prompt to the cache, and OpenAI bills cache writes at $2.50/M against $2.00 input —
->    on its price sheet and as its own line on the dashboard. A fresh corridor is $0.394, so every
->    earlier corridor cost here is up to a fifth low. The plan call is 13% of a fresh corridor and
->    69% output, so trimming its input is not a lever.
->
->    **New threshold:** above 272K input tokens OpenAI bills the whole request at 2× input and 1.5×
->    output. Canada's selection is already 149K, and nothing caps the packet as a whole.
-> 2. ~~State the notes once and send compact JSON~~ — **done 2026-09-15, entry 170.**
-> 3. ~~Show identical excerpts once~~ — **done, entry 170**, with step 2 graded together: −31% of
->    selection input and 39 of 48 roles in both arms over ten corridors, one run each. Stripping
->    boilerplate was **declined**: excerpts are cut to a budget, so it saved 0–4% and would only
->    have changed what the selector reads. **Measured live with step 4 (entry 171): a fresh
->    corridor $0.394 → $0.251.** Singapore `PH/PH`'s plan was deciding its visa question by chance
->    in either message shape. **Entry 172's rule settles it:** absence from the authority's
->    visa-required list states no visa is needed — 4 of 4 "no visa", and India, which is on the
->    list, 2 of 2 "required".
-> 4. ~~Stop paying to write packets nothing reads~~ — **done 2026-09-15, entry 169**: every call
->    caches only its instructions, projected $0.394 → $0.323 a fresh corridor. Still waiting for
->    traffic: entry 146's reusable country-stable packet, and a cheaper model for selection only.
->
-> Steps 2–4 change what the selector reads and are graded as recall changes; entry 164 says how.
-> **Not worth it:** lowering reasoning effort (output is 4% of the bill), capping the pool (entry
-> 158), and Flex processing (too slow for a traveller waiting).
-
-> **The goal is latency, and it always was (entry 140).** The owner:
->
-> > *"I do want to remove search from the request path but that was because it took 50-70 seconds
-> > for each corridor. Since the corpus is general purpose it might not be able to hold everything
-> > and the traveller information comes through the corridor, so I'm not opposed to using search at
-> > some point in the flow to give correct information as long as we are speeding up the process and
-> > utilising the corpus for efficiency."*
->
-> So **removal is not the deliverable and never was the point** — speed is, and search is the
-> traveller-specific complement to a traveller-neutral store. Nothing safety-bearing moves: search
-> still only generates candidates, nothing it returns is evidence until it passes the trust rules,
-> and entry 44's ban on *quietly* falling back after a corpus miss is untouched because nothing here
-> is conditional at request time.
->
-> **And the seconds are not where this item assumed.** Measured on `australia/BD/AE` against a
-> 27.4s median corridor: `search_all` is **19.0s**, one query alone is **1.0s**, and 14 gaps at
-> `DEFAULT_QUERY_INTERVAL_SECONDS` are **18.2s**. **Search is ~69% of a corridor and 95% of that is
-> a pacing lock this program holds against itself** — `_resolve` step 1 blocks steps 2 to 5, so
-> every corridor pays it, including one the corpus could answer alone. The standing claim that
-> *"adjudication is ~60% of a corridor"* (entries 53–55) cannot hold on this corridor and was taken
-> when a destination had two domains and six queries, before the five-domain cap tripled it.
->
-> **The lock is protecting a quota, not wasting time on purpose.** Entry 74 added it because Brave
-> answers `HTTP 402` when queried too fast on a capped plan. So the first question is about the
-> **plan**, and it is not answerable from this repository.
->
-> **Four ways to the same second, cheapest first, none built and none measured:**
->
-> 1. **~~Raise the pace~~ — done 2026-09-07, entry 141.** Brave's own headers answer
->    `x-ratelimit-policy: 50;w=1`, so the 1.3s lock was pacing at 0.77/s, **65× under the ceiling**.
->    At 0.05s the same fifteen queries take **2.6s against 19.0s**, return the identical 148 results,
->    and cost the identical amount. A full `australia/BD/AE` now runs in **34.5s**, so the remaining
->    time is fetching and adjudication.
-> 2. **~~Let the corpus decide how much search to buy~~ — measured 2026-09-15 and rejected, entry
->    159.** Searching after the corpus leaves a role open projects +4% seconds, and deciding per
->    query from the corpus loses the pages that answered. The original framing:
->    the owner's "utilising the corpus for
->    efficiency", literally. Fifteen queries are issued whether or not the store already covers the
->    corridor; a country whose corpus out-covers a crawl already skips the *crawl* (entry 51) and
->    the same test has never been applied to search.
-> 3. **Overlap search with the fetches** in step 4 rather than blocking on it in step 1. Overlapping
->    it with the corpus read buys nothing — that path is 346ms (entry 50).
-> 4. **The per-country switch**, which is this item as entry 129 left it. Still valid, now clearly
->    the *last* of the four: the most work, and not where the seconds are.
->
-> **~~The prerequisite: nothing records where a corridor's time goes~~ — built 2026-09-07, entry
-> 142.** `ResolutionTrace` accumulates a duration per stage, `RecallRecord.phase_seconds` keeps it,
-> and the corridor command prints it. A stage is the span between two numbered steps of `_resolve`,
-> not the act it is named after.
-
-> **Where it stands after option 1, measured rather than guessed (entry 142).** `australia/BD/AE` at
-> **34.5s**: `fetch` **14.7s (43%)**, `select` **7.3s (21%)**, `adjudicate` **6.1s (18%)**, `search`
-> 4.0s (12%), `crawl` 2.0s, `corpus` 0.4s.
->
-> **Widened to six corridors, which withdrew that reading (entry 143).** Japan, Canada, Singapore,
-> Germany, the Netherlands and Australia, 199.8s in total: `fetch` **31%**, `adjudicate` **29%**,
-> `select` **23%**, `search` 8%, `crawl` 7%, `corpus` 2%. **The two model calls are 52% — the
-> majority.** Australia was an outlier at 51% fetch, and its fetch time is mostly *failing*: a
-> render budget exhausted, an `HTTP 500`, no new pages cached.
->
-> **Never pick a target from one corridor.** `fetch` ranges 14–51% and `adjudicate` 13–50%, so
-> Australia names fetch, Japan names adjudication and Singapore names selection.
->
-> **What is next, in order:**
->
-> - **~~Measure inside the model calls~~ — done 2026-09-07, entry 144, and the answer is negative.**
->   `ModelCall` records each call's prompt and packet characters, seconds and whether it raised.
->   **Input size does not explain the spread**: r=+0.33 for selection, +0.48 for roles, and the
->   Netherlands sends the second-largest selection packet with the fastest selection. **And the same
->   corridor swings a mean of 40% between two runs of identical code**, Germany by 69% — so most of
->   what entry 143 wanted explained is provider-side noise, and **no model-latency change can be
->   graded on single runs** (entry 81's rule, new place).
->
->   **What is left inside them is output, not input** — tokens and reasoning effort — and neither is
->   visible at the call site. Reading them means asking the provider for its usage figures inside
->   `adjudication.py` and `selection.py`. **`openai_reasoning_effort` is already `low`**: it is the
->   one-line lever, and lowering it trades the judgement the safety rules rest on, so it does not
->   move without an accuracy measurement beside it.
-> - **`select` is the input side of item 31, and it is now costed (entry 145).** It is **59% of a
->   corridor's $0.28** — 46k–116k input tokens against the roles call's 4k–29k, with input at **96%
->   of the model bill**. Item 31 widened the pool and was
->   priced on both first: **+16% selection input over 53 corpora, no second scoring pass**
->   (entry 158).
->
->   **That lead was tried offline and it is five conditions, not one (entry 146).** Common prefix
->   between Japan's packets for three travellers: today **48 chars**; moving `traveller` to the end
->   **~500 tokens, below the 1,024 cache minimum**; plus a fixed excerpt budget, plus candidates
->   sorted by URL, plus the same candidate set, plus ids assigned in that order — **279,610 chars,
->   100% of the packet, ~69,902 tokens.** All five or nothing.
->
->   **The fifth is the pool gate, which is item 31.** `best_combined() > 0` takes the traveller, so
->   the sets differ and the prefix breaks at candidate #1. **But they differ barely**: Japan's three
->   pools are 288/275/272, intersection **272**, union **291** — the intersection is **93% of the
->   union**, so a traveller-independent gate shows about **7% more** candidates, and the
->   corridor-independent scorer already exists (`score_role_vocabulary`).
->
->   **Worth $0.1398 → $0.0140 on selection input**, taking a corridor from **$0.28 to ~$0.154** once
->   a country is warm. **Nothing shipped**: all five conditions change what the selector is shown or
->   in what order, which is a recall change and needs grading against
->   `oracle/selection_oracle.yaml` first. Reordering alone is harmless *and* worth nothing, so it
->   waits for the rest. **The 93% overlap was checked on seven more countries on 2026-09-15 and does not hold everywhere:**
->   79–80% for Japan, Germany and the UK across four travellers (entry 164).
-> - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
->   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
->   fetcher; nobody has asked it of `LiveSourceFetcher`.
-> - **Option 2 — let the corpus decide how much search to buy — is worth at most 8%.** ~~Still
->   right, now last.~~ **Measured and rejected on 2026-09-15 (entry 159)**: waiting for the corpus
->   makes a gap corridor do the pass twice, and the corpus cannot tell from addresses whether it
->   holds the traveller's page.
->
-> **And "read fewer pages" is not the shortcut it looks.** Those three stages are 83% of a corridor,
-> but per page they run 1.29s (Canada) to 2.78s (Germany), and Canada reads 20 pages in 25.8s where
-> Japan reads 16 in 43.0s. Entry 84's *"a fetch is cheap and a missed role is not"* is not refuted.
-
-### The earlier framing, kept because its findings stand
-
-> **Re-scoped 2026-09-02 (entry 129), and the shape of the decision changes: this is a per-country
-> switch, not a global one.** Re-measured over 47 runs postdating their corpora: **450 pages read,
-> 78 not in the corpus, all 78 from search — 17.3% — and 25 covered a role no corpus page in that
-> run covered.** Two things about those 25 decide the item:
->
-> **Every one of the 78 is on a host the corpus already crawls.** Search is not finding hosts the
-> trust configuration missed; entry 82's site-level conclusion holds across all 53 countries. It is
-> finding *pages* on known hosts the crawl never recorded.
->
-> **And they concentrate where the corpus has a named ceiling.** Lithuania **12** (a `robots.txt`
-> `Disallow`, corpus 139 entries), the United Kingdom 3 (the fee space is behind a **form**),
-> Bulgaria 3 (deep `/upload/` PDFs), Liechtenstein 2 (an unanswerable challenge), Thailand 2,
-> and one each for the UAE, the United States (`travel.state.gov`, blocked) and Denmark. **Eighteen
-> of the 25 are capped by a policy, a challenge, a block or a form** — four things this project
-> forbids working around, three of them permanently.
->
-> **So "reduce search" is the wrong verb.** The dependence is not general, and for Lithuania, the
-> United States and Liechtenstein search is the *only* legitimate way this program can name a page
-> to a traveller. Build the switch **per country, offline, default-on**: off where a corpus is
-> demonstrably sufficient, on where the ceiling is named, and every country recorded as one or the
-> other. Nothing is conditional at request time, so entry 44's rule — *a corpus miss must never be
-> answered by quietly falling back* — is satisfied by construction.
->
-> **The earlier framing, kept because its caveat is now sized.** This item sat behind item 31
-> because the pool admits **49% of search results and 5.5% of corpus pages**, so the corpus was
-> being measured through a filter biased against it and the load-bearing figure read as an upper
-> bound (entry 125). Entry 128 sized that bias at **4 role-cells of 35**. The bound was real and it
-> was small; the search figure is close to its true value.
-
-> **Measured 2026-08-30, and the answer is: not yet, and not the way either obvious option would do
-> it.** This is the comparison the item had been gated on since entry 82. It is offline, and it has
-> **no model and no adjudicator in it** — entry 81's requirement — because it grades what a corridor
-> *read*, not what its plan came out as.
->
-> **Method.** For every recall log, take the pages the run actually fetched and ask whether the
-> country's corpus holds them, comparing on `canonical_key`. **Restricted to runs that happened
-> after that country's corpus was built** — the first cut read 26.7% and was meaningless, because
-> most logs predate the corpora they were being compared against (Egypt's run is five days older
-> than its corpus, and "22 of 22 missing" said nothing at all).
->
-> | | |
-> | --- | --- |
-> | runs measured after their corpus was built | 36 |
-> | pages read | 382 |
-> | **pages read that the corpus does not hold** | **59 (15.4%)** |
-> | runs where the corpus held everything read | **13 of 36** |
-> | how those 59 were found | **search — all 59** |
-> | of the 59, covering a role nothing else in that run covered | **17** |
->
-> **So search is not redundant today, and the 17 are load-bearing:**
->
-> - `mfa.bg/upload/…VisaRegime…pdf` — **the page Bulgaria's visa decision comes from**, with its
->   Type-C checklist PDF beside it. Bulgaria has a 7,098-entry corpus and neither page is in it.
-> - `um.dk/nigeria/…` — Denmark's Nigeria checklist page, scoring 84.
-> - `visa-fees.homeoffice.gov.uk/y/philippines/…` — the UK's per-nationality fee table. Exactly the
->   form-gated space entry 82 predicted would be the residual risk, now confirmed as a real loss.
-> - Lithuania's `keliauk.urm.lt` decision and documents pages; Liechtenstein's `llv.li` visa pages.
->
-> **This kills both of the obvious shortcuts.** *Disabling search only where a corpus exists* fails
-> because the 17 are all in corpus countries. *Waiting until every country has a corpus* fails for
-> the same reason from the other side: the failure is not "no corpus", it is that **a corpus is not
-> a superset even where it exists**.
->
-> **The lever is the write-back, and it is not running everywhere.** Entry 47's `_write_back` is
-> this item's own "decay rather than switch" plan — keep what a live run finds so later runs start
-> from more — and it is well built. But `automatic.py:414` is its only call site, so it runs on the
-> **API/webpage path only**: `visa-discover corridor` builds its resolver directly
-> (`cli.py:744`) and folds nothing back. Bulgaria has **`proven` entries: 0** and still lacks the
-> PDF it resolved from, and every corridor run from the CLI this session contributed nothing.
->
-> **Do next, in this order.**
->
-> 1. **Decide whether the CLI should write back**, and note it is not free: the CLI deliberately
->    withholds *pins* so `--runs` measures variance without run 1 contaminating run 2, and
->    write-back mutates the store in exactly that way. A flag defaulting off for `--runs` is the
->    obvious shape; it has not been agreed.
-> 2. **Re-run this measurement after a period of normal use** and watch the 15.4% fall. The script
->    is a dozen lines over `var/recall/` and `var/corpus/`; it should become
->    `visa-discover search-dependence` if it is going to be run more than twice.
-> 3. **Retire search per country, never globally.** A country whose load-bearing search-only count
->    is zero across several travellers can drop it; Bulgaria plainly cannot. 13 of 36 runs are
->    already fully covered, so the first candidates exist today.
->
-> **What this does not measure.** Whether a page the corpus lacks would have been *replaced* by an
-> adequate corpus page the adjudicator never saw. Reading is not using, and 42 of the 59 had their
-> role covered by a corpus page in the same run — the 17 are the honest floor, not the ceiling.
-
-
-> **Updated 2026-08-26.** This item *is* the goal: a country built offline answers its corridors from
-> the store, with live search only where it is genuinely unavoidable. Three things moved under it
-> today and none of them closes it.
->
-> **The nationality measurement this was always gated on now exists** (entry 82), and the
-> 2026-08-30 measurement above confirms where its residual risk landed: the UK's form-gated fee
-> table is one of the 17 pages search alone supplied. It is not the
-> 198-valued risk the item feared. Across 30 corridors into the ten corpus countries, 18 had **zero**
-> misses and **none of the 67 misses were on a host the corpus lacks**. Half the misses are URLs
-> naming a nationality — and the crawl reaches those where the authority published a country index
-> (Canada: 213 values) and cannot where it published a form (the UK: 15, and a rebuild moved it only
-> to 20). So the residual risk of dropping search is **concentrated in form-gated spaces**, which is
-> a nameable, bounded thing rather than an unmeasured dimension.
->
-> ~~**What is still missing before switching it off.** Nobody has run a corridor set corpus-only and
-> compared it to the same set with search…~~ **Superseded by the 2026-08-30 measurement above**,
-> which answers it from the recall logs without needing a second live arm at all: the question
-> "would search's absence have cost this run a page" is settled by asking whether the corpus holds
-> what the run read. Entry 76's "corpus-only costs 4 of 10 their checklist" is still not current and
-> should still not be quoted; entry 81's ±2 noise on roles-filled is why the new measurement counts
-> pages rather than roles.
->
-> **And search is no longer the single point of failure it was**: entry 74 gave a corpus country a
-> fallback when search is down, and it is reported rather than silent.
-
-
-**Why:** the crawl half of this is done (entry 51) and search is what remains. ~~It is the largest
-live component of a corridor~~ — roughly 3s and **three queries per trusted domain**, so a five-domain
-country like China spends fifteen live queries on every page load, paced at 1.3s each (0.05s since
-entry 141). `_resolve`
-searches *before* reading the corpus, unconditionally; the corpus can only suppress the **crawl**
-(`_crawl_is_worth_running`), which is what the "the crawl was skipped" note in a corridor means.
-Search is no longer a single point of failure — entry 74 gives a corpus country a reported fallback
-when the provider is down — ~~but it is still the whole of the remaining live cost~~.
-**Measurement has since shown this premise was wrong on both counts.** Search is 8% of a corridor's
-seconds (entry 143) and 17% of its money (entry 159). The two model calls are the majority of both.
-See the cost table at the top of this item.
-
-**The bar for doing it is unchanged and has not been met.** `corridor_queries` interpolates purpose
-*and* nationality; purpose is swept offline (four values), and **nationality is 198-valued and still
-never measured** (entry 48). Removing search trades a known cost for an unmeasured recall risk on the
-one dimension nobody has examined. Item 3's twenty corridors varied nationality four ways across five
-destinations and changed the outcome **once**, which is suggestive and is not the measurement.
-
-**Narrowed 2026-08-22 by entry 47.** The gap that blocked this is closed for Canada — the union plus
-write-back holds 24 of 24 pages the live run fetched — so what is left here is no longer "make the
-corpus a superset" but **stop paying for live discovery once it is one**. Decay rather than switch:
-a proven, fresh corridor whose corpus holds no better-scoring unseen candidate needs no searches at
-all, which is where the cost goes to zero and determinism becomes total. Gate it on the superset bar
-holding for more than one destination; Canada alone is not evidence.
-
-**Narrowed again 2026-08-23 by entry 51: the crawl half is done.** A country whose corpus offers more
-than `DEFAULT_CRAWL_PAGES` pages on trusted domains no longer crawls in the request path at all, so
-what remains here is **search** — the other 9.1s — and search stays until nationality has been measured
-(entry 48). Note the two halves failed differently and only one of them ever refused a corridor: the
-crawl was pure redundancy, while search is the dimension the corpus is not yet known to cover.
-
-**Two things entry 47 leaves for this item.** Eviction is designed and unbuilt, so the corpus only
-grows — 723 of Canada's original 1,071 entries scored zero on role vocabulary, which is the Noise tier
-that should age out. And a **dead pin must never silently degrade**: if a pinned page 404s and the role
-cannot be refilled, the corridor refuses, exactly as it would have without a pin.
-
-**Do:** seed `CorridorResolver` from the country's corpus instead of from `corridor_queries` + crawl,
-score and shortlist as now, and adjudicate as now. **The corridor-dependent step does not move** — which
-page answers this traveller is still decided live, per entry 44's three-column table.
-
-**Refuse on a miss, and flag the country.** Entry 38's rule applied to pages: falling back to live search
-would silently restore the lottery for exactly the corridors that need it not to be one. The refusal must
-tell three cases apart, because their fixes differ:
-
-| What happened | What it means | Fix |
-| --- | --- | --- |
-| No corpus for this country | the job has not run here | run `visa-discover corpus --country XX`; only BR and UY lack one |
-| A corpus exists, no page fills `visa_decision` | the job's recall missed, or the country publishes it behind a wizard | deepen the job, or item 5 |
-| Stored URLs no longer resolve | **the corpus has rotted** | repopulate |
-
-Only the third is corpus rot, and only the third should be alarming. **Refusals become the repopulation
-queue**, which is observability the current system has none of.
-
-**Careful:** trust is unchanged and must stay so. A seeded URL is still checked against `trusted_domains`
-and still fetched through `LiveSourceFetcher`, so `validate_route` still runs and a corpus entry cannot
-survive a later narrowing of the domain registry.
 
 ### 56. Make the written plan shorter — `next`, **added 2026-09-15 for a fresh session to judge**
 
@@ -1227,9 +849,73 @@ wait; this makes it feel shorter, and the two do not compete.**
 content can be shown before validation without breaking entry 6's rule against unverified claims that
 would alarm a traveller if wrong.
 
+### 59. Guard the 272K-token price threshold — `soon`, **split from item 19 on 2026-09-15 (entry 173)**
+
+**Why it matters.** OpenAI bills a request with more than 272K input tokens at 2× input and 1.5×
+output for the *whole* request — the `gpt-5.6-terra` model page, read 2026-09-15 (entry 167).
+- **Canada's selection packet is already ~92K tokens** after entry 170, and was 149K before it.
+- **Nothing caps a selection packet as a whole.** `DEFAULT_SELECTION_CHARACTERS` bounds the excerpt
+  text, but every candidate still brings its address and labels, and each excerpt keeps at least 200
+  characters. A pool that grows — entry 158's admission, write-back, a rebuild — grows the packet.
+- **By arithmetic, the other calls stay below it.** The roles packet is at most 20 pages of 20,000
+  characters on the model path, roughly 100K tokens, but up to 35 pages on the heuristic path. The plan
+  packet is capped at 80,000 characters (`maximum_model_input_characters`).
+
+**Open — measure before deciding.**
+- **How close any country comes.** Rebuild each corpus's largest pool offline with `contention_for`
+  and count tokens, as entry 164 did, allowing for search's extra candidates.
+- **What a guard should do when a packet would cross.** Shorter excerpts are what `excerpt_budget`
+  already does as a pool widens. A hard cap on candidates is what entries 123 and 158 argue against,
+  because the pool is the recall gate. Or refuse with a note. Silently dropping candidates is not an
+  option (`selection.py`'s module docstring).
+- **Whether to warn near the threshold.** `var/usage/` already records every call's `input_tokens`.
+
 ---
 
 ## Later
+
+### 58. What is left of model-call cost and research latency — `later`, **split from item 19 on 2026-09-15 (entry 173)**
+
+**Where it stands.** A fresh corridor that resolves costs **$0.251 in model calls**, plus about $0.054 of
+search, and takes about **55s**: ~25s of research and ~29s of writing the plan (entry 171). The plan
+call's wait is items 56 and 57; the 272K price threshold is item 59. The instrumentation is on: every
+model call goes to `var/usage/model-calls-YYYY-MM-DD.jsonl`, and every stage's seconds to the recall
+log's `phase_seconds`.
+
+**Cost, biggest first — none of it decided.**
+- **A cheaper model for selection only.** Selection is ~63% of the model bill, and `gpt-5.6-luna` is
+  listed at a tenth of `gpt-5.6-terra`'s price a token, which could take a corridor from about $0.25 to
+  about $0.11. It changes what picks the pages, so it needs grading and the owner's decision. Entry
+  170's selection-only A/B is the method, about $1.70 for ten corridors. A failed selection falls
+  back to the heuristic ranking, which is allowed: entry 31 governs the decider, not the selector.
+  Role adjudication and the plan call stay on the stronger model.
+- **Trim the roles call's packet**, as entry 170 trimmed selection's. Its JSON is still indented.
+  Roles is ~19% of the bill, so the saving is a few percent, and it changes what the adjudicator
+  reads, so it is graded.
+- **A refusal is not stored** (entry 151), so each repeat of a refusing corridor pays ~29s and
+  $0.11–0.19 again. Storing one briefly is a freshness question as much as a cost one.
+- **Entry 146's reusable country-stable packet waits for traffic.** OpenAI's cache lives 30 minutes,
+  a write costs 1.25×, and pools overlap 79–99% across travellers (entry 164).
+
+**Research latency, ~25s — none of it decided.** Means over five fresh corridors (entry 171): roles
+8.2s, selection 6.6s, search 3.5s, the crawl stage 3.2s, fetch 2.7s. Fetch was measured on a warm page
+cache, and Canada still took 12s.
+- **Overlap search with the fetches** rather than blocking on it before anything else. Proposed under
+  item 19 and never built.
+- **Find out what `fetch` is made of** — renders, serial waiting, one failing host — before touching
+  it. Entry 139 asked that of the crawl fetcher; nobody has asked it of `LiveSourceFetcher`.
+- **Grade any latency change on several runs, and price it in dollars too.** Model-call seconds swing
+  40% between identical runs (entry 144), and latency and cost pull opposite ways (entry 145).
+
+**Carried over from item 19, not about cost.**
+- **Should `visa-discover corridor` write back to the corpus?** Only the web path does (entry 173).
+  It is not free: `--runs` withholds pins so one run cannot contaminate the next, and write-back
+  mutates the store in exactly that way.
+- **Eviction is designed and unbuilt**, so the corpus only grows.
+- **A dead pin must never silently degrade.** If a pinned page 404s and its role cannot be refilled,
+  the corridor refuses, as it would have without the pin.
+
+**Do not re-propose** conditional search (entries 159 and 160) or refusing on a miss (entry 173).
 
 ### 48. Rebuild the other 50 corpora so they keep their search seeds — `later`, **parked 2026-09-15 by the owner until the new OpenAI key**
 
@@ -1780,6 +1466,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 19. Get a corridor under ten seconds; search may stay | 09-15 | 140–146, 159–173 | **Closed, not reached: ten seconds was set against the research stage alone.** A fresh request measures ~55s end to end, ~29s of it writing a plan that is never stored. Delivered: search pace 19.0s → 2.6s at identical spend; every corridor's seconds and every model call's tokens, cache writes and retries recorded; search kept on every corridor, measured twice; model calls $0.394 → $0.251 a fresh corridor, after finding every call was writing its whole prompt to a cache billed at 1.25×. Refusing on a miss dropped. What is left is items 58 and 59; the plan's wait is 56 and 57 |
 | 51. Make live search ask only for what is specific to this traveller | 09-15 | 159, 160 | **Nothing was built, and both results are measured.** The owner's corpus-first version was tried two ways (entry 159). Searching only after the corpus leaves a role open projects −3% money and +4% seconds, and misses the traveller's own embassy pages. Deciding per query from what the corpus holds loses 5–6 of 8 answering pages. **The purpose query was marked traveller-neutral and is not** (entry 160): it alone returns 28 of the 45 pages it was first to find, and in matched runs dropping it cost Japan `IN/GB` its London-embassy checklist and moved Norway `IN/IN` to an older checklist, the same way in both runs. It would have saved $0.030 a corridor. All three queries stay |
 | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | 09-14 | 123, 125–128, 158 | **The 94% held four fixture answers nothing in the pool could replace**, and every rule tried recovered them, so cost and safety chose. Admitting every page whose stored text scores cost +68% input and was mostly chaff; a cap the size of the pool displaced 1,813 pooled pages with no text and five the fixture names. **Shipped: the five best per role on stored text, added, nothing removed** — each recovered answer ranks second for its role, +16% selection input over 53 corpora, and no second scoring pass, because step 3b already scored every candidate and threw the scores away. Czechia's UK checklist filled live; Liechtenstein's pool went 2 → 21 and its challenge still refused |
 | 21. Fill the three provenance gaps | 09-14 | 156, 157 | **A claim now carries the sentence behind it**: the decision and every requirement get quotes the model writes and the application keeps only where the retrieved text holds them — 35 of 35 in a probe before building, 45 of 45 live after. A match proves the words exist, not that they fit the claim. **Every cited source carries its page's content hash and why discovery chose it**, attached when the plan is built because the retrieval cache is shared between corridors. Steps and `where_to_apply` still carry no quote |
@@ -1950,8 +1637,8 @@ Confirmed live against a genuinely capped account: all ten corpus countries reso
 tool where every one of them previously raised. Canada answered in 31.7s from 2,450 stored pages.
 
 **What is still open here**: search remains required for the 43 countries with no corpus, and taking
-it out of the request path *by design* is item 19, which still wants the nationality dimension
-measured first.
+it out of the request path *by design* was item 19's question, and it is settled: search stays on
+every corridor (entries 159 and 173).
 
 **Settled in part, 2026-08-24 — DECISIONS entry 57 moved the meaning question to the model, and left
 the ranking with the heuristic.** What follows is the evidence that produced that split, kept because

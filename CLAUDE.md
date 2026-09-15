@@ -36,9 +36,14 @@ On **reliability nothing here can answer it** — every number this project quot
 owner outside this repository on purpose (entry 68). **Do not build a truth set, a correctness grader
 or an accuracy metric without asking**; entry 147 is a priority, not that rule being lifted.
 
-**[TODO.md](TODO.md) item 19's latency and cost work is paused** (entry 147), including entry 146's
-measured-but-unshipped cacheable prefix. The instrumentation stays on: `phase_seconds` and
-`model_calls` are recorded every run, so the constraint is already measured whenever this resumes.
+**[TODO.md](TODO.md) item 19 is closed (entry 173).**
+- **Settled:** search stays on every corridor (entries 159, 160).
+- **Delivered:** its cost work took a fresh corridor from $0.394 to $0.251 in model calls (entries
+  164–171).
+- **What is left:** item 58. The plan call's ~29s wait is items 56 and 57, and the 272K-token price
+  threshold is item 59.
+- **Still on:** the instrumentation — `phase_seconds` and `model_calls` are recorded every run, and every
+  model call is appended to `var/usage/`.
 
 **The hybrid, settled — the owner, 2026-09-14 (entry 148).** **The corpus holds what every traveller
 shares; live search fetches what this traveller needs, and stays the minority** of what a corridor
@@ -151,7 +156,7 @@ the oracle was curated from inside that same 6% and so agreed with the gate by c
 127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. **Item 31 is done (entry 158):** the pool
 now also admits the five best candidates per role that the link scored zero, ranked by their own
 stored text, and removes nothing — all four hidden fixture answers recovered, for +16% selection input
-over 53 corpora. Item 19's search-dependence figure is still an upper bound, because the link test
+over 53 corpora. The search-dependence figure (entries 129 and 173) is still an upper bound, because the link test
 admits 49% of search results against 5.5% of corpus pages and that gap was not re-measured.
 
 **And what the scorer's number is actually used for is a boolean (entry 126).**
@@ -212,7 +217,7 @@ both arms filter on `> 0` and raced over the same 6%. What is narrower than it r
 recall: the oracle was curated "from every candidate that scored above zero", so it **cannot detect
 the filter it shares**, and whether the discarded 94% holds any answer is unmeasured. The gate is
 also not neutral between sources — **49% of search results are admitted against 5.5% of corpus
-pages** (entry 125), so item 19's search-dependence figure is an upper bound. Item 31 closed as entry 158.
+pages** (entry 125), so the search-dependence figure of entries 129 and 173 is an upper bound. Item 31 closed as entry 158.
 `visa-discover selection-recall` stays as an offline regression check, and entries 87, 100 and 106
 say how to read it: it measures agreement with pages a person named, not corridor health, and its
 known errors run against the model so the figure is a floor.
@@ -508,9 +513,9 @@ produces a serious defect.
   refuses and flags the country", and entry 47 chose a different shape that satisfies the same
   constraint: the candidate set is **`corpus ∪ live search`**, with search running on *every* corridor
   rather than as a fallback after a miss, so nothing silently degrades because nothing was ever
-  conditional. A country with **no** corpus simply crawls, exactly as before. Refusing on a miss is
-  still unbuilt and still wanted — [TODO.md](TODO.md) item 19 — and it only becomes safe once search
-  has left the request path, which needs the nationality dimension measured first (entry 48).
+  conditional. A country with **no** corpus simply crawls, exactly as before. **Refusing on a
+  miss is dropped (entry 173).** It was only ever safe once search left the request path, and entries
+  148 and 159 keep search on every corridor. The constraint above still holds, by construction.
 - **A stored row records when the evidence was retrieved, never when the row was written.** A failed
   refresh serves cached text flagged `stale` and **keeps its original `fetched_at`**; only a validator
   match moves it, because a `304` proves the text is still current (entry 4). Past
@@ -682,8 +687,8 @@ cause, and only running the thing showed it.
 | a TLS failure is a missing intermediate to bundle | egypt's certificate expired in May 2025; bundling cannot fix that (entry 116) |
 | DK, LT and SK refuse every passport and no corpus will fix them | with corpora DK fills 4 roles and SK 2; only LT still fills none (entry 116) |
 | a corridor exiting 0 answered its six roles | bulgaria exits 0 having filled two — the other four are silent, not counted (entry 116) |
-| a country with a large corpus no longer needs live search | bulgaria holds 7,098 pages and gets its decision from a search-only pdf (item 19) |
-| the corpus write-back keeps every run's findings | it runs on the api path only; `visa-discover corridor` folds nothing back (item 19) |
+| a country with a large corpus no longer needs live search | bulgaria holds 7,098 pages and gets its decision from a search-only pdf (entry 173) |
+| the corpus write-back keeps every run's findings | it runs on the api path only; `visa-discover corridor` folds nothing back (entry 173) |
 | liechtenstein fills nothing because its corpus is thin or german | it holds the right 29 pages; each stores a cloudflare interstitial (entry 117) |
 | a challenge marker test only needs the top of the page | cloudflare puts `_cf_chl_opt` at index 24,915 of 29,336 (entry 117) |
 | the renderer waits out a challenge until it clears | it polled on `is_challenge`, which said 'cleared' on iteration one (entry 117) |
@@ -947,7 +952,7 @@ suppress the *crawl*. Measured 2026-08-30: of
 382 pages read by runs postdating their corpus, 59 were not in the corpus and **all 59 came from
 search**, 17 covering a role nothing else in the run covered. So the corpus is not a superset even
 where it is large, and **search may not be switched off for a country without measuring that
-country** — TODO item 19 carries the method.
+country** — entry 173 keeps the method, and entry 159 is why search stays.
 
 **53 countries have a corpus in `var/corpus/` and a text index in `var/pagetext/`** — the ten of
 entry 85 plus the 43 of entry 116. Only **BR and UY** are researchable without one, at a single
