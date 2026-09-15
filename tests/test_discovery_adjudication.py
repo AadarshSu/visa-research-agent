@@ -121,7 +121,9 @@ class FakeAdjudicator:
         self.adjudication = adjudication
         self.calls: list[str] = []
 
-    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+    async def adjudicate(
+        self, system_prompt: str, packet: str, *, usage: object = None
+    ) -> RoleAdjudication:
         self.calls.append(packet)
         if isinstance(self.adjudication, Exception):
             raise self.adjudication
@@ -136,7 +138,9 @@ class FlakyAdjudicator:
         self.adjudication = adjudication
         self.calls: list[str] = []
 
-    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+    async def adjudicate(
+        self, system_prompt: str, packet: str, *, usage: object = None
+    ) -> RoleAdjudication:
         self.calls.append(packet)
         if self.remaining_failures:
             self.remaining_failures -= 1

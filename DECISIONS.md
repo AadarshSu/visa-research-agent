@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [166](#166-every-model-call-goes-into-one-daily-log-with-its-retries-counted-and-its-usage-handed-in-per-call) | **Every model call goes into one daily log** — retries counted by a request hook, usage handed in per call so concurrent requests cannot swap figures; tested against a mocked Responses API, not live |
 | [165](#165-the-plan-writing-call-records-what-it-cost-and-every-call-records-its-cache-writes) | **The plan call records what it cost, and every call its cache writes** — appended per day to `var/usage/`, with a recorder handed in per call; the shared roles adjudicator can still mix up usage between concurrent requests |
 | [164](#164-what-a-model-call-is-made-of-three-costs-nobody-records-and-much-of-a-selection-packet-says-nothing-about-a-candidate) | **What a model call is made of** — the plan call runs on every request and was never priced, cache writes may bill 1.25×, 13–40% of a selection packet is notes and layout, and entry 146's overlap is 79–80% in three countries |
 | [163](#163-a-www-spelling-and-its-bare-host-are-one-site-for-a-crawls-page-budget) | **A `www.` spelling and its bare host are one site for the crawl budget** — 44 of 53 corpora held a split site taking two shares; trust, politeness and reporting keep the exact host |
@@ -214,6 +215,72 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 166. Every model call goes into one daily log, with its retries counted and its usage handed in per call
+
+**2026-09-15 · the rest of entry 164's first step, after entry 165 — built and tested offline against a mocked Responses API; not yet seen on a live response**
+
+Entry 165 left three things open: selection and roles usage lived only in recall logs, which the
+next run of a corridor overwrites; the web app's shared role adjudicator could record another
+request's usage; and the selection call's retries were out of sight. This closes all three.
+**Nothing any model is shown changed, and no behaviour changed**: the selector keeps its retries,
+and the roles and plan calls keep none.
+
+### One log for every call
+
+- **The resolver appends every call it makes** — selection, roles, blocked pages — to the daily file
+  the plan call already used. It is renamed `var/usage/model-calls-YYYY-MM-DD.jsonl`, and
+  `PlanCallRecord` is `ModelCallRecord`. A rename rather than a second file, because entry 165
+  shipped the same day and this session wrote nothing under the old name.
+- **`build_resolver` wires it, so the command line writes too.** A sweep and a web request spend from
+  the same account, and the bill is checked against the sum.
+- **The recall log still keeps a run's calls.** The daily log exists because the next run replaces
+  them; a test runs a corridor twice and finds two selection calls in the daily log and one in the
+  recall log.
+
+### Usage is handed in, never read back
+
+- **`CandidateSelector.select` and `RoleAdjudicator.adjudicate` take an optional `usage` recorder**,
+  as the plan generator already did. `_timed_model_call` creates it and yields it to the call site,
+  and `last_usage` is gone from both providers.
+- **This fixes what entry 165 found.** The web app builds one adjudicator for every request, so two
+  concurrent requests could record each other's roles and blocked-page usage. A test runs two
+  selections at once on one provider, one of them retried, and each keeps its own counts and tokens.
+
+### Retries counted, not switched off
+
+- **The OpenAI client retries a failed request by itself**, below anything LangChain reports, so a
+  retried call looked like one call.
+- **Every call now goes through one shared `httpx2` client** — the OpenAI SDK's own defaults,
+  `openai.DefaultAsyncHttpxClient`, plus a request hook. The hook fires once per attempt, and a
+  context variable ties each attempt to the recorder of the call that sent it.
+  `ModelCall.http_requests` above one means the client retried; `None` means nothing counted.
+- **Counted rather than switched off.** `max_retries=0` on the selector would change behaviour: a
+  momentary rate limit would send selection straight to the heuristic ranking.
+- **One cost of supplying the client.** LangChain applies TCP keep-alive socket options to its own
+  default async client, and a supplied one does not get them. Not measured.
+- **`httpx2` is now a declared dependency**, since the code imports it directly. `openai` 3.0.0
+  already required it.
+
+### Verified, and how far
+
+Against a mocked Responses API, through the real LangChain and OpenAI client code, with no network:
+- a selection whose first request fails is retried by the client and recorded as **2 requests**, with
+  input, cache-write and reasoning tokens read from the reply;
+- a roles call sends **1 request**, and a failure reports no usage;
+- two concurrent selections on one provider each keep their own counts and tokens.
+
+So the mapping of `cache_write_tokens` to cache writes is exercised through the library, not only by a
+hand-built usage report as in entry 165. **Still unverified:** a live response — whether OpenAI counts
+a write inside `input_tokens`, and whether a failed attempt is billed.
+
+### What is left of entry 164's first step
+
+**Read one live day and compare it with the bill.** Run corridors through the web app, sum
+`model-calls` for the day, and compare with the OpenAI dashboard. It needs a key with credit, which
+TODO item 48 is already waiting on.
 
 ---
 

@@ -5,12 +5,13 @@ over — "was that page ranked out, or never found?" — so these run a whole co
 site and then ask the record.
 """
 
+import asyncio
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from types import SimpleNamespace
 
 import httpx
+import httpx2
 import pytest
 from discovery_site import (
     AUTHORITY,
@@ -24,7 +25,11 @@ from discovery_site import (
 from langchain_core.messages import AIMessage
 from langchain_core.outputs import ChatGeneration, LLMResult
 
-from visa_research_agent.discovery.adjudication import UsageRecorder
+from visa_research_agent.discovery.adjudication import (
+    AdjudicationError,
+    LangChainRoleAdjudicator,
+    UsageRecorder,
+)
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.models import Corridor
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
@@ -36,9 +41,14 @@ from visa_research_agent.discovery.recall_log import (
     compare_runs,
 )
 from visa_research_agent.discovery.resolver import CorridorResolver, ResolutionTrace
-from visa_research_agent.discovery.selection import Selection, SelectionQuotaExhausted
+from visa_research_agent.discovery.selection import (
+    LangChainCandidateSelector,
+    Selection,
+    SelectionQuotaExhausted,
+)
 from visa_research_agent.domain.models import DestinationConfig
 from visa_research_agent.research.live_sources import LiveSourceFetcher
+from visa_research_agent.research.model_usage import FileModelUsageLog
 from visa_research_agent.research.source_cache import FileSourceCache
 
 pytestmark = pytest.mark.anyio
@@ -312,7 +322,7 @@ class FailingSelector:
     def __init__(self) -> None:
         self.calls = 0
 
-    async def select(self, system_prompt: str, packet: str) -> Selection:
+    async def select(self, system_prompt: str, packet: str, *, usage: object = None) -> Selection:
         self.calls += 1
         raise SelectionQuotaExhausted("The OpenAI account is out of credit")
 
@@ -323,7 +333,7 @@ class PickingSelector:
     def __init__(self) -> None:
         self.calls = 0
 
-    async def select(self, system_prompt: str, packet: str) -> Selection:
+    async def select(self, system_prompt: str, packet: str, *, usage: object = None) -> Selection:
         self.calls += 1
         entries = json.loads(packet)["candidates"]
         return Selection(source_ids=[entries[0]["source_id"]])
@@ -418,7 +428,7 @@ class OfferRecordingSelector:
     def __init__(self) -> None:
         self.offered: list[set[str]] = []
 
-    async def select(self, system_prompt: str, packet: str) -> Selection:
+    async def select(self, system_prompt: str, packet: str, *, usage: object = None) -> Selection:
         entries = json.loads(packet)["candidates"]
         self.offered.append({entry["url"] for entry in entries})
         return Selection(source_ids=[entries[0]["source_id"]])
@@ -658,7 +668,7 @@ async def test_the_usage_recorder_reads_cache_writes_beside_cache_reads() -> Non
     assert recorder.reasoning_output_tokens == 131
 
 
-async def test_a_model_call_keeps_the_cache_writes_its_provider_reported(tmp_path: Path) -> None:
+async def test_a_model_call_keeps_what_its_recorder_was_told(tmp_path: Path) -> None:
     resolver = CorridorResolver(
         StubSearchProvider([]),  # type: ignore[arg-type]
         CrawlFetcher(host_delay_seconds=0.0),
@@ -674,17 +684,161 @@ async def test_a_model_call_keeps_the_cache_writes_its_provider_reported(tmp_pat
         ),
         monotonic=lambda: 0.0,
     )
-    usage = UsageRecorder()
-    usage.input_tokens = 54_667
-    usage.cache_write_input_tokens = 52_000
-    resolver.selector = SimpleNamespace(last_usage=usage)
-
-    async with resolver._timed_model_call("select", "PROMPT", "PACKET"):
-        pass
+    async with resolver._timed_model_call("select", "PROMPT", "PACKET") as usage:
+        # What the provider's callback and the client's request hook fill in for a real call.
+        usage.input_tokens = 54_667
+        usage.cache_write_input_tokens = 52_000
+        usage.http_requests = 3
 
     [call] = resolver.model_call_timings
     assert call.input_tokens == 54_667
     assert call.cache_write_input_tokens == 52_000
+    assert call.http_requests == 3
+
+
+async def test_every_model_call_a_run_makes_is_appended_to_the_daily_usage_log(
+    tmp_path: Path,
+) -> None:
+    """The recall log keeps a run's calls, but the next run of the corridor overwrites them, so a
+    day's spend could not be summed from it (entry 166)."""
+
+    recall = RecordingLog()
+    resolver = build_resolver(tmp_path, [INDEX, MISSION_INDEX], recall)
+    resolver.selector = PickingSelector()
+    resolver.page_text = text_store(tmp_path, [INDEX, MISSION_INDEX, DETAIL_INDIA])
+    resolver.usage_log = FileModelUsageLog(tmp_path / "usage")
+    resolver.now = lambda: RESOLVED_AT
+
+    for _ in range(2):
+        await resolver.resolve(indexed_destination(), corridor())
+
+    records = FileModelUsageLog(tmp_path / "usage").read(RESOLVED_AT.date())
+    assert [record.call.call for record in records] == ["select", "select"]
+    assert {record.corridor_key for record in records} == {corridor().key}
+    assert len(recall.records[-1].model_calls) == 1, "the recall log holds only the latest run"
+
+
+# --- The providers themselves, against a mocked Responses API (entry 166) --------------------
+
+
+def responses_api_reply(text: str, *, input_tokens: int) -> dict[str, object]:
+    """The smallest Responses API body the OpenAI client and LangChain accept, reporting usage the
+    way a GPT-5.6 call does — cache writes included."""
+
+    return {
+        "id": "resp_test",
+        "object": "response",
+        "created_at": 1,
+        "status": "completed",
+        "model": "test-model",
+        "output": [
+            {
+                "type": "message",
+                "id": "msg_test",
+                "status": "completed",
+                "role": "assistant",
+                "content": [{"type": "output_text", "text": text, "annotations": []}],
+            }
+        ],
+        "usage": {
+            "input_tokens": input_tokens,
+            "input_tokens_details": {"cached_tokens": 0, "cache_write_tokens": 1_100},
+            "output_tokens": 20,
+            "output_tokens_details": {"reasoning_tokens": 5},
+            "total_tokens": input_tokens + 20,
+        },
+        "parallel_tool_calls": True,
+        "tool_choice": "auto",
+        "tools": [],
+    }
+
+
+class ProviderEndpoint:
+    """A Responses API that fails the first request carrying each marker, then answers.
+
+    A mock transport, so nothing reaches the network. The input tokens it reports depend on the
+    packet, so two concurrent calls can each be checked for their own figures.
+    """
+
+    def __init__(self, text: str, *, fail_first: tuple[str, ...] = ()) -> None:
+        self.text = text
+        self.failing = set(fail_first)
+        self.requests = 0
+
+    def __call__(self, request: httpx2.Request) -> httpx2.Response:
+        self.requests += 1
+        body = request.content.decode()
+        for marker in sorted(self.failing):
+            if marker in body:
+                self.failing.discard(marker)
+                return httpx2.Response(
+                    500, headers={"retry-after-ms": "1"}, json={"error": {"message": "overloaded"}}
+                )
+        tokens = 2_400 if "PACKET-B" in body else 1_200
+        return httpx2.Response(200, json=responses_api_reply(self.text, input_tokens=tokens))
+
+
+def selector_against(endpoint: ProviderEndpoint) -> LangChainCandidateSelector:
+    return LangChainCandidateSelector(
+        api_key="test-key",
+        model_name="test-model",
+        request_timeout_seconds=5.0,
+        max_output_tokens=100,
+        reasoning_effort="low",
+        transport=httpx2.MockTransport(endpoint),
+    )
+
+
+async def test_a_retried_selection_counts_every_request_and_keeps_cache_writes() -> None:
+    """The OpenAI client retried a failed selection by itself, and that retry was invisible."""
+
+    endpoint = ProviderEndpoint(json.dumps({"source_ids": ["japan_a"]}), fail_first=("PACKET",))
+    usage = UsageRecorder()
+
+    selection = await selector_against(endpoint).select("PROMPT", "PACKET", usage=usage)
+
+    assert selection.source_ids == ["japan_a"]
+    assert endpoint.requests == 2
+    assert usage.http_requests == 2
+    assert usage.input_tokens == 1_200
+    assert usage.cache_write_input_tokens == 1_100
+    assert usage.reasoning_output_tokens == 5
+
+
+async def test_role_adjudication_sends_one_request_and_a_failure_reports_no_usage() -> None:
+    endpoint = ProviderEndpoint("{}", fail_first=("PACKET",))
+    adjudicator = LangChainRoleAdjudicator(
+        api_key="test-key",
+        model_name="test-model",
+        request_timeout_seconds=5.0,
+        max_output_tokens=100,
+        reasoning_effort="low",
+        transport=httpx2.MockTransport(endpoint),
+    )
+    usage = UsageRecorder()
+
+    with pytest.raises(AdjudicationError):
+        await adjudicator.adjudicate("PROMPT", "PACKET", usage=usage)
+
+    assert endpoint.requests == 1, "role adjudication keeps max_retries=0"
+    assert usage.http_requests == 1
+    assert usage.input_tokens is None, "the provider reported nothing, which is not zero"
+
+
+async def test_concurrent_calls_on_one_provider_each_record_their_own_usage() -> None:
+    """One provider serves every concurrent web request, which is why usage is handed in."""
+
+    endpoint = ProviderEndpoint(json.dumps({"source_ids": ["japan_a"]}), fail_first=("PACKET-B",))
+    selector = selector_against(endpoint)
+    first, second = UsageRecorder(), UsageRecorder()
+
+    await asyncio.gather(
+        selector.select("PROMPT", "PACKET-A", usage=first),
+        selector.select("PROMPT", "PACKET-B", usage=second),
+    )
+
+    assert (first.http_requests, first.input_tokens) == (1, 1_200)
+    assert (second.http_requests, second.input_tokens) == (2, 2_400)
 
 
 def test_the_record_keeps_model_calls_and_an_older_log_reads_as_unrecorded(

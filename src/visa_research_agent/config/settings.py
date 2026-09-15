@@ -31,9 +31,10 @@ class Settings(BaseSettings):
     # overwritten by the newest run, read by nobody: deleting the directory costs a question, never
     # an answer.
     recall_log_directory: Path = Path("var/recall")
-    # What each plan-writing call cost (DECISIONS entry 165). One JSON line per call and one file
-    # per UTC day, appended rather than overwritten, because the question is a day's spend against
-    # the provider's bill. Read by nobody at runtime: deleting it costs a question, never an answer.
+    # What every model call cost — selection, roles, blocked pages and the plan (DECISIONS entries
+    # 165 and 166). One JSON line per call and one file per UTC day, appended rather than
+    # overwritten, because the question is a day's spend against the provider's bill. Read by
+    # nobody at runtime: deleting it costs a question, never an answer.
     model_usage_directory: Path = Path("var/usage")
     # Three weeks. A corridor is not evidence: which pages answer it changes when a site is
     # redesigned, not when its guidance is edited. The pages themselves are re-fetched under the

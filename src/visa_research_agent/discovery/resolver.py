@@ -31,6 +31,7 @@ from visa_research_agent.discovery.adjudication import (
     AdjudicationQuotaExhausted,
     RoleAdjudication,
     RoleAdjudicator,
+    UsageRecorder,
     build_blocked_packet,
     build_candidate_packet,
     load_adjudication_prompt,
@@ -118,6 +119,7 @@ from visa_research_agent.domain.models import (
 )
 from visa_research_agent.domain.trust import host_is_within, host_of, registrable_domain
 from visa_research_agent.research.live_sources import LiveSourceFetcher
+from visa_research_agent.research.model_usage import ModelCallRecord, ModelUsageLog
 
 DEFAULT_TEXT_COVERAGE_BAR = 0.5
 """What share of a corridor's candidates must have stored text before it may rank them.
@@ -495,6 +497,7 @@ class CorridorResolver:
         excerpt_head_characters: int = DEFAULT_EXCERPT_HEAD_CHARACTERS,
         excerpt_window_characters: int = DEFAULT_EXCERPT_WINDOW_CHARACTERS,
         recall_log: RecallLog | None = None,
+        usage_log: ModelUsageLog | None = None,
         corpus: CountryCorpus | None = None,
         page_text: PageTextStore | None = None,
         text_scoring_coverage_bar: float = DEFAULT_TEXT_COVERAGE_BAR,
@@ -522,6 +525,11 @@ class CorridorResolver:
         # Optional, and nothing reads it back. A corridor behaves identically without one; what is
         # lost is the ability to answer "was that page ranked out, or never found" afterwards.
         self.recall_log = recall_log
+        # Every model call, appended per day so a day's spend can be summed against the bill
+        # (entry 166). Optional and read by nothing, like the recall log.
+        self.usage_log = usage_log
+        # Which corridor the calls being made belong to, set at the top of `resolve`.
+        self.corridor_key: str | None = None
         # The country's known pages, seeded alongside search rather than instead of it. Optional, so
         # a resolver built without one behaves exactly as it did before the corpus existed.
         self.corpus = corpus
@@ -564,6 +572,7 @@ class CorridorResolver:
 
         trace = ResolutionTrace(clock=self.monotonic)
         self.model_call_timings = []
+        self.corridor_key = corridor.key
         # Kept on the resolver so a caller can read what this run considered without re-reading the
         # recall log, which is overwritten per corridor and deliberately depended on by nothing.
         # Safe as per-run state because a resolver is built per corridor; the mistake entry 37
@@ -974,8 +983,8 @@ class CorridorResolver:
         try:
             self.selection_calls += 1
             selection_prompt = load_selection_prompt()
-            async with self._timed_model_call("select", selection_prompt, packet):
-                selection = await self.selector.select(selection_prompt, packet)
+            async with self._timed_model_call("select", selection_prompt, packet) as usage:
+                selection = await self.selector.select(selection_prompt, packet, usage=usage)
         except SelectionError as exc:
             # A failed selection is not a failed corridor: the heuristic still ranks, and saying so
             # is honest about which decider produced the answer. This is not entry 31's forbidden
@@ -1243,8 +1252,8 @@ class CorridorResolver:
         for attempt in range(1, ADJUDICATION_ATTEMPTS + 1):
             calls += 1
             try:
-                async with self._timed_model_call("blocked", prompt, packet):
-                    adjudication = await self.adjudicator.adjudicate(prompt, packet)
+                async with self._timed_model_call("blocked", prompt, packet) as usage:
+                    adjudication = await self.adjudicator.adjudicate(prompt, packet, usage=usage)
             except AdjudicationError as exc:
                 if attempt < ADJUDICATION_ATTEMPTS:
                     notes.append(f"judging the refused pages failed ({exc}); retrying once")
@@ -1557,9 +1566,9 @@ class CorridorResolver:
             attempts += 1
             try:
                 roles_prompt = load_adjudication_prompt()
-                async with self._timed_model_call("roles", roles_prompt, packet):
+                async with self._timed_model_call("roles", roles_prompt, packet) as usage:
                     adjudicated = await self.adjudicator.adjudicate(  # type: ignore[union-attr]
-                        roles_prompt, packet
+                        roles_prompt, packet, usage=usage
                     )
                 return adjudicated, attempts
             except AdjudicationQuotaExhausted as exc:
@@ -1691,42 +1700,61 @@ class CorridorResolver:
     @asynccontextmanager
     async def _timed_model_call(
         self, call: Literal["select", "roles", "blocked"], prompt: str, packet: str
-    ) -> AsyncIterator[None]:
-        """Time one model call and record what it was given, whether or not it succeeds.
+    ) -> AsyncIterator[UsageRecorder]:
+        """Time one model call and record what it was given and cost, whether or not it succeeds.
 
         Wrapped at the *call site* rather than inside the two providers on purpose: this measures
         what the resolver waits for, which is what a corridor's latency is made of, and it stays
         true of any provider without either implementation knowing it is being timed.
+
+        **The recorder is yielded to the call site and handed to the provider, never read back off
+        it** (entry 166). The web app shares one adjudicator between concurrent requests, so a
+        `last_usage` field on it could hold another request's figures by the time this read it.
         """
 
+        usage = UsageRecorder()
         started = self.monotonic()
         failed = False
         try:
-            yield
+            yield usage
         except BaseException:
             failed = True
             raise
         finally:
-            # Read off whichever object made the call, and only if it kept any. The two shipped
-            # implementations record it on `last_usage`; the fakes the tests use do not, and a
-            # protocol that demanded it would make every fake carry a field nothing asserts.
-            # `None` throughout is "the provider said nothing", which is not zero.
-            source = self.selector if call == "select" else self.adjudicator
-            usage = getattr(source, "last_usage", None)
-            self.model_call_timings.append(
-                ModelCall(
-                    call=call,
-                    prompt_characters=len(prompt),
-                    packet_characters=len(packet),
-                    seconds=round(self.monotonic() - started, 3),
-                    failed=failed,
-                    input_tokens=getattr(usage, "input_tokens", None),
-                    output_tokens=getattr(usage, "output_tokens", None),
-                    cached_input_tokens=getattr(usage, "cached_input_tokens", None),
-                    cache_write_input_tokens=getattr(usage, "cache_write_input_tokens", None),
-                    reasoning_output_tokens=getattr(usage, "reasoning_output_tokens", None),
-                )
+            # `None` throughout is "the provider said nothing", which is not zero — and a fake that
+            # fills nothing in leaves every figure `None`.
+            timing = ModelCall(
+                call=call,
+                prompt_characters=len(prompt),
+                packet_characters=len(packet),
+                seconds=round(self.monotonic() - started, 3),
+                failed=failed,
+                input_tokens=usage.input_tokens,
+                output_tokens=usage.output_tokens,
+                cached_input_tokens=usage.cached_input_tokens,
+                cache_write_input_tokens=usage.cache_write_input_tokens,
+                reasoning_output_tokens=usage.reasoning_output_tokens,
+                http_requests=usage.http_requests,
             )
+            self.model_call_timings.append(timing)
+            self._record_usage(timing)
+
+    def _record_usage(self, timing: ModelCall) -> None:
+        """Append one call to the daily usage log, and never let doing so cost the corridor.
+
+        The recall log keeps this run's calls too, but the next run of the same corridor overwrites
+        it, so a day with repeat runs could not be summed from it — and a day's sum is what the
+        provider's bill is checked against (entries 164 to 166).
+        """
+
+        if self.usage_log is None or self.corridor_key is None:
+            return
+        try:
+            self.usage_log.write(
+                ModelCallRecord(corridor_key=self.corridor_key, recorded_at=self.now(), call=timing)
+            )
+        except OSError:
+            return
 
     def _write_recall_log(
         self,

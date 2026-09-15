@@ -134,6 +134,7 @@ from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
 from visa_research_agent.domain.trust import host_is_within
 from visa_research_agent.research.errors import LLMConfigurationError, VisaResearchError
 from visa_research_agent.research.live_sources import LiveSourceFetcher
+from visa_research_agent.research.model_usage import FileModelUsageLog
 from visa_research_agent.research.rendering import (
     PageRenderer,
     PlaywrightPageRenderer,
@@ -228,6 +229,9 @@ def build_resolver(
         # On by default in both the command and the API. A recall failure is diagnosable only from
         # the run that had it, and the run that had it is over by the time anyone asks.
         recall_log=FileRecallLog(settings.recall_log_directory),
+        # Both the command and the API, like the recall log: a sweep and a web request spend from
+        # the same account, and the bill is checked against the sum (entry 166).
+        usage_log=FileModelUsageLog(settings.model_usage_directory),
         corpus=corpus,
         # Passed unconditionally, like the recall log and unlike the corpus: this is a directory
         # rather than one country's data, and a country with nothing in it is silently the old

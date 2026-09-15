@@ -597,7 +597,9 @@ async def test_a_corridor_refuses_when_adjudication_cannot_answer(tmp_path: Path
     """
 
     class AlwaysFails:
-        async def adjudicate(self, system_prompt: str, packet: str) -> object:
+        async def adjudicate(
+            self, system_prompt: str, packet: str, *, usage: object = None
+        ) -> object:
             raise AdjudicationError("the request failed")
 
     resolver, _ = build_resolver(tmp_path, [], [INDEX, MISSION_INDEX])
@@ -896,7 +898,9 @@ class StubBlockedJudge:
         self.packets: list[str] = []
         self.prompts: list[str] = []
 
-    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+    async def adjudicate(
+        self, system_prompt: str, packet: str, *, usage: object = None
+    ) -> RoleAdjudication:
         self.prompts.append(system_prompt)
         self.packets.append(packet)
         if "refused_pages" not in packet:
@@ -1018,7 +1022,9 @@ class StubToolJudge:
         self.also_fill_decision = also_fill_decision
         self.packets: list[str] = []
 
-    async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+    async def adjudicate(
+        self, system_prompt: str, packet: str, *, usage: object = None
+    ) -> RoleAdjudication:
         self.packets.append(packet)
         candidates = json.loads(packet)["candidates"]
         first = candidates[0]["source_id"]
@@ -1151,7 +1157,9 @@ async def test_an_empty_account_is_not_retried(tmp_path: Path) -> None:
         def __init__(self) -> None:
             self.calls = 0
 
-        async def adjudicate(self, system_prompt: str, packet: str) -> RoleAdjudication:
+        async def adjudicate(
+            self, system_prompt: str, packet: str, *, usage: object = None
+        ) -> RoleAdjudication:
             self.calls += 1
             raise AdjudicationQuotaExhausted("The OpenAI account is out of credit")
 

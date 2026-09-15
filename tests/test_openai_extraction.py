@@ -23,7 +23,7 @@ from visa_research_agent.research.errors import (
     LLMExtractionError,
 )
 from visa_research_agent.research.fixtures import FixtureSourceFetcher
-from visa_research_agent.research.model_usage import FileModelUsageLog, PlanCallRecord
+from visa_research_agent.research.model_usage import FileModelUsageLog, ModelCallRecord
 from visa_research_agent.research.openai_extraction import (
     OpenAIVisaPlanExtractor,
     load_extraction_prompt,
@@ -244,7 +244,7 @@ class RaisingPlanGenerator:
 
 
 class UnwritableUsageLog:
-    def write(self, record: PlanCallRecord) -> None:
+    def write(self, record: ModelCallRecord) -> None:
         raise OSError("read-only file system")
 
 
@@ -283,7 +283,7 @@ async def test_the_plan_call_records_what_the_provider_billed_including_cache_wr
     profile = DEFAULT_TRAVELLER_PROFILE
     assert generator.research_packet is not None
     assert log.read(RECORDED_AT.date()) == [
-        PlanCallRecord(
+        ModelCallRecord(
             corridor_key=(
                 f"{destination.slug}/{profile.passport_nationality}/"
                 f"{profile.country_of_residence}/{profile.travel_purpose}"
@@ -360,7 +360,7 @@ def test_the_usage_log_appends_a_line_per_call_and_starts_a_file_per_day(tmp_pat
     """Appended, where the recall log overwrites: a day's spend is a sum, not the latest run."""
 
     log = FileModelUsageLog(tmp_path)
-    first = PlanCallRecord(
+    first = ModelCallRecord(
         corridor_key="japan/IN/GB/tourism",
         recorded_at=datetime(2026, 9, 15, 9, 0, tzinfo=UTC),
         call=ModelCall(call="plan", prompt_characters=1, packet_characters=2, seconds=0.5),

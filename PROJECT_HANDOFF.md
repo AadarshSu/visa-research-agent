@@ -62,9 +62,11 @@ truth set or a correctness grader without asking.**
 
 TODO item 19 carries the order to take it in when the work resumes.
 
-**Its first step is half done (entry 165).** From the web app, the plan call now appends what it
-cost to `var/usage/plan-calls-YYYY-MM-DD.jsonl`, and every model call records its cache writes.
-Neither has been seen on a live response yet.
+**Its first step is done except the live check (entries 165 and 166).** Every model call —
+selection, roles, blocked pages and the plan, from the web app and the command line — appends what
+it cost to `var/usage/model-calls-YYYY-MM-DD.jsonl`, with its cache writes and the number of HTTP
+requests it took. It is tested against a mocked OpenAI API; no live response has gone through it
+yet.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.

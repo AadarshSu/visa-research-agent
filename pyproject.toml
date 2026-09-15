@@ -13,6 +13,9 @@ dependencies = [
     "certifi>=2024.2",
     "fastapi>=0.115,<1",
     "httpx>=0.27,<1",
+    # The OpenAI client's own HTTP library. Imported directly to count the requests a model call
+    # sends, including the client's own retries (DECISIONS entry 166).
+    "httpx2>=2,<3",
     "jinja2>=3.1,<4",
     "langchain>=1,<2",
     "langchain-openai>=1,<2",

@@ -75,8 +75,8 @@ class ModelCall(StrictModel):
     call: Literal["select", "roles", "blocked", "plan"]
     """`plan` never appears in a `RecallRecord`. The plan is written on every web request — after a
     resolution, or with none because the corridor came from the store — so it is not part of any
-    run this record describes, and is kept in `research/model_usage.py`'s log instead
-    (entry 165)."""
+    run this record describes. Every call, `plan` included, is also appended to the daily log in
+    `research/model_usage.py` (entries 165 and 166)."""
     input_tokens: int | None = None
     output_tokens: int | None = None
     cached_input_tokens: int | None = None
@@ -98,6 +98,11 @@ class ModelCall(StrictModel):
     failed: bool = False
     """A call that raised. Timed and kept, because a slow failure is a cost like any other and a
     retry loop that hides them would under-report the runs worth reading."""
+    http_requests: int | None = None
+    """How many HTTP requests the provider's client sent for this call; above one means it retried
+    (entry 166). `None` where nothing counted, which includes every log written before the field
+    existed. Usage is recorded from the attempt that answered, and whether an attempt that failed
+    was billed depends on how it failed, which is not known here."""
 
 
 class RecallRecord(StrictModel):
