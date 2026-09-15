@@ -400,7 +400,7 @@ empty ruleset and the host is crawled. Closing it would stop crawling hosts craw
 needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
 sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 
-### 60. Decide where Fast mode goes — `next`, **added 2026-09-16 (entry 176)**
+### 60. Decide where Fast mode goes — `next`, **added 2026-09-16 (entry 177)**
 
 **Why it matters.** It is the one latency lever measured that is both large and safe.
 - **The plan call is 39–48% faster** on Fast mode, with no decision changed: Japan open, Germany
@@ -427,7 +427,7 @@ Projected from entry 171's split, not timed end to end.
   new seconds. The table above is arithmetic.
 
 **Do not take the cheaper shortcuts instead.** Reasoning `none` answered Japan "visa required" where
-no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 176).
+no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 177).
 
 ## Next up
 
@@ -796,7 +796,7 @@ could appear seconds after the plan call starts rather than when it ends. **Item
 - **A refusal can arrive after text has started to appear**, and the interface would need an honest
   way to take it back.
 
-**Measured, 2026-09-16 (entry 176).** The plan call's first visible token arrives 7–15s in today and
+**Measured, 2026-09-16 (entry 177).** The plan call's first visible token arrives 7–15s in today and
 4–7s on Fast mode, so streaming would put text on the screen that early.
 
 **Open for whoever picks it up:** whether streaming progress alone is enough, and whether any plan
@@ -851,7 +851,7 @@ log's `phase_seconds`.
 - **Entry 146's reusable country-stable packet waits for traffic.** OpenAI's cache lives 30 minutes,
   a write costs 1.25×, and pools overlap 79–99% across travellers (entry 164).
 
-**Fast mode was measured on every call (entry 176)** — plan −43%, selection −23%, roles −13%, at
+**Fast mode was measured on every call (entry 177)** — plan −43%, selection −23%, roles −13%, at
 twice the price. Where it goes is item 60.
 
 **Research latency, ~25s — none of it decided.** Means over five fresh corridors (entry 171): roles

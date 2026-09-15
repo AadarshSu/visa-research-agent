@@ -143,7 +143,7 @@ a plan is never stored (entry 44).
 
 **Item 57**, streaming the plan to the screen as it is written, is what is left of that wait.
 
-**What would make a real difference to latency was measured on 2026-09-16 (entry 176).**
+**What would make a real difference to latency was measured on 2026-09-16 (entry 177).**
 - **Fast mode** takes the plan call 39–48% faster with no decision changed, at twice its price.
   Projected, a fresh request goes from ~55s to ~42s and a repeat from ~24s to ~14s. Where it goes is
   **TODO item 60, the owner's decision.**

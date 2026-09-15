@@ -122,7 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
-| [176](#176-where-a-requests-seconds-go-fast-mode-takes-43-off-the-plan-call-and-the-two-cheaper-shortcuts-broke-a-decision) | **Where a request's seconds go, and what moves them** — the plan and roles calls are generation (R² 0.99, 0.98); Fast mode takes the plan call −43% at 2× its price and selection −23%, roles −13%; reasoning `none` and `gpt-5.6-luna` each broke Japan's decision; nothing shipped, item 60 |
+| [177](#177-where-a-requests-seconds-go-fast-mode-takes-43-off-the-plan-call-and-the-two-cheaper-shortcuts-broke-a-decision) | **Where a request's seconds go, and what moves them** — the plan and roles calls are generation (R² 0.99, 0.98); Fast mode takes the plan call −43% at 2× its price and selection −23%, roles −13%; reasoning `none` and `gpt-5.6-luna` each broke Japan's decision; nothing shipped, item 60 |
 | [175](#175-trims-2-and-3-ship-one-short-quote-a-claim-a-few-words-where-nothing-conditions-a-document--about-a-second-and-a-half) | **Trims 2 and 3 ship, at the owner's choice** — decisions held in every call and nothing refused; the plan says 5–13% less but hidden reasoning did not shrink, so the call is ~150 output tokens and ~1.5s shorter; entry 174's quote-heading claim withdrawn |
 | [174](#174-the-written-plan-measured-live-short-source-ids-refuse-and-mislead-and-the-wording-trims-save-a-sixth) | **The written plan, measured live** — short source ids gave two refused plans and two wrong "no visa" answers for Japan in 48 calls, none in 48 without them, and are declined; the three wording trims take the call from 25.1s to 21.4s and wait on the owner's read |
 | [173](#173-item-19-closes-search-stays-refusing-on-a-miss-is-dropped-and-what-is-left-is-split-into-items-58-and-59) | **Item 19 closes** — ten seconds was never reachable as defined; search stays; refusing on a miss is dropped; the 2026-08-30 search-dependence method and the web-only write-back are kept here; the rest is items 58 and 59 |
@@ -229,37 +229,7 @@ not — and stored text ranks, it never speaks).
 
 ---
 
-## 176. A redirect to an address that is not a URL costs one page, not a build or a corridor
-
-**2026-09-15 · found by TODO item 48's 53-country rebuild**
-
-**What happened.** 52 of the 53 corpora rebuilt cleanly. **China's crashed after seven minutes**
-with `httpx.InvalidURL: For absolute URLs, path must be empty or begin with '/'`, raised while the
-crawler read a host's `robots.txt` and followed a redirect. The crash came before the corpus was
-written, so China's store is still its 2026-08-30 build.
-
-**The cause is a `Location` header with a scheme and no host**, such as `https:robots.txt`. `httpx`
-raises `InvalidURL` while building the next request, and **`InvalidURL` is not an `HTTPError`**.
-`CrawlFetcher._get` and `LiveSourceFetcher` catch only `HTTPError`, so it escaped both and ended the
-run. That is entry 114's shape again: one bad response from one host cost a whole build. On the
-request path the same header would have ended a corridor.
-
-**Which host sent it was not found.** A probe of all 94 of China's hosts, asking each for
-`robots.txt` without following redirects, reproduced nothing. The header may come from a host
-reached only through a redirect, or not on every request. The fix does not depend on which.
-
-**Fixed where redirects are followed.**
-- **`CrawlFetcher._get`** records the page as `unreachable`, with the reason *"it redirected to an
-  address that is not a valid URL"*. It does not count the failure towards giving up on the host,
-  because the host did answer.
-- **The crawler's landing-policy check** treats the same error as a policy it could not read.
-- **`LiveSourceFetcher`** reports it the same way in both places it follows redirects.
-
-Two tests send that header, one through the crawler and one through retrieval.
-
----
-
-## 176. Where a request's seconds go: Fast mode takes 43% off the plan call, and the two cheaper shortcuts broke a decision
+## 177. Where a request's seconds go: Fast mode takes 43% off the plan call, and the two cheaper shortcuts broke a decision
 
 **2026-09-16 · the owner asked for methods that would make a significant difference**
 
@@ -359,6 +329,36 @@ the owner's call — TODO item 60.
 $0.96 for the plan-call probe, about $3.00 for the corridor trial, and a few cents for the two smoke
 tests. The probe's calls are in `var/usage/model-calls-2026-09-15.jsonl`; the trial's selection and
 roles calls are there too, between 17:19 and 17:23 UTC.
+
+---
+
+## 176. A redirect to an address that is not a URL costs one page, not a build or a corridor
+
+**2026-09-15 · found by TODO item 48's 53-country rebuild**
+
+**What happened.** 52 of the 53 corpora rebuilt cleanly. **China's crashed after seven minutes**
+with `httpx.InvalidURL: For absolute URLs, path must be empty or begin with '/'`, raised while the
+crawler read a host's `robots.txt` and followed a redirect. The crash came before the corpus was
+written, so China's store is still its 2026-08-30 build.
+
+**The cause is a `Location` header with a scheme and no host**, such as `https:robots.txt`. `httpx`
+raises `InvalidURL` while building the next request, and **`InvalidURL` is not an `HTTPError`**.
+`CrawlFetcher._get` and `LiveSourceFetcher` catch only `HTTPError`, so it escaped both and ended the
+run. That is entry 114's shape again: one bad response from one host cost a whole build. On the
+request path the same header would have ended a corridor.
+
+**Which host sent it was not found.** A probe of all 94 of China's hosts, asking each for
+`robots.txt` without following redirects, reproduced nothing. The header may come from a host
+reached only through a redirect, or not on every request. The fix does not depend on which.
+
+**Fixed where redirects are followed.**
+- **`CrawlFetcher._get`** records the page as `unreachable`, with the reason *"it redirected to an
+  address that is not a valid URL"*. It does not count the failure towards giving up on the host,
+  because the host did answer.
+- **The crawler's landing-policy check** treats the same error as a policy it could not read.
+- **`LiveSourceFetcher`** reports it the same way in both places it follows redirects.
+
+Two tests send that header, one through the crawler and one through retrieval.
 
 ---
 
