@@ -951,6 +951,22 @@ def test_absence_from_a_visa_required_list_is_an_answer_only_within_its_bounds()
     assert "The one silence that is an answer" in prompt, "rule 4 must not contradict it"
 
 
+def test_one_short_quote_and_a_few_words_of_reason_where_nothing_conditions_a_document() -> None:
+    """Item 56, the owner's choice of trims 2 and 3 (entry 175). Writing the plan is the longest
+    wait in a request and its time tracks what it writes, so a claim carries one short quote rather
+    than up to two long ones, and an unconditional document a few words of why it applies. The
+    checker's own bounds are unchanged: a longer quote than asked for is still a real one."""
+
+    prompt = load_extraction_prompt()
+
+    assert "copy one passage VERBATIM" in prompt
+    assert "20 to 150 characters" in prompt
+    assert "one or two passages" not in prompt
+    assert "keep reason_it_applies to a few words" in prompt
+    # The shortening is only for a document nothing conditions; a condition is still explained.
+    assert "explain any\n   condition or uncertainty plainly in reason_it_applies" in prompt
+
+
 def test_the_extraction_prompt_separates_a_block_from_a_questionnaire() -> None:
     """Two reasons a decision can be unverified, and they need different sentences: one page was
     withheld, the other was read and asks questions."""

@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [175](#175-trims-2-and-3-ship-one-short-quote-a-claim-a-few-words-where-nothing-conditions-a-document--about-a-second-and-a-half) | **Trims 2 and 3 ship, at the owner's choice** — decisions held in every call and nothing refused; the plan says 5–13% less but hidden reasoning did not shrink, so the call is ~150 output tokens and ~1.5s shorter; entry 174's quote-heading claim withdrawn |
 | [174](#174-the-written-plan-measured-live-short-source-ids-refuse-and-mislead-and-the-wording-trims-save-a-sixth) | **The written plan, measured live** — short source ids gave two refused plans and two wrong "no visa" answers for Japan in 48 calls, none in 48 without them, and are declined; the three wording trims take the call from 25.1s to 21.4s and wait on the owner's read |
 | [173](#173-item-19-closes-search-stays-refusing-on-a-miss-is-dropped-and-what-is-left-is-split-into-items-58-and-59) | **Item 19 closes** — ten seconds was never reachable as defined; search stays; refusing on a miss is dropped; the 2026-08-30 search-dependence method and the web-only write-back are kept here; the rest is items 58 and 59 |
 | [172](#172-absence-from-the-authoritys-visa-required-list-states-that-no-visa-is-needed) | **Absence from the authority's visa-required list states no visa is needed** — the owner's rule, bounded in the plan prompt; Singapore `PH/PH` 4 of 4 "no visa" after it, India 2 of 2 still "required" |
@@ -223,6 +224,67 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 175. Trims 2 and 3 ship: one short quote a claim, a few words where nothing conditions a document — about a second and a half
+
+**2026-09-15 · the owner's choice from entry 174; trim 4 is not shipped**
+
+### Decided, by the owner
+
+- **Rule 6a** asks for one verbatim passage of 20 to 150 characters, the shortest that directly
+  supports the claim, where it asked for one or two of up to 300.
+- **Rule 7** asks for a few words of `reason_it_applies` — "Listed for every applicant on this
+  route." — where the source attaches no condition, and still asks for any condition to be explained.
+- **The wording is exactly what entry 174's arm C measured.** A test pins it.
+- **`QuoteChecker` is unchanged.** It still keeps up to two quotes of up to 300 characters, because a
+  longer real quote is still a real one.
+- **Trim 4, word limits on steps, is not shipped.**
+
+### Checked live before committing
+
+The pair had never run on its own — arm C also carried trim 4 — so the shipped prompt ran on the same
+five fixed packets: four calls a corridor and eight for Japan and Singapore, 28 calls, 11:19–11:21
+UTC, $1.02.
+- **Nothing refused**, and every quote offered was kept.
+- **The decisions held.** Japan `IN/GB` stayed open 8 of 8 on MOFA's exemption list, Singapore `PH/PH`
+  was "no visa" 8 of 8, and Canada and Germany were "visa required" in every call.
+- **The plan says less.** Against arm A, mean of the four visa-required corridors: quotes −89 tokens
+  and `reason_it_applies` −76. The visible plan fell 5–13% by corridor.
+
+### What it saves: about 150 output tokens, about a second and a half
+
+- **Billed output fell less than the visible plan**: Canada +4%, Germany −5%, Japan −12%, the
+  Netherlands −8%, Singapore 0%. That is a mean of about 150 tokens over the four corridors that
+  apply. Hidden reasoning did not shrink with the prose; in that batch it rose by a mean of 78 tokens.
+- **At 11 ms a token that is about 1.5s of a ~25s call**, and about $0.002 a request.
+- **Measured seconds could not show it.** That batch ran 15–25 minutes after arm A and came out −5% to
+  +25%, and 6% sits far inside entry 144's 40% swing.
+- **An interleaved re-run was lost to the network.** Old and shipped prompts alternated on the same
+  packets from 11:23 to 11:27 UTC. 26 of 40 calls failed with `APIConnectionError` in both arms, all
+  before 11:26:00, and every call after it succeeded — an outage, never a 429. On the 14 that
+  answered, output on the four visa-required corridors fell 6%, in line. It was not run a third time,
+  because seconds at this size cannot see 1.5s either way. $0.56.
+- **So entry 174's per-trim figures overstated it.** Its 1.2s and 1.0s were read off the visible plan,
+  and the visible saving was about right. The reasoning tokens are what that reading could not see.
+
+### Entry 174 corrected
+
+**"Quotes get shorter by quoting the heading" is withdrawn.** It rested on two quotes read side by
+side. Counted over every plan, quotes under 40 characters were:
+- 23 of 309 on today's prompt (7%);
+- 4 of 137 with trims 2–4 (3%);
+- 9 of 176 as shipped (5%).
+
+Mean length went from 86 to 81 characters. **What trim 2 does is drop the second quote**: 1.5 a
+requirement became 1.0, and no requirement was left without one.
+
+### Spent
+
+This session's plan calls cost $3.67 (entry 174), then $1.02 and $0.56 here. All are in
+`var/usage/model-calls-2026-09-15.jsonl` between 10:54 and 11:28 UTC; leave that window out of any
+reading of what a web request costs.
 
 ---
 

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-15 — update this line when you touch the handoff |
-| **Tests** | 787 passing, 3 skipped, run 2026-09-15 in a checkout with no corpus built — two skips need one, the third a browser (opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 791: 790 passing and 1 skipped, run 2026-09-15 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -55,7 +55,7 @@ every number here measures whether it *answered*, not whether the answer was *ri
 truth set or a correctness grader without asking.**
 
 **TODO item 19 is closed (entry 173).** What is left of its cost and latency work is item 58, the
-272K-token price threshold is item 59, and the plan call's wait is items 56 and 57. Refusing on a
+272K-token price threshold is item 59, and the plan call's wait is item 57. Refusing on a
 miss is dropped: search stays on every corridor.
 **What the model calls are made of was sized offline on 2026-09-15 (entry 164)**:
 - the plan-writing call runs on every web request and has never been priced;
@@ -131,14 +131,17 @@ over five that resolved, plus about $0.054 of Brave search (entry 159).
 and 29s of writing the plan. The same corridor again took about **24s**, all of it the plan, because
 a plan is never stored (entry 44).
 
-**TODO item 56 was measured live on 2026-09-15 and waits on the owner's read (entry 174).**
-- **Short source ids are declined.** They gave two refused plans and two confident, wrong "no visa
+**TODO item 56 is closed (entries 174 and 175).**
+- **Short source ids were declined.** They gave two refused plans and two confident, wrong "no visa
   required" answers for Japan `IN/GB` in 48 calls, and none in 48 without them.
-- **The three wording trims** take the plan call from 25.1s to 21.4s and change what a traveller
-  reads. Whether any ships is the owner's call, and entry 174 sets each one's cost beside what it
-  loses.
+- **The owner shipped trims 2 and 3**: one quote of at most 150 characters a claim, and a few words
+  of why an unconditional document applies. The plan says 5–13% less, but hidden reasoning did not
+  shrink with it, so the call is about 150 output tokens and about 1.5s shorter — too little for
+  measured seconds to show.
+- **Any change to the plan call's prompt or packet re-runs Japan `IN/GB` and Singapore `PH/PH`**
+  several times first. Rule 8e's bounds live only in the prompt, and a packet change broke them.
 
-**Item 57**, streaming the plan to the screen as it is written, is the UX companion to it.
+**Item 57**, streaming the plan to the screen as it is written, is what is left of that wait.
 
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
 *time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened

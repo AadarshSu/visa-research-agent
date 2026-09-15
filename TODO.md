@@ -280,7 +280,6 @@ one-paragraph defects rather than items.
 | | | |
 | --- | --- | --- |
 | **Now** | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
-|  | 56. Make the written plan shorter | `next` |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
@@ -399,57 +398,6 @@ What was **not** changed is the verdict for a *small* HTML page at that path: it
 empty ruleset and the host is crawled. Closing it would stop crawling hosts crawled today, so it
 needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
 sweep over `authority_domains.yaml`, one GET per host, no model and no search.
-
-### 56. Make the written plan shorter — `next`, **measured live 2026-09-15 (entry 174); the wording trims wait on the owner's read**
-
-**Why it matters.** Writing the plan is the longest single wait in a request and happens on every
-request, because a plan is never stored (entry 44): about **29s of a fresh corridor's ~55s** and
-nearly all of a repeat's ~24s (entry 171). Its time tracks what it writes, about 11 ms a token.
-
-**Where it stands — entry 174, 99 live plan calls on five fixed packets.**
-- **Trim 1, short source ids, is declined.** It was the one trim claimed to change nothing a
-  traveller reads. In 48 calls it gave **two refused plans** and **two wrong "no visa required"
-  answers for Japan `IN/GB`**, status `verified`, read off MOFA's visa-exemption list. The 48 calls on
-  today's ids gave neither.
-- **Trims 2–4 together take the call from 25.1s to 21.4s** (−15%) and its output from 2,314 to 1,947
-  tokens, with nothing refused. Money barely moves, about $0.003 a request. Germany, Japan and the
-  Netherlands save; Canada and Singapore are inside the noise.
-
-**Open — the owner's decision, one trim at a time.** Entry 174 has what each one changes, read side
-by side.
-- **Trim 2 — one quote of at most 150 characters.** It saves most, about 1.2s. It gets there by
-  quoting headings — "Completed Visa Application Form (Sample)" — which support the claim less, and
-  quotes exist for the owner's check (entry 156).
-- **Trim 3 — a few words of "why it applies" where nothing conditions the document.** About 1.0s, and
-  the least lost.
-- **Trim 4 — at most 40 words an action and 15 a timing.** About 0.8s. Japan kept its processing
-  window in one arm and lost it in the other.
-- **Whether any of it is worth doing next to item 57**, which does not shorten the wait but makes it
-  feel much shorter.
-
-**If a trim ships.**
-- **Change the prompt only.** `QuoteChecker`'s bounds stay as they are, since a longer quote than
-  asked for is still a real one.
-- **Re-run Japan `IN/GB` and Singapore `PH/PH` several times each first.** Rule 8e's bounds live only
-  in the prompt; they held 16 of 16 on Japan's exemption list and broke twice under a packet change.
-- **Update the tests** that assert on the prompt's wording (`test_openai_extraction.py`).
-
-**Constraints that do not move.**
-- **Do not lower `openai_reasoning_effort`** to cut the hidden reasoning without an accuracy
-  measurement (CLAUDE.md).
-- **A visa-free plan still lists only the entry duties its sources state**, with no minimum (entries 95
-  and 96).
-- **Every quote is still checked against the retrieved text** (entry 156), and a requirement still needs
-  a designated document source (`validate_absent_checklist`).
-- **Do not rename source ids or field names in what the model reads** without re-measuring as entry
-  174 did. Field names are a fifth to a quarter of a visible plan and look like the next lever; trim 1
-  is what that kind of change did.
-
-**How to measure it again.** Rebuild each packet from a stored corridor and the warm page cache —
-`AutomaticDestinationService.destination_for`, then `LiveSourceFetcher.fetch`, which costs no search
-and no model call. Call the real extractor with a generator that swaps the prompt, so validation and
-`var/usage/` see every call. Compare several calls an arm, on output tokens as well as seconds, and
-tally the visa decision per arm, not only the length.
 
 ## Next up
 
@@ -803,8 +751,7 @@ or Ofself does, and whether a field says which app wrote it and when.
 **Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171), and the
 traveller sees nothing until the whole plan arrives. More than half of a fresh request, and nearly
 all of a repeat, is the model writing the plan. Streaming would not shorten any of that, but text
-could appear seconds after the plan call starts rather than when it ends. **Item 56 shortens the
-wait; this makes it feel shorter, and the two do not compete.**
+could appear seconds after the plan call starts rather than when it ends. **Item 56 took about 1.5s off the plan call (entry 175); this makes the rest feel shorter.**
 
 **What stands in the way — to be designed, not assumed.**
 - **The plan is validated as a whole before anyone sees it:** `VisaPlan`'s validators,
@@ -852,7 +799,7 @@ output for the *whole* request — the `gpt-5.6-terra` model page, read 2026-09-
 
 **Where it stands.** A fresh corridor that resolves costs **$0.251 in model calls**, plus about $0.054 of
 search, and takes about **55s**: ~25s of research and ~29s of writing the plan (entry 171). The plan
-call's wait is items 56 and 57; the 272K price threshold is item 59. The instrumentation is on: every
+call's wait is item 57; the 272K price threshold is item 59. The instrumentation is on: every
 model call goes to `var/usage/model-calls-YYYY-MM-DD.jsonl`, and every stage's seconds to the recall
 log's `phase_seconds`.
 
@@ -1440,6 +1387,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 56. Make the written plan shorter | 09-15 | 174, 175 | **Short source ids were declined**: 2 refused plans and 2 wrong "no visa required" answers for Japan in 48 calls, none in 48 without them. **The owner shipped trims 2 and 3** — one quote of at most 150 characters, and a few words of why an unconditional document applies — and not trim 4. The visible plan fell 5–13% but billed output only about 150 tokens, because hidden reasoning did not shrink with it: about 1.5s of a ~25s call, too little for measured seconds to show. Japan's decision stayed open and Singapore's "no visa" held in every call. Rule 8e's bounds live only in the prompt, so any change to this call re-runs both first |
 | 19. Get a corridor under ten seconds; search may stay | 09-15 | 140–146, 159–173 | **Closed, not reached: ten seconds was set against the research stage alone.** A fresh request measures ~55s end to end, ~29s of it writing a plan that is never stored. Delivered: search pace 19.0s → 2.6s at identical spend; every corridor's seconds and every model call's tokens, cache writes and retries recorded; search kept on every corridor, measured twice; model calls $0.394 → $0.251 a fresh corridor, after finding every call was writing its whole prompt to a cache billed at 1.25×. Refusing on a miss dropped. What is left is items 58 and 59; the plan's wait is 56 and 57 |
 | 51. Make live search ask only for what is specific to this traveller | 09-15 | 159, 160 | **Nothing was built, and both results are measured.** The owner's corpus-first version was tried two ways (entry 159). Searching only after the corpus leaves a role open projects −3% money and +4% seconds, and misses the traveller's own embassy pages. Deciding per query from what the corpus holds loses 5–6 of 8 answering pages. **The purpose query was marked traveller-neutral and is not** (entry 160): it alone returns 28 of the 45 pages it was first to find, and in matched runs dropping it cost Japan `IN/GB` its London-embassy checklist and moved Norway `IN/IN` to an older checklist, the same way in both runs. It would have saved $0.030 a corridor. All three queries stay |
 | 31. The anchor scorer gates 94% of the corpus: measure it, scope a fix, test it | 09-14 | 123, 125–128, 158 | **The 94% held four fixture answers nothing in the pool could replace**, and every rule tried recovered them, so cost and safety chose. Admitting every page whose stored text scores cost +68% input and was mostly chaff; a cap the size of the pool displaced 1,813 pooled pages with no text and five the fixture names. **Shipped: the five best per role on stored text, added, nothing removed** — each recovered answer ranks second for its role, +16% selection input over 53 corpora, and no second scoring pass, because step 3b already scored every candidate and threw the scores away. Czechia's UK checklist filled live; Liechtenstein's pool went 2 → 21 and its challenge still refused |

@@ -40,7 +40,7 @@ or an accuracy metric without asking**; entry 147 is a priority, not that rule b
 - **Settled:** search stays on every corridor (entries 159, 160).
 - **Delivered:** its cost work took a fresh corridor from $0.394 to $0.251 in model calls (entries
   164–171).
-- **What is left:** item 58. The plan call's ~29s wait is items 56 and 57, and the 272K-token price
+- **What is left:** item 58. The plan call's ~29s wait is item 57, and the 272K-token price
   threshold is item 59.
 - **Still on:** the instrumentation — `phase_seconds` and `model_calls` are recorded every run, and every
   model call is appended to `var/usage/`.
@@ -891,7 +891,8 @@ cause, and only running the thing showed it.
 | a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
 | short source ids in the plan packet change nothing a traveller reads | 2 refused plans and 2 wrong "no visa" for Japan in 48 calls; none in 48 on today's ids (entry 174) |
 | rule 8e's bounds are proven, Singapore checked them | Japan's exemption list held 16 of 16 — and a packet change broke it twice (entry 174) |
-| a shorter quote is the same evidence in fewer words | it shortens by quoting the heading, which supports the claim less (entry 174) |
+| trim 2 shortens a quote by quoting the checklist heading | it drops the second quote: under-40-character quotes 7% → 5%, mean 86 → 81 characters (entry 175) |
+| a prompt that shortens the plan's prose shortens its wait as much | visible plan −5–13%, billed output ~150 tokens: hidden reasoning did not shrink with it (entry 175) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
