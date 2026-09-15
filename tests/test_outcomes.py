@@ -42,7 +42,9 @@ class FakeStructuredPlanGenerator:
         self.result = result
         self.calls = 0
 
-    async def generate(self, system_prompt: str, research_packet: str) -> VisaPlanDraft:
+    async def generate(
+        self, system_prompt: str, research_packet: str, *, usage: object = None
+    ) -> VisaPlanDraft:
         self.calls += 1
         return self.result
 

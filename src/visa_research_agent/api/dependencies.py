@@ -12,6 +12,7 @@ from visa_research_agent.research.errors import LLMConfigurationError
 from visa_research_agent.research.fixtures import FixtureSourceFetcher, FixtureVisaPlanExtractor
 from visa_research_agent.research.interfaces import SourceFetcher
 from visa_research_agent.research.live_sources import LiveSourceFetcher
+from visa_research_agent.research.model_usage import FileModelUsageLog
 from visa_research_agent.research.openai_extraction import (
     LangChainStructuredPlanGenerator,
     OpenAIVisaPlanExtractor,
@@ -64,6 +65,7 @@ def build_visa_plan_service(policy: RuntimePolicy) -> VisaPlanService:
     extractor = OpenAIVisaPlanExtractor(
         generator,
         maximum_input_characters=settings.maximum_model_input_characters,
+        usage_log=FileModelUsageLog(settings.model_usage_directory),
     )
     return VisaPlanService(source_fetcher, extractor)
 

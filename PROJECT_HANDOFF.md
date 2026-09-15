@@ -62,6 +62,10 @@ truth set or a correctness grader without asking.**
 
 TODO item 19 carries the order to take it in when the work resumes.
 
+**Its first step is half done (entry 165).** From the web app, the plan call now appends what it
+cost to `var/usage/plan-calls-YYYY-MM-DD.jsonl`, and every model call records its cache writes.
+Neither has been seen on a live response yet.
+
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.
 

@@ -8,6 +8,7 @@ site and then ask the record.
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -20,7 +21,10 @@ from discovery_site import (
     destination,
     handler,
 )
+from langchain_core.messages import AIMessage
+from langchain_core.outputs import ChatGeneration, LLMResult
 
+from visa_research_agent.discovery.adjudication import UsageRecorder
 from visa_research_agent.discovery.crawl import CrawlFetcher
 from visa_research_agent.discovery.models import Corridor
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
@@ -627,6 +631,60 @@ async def test_a_failed_model_call_is_timed_and_kept(tmp_path: Path) -> None:
     assert len(resolver.model_call_timings) == 1
     assert resolver.model_call_timings[0].failed is True
     assert resolver.model_call_timings[0].seconds == 9.0
+
+
+async def test_the_usage_recorder_reads_cache_writes_beside_cache_reads() -> None:
+    """OpenAI bills a cache write at 1.25× on GPT-5.6 and later, and only reads were being kept
+    (entry 164). LangChain reports the Responses API's `cache_write_tokens` as `cache_creation`."""
+
+    recorder = UsageRecorder()
+    message = AIMessage(
+        content="",
+        usage_metadata={
+            "input_tokens": 110_205,
+            "output_tokens": 350,
+            "total_tokens": 110_555,
+            "input_token_details": {"cache_read": 2_029, "cache_creation": 108_000},
+            "output_token_details": {"reasoning": 131},
+        },
+    )
+
+    await recorder.on_llm_end(LLMResult(generations=[[ChatGeneration(message=message)]]))
+
+    assert recorder.input_tokens == 110_205
+    assert recorder.cached_input_tokens == 2_029
+    assert recorder.cache_write_input_tokens == 108_000
+    assert recorder.output_tokens == 350
+    assert recorder.reasoning_output_tokens == 131
+
+
+async def test_a_model_call_keeps_the_cache_writes_its_provider_reported(tmp_path: Path) -> None:
+    resolver = CorridorResolver(
+        StubSearchProvider([]),  # type: ignore[arg-type]
+        CrawlFetcher(host_delay_seconds=0.0),
+        LiveSourceFetcher(
+            FileSourceCache(tmp_path),
+            ttl_hours=24.0,
+            maximum_stale_hours=168.0,
+            timeout_seconds=5.0,
+            concurrency=2,
+            maximum_characters=20_000,
+            minimum_characters=10,
+            user_agent="VisaResearchAgent/test",
+        ),
+        monotonic=lambda: 0.0,
+    )
+    usage = UsageRecorder()
+    usage.input_tokens = 54_667
+    usage.cache_write_input_tokens = 52_000
+    resolver.selector = SimpleNamespace(last_usage=usage)
+
+    async with resolver._timed_model_call("select", "PROMPT", "PACKET"):
+        pass
+
+    [call] = resolver.model_call_timings
+    assert call.input_tokens == 54_667
+    assert call.cache_write_input_tokens == 52_000
 
 
 def test_the_record_keeps_model_calls_and_an_older_log_reads_as_unrecorded(

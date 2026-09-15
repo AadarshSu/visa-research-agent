@@ -135,6 +135,7 @@ class UsageRecorder(AsyncCallbackHandler):
         self.input_tokens: int | None = None
         self.output_tokens: int | None = None
         self.cached_input_tokens: int | None = None
+        self.cache_write_input_tokens: int | None = None
         self.reasoning_output_tokens: int | None = None
 
     async def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
@@ -147,6 +148,10 @@ class UsageRecorder(AsyncCallbackHandler):
                 self.output_tokens = usage.get("output_tokens")
                 details = usage.get("input_token_details") or {}
                 self.cached_input_tokens = details.get("cache_read")
+                # What this call wrote to the provider's prompt cache. OpenAI bills a write at 1.25×
+                # the input rate on GPT-5.6 and later, and reading only `cache_read` left that cost
+                # unrecorded — enough to put selection up to 25% under its real price (entry 164).
+                self.cache_write_input_tokens = details.get("cache_creation")
                 # Recorded to settle whether `output_tokens` already contains it. It does on this
                 # provider, so the two must never be added — see entry 145.
                 produced = usage.get("output_token_details") or {}

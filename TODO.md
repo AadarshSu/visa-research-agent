@@ -460,7 +460,9 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 >   one, so it is a lever for after deployment.
 >
 > **When this resumes, in this order:**
-> 1. Record the plan call, cache writes and selection retries, and check the bill.
+> 1. ~~Record the plan call and cache writes~~ — **done 2026-09-15, entry 165**: the plan call
+>    appends to `var/usage/plan-calls-YYYY-MM-DD.jsonl` and every call records its cache writes.
+>    Still open: selection retries, reading one live response through both, and the bill check.
 > 2. State the notes once and send compact JSON.
 > 3. When building the packet, strip repeated boilerplate and show identical excerpts once — never
 >    in the stored index.

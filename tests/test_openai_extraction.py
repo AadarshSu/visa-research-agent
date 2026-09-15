@@ -1,5 +1,7 @@
 import json
+from datetime import UTC, date, datetime
 from importlib.resources import files
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -8,6 +10,8 @@ from pydantic import ValidationError
 
 from visa_research_agent.config.loader import load_destination_registry
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
+from visa_research_agent.discovery.adjudication import UsageRecorder
+from visa_research_agent.discovery.recall_log import ModelCall
 from visa_research_agent.domain.models import (
     DestinationConfig,
     SupportingQuote,
@@ -19,6 +23,7 @@ from visa_research_agent.research.errors import (
     LLMExtractionError,
 )
 from visa_research_agent.research.fixtures import FixtureSourceFetcher
+from visa_research_agent.research.model_usage import FileModelUsageLog, PlanCallRecord
 from visa_research_agent.research.openai_extraction import (
     OpenAIVisaPlanExtractor,
     load_extraction_prompt,
@@ -46,16 +51,23 @@ def test_model_output_schema_avoids_unsupported_format_keywords() -> None:
 
 
 class FakeStructuredPlanGenerator:
-    def __init__(self, result: VisaPlanDraft) -> None:
+    def __init__(self, result: VisaPlanDraft, *, billed: dict[str, int] | None = None) -> None:
         self.result = result
+        self.billed = billed or {}
         self.calls = 0
         self.system_prompt: str | None = None
         self.research_packet: str | None = None
 
-    async def generate(self, system_prompt: str, research_packet: str) -> VisaPlanDraft:
+    async def generate(
+        self, system_prompt: str, research_packet: str, *, usage: UsageRecorder | None = None
+    ) -> VisaPlanDraft:
         self.calls += 1
         self.system_prompt = system_prompt
         self.research_packet = research_packet
+        # What the LangChain callback would have filled in from the provider's usage report.
+        if usage is not None:
+            for field, value in self.billed.items():
+                setattr(usage, field, value)
         return self.result
 
 
@@ -217,6 +229,152 @@ async def test_openai_extractor_stops_before_call_when_input_is_too_large() -> N
         await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
     assert generator.calls == 0
+
+
+# --- What the plan-writing call cost (DECISIONS entries 164 and 165) ---------------------------
+
+RECORDED_AT = datetime(2026, 9, 15, 23, 59, tzinfo=UTC)
+
+
+class RaisingPlanGenerator:
+    async def generate(
+        self, system_prompt: str, research_packet: str, *, usage: UsageRecorder | None = None
+    ) -> VisaPlanDraft:
+        raise RuntimeError("the provider timed out")
+
+
+class UnwritableUsageLog:
+    def write(self, record: PlanCallRecord) -> None:
+        raise OSError("read-only file system")
+
+
+@pytest.mark.anyio
+async def test_the_plan_call_records_what_the_provider_billed_including_cache_writes(
+    tmp_path: Path,
+) -> None:
+    """The plan call runs on every web request, stored corridors included, and nothing recorded
+    what it cost — and OpenAI bills a cache write at 1.25×, which nothing read either
+    (entry 164)."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft(),
+        billed={
+            "input_tokens": 6_200,
+            "output_tokens": 2_100,
+            "cached_input_tokens": 2_048,
+            "cache_write_input_tokens": 3_900,
+            "reasoning_output_tokens": 700,
+        },
+    )
+    clock = iter([10.0, 16.5])
+    log = FileModelUsageLog(tmp_path)
+    extractor = OpenAIVisaPlanExtractor(
+        generator,
+        maximum_input_characters=80_000,
+        usage_log=log,
+        now=lambda: RECORDED_AT,
+        monotonic=lambda: next(clock),
+    )
+    destination = singapore_config()
+    report = await FixtureSourceFetcher().fetch(destination)
+
+    await extractor.extract(destination, DEFAULT_TRAVELLER_PROFILE, report)
+
+    profile = DEFAULT_TRAVELLER_PROFILE
+    assert generator.research_packet is not None
+    assert log.read(RECORDED_AT.date()) == [
+        PlanCallRecord(
+            corridor_key=(
+                f"{destination.slug}/{profile.passport_nationality}/"
+                f"{profile.country_of_residence}/{profile.travel_purpose}"
+            ),
+            recorded_at=RECORDED_AT,
+            call=ModelCall(
+                call="plan",
+                prompt_characters=len(load_extraction_prompt()),
+                packet_characters=len(generator.research_packet),
+                seconds=6.5,
+                input_tokens=6_200,
+                output_tokens=2_100,
+                cached_input_tokens=2_048,
+                cache_write_input_tokens=3_900,
+                reasoning_output_tokens=700,
+            ),
+        )
+    ]
+
+
+@pytest.mark.anyio
+async def test_a_failed_plan_call_is_recorded_and_the_plan_still_refuses(tmp_path: Path) -> None:
+    """A slow failure is a cost like any other, which is the rule the other two calls follow."""
+
+    log = FileModelUsageLog(tmp_path)
+    extractor = OpenAIVisaPlanExtractor(
+        RaisingPlanGenerator(),
+        maximum_input_characters=80_000,
+        usage_log=log,
+        now=lambda: RECORDED_AT,
+    )
+    report = await FixtureSourceFetcher().fetch(singapore_config())
+
+    with pytest.raises(LLMExtractionError, match="generator failed"):
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, report)
+
+    [record] = log.read(RECORDED_AT.date())
+    assert record.call.failed is True
+    assert record.call.input_tokens is None, "a provider that said nothing is not a free call"
+
+
+@pytest.mark.anyio
+async def test_a_plan_refused_before_the_call_records_no_call(tmp_path: Path) -> None:
+    log = FileModelUsageLog(tmp_path)
+    extractor = OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(load_golden_draft()),
+        maximum_input_characters=10,
+        usage_log=log,
+        now=lambda: RECORDED_AT,
+    )
+    report = await FixtureSourceFetcher().fetch(singapore_config())
+
+    with pytest.raises(LLMExtractionError, match="input exceeds"):
+        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, report)
+
+    assert log.read(RECORDED_AT.date()) == []
+
+
+@pytest.mark.anyio
+async def test_an_unwritable_usage_log_never_costs_the_traveller_their_plan() -> None:
+    extractor = OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(load_golden_draft()),
+        maximum_input_characters=80_000,
+        usage_log=UnwritableUsageLog(),
+    )
+    report = await FixtureSourceFetcher().fetch(singapore_config())
+
+    plan = await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, report)
+
+    assert plan.destination == singapore_config().display_name
+
+
+def test_the_usage_log_appends_a_line_per_call_and_starts_a_file_per_day(tmp_path: Path) -> None:
+    """Appended, where the recall log overwrites: a day's spend is a sum, not the latest run."""
+
+    log = FileModelUsageLog(tmp_path)
+    first = PlanCallRecord(
+        corridor_key="japan/IN/GB/tourism",
+        recorded_at=datetime(2026, 9, 15, 9, 0, tzinfo=UTC),
+        call=ModelCall(call="plan", prompt_characters=1, packet_characters=2, seconds=0.5),
+    )
+    same_corridor_again = first.model_copy(
+        update={"recorded_at": datetime(2026, 9, 15, 9, 5, tzinfo=UTC)}
+    )
+    next_day = first.model_copy(update={"recorded_at": datetime(2026, 9, 16, 0, 1, tzinfo=UTC)})
+
+    for record in (first, same_corridor_again, next_day):
+        log.write(record)
+
+    assert log.read(date(2026, 9, 15)) == [first, same_corridor_again]
+    assert log.read(date(2026, 9, 16)) == [next_day]
 
 
 def checklist_less(destination: DestinationConfig) -> DestinationConfig:

@@ -1723,6 +1723,7 @@ class CorridorResolver:
                     input_tokens=getattr(usage, "input_tokens", None),
                     output_tokens=getattr(usage, "output_tokens", None),
                     cached_input_tokens=getattr(usage, "cached_input_tokens", None),
+                    cache_write_input_tokens=getattr(usage, "cache_write_input_tokens", None),
                     reasoning_output_tokens=getattr(usage, "reasoning_output_tokens", None),
                 )
             )

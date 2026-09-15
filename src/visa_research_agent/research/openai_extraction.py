@@ -1,6 +1,10 @@
 """One-call LangChain extraction over bounded, locally loaded source evidence."""
 
 import json
+import time
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager, suppress
+from datetime import UTC, datetime
 from importlib.resources import files
 from typing import Any
 
@@ -8,7 +12,9 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr, ValidationError
 
+from visa_research_agent.discovery.adjudication import UsageRecorder
 from visa_research_agent.discovery.lexicon import get_country_registry
+from visa_research_agent.discovery.recall_log import ModelCall
 from visa_research_agent.domain.models import (
     ApplicationLocation,
     DestinationConfig,
@@ -22,6 +28,7 @@ from visa_research_agent.domain.models import (
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LLMExtractionError, VisaResearchError
 from visa_research_agent.research.interfaces import StructuredPlanGenerator
+from visa_research_agent.research.model_usage import ModelUsageLog, PlanCallRecord
 from visa_research_agent.research.outcomes import (
     plan_references,
     require_load_bearing_sources,
@@ -152,7 +159,9 @@ class LangChainStructuredPlanGenerator:
             strict=True,
         )
 
-    async def generate(self, system_prompt: str, research_packet: str) -> VisaPlanDraft:
+    async def generate(
+        self, system_prompt: str, research_packet: str, *, usage: UsageRecorder | None = None
+    ) -> VisaPlanDraft:
         try:
             result: Any = await self._structured_model.ainvoke(
                 [
@@ -164,7 +173,10 @@ class LangChainStructuredPlanGenerator:
                             f"{research_packet}"
                         )
                     ),
-                ]
+                ],
+                # The recorder the other two calls use (entry 145), handed in per call rather than
+                # kept on this object — see `StructuredPlanGenerator.generate`.
+                config={"callbacks": [usage] if usage is not None else []},
             )
             return VisaPlanDraft.model_validate(result)
         except (ValidationError, ValueError, TypeError) as exc:
@@ -181,9 +193,66 @@ class OpenAIVisaPlanExtractor:
         generator: StructuredPlanGenerator,
         *,
         maximum_input_characters: int,
+        usage_log: ModelUsageLog | None = None,
+        now: Callable[[], datetime] = lambda: datetime.now(UTC),
+        monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
         self.generator = generator
         self.maximum_input_characters = maximum_input_characters
+        self.usage_log = usage_log
+        self.now = now
+        self.monotonic = monotonic
+
+    @asynccontextmanager
+    async def _recorded_call(
+        self,
+        destination: DestinationConfig,
+        traveller_profile: TravellerProfile,
+        prompt: str,
+        packet: str,
+    ) -> AsyncIterator[UsageRecorder]:
+        """Time the plan call and write down what it cost, whether or not it succeeds.
+
+        The resolver's `_timed_model_call` does this for selection and role adjudication; the plan
+        call went unrecorded because it is not part of a resolution (entry 164). Only the call
+        itself is inside, so a plan refused before it — no load-bearing source, an oversized
+        packet — spent nothing and records nothing.
+        """
+
+        usage = UsageRecorder()
+        started = self.monotonic()
+        failed = False
+        try:
+            yield usage
+        except BaseException:
+            failed = True
+            raise
+        finally:
+            if self.usage_log is not None:
+                record = PlanCallRecord(
+                    corridor_key=(
+                        f"{destination.slug}/{traveller_profile.passport_nationality}/"
+                        f"{traveller_profile.country_of_residence}/"
+                        f"{traveller_profile.travel_purpose}"
+                    ),
+                    recorded_at=self.now(),
+                    call=ModelCall(
+                        call="plan",
+                        prompt_characters=len(prompt),
+                        packet_characters=len(packet),
+                        seconds=round(self.monotonic() - started, 3),
+                        failed=failed,
+                        input_tokens=usage.input_tokens,
+                        output_tokens=usage.output_tokens,
+                        cached_input_tokens=usage.cached_input_tokens,
+                        cache_write_input_tokens=usage.cache_write_input_tokens,
+                        reasoning_output_tokens=usage.reasoning_output_tokens,
+                    ),
+                )
+                # A diagnostic nothing reads back, so a failed write is dropped rather than allowed
+                # to cost the traveller the plan it describes.
+                with suppress(OSError):
+                    self.usage_log.write(record)
 
     async def extract(
         self,
@@ -214,8 +283,12 @@ class OpenAIVisaPlanExtractor:
         if len(research_packet) > self.maximum_input_characters:
             raise LLMExtractionError("The bounded model input exceeds the configured size limit")
 
+        prompt = load_extraction_prompt()
         try:
-            draft = await self.generator.generate(load_extraction_prompt(), research_packet)
+            async with self._recorded_call(
+                destination, traveller_profile, prompt, research_packet
+            ) as usage:
+                draft = await self.generator.generate(prompt, research_packet, usage=usage)
         except VisaResearchError:
             raise
         except Exception as exc:

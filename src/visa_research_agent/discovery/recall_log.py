@@ -72,10 +72,18 @@ class ModelCall(StrictModel):
     measured behind a constant.
     """
 
-    call: Literal["select", "roles", "blocked"]
+    call: Literal["select", "roles", "blocked", "plan"]
+    """`plan` never appears in a `RecallRecord`. The plan is written on every web request — after a
+    resolution, or with none because the corridor came from the store — so it is not part of any
+    run this record describes, and is kept in `research/model_usage.py`'s log instead
+    (entry 165)."""
     input_tokens: int | None = None
     output_tokens: int | None = None
     cached_input_tokens: int | None = None
+    cache_write_input_tokens: int | None = None
+    """What the call wrote to the provider's prompt cache, which OpenAI bills at 1.25× the input
+    rate on GPT-5.6 and later (entry 164). Reported beside `input_tokens`; whether it is counted
+    inside that figure, as `cached_input_tokens` is, has not been checked on a live response."""
     reasoning_output_tokens: int | None = None
     """What the provider said it billed, or `None` where it did not say.
 

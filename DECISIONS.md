@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [165](#165-the-plan-writing-call-records-what-it-cost-and-every-call-records-its-cache-writes) | **The plan call records what it cost, and every call its cache writes** — appended per day to `var/usage/`, with a recorder handed in per call; the shared roles adjudicator can still mix up usage between concurrent requests |
 | [164](#164-what-a-model-call-is-made-of-three-costs-nobody-records-and-much-of-a-selection-packet-says-nothing-about-a-candidate) | **What a model call is made of** — the plan call runs on every request and was never priced, cache writes may bill 1.25×, 13–40% of a selection packet is notes and layout, and entry 146's overlap is 79–80% in three countries |
 | [163](#163-a-www-spelling-and-its-bare-host-are-one-site-for-a-crawls-page-budget) | **A `www.` spelling and its bare host are one site for the crawl budget** — 44 of 53 corpora held a split site taking two shares; trust, politeness and reporting keep the exact host |
 | [162](#162-a-corpus-build-goes-on-without-a-failed-search-query-and-names-it) | **A corpus build goes on without a failed search query, and names it** — one failed query of 70 used to discard the build; an exhausted account or every query failing still stops it |
@@ -213,6 +214,73 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 165. The plan-writing call records what it cost, and every call records its cache writes
+
+**2026-09-15 · the first step entry 164 set for item 19 — built and tested offline; not yet seen on a live response**
+
+Entry 164 found two costs no run recorded: the call that writes the plan, which runs on every web
+request, and cache writes, which OpenAI bills at 1.25× on GPT-5.6 and later. **This is recording
+only.** Nothing any model is shown has changed, so it is not a recall change and needed no grading.
+Item 19 stays paused (entry 147); this is the kind of instrumentation entry 147 kept switched on.
+
+### Cache writes, on every call
+
+`UsageRecorder` now reads `input_token_details["cache_creation"]` beside `cache_read`. That is
+`langchain-openai` 1.5.0's name for the Responses API's `cache_write_tokens`, read from its source.
+`ModelCall.cache_write_input_tokens` carries it for selection, roles and the blocked-page call, and
+`None` still means the provider said nothing. **Whether a write is counted inside `input_tokens`**,
+as a cached read is, stays unchecked until a live response is read.
+
+### The plan call, in its own log
+
+- **Not a recall log.** A recall log belongs to a resolution, and a request served from the corridor
+  store has none — exactly the case where this call is the whole bill. `research/model_usage.py`
+  appends one `PlanCallRecord` per call — corridor key, time, and a `ModelCall` with `call: "plan"` —
+  to `var/usage/plan-calls-YYYY-MM-DD.jsonl`, one file per UTC day.
+- **Appended, where the recall log overwrites.** The recall log answers what a corridor's last run
+  did. This answers what the plan calls cost, which is a sum, checked against a bill kept per day.
+- **A recorder is handed in per call, never read off the generator.** The selector and adjudicator
+  keep usage on a field, `last_usage`. The plan generator is one object serving every concurrent web
+  request, so such a field could be overwritten by another call before this one read it.
+  `StructuredPlanGenerator.generate` takes an optional `usage` recorder instead, which the extractor
+  creates for each call.
+- **Only the call is inside.** A plan refused before it — no load-bearing source, a packet over
+  80,000 characters — spent nothing and writes nothing. A call that raised is written with
+  `failed: true`. A write that fails is dropped, because a diagnostic may never cost a traveller
+  their plan.
+- **Web app only.** `visa-discover corridor` still makes no plan call, so it still prices a corridor
+  without one.
+
+### Found while building it, and not fixed
+
+**The role adjudicator has the problem the plan call was built to avoid.** The web app builds one
+adjudicator for every request (`build_automatic_destinations`), while each resolver builds its own
+selector. So two concurrent web requests can record each other's roles-call usage. Nothing decides
+anything from it, but it would mix up costs once they are read from web traffic.
+
+### What is left of entry 164's first step
+
+- **Selection retries** are still out of sight: the selector alone keeps the OpenAI client's two
+  retries.
+- **The bill check.** A day's `plan-calls` lines cover the plan call. Selection and roles still live
+  only in recall logs, which overwrite per corridor, so a day with repeat runs cannot be summed from
+  them.
+- **A live response.** None has been recorded through either path. The tests use a constructed usage
+  report.
+
+### Tests
+
+Seven, all offline:
+- the recorder reads `cache_creation` from a usage report;
+- a resolver call keeps the cache writes its provider reported;
+- a plan call writes one line with every billed figure and its timing;
+- a failed call is written, and the plan still refuses;
+- a plan refused before the call writes nothing;
+- an unwritable log still returns the plan;
+- the log appends a line per call and starts a file per day.
 
 ---
 
