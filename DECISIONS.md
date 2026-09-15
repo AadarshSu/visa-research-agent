@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [174](#174-the-written-plan-measured-live-short-source-ids-refuse-and-mislead-and-the-wording-trims-save-a-sixth) | **The written plan, measured live** — short source ids gave two refused plans and two wrong "no visa" answers for Japan in 48 calls, none in 48 without them, and are declined; the three wording trims take the call from 25.1s to 21.4s and wait on the owner's read |
 | [173](#173-item-19-closes-search-stays-refusing-on-a-miss-is-dropped-and-what-is-left-is-split-into-items-58-and-59) | **Item 19 closes** — ten seconds was never reachable as defined; search stays; refusing on a miss is dropped; the 2026-08-30 search-dependence method and the web-only write-back are kept here; the rest is items 58 and 59 |
 | [172](#172-absence-from-the-authoritys-visa-required-list-states-that-no-visa-is-needed) | **Absence from the authority's visa-required list states no visa is needed** — the owner's rule, bounded in the plan prompt; Singapore `PH/PH` 4 of 4 "no visa" after it, India 2 of 2 still "required" |
 | [171](#171-measured-live-the-two-changes-take-a-fresh-corridor-from-0394-to-0251--and-singapores-decision-is-borderline-either-way) | **Measured live: a fresh corridor $0.394 → $0.251** — entries 169 and 170 through the web app; Singapore `PH/PH`'s plan left its decision open in both message shapes, 13 calls too few to say more |
@@ -222,6 +223,106 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 174. The written plan, measured live: short source ids refuse and mislead, and the wording trims save a sixth
+
+**2026-09-15 · TODO item 56, measured before anything was decided**
+
+### Method
+
+- **Five fixed research packets.** Japan, Germany, Canada and the Netherlands `IN/GB`, and Singapore
+  `PH/PH`, were rebuilt from the corridors stored that morning and the warm page cache — no search,
+  no model call — and each packet was kept fixed for every call.
+- **The real extractor.** Every call went through `OpenAIVisaPlanExtractor`, so each draft met the
+  validation, `QuoteChecker` and usage log a web request meets.
+- **Four arms**, four calls each a corridor with the order rotated, and eight more Japan calls in A
+  and B:
+  - **A** — today's prompt and packet;
+  - **B** — trim 1: sources renamed `s1`, `s2`… in the packet and mapped back before validation;
+  - **C** — trims 2–4 on today's ids: one verbatim quote of 20–150 characters; a few words of
+    `reason_it_applies` where the source attaches no condition; at most 40 words an action and 15 a
+    timing;
+  - **D** — all four.
+- **Spent:** 99 plan calls from 10:54 to 11:05 UTC, **$3.67** at entry 167's list prices. They are in
+  `var/usage/model-calls-2026-09-15.jsonl`; leave that window out of any later reading of what a web
+  request costs.
+
+### Trim 1 is not neutral, and is declined
+
+Item 56 called it the one trim that changes nothing a traveller reads. Measured:
+
+| | calls | refused: invalid structured output | Japan `IN/GB` answered "no visa required" |
+| --- | --- | --- | --- |
+| today's ids (A, C) | 48 | 0 | 0 of 16 |
+| short ids (B, D) | 48 | **2** | **2 of 16** |
+
+- **Both refusals** were a step whose `link_source_id` disagreed with its `link_target` or its
+  `source_ids`, which `ApplicationStep.validate_link_target` rejects. The traveller gets a 503. They
+  are the only failed plan calls in the day's log.
+- **Both wrong answers read MOFA's visa-*exemption* list**, found India absent, and returned
+  `visa_required: false`, no steps and status `verified`. Rule 8e's third bound says in terms that a
+  list of who does not need a visa says nothing about a country it leaves out.
+- **The saving is small anyway.** Pooled output fell 11% (2,314 → 2,048 tokens) and seconds 7%, inside
+  the run-to-run swing. Source ids are 12–17% of a visible plan, but reasoning and prose varied by more.
+
+Four bad outcomes against none is not proof — one-sided p ≈ 0.06 — and why short ids do this is not
+established. But the wrong answer is entry 6's class, the one a traveller has nothing left to notice,
+and a few percent does not buy that risk. **Declined.**
+
+### Trims 2–4 take about a sixth off the call
+
+| arm | output tokens | seconds | cost a call |
+| --- | --- | --- | --- |
+| A — today | 2,314 | 25.1 | $0.0413 |
+| **C — trims 2–4** | **1,947 (−16%)** | **21.4 (−15%)** | $0.0385 (−7%) |
+| D — all four | 1,687 (−27%) | 18.8 (−25%) | $0.0347 (−16%) |
+
+- **By corridor, arm C:** Germany −15% output and −13% seconds, Japan −13% and −14%, the Netherlands
+  −15% and −15%. Canada (−3%, +3%) and Singapore (−5%, −2%) are inside the noise.
+- **Nothing refused**, in 20 calls, and 147 of 150 quotes offered were kept, against 309 of 312 in A.
+- **Where the visible tokens went,** A → C, mean of the four visa-required corridors, counted with
+  `o200k_base` on the compact draft: quotes −110, `reason_it_applies` −88, step action and timing −76.
+  At entry 171's 11 ms a token that is about 1.2s, 1.0s and 0.8s.
+- **Money barely moves:** about $0.003 a request, because the input is unchanged.
+- **The offline estimate for all four was about right** — Japan −25% estimated, −30% of the visible
+  plan measured. What cutting text could not show was trim 1's behaviour.
+
+### What each trim changes, read side by side
+
+- **Quotes (trim 2) get shorter by quoting the heading.** Japan's application form is backed by
+  "Completed Visa Application Form (Sample)". Germany's passport requirement — issued within ten years,
+  valid three months after the trip, two blank pages — is backed by "One photocopy of the passport's
+  bio data page." Entry 156 warned that a quote can be on the page and not support its claim; this
+  makes that likelier. It is the largest saving and the likeliest to cost the owner's check.
+- **"Why it applies" (trim 3) loses least.** It becomes "Listed for every applicant on the tourism
+  checklist" where nothing conditions a document, and conditional ones stay specific: "Required only
+  if flights have been booked".
+- **Steps (trim 4) are mixed.** In arm C, Japan kept its two-to-three-week processing window; in arm D
+  it lost that and its three-month submission window. Canada's arm C plan dropped its processing-time
+  step and kept the checker as an unresolved question.
+- **The visa-free plan held.** Singapore listed 4–6 entry duties in every arm, and no arm dropped the
+  arrival card.
+
+### Not decided
+
+**Whether trims 2, 3 or 4 ship is the owner's judgement** (entry 68, and item 56's own constraint).
+Nothing shipped.
+
+### Found on the way
+
+- **Rule 8e held on a second country, and broke under a packet change.** Entry 172 checked Singapore
+  only. On Japan's exemption list, today's prompt and ids left the decision open in 16 of 16 calls;
+  short ids broke the bound twice. The bounds live only in the prompt, so **any change to the plan
+  call's prompt or packet re-runs Japan `IN/GB` and Singapore `PH/PH` several times each before it
+  ships.**
+- **Field names and JSON punctuation are a fifth to a quarter of a visible plan** — Japan 512 of 1,917
+  tokens, Germany 555 of 2,509 — more than the source ids. Not proposed: renaming what the model reads
+  is the same kind of change trim 1 was.
+- **A plan call that returns invalid structured output logs no tokens.** Both refusals recorded
+  `input_tokens` and `output_tokens` as null although the provider answered, so a day's plan cost read
+  from `var/usage/` is slightly low whenever one fails.
 
 ---
 

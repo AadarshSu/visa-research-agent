@@ -400,82 +400,56 @@ empty ruleset and the host is crawled. Closing it would stop crawling hosts craw
 needs its own count first — how many authority hosts serve markup at `/robots.txt` at all. That is a
 sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 
-### 56. Make the written plan shorter — `next`, **added 2026-09-15 for a fresh session to judge**
+### 56. Make the written plan shorter — `next`, **measured live 2026-09-15 (entry 174); the wording trims wait on the owner's read**
 
-**Why it matters.**
-- **Writing the plan is the longest single wait in a request, and it happens on every request**,
-  because a plan is never stored (entry 44). Entry 171 measured it live: about **29s of a fresh
-  corridor's ~55s**, and nearly all of a repeat's ~24s.
-- **The call's time tracks what it writes**, at about 11 ms a token. Germany's 3,526 output tokens
-  took 38.7s.
-- **Money is the smaller reason.** The plan call is about 18% of a fresh corridor's $0.251 of model
-  calls, and about 69% of its own cost is output. A quarter shorter would take a fresh request to
-  about $0.244 and a repeat from about $0.035 to about $0.028.
+**Why it matters.** Writing the plan is the longest single wait in a request and happens on every
+request, because a plan is never stored (entry 44): about **29s of a fresh corridor's ~55s** and
+nearly all of a repeat's ~24s (entry 171). Its time tracks what it writes, about 11 ms a token.
 
-**What a plan is made of.** Japan `IN/GB` is a typical visa-required plan: 2,579 output tokens in
-29s. About 516 of those are hidden reasoning, and about 2,271 are the plan itself:
+**Where it stands — entry 174, 99 live plan calls on five fixed packets.**
+- **Trim 1, short source ids, is declined.** It was the one trim claimed to change nothing a
+  traveller reads. In 48 calls it gave **two refused plans** and **two wrong "no visa required"
+  answers for Japan `IN/GB`**, status `verified`, read off MOFA's visa-exemption list. The 48 calls on
+  today's ids gave neither.
+- **Trims 2–4 together take the call from 25.1s to 21.4s** (−15%) and its output from 2,314 to 1,947
+  tokens, with nothing refused. Money barely moves, about $0.003 a request. Germany, Japan and the
+  Netherlands save; Canada and Singapore are inside the noise.
 
-| part | share of the visible plan |
-| --- | --- |
-| document requirements, nine | **55%** — the verbatim quotes alone are 22%, descriptions 10%, "why it applies" 8% |
-| steps, six | 26% — actions 215 tokens, timings 84 |
-| open questions, explanation, where to apply, visa type | the rest |
+**Open — the owner's decision, one trim at a time.** Entry 174 has what each one changes, read side
+by side.
+- **Trim 2 — one quote of at most 150 characters.** It saves most, about 1.2s. It gets there by
+  quoting headings — "Completed Visa Application Form (Sample)" — which support the claim less, and
+  quotes exist for the owner's check (entry 156).
+- **Trim 3 — a few words of "why it applies" where nothing conditions the document.** About 1.0s, and
+  the least lost.
+- **Trim 4 — at most 40 words an action and 15 a timing.** About 0.8s. Japan kept its processing
+  window in one arm and lost it in the other.
+- **Whether any of it is worth doing next to item 57**, which does not shorten the wait but makes it
+  feel much shorter.
 
-- **Source ids repeat through every field.** Labels such as `japan_www_sightseeing` come to about 200
-  tokens in all.
-- **A visa-free plan is different.** Singapore `PH/PH` is 1,271 output tokens, over half of them
-  hidden reasoning.
-- **Existing limits:** `ApplicationStep` caps a plan at eight steps, and a step's title, action and
-  timing at 70, 320 and 160 characters. Nothing caps a requirement.
-
-**Candidate trims, estimated offline on those two plans only.** They are cumulative, made by cutting
-text out of the saved plans and counting tokens. **They are estimates, not measurements**: cutting
-text stands in for an instruction the model may not follow exactly.
-
-| # | trim | changes what the traveller reads? | Japan | Singapore |
-| --- | --- | --- | --- | --- |
-| 1 | short source ids in the plan packet (`s1`, `s2`), mapped back by code before validation | no | −8% | −8% |
-| 2 | one quote per claim, at most ~150 characters, instead of up to two | a little | −17% | −9% |
-| 3 | a brief "why it applies" where a document carries no condition — 8 of Japan's 9 | a little | −22% | — |
-| 4 | tighter step wording, through word limits in the prompt | a little | −25% | −13% |
-
-At 11 ms a token that is about 6 seconds off Japan's plan, and under a second off Singapore's.
-
-**Open for the session that picks this up — none of it is decided.**
-- **Whether any trim is worth what it changes.** The only claim made here is that trim 1 changes
-  nothing a traveller or the owner reads. Trims 2–4 are judgement calls.
-- **Quotes exist so the owner can check a plan quickly** (entry 156). Whether one short quote per
-  claim still serves that is the owner's judgement. A shorter quote is, if anything, likelier to
-  survive `QuoteChecker`'s exact match.
-- **Whether "why it applies" earns its full length** where it only restates that a document is on the
-  checklist, or whether travellers read it in a way that matters.
-- **Whether tighter steps lose detail travellers need.** It was the smallest saving and the likeliest
-  to cost something.
-- **Whether there are better levers than these four** — fields the application could fill itself
-  rather than asking the model to write them, for instance. Measure before proposing, as the table
-  was built.
-- **Whether shortening is worth doing at all next to item 57**, which does not shorten the wait but
-  makes it feel much shorter.
+**If a trim ships.**
+- **Change the prompt only.** `QuoteChecker`'s bounds stay as they are, since a longer quote than
+  asked for is still a real one.
+- **Re-run Japan `IN/GB` and Singapore `PH/PH` several times each first.** Rule 8e's bounds live only
+  in the prompt; they held 16 of 16 on Japan's exemption list and broke twice under a packet change.
+- **Update the tests** that assert on the prompt's wording (`test_openai_extraction.py`).
 
 **Constraints that do not move.**
 - **Do not lower `openai_reasoning_effort`** to cut the hidden reasoning without an accuracy
   measurement (CLAUDE.md).
-- **A visa-free plan still lists only the entry duties its sources state**, with no minimum, and must
-  not gain one (entries 95 and 96).
+- **A visa-free plan still lists only the entry duties its sources state**, with no minimum (entries 95
+  and 96).
 - **Every quote is still checked against the retrieved text** (entry 156), and a requirement still needs
   a designated document source (`validate_absent_checklist`).
-- **Correctness is the owner's to verify** (entry 68). Read shortened plans side by side with today's
-  before shipping anything that changes wording.
+- **Do not rename source ids or field names in what the model reads** without re-measuring as entry
+  174 did. Field names are a fifth to a quarter of a visible plan and look like the next lever; trim 1
+  is what that kind of change did.
 
-**How to measure it.**
-- **Offline.** The two plans behind the estimates were saved outside the repository and are gone. To
-  reproduce, ask the web app for a stored corridor, keep the JSON it returns, and count the fields
-  `VisaPlanDraft` names with tiktoken's `o200k_base`.
-- **Live.** Make plan calls on one fixed research packet, alternating the old and new prompt, as entry
-  171's Singapore A/B did. Every call lands in `var/usage/model-calls-YYYY-MM-DD.jsonl` with its
-  output tokens and seconds, and costs about $0.02–0.05.
-- **One run is noise** (entries 81 and 144). Compare several calls per arm, on output tokens as well as
-  seconds.
+**How to measure it again.** Rebuild each packet from a stored corridor and the warm page cache —
+`AutomaticDestinationService.destination_for`, then `LiveSourceFetcher.fetch`, which costs no search
+and no model call. Call the real extractor with a generator that swaps the prompt, so validation and
+`var/usage/` see every call. Compare several calls an arm, on output tokens as well as seconds, and
+tally the visa decision per arm, not only the length.
 
 ## Next up
 

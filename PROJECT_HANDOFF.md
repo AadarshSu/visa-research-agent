@@ -131,9 +131,14 @@ over five that resolved, plus about $0.054 of Brave search (entry 159).
 and 29s of writing the plan. The same corridor again took about **24s**, all of it the plan, because
 a plan is never stored (entry 44).
 
-**Next, in the owner's new session: TODO item 56**, making the written plan shorter — trims
-estimated, nothing decided. **Item 57**, streaming the plan to the screen as it is written, is the
-UX companion to it.
+**TODO item 56 was measured live on 2026-09-15 and waits on the owner's read (entry 174).**
+- **Short source ids are declined.** They gave two refused plans and two confident, wrong "no visa
+  required" answers for Japan `IN/GB` in 48 calls, and none in 48 without them.
+- **The three wording trims** take the plan call from 25.1s to 21.4s and change what a traveller
+  reads. Whether any ships is the owner's call, and entry 174 sets each one's cost beside what it
+  loses.
+
+**Item 57**, streaming the plan to the screen as it is written, is the UX companion to it.
 
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
 *time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened

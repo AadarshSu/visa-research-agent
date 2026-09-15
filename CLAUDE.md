@@ -889,6 +889,9 @@ cause, and only running the thing showed it.
 | a plan that turns `partial` after a selection change was caused by selection | Singapore's pages were identical; its plan call leaves the decision open in both message shapes (entry 171) |
 | time windows alone attribute a sweep's calls to its requests | a request's last call lands in the second the next starts — match on corridor too (entry 171) |
 | a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
+| short source ids in the plan packet change nothing a traveller reads | 2 refused plans and 2 wrong "no visa" for Japan in 48 calls; none in 48 on today's ids (entry 174) |
+| rule 8e's bounds are proven, Singapore checked them | Japan's exemption list held 16 of 16 — and a packet change broke it twice (entry 174) |
+| a shorter quote is the same evidence in fewer words | it shortens by quoting the heading, which supports the claim less (entry 174) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
