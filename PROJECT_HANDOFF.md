@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-15 — update this line when you touch the handoff |
-| **Tests** | 749 passing, 1 skipped (needs a browser, opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 772 passing, 3 skipped, run 2026-09-15 in a checkout with no corpus built — two skips need one, the third a browser (opt-in); `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -180,7 +180,11 @@ outcome (entries 59 and 60) appearing as a corpus gap, and the honest response i
 **Discovery runs in the request path** for a destination nobody configured: the country's own
 government domains are read from committed data, the corridor resolved, the plan built from what was
 found. No human approves anything per request. Seven destinations are also hand-configured in
-`destinations.yaml`; everything else uses the automatic path.
+`destinations.yaml`; everything else uses the automatic path. **The corridor is keyed on the slug of
+the country the request names** — `"United States"`, `"USA"` and `"united-states"` are one corridor;
+until 2026-09-15 a name with a space answered `HTTP 500` and a synonym was stored as a corridor of
+its own (entry 168). The interface always sent the slug. `visa-discover corridor` still crashes the
+same way — TODO, Smaller things.
 
 ---
 

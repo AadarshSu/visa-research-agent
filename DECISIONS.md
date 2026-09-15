@@ -209,6 +209,7 @@ not — and stored text ranks, it never speaks).
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
 | [37](#37-a-per-run-allowance-may-not-be-counted-on-an-object-that-outlives-the-run) | A per-run allowance may not live on an object that outlives the run |
+| [168](#168-a-destination-is-keyed-on-the-country-it-names-never-on-how-the-request-wrote-it) | **A destination is keyed on the country it names** — `"United States"` crashed the API with a 500, and `"usa"` was stored as a corridor of its own |
 
 ### Whether this is a product
 | | |
@@ -216,6 +217,49 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 168. A destination is keyed on the country it names, never on how the request wrote it
+
+**2026-09-15 · the `HTTP 500` entry 167's sweep met, fixed**
+
+**The defect.** `POST /visa-plans` for `"United States"` crashed with `HTTP 500` before any search or
+model call. `VisaPlanRequest.normalize_destination` only strips and lowercases, and under
+`destination_mode: automatic` `resolve_destination` built the corridor from that string.
+`"united states"` fails `Corridor.destination_slug`'s pattern `^[a-z][a-z0-9-]*$`, and the pydantic
+`ValidationError` was unhandled. The line above it had already found the country — `country_named`
+matches a name, a synonym or a slug — and its answer was thrown away.
+
+**Only API callers could meet it.** The interface's select sends `destination.slug`, which is
+`Country.slug` under `automatic` and the hand-written slug under `configured`, and the seven
+hand-written slugs are the country slugs of their display names — checked. Under `configured` the
+same request was already a 422, because that registry is looked up by slug.
+
+**A second defect sat behind the same line and never crashed.** A synonym that fits the pattern —
+`"usa"`, `"uae"`, `"uk"` — was researched as the corridor `usa/IN/GB/tourism`, stored under that key
+and given the `DestinationConfig.slug` `usa`: a second stored answer beside the `united-states` one
+the interface asks for, free to disagree with it for three weeks.
+
+**Decided.** The corridor is keyed on `country.slug`, from the lookup the route already made. A
+request naming no country stays the 422 it was. Rejected:
+- **mapping the destination to a slug in the schema** — it changes what the `configured` path looks
+  up and what its refusals quote, for a defect only the `automatic` path has;
+- **catching `ValidationError` and answering 422** — that refuses a country the agent can research
+  purely on how it was spelled, which is what `find_country` exists to prevent.
+
+**Nothing stored moves.** The nine corridors in the local `var/corridors/` all carry canonical slugs,
+and `Country.slug` is what the interface already sends.
+
+**Test.** The reported request reaches the plan service with the corridor `united-states/IN/GB/tourism`;
+`"united states"`, `"USA"`, `"usa"` and `"united-states"` are one corridor; three strings naming no
+country are 422 with discovery never called; and all 198 country slugs construct a `Corridor`, so the
+fix cannot become this 500 for one country. The first two failed on the unfixed code — with the
+`ValidationError` from the log, and with `['usa']` for the synonym.
+
+**Not fixed here.** `visa-discover corridor --destination "united states"` raises the same
+`ValidationError` as a traceback, reproduced offline: `run_corridor` builds its corridor from the
+argument as written. A command-line crash rather than a traveller-facing one — TODO, Smaller things.
 
 ---
 
@@ -243,7 +287,7 @@ own recall logs are kept outside the repository.
 
 A fourth pass-A request, `United States`, crashed with `HTTP 500` before any call: the route builds a
 corridor from the name as written, and `"united states"` fails the slug pattern. The interface sends
-a slug, so it is an API-caller defect, filed separately.
+a slug, so it is an API-caller defect — fixed in entry 168.
 
 ### Every call wrote its whole uncached prompt to the cache
 

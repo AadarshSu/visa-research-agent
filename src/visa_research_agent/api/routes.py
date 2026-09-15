@@ -199,7 +199,8 @@ async def resolve_destination(
         )
 
     name = destination.display_name if destination is not None else requested
-    if automatic.country_named(name) is None:
+    country = automatic.country_named(name)
+    if country is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
@@ -211,8 +212,12 @@ async def resolve_destination(
                 "supported_destinations": [item.slug for item in researchable_destinations()],
             },
         )
+    # Keyed on the country's own slug, never on the request as written. "united states" fails the
+    # corridor's slug pattern, and "usa" fits it but would be stored as a corridor of its own beside
+    # the `united-states` one the interface asks for. DECISIONS entry 168.
+    corridor = corridor_for(country.slug, traveller)
     try:
-        discovered = await automatic.destination_for(name, corridor_for(requested, traveller))
+        discovered = await automatic.destination_for(name, corridor)
     except AutomaticDiscoveryError as exc:
         # A refusal, not a fault. It names what could not be established rather than offering a
         # plan assembled from whatever happened to be readable.

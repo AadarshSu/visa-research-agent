@@ -11,14 +11,16 @@ from visa_research_agent.api.dependencies import (
     get_visa_plan_service,
 )
 from visa_research_agent.api.routes import resolve_destination
-from visa_research_agent.discovery.automatic import AutomaticDestinationService
+from visa_research_agent.discovery.automatic import AutomaticDestinationService, find_country
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import Corridor
 from visa_research_agent.domain.models import (
     DestinationConfig,
     RuntimePolicy,
     TravellerProfile,
+    VisaPlan,
 )
+from visa_research_agent.research.errors import VisaResearchError
 
 OFFLINE_POLICY = RuntimePolicy(
     schema_version=1,
@@ -184,7 +186,8 @@ class RecordingAutomatic:
         self.asked: list[tuple[str, Corridor]] = []
 
     def country_named(self, name: str) -> object:
-        return get_country_registry().by_slug(name.lower())
+        # The real lookup, so a request written as a name or a synonym is found the way it is live.
+        return find_country(name, get_country_registry())
 
     async def destination_for(self, name: str, corridor: Corridor) -> SimpleNamespace:
         self.asked.append((name, corridor))
@@ -359,3 +362,114 @@ async def test_the_same_corridor_for_another_passport_is_still_researched(
     )
 
     assert response.status_code != 422
+
+
+UNITED_STATES = DestinationConfig(
+    slug="united-states",
+    display_name="United States",
+    route_type="national",
+    implementation_status="available",
+    trusted_domains=["example.gov"],
+)
+
+
+class StoppingPlanService:
+    """Stops once a destination is resolved: these tests are about the route, not the plan."""
+
+    async def generate(
+        self, destination: DestinationConfig, traveller: TravellerProfile
+    ) -> VisaPlan:
+        raise VisaResearchError("the route is under test, not the plan")
+
+
+@pytest.fixture
+async def researching(
+    monkeypatch: pytest.MonkeyPatch,
+) -> AsyncIterator[tuple[httpx.AsyncClient, RecordingAutomatic]]:
+    """The app under `destination_mode: automatic`, with discovery and the plan stood in for."""
+
+    policy = OFFLINE_POLICY.model_copy(update={"destination_mode": "automatic"})
+    monkeypatch.setattr("visa_research_agent.api.routes.get_runtime_policy", lambda: policy)
+    automatic = RecordingAutomatic(UNITED_STATES)
+    app = create_app()
+    app.dependency_overrides[get_automatic_destinations] = lambda: automatic
+    app.dependency_overrides[get_visa_plan_service] = StoppingPlanService
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
+        yield test_client, automatic
+
+
+@pytest.mark.anyio
+async def test_a_destination_written_as_a_name_is_researched_not_a_500(
+    researching: tuple[httpx.AsyncClient, RecordingAutomatic],
+) -> None:
+    """Entry 168: `"United States"` reached the corridor as written and crashed the request.
+
+    The schema only lowercases, and `"united states"` fails `Corridor.destination_slug`'s pattern,
+    so the unhandled validation error answered `HTTP 500`. The interface sends the slug and never
+    met it; an API caller writing the country's name did.
+    """
+
+    client, automatic = researching
+
+    response = await client.post(
+        "/visa-plans",
+        json={
+            "destination": "United States",
+            "traveller": {
+                "passport_nationality": "IN",
+                "country_of_residence": "GB",
+                "travel_purpose": "tourism",
+            },
+        },
+    )
+
+    # 503 is the stand-in plan service stopping; what matters is that the route got that far.
+    assert response.status_code == 503
+    assert [corridor.key for _, corridor in automatic.asked] == ["united-states/IN/GB/tourism"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("written", ["united states", "USA", "usa", "united-states"])
+async def test_every_way_of_writing_a_destination_is_one_corridor(written: str) -> None:
+    """A name, a synonym and the slug are one corridor, so one stored answer rather than several.
+
+    `"usa"` fits the slug pattern, so before entry 168 it did not crash — it was researched and
+    stored as a corridor of its own, beside the `united-states` one the interface asks for.
+    """
+
+    automatic = RecordingAutomatic(UNITED_STATES)
+    traveller = TravellerProfile(
+        passport_nationality="IN", passport_type="ordinary", country_of_residence="GB"
+    )
+
+    await resolve_destination(
+        written.strip().lower(), traveller, cast(AutomaticDestinationService, automatic)
+    )
+
+    assert [corridor.destination_slug for _, corridor in automatic.asked] == ["united-states"]
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("written", ["Narnia", "united_states", "United-States-of"])
+async def test_a_destination_that_names_no_country_is_a_422_before_anything_runs(
+    researching: tuple[httpx.AsyncClient, RecordingAutomatic], written: str
+) -> None:
+    client, automatic = researching
+
+    response = await client.post("/visa-plans", json={"destination": written})
+
+    assert response.status_code == 422
+    message = response.json()["detail"]["message"]
+    assert "not a country this agent holds reference data for" in message
+    assert automatic.asked == []
+
+
+def test_every_country_slug_can_key_a_corridor() -> None:
+    """The route keys a corridor on `Country.slug`, so every slug must fit the corridor's pattern.
+
+    One that did not would be entry 168's `HTTP 500` again, for that one country.
+    """
+
+    for country in get_country_registry().countries:
+        Corridor(destination_slug=country.slug, passport_nationality="IN", applying_from="GB")
