@@ -37,11 +37,14 @@ pays:
     to a general ministry page;
   - Norway `IN/IN`'s January 2024 checklist was replaced by an older file.
 
-**Item 48 was worked the same day and is half done (entry 161).** Root seeding was probed and
-rejected: 0 of 9 target pages were reached from their roots. The gap it was chasing turned out to be
-a build discarding its own search seeds — a seed became an entry only if another page linked to it.
-That is fixed, and Norway, Thailand and Japan were rebuilt with it. **Whether it changes a
-traveller's answer is not measured**, so item 48 stays first until it is.
+**Item 48 was worked the same day (entry 161).**
+- **Root seeding was probed and rejected:** 0 of 9 target pages were reached from their roots.
+- **The real gap was a build discarding its own search seeds.** That is fixed, and Norway, Thailand
+  and Japan were rebuilt with it.
+- **A matched test found Thailand `IN/GB` resolving in 4 of 4 runs where it had refused in 4 of 4**,
+  for about 9% more a corridor.
+
+What is left is the owner's decision on rebuilding the other 50 corpora.
 
 **Re-ordered 2026-09-14 by the owner's rule for the hybrid (entry 148).** **The corpus holds what
 every traveller shares; live search fetches what this traveller needs, and stays the minority.** So
@@ -273,7 +276,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 48. A build now keeps its own search seeds; measure what that buys before rebuilding the rest | `next` |
+| **Now** | 48. A build now keeps its own search seeds; decide whether to rebuild the other 50 | `next` |
 |  | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | `next` |
 |  | 19. Get a corridor under ten seconds; search may stay | **paused** |
 | **Next up** | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
@@ -313,7 +316,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 48. A build now keeps its own search seeds; measure what that buys before rebuilding the rest — `next`
+### 48. A build now keeps its own search seeds; decide whether to rebuild the other 50 — `next`
 
 > **Worked 2026-09-15 (entry 161): root seeding rejected, a different discovery defect fixed, and its
 > benefit not yet measured.**
@@ -334,14 +337,18 @@ careful reading and were wrong.
 >
 > **What is left, in order:**
 >
-> 1. **Measure whether it changes an answer, before rebuilding anything else.** `norway/IN/IN`,
->    `thailand/IN/GB` and `japan/IN/GB`, twice each on the old and new corpus with search stubbed out
->    (the case the fix is for), and twice each with search on (regression, and selection input). One
->    cache, about 24 runs, about $6. The old corpora are `var/corpus/pre-seeds-{NO,TH,JP}.json.bak`
->    with matching `var/pagetext/pre-seeds-*.sqlite3.bak` — swap them in for the old arm and back
->    afterwards. Count a corpus-only gain as the fix's only where a depth-0 entry fills the role: the
->    rebuild also crawled differently.
-> 2. **Then the owner decides the other 50 rebuilds**, about 13 hours and $17 of search.
+> 1. **~~Measure whether it changes an answer~~ — done the same day (entry 161).** 24 matched runs
+>    over `norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, old corpus against new, with search
+>    off and on:
+>    - **Thailand went from no decision to resolved in 4 of 4 runs.** The decision came from the Thai
+>      foreign ministry's 2026 visa-exemption summary, a kept seed that live search never returned.
+>    - **Japan filled every role from its London embassy with search off**, where the old corpus
+>      could not.
+>    - **Norway did not change.**
+>
+>    Cost with search on: **about +9% a corridor**, all of it selection input.
+> 2. **Now the owner decides the other 50 rebuilds**: about 13 hours and $17 of search, and the same
+>    ~9% on their corridors.
 > 3. **The two allocation findings below** — fair shares between unequal hosts, and `www.` counted as
 >    its own host — are untouched.
 >

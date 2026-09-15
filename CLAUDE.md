@@ -847,6 +847,8 @@ cause, and only running the thing showed it.
 | a page a build's search returned is a page its corpus holds | a seed was kept only if something linked to it — Norway's rebuild kept 174 of 198 (entry 161) |
 | the corpus lacks what only live search supplies | the build's own search returned Norway's checklist and TDAC's form, and threw them away (entry 161) |
 | a PDF a build's search returns is read in the PDF pass | that pass read only linked PDFs; a PDF seed was never read at all (entry 161) |
+| a kept seed only matters when live search misses a page it usually finds | Thailand's decision PDF comes from a build query corridors never ask — old corpus 0 of 4, new 4 of 4 (entry 161) |
+| a page the corpus holds and pools is a page the model reads | Norway's January 2024 checklist was pooled and passed over for its 2018 sibling (entry 161) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

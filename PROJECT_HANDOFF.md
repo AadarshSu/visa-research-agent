@@ -188,8 +188,17 @@ rejected — none of nine target pages was reached. The gap was a corpus build d
 seeds: a seed became an entry only if another page linked to it, and a PDF seed was never read. That
 is fixed in `corpus_build.py`, and Norway, Thailand and Japan were rebuilt with it — 174, 127 and 156
 seeds kept, and Norway's 2024 checklist, Thailand's arrival card and Japan's London-embassy tourism
-page are now held. **Whether it changes an answer is not measured, and the other 50 corpora are not
-rebuilt.** **Start at item 48's matched test** (about $6). The pre-rebuild corpora are kept as
+page are now held.
+
+**A matched test the same day** compared the old and new corpora for those three countries, with
+search off and on:
+- **Thailand `IN/GB` resolved in 4 of 4 runs where the old corpus refused in 4 of 4**, on a page live
+  search never returns.
+- **Japan gains its London-embassy pages when search misses them.**
+- **Norway does not change.**
+
+It costs about 9% more a corridor. **The other 50 corpora are not rebuilt — that is the owner's
+decision, and item 48 is where it waits.** The pre-rebuild corpora are kept as
 `var/corpus/pre-seeds-{NO,TH,JP}.json.bak` and `var/pagetext/pre-seeds-{NO,TH,JP}.sqlite3.bak`, names
 no reader globs.
 

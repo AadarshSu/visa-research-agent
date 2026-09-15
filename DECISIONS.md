@@ -122,7 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
-| [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 174 of Norway's 198 seeds kept by the fix, 0 of 9 targets reached from roots; whether an answer changes is unmeasured |
+| [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 0 of 9 targets reached from roots; with seeds kept, Thailand `IN/GB` went from no decision to resolved in 4 of 4 runs on a page live search never returns, for ~9% more a corridor |
 | [160](#160-the-purpose-query-stays-it-finds-the-posts-own-checklist-which-neither-the-other-queries-nor-the-corpus-hold) | **The purpose query stays** — it alone returns 28 of 45 pages it found first; without it Japan lost its London-embassy checklist and Norway read an older one, the same way in both runs |
 | [159](#159-search-stays-on-every-corridor-waiting-for-the-corpus-costs-a-second-pass-and-the-corpus-cannot-say-when-search-is-needed) | **Search stays on every corridor** — search-only-when-needed projects −3% money and +4% seconds and misses the traveller's own embassy pages; deciding per query from the corpus loses 5–6 of 8 answering pages |
 | [158](#158-the-selectors-pool-admits-up-to-five-pages-per-role-on-their-stored-text-and-removes-nothing) | **The selector's pool also admits the five best per role on stored text, removing nothing** — all four hidden fixture answers recovered for +16% selection input over 53 corpora; a cap displaced 1,813 unread pages |
@@ -320,6 +320,58 @@ names no reader globs.
 **Not decided: rebuilding the other 50 corpora** (about 13 hours and $17 of search), which waits for
 that measurement. Item 48's two allocation findings — fair shares between unequal hosts, and `www.`
 counted as a separate host — are untouched.
+
+### Measured the same day: one corridor now resolves, one gains its post's pages when search misses them, one does not change
+
+**Method.** `norway/IN/IN`, `thailand/IN/GB` and `japan/IN/GB`, each run twice on the old corpus — the
+`.bak` copies, read through the ordinary stores — and twice on the rebuilt one, with search stubbed
+out and with search on. That is 24 runs, ordered new, old, old, new within each search mode, on one
+cache. The laptop slept through one run: its lid was closed at 03:53 and a browser launch timed out,
+so that run was repeated. Every model call in the 24 completed, and the recall logs were restored
+byte-identical. "Kept seed" below means a depth-0 entry the new corpus holds and the old one did not.
+
+| corridor | old corpus | new corpus |
+| --- | --- | --- |
+| `thailand/IN/GB`, search on | **decision not found, 2 of 2** | **resolved, 2 of 2** |
+| `thailand/IN/GB`, search off | decision not found, 2 of 2 | resolved, 2 of 2 |
+| `japan/IN/GB`, search off | 4 and 6 roles — a checklist questionnaire; Edinburgh consulate pages | 6 and 6 — the London embassy's checklist (kept seed), route, fees and times |
+| `japan/IN/GB`, search on | 5 and 5 | 5 and 6 |
+| `norway/IN/IN`, either mode | 6 and 6 | 6 and 6, the same pages with search on |
+
+**Thailand is the finding.** Its decision now comes from the Thai foreign ministry's
+*"Summary: The revision of Thailand's visa exemption and VoA schemes, 2026"* (an `image.mfa.go.th`
+PDF). In all four runs the adjudicator read it as listing India under Visa on Arrival. The PDF is a
+kept seed from the build query `site:mfa.go.th visa exempt countries`, **and live search never returned
+it**: it was not a candidate in either old-corpus run with search on, because corridor queries do not
+ask that. **So this entry's premise above was too narrow.** It assumed a kept seed is usually a page
+live search supplies anyway, but a build asks different queries from a corridor, and what those
+queries find may exist nowhere else in a run. With the decision stated, no page was judged to be this
+traveller's checklist, where the old corpus had filled that role with the e-visa tourist-visa page.
+That is consistent with a Visa on Arrival answer, and whether it is right is the owner's to judge
+(entry 68).
+
+**Japan's gain is in the case the fix is for, and only partly the seed's.** With search on, both
+corpora read the London embassy's tourism page from search. With search off, the old corpus has none
+of the London pages, and the new one fills every role from them. The checklist is a kept seed; the
+route, fees and times are pages this rebuild's crawl reached.
+
+**Norway does not change.** With search on, both corpora read the January 2024 checklist from search.
+With search off, the new corpus held that PDF and pooled it, but the model did not shortlist it and
+read its July 2018 sibling instead — the same vintage the old corpus answers with.
+
+**It costs about 9% a corridor with search on, all of it selection input:**
+
+| search on, mean of 2 runs | old | new | selection input |
+| --- | --- | --- | --- |
+| Thailand | $0.288 | $0.315 | +12% |
+| Norway | $0.330 | $0.360 | +10% |
+| Japan | $0.237 | $0.259 | +22% |
+
+That is about $0.03 more a corridor, and across the three countries one corridor went from refusing
+to resolving, stably, on a page nothing else supplied. Read every cell as two runs (entry 81):
+Thailand's 4 of 4 against 0 of 4 is the only difference large enough to rest on. **Still the owner's
+decision: rebuilding the other 50**, at about 13 hours and $17 of search, with the same roughly 9% on
+their corridors.
 
 ---
 
