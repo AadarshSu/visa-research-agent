@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [164](#164-what-a-model-call-is-made-of-three-costs-nobody-records-and-much-of-a-selection-packet-says-nothing-about-a-candidate) | **What a model call is made of** — the plan call runs on every request and was never priced, cache writes may bill 1.25×, 13–40% of a selection packet is notes and layout, and entry 146's overlap is 79–80% in three countries |
 | [163](#163-a-www-spelling-and-its-bare-host-are-one-site-for-a-crawls-page-budget) | **A `www.` spelling and its bare host are one site for the crawl budget** — 44 of 53 corpora held a split site taking two shares; trust, politeness and reporting keep the exact host |
 | [162](#162-a-corpus-build-goes-on-without-a-failed-search-query-and-names-it) | **A corpus build goes on without a failed search query, and names it** — one failed query of 70 used to discard the build; an exhausted account or every query failing still stops it |
 | [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 0 of 9 targets reached from roots; with seeds kept, Thailand `IN/GB` went from no decision to resolved in 4 of 4 runs on a page live search never returns, for ~9% more a corridor |
@@ -212,6 +213,160 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 164. What a model call is made of: three costs nobody records, and much of a selection packet says nothing about a candidate
+
+**2026-09-15 · the owner asked what could and should be considered for the model calls — measured offline, with no model call and no search; nothing built**
+
+Entries 145 and 159 established that the model calls, not search, are most of a corridor's cost.
+This entry asks what those calls are made of. Everything here was read from the code, measured
+offline, or read from OpenAI's documentation. No code changed.
+
+### Three costs that are not recorded
+
+**The plan-writing call runs on every web request, and no run has priced it.** The request handler
+calls `service.generate` after the destination is resolved — including when `destination_for` served
+the corridor from the three-week store and skipped selection and role adjudication. For a stored
+corridor this call is the whole model bill. It is invisible for three reasons:
+- `ModelCall.call` allows only `select`, `roles` and `blocked`;
+- `LangChainStructuredPlanGenerator` attaches no `UsageRecorder`;
+- `visa-discover corridor`, which produced entries 145 and 159, never runs it.
+
+Its input is the full `content` of each source — up to 50,000 characters a page and 80,000 for the
+packet — under a 2,238-token prompt. The four corridors in `var/corridors/` would send 1,547–4,569
+tokens of page text. Its output is a whole plan with quotes, steps and an explanation, billed at
+$12/M, and is unmeasured; entry 156 already noted that what quotes add to it was never measured.
+
+**Cache writes may be billed, and they are never read.** OpenAI's prompt-caching guide, read
+2026-09-15 through a fetch tool, says cache writes on GPT-5.6 and later are billed at 1.25× the
+uncached input rate, happen automatically when caching is implicit, and are reported as
+`cache_write_tokens`. LangChain surfaces that as `input_token_details["cache_creation"]`;
+`UsageRecorder` reads only `cache_read`. If every eligible selection call pays the write rate,
+entries 145 and 159 priced selection input up to 25% low. Nothing recorded can say. A day's billing
+dashboard against the computed cost can.
+
+**The selection call can retry out of sight.** The role adjudicator and the plan generator pass
+`max_retries=0`; `LangChainCandidateSelector` does not, so the OpenAI client's default of two retries
+applies to a request of about 100k tokens with a 60-second timeout. `UsageRecorder` keeps the last
+generation, so a retried call is recorded once. None of the 9 logs that carry token counts shows a
+failure, and 9 is not evidence of none: a re-run overwrites its corridor's log (entry 118).
+
+### What a selection packet is made of
+
+**Method.** For `IN/GB/tourism` in eight countries: `contention_for` with the page-text index, which
+is the pool the resolver shows the selector; source ids assigned the way `_choose_what_to_read`
+assigns them; `build_selection_packet` over `text_for_selection`; tokens counted with tiktoken's
+`o200k_base`. Corpus-only, so a live packet adds search's 1–36 candidates.
+
+**The count agrees with what OpenAI billed**, within about 1%, where the corpus has not been rebuilt
+since the logged run: Canada 116,566 against 116,486, the Netherlands 109,437 against 107,638,
+Germany 108,763 against 109,422. Japan reads 64,227 against 46,752 because entry 161 rebuilt it.
+
+| country | candidates | tokens | repeated notes | saved by compact JSON | boilerplate, of excerpt text | identical excerpts, of excerpt text |
+| --- | --- | --- | --- | --- | --- | --- |
+| Canada | 584 | 116,566 | 18% | 11% | 16% | 21% |
+| France | 643 | 98,741 | **26%** | 14% | 27% | 8% |
+| Netherlands | 545 | 109,437 | 18% | 11% | 30% | 2% |
+| United Kingdom | 359 | 117,021 | 10% | 7% | **50%** | 8% |
+| Thailand | 237 | 102,000 | 8% | 5% | **51%** | **37%** |
+| Germany | 357 | 108,763 | 11% | 8% | 10% | 5% |
+| Singapore | 265 | 67,828 | 15% | 9% | 13% | 8% |
+| Japan | 167 | 64,227 | 9% | 6% | 9% | 4% |
+
+- **Repeated notes.** Every candidate with text carries `stored_excerpt_note` and every one without
+  carries `no_stored_text` — two fixed sentences, the second restating rule 4 of the selection
+  prompt. France pays 22,509 tokens to be told 549 times that nothing is stored.
+- **Compact JSON.** The packet is serialised with `indent=2`; this column is the same object with no
+  whitespace. Keys, indentation and punctuation together are 13,557 (UK) to 22,427 (France) tokens.
+- **Boilerplate.** Excerpt lines of at least 15 characters that recur in three or more excerpts of
+  the same packet, counting every occurrence after the first. The excerpt is the head of the stored
+  page, so the GOV.UK cookie banner opens 286 of the UK's 359 excerpts, 71 of Germany's open with
+  the Foreign Office's welcome line, and 79 of the Netherlands' are `business.gov.nl`'s cookie
+  notice. So it is a recall cost as well as a price: the excerpt budget is spent on the same lines.
+- **Identical excerpts.** Excerpt text identical to another candidate's — the same page at several
+  addresses, or near-identical sites.
+- Outside the table, URLs are 7,511–21,699 tokens and the descriptive source ids 4,182–7,521.
+
+### Entry 146's overlap does not hold on other countries
+
+Entry 146 found Japan's pools for three travellers overlapping 93% and asked for a second country
+before anything was built on it. Across `IN/GB`, `PH/PH`, `NG/NG` and `BD/AE`, intersection over
+union:
+
+| Thailand | Canada | France | Singapore | Netherlands | United Kingdom | Germany | Japan |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 99% | 98% | 94% | 92% | 86% | **80%** | **79%** | **79%** |
+
+Japan's figure is after entry 158's admission and entry 161's rebuild. In the three low countries the
+`IN/GB` pool is the largest, and a traveller-independent pool would show up to about a quarter more
+candidates than the smallest traveller's pool.
+
+### What the caching lever looks like now
+
+From the same guide: at least 1,024 visible input tokens; on GPT-5.6 and later a cache lives 30
+minutes after its last write or reuse, and `30m` is the only supported `prompt_cache_options.ttl`;
+reads are billed at 0.1×; writes at 1.25×; explicit `prompt_cache_breakpoint` markers exist, and in
+explicit-only mode content after the last breakpoint carries no write charge.
+
+- **Against a baseline that pays no write charge**, a cached prefix pays for itself only where more
+  than about 22% of a country's selection calls arrive within 30 minutes of the previous one
+  (1.25 − 1.15 × hit rate < 1). Before deployment (TODO item 7) that is close to nothing, so entry
+  146 is a lever for when there is traffic.
+- **If today's calls already pay write charges**, the arithmetic flips: the write is already paid
+  and every hit saves. The recording in the first section decides which.
+- **Explicit breakpoints were not considered in entry 146** and may change its five conditions. Not
+  examined.
+- The selection system prompt is 766 tokens, under the minimum by itself. The roles call's shared
+  prefix already caches, at 2,029 tokens in the logs; the plan prompt is 2,238 tokens and should too.
+
+### What could be done, safest first — none of it built
+
+1. **Record, changing nothing the model sees.** The plan call's usage, cache writes beside cache
+   reads, and selection retries — or `max_retries=0` on the selector, as on the other two calls.
+   Then compare a day's billing dashboard with the computed cost.
+2. **Change the packet's form.** State the two notes once and send compact JSON: roughly 13–40% of
+   selection input, the sum of two columns that overlap slightly. `no_stored_text` is the signal the
+   selection design turns on, so shorten it to a marker the prompt explains rather than removing it.
+3. **Change its content.** When building the packet — never in the stored index, whose text entry
+   158's admission scores — drop boilerplate lines and show an identical excerpt once with every
+   address beside it, keeping every candidate, since the module drops none for want of room. At the
+   same excerpt budget the model sees more of each page; with a smaller one it costs less. One
+   measurement per choice.
+4. **Structural.** Caching as above, once there is traffic. And a cheaper model **for selection
+   only**: it returns ids and falls back to the heuristic when it fails, which is not entry 31's
+   forbidden fallback, and input is 96% of the bill, so the input price is what matters. Role
+   adjudication and plan writing decide what a traveller is told and stay where they are.
+
+**Considered and not worth it:**
+- **Lowering reasoning effort.** Output is 4% of the model bill (entry 145), and it may not move
+  without an accuracy measurement.
+- **Narrowing or capping the pool.** The pool is the recall gate, and entry 158 rejected the cap.
+- **Flex processing.** Billed at Batch rates, slower, and may answer `429 Resource Unavailable` —
+  wrong for a traveller waiting. It could suit a measurement sweep, where `phase_seconds` would then
+  mean nothing.
+
+### How 2–4 have to be graded
+
+- **Each changes what the selector reads, so each is a recall change.** Several runs per arm
+  (entries 81, 144) over the selection fixture, graded with `selection-recall`, recall logs backed
+  up first (entry 118), caches cleared for both arms or neither (entry 136), and priced in dollars
+  and seconds (entry 145).
+- **Correctness stays the owner's check** outside this repository (entry 68).
+- **Item 19 is still paused** (entry 147). Live grading needs the new OpenAI key (TODO item 48), and
+  the last sweep ran out of credit (entry 159).
+
+### What this does not establish
+
+- **The plan call's cost, and whether writes are billed today.** Both are unrecorded.
+- **The shares are one traveller, corpus-only, today's corpora.**
+- **"Boilerplate" is a repetition proxy, not a verdict.** A line repeated three times can be
+  guidance: Thailand's "Photograph taken within the last six months" recurs 39 times because it
+  publishes near-identical checklists. Stripping has to be tested against the fixture, not assumed.
+- **Whether the plan call's 80,000-character cap ever refuses a plan.** 16 of 774 cached pages exceed
+  40,000 characters, but recall logs do not record which pages filled a role, so it could not be
+  checked.
 
 ---
 

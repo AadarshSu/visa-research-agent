@@ -55,6 +55,12 @@ every number here measures whether it *answered*, not whether the answer was *ri
 truth set or a correctness grader without asking.**
 
 **Item 19's latency and cost work is paused** (entry 147), entry 146's cacheable prefix included.
+**What the model calls are made of was sized offline on 2026-09-15 (entry 164)**:
+- the plan-writing call runs on every web request and has never been priced;
+- OpenAI may bill cache writes at 1.25×, which nothing records;
+- 13–40% of a selection packet is repeated notes and JSON layout.
+
+TODO item 19 carries the order to take it in when the work resumes.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.

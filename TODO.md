@@ -443,6 +443,33 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > and it is paused along with the rest of this item. Do not propose trimming search to save money
 > unless you have a new argument against these two measurements.
 
+> **What those model calls are made of — measured offline on 2026-09-15, nothing built (entry 164).**
+>
+> - **Three costs are not recorded.**
+>   - The plan-writing call runs on every web request, including a corridor served from the store,
+>     where it is the whole model bill, and no run has priced it.
+>   - OpenAI's guide says cache writes on GPT-5.6 and later cost 1.25× and happen automatically,
+>     and nothing reads them, so selection may be priced up to 25% low.
+>   - The selection call alone keeps the OpenAI client's two silent retries.
+> - **13–40% of a selection packet is notes and layout.** A fixed note repeated on every candidate is
+>   8–26% of its tokens, and indented JSON another 5–14%. Inside the excerpts, lines repeated across
+>   pages — cookie banners, navigation — are 9–51% of the text, and identical excerpts up to 37%.
+> - **Entry 146's 93% overlap does not hold everywhere.** Across four travellers it is 79–80% for
+>   Japan, Germany and the UK. With a 30-minute cache lifetime and the write charge, caching pays only
+>   where more than about 22% of a country's selection calls arrive within 30 minutes of the previous
+>   one, so it is a lever for after deployment.
+>
+> **When this resumes, in this order:**
+> 1. Record the plan call, cache writes and selection retries, and check the bill.
+> 2. State the notes once and send compact JSON.
+> 3. When building the packet, strip repeated boilerplate and show identical excerpts once — never
+>    in the stored index.
+> 4. Caching once there is traffic, and a cheaper model for selection only.
+>
+> Steps 2–4 change what the selector reads and are graded as recall changes; entry 164 says how.
+> **Not worth it:** lowering reasoning effort (output is 4% of the bill), capping the pool (entry
+> 158), and Flex processing (too slow for a traveller waiting).
+
 > **The goal is latency, and it always was (entry 140).** The owner:
 >
 > > *"I do want to remove search from the request path but that was because it took 50-70 seconds
@@ -543,7 +570,8 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 >   a country is warm. **Nothing shipped**: all five conditions change what the selector is shown or
 >   in what order, which is a recall change and needs grading against
 >   `oracle/selection_oracle.yaml` first. Reordering alone is harmless *and* worth nothing, so it
->   waits for the rest. Check the 93% overlap on a second country before building on it.
+>   waits for the rest. **The 93% overlap was checked on seven more countries on 2026-09-15 and does not hold everywhere:**
+>   79–80% for Japan, Germany and the UK across four travellers (entry 164).
 > - **`fetch` at 31%** — worth attention, but find out how much is renders, how much is serial
 >   waiting and how much is one failing host first. Entry 139 asked exactly that of the *crawl*
 >   fetcher; nobody has asked it of `LiveSourceFetcher`.

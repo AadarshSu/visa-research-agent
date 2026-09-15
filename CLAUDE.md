@@ -851,6 +851,10 @@ cause, and only running the thing showed it.
 | a page the corpus holds and pools is a page the model reads | Norway's January 2024 checklist was pooled and passed over for its 2018 sibling (entry 161) |
 | one failed search query costs a corpus build one query | `search_all` raised and the command exited — Japan's whole build lost to a DNS blip (entry 162) |
 | a host is a site for a crawl's budget | `host_of` keeps `www.` — 44 of 53 corpora held a split site taking two shares (entry 163) |
+| a corridor's model cost is the selection and roles calls | the plan-writing call runs on every web request, stored corridors too, and was never priced (entry 164) |
+| the recorded tokens price the model calls exactly | OpenAI bills cache writes at 1.25× on GPT-5.6+ and the recorder never reads them (entry 164) |
+| japan's 93% pool overlap makes a traveller-independent pool cheap | across four travellers JP, DE and GB overlap 79–80% (entry 164) |
+| a selection packet's tokens are candidate evidence | 13–40% is repeated notes and JSON layout; half the UK's excerpt text is lines repeated across pages (entry 164) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
