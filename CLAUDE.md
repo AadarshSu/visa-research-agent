@@ -850,6 +850,7 @@ cause, and only running the thing showed it.
 | a kept seed only matters when live search misses a page it usually finds | Thailand's decision PDF comes from a build query corridors never ask — old corpus 0 of 4, new 4 of 4 (entry 161) |
 | a page the corpus holds and pools is a page the model reads | Norway's January 2024 checklist was pooled and passed over for its 2018 sibling (entry 161) |
 | one failed search query costs a corpus build one query | `search_all` raised and the command exited — Japan's whole build lost to a DNS blip (entry 162) |
+| a host is a site for a crawl's budget | `host_of` keeps `www.` — 44 of 53 corpora held a split site taking two shares (entry 163) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

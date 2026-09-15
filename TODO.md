@@ -1152,12 +1152,11 @@ TDAC, 2,615 recorded for the provinces.** The provincial sites are WordPress ins
 category and archive pages present an effectively unbounded link graph. **The crawler is not being
 greedy; it is being fair between things that are not equal.**
 
-**`host_of` does not fold `www.`, so one authority can take several shares.** Bulgaria opened 587
-pages: `www.mvr.bg` 149, `mvr.bg` 161, `e-uslugi.mvr.bg` 110 — **420 of 587, 72%, on the interior
-ministry across three spellings** — while `mfa.bg`, the foreign ministry that publishes the visa
-PDFs, opened **0**. `canonical_key` folds `www.` for comparison and the crawl's budget accounting
-does not. **Check whether this is deliberate before changing it**; a fix is small and its blast
-radius is every build.
+**~~`host_of` does not fold `www.`, so one authority can take several shares~~ — fixed 2026-09-15,
+DECISIONS entry 163.** Bulgaria opened 587 pages: `www.mvr.bg` 149, `mvr.bg` 161, `e-uslugi.mvr.bg`
+110 — 420 of 587 on the interior ministry across three spellings — while `mfa.bg` opened 0. Nothing
+documented it as deliberate, and 44 of 53 corpora held such a pair. The crawl budget now folds a
+leading `www.`; trust, politeness and reporting keep the exact host.
 
 **~~And Bulgaria's zero may be a stale failure~~ — re-run on 2026-09-04, and it is not (entry
 131).** The hypothesis was that its 175 `mfa.bg` failures were stale, because three of those URLs

@@ -122,6 +122,26 @@ DEFAULT_KEPT_TEXT_CHARACTERS = 50_000
 FetchResult = httpx.Response | str
 
 
+def budget_host(url: str) -> str:
+    """The site a page counts against in a crawl's page budget: its host, a leading `www.` folded.
+
+    **`host_of` keeps `www.`, and the budget used to key on it, so one site could take two shares.**
+    A crawl divides its allowance by the hosts it seeded, and a search engine returns both spellings
+    of the same site: it took two shares, and every other host's shrank. Bulgaria's interior
+    ministry, as `www.mvr.bg` and `mvr.bg` plus a third host, took 72% of a build (TODO item 48).
+    Counted 2026-09-15 over the 53 corpora: **44 hold at least one `www.`/bare pair, 140 in all**,
+    and for Iceland, Liechtenstein and Morocco the pair is 99% of what the build read.
+
+    **Only the budget reads this.** Trust, the politeness delay a fetcher owes a host, and failure
+    reporting all keep the exact host, because those describe what answered a request and must stay
+    true of it. `canonical_key` has always folded `www.` for comparing pages; this is the same fold,
+    applied to counting them. DECISIONS entry 163.
+    """
+
+    host = host_of(url)
+    return host[4:] if host.startswith("www.") else host
+
+
 class HostBudget:
     """How many pages each host may take, and why one number for all of them was wrong.
 
@@ -982,7 +1002,8 @@ class LinkCrawler:
         # objects, which raises.
         counters = [counter]
 
-        seed_hosts = {host_of(link.url) for link in seed_links}
+        # Sites, not spellings: `www.` and the bare host share one budget. See `budget_host`.
+        seed_hosts = {budget_host(link.url) for link in seed_links}
         host_budget = self._budget_for(len(seed_hosts))
 
         async with httpx.AsyncClient(
@@ -1002,7 +1023,7 @@ class LinkCrawler:
                     break
                 for _depth, url, _link in wave:
                     visited.add(url)
-                    per_host[host_of(url)] = per_host.get(host_of(url), 0) + 1
+                    per_host[budget_host(url)] = per_host.get(budget_host(url), 0) + 1
 
                 pages = await asyncio.gather(
                     *(
@@ -1091,7 +1112,7 @@ class LinkCrawler:
                 _, depth, url, _sequence, link = entry
                 if url in visited:
                     continue
-                host = host_of(url)
+                host = budget_host(url)
                 # The host budget still binds. A family lives on one host by construction, so
                 # exempting it would hand that host the whole crawl through the side door.
                 if not host_budget.allows(host, per_host):
@@ -1108,7 +1129,8 @@ class LinkCrawler:
             _, depth, url, _sequence, link = entry
             if url in visited:
                 continue
-            host = host_of(url)
+            # One site, one share, and one page of it per wave: both spellings are the same server.
+            host = budget_host(url)
             # Over its share of the budget: dropped rather than deferred, exactly as before, or a
             # large portal would keep its links circulating forever.
             if not host_budget.allows(host, per_host):

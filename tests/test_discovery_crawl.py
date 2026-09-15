@@ -25,6 +25,7 @@ from discovery_site import (
 from visa_research_agent.discovery.crawl import (
     CrawlFetcher,
     LinkCrawler,
+    budget_host,
     extract_links,
     host_does_not_resolve,
 )
@@ -601,6 +602,58 @@ def test_the_request_path_keeps_the_even_split() -> None:
     budget = crawler._budget_for(4)
 
     assert (budget.floor, budget.ceiling, budget.surplus) == (10, 10, 0)
+
+
+def test_a_www_spelling_and_the_bare_host_are_one_site_for_the_budget() -> None:
+    assert budget_host("https://www.mvr.bg/en/visas") == "mvr.bg"
+    assert budget_host("https://mvr.bg/en/visas") == "mvr.bg"
+    # Only a leading `www.`: another label is another host, and so is `www2`.
+    assert budget_host("https://www2.mvr.bg/") == "www2.mvr.bg"
+    assert budget_host("https://e-uslugi.mvr.bg/") == "e-uslugi.mvr.bg"
+
+
+@pytest.mark.anyio
+async def test_a_www_and_a_bare_spelling_of_one_site_share_one_budget() -> None:
+    """Search returns both spellings of a site, and each used to be its own share of the crawl.
+
+    Bulgaria's interior ministry, as `www.mvr.bg`, `mvr.bg` and a third host, took 72% of a build
+    while the foreign ministry got none (TODO item 48), and 44 of 53 corpora hold at least one such
+    pair. Seeded on both spellings with a six-page share, the site may now read six pages, not
+    twelve (entry 163).
+    """
+
+    fetched: list[str] = []
+    pages = iter(range(10_000))
+
+    async def fetch_html(client: Any, url: str, destination: Any) -> str:
+        fetched.append(url)
+        page = next(pages)
+        links = "".join(
+            f'<a href="https://www.{AUTHORITY}/visa/w{page}-{i}.html">visa {i}</a>'
+            f'<a href="https://{AUTHORITY}/visa/b{page}-{i}.html">visa {i}</a>'
+            for i in range(10)
+        )
+        return f"<html><body>{links}</body></html>"
+
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200)),
+        host_delay_seconds=0.0,
+    )
+    fetcher.fetch_html = fetch_html  # type: ignore[method-assign]
+    crawler = LinkCrawler(
+        fetcher,
+        lambda link: RoleScores(scores={"visa_decision": 20.0}),
+        maximum_pages=40,
+        maximum_pages_per_host=6,
+    )
+
+    await crawler.crawl(
+        destination(),
+        [f"https://www.{AUTHORITY}/visa/a.html", f"https://{AUTHORITY}/visa/b.html"],
+    )
+
+    assert len(fetched) == 6, "two spellings of one site took one share, not two"
+    assert {host_of(url) for url in fetched} >= {AUTHORITY, f"www.{AUTHORITY}"}
 
 
 @pytest.mark.anyio

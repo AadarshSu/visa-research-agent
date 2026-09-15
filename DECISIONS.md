@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [163](#163-a-www-spelling-and-its-bare-host-are-one-site-for-a-crawls-page-budget) | **A `www.` spelling and its bare host are one site for the crawl budget** — 44 of 53 corpora held a split site taking two shares; trust, politeness and reporting keep the exact host |
 | [162](#162-a-corpus-build-goes-on-without-a-failed-search-query-and-names-it) | **A corpus build goes on without a failed search query, and names it** — one failed query of 70 used to discard the build; an exhausted account or every query failing still stops it |
 | [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 0 of 9 targets reached from roots; with seeds kept, Thailand `IN/GB` went from no decision to resolved in 4 of 4 runs on a page live search never returns, for ~9% more a corridor |
 | [160](#160-the-purpose-query-stays-it-finds-the-posts-own-checklist-which-neither-the-other-queries-nor-the-corpus-hold) | **The purpose query stays** — it alone returns 28 of 45 pages it found first; without it Japan lost its London-embassy checklist and Norway read an older one, the same way in both runs |
@@ -211,6 +212,42 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 163. A `www.` spelling and its bare host are one site for a crawl's page budget
+
+**2026-09-15 · TODO item 48's second allocation finding, done before its 50-country rebuild**
+
+**The defect.** `LinkCrawler` divides its page allowance by the number of hosts it seeded, and keyed
+both that count and each host's spend on `host_of`, which keeps `www.`. Search returns both
+spellings of the same site, so the site took **two shares** and every other host's share shrank.
+Bulgaria's interior ministry, as `www.mvr.bg`, `mvr.bg` and `e-uslugi.mvr.bg`, took 72% of a build.
+
+**Checked that it was not deliberate before changing it**, as item 48 asked. `host_of` has no
+rationale for keeping the prefix, the budget's own documentation speaks only of hosts, and
+`canonical_key` has folded `www.` for comparing pages since entry 47.
+
+**Measured before changing it, over the 53 corpora:**
+- **44 hold at least one `www.`/bare pair, 140 in all**, and folding them takes 2,284 hosts to 2,144.
+- **For some countries the pair is nearly everything the build read:** Iceland, Liechtenstein and
+  Morocco 99%, Finland 69%, Bulgaria 52%.
+
+**Decided.** `budget_host` folds a leading `www.` and nothing else — `www2.` and every other label
+remain their own host. **Only the budget reads it**: the seeded-site count, each site's spend, and the
+rule of one page per site per wave. So both spellings are no longer fetched in the same wave; they are
+one server, which makes the crawl more polite rather than less. Trust checks, the politeness delay
+and failure reporting keep the exact host, because those describe what answered a request and must
+stay true of it. The request-path crawl, used by BR and UY and by thin corpora, shares the code and
+changes the same way.
+
+**What this is not.** It is a bookkeeping correction with a measured prevalence, **not a recall
+result**. Whether any role changes because a build divides its pages differently would take a
+matched pair of rebuilds per country, and none was run. The 50-country rebuild of item 48 is the
+first build to use it.
+
+**Test.** A crawl seeded on both spellings with a six-page share now reads six pages; with the old
+behaviour patched back in it read twelve.
 
 ---
 

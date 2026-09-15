@@ -413,7 +413,8 @@ this is automated while per-country trust is not.
    the country's corpus already offers more pages than a crawl could visit** (entry 51). For a country
    nobody has built it is still how the map is made: search lands on a section
    index; the checklist is usually one link further on. Budget is shared between seeded hosts so a
-   large ministry portal cannot starve the mission site. The frontier is walked in **waves** of at
+   large ministry portal cannot starve the mission site, and a `www.` spelling and its bare host
+   count as one site in it (entry 163). The frontier is walked in **waves** of at
    most one page per host, fetched together: the politeness delay is owed to a host, so applying it
    globally made every site wait behind every other. Results are handled in frontier order rather
    than completion order, because which page a corridor resolves to must not depend on which site
