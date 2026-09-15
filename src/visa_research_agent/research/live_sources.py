@@ -438,6 +438,16 @@ class LiveSourceFetcher:
             return self._serve_stale(
                 configured_source, cached, now, transport_failure_reason(exc), "unreachable"
             )
+        except httpx.InvalidURL:
+            # Raised while following a redirect whose `Location` has a scheme and no host, and not
+            # an `HTTPError`, so without this it escaped retrieval and ended the whole corridor.
+            return self._serve_stale(
+                configured_source,
+                cached,
+                now,
+                "the request was redirected to an address that is not a valid URL",
+                "unreachable",
+            )
 
         # Follow where the request actually landed. A page that redirects off the approved
         # authority domains is refused outright rather than quoted as official guidance.
@@ -560,7 +570,7 @@ class LiveSourceFetcher:
             return self._serve_stale(
                 configured_source, cached, now, problem.reason, problem.outcome
             )
-        except httpx.HTTPError as exc:
+        except (httpx.HTTPError, httpx.InvalidURL) as exc:
             return self._serve_stale(
                 configured_source,
                 cached,

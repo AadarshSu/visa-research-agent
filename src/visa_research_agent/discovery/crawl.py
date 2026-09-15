@@ -632,6 +632,16 @@ class CrawlFetcher:
             if host_does_not_resolve(exc):
                 self.unresolvable_hosts.add(host_of(url))
             return None
+        except httpx.InvalidURL:
+            # A redirect whose `Location` names a scheme and no host — `https:robots.txt` — makes
+            # `httpx` raise while building the next request, and what it raises is neither an
+            # `HTTPError` nor a response. It escaped the handler above, and on 2026-09-15 took
+            # China's whole corpus build with it. The host did answer, so this is not a transport
+            # failure to count towards giving up on it; it is one address this run could not follow.
+            self._record_failure(
+                url, "unreachable", "it redirected to an address that is not a valid URL"
+            )
+            return None
         # Any response clears the streak, a refusal included: the question this counter asks is
         # whether the host is answering, not whether it is answering *yes*.
         self.transport_failures.pop(host, None)
@@ -658,7 +668,7 @@ class CrawlFetcher:
         if final_url != url:
             try:
                 landing = await self.robots.verdict(client, final_url)
-            except httpx.HTTPError:
+            except (httpx.HTTPError, httpx.InvalidURL):
                 # The landing host would not serve its policy, so we cannot say we were permitted.
                 landing = RobotsVerdict.UNREADABLE
             if landing is not RobotsVerdict.ALLOWED:

@@ -382,6 +382,28 @@ async def test_a_refusal_is_recorded_as_blocked_rather_than_as_a_broken_page() -
 
 
 @pytest.mark.anyio
+async def test_a_redirect_to_an_address_that_is_not_a_url_costs_one_page_not_the_crawl() -> None:
+    """`Location: https:robots.txt` has a scheme and no host, and `httpx` raises `InvalidURL` while
+    building the next request. That is not an `HTTPError`, so it escaped the crawler's handler and
+    ended China's whole corpus build on 2026-09-15 (entry 176). Here it arrives on the `robots.txt`
+    request, which is where China's did."""
+
+    broken = f"https://{AUTHORITY}/visa/index.html"
+
+    def redirecting(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"Location": "https:robots.txt"})
+
+    fetcher = CrawlFetcher(transport=httpx.MockTransport(redirecting), host_delay_seconds=0.0)
+    async with httpx.AsyncClient(transport=fetcher.transport, follow_redirects=True) as client:
+        assert await fetcher.fetch_html(client, broken, destination()) is None
+
+    assert fetcher.outcomes[broken] == "unreachable"
+    assert "not a valid URL" in fetcher.failures[broken]
+    # The host answered. A malformed redirect is not a reason to stop asking it for other pages.
+    assert not fetcher.transport_failures
+
+
+@pytest.mark.anyio
 async def test_the_politeness_delay_is_owed_to_a_host_not_to_the_whole_crawl() -> None:
     """It was applied before every request whatever host it was for, so forty pages cost twenty
     seconds of waiting and a second site queued behind the first for no reason. Each host still

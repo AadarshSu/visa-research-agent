@@ -133,6 +133,7 @@ not — and stored text ranks, it never speaks).
 | [166](#166-every-model-call-goes-into-one-daily-log-with-its-retries-counted-and-its-usage-handed-in-per-call) | **Every model call goes into one daily log** — retries counted by a request hook, usage handed in per call so concurrent requests cannot swap figures; tested against a mocked Responses API, not live |
 | [165](#165-the-plan-writing-call-records-what-it-cost-and-every-call-records-its-cache-writes) | **The plan call records what it cost, and every call its cache writes** — appended per day to `var/usage/`, with a recorder handed in per call; the shared roles adjudicator can still mix up usage between concurrent requests |
 | [164](#164-what-a-model-call-is-made-of-three-costs-nobody-records-and-much-of-a-selection-packet-says-nothing-about-a-candidate) | **What a model call is made of** — the plan call runs on every request and was never priced, cache writes may bill 1.25×, 13–40% of a selection packet is notes and layout, and entry 146's overlap is 79–80% in three countries |
+| [176](#176-a-redirect-to-an-address-that-is-not-a-url-costs-one-page-not-a-build-or-a-corridor) | **A redirect to an address that is not a URL costs one page** — `httpx.InvalidURL` is not an `HTTPError`, and it ended China's rebuild |
 | [163](#163-a-www-spelling-and-its-bare-host-are-one-site-for-a-crawls-page-budget) | **A `www.` spelling and its bare host are one site for the crawl budget** — 44 of 53 corpora held a split site taking two shares; trust, politeness and reporting keep the exact host |
 | [162](#162-a-corpus-build-goes-on-without-a-failed-search-query-and-names-it) | **A corpus build goes on without a failed search query, and names it** — one failed query of 70 used to discard the build; an exhausted account or every query failing still stops it |
 | [161](#161-a-build-kept-only-the-pages-something-linked-to-so-it-discarded-what-its-own-search-found) | **A corpus build discarded its own search seeds; root seeding would not have helped** — 0 of 9 targets reached from roots; with seeds kept, Thailand `IN/GB` went from no decision to resolved in 4 of 4 runs on a page live search never returns, for ~9% more a corridor |
@@ -224,6 +225,36 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 176. A redirect to an address that is not a URL costs one page, not a build or a corridor
+
+**2026-09-15 · found by TODO item 48's 53-country rebuild**
+
+**What happened.** 52 of the 53 corpora rebuilt cleanly. **China's crashed after seven minutes**
+with `httpx.InvalidURL: For absolute URLs, path must be empty or begin with '/'`, raised while the
+crawler read a host's `robots.txt` and followed a redirect. The crash came before the corpus was
+written, so China's store is still its 2026-08-30 build.
+
+**The cause is a `Location` header with a scheme and no host**, such as `https:robots.txt`. `httpx`
+raises `InvalidURL` while building the next request, and **`InvalidURL` is not an `HTTPError`**.
+`CrawlFetcher._get` and `LiveSourceFetcher` catch only `HTTPError`, so it escaped both and ended the
+run. That is entry 114's shape again: one bad response from one host cost a whole build. On the
+request path the same header would have ended a corridor.
+
+**Which host sent it was not found.** A probe of all 94 of China's hosts, asking each for
+`robots.txt` without following redirects, reproduced nothing. The header may come from a host
+reached only through a redirect, or not on every request. The fix does not depend on which.
+
+**Fixed where redirects are followed.**
+- **`CrawlFetcher._get`** records the page as `unreachable`, with the reason *"it redirected to an
+  address that is not a valid URL"*. It does not count the failure towards giving up on the host,
+  because the host did answer.
+- **The crawler's landing-policy check** treats the same error as a policy it could not read.
+- **`LiveSourceFetcher`** reports it the same way in both places it follows redirects.
+
+Two tests send that header, one through the crawler and one through retrieval.
 
 ---
 

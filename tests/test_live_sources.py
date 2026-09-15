@@ -419,6 +419,26 @@ async def test_redirect_off_the_trusted_domains_is_refused_as_untrusted(tmp_path
 
 
 @pytest.mark.anyio
+async def test_a_redirect_to_an_address_that_is_not_a_url_is_reported_not_raised(
+    tmp_path: Path,
+) -> None:
+    """A `Location` with a scheme and no host makes `httpx` raise `InvalidURL`, which is not an
+    `HTTPError`. It ended a corpus build (entry 176), and on this path it would end a corridor."""
+
+    clock = Clock()
+    requests: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(302, headers={"Location": "https:visa.html"})
+
+    fetcher = build_fetcher(tmp_path, clock, handler, requests)
+    failure = await fetch_failure(fetcher)
+
+    assert failure.outcome == "unreachable"
+    assert "not a valid URL" in failure.detail
+
+
+@pytest.mark.anyio
 async def test_destination_without_primary_sources_is_refused(tmp_path: Path) -> None:
     clock = Clock()
     requests: list[httpx.Request] = []
