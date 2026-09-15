@@ -474,7 +474,9 @@ sweep over `authority_domains.yaml`, one GET per host, no model and no search.
 > 2. State the notes once and send compact JSON.
 > 3. When building the packet, strip repeated boilerplate and show identical excerpts once — never
 >    in the stored index.
-> 4. Caching once there is traffic, and a cheaper model for selection only.
+> 4. ~~Stop paying to write packets nothing reads~~ — **done 2026-09-15, entry 169**: every call
+>    caches only its instructions, projected $0.394 → $0.323 a fresh corridor. Still waiting for
+>    traffic: entry 146's reusable country-stable packet, and a cheaper model for selection only.
 >
 > Steps 2–4 change what the selector reads and are graded as recall changes; entry 164 says how.
 > **Not worth it:** lowering reasoning effort (output is 4% of the bill), capping the pool (entry

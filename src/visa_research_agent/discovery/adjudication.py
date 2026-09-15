@@ -210,6 +210,34 @@ def _shared_counting_http_client() -> httpx2.AsyncClient:
     return DefaultAsyncHttpxClient(event_hooks={"request": [_count_request]})
 
 
+def explicit_prompt_cache() -> dict[str, Any]:
+    """Ask the provider to cache only what is marked, never the whole prompt (entry 169).
+
+    **Left implicit, GPT-5.6 wrote every uncached input token of every call to its cache** — 24 of
+    24 calls in entry 167, selection's 100k-token packets included — at $2.50 a million against
+    $2.00 for input. Nothing ever read a packet back, because each is built for one corridor. In
+    explicit mode nothing is written except up to a marked breakpoint, and `cached_instructions`
+    marks one after the system prompt, which every call of a kind shares. Measured live: with no
+    breakpoint a call wrote 0 tokens; with one after the instructions it wrote 1,759, and the next
+    call read those 1,759 back.
+    """
+
+    return {"mode": "explicit"}
+
+
+def cached_instructions(prompt: str) -> SystemMessage:
+    """The system prompt as a message that ends at a cache breakpoint.
+
+    The prompt is the same for every call of a kind, so it is the part worth writing once and
+    reading after. The packet that follows carries no breakpoint, so it is billed at the input rate
+    and never written. A prompt under the model's 1,024-token minimum is simply not cached.
+    """
+
+    return SystemMessage(
+        content=[{"type": "text", "text": prompt, "prompt_cache_breakpoint": {"mode": "explicit"}}]
+    )
+
+
 class RoleAdjudicator(Protocol):
     async def adjudicate(
         self, system_prompt: str, packet: str, *, usage: UsageRecorder | None = None
@@ -601,6 +629,7 @@ class LangChainRoleAdjudicator:
             reasoning_effort=reasoning_effort,
             use_responses_api=True,
             http_async_client=counting_http_client(transport),
+            prompt_cache_options=explicit_prompt_cache(),
             max_retries=0,
             timeout=request_timeout_seconds,
             max_completion_tokens=max_output_tokens,
@@ -620,7 +649,7 @@ class LangChainRoleAdjudicator:
             with counting_requests(usage):
                 result: Any = await self._structured_model.ainvoke(
                     [
-                        SystemMessage(content=system_prompt),
+                        cached_instructions(system_prompt),
                         HumanMessage(
                             content=(
                                 "Decide which candidate fills each role, using this JSON packet. "

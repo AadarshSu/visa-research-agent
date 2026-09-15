@@ -122,6 +122,7 @@ not — and stored text ranks, it never speaks).
 ### The stores: corpus, corridors, freshness
 | | |
 | --- | --- |
+| [169](#169-every-call-caches-only-its-instructions-so-no-packet-is-written-to-a-cache-nothing-reads) | **Every call caches only its instructions** — explicit caching with a breakpoint after the system prompt, so no packet is written; projected $0.394 → $0.323 a fresh corridor, +$0.015 on a stored corridor repeated within 30 minutes |
 | [167](#167-the-first-live-read-of-model-call-usage-every-call-writes-its-whole-prompt-to-the-cache-and-the-plan-call-is-small-and-made-of-output) | **The first live read of model-call usage** — 15 web requests cost $2.41: every call wrote its whole uncached prompt to the cache, which OpenAI bills at $2.50/M against $2.00 input; the plan call is 13% of a fresh request and 69% output |
 | [166](#166-every-model-call-goes-into-one-daily-log-with-its-retries-counted-and-its-usage-handed-in-per-call) | **Every model call goes into one daily log** — retries counted by a request hook, usage handed in per call so concurrent requests cannot swap figures; tested against a mocked Responses API, not live |
 | [165](#165-the-plan-writing-call-records-what-it-cost-and-every-call-records-its-cache-writes) | **The plan call records what it cost, and every call its cache writes** — appended per day to `var/usage/`, with a recorder handed in per call; the shared roles adjudicator can still mix up usage between concurrent requests |
@@ -260,6 +261,68 @@ fix cannot become this 500 for one country. The first two failed on the unfixed 
 **Not fixed here.** `visa-discover corridor --destination "united states"` raises the same
 `ValidationError` as a traceback, reproduced offline: `run_corridor` builds its corridor from the
 argument as written. A command-line crash rather than a traveller-facing one — TODO, Smaller things.
+
+---
+
+## 169. Every call caches only its instructions, so no packet is written to a cache nothing reads
+
+**2026-09-15 · the owner asked to act on entry 167 — built, tested offline, and checked live with small calls**
+
+Entry 167 found that `gpt-5.6-terra`, left to cache implicitly, wrote every uncached input token of
+every call at $2.50 a million against $2.00 for input, and that nothing read a packet back. A packet
+is built for one corridor, so the next call's differs from its first line. This stops the writing
+and keeps the one part worth caching.
+
+### What changed
+
+- **All three calls ask for explicit caching**, through `ChatOpenAI`'s own `prompt_cache_options`
+  field (`langchain-openai` 1.5.0): `{"mode": "explicit"}`. In that mode OpenAI writes nothing
+  except up to a marked breakpoint.
+- **The system prompt carries the one breakpoint**, as a content block with
+  `prompt_cache_breakpoint: {"mode": "explicit"}`. It is identical for every call of a kind, so it is
+  written once and read after. The packet after it carries none.
+- **Nothing the model reads changed.** The instructions are the same text, sent as a content block
+  rather than a string, and the packet is untouched. So this is a billing change, not a recall
+  change, and it needed no grading.
+
+### Checked before and after
+
+**Before building, with a bare `ChatOpenAI` and a 6k-token prompt:**
+
+| call | input | written | read |
+| --- | --- | --- | --- |
+| implicit, as shipped until now | 5,997 | 5,994 | 0 |
+| explicit, no breakpoint | 5,998 | 0 | 0 |
+| explicit, breakpoint after the instructions | 5,986 | 1,759 | 0 |
+| the same, with a different packet | 5,986 | 0 | 1,759 |
+
+**After, through the shipped providers:**
+- **Selection** wrote 0 and read 0. Its instructions, with the output schema, are under the
+  1,024-token minimum, so they are never cached — which was already true (entry 167).
+- **Roles** wrote 2,029 on the first call and read 2,029 on the next, writing 0.
+
+Offline, a test sends each of the three calls to a mocked Responses API and checks that the request
+asks for explicit caching, marks the instructions and never marks the packet. The provider tests
+also pass with warnings treated as errors: the first version passed the option through
+`model_kwargs`, and LangChain warned that it has a field of its own.
+
+### What it is worth, projected from entry 167's logged tokens — not re-run
+
+- **A fresh corridor that resolved: $0.394 → about $0.323 (−18%).** Selection's writes were 544,445
+  tokens over the five and are now billed at $2.00: −$0.054 a corridor. Roles' packet writes are
+  −$0.012, the plan's −$0.004.
+- **The cost, on one path: a stored corridor asked for again within 30 minutes.** Its plan packet
+  used to be read back at $0.20 a million and is now billed at $2.00. Entry 167's five warm repeats
+  would each have cost about $0.015 more, so the plan call alone would favour implicit caching once
+  more than about a fifth of its calls repeat a packet within 30 minutes. No traffic exists to say
+  whether it will, so every call is treated alike, and the break-even is written down here.
+
+### What it does not do
+
+- **It is not entry 146's cacheable prefix.** That would make the country-stable part of the
+  selection packet reusable across travellers; this only stops paying to write what nobody reuses.
+- **It leaves the selection packet's size alone.** Trimming it is entry 164's second and third
+  steps, which change what the selector reads and are graded separately.
 
 ---
 

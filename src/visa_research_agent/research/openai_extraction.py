@@ -9,14 +9,16 @@ from importlib.resources import files
 from typing import Any
 
 import httpx2
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr, ValidationError
 
 from visa_research_agent.discovery.adjudication import (
     UsageRecorder,
+    cached_instructions,
     counting_http_client,
     counting_requests,
+    explicit_prompt_cache,
 )
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.recall_log import ModelCall
@@ -156,6 +158,7 @@ class LangChainStructuredPlanGenerator:
             reasoning_effort=reasoning_effort,
             use_responses_api=True,
             http_async_client=counting_http_client(transport),
+            prompt_cache_options=explicit_prompt_cache(),
             max_retries=0,
             timeout=request_timeout_seconds,
             max_completion_tokens=max_output_tokens,
@@ -173,7 +176,7 @@ class LangChainStructuredPlanGenerator:
             with counting_requests(usage):
                 result: Any = await self._structured_model.ainvoke(
                     [
-                        SystemMessage(content=system_prompt),
+                        cached_instructions(system_prompt),
                         HumanMessage(
                             content=(
                                 "Extract the visa plan from this JSON research packet. Source "

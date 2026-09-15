@@ -47,8 +47,10 @@ from visa_research_agent.discovery.selection import (
     SelectionQuotaExhausted,
 )
 from visa_research_agent.domain.models import DestinationConfig
+from visa_research_agent.research.errors import LLMExtractionError
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.model_usage import FileModelUsageLog
+from visa_research_agent.research.openai_extraction import LangChainStructuredPlanGenerator
 from visa_research_agent.research.source_cache import FileSourceCache
 
 pytestmark = pytest.mark.anyio
@@ -764,10 +766,12 @@ class ProviderEndpoint:
         self.text = text
         self.failing = set(fail_first)
         self.requests = 0
+        self.bodies: list[str] = []
 
     def __call__(self, request: httpx2.Request) -> httpx2.Response:
         self.requests += 1
         body = request.content.decode()
+        self.bodies.append(body)
         for marker in sorted(self.failing):
             if marker in body:
                 self.failing.discard(marker)
@@ -787,6 +791,41 @@ def selector_against(endpoint: ProviderEndpoint) -> LangChainCandidateSelector:
         reasoning_effort="low",
         transport=httpx2.MockTransport(endpoint),
     )
+
+
+async def test_every_call_caches_only_its_instructions_and_never_writes_its_packet() -> None:
+    """Left implicit, every call wrote its whole prompt to the cache at 1.25× the input rate, and
+    nothing ever read a packet back (entries 167 and 169)."""
+
+    selection = ProviderEndpoint(json.dumps({"source_ids": []}))
+    await selector_against(selection).select("SELECT-PROMPT", "PACKET-SELECT")
+    roles = ProviderEndpoint(json.dumps({"choices": [], "delegates": [], "tools": []}))
+    await LangChainRoleAdjudicator(
+        api_key="test-key",
+        model_name="test-model",
+        request_timeout_seconds=5.0,
+        max_output_tokens=100,
+        reasoning_effort="low",
+        transport=httpx2.MockTransport(roles),
+    ).adjudicate("ROLES-PROMPT", "PACKET-ROLES")
+    plan = ProviderEndpoint("{}")
+    with pytest.raises(LLMExtractionError):
+        # The reply is not a plan, so the call refuses; what it sent is the part under test.
+        await LangChainStructuredPlanGenerator(
+            api_key="test-key",
+            model_name="test-model",
+            request_timeout_seconds=5.0,
+            max_output_tokens=100,
+            reasoning_effort="low",
+            transport=httpx2.MockTransport(plan),
+        ).generate("PLAN-PROMPT", "PACKET-PLAN")
+
+    for endpoint in (selection, roles, plan):
+        body = json.loads(endpoint.bodies[0])
+        assert body["prompt_cache_options"] == {"mode": "explicit"}
+        instructions, packet = body["input"]
+        assert instructions["content"][0]["prompt_cache_breakpoint"] == {"mode": "explicit"}
+        assert "prompt_cache_breakpoint" not in json.dumps(packet), "a packet is never written"
 
 
 async def test_a_retried_selection_counts_every_request_and_keeps_cache_writes() -> None:

@@ -75,6 +75,9 @@ requests it took.
 - **A corridor served from the store** cost $0.035, all of it the plan call, which is 69% output.
 - **Above 272K input tokens** OpenAI bills the whole request at 2× input and 1.5× output. Canada's
   selection is 149K, and nothing caps the packet as a whole.
+- **Since entry 169 no call writes its packet to the cache.** Every call uses explicit caching with a
+  breakpoint after its instructions — checked live — projected to take a fresh corridor to about
+  $0.323. A stored corridor repeated within 30 minutes pays about $0.015 more for its plan call.
 
 **The constraint, sized and then paused.** What follows is kept because it is measured, not because
 it is next.
