@@ -11,8 +11,9 @@ why the item after it exists; **Smaller things** are one-paragraph defects with 
 right information. Latency and cost are the constraint it fits inside, not the goal.** A country is
 built offline — corpus plus page-text index — and a corridor answers from that store; **search does
 not have to leave the request path, provided it can be justified as giving reliable information at a
-cost that is not high.** On cost and time it passes: **search is $0.054 of a $0.322 corridor, 17% of
-the money and 8% of the seconds, and the model calls are the other 83%** (entry 159). On reliability nothing here can answer it — see item 19, now **paused**, and
+cost that is not high.** On cost and time it passes: **search is about $0.054 of a $0.31 corridor,
+roughly 18% of the money and 8% of the seconds; the model calls are $0.251, measured live** (entries
+159 and 171). On reliability nothing here can answer it — see item 19, now **paused**, and
 known problem 26. The older measurement below still stands on its own terms: of 382 pages read by runs that postdate their country's corpus, **59 were not in the
 corpus and all 59 came from search — 17 of them covering a role nothing else in the run covered**.
 So the corpus is not yet a superset, not even where it is large: Bulgaria has 7,098 entries and

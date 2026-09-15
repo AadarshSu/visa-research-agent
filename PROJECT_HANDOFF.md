@@ -48,8 +48,8 @@ country is built **offline** — corpus and page-text index — and a corridor a
 **Search does not have to leave the request path, provided it can be justified as giving reliable
 information at a cost that is not high.** Every rule about what search may *do* is unchanged.
 
-**Half that justification is measured.** On cost and time **search passes**: $0.075 of a $0.28
-corridor (27%) and 8% of its seconds. On **reliability, nothing in this repository can answer it** —
+**Half that justification is measured.** On cost and time **search passes**: about $0.054 of a
+$0.31 corridor (roughly 18%) and 8% of its seconds (entries 159 and 171). On **reliability, nothing in this repository can answer it** —
 every number here measures whether it *answered*, not whether the answer was *right* (known problem
 26), and correctness is verified outside this repository on purpose (entry 68). **Do not build a
 truth set or a correctness grader without asking.**
@@ -114,11 +114,20 @@ pages read and 2 model calls. **And a corridor now says where its seconds go** (
 
 **The two model calls are 52% — the majority.** Search is 8%, from 69% two entries earlier.
 
-**A corridor costs $0.28 (entry 145).** `gpt-5.6-terra` at $2/M input and $12/M output, plus $0.075
-of Brave search — **selection 59%, search 27%, role adjudication 14%**, and **input is 96% of the
-model bill** (588,363 input tokens against 4,191 output over six corridors). Range $0.19 (Australia,
-Singapore) to $0.37 (Canada). A thousand corridors is **$280**; a corpus build is **$0.35** of search
-and no model cost, so item 49's 53-country rebuild is about **$18.55**.
+**A fresh corridor costs $0.251 in model calls (entry 171)**, measured live through the web app
+over five that resolved, plus about $0.054 of Brave search (entry 159).
+- **Split:** selection 63%, roles 19%, the plan call 18%.
+- **Range:** $0.15 (Singapore) to $0.33 (Canada).
+- **Before:** it was $0.394 the same morning, and entry 145's $0.28 was priced without OpenAI's
+  cache-write charge (entries 167–170).
+- **At volume:** a thousand fresh corridors is about **$305**, and a request served from the corridor
+  store about **$0.035**, the plan call alone.
+- **Corpus builds:** a build is **$0.35** of search and no model cost, so a 53-country rebuild is about
+  **$18.55**.
+
+**How long it takes (entry 171).** A fresh corridor took about **55s**: roughly 25s of research
+and 29s of writing the plan. The same corridor again took about **24s**, all of it the plan, because
+a plan is never stored (entry 44).
 
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
 *time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened

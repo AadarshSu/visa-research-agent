@@ -29,7 +29,8 @@ traveller-specific complement to a traveller-neutral store; what it may *do* is 
 rule below still holds.
 
 **Half of that justification is measured and half is not.** On **cost and time search passes**: a
-corridor is **$0.28** of which search is **$0.075 (27%)**, and 8% of its seconds (entries 143, 145).
+fresh corridor is about **$0.31** — **$0.251** of model calls, measured live (entry 171), and about
+**$0.054** of search (entry 159) — so search is roughly 18% of its money and 8% of its seconds.
 On **reliability nothing here can answer it** — every number this project quotes measures whether it
 *answered*, not whether the answer was *right* (known problem 26), and correctness is verified by the
 owner outside this repository on purpose (entry 68). **Do not build a truth set, a correctness grader
@@ -55,7 +56,8 @@ and searching only to fill what it leaves was tried two ways, and neither pays:
 - **Deciding per query from what the corpus holds** skips the searches that found 5–6 of the 8
   search-only pages that answered.
 
-Search is $0.054 of a $0.322 corridor; the model calls are the rest. **Do not re-propose conditional
+Search was $0.054 of a $0.322 corridor then; the model calls are the rest, and since entries 169–171
+they are $0.251 of about $0.31. **Do not re-propose conditional
 search without a new argument against both.** **The purpose query stays too (entry 160).** It
 alone returns 28 of the 45 pages it was first to find. Without it, Japan `IN/GB`'s London-embassy
 checklist became a questionnaire and Norway `IN/IN` moved to an older checklist, in both runs of
@@ -94,9 +96,15 @@ provider said it billed. Correlation of packet size with time is **+0.33** for s
 for roles; the Netherlands sends the *second-largest* selection packet and has the *fastest*
 selection, and the per-100k rate varies 4×. **"Send the model less" is not a latency lever.**
 
-**It is the whole of the money, though (entry 145).** A corridor costs **$0.28** on `gpt-5.6-terra`
-at $2/M in and $12/M out plus $0.075 of search — **selection 59%, search 27%, roles 14%** — and
-**input is 96% of the model bill**, 588,363 input tokens against 4,191 output over six corridors.
+**It is the whole of the money, though (entries 145 and 167–171).**
+- **Today:** a fresh corridor that resolves costs **$0.251 in model calls**, measured live through the
+  web app (entry 171) — selection about 63%, roles 19%, the plan call 18% — plus about $0.054 of
+  search.
+- **That morning it was $0.394.** OpenAI bills a token written to its prompt cache at $2.50/M against
+  $2.00 for input, and the model was writing every call's whole prompt (entry 167). Entry 169 caches
+  only instructions, and entry 170 cut a third of selection's input.
+- **Entry 145's $0.28** was six corridors priced without the write charge. Input was **96% of the
+  model bill** there: 588,363 input tokens against 4,191 output.
 So latency and cost pull opposite ways and a change must be priced on both. **Item 31 widened the
 pool the selector reads, priced on both before it shipped: +16% selection input over 53 corpora, and
 no second scoring pass (entry 158).** Two things

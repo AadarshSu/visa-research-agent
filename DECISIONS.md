@@ -419,6 +419,29 @@ model.
 Whether a list of visa-requiring countries states "no visa" for a country it omits is the owner's
 judgement (entry 68).
 
+### Where the seconds went
+
+From the same requests: each request's total, the recall log's research stages and the plan call's
+own seconds. One run each, so entry 144's 40% run-to-run swing applies.
+
+| request | total | research | writing the plan |
+| --- | --- | --- | --- |
+| a fresh corridor that resolved, mean of five | **54.9s** (30.9–72.5) | 25.0s | 29.1s |
+| the same corridor again minutes later, from the store | **24.3s** (12.0–31.5) | none | 24.3s |
+| an older stored corridor, mean of four | 14.2s (9.0–18.2) | none | 14.2s |
+| a refusal (Australia) | 28.7s | 28.5s | none |
+
+- **Research, in means:** roles 8.2s, selection 6.6s, search 3.5s, the crawl stage 3.2s, fetch
+  2.7s, corpus 0.8s. Fetch was short because the first sweep had warmed the page cache; Canada still
+  spent 12s in it.
+- **The cost changes did not move latency.** The first sweep, on the code before entries 169 and 170,
+  averaged 52.1s fresh and 30.4s warm — inside the noise.
+- **The plan call is the largest single wait**, and it scales with what it writes, about 11 ms a token:
+  Germany's 3,526 output tokens took 38.7s.
+- **A repeat is fast only in research.** The corridor store keeps which pages answer for three weeks,
+  and the page cache keeps their text for 24 hours. A plan is never stored (entry 44), so every
+  request writes it again, and a refusal is not stored either (entry 151).
+
 ### How to measure this next time
 
 **Attribute a call by corridor as well as by time.** A request's last call is logged in the second
