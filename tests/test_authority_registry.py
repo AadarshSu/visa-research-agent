@@ -35,7 +35,8 @@ NOW = datetime(2026, 8, 18, 9, 0, tzinfo=UTC)
 
 
 def country(code: str, name: str, tlds: list[str]) -> Country:
-    return Country(code=code, name=name, tlds=tlds)
+    # A made-up alpha-3 that stays unique as long as the alpha-2 codes are.
+    return Country(code=code, alpha3=f"{code}X", name=name, tlds=tlds)
 
 
 def countries(*items: Country) -> CountryRegistry:

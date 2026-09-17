@@ -7,6 +7,7 @@ from visa_research_agent.api.countries import normalise_country
 from visa_research_agent.api.schemas import TravellerRequest, VisaPlanRequest
 from visa_research_agent.api.traveller import RequestBodyTravellerSource
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
+from visa_research_agent.discovery.lexicon import get_country_registry
 
 
 def test_the_default_profile_is_the_one_the_singapore_fixture_was_recorded_against() -> None:
@@ -40,8 +41,18 @@ def test_the_country_check_is_usable_outside_the_request_schema() -> None:
     check cannot live only inside the form's schema."""
 
     assert normalise_country(" united kingdom ") == "GB"
+    assert normalise_country("IND") == "IN"
     with pytest.raises(ValueError, match="reference data"):
         normalise_country("Atlantis")
+
+
+def test_every_countrys_alpha_3_code_normalises_to_its_own_alpha_2() -> None:
+    """Ofself may record a citizenship as alpha-3 (TODO item 55). Checked for all 198, so a wrong or
+    missing code in `countries.yaml` fails here rather than as a traveller's wrong passport."""
+
+    for country in get_country_registry().countries:
+        assert normalise_country(country.alpha3) == country.code
+        assert normalise_country(country.alpha3.lower()) == country.code
 
 
 def test_only_the_deciding_details_are_required() -> None:

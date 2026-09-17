@@ -264,7 +264,8 @@ Its API key is in `.paradigm/secrets.toml`, which is gitignored. Its DLR was emp
 because `app push` does not read `CRUX.md`; it is published by `paradigm crux sync`, which only the
 owner may confirm. Steps 1
 and 2 of item 55 are built — the route takes its traveller from an injected `TravellerSource`, and
-the country check is in `api/countries.py` — and the Ofself adapter itself is not. Paradigm stores user data and does not host apps, as far as
+the country check is in `api/countries.py` — and the Ofself adapter
+(`api/ofself.py`, step 3) is built and tested offline but has not yet been run against Paradigm. Paradigm stores user data and does not host apps, as far as
 its documentation shows, so item 7 still needs a host. The CLI is `~/.local/bin/paradigm`,
 logged in as the owner.
 

@@ -80,6 +80,13 @@ class Settings(BaseSettings):
     search_timeout_seconds: float = 15.0
     discovery_host_delay_seconds: float = 0.5
 
+    # Ofself, through its developer platform Paradigm (TODO item 55). The API key is this app's own
+    # credential and a secret; `paradigm app push` wrote it to `.paradigm/secrets.toml`, and it is
+    # read from here like every other secret.
+    paradigm_api_key: SecretStr | None = None
+    paradigm_base_url: str = "https://api.ofself.ai"
+    paradigm_timeout_seconds: float = 10.0
+
     maximum_model_input_characters: int = 80_000
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None

@@ -10,6 +10,10 @@
 # cities, because a post is usually named after its city rather than its country — which is why
 # Singapore's `london.mfa.gov.sg` was never recognised as the mission serving a UK applicant.
 #
+# `alpha3` is the ISO 3166-1 alpha-3 code, because Ofself's `work-authorization` schema may record a
+# citizenship that way (TODO item 55). Taken from Wikidata's P297/P298 on 2026-09-17: one alpha-3 for
+# each of these 198 codes, all distinct, none equal to another country's name or synonym.
+#
 # `demonyms` are the forms that appear in URL paths and link text ("india", "indian").
 #
 # `tlds` are the country's own top-level domains. A candidate under the destination's own TLD
@@ -20,6 +24,7 @@
 schema_version: 1
 countries:
   - code: GB
+    alpha3: GBR
     name: United Kingdom
     synonyms: [united kingdom, uk, great britain, britain, england, scotland, wales]
     demonyms: [british]
@@ -28,6 +33,7 @@ countries:
     tlds: [uk]
 
   - code: IN
+    alpha3: IND
     name: India
     synonyms: [india, republic of india]
     demonyms: [indian, indians]
@@ -36,6 +42,7 @@ countries:
     tlds: [in]
 
   - code: SG
+    alpha3: SGP
     name: Singapore
     synonyms: [singapore, republic of singapore]
     demonyms: [singaporean]
@@ -44,6 +51,7 @@ countries:
     tlds: [sg]
 
   - code: JP
+    alpha3: JPN
     name: Japan
     synonyms: [japan]
     demonyms: [japanese]
@@ -52,6 +60,7 @@ countries:
     tlds: [jp]
 
   - code: US
+    alpha3: USA
     name: United States
     synonyms: [united states, usa, us, united states of america, america]
     demonyms: [american]
@@ -60,6 +69,7 @@ countries:
     tlds: [us, gov]
 
   - code: CA
+    alpha3: CAN
     name: Canada
     synonyms: [canada]
     demonyms: [canadian]
@@ -68,6 +78,7 @@ countries:
     tlds: [ca]
 
   - code: AU
+    alpha3: AUS
     name: Australia
     synonyms: [australia]
     demonyms: [australian]
@@ -76,6 +87,7 @@ countries:
     tlds: [au]
 
   - code: FR
+    alpha3: FRA
     name: France
     synonyms: [france, french republic]
     demonyms: [french]
@@ -84,6 +96,7 @@ countries:
     tlds: [fr]
 
   - code: DE
+    alpha3: DEU
     name: Germany
     synonyms: [germany, federal republic of germany]
     demonyms: [german]
@@ -92,6 +105,7 @@ countries:
     tlds: [de]
 
   - code: CN
+    alpha3: CHN
     name: China
     synonyms: [china, people's republic of china]
     demonyms: [chinese]
@@ -100,6 +114,7 @@ countries:
     tlds: [cn]
 
   - code: AE
+    alpha3: ARE
     name: United Arab Emirates
     synonyms: [united arab emirates, uae, dubai, abu dhabi]
     demonyms: [emirati]
@@ -108,6 +123,7 @@ countries:
     tlds: [ae]
 
   - code: BR
+    alpha3: BRA
     name: Brazil
     synonyms: [brazil, federative republic of brazil]
     demonyms: [brazilian]
@@ -116,6 +132,7 @@ countries:
     tlds: [br]
 
   - code: VN
+    alpha3: VNM
     name: Vietnam
     synonyms: [vietnam, viet nam, socialist republic of vietnam]
     demonyms: [vietnamese]
@@ -124,6 +141,7 @@ countries:
     tlds: [vn]
 
   - code: TH
+    alpha3: THA
     name: Thailand
     synonyms: [thailand, kingdom of thailand]
     demonyms: [thai]
@@ -147,6 +165,7 @@ countries:
 # Every scalar is quoted. Unquoted, YAML reads Norway's "NO" as the boolean false.
 
   - code: "AF"
+    alpha3: "AFG"
     name: "Afghanistan"
     synonyms: ["afghanistan"]
     host_labels: ["af"]
@@ -154,6 +173,7 @@ countries:
     tlds: ["af"]
 
   - code: "AL"
+    alpha3: "ALB"
     name: "Albania"
     synonyms: ["albania"]
     host_labels: ["al"]
@@ -161,6 +181,7 @@ countries:
     tlds: ["al"]
 
   - code: "DZ"
+    alpha3: "DZA"
     name: "Algeria"
     synonyms: ["algeria"]
     host_labels: ["dz"]
@@ -168,6 +189,7 @@ countries:
     tlds: ["dz"]
 
   - code: "AD"
+    alpha3: "AND"
     name: "Andorra"
     synonyms: ["andorra"]
     host_labels: ["ad"]
@@ -175,6 +197,7 @@ countries:
     tlds: ["ad"]
 
   - code: "AO"
+    alpha3: "AGO"
     name: "Angola"
     synonyms: ["angola"]
     host_labels: ["ao"]
@@ -182,6 +205,7 @@ countries:
     tlds: ["ao"]
 
   - code: "AG"
+    alpha3: "ATG"
     name: "Antigua and Barbuda"
     synonyms: ["antigua and barbuda"]
     host_labels: ["ag"]
@@ -189,6 +213,7 @@ countries:
     tlds: ["ag"]
 
   - code: "AR"
+    alpha3: "ARG"
     name: "Argentina"
     synonyms: ["argentina"]
     host_labels: ["ar"]
@@ -196,6 +221,7 @@ countries:
     tlds: ["ar"]
 
   - code: "AM"
+    alpha3: "ARM"
     name: "Armenia"
     synonyms: ["armenia"]
     host_labels: ["am"]
@@ -203,6 +229,7 @@ countries:
     tlds: ["am"]
 
   - code: "AT"
+    alpha3: "AUT"
     name: "Austria"
     synonyms: ["austria"]
     host_labels: ["at"]
@@ -210,6 +237,7 @@ countries:
     tlds: ["at"]
 
   - code: "AZ"
+    alpha3: "AZE"
     name: "Azerbaijan"
     synonyms: ["azerbaijan"]
     host_labels: ["az"]
@@ -217,6 +245,7 @@ countries:
     tlds: ["az"]
 
   - code: "BS"
+    alpha3: "BHS"
     name: "Bahamas"
     synonyms: ["bahamas"]
     host_labels: ["bs"]
@@ -224,6 +253,7 @@ countries:
     tlds: ["bs"]
 
   - code: "BH"
+    alpha3: "BHR"
     name: "Bahrain"
     synonyms: ["bahrain"]
     host_labels: ["bh"]
@@ -231,6 +261,7 @@ countries:
     tlds: ["bh"]
 
   - code: "BD"
+    alpha3: "BGD"
     name: "Bangladesh"
     synonyms: ["bangladesh"]
     host_labels: ["bd"]
@@ -238,6 +269,7 @@ countries:
     tlds: ["bd"]
 
   - code: "BB"
+    alpha3: "BRB"
     name: "Barbados"
     synonyms: ["barbados"]
     host_labels: ["bb"]
@@ -245,6 +277,7 @@ countries:
     tlds: ["bb"]
 
   - code: "BY"
+    alpha3: "BLR"
     name: "Belarus"
     synonyms: ["belarus"]
     host_labels: ["by"]
@@ -252,6 +285,7 @@ countries:
     tlds: ["by"]
 
   - code: "BE"
+    alpha3: "BEL"
     name: "Belgium"
     synonyms: ["belgium"]
     host_labels: ["be"]
@@ -259,6 +293,7 @@ countries:
     tlds: ["be"]
 
   - code: "BZ"
+    alpha3: "BLZ"
     name: "Belize"
     synonyms: ["belize"]
     host_labels: ["bz"]
@@ -266,6 +301,7 @@ countries:
     tlds: ["bz"]
 
   - code: "BJ"
+    alpha3: "BEN"
     name: "Benin"
     synonyms: ["benin"]
     host_labels: ["bj"]
@@ -273,6 +309,7 @@ countries:
     tlds: ["bj"]
 
   - code: "BT"
+    alpha3: "BTN"
     name: "Bhutan"
     synonyms: ["bhutan"]
     host_labels: ["bt"]
@@ -280,6 +317,7 @@ countries:
     tlds: ["bt"]
 
   - code: "BO"
+    alpha3: "BOL"
     name: "Bolivia"
     synonyms: ["bolivia"]
     host_labels: ["bo"]
@@ -287,6 +325,7 @@ countries:
     tlds: ["bo"]
 
   - code: "BA"
+    alpha3: "BIH"
     name: "Bosnia and Herzegovina"
     synonyms: ["bosnia and herzegovina"]
     host_labels: ["ba"]
@@ -294,6 +333,7 @@ countries:
     tlds: ["ba"]
 
   - code: "BW"
+    alpha3: "BWA"
     name: "Botswana"
     synonyms: ["botswana"]
     host_labels: ["bw"]
@@ -301,6 +341,7 @@ countries:
     tlds: ["bw"]
 
   - code: "BN"
+    alpha3: "BRN"
     name: "Brunei"
     synonyms: ["brunei"]
     host_labels: ["bn"]
@@ -308,6 +349,7 @@ countries:
     tlds: ["bn"]
 
   - code: "BG"
+    alpha3: "BGR"
     name: "Bulgaria"
     synonyms: ["bulgaria"]
     host_labels: ["bg"]
@@ -315,6 +357,7 @@ countries:
     tlds: ["bg"]
 
   - code: "BF"
+    alpha3: "BFA"
     name: "Burkina Faso"
     synonyms: ["burkina faso"]
     host_labels: ["bf"]
@@ -322,6 +365,7 @@ countries:
     tlds: ["bf"]
 
   - code: "BI"
+    alpha3: "BDI"
     name: "Burundi"
     synonyms: ["burundi"]
     host_labels: ["bi"]
@@ -329,6 +373,7 @@ countries:
     tlds: ["bi"]
 
   - code: "KH"
+    alpha3: "KHM"
     name: "Cambodia"
     synonyms: ["cambodia"]
     host_labels: ["kh"]
@@ -336,6 +381,7 @@ countries:
     tlds: ["kh"]
 
   - code: "CM"
+    alpha3: "CMR"
     name: "Cameroon"
     synonyms: ["cameroon"]
     host_labels: ["cm"]
@@ -343,6 +389,7 @@ countries:
     tlds: ["cm"]
 
   - code: "CV"
+    alpha3: "CPV"
     name: "Cabo Verde"
     synonyms: ["cabo verde"]
     host_labels: ["cv"]
@@ -350,6 +397,7 @@ countries:
     tlds: ["cv"]
 
   - code: "CF"
+    alpha3: "CAF"
     name: "Central African Republic"
     synonyms: ["central african republic"]
     host_labels: ["cf"]
@@ -357,6 +405,7 @@ countries:
     tlds: ["cf"]
 
   - code: "TD"
+    alpha3: "TCD"
     name: "Chad"
     synonyms: ["chad"]
     host_labels: ["td"]
@@ -364,6 +413,7 @@ countries:
     tlds: ["td"]
 
   - code: "CL"
+    alpha3: "CHL"
     name: "Chile"
     synonyms: ["chile"]
     host_labels: ["cl"]
@@ -371,6 +421,7 @@ countries:
     tlds: ["cl"]
 
   - code: "CO"
+    alpha3: "COL"
     name: "Colombia"
     synonyms: ["colombia"]
     host_labels: ["co"]
@@ -378,6 +429,7 @@ countries:
     tlds: ["co"]
 
   - code: "KM"
+    alpha3: "COM"
     name: "Comoros"
     synonyms: ["comoros"]
     host_labels: ["km"]
@@ -385,6 +437,7 @@ countries:
     tlds: ["km"]
 
   - code: "CG"
+    alpha3: "COG"
     name: "Congo"
     synonyms: ["congo"]
     host_labels: ["cg"]
@@ -392,6 +445,7 @@ countries:
     tlds: ["cg"]
 
   - code: "CD"
+    alpha3: "COD"
     name: "Democratic Republic of the Congo"
     synonyms: ["democratic republic of the congo"]
     host_labels: ["cd"]
@@ -399,6 +453,7 @@ countries:
     tlds: ["cd"]
 
   - code: "CR"
+    alpha3: "CRI"
     name: "Costa Rica"
     synonyms: ["costa rica"]
     host_labels: ["cr"]
@@ -406,6 +461,7 @@ countries:
     tlds: ["cr"]
 
   - code: "CI"
+    alpha3: "CIV"
     name: "Cote d'Ivoire"
     synonyms: ["cote d'ivoire"]
     host_labels: ["ci"]
@@ -413,6 +469,7 @@ countries:
     tlds: ["ci"]
 
   - code: "HR"
+    alpha3: "HRV"
     name: "Croatia"
     synonyms: ["croatia"]
     host_labels: ["hr"]
@@ -420,6 +477,7 @@ countries:
     tlds: ["hr"]
 
   - code: "CU"
+    alpha3: "CUB"
     name: "Cuba"
     synonyms: ["cuba"]
     host_labels: ["cu"]
@@ -427,6 +485,7 @@ countries:
     tlds: ["cu"]
 
   - code: "CY"
+    alpha3: "CYP"
     name: "Cyprus"
     synonyms: ["cyprus"]
     host_labels: ["cy"]
@@ -434,6 +493,7 @@ countries:
     tlds: ["cy"]
 
   - code: "CZ"
+    alpha3: "CZE"
     name: "Czechia"
     synonyms: ["czechia"]
     host_labels: ["cz"]
@@ -441,6 +501,7 @@ countries:
     tlds: ["cz"]
 
   - code: "DK"
+    alpha3: "DNK"
     name: "Denmark"
     synonyms: ["denmark"]
     host_labels: ["dk"]
@@ -448,6 +509,7 @@ countries:
     tlds: ["dk"]
 
   - code: "DJ"
+    alpha3: "DJI"
     name: "Djibouti"
     synonyms: ["djibouti"]
     host_labels: ["dj"]
@@ -455,6 +517,7 @@ countries:
     tlds: ["dj"]
 
   - code: "DM"
+    alpha3: "DMA"
     name: "Dominica"
     synonyms: ["dominica"]
     host_labels: ["dm"]
@@ -462,6 +525,7 @@ countries:
     tlds: ["dm"]
 
   - code: "DO"
+    alpha3: "DOM"
     name: "Dominican Republic"
     synonyms: ["dominican republic"]
     host_labels: ["do"]
@@ -469,6 +533,7 @@ countries:
     tlds: ["do"]
 
   - code: "EC"
+    alpha3: "ECU"
     name: "Ecuador"
     synonyms: ["ecuador"]
     host_labels: ["ec"]
@@ -476,6 +541,7 @@ countries:
     tlds: ["ec"]
 
   - code: "EG"
+    alpha3: "EGY"
     name: "Egypt"
     synonyms: ["egypt"]
     host_labels: ["eg"]
@@ -483,6 +549,7 @@ countries:
     tlds: ["eg"]
 
   - code: "SV"
+    alpha3: "SLV"
     name: "El Salvador"
     synonyms: ["el salvador"]
     host_labels: ["sv"]
@@ -490,6 +557,7 @@ countries:
     tlds: ["sv"]
 
   - code: "GQ"
+    alpha3: "GNQ"
     name: "Equatorial Guinea"
     synonyms: ["equatorial guinea"]
     host_labels: ["gq"]
@@ -497,6 +565,7 @@ countries:
     tlds: ["gq"]
 
   - code: "ER"
+    alpha3: "ERI"
     name: "Eritrea"
     synonyms: ["eritrea"]
     host_labels: ["er"]
@@ -504,6 +573,7 @@ countries:
     tlds: ["er"]
 
   - code: "EE"
+    alpha3: "EST"
     name: "Estonia"
     synonyms: ["estonia"]
     host_labels: ["ee"]
@@ -511,6 +581,7 @@ countries:
     tlds: ["ee"]
 
   - code: "SZ"
+    alpha3: "SWZ"
     name: "Eswatini"
     synonyms: ["eswatini"]
     host_labels: ["sz"]
@@ -518,6 +589,7 @@ countries:
     tlds: ["sz"]
 
   - code: "ET"
+    alpha3: "ETH"
     name: "Ethiopia"
     synonyms: ["ethiopia"]
     host_labels: ["et"]
@@ -525,6 +597,7 @@ countries:
     tlds: ["et"]
 
   - code: "FJ"
+    alpha3: "FJI"
     name: "Fiji"
     synonyms: ["fiji"]
     host_labels: ["fj"]
@@ -532,6 +605,7 @@ countries:
     tlds: ["fj"]
 
   - code: "FI"
+    alpha3: "FIN"
     name: "Finland"
     synonyms: ["finland"]
     host_labels: ["fi"]
@@ -539,6 +613,7 @@ countries:
     tlds: ["fi"]
 
   - code: "GA"
+    alpha3: "GAB"
     name: "Gabon"
     synonyms: ["gabon"]
     host_labels: ["ga"]
@@ -546,6 +621,7 @@ countries:
     tlds: ["ga"]
 
   - code: "GM"
+    alpha3: "GMB"
     name: "Gambia"
     synonyms: ["gambia"]
     host_labels: ["gm"]
@@ -553,6 +629,7 @@ countries:
     tlds: ["gm"]
 
   - code: "GE"
+    alpha3: "GEO"
     name: "Georgia"
     synonyms: ["georgia"]
     host_labels: ["ge"]
@@ -560,6 +637,7 @@ countries:
     tlds: ["ge"]
 
   - code: "GH"
+    alpha3: "GHA"
     name: "Ghana"
     synonyms: ["ghana"]
     host_labels: ["gh"]
@@ -567,6 +645,7 @@ countries:
     tlds: ["gh"]
 
   - code: "GR"
+    alpha3: "GRC"
     name: "Greece"
     synonyms: ["greece"]
     host_labels: ["gr"]
@@ -574,6 +653,7 @@ countries:
     tlds: ["gr"]
 
   - code: "GD"
+    alpha3: "GRD"
     name: "Grenada"
     synonyms: ["grenada"]
     host_labels: ["gd"]
@@ -581,6 +661,7 @@ countries:
     tlds: ["gd"]
 
   - code: "GT"
+    alpha3: "GTM"
     name: "Guatemala"
     synonyms: ["guatemala"]
     host_labels: ["gt"]
@@ -588,6 +669,7 @@ countries:
     tlds: ["gt"]
 
   - code: "GN"
+    alpha3: "GIN"
     name: "Guinea"
     synonyms: ["guinea"]
     host_labels: ["gn"]
@@ -595,6 +677,7 @@ countries:
     tlds: ["gn"]
 
   - code: "GW"
+    alpha3: "GNB"
     name: "Guinea-Bissau"
     synonyms: ["guinea-bissau"]
     host_labels: ["gw"]
@@ -602,6 +685,7 @@ countries:
     tlds: ["gw"]
 
   - code: "GY"
+    alpha3: "GUY"
     name: "Guyana"
     synonyms: ["guyana"]
     host_labels: ["gy"]
@@ -609,6 +693,7 @@ countries:
     tlds: ["gy"]
 
   - code: "HT"
+    alpha3: "HTI"
     name: "Haiti"
     synonyms: ["haiti"]
     host_labels: ["ht"]
@@ -616,6 +701,7 @@ countries:
     tlds: ["ht"]
 
   - code: "HN"
+    alpha3: "HND"
     name: "Honduras"
     synonyms: ["honduras"]
     host_labels: ["hn"]
@@ -623,6 +709,7 @@ countries:
     tlds: ["hn"]
 
   - code: "HK"
+    alpha3: "HKG"
     name: "Hong Kong"
     synonyms: ["hong kong"]
     host_labels: ["hk"]
@@ -630,6 +717,7 @@ countries:
     tlds: ["hk"]
 
   - code: "HU"
+    alpha3: "HUN"
     name: "Hungary"
     synonyms: ["hungary"]
     host_labels: ["hu"]
@@ -637,6 +725,7 @@ countries:
     tlds: ["hu"]
 
   - code: "IS"
+    alpha3: "ISL"
     name: "Iceland"
     synonyms: ["iceland"]
     host_labels: ["is"]
@@ -644,6 +733,7 @@ countries:
     tlds: ["is"]
 
   - code: "ID"
+    alpha3: "IDN"
     name: "Indonesia"
     synonyms: ["indonesia"]
     host_labels: ["id"]
@@ -651,6 +741,7 @@ countries:
     tlds: ["id"]
 
   - code: "IR"
+    alpha3: "IRN"
     name: "Iran"
     synonyms: ["iran"]
     host_labels: ["ir"]
@@ -658,6 +749,7 @@ countries:
     tlds: ["ir"]
 
   - code: "IQ"
+    alpha3: "IRQ"
     name: "Iraq"
     synonyms: ["iraq"]
     host_labels: ["iq"]
@@ -665,6 +757,7 @@ countries:
     tlds: ["iq"]
 
   - code: "IE"
+    alpha3: "IRL"
     name: "Ireland"
     synonyms: ["ireland"]
     host_labels: ["ie"]
@@ -672,6 +765,7 @@ countries:
     tlds: ["ie"]
 
   - code: "IL"
+    alpha3: "ISR"
     name: "Israel"
     synonyms: ["israel"]
     host_labels: ["il"]
@@ -679,6 +773,7 @@ countries:
     tlds: ["il"]
 
   - code: "IT"
+    alpha3: "ITA"
     name: "Italy"
     synonyms: ["italy"]
     host_labels: ["it"]
@@ -686,6 +781,7 @@ countries:
     tlds: ["it"]
 
   - code: "JM"
+    alpha3: "JAM"
     name: "Jamaica"
     synonyms: ["jamaica"]
     host_labels: ["jm"]
@@ -693,6 +789,7 @@ countries:
     tlds: ["jm"]
 
   - code: "JO"
+    alpha3: "JOR"
     name: "Jordan"
     synonyms: ["jordan"]
     host_labels: ["jo"]
@@ -700,6 +797,7 @@ countries:
     tlds: ["jo"]
 
   - code: "KZ"
+    alpha3: "KAZ"
     name: "Kazakhstan"
     synonyms: ["kazakhstan"]
     host_labels: ["kz"]
@@ -707,6 +805,7 @@ countries:
     tlds: ["kz"]
 
   - code: "KE"
+    alpha3: "KEN"
     name: "Kenya"
     synonyms: ["kenya"]
     host_labels: ["ke"]
@@ -714,6 +813,7 @@ countries:
     tlds: ["ke"]
 
   - code: "KI"
+    alpha3: "KIR"
     name: "Kiribati"
     synonyms: ["kiribati"]
     host_labels: ["ki"]
@@ -721,6 +821,7 @@ countries:
     tlds: ["ki"]
 
   - code: "KW"
+    alpha3: "KWT"
     name: "Kuwait"
     synonyms: ["kuwait"]
     host_labels: ["kw"]
@@ -728,6 +829,7 @@ countries:
     tlds: ["kw"]
 
   - code: "KG"
+    alpha3: "KGZ"
     name: "Kyrgyzstan"
     synonyms: ["kyrgyzstan"]
     host_labels: ["kg"]
@@ -735,6 +837,7 @@ countries:
     tlds: ["kg"]
 
   - code: "LA"
+    alpha3: "LAO"
     name: "Laos"
     synonyms: ["laos"]
     host_labels: ["la"]
@@ -742,6 +845,7 @@ countries:
     tlds: ["la"]
 
   - code: "LV"
+    alpha3: "LVA"
     name: "Latvia"
     synonyms: ["latvia"]
     host_labels: ["lv"]
@@ -749,6 +853,7 @@ countries:
     tlds: ["lv"]
 
   - code: "LB"
+    alpha3: "LBN"
     name: "Lebanon"
     synonyms: ["lebanon"]
     host_labels: ["lb"]
@@ -756,6 +861,7 @@ countries:
     tlds: ["lb"]
 
   - code: "LS"
+    alpha3: "LSO"
     name: "Lesotho"
     synonyms: ["lesotho"]
     host_labels: ["ls"]
@@ -763,6 +869,7 @@ countries:
     tlds: ["ls"]
 
   - code: "LR"
+    alpha3: "LBR"
     name: "Liberia"
     synonyms: ["liberia"]
     host_labels: ["lr"]
@@ -770,6 +877,7 @@ countries:
     tlds: ["lr"]
 
   - code: "LY"
+    alpha3: "LBY"
     name: "Libya"
     synonyms: ["libya"]
     host_labels: ["ly"]
@@ -777,6 +885,7 @@ countries:
     tlds: ["ly"]
 
   - code: "LI"
+    alpha3: "LIE"
     name: "Liechtenstein"
     synonyms: ["liechtenstein"]
     host_labels: ["li"]
@@ -784,6 +893,7 @@ countries:
     tlds: ["li"]
 
   - code: "LT"
+    alpha3: "LTU"
     name: "Lithuania"
     synonyms: ["lithuania"]
     host_labels: ["lt"]
@@ -791,6 +901,7 @@ countries:
     tlds: ["lt"]
 
   - code: "LU"
+    alpha3: "LUX"
     name: "Luxembourg"
     synonyms: ["luxembourg"]
     host_labels: ["lu"]
@@ -798,6 +909,7 @@ countries:
     tlds: ["lu"]
 
   - code: "MO"
+    alpha3: "MAC"
     name: "Macao"
     synonyms: ["macao"]
     host_labels: ["mo"]
@@ -805,6 +917,7 @@ countries:
     tlds: ["mo"]
 
   - code: "MG"
+    alpha3: "MDG"
     name: "Madagascar"
     synonyms: ["madagascar"]
     host_labels: ["mg"]
@@ -812,6 +925,7 @@ countries:
     tlds: ["mg"]
 
   - code: "MW"
+    alpha3: "MWI"
     name: "Malawi"
     synonyms: ["malawi"]
     host_labels: ["mw"]
@@ -819,6 +933,7 @@ countries:
     tlds: ["mw"]
 
   - code: "MY"
+    alpha3: "MYS"
     name: "Malaysia"
     synonyms: ["malaysia"]
     host_labels: ["my"]
@@ -826,6 +941,7 @@ countries:
     tlds: ["my"]
 
   - code: "MV"
+    alpha3: "MDV"
     name: "Maldives"
     synonyms: ["maldives"]
     host_labels: ["mv"]
@@ -833,6 +949,7 @@ countries:
     tlds: ["mv"]
 
   - code: "ML"
+    alpha3: "MLI"
     name: "Mali"
     synonyms: ["mali"]
     host_labels: ["ml"]
@@ -840,6 +957,7 @@ countries:
     tlds: ["ml"]
 
   - code: "MT"
+    alpha3: "MLT"
     name: "Malta"
     synonyms: ["malta"]
     host_labels: ["mt"]
@@ -847,6 +965,7 @@ countries:
     tlds: ["mt"]
 
   - code: "MH"
+    alpha3: "MHL"
     name: "Marshall Islands"
     synonyms: ["marshall islands"]
     host_labels: ["mh"]
@@ -854,6 +973,7 @@ countries:
     tlds: ["mh"]
 
   - code: "MR"
+    alpha3: "MRT"
     name: "Mauritania"
     synonyms: ["mauritania"]
     host_labels: ["mr"]
@@ -861,6 +981,7 @@ countries:
     tlds: ["mr"]
 
   - code: "MU"
+    alpha3: "MUS"
     name: "Mauritius"
     synonyms: ["mauritius"]
     host_labels: ["mu"]
@@ -868,6 +989,7 @@ countries:
     tlds: ["mu"]
 
   - code: "MX"
+    alpha3: "MEX"
     name: "Mexico"
     synonyms: ["mexico"]
     host_labels: ["mx"]
@@ -875,6 +997,7 @@ countries:
     tlds: ["mx"]
 
   - code: "FM"
+    alpha3: "FSM"
     name: "Micronesia"
     synonyms: ["micronesia"]
     host_labels: ["fm"]
@@ -882,6 +1005,7 @@ countries:
     tlds: ["fm"]
 
   - code: "MD"
+    alpha3: "MDA"
     name: "Moldova"
     synonyms: ["moldova"]
     host_labels: ["md"]
@@ -889,6 +1013,7 @@ countries:
     tlds: ["md"]
 
   - code: "MC"
+    alpha3: "MCO"
     name: "Monaco"
     synonyms: ["monaco"]
     host_labels: ["mc"]
@@ -896,6 +1021,7 @@ countries:
     tlds: ["mc"]
 
   - code: "MN"
+    alpha3: "MNG"
     name: "Mongolia"
     synonyms: ["mongolia"]
     host_labels: ["mn"]
@@ -903,6 +1029,7 @@ countries:
     tlds: ["mn"]
 
   - code: "ME"
+    alpha3: "MNE"
     name: "Montenegro"
     synonyms: ["montenegro"]
     host_labels: ["me"]
@@ -910,6 +1037,7 @@ countries:
     tlds: ["me"]
 
   - code: "MA"
+    alpha3: "MAR"
     name: "Morocco"
     synonyms: ["morocco"]
     host_labels: ["ma"]
@@ -917,6 +1045,7 @@ countries:
     tlds: ["ma"]
 
   - code: "MZ"
+    alpha3: "MOZ"
     name: "Mozambique"
     synonyms: ["mozambique"]
     host_labels: ["mz"]
@@ -924,6 +1053,7 @@ countries:
     tlds: ["mz"]
 
   - code: "MM"
+    alpha3: "MMR"
     name: "Myanmar"
     synonyms: ["myanmar"]
     host_labels: ["mm"]
@@ -931,6 +1061,7 @@ countries:
     tlds: ["mm"]
 
   - code: "NA"
+    alpha3: "NAM"
     name: "Namibia"
     synonyms: ["namibia"]
     host_labels: ["na"]
@@ -938,6 +1069,7 @@ countries:
     tlds: ["na"]
 
   - code: "NR"
+    alpha3: "NRU"
     name: "Nauru"
     synonyms: ["nauru"]
     host_labels: ["nr"]
@@ -945,6 +1077,7 @@ countries:
     tlds: ["nr"]
 
   - code: "NP"
+    alpha3: "NPL"
     name: "Nepal"
     synonyms: ["nepal"]
     host_labels: ["np"]
@@ -952,6 +1085,7 @@ countries:
     tlds: ["np"]
 
   - code: "NL"
+    alpha3: "NLD"
     name: "Netherlands"
     synonyms: ["netherlands"]
     host_labels: ["nl"]
@@ -959,6 +1093,7 @@ countries:
     tlds: ["nl"]
 
   - code: "NZ"
+    alpha3: "NZL"
     name: "New Zealand"
     synonyms: ["new zealand"]
     host_labels: ["nz"]
@@ -966,6 +1101,7 @@ countries:
     tlds: ["nz"]
 
   - code: "NI"
+    alpha3: "NIC"
     name: "Nicaragua"
     synonyms: ["nicaragua"]
     host_labels: ["ni"]
@@ -973,6 +1109,7 @@ countries:
     tlds: ["ni"]
 
   - code: "NE"
+    alpha3: "NER"
     name: "Niger"
     synonyms: ["niger"]
     host_labels: ["ne"]
@@ -980,6 +1117,7 @@ countries:
     tlds: ["ne"]
 
   - code: "NG"
+    alpha3: "NGA"
     name: "Nigeria"
     synonyms: ["nigeria"]
     host_labels: ["ng"]
@@ -987,6 +1125,7 @@ countries:
     tlds: ["ng"]
 
   - code: "KP"
+    alpha3: "PRK"
     name: "North Korea"
     synonyms: ["north korea"]
     host_labels: ["kp"]
@@ -994,6 +1133,7 @@ countries:
     tlds: ["kp"]
 
   - code: "MK"
+    alpha3: "MKD"
     name: "North Macedonia"
     synonyms: ["north macedonia"]
     host_labels: ["mk"]
@@ -1001,6 +1141,7 @@ countries:
     tlds: ["mk"]
 
   - code: "NO"
+    alpha3: "NOR"
     name: "Norway"
     synonyms: ["norway"]
     host_labels: ["no"]
@@ -1008,6 +1149,7 @@ countries:
     tlds: ["no"]
 
   - code: "OM"
+    alpha3: "OMN"
     name: "Oman"
     synonyms: ["oman"]
     host_labels: ["om"]
@@ -1015,6 +1157,7 @@ countries:
     tlds: ["om"]
 
   - code: "PK"
+    alpha3: "PAK"
     name: "Pakistan"
     synonyms: ["pakistan"]
     host_labels: ["pk"]
@@ -1022,6 +1165,7 @@ countries:
     tlds: ["pk"]
 
   - code: "PW"
+    alpha3: "PLW"
     name: "Palau"
     synonyms: ["palau"]
     host_labels: ["pw"]
@@ -1029,6 +1173,7 @@ countries:
     tlds: ["pw"]
 
   - code: "PS"
+    alpha3: "PSE"
     name: "Palestine"
     synonyms: ["palestine"]
     host_labels: ["ps"]
@@ -1036,6 +1181,7 @@ countries:
     tlds: ["ps"]
 
   - code: "PA"
+    alpha3: "PAN"
     name: "Panama"
     synonyms: ["panama"]
     host_labels: ["pa"]
@@ -1043,6 +1189,7 @@ countries:
     tlds: ["pa"]
 
   - code: "PG"
+    alpha3: "PNG"
     name: "Papua New Guinea"
     synonyms: ["papua new guinea"]
     host_labels: ["pg"]
@@ -1050,6 +1197,7 @@ countries:
     tlds: ["pg"]
 
   - code: "PY"
+    alpha3: "PRY"
     name: "Paraguay"
     synonyms: ["paraguay"]
     host_labels: ["py"]
@@ -1057,6 +1205,7 @@ countries:
     tlds: ["py"]
 
   - code: "PE"
+    alpha3: "PER"
     name: "Peru"
     synonyms: ["peru"]
     host_labels: ["pe"]
@@ -1064,6 +1213,7 @@ countries:
     tlds: ["pe"]
 
   - code: "PH"
+    alpha3: "PHL"
     name: "Philippines"
     synonyms: ["philippines"]
     host_labels: ["ph"]
@@ -1071,6 +1221,7 @@ countries:
     tlds: ["ph"]
 
   - code: "PL"
+    alpha3: "POL"
     name: "Poland"
     synonyms: ["poland"]
     host_labels: ["pl"]
@@ -1078,6 +1229,7 @@ countries:
     tlds: ["pl"]
 
   - code: "PT"
+    alpha3: "PRT"
     name: "Portugal"
     synonyms: ["portugal"]
     host_labels: ["pt"]
@@ -1085,6 +1237,7 @@ countries:
     tlds: ["pt"]
 
   - code: "QA"
+    alpha3: "QAT"
     name: "Qatar"
     synonyms: ["qatar"]
     host_labels: ["qa"]
@@ -1092,6 +1245,7 @@ countries:
     tlds: ["qa"]
 
   - code: "RO"
+    alpha3: "ROU"
     name: "Romania"
     synonyms: ["romania"]
     host_labels: ["ro"]
@@ -1099,6 +1253,7 @@ countries:
     tlds: ["ro"]
 
   - code: "RU"
+    alpha3: "RUS"
     name: "Russia"
     synonyms: ["russia"]
     host_labels: ["ru"]
@@ -1106,6 +1261,7 @@ countries:
     tlds: ["ru"]
 
   - code: "RW"
+    alpha3: "RWA"
     name: "Rwanda"
     synonyms: ["rwanda"]
     host_labels: ["rw"]
@@ -1113,6 +1269,7 @@ countries:
     tlds: ["rw"]
 
   - code: "KN"
+    alpha3: "KNA"
     name: "Saint Kitts and Nevis"
     synonyms: ["saint kitts and nevis"]
     host_labels: ["kn"]
@@ -1120,6 +1277,7 @@ countries:
     tlds: ["kn"]
 
   - code: "LC"
+    alpha3: "LCA"
     name: "Saint Lucia"
     synonyms: ["saint lucia"]
     host_labels: ["lc"]
@@ -1127,6 +1285,7 @@ countries:
     tlds: ["lc"]
 
   - code: "VC"
+    alpha3: "VCT"
     name: "Saint Vincent and the Grenadines"
     synonyms: ["saint vincent and the grenadines"]
     host_labels: ["vc"]
@@ -1134,6 +1293,7 @@ countries:
     tlds: ["vc"]
 
   - code: "WS"
+    alpha3: "WSM"
     name: "Samoa"
     synonyms: ["samoa"]
     host_labels: ["ws"]
@@ -1141,6 +1301,7 @@ countries:
     tlds: ["ws"]
 
   - code: "SM"
+    alpha3: "SMR"
     name: "San Marino"
     synonyms: ["san marino"]
     host_labels: ["sm"]
@@ -1148,6 +1309,7 @@ countries:
     tlds: ["sm"]
 
   - code: "ST"
+    alpha3: "STP"
     name: "Sao Tome and Principe"
     synonyms: ["sao tome and principe"]
     host_labels: ["st"]
@@ -1155,6 +1317,7 @@ countries:
     tlds: ["st"]
 
   - code: "SA"
+    alpha3: "SAU"
     name: "Saudi Arabia"
     synonyms: ["saudi arabia"]
     host_labels: ["sa"]
@@ -1162,6 +1325,7 @@ countries:
     tlds: ["sa"]
 
   - code: "SN"
+    alpha3: "SEN"
     name: "Senegal"
     synonyms: ["senegal"]
     host_labels: ["sn"]
@@ -1169,6 +1333,7 @@ countries:
     tlds: ["sn"]
 
   - code: "RS"
+    alpha3: "SRB"
     name: "Serbia"
     synonyms: ["serbia"]
     host_labels: ["rs"]
@@ -1176,6 +1341,7 @@ countries:
     tlds: ["rs"]
 
   - code: "SC"
+    alpha3: "SYC"
     name: "Seychelles"
     synonyms: ["seychelles"]
     host_labels: ["sc"]
@@ -1183,6 +1349,7 @@ countries:
     tlds: ["sc"]
 
   - code: "SL"
+    alpha3: "SLE"
     name: "Sierra Leone"
     synonyms: ["sierra leone"]
     host_labels: ["sl"]
@@ -1190,6 +1357,7 @@ countries:
     tlds: ["sl"]
 
   - code: "SK"
+    alpha3: "SVK"
     name: "Slovakia"
     synonyms: ["slovakia"]
     host_labels: ["sk"]
@@ -1197,6 +1365,7 @@ countries:
     tlds: ["sk"]
 
   - code: "SI"
+    alpha3: "SVN"
     name: "Slovenia"
     synonyms: ["slovenia"]
     host_labels: ["si"]
@@ -1204,6 +1373,7 @@ countries:
     tlds: ["si"]
 
   - code: "SB"
+    alpha3: "SLB"
     name: "Solomon Islands"
     synonyms: ["solomon islands"]
     host_labels: ["sb"]
@@ -1211,6 +1381,7 @@ countries:
     tlds: ["sb"]
 
   - code: "SO"
+    alpha3: "SOM"
     name: "Somalia"
     synonyms: ["somalia"]
     host_labels: ["so"]
@@ -1218,6 +1389,7 @@ countries:
     tlds: ["so"]
 
   - code: "ZA"
+    alpha3: "ZAF"
     name: "South Africa"
     synonyms: ["south africa"]
     host_labels: ["za"]
@@ -1225,6 +1397,7 @@ countries:
     tlds: ["za"]
 
   - code: "KR"
+    alpha3: "KOR"
     name: "South Korea"
     synonyms: ["south korea"]
     host_labels: ["kr"]
@@ -1232,6 +1405,7 @@ countries:
     tlds: ["kr"]
 
   - code: "SS"
+    alpha3: "SSD"
     name: "South Sudan"
     synonyms: ["south sudan"]
     host_labels: ["ss"]
@@ -1239,6 +1413,7 @@ countries:
     tlds: ["ss"]
 
   - code: "ES"
+    alpha3: "ESP"
     name: "Spain"
     synonyms: ["spain"]
     host_labels: ["es"]
@@ -1246,6 +1421,7 @@ countries:
     tlds: ["es"]
 
   - code: "LK"
+    alpha3: "LKA"
     name: "Sri Lanka"
     synonyms: ["sri lanka"]
     host_labels: ["lk"]
@@ -1253,6 +1429,7 @@ countries:
     tlds: ["lk"]
 
   - code: "SD"
+    alpha3: "SDN"
     name: "Sudan"
     synonyms: ["sudan"]
     host_labels: ["sd"]
@@ -1260,6 +1437,7 @@ countries:
     tlds: ["sd"]
 
   - code: "SR"
+    alpha3: "SUR"
     name: "Suriname"
     synonyms: ["suriname"]
     host_labels: ["sr"]
@@ -1267,6 +1445,7 @@ countries:
     tlds: ["sr"]
 
   - code: "SE"
+    alpha3: "SWE"
     name: "Sweden"
     synonyms: ["sweden"]
     host_labels: ["se"]
@@ -1274,6 +1453,7 @@ countries:
     tlds: ["se"]
 
   - code: "CH"
+    alpha3: "CHE"
     name: "Switzerland"
     synonyms: ["switzerland"]
     host_labels: ["ch"]
@@ -1281,6 +1461,7 @@ countries:
     tlds: ["ch"]
 
   - code: "SY"
+    alpha3: "SYR"
     name: "Syria"
     synonyms: ["syria"]
     host_labels: ["sy"]
@@ -1288,6 +1469,7 @@ countries:
     tlds: ["sy"]
 
   - code: "TW"
+    alpha3: "TWN"
     name: "Taiwan"
     synonyms: ["taiwan"]
     host_labels: ["tw"]
@@ -1295,6 +1477,7 @@ countries:
     tlds: ["tw"]
 
   - code: "TJ"
+    alpha3: "TJK"
     name: "Tajikistan"
     synonyms: ["tajikistan"]
     host_labels: ["tj"]
@@ -1302,6 +1485,7 @@ countries:
     tlds: ["tj"]
 
   - code: "TZ"
+    alpha3: "TZA"
     name: "Tanzania"
     synonyms: ["tanzania"]
     host_labels: ["tz"]
@@ -1309,6 +1493,7 @@ countries:
     tlds: ["tz"]
 
   - code: "TL"
+    alpha3: "TLS"
     name: "Timor-Leste"
     synonyms: ["timor-leste"]
     host_labels: ["tl"]
@@ -1316,6 +1501,7 @@ countries:
     tlds: ["tl"]
 
   - code: "TG"
+    alpha3: "TGO"
     name: "Togo"
     synonyms: ["togo"]
     host_labels: ["tg"]
@@ -1323,6 +1509,7 @@ countries:
     tlds: ["tg"]
 
   - code: "TO"
+    alpha3: "TON"
     name: "Tonga"
     synonyms: ["tonga"]
     host_labels: ["to"]
@@ -1330,6 +1517,7 @@ countries:
     tlds: ["to"]
 
   - code: "TT"
+    alpha3: "TTO"
     name: "Trinidad and Tobago"
     synonyms: ["trinidad and tobago"]
     host_labels: ["tt"]
@@ -1337,6 +1525,7 @@ countries:
     tlds: ["tt"]
 
   - code: "TN"
+    alpha3: "TUN"
     name: "Tunisia"
     synonyms: ["tunisia"]
     host_labels: ["tn"]
@@ -1344,6 +1533,7 @@ countries:
     tlds: ["tn"]
 
   - code: "TR"
+    alpha3: "TUR"
     name: "Turkey"
     synonyms: ["turkey"]
     host_labels: ["tr"]
@@ -1351,6 +1541,7 @@ countries:
     tlds: ["tr"]
 
   - code: "TM"
+    alpha3: "TKM"
     name: "Turkmenistan"
     synonyms: ["turkmenistan"]
     host_labels: ["tm"]
@@ -1358,6 +1549,7 @@ countries:
     tlds: ["tm"]
 
   - code: "TV"
+    alpha3: "TUV"
     name: "Tuvalu"
     synonyms: ["tuvalu"]
     host_labels: ["tv"]
@@ -1365,6 +1557,7 @@ countries:
     tlds: ["tv"]
 
   - code: "UG"
+    alpha3: "UGA"
     name: "Uganda"
     synonyms: ["uganda"]
     host_labels: ["ug"]
@@ -1372,6 +1565,7 @@ countries:
     tlds: ["ug"]
 
   - code: "UA"
+    alpha3: "UKR"
     name: "Ukraine"
     synonyms: ["ukraine"]
     host_labels: ["ua"]
@@ -1379,6 +1573,7 @@ countries:
     tlds: ["ua"]
 
   - code: "UY"
+    alpha3: "URY"
     name: "Uruguay"
     synonyms: ["uruguay"]
     host_labels: ["uy"]
@@ -1386,6 +1581,7 @@ countries:
     tlds: ["uy"]
 
   - code: "UZ"
+    alpha3: "UZB"
     name: "Uzbekistan"
     synonyms: ["uzbekistan"]
     host_labels: ["uz"]
@@ -1393,6 +1589,7 @@ countries:
     tlds: ["uz"]
 
   - code: "VU"
+    alpha3: "VUT"
     name: "Vanuatu"
     synonyms: ["vanuatu"]
     host_labels: ["vu"]
@@ -1400,6 +1597,7 @@ countries:
     tlds: ["vu"]
 
   - code: "VA"
+    alpha3: "VAT"
     name: "Vatican City"
     synonyms: ["vatican city"]
     host_labels: ["va"]
@@ -1407,6 +1605,7 @@ countries:
     tlds: ["va"]
 
   - code: "VE"
+    alpha3: "VEN"
     name: "Venezuela"
     synonyms: ["venezuela"]
     host_labels: ["ve"]
@@ -1414,6 +1613,7 @@ countries:
     tlds: ["ve"]
 
   - code: "YE"
+    alpha3: "YEM"
     name: "Yemen"
     synonyms: ["yemen"]
     host_labels: ["ye"]
@@ -1421,6 +1621,7 @@ countries:
     tlds: ["ye"]
 
   - code: "ZM"
+    alpha3: "ZMB"
     name: "Zambia"
     synonyms: ["zambia"]
     host_labels: ["zm"]
@@ -1428,6 +1629,7 @@ countries:
     tlds: ["zm"]
 
   - code: "ZW"
+    alpha3: "ZWE"
     name: "Zimbabwe"
     synonyms: ["zimbabwe"]
     host_labels: ["zw"]

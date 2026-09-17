@@ -21,6 +21,9 @@ class Country(StrictModel):
     """One country, with the several ways it is written in URLs and link text."""
 
     code: str = Field(pattern=r"^[A-Z]{2}$")
+    alpha3: str = Field(pattern=r"^[A-Z]{3}$")
+    """ISO 3166-1 alpha-3. Only the edge reads it: Ofself may record a citizenship as `IND` where
+    everything in this program is keyed on `IN` (TODO item 55)."""
     name: str = Field(min_length=1)
     synonyms: list[str] = Field(default_factory=list)
     demonyms: list[str] = Field(default_factory=list)
@@ -60,6 +63,9 @@ class CountryRegistry(StrictModel):
         codes = [country.code for country in self.countries]
         if len(codes) != len(set(codes)):
             raise ValueError("country codes must be unique")
+        alpha3s = [country.alpha3 for country in self.countries]
+        if len(alpha3s) != len(set(alpha3s)):
+            raise ValueError("alpha-3 codes must be unique")
         return self
 
     def by_slug(self, slug: str) -> "Country | None":
@@ -79,6 +85,12 @@ class CountryRegistry(StrictModel):
             if any(synonym.lower() == wanted for synonym in country.synonyms):
                 return country.code
         return None
+
+    def code_for_alpha3(self, alpha3: str) -> str | None:
+        """The alpha-2 code for an ISO alpha-3 code, such as `IN` for `IND`."""
+
+        wanted = alpha3.strip().upper()
+        return next((c.code for c in self.countries if c.alpha3 == wanted), None)
 
     def get(self, code: str) -> Country | None:
         normalized = code.strip().upper()

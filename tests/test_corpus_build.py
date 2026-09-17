@@ -47,6 +47,7 @@ TRUSTED = ["immigration.gov.example", "uk.embassy.gov.example"]
 def country() -> Country:
     return Country(
         code="XX",
+        alpha3="XXX",
         name="Example",
         tlds=[".example"],
         synonyms=[],

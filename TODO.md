@@ -681,15 +681,26 @@ exists, which is why this is sized small:
    `api/dependencies.py` returns `RequestBodyTravellerSource`. The default-traveller fallback moved
    into that source, out of the route, so an Ofself source cannot inherit it.
 2. ~~**Move `normalise_country` out of `api/schemas.py`.**~~ **Done 2026-09-17**, to
-   `api/countries.py`. It does not yet accept an **alpha-3** code — checked, `IND`, `GBR`, `NGA` and
-   `PHL` are refused, and `USA` passes only because it is a synonym. `countries.yaml` holds none, and
-   `work-authorization.citizenships` may use them, so step 3 adds them to the reference data and to
-   this check, rather than converting them inside the adapter.
-3. **Write the adapter as one module**, a `work-authorization` node to a passport nationality the
-   traveller confirms, tested on fixture nodes with no network — including one whose fields the
-   user has hidden, since a missing field means "ask", and the three sandbox users all have full
-   access. Nothing past the edge should change. Call Paradigm with the project's own `httpx` client
-   and its `transport=` seam; the Paradigm SDK is only needed for encrypted fields, and none is read.
+   `api/countries.py`. It did not accept an **alpha-3** code — `IND`, `GBR`, `NGA` and `PHL` were
+   refused, and `USA` passed only as a synonym — and step 3 added them.
+3. **Write the adapter as one module.** **Built 2026-09-17; not yet run against Paradigm.**
+   - **`api/ofself.py`:** `OfselfIdentity.passport_nationalities(user_id)` reads
+     `GET /api/v1/nodes?schema_id=work-authorization` with `X-API-Key` and `X-User-ID`, through the
+     project's own `httpx` client and `transport=` seam, and returns `PassportNationalities`: every
+     citizenship as alpha-2 in recorded order (the traveller picks one, rule 3), what named no known
+     country (never guessed), and a count of encrypted values (never read). Empty means ask (rule 4).
+   - **Errors:** the five authorisation codes and the legacy one raise `OfselfAuthorizationLost`,
+     from either documented envelope; a refused API key, any other refusal, a transport failure or a
+     malformed body raise `OfselfUnavailable`, so a broken answer is never mistaken for an empty one.
+   - **Alpha-3:** `countries.yaml` gained `alpha3` for all 198 countries, from Wikidata's P297/P298 —
+     exactly one each, all distinct, none equal to another country's name or synonym — and
+     `normalise_country` accepts it. A test checks all 198.
+   - **Settings:** `PARADIGM_API_KEY`, `PARADIGM_BASE_URL`, `PARADIGM_TIMEOUT_SECONDS`.
+   - **Not done:** nothing calls it yet — that needs sign-in, to know whose identity to read. And the
+     response shapes are the developer guide's, **not yet confirmed against a live sandbox user**:
+     the guide was not bundled with the CLI, and the hosted reference is a JavaScript page. Run it
+     against one before building on it — in particular whether `fields: [citizenships]` narrows what
+     comes back, since sandbox users have full access.
 4. **Check authorisation twice per request:** before reading the node, and again before returning a
    plan, because a plan takes about 55s and access can be withdrawn while it is written. Handle
    `EP_NOT_FOUND`, `EP_REVOKED`, `EP_PAUSED`, `EP_EXPIRED` and the legacy `NO_AUTHORIZATION` — the
