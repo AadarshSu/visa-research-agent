@@ -287,6 +287,19 @@ that does not need to exist.
 *Suggest:* say "You have no work-authorization yet — the app will see it once you add one" when the
 realm fits and the data is absent.
 
+**9.7 `sid_code` in the address ends up in server logs.** *Observed.* Delivering the code as a query
+parameter means every web server that logs requests records it — this app's did, in uvicorn's
+default access log. A callback an app refuses before exchanging leaves the code unredeemed there,
+redeemable by anyone who reads the log. This app now redacts it, but every app has to know to.
+*Suggest:* expire codes within seconds, or deliver them some other way — a POST, or the URL fragment.
+
+**9.8 A real grant does carry a DLR's `fields`.** *Observed.* After the owner authorised the app,
+`GET /my-permissions` reported `effective_access` of exactly `nodes:read` on `work-authorization` with
+`fields: ["citizenships"]`, and listing all nodes returned none of the account's other records. That
+confirms 1.3's restriction reaches the grant; whether a read returns only that field needs an
+account holding a `work-authorization` record. The grant also expired thirty days out by default or
+by choice on the consent page — the guide does not say which.
+
 ---
 
 ## 10. What worked well
@@ -311,7 +324,7 @@ Raised in this project on the date shown. Fill in when each was put to Ofself, a
 | Does Ofself host apps, and is an app linked out to or embedded? (5.1) | 2026-09-17 | — | — |
 | Does any app record a `trip` before it happens? | 2026-09-17 | — | — |
 | Is direct model access available behind the `ofself` provider, and who is billed? (8) | 2026-09-17 | — | — |
-| Is a DLR `fields` restriction enforced on a real grant? (1.3, 4.1) | 2026-09-17 | — | — |
+| Is a DLR `fields` restriction enforced on a real grant? (1.3, 4.1) | 2026-09-17 | — | In the grant, yes — seen 2026-09-17 (9.8); on returned data, untested |
 | What does `POST /auth/session/exchange` return on success, and can `sid_code` be relied on? (9.2) | 2026-09-17 | — | — |
 | Will the authorize redirect echo a `state` value? (9.3) | 2026-09-17 | — | — |
 | Is `redirect_uri` checked against the registered URIs at approval? (9.5) | 2026-09-17 | — | — |

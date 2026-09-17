@@ -28,6 +28,8 @@ import base64
 import hashlib
 import hmac
 import json
+import logging
+import re
 import secrets
 import time
 from collections.abc import Callable
@@ -49,6 +51,36 @@ SESSION_COOKIE = "visa_desk_session"
 PENDING_COOKIE = "visa_desk_signin"
 PENDING_MAX_AGE_SECONDS = 600
 """Ten minutes from starting sign-in to coming back, for the approval page to be read."""
+
+
+_SESSION_CODE = re.compile(r"(sid_code=)[^&\s\"]+")
+
+
+class RedactSessionCodes(logging.Filter):
+    """Keep a sign-in's single-use code out of the access log.
+
+    Ofself puts `sid_code` in the callback's address, and uvicorn logs every address in full. A
+    callback refused before its exchange leaves that code unredeemed, and whoever reads the log
+    could redeem it and be signed in as that user. Seen in this app's own log on 2026-09-17.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if isinstance(record.args, tuple):
+            record.args = tuple(
+                _SESSION_CODE.sub(r"\1[redacted]", arg) if isinstance(arg, str) else arg
+                for arg in record.args
+            )
+        elif isinstance(record.msg, str):
+            record.msg = _SESSION_CODE.sub(r"\1[redacted]", record.msg)
+        return True
+
+
+def redact_session_codes_from_access_log() -> None:
+    """Install the redaction on uvicorn's access logger, once however many apps are built."""
+
+    access = logging.getLogger("uvicorn.access")
+    if not any(isinstance(existing, RedactSessionCodes) for existing in access.filters):
+        access.addFilter(RedactSessionCodes())
 
 
 class SignedCookies:

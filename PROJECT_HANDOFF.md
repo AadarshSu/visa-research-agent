@@ -266,7 +266,7 @@ owner may confirm. Steps 1
 and 2 of item 55 are built — the route takes its traveller from an injected `TravellerSource`, and
 the country check is in `api/countries.py` — and the Ofself adapter
 (`api/ofself.py`, step 3) is built, tested offline, and run against a live sandbox user. Sign-in with Ofself (`api/signin.py`) is
-built and tested offline but has not had a real sign-in yet — item 55 says what that must confirm. Paradigm stores user data and does not host apps, as far as
+built, and the owner has signed in with it for real; the passport field is not yet filled from Ofself. Paradigm stores user data and does not host apps, as far as
 its documentation shows, so item 7 still needs a host. The CLI is `~/.local/bin/paradigm`,
 logged in as the owner.
 

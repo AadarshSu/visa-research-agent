@@ -714,7 +714,7 @@ exists, which is why this is sized small:
      proves nothing about a real authorisation. It needs one real OAuth grant to check. The adapter
      reads only `citizenships` and keeps nothing, either way.
    - **Not done:** nothing calls it yet — that needs sign-in, to know whose identity to read.
-4. **Sign in with Ofself.** **Built 2026-09-17; not yet run with a real sign-in.** `api/signin.py`.
+4. **Sign in with Ofself.** **Built 2026-09-17, and one real sign-in completed the same day.** `api/signin.py`.
    - **The flow was read from Ofself's authorize page itself,** since the guide shows it only through
      private SDK helpers. `/oauth/login` sends the browser to
      `app.ofself.ai/authorize?client_id=…&redirect_uri=…`. After approval the page redirects with
@@ -730,10 +730,19 @@ exists, which is why this is sized small:
      /oauth/logout` forgets it here and leaves the grant on Ofself alone.
    - **Off until configured:** `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` and `SESSION_SECRET`.
      `.claude/launch.json` has `visa-research-agent-signin` on port 8000, the registered redirect.
-   - **Unconfirmed until one real sign-in:** what a successful exchange returns. The callback
-     accepts `user_id`, or `user.id`, as a UUID and nothing looser, and logs the response's field
-     names — never values — if it finds neither. Tighten it to what is seen. That sign-in is also
-     the first real grant, so check with it whether `fields: [citizenships]` narrows the read.
+   - **The real sign-in, 2026-09-17.** The owner authorised the app under Full Access and was signed
+     in as `43b82f83-66c4-449b-a9ce-eb1f690c433b`. Two earlier callbacks, from a browser that had not
+     visited `/oauth/login`, were refused as they should be. The exchange answered in one of the two
+     accepted shapes with no warning, but which one was not recorded; tightening to it is optional,
+     since both are checked as UUIDs.
+   - **The real grant narrows as asked.** `/my-permissions` for that user reports effective access
+     of exactly `nodes:read` on `work-authorization`, field `citizenships`, and reading every node
+     returns none — the owner's `profile` is out of reach. **Whether a read returns only that field
+     is still unseen:** the owner's account holds no `work-authorization` record. The grant **expires
+     2026-10-17**, thirty days on, after which the app gets `EP_EXPIRED` (step 5).
+   - **`sid_code` was in the access log.** Uvicorn logs the whole callback address, and a callback
+     refused before its exchange leaves its code unredeemed. `RedactSessionCodes` now replaces it
+     with `[redacted]` on uvicorn's access logger; confirmed in the live log.
    - **Cannot be closed from this side:** the authorize page echoes no `state`, so a callback cannot
      be tied to the login that began it. The pending cookie refuses a browser that never started.
 5. **Check authorisation twice per request:** before reading the node, and again before returning a

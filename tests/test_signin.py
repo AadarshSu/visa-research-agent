@@ -5,6 +5,7 @@ the ones the live endpoint gave a made-up and a missing code on 2026-09-17, and 
 an assumption until a real sign-in has been seen.
 """
 
+import logging
 from collections.abc import AsyncIterator, Awaitable, Callable
 from urllib.parse import parse_qs, urlsplit
 
@@ -16,6 +17,7 @@ from visa_research_agent.api.ofself import OfselfIdentity, OfselfSignInRejected,
 from visa_research_agent.api.signin import (
     PENDING_COOKIE,
     SESSION_COOKIE,
+    RedactSessionCodes,
     SignedCookies,
     SignIn,
     get_sign_in,
@@ -294,3 +296,25 @@ async def test_logout_ends_the_session(started: Start) -> None:
 
     assert response.status_code == 303
     assert (await client.get("/oauth/session")).json()["signed_in"] is False
+
+
+def test_a_session_code_never_reaches_the_access_log() -> None:
+    """Seen live: uvicorn logged the whole callback address, unredeemed `sid_code` included."""
+
+    path = f"/oauth/callback?code=success&user_id={USER}&sid_code=TW2dWyWr0djO4&username=x"
+    record = logging.LogRecord(
+        "uvicorn.access",
+        logging.INFO,
+        __file__,
+        0,
+        '%s - "%s %s HTTP/%s" %d',
+        ("127.0.0.1:1", "GET", path, "1.1", 400),
+        None,
+    )
+
+    assert RedactSessionCodes().filter(record)
+
+    line = record.getMessage()
+    assert "TW2dWyWr0djO4" not in line
+    assert "sid_code=[redacted]&username=x" in line
+    assert f"user_id={USER}" in line

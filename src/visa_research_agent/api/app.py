@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 from visa_research_agent import __version__
 from visa_research_agent.api.routes import router
+from visa_research_agent.api.signin import redact_session_codes_from_access_log
 from visa_research_agent.api.signin import router as sign_in_router
 from visa_research_agent.api.templates import STATIC_DIRECTORY
 from visa_research_agent.config.settings import settings
@@ -24,6 +25,7 @@ def create_app() -> FastAPI:
     application.mount("/static", StaticFiles(directory=str(STATIC_DIRECTORY)), name="static")
     application.include_router(router)
     application.include_router(sign_in_router)
+    redact_session_codes_from_access_log()
     return application
 
 
