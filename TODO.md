@@ -730,7 +730,7 @@ step 3 moves it into `.env` as `PARADIGM_API_KEY`, where every other secret live
   developer, not an assistant, confirms what users will consent to. Then `paradigm commit` applies
   the staged change and `paradigm dlr preview` shows the consent card.
 
-**Three traps in `paradigm-cli` 0.5.0.**
+**Two more traps in `paradigm-cli` 0.5.0.**
 - **Its own materials disagree about where the DLR goes.** `crux init` scaffolds a sixteen-section
   `CRUX.md` that says it has no DLR section, while `crux validate` fails without a `dlr.requests`
   block and the bundled skill says to use §9.
