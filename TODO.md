@@ -718,7 +718,19 @@ restate it.
   costs nothing while there are no users.
 - **Does Ofself host apps?** Nothing in the guide or `paradigm-cli` 0.5.0 says so. See item 7.
 
-**Two traps in `paradigm-cli` 0.5.0.**
+**Registered on 2026-09-17** as "Visa Research Desk" (app id `ed21d312-1c8a-487e-9de3-38ed61abb013`),
+in incubator mode, visible to selected users only, with `http://localhost:8000/oauth/callback` as its
+one redirect URI — Paradigm accepted `http://localhost`. The API key is in `.paradigm/secrets.toml`;
+step 3 moves it into `.env` as `PARADIGM_API_KEY`, where every other secret lives.
+- **Registering needs a file only `paradigm init` writes.** `app push` registers from
+  `.paradigm/pending.toml`, and `init` would also have installed Paradigm's SDK into `.venv` and
+  overwritten `CRUX.md`, so the file was written by hand with the same three keys.
+- **The DLR is published separately, and only by the owner.** `app push` registers with an empty
+  DLR — it does not read `CRUX.md` — and `crux sync` refuses a non-interactive shell so that the
+  developer, not an assistant, confirms what users will consent to. Then `paradigm commit` applies
+  the staged change and `paradigm dlr preview` shows the consent card.
+
+**Three traps in `paradigm-cli` 0.5.0.**
 - **Its own materials disagree about where the DLR goes.** `crux init` scaffolds a sixteen-section
   `CRUX.md` that says it has no DLR section, while `crux validate` fails without a `dlr.requests`
   block and the bundled skill says to use §9.

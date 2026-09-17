@@ -118,12 +118,14 @@ form starts empty.
   keep in step and nothing left behind when access is revoked.
 
 **Not asked for.**
-- **`place`, for country of residence.** Its `home` kind carries a country, but requesting the schema
-  means every place the person holds, with addresses and coordinates. Residence is asked on the page.
+- **`place`, for country of residence.** Its `home` kind carries a country. A DLR can restrict the
+  fields it reads but not the rows, so even `kind` and `country_code` alone would return every place
+  the person holds — properties, towns, airports — to learn where they live. Residence is asked on
+  the page.
 - **`profile.location`.** Free text, "as coarse as you want"; turning it into a country is a guess.
-- **`trip`, for destination and purpose.** The DLR cannot ask for future trips only, so it would bring
-  past trips with their companions and highlights. Whether any Ofself app records a trip before it
-  happens is unknown and is a question for Ofself.
+- **`trip`, for destination and purpose.** Fields can be restricted, so companions and highlights need
+  not come, but rows cannot: it would bring every past trip's destination and dates. Whether any
+  Ofself app records a trip before it happens is unknown and is a question for Ofself.
 - **Any encrypted field.** Reading one means holding the user's whole private key at runtime.
 
 ---
@@ -134,8 +136,10 @@ form starts empty.
 passport nationality in the registry: `paradigm schema search` for passport, nationality,
 residence, residency and immigration returns nothing. It is unencrypted, one node per user.
 
-**The DLR.** Read-only, one schema. `paradigm crux validate` reads this block and `paradigm crux sync`
-pushes it; the template has no section of its own for it, while the validator requires one.
+**The DLR.** Read-only, one schema, one field: `fields` restricts the read to `citizenships`, so
+`notes`, `work_authorized_in` and the rest never reach this app. `paradigm crux validate` reads this
+block and `paradigm crux sync` pushes it; the template has no section of its own for it, while the
+validator requires one.
 
 ```yaml
 dlr:
@@ -143,6 +147,7 @@ dlr:
     - resource: nodes
       verb: read
       schemas: [work-authorization]
+      fields: [citizenships]
 ```
 
 **Golden schemas.** None. The app touches nothing in self, belief, value, goal, percept, act or

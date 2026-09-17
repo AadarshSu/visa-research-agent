@@ -269,12 +269,12 @@ schema they plan exists.
 
 ### What was declined, and why each is not a detail
 
-- **`place` for residence.** A DLR asks for a whole schema, and only the user can hide fields. Asking
-  for `place` asks for every home and property the person holds, with addresses and coordinates, to
-  learn one country code. **`profile.location`** is free text, and reading a country out of it is a
+- **`place` for residence.** A DLR can restrict the fields it reads but not the rows. Even limited to
+  `kind` and `country_code`, `place` returns every place the person holds — properties, towns,
+  airports — to learn one country code. **`profile.location`** is free text, and reading a country out of it is a
   guess.
 - **`trip` for destination and purpose.** A DLR cannot ask for future trips only, so it would bring
-  every past trip with its companions and highlights. Only `destination` is required, so an undated
+  every past trip — restricted to `destination`, `start_date` and `purpose`, but every one of them. Only `destination` is required, so an undated
   trip cannot be told from an old one. And nobody knows whether any Ofself app records a trip before
   it happens — the owner's point was that the trip that matters is one being planned. Ask Ofself
   first. Widening a DLR later pauses every existing user's access, which costs nothing while there
@@ -292,6 +292,13 @@ schema they plan exists.
   app to be that source; it needs its own entry first.
 - **The user's `guidelines` custom prompts.** The guide suggests appending them to a model prompt. For
   this app that is outside text steering the call that decides a visa.
+
+**Corrected the same day, at registration: a DLR can ask for single fields.** This entry first said
+a DLR asks for whole schemas and only the user can narrow fields, which is what the developer guide
+shows. `paradigm-cli` 0.5.0's `dlr add-read --fields` restricts a read to named properties, and the
+`CRUX.md` block passes a `fields` key through to the server the same way. So the DLR reads
+`citizenships` alone, and `notes`, `work_authorized_in` and the rest never reach the app. It does not
+change `place` or `trip`: fields narrow, rows do not.
 
 ### What Paradigm's own advice is replaced with
 

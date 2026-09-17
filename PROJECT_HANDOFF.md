@@ -257,7 +257,12 @@ follows is only the state a cold session needs to read the queue.
 **The Ofself integration is designed and not built (entry 180, 2026-09-17).** Ofself's developer
 platform is Paradigm, and [CRUX.md](CRUX.md) — which `paradigm crux validate` passes — holds the
 design. The app reads only `work-authorization.citizenships` as a passport nationality the traveller
-confirms, writes nothing back, and asks everything else on the page. No app is registered. Steps 1
+confirms, writes nothing back, and asks everything else on the page. **The app is registered** — 2026-09-17, "Visa Research Desk", app id
+`ed21d312-1c8a-487e-9de3-38ed61abb013`, client id `tp_hErNm3BbU_ISDz_Q703QpVIbTTZ87Ixt6H306ihMtAU`,
+incubator mode, visible to selected users only, redirect URI `http://localhost:8000/oauth/callback`.
+Its API key is in `.paradigm/secrets.toml`, which is gitignored. Its DLR was empty at registration,
+because `app push` does not read `CRUX.md`; it is published by `paradigm crux sync`, which only the
+owner may confirm. Steps 1
 and 2 of item 55 are built — the route takes its traveller from an injected `TravellerSource`, and
 the country check is in `api/countries.py` — and the Ofself adapter itself is not. Paradigm stores user data and does not host apps, as far as
 its documentation shows, so item 7 still needs a host. The CLI is `~/.local/bin/paradigm`,

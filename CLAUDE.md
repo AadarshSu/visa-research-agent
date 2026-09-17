@@ -907,6 +907,7 @@ cause, and only running the thing showed it.
 | france's corridor loses its portal to the challenge | to the budget — 14 of 17 challenged pages were never rendered (entry 179) |
 | lithuania's challenge fingerprints past the user agent | what was seen is the gate aborting cloudflare's script; passing with it is untested (entry 179) |
 | a web page at `/robots.txt` should close the host | 401 origins, 4,687 read pages; the one real policy among them is already obeyed (entry 179) |
+| a DLR asks for a whole schema; only the user can narrow fields | `dlr add-read --fields` asks for single fields; the app reads `citizenships` alone (entry 180) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were
