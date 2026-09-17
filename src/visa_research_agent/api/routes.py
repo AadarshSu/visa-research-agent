@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 
 from visa_research_agent.api.dependencies import (
     get_automatic_destinations,
+    get_traveller_source,
     get_visa_plan_service,
 )
 from visa_research_agent.api.schemas import (
@@ -16,6 +17,7 @@ from visa_research_agent.api.schemas import (
     VisaPlanRequest,
 )
 from visa_research_agent.api.templates import static_asset_version, templates
+from visa_research_agent.api.traveller import TravellerSource
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.discovery.automatic import (
@@ -241,14 +243,9 @@ async def create_visa_plan(
     request: VisaPlanRequest,
     service: Annotated[VisaPlanService, Depends(get_visa_plan_service)],
     automatic: Annotated[AutomaticDestinationService | None, Depends(get_automatic_destinations)],
+    travellers: Annotated[TravellerSource, Depends(get_traveller_source)],
 ) -> VisaPlan:
-    # A request that describes nobody gets the default traveller, which is what the interface
-    # opens on and what the offline Singapore fixture was recorded against.
-    traveller = (
-        request.traveller.to_profile()
-        if request.traveller is not None
-        else DEFAULT_TRAVELLER_PROFILE
-    )
+    traveller = await travellers.traveller_for(request)
     refuse_impossible_corridors(request.destination, traveller)
     destination = await resolve_destination(request.destination, traveller, automatic)
 

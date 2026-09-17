@@ -3,7 +3,9 @@
 import pytest
 from pydantic import ValidationError
 
+from visa_research_agent.api.countries import normalise_country
 from visa_research_agent.api.schemas import TravellerRequest, VisaPlanRequest
+from visa_research_agent.api.traveller import RequestBodyTravellerSource
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 
 
@@ -31,6 +33,15 @@ def test_a_country_with_no_reference_data_is_refused_rather_than_guessed() -> No
     # Without its own domains and demonyms, the right official pages cannot be identified.
     with pytest.raises(ValidationError, match="reference data"):
         TravellerRequest(passport_nationality="Atlantis", country_of_residence="GB")
+
+
+def test_the_country_check_is_usable_outside_the_request_schema() -> None:
+    """Item 55: an identity from Ofself must pass the same check a typed country does, so the
+    check cannot live only inside the form's schema."""
+
+    assert normalise_country(" united kingdom ") == "GB"
+    with pytest.raises(ValueError, match="reference data"):
+        normalise_country("Atlantis")
 
 
 def test_only_the_deciding_details_are_required() -> None:
@@ -69,3 +80,27 @@ def test_a_diplomatic_passport_cannot_be_requested() -> None:
                 "passport_type": "diplomatic",
             },
         )
+
+
+@pytest.mark.anyio
+async def test_the_request_body_source_uses_the_traveller_the_request_describes() -> None:
+    request = VisaPlanRequest(
+        destination="japan",
+        traveller=TravellerRequest(passport_nationality="PH", country_of_residence="PH"),
+    )
+
+    profile = await RequestBodyTravellerSource().traveller_for(request)
+
+    assert (profile.passport_nationality, profile.country_of_residence) == ("PH", "PH")
+
+
+@pytest.mark.anyio
+async def test_only_the_request_body_source_falls_back_to_the_default_traveller() -> None:
+    """The anonymous form opens on the default traveller. The fallback lives in this source, not
+    the route, so an Ofself source can never inherit it (item 55, rule 4)."""
+
+    profile = await RequestBodyTravellerSource().traveller_for(
+        VisaPlanRequest(destination="singapore")
+    )
+
+    assert profile == DEFAULT_TRAVELLER_PROFILE

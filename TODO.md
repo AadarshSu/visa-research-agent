@@ -670,18 +670,21 @@ exists, which is why this is sized small:
 - **Discovery never sees the profile.** `corridor_for` (`api/routes.py`) reduces it to a `Corridor`
   of destination, passport, country applied from and purpose. That is all search, the corpus,
   selection and adjudication read, and corridor store keys hold codes only.
-- **Three places assume the one input path:** `create_visa_plan` reads `request.traveller` directly,
-  the page's form pre-selects from `DEFAULT_TRAVELLER_PROFILE` (`api/routes.py:49`), and `app.js`
-  posts three form fields.
+- **Three places assumed the one input path; one is now a seam.** `create_visa_plan` asks an
+  injected `TravellerSource` (`api/traveller.py`) instead of reading `request.traveller`, and only
+  the request-body source falls back to the default traveller. Still assuming the form: the page
+  pre-selects from `DEFAULT_TRAVELLER_PROFILE` (`api/routes.py`), and `app.js` posts the form's fields.
 
 **Do:**
-1. **Make where the profile comes from an injected dependency.** A small protocol with one method
-   returning this request's `TravellerProfile`, whose first implementation is today's request body.
-   `create_visa_plan` asks the dependency instead of reading `request.traveller`. `Depends` is
-   already how the plan service and automatic destinations reach the route, so this follows the
-   pattern in `api/dependencies.py`.
-2. **Move `normalise_country` out of `api/schemas.py`** to where both adapters can use it, so an
-   identity from Ofself passes the same "no reference data, refused" check a typed one does.
+1. ~~**Make where the profile comes from an injected dependency.**~~ **Done 2026-09-17.**
+   `TravellerSource` has one method, `traveller_for(request)`, and `get_traveller_source` in
+   `api/dependencies.py` returns `RequestBodyTravellerSource`. The default-traveller fallback moved
+   into that source, out of the route, so an Ofself source cannot inherit it.
+2. ~~**Move `normalise_country` out of `api/schemas.py`.**~~ **Done 2026-09-17**, to
+   `api/countries.py`. It does not yet accept an **alpha-3** code — checked, `IND`, `GBR`, `NGA` and
+   `PHL` are refused, and `USA` passes only because it is a synonym. `countries.yaml` holds none, and
+   `work-authorization.citizenships` may use them, so step 3 adds them to the reference data and to
+   this check, rather than converting them inside the adapter.
 3. **Write the adapter as one module**, a `work-authorization` node to a passport nationality the
    traveller confirms, tested on fixture nodes with no network — including one whose fields the
    user has hidden, since a missing field means "ask", and the three sandbox users all have full

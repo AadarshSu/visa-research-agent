@@ -91,7 +91,9 @@ VisaPlanExtractor.extract(destination, traveller, report) ──▶ VisaPlan
 ```
 
 `research/service.py` is the whole orchestration, and its pipeline is two lines.
-`api/dependencies.py` chooses the implementations from `runtime.yaml`.
+`api/dependencies.py` chooses the implementations from `runtime.yaml`, and the traveller a plan is
+for comes from an injected `TravellerSource` (`api/traveller.py`) — today the request body, and
+once TODO item 55 is built, an Ofself identity as well.
 
 ### Evidence outcomes
 

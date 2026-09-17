@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from visa_research_agent.discovery.lexicon import get_country_registry
+from visa_research_agent.api.countries import normalise_country
 from visa_research_agent.domain.models import TravellerProfile, TravelPurpose
 
 
@@ -26,23 +26,6 @@ class DestinationSummary(ApiModel):
 
 class DestinationsResponse(ApiModel):
     destinations: list[DestinationSummary]
-
-
-def normalise_country(value: str) -> str:
-    """Accept a country however a person wrote it, and store the one canonical form.
-
-    "IN", "in", "India" and "Republic of India" are the same country; corridors, cache keys and
-    every lexicon lookup are keyed by the ISO code, so the conversion happens once, here.
-    """
-
-    cleaned = value.strip()
-    registry = get_country_registry()
-    if len(cleaned) == 2 and cleaned.isalpha() and registry.get(cleaned.upper()) is not None:
-        return cleaned.upper()
-    named = registry.code_for_name(cleaned)
-    if named is None:
-        raise ValueError(f"{cleaned} is not a country this agent holds reference data for")
-    return named
 
 
 class TravellerRequest(ApiModel):
