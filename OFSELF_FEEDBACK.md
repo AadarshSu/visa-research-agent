@@ -277,6 +277,16 @@ without it, which narrows the gap and does not close it.
 so the server can check it against the app's registered URIs before the page redirects. Whether it
 does was not tested; if it did not, `sid_code` could be delivered to any address a link supplied.
 
+**9.6 The consent page says a realm "reaches none" of what the server says it fits.** *Observed.*
+Authorising this app from an account holding no `work-authorization` record, the page showed
+*"Full Access × Reaches none of what Visa Research Desk requires. Add a realm that does."*. For the
+same account and app, `GET /authorize/preview` answered Full Access `fits: true`, `coverage: {granted:
+1, total: 1}`, `missing: []`. The page appears to count records the user holds, not what the realm
+permits, and words the absence of data as a permission gap — sending the user to look for a realm
+that does not need to exist.
+*Suggest:* say "You have no work-authorization yet — the app will see it once you add one" when the
+realm fits and the data is absent.
+
 ---
 
 ## 10. What worked well
