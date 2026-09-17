@@ -264,6 +264,11 @@ schema they plan exists.
   with two citizenships chooses which passport the trip is on — entry 59's dual-nationality question.
 - **Codes arrive in two lengths.** The schema allows alpha-2 or alpha-3, so the adapter normalises to
   alpha-2, as entry 20 requires of any input.
+- **One citizenship autofills; several are offered with none chosen** — the owner, the same day.
+  With one, the passport field arrives filled in and editable, and nothing asks for a separate
+  confirmation. With two or more, the traveller taps the one this trip is on: pre-filling the first
+  and noting the rest was declined, because a traveller who misses the note gets a plan for a
+  passport they may not be travelling on.
 - **There is no passport type.** The program still researches ordinary passports only, as it does
   for the form, which has never asked.
 

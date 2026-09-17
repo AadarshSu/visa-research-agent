@@ -696,6 +696,10 @@ exists, which is why this is sized small:
      exactly one each, all distinct, none equal to another country's name or synonym — and
      `normalise_country` accepts it. A test checks all 198.
    - **Settings:** `PARADIGM_API_KEY`, `PARADIGM_BASE_URL`, `PARADIGM_TIMEOUT_SECONDS`.
+   - **How the page uses it — the owner, 2026-09-17:** one citizenship fills the passport field in,
+     editable and with no confirmation step; none leaves it empty, as today; **two or more are
+     offered with none chosen**, so the traveller taps the one this trip is on. A dual national's
+     visa answer depends on the passport, and the record cannot say which one a trip uses.
    - **Not done:** nothing calls it yet — that needs sign-in, to know whose identity to read. And the
      response shapes are the developer guide's, **not yet confirmed against a live sandbox user**:
      the guide was not bundled with the CLI, and the hosted reference is a JavaScript page. Run it
