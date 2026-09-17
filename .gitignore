@@ -1,5 +1,7 @@
 .DS_Store
 .env
+# Paradigm (Ofself) CLI secrets: the app's API key and encryption key. Secrets live only here or in .env.
+.paradigm/
 .idea/
 .mypy_cache/
 .pytest_cache/

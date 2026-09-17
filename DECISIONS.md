@@ -218,6 +218,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [180](#180-the-first-ofself-integration-reads-one-field-writes-nothing-and-asks-the-rest-on-the-page) | **The first Ofself integration reads one field** — `work-authorization` for nationality, nothing written back, residence and trip asked on the page; Paradigm hosts data, not the app |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
 | [37](#37-a-per-run-allowance-may-not-be-counted-on-an-object-that-outlives-the-run) | A per-run allowance may not live on an object that outlives the run |
 | [168](#168-a-destination-is-keyed-on-the-country-it-names-never-on-how-the-request-wrote-it) | **A destination is keyed on the country it names** — `"United States"` crashed the API with a 500, and `"usa"` was stored as a corridor of its own; the `corridor` command crashed the same way and ran `usa` without its corpus |
@@ -228,6 +229,88 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 180. The first Ofself integration reads one field, writes nothing, and asks the rest on the page
+
+**2026-09-17 · TODO item 55 and item 7. The owner's decisions, on Paradigm's developer guide and a
+search of its schema registry. No code changes**
+
+### What Ofself turned out to be
+
+Ofself's developer platform is **Paradigm**. A person's data is nodes on shared schemas; an app is a
+guest that authenticates with its own API key plus the user id OAuth returns, and it declares what it
+wants in a DLR that the user grants — narrowed by the user, never widened by the app. A new app has
+to pass `paradigm crux validate` on a design document, `CRUX.md`, before it can register. That
+document is now the one home for this app's Ofself design; item 55 is the work.
+
+### The registry holds nothing shaped like a visa question
+
+`paradigm schema search` for passport, nationality, residence, residency and immigration returned
+nothing. What is nearest:
+
+| what a plan needs | nearest schema | used? |
+| --- | --- | --- |
+| passport nationality | `work-authorization.citizenships` | **yes** |
+| country of residence | `place` with `kind: home`, or `profile.location` | no |
+| residence status, permit expiry | nothing | — |
+| destination, purpose | `trip` | no |
+
+**So the DLR is `nodes:read` on `work-authorization`, alone** — the owner's decision, until the visa
+schema they plan exists.
+- **The nationality is only a default.** The node's `source` can be `resume_parse`, so it may have
+  been parsed from a CV rather than stated. It is shown for the traveller to confirm, and someone
+  with two citizenships chooses which passport the trip is on — entry 59's dual-nationality question.
+- **Codes arrive in two lengths.** The schema allows alpha-2 or alpha-3, so the adapter normalises to
+  alpha-2, as entry 20 requires of any input.
+- **There is no passport type.** The program still researches ordinary passports only, as it does
+  for the form, which has never asked.
+
+### What was declined, and why each is not a detail
+
+- **`place` for residence.** A DLR asks for a whole schema, and only the user can hide fields. Asking
+  for `place` asks for every home and property the person holds, with addresses and coordinates, to
+  learn one country code. **`profile.location`** is free text, and reading a country out of it is a
+  guess.
+- **`trip` for destination and purpose.** A DLR cannot ask for future trips only, so it would bring
+  every past trip with its companions and highlights. Only `destination` is required, so an undated
+  trip cannot be told from an old one. And nobody knows whether any Ofself app records a trip before
+  it happens — the owner's point was that the trip that matters is one being planned. Ask Ofself
+  first. Widening a DLR later pauses every existing user's access, which costs nothing while there
+  are none.
+- **Encrypted fields.** Reading one requires `paradigm app keygen`, and Paradigm then hands the app
+  the user's whole private key at runtime — enough to decrypt every encrypted field they hold. None
+  is needed, so there is no keypair, and no Paradigm SDK dependency: that SDK comes from a private
+  package index and is only needed for decryption.
+- **Writing back, in any form.** Entry 44 and item 55's sixth rule stand. Paradigm expects apps to
+  update the graph and offers plugins that write their output as nodes; a visa plan written there is
+  a stored answer every app reads, with no citation and no age.
+- **`fact` nodes as evidence.** Other apps already store *"a tax rule, a visa floor, a fee"* as
+  `fact`, each with a source URL. A URL in another app's record has passed none of entry 2's domain
+  rules, so it is never read — and a plan is never written there either. Someone will ask for this
+  app to be that source; it needs its own entry first.
+- **The user's `guidelines` custom prompts.** The guide suggests appending them to a model prompt. For
+  this app that is outside text steering the call that decides a visa.
+
+### What Paradigm's own advice is replaced with
+
+The guide recommends a local mirror of user data, webhooks, and five layers of revocation detection.
+All of that exists to protect a mirror, and this app keeps none: the traveller is read on each
+request and nothing is stored under a user id, so revocation leaves nothing behind. What is kept
+is the part that still applies — **authorisation is checked before the node is read and again before
+a plan is returned**, because a plan takes about 55s. One store does hold traveller detail: model
+drafts (entry 178) are written from the whole profile and never deleted, and that is item 55's
+step 5.
+
+### Hosting
+
+**Paradigm hosts the user's data, not the app, as far as its documentation shows.** Registration asks
+the developer for a redirect URI, a webhook URL and a plugin endpoint, all served by the developer,
+and the CLI has no deploy command. So item 7 still needs a host. What does change is item 7's fifth
+step: an app in **incubator** mode can be authorised only by an allowlist, so it can be deployed
+privately. The owner is to confirm both open questions with Ofself: whether it hosts apps, and
+whether any app records planned trips.
 
 ---
 

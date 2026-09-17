@@ -596,6 +596,13 @@ makes **every** request cold. That is item 20, which this item should be planned
    real money — search plus two model calls — so a public URL is a public wallet. Ofself's login
    is the likely answer; plan this step with item 55.
 
+**Ofself provides sign-in, not a host — as far as its documentation shows (2026-09-17, entry 180).**
+Paradigm stores the user's data and handles OAuth. The app registers its own redirect URI,
+webhook URL and plugin endpoint, all served by the developer, and `paradigm-cli` 0.5.0 has no
+deploy command. So this item still needs a host of its own; ask Ofself before choosing one. What
+Paradigm does change is step 5: an app in **incubator** mode can be authorised only by an
+allowlist, which makes a private deployment possible without a public URL anyone can spend.
+
 **Do not** deploy with `source_mode: fixtures`: it only knows Singapore, and would look like a working
 product that answers exactly one corridor.
 
@@ -675,26 +682,53 @@ exists, which is why this is sized small:
    pattern in `api/dependencies.py`.
 2. **Move `normalise_country` out of `api/schemas.py`** to where both adapters can use it, so an
    identity from Ofself passes the same "no reference data, refused" check a typed one does.
-3. **Once Ofself's schema for this project exists, write its adapter as one module**, Ofself
-   identity to `TravellerProfile`, tested on fixture identities with no network. Nothing past the
-   edge should change.
+3. **Write the adapter as one module**, a `work-authorization` node to a passport nationality the
+   traveller confirms, tested on fixture nodes with no network — including one whose fields the
+   user has hidden, since a missing field means "ask", and the three sandbox users all have full
+   access. Nothing past the edge should change. Call Paradigm with the project's own `httpx` client
+   and its `transport=` seam; the Paradigm SDK is only needed for encrypted fields, and none is read.
+4. **Check authorisation twice per request:** before reading the node, and again before returning a
+   plan, because a plan takes about 55s and access can be withdrawn while it is written. Handle
+   `EP_NOT_FOUND`, `EP_REVOKED`, `EP_PAUSED`, `EP_EXPIRED` and the legacy `NO_AUTHORIZATION` — the
+   guide names both vocabularies — and none of them may fall back to `DEFAULT_TRAVELLER_PROFILE`.
+5. **Stop keeping model drafts past their reuse window.** `FilePlanStore` reuses a draft for 24 hours
+   (entry 178) and never deletes it, and a draft is written from the whole `TravellerProfile`, so a
+   city or a residence status can sit on disk indefinitely. Harmless for one developer; not for
+   real users.
 
-**What this project asks Ofself for is ours to state now; the adapter is not.** The list is
-`TravellerProfile`'s fields and no more: passport nationality and passport type, country of
-residence, and the optional city, residence status and permission expiry. **Purpose stays a
-question on the page**, because it belongs to a trip, not to a person. Field names and format are
-Ofself's, and a seam designed against a guessed schema lands in the wrong place, so steps 1 and 2
-can go ahead now if they stay small and step 3 waits.
+**Settled with the owner on 2026-09-17 — entry 180, which has the reasoning.** The Ofself design lives
+in [CRUX.md](CRUX.md), which `paradigm crux validate` passes; this item is the work and does not
+restate it.
+- **The platform is Paradigm**, Ofself's developer platform. The app authenticates with `X-API-Key`
+  plus the `X-User-ID` that OAuth returns. Its data request (DLR) is a YAML block in `CRUX.md` §11.
+- **The DLR is `nodes:read` on `work-authorization` and nothing else.** Its `citizenships` stands in
+  for passport nationality until the owner's planned visa schema exists. The registry holds no
+  schema for a passport, a residence or a residence permit.
+- **Asked on the page, not requested:** country of residence (`place` would bring every address the
+  person holds), destination and purpose (`trip` cannot be narrowed to future trips), residence
+  status and permit expiry (no schema). The form does not ask the last two today either.
+- **Nothing is written back, and `fact` nodes are never read as evidence.**
 
-**Open, and for the owner to settle with Ofself:** whether this project writes the requested schema
-or Ofself does, and whether a field says which app wrote it and when.
+**Open, for the owner to ask Ofself:**
+- **Does any Ofself app record a trip before it happens?** If one does, `trip` is worth adding before
+  launch. Widening a DLR later pauses every existing user's access until they re-authorise, which
+  costs nothing while there are no users.
+- **Does Ofself host apps?** Nothing in the guide or `paradigm-cli` 0.5.0 says so. See item 7.
+
+**Two traps in `paradigm-cli` 0.5.0.**
+- **Its own materials disagree about where the DLR goes.** `crux init` scaffolds a sixteen-section
+  `CRUX.md` that says it has no DLR section, while `crux validate` fails without a `dlr.requests`
+  block and the bundled skill says to use §9.
+- **It writes secrets to `.paradigm/secrets.toml`,** which `.gitignore` now excludes. The skill it
+  writes to `.claude/skills/` and the `API_REFERENCE.md` that `paradigm init` adds are generic
+  Paradigm material and are not committed.
 
 **Six things an adapter must not lose, each easy to lose by mapping fields one to one:**
 1. **Ask for only the fields that select guidance, and drop anything else that arrives.** The shared
    identity will hold a name, a date of birth, a passport number, an address. `build_research_packet`
    (`research/openai_extraction.py:108`) sends `traveller_profile.model_dump()` to OpenAI **whole**,
-   so any field added to `TravellerProfile` goes to a third party on every plan. Request the list
-   above; the adapter drops what the plan does not use, and `TravellerProfile` is not widened to
+   so any field added to `TravellerProfile` goes to a third party on every plan. Request only what
+   `CRUX.md` declares; the adapter drops what the plan does not use, and `TravellerProfile` is not widened to
    hold it. Keep `StrictModel`'s `extra="forbid"`, which stops a stray field at construction.
 2. **A passport type the program cannot research is refused, never coerced.** `to_profile()`
    hard-codes `passport_type="ordinary"`, which is safe only because the form has no type field. A

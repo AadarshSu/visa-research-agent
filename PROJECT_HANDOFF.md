@@ -254,6 +254,14 @@ ran `--destination usa` without the United States corpus.
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
+**The Ofself integration is designed and not built (entry 180, 2026-09-17).** Ofself's developer
+platform is Paradigm, and [CRUX.md](CRUX.md) — which `paradigm crux validate` passes — holds the
+design. The app reads only `work-authorization.citizenships` as a passport nationality the traveller
+confirms, writes nothing back, and asks everything else on the page. No app is registered and no
+code is written; item 55 has the steps. Paradigm stores user data and does not host apps, as far as
+its documentation shows, so item 7 still needs a host. The CLI is `~/.local/bin/paradigm`,
+logged in as the owner.
+
 **Item 51 was measured on 2026-09-15 and search stays on every corridor (entry 159).** The owner
 asked for the corpus first and search only to fill what it leaves. Nothing was built, because
 neither shape pays:
