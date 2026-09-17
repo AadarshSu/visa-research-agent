@@ -1,7 +1,8 @@
 """Reading a passport nationality from an Ofself identity (TODO item 55, step 3).
 
-Nothing here reaches Paradigm: a fake answers through `httpx.MockTransport`, shaped as the
-developer guide documents `GET /api/v1/nodes` and its two error envelopes.
+Nothing here reaches Paradigm: a fake answers through `httpx.MockTransport`. Its shapes were
+checked against the live API with a sandbox user on 2026-09-17, where one differs from the developer
+guide: `total` is `null`, not a count.
 """
 
 from collections.abc import Callable
@@ -11,6 +12,7 @@ import pytest
 
 from visa_research_agent.api.ofself import (
     AUTHORIZATION_CODES,
+    PAGE_SIZE,
     OfselfAuthorizationLost,
     OfselfIdentity,
     OfselfUnavailable,
@@ -33,10 +35,12 @@ def identity(handler: Callable[[httpx.Request], httpx.Response]) -> OfselfIdenti
     )
 
 
-def nodes(*value_jsons: dict[str, object], total: int | None = None) -> httpx.Response:
+def nodes(*value_jsons: dict[str, object]) -> httpx.Response:
+    """A page as Paradigm answered live on 2026-09-17: `total` is `null`, not a count."""
+
     listed = [{"id": f"node-{i}", "value_json": value} for i, value in enumerate(value_jsons)]
     return httpx.Response(
-        200, json={"nodes": listed, "total": len(listed) if total is None else total}
+        200, json={"nodes": listed, "total": None, "limit": PAGE_SIZE, "offset": 0}
     )
 
 
@@ -121,19 +125,22 @@ async def test_an_encrypted_value_is_counted_and_never_read_as_a_country() -> No
     assert found.encrypted_values == 1
 
 
-async def test_more_nodes_than_one_page_are_all_read() -> None:
+async def test_more_nodes_than_one_page_are_all_read_without_a_total() -> None:
+    """Live, `total` is always `null`, so a full page is what says another may follow."""
+
     offsets: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
         offset = request.url.params["offset"]
         offsets.append(offset)
         if offset == "0":
-            return nodes({"citizenships": ["IN"]}, total=2)
-        return nodes({"citizenships": ["GB"]}, total=2)
+            full_page: list[dict[str, object]] = [{"citizenships": ["IN"]}] * PAGE_SIZE
+            return nodes(*full_page)
+        return nodes({"citizenships": ["GB"]})
 
     found = await identity(handler).passport_nationalities(USER)
 
-    assert offsets == ["0", "1"]
+    assert offsets == ["0", str(PAGE_SIZE)]
     assert found.nationalities == ["IN", "GB"]
 
 

@@ -683,7 +683,7 @@ exists, which is why this is sized small:
 2. ~~**Move `normalise_country` out of `api/schemas.py`.**~~ **Done 2026-09-17**, to
    `api/countries.py`. It did not accept an **alpha-3** code — `IND`, `GBR`, `NGA` and `PHL` were
    refused, and `USA` passed only as a synonym — and step 3 added them.
-3. **Write the adapter as one module.** **Built 2026-09-17; not yet run against Paradigm.**
+3. **Write the adapter as one module.** **Built 2026-09-17, and run against Paradigm the same day.**
    - **`api/ofself.py`:** `OfselfIdentity.passport_nationalities(user_id)` reads
      `GET /api/v1/nodes?schema_id=work-authorization` with `X-API-Key` and `X-User-ID`, through the
      project's own `httpx` client and `transport=` seam, and returns `PassportNationalities`: every
@@ -700,11 +700,20 @@ exists, which is why this is sized small:
      editable and with no confirmation step; none leaves it empty, as today; **two or more are
      offered with none chosen**, so the traveller taps the one this trip is on. A dual national's
      visa answer depends on the passport, and the record cannot say which one a trip uses.
-   - **Not done:** nothing calls it yet — that needs sign-in, to know whose identity to read. And the
-     response shapes are the developer guide's, **not yet confirmed against a live sandbox user**:
-     the guide was not bundled with the CLI, and the hosted reference is a JavaScript page. Run it
-     against one before building on it — in particular whether `fields: [citizenships]` narrows what
-     comes back, since sandbox users have full access.
+   - **Run live, 2026-09-17,** against sandbox user `66a3241b-5130-4ca9-9ce7-baaa69f84745`
+     (`paradigm app test-users list`), given a `work-authorization` record of `["IND", "GB"]` plus
+     `notes`, `source` and `work_authorized_in`. The adapter returned `IN, GB`; a user who never
+     authorised the app raised `OfselfAuthorizationLost` with `EP_NOT_FOUND`; a made-up key raised
+     `OfselfUnavailable` naming `INVALID_API_KEY`.
+   - **Two ways the live API differs from the developer guide.** `GET /nodes` answers `"total":
+     null`, never a count, so the adapter pages until a page comes back short; the guide's version
+     would have stopped after one page. `POST /nodes` returns the node at the top level, not under
+     `"node"`.
+   - **Unconfirmed: whether `fields: [citizenships]` narrows a real grant.** The sandbox user also got
+     `notes`, `source` and `work_authorized_in` back, but a sandbox user has full access, so that
+     proves nothing about a real authorisation. It needs one real OAuth grant to check. The adapter
+     reads only `citizenships` and keeps nothing, either way.
+   - **Not done:** nothing calls it yet — that needs sign-in, to know whose identity to read.
 4. **Check authorisation twice per request:** before reading the node, and again before returning a
    plan, because a plan takes about 55s and access can be withdrawn while it is written. Handle
    `EP_NOT_FOUND`, `EP_REVOKED`, `EP_PAUSED`, `EP_EXPIRED` and the legacy `NO_AUTHORIZATION` — the

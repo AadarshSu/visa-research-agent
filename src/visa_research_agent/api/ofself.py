@@ -33,7 +33,10 @@ DEFAULT_BASE_URL = "https://api.ofself.ai"
 WORK_AUTHORIZATION_SCHEMA = "work-authorization"
 PAGE_SIZE = 100
 """`GET /nodes` caps a page at 100. `work-authorization` is one node per user, so one page is the
-ordinary case, but more than one node is read correctly rather than assumed away."""
+ordinary case, but more than one node is read correctly rather than assumed away.
+
+Paging stops on a page that comes back short, not on `total`: live, on 2026-09-17, `total` was
+`null` on every answer, though the developer guide shows a count."""
 
 ENCRYPTED_VALUE_PREFIX = "paradigm_enc:"
 
@@ -112,8 +115,7 @@ class OfselfIdentity:
             for node in nodes:
                 values.extend(_citizenships_of(node))
             offset += len(nodes)
-            total = page.get("total")
-            if not nodes or not isinstance(total, int) or offset >= total:
+            if len(nodes) < PAGE_SIZE:
                 break
 
         return _normalise(values)
