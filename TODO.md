@@ -714,11 +714,33 @@ exists, which is why this is sized small:
      proves nothing about a real authorisation. It needs one real OAuth grant to check. The adapter
      reads only `citizenships` and keeps nothing, either way.
    - **Not done:** nothing calls it yet — that needs sign-in, to know whose identity to read.
-4. **Check authorisation twice per request:** before reading the node, and again before returning a
+4. **Sign in with Ofself.** **Built 2026-09-17; not yet run with a real sign-in.** `api/signin.py`.
+   - **The flow was read from Ofself's authorize page itself,** since the guide shows it only through
+     private SDK helpers. `/oauth/login` sends the browser to
+     `app.ofself.ai/authorize?client_id=…&redirect_uri=…`. After approval the page redirects with
+     `code=success` (a literal), `client_id`, `user_id`, `username` and a single-use `sid_code`.
+   - **Only `POST /api/v1/auth/session/exchange` names the user**, called with the app's key and
+     `{"code": sid_code}`; found by probing with a dummy code, which answered `INVALID_CODE`.
+     `/oauth/callback` never believes the query's `user_id`: it refuses a missing `sid_code`, another
+     `client_id`, anything but `code=success`, a browser that never started sign-in, and a `user_id`
+     that disagrees with the exchange.
+   - **The session** is one signed cookie holding the Ofself user id and nothing else — HMAC-SHA256
+     with `SESSION_SECRET`, a purpose stamp so the pending cookie cannot pass as a session, and a
+     12-hour expiry. No new dependency. `GET /oauth/session` says who is signed in; `POST
+     /oauth/logout` forgets it here and leaves the grant on Ofself alone.
+   - **Off until configured:** `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` and `SESSION_SECRET`.
+     `.claude/launch.json` has `visa-research-agent-signin` on port 8000, the registered redirect.
+   - **Unconfirmed until one real sign-in:** what a successful exchange returns. The callback
+     accepts `user_id`, or `user.id`, as a UUID and nothing looser, and logs the response's field
+     names — never values — if it finds neither. Tighten it to what is seen. That sign-in is also
+     the first real grant, so check with it whether `fields: [citizenships]` narrows the read.
+   - **Cannot be closed from this side:** the authorize page echoes no `state`, so a callback cannot
+     be tied to the login that began it. The pending cookie refuses a browser that never started.
+5. **Check authorisation twice per request:** before reading the node, and again before returning a
    plan, because a plan takes about 55s and access can be withdrawn while it is written. Handle
    `EP_NOT_FOUND`, `EP_REVOKED`, `EP_PAUSED`, `EP_EXPIRED` and the legacy `NO_AUTHORIZATION` — the
    guide names both vocabularies — and none of them may fall back to `DEFAULT_TRAVELLER_PROFILE`.
-5. **Stop keeping model drafts past their reuse window.** `FilePlanStore` reuses a draft for 24 hours
+6. **Stop keeping model drafts past their reuse window.** `FilePlanStore` reuses a draft for 24 hours
    (entry 178) and never deletes it, and a draft is written from the whole `TravellerProfile`, so a
    city or a residence status can sit on disk indefinitely. Harmless for one developer; not for
    real users.
@@ -745,7 +767,7 @@ restate it.
 **Registered on 2026-09-17** as "Visa Research Desk" (app id `ed21d312-1c8a-487e-9de3-38ed61abb013`),
 in incubator mode, visible to selected users only, with `http://localhost:8000/oauth/callback` as its
 one redirect URI — Paradigm accepted `http://localhost`. The API key is in `.paradigm/secrets.toml`;
-step 3 moves it into `.env` as `PARADIGM_API_KEY`, where every other secret lives.
+it was moved into `.env` as `PARADIGM_API_KEY`, where every other secret lives, on 2026-09-17.
 - **Registering needs a file only `paradigm init` writes.** `app push` registers from
   `.paradigm/pending.toml`, and `init` would also have installed Paradigm's SDK into `.venv` and
   overwritten `CRUX.md`, so the file was written by hand with the same three keys.

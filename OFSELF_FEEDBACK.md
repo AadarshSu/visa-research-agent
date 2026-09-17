@@ -237,7 +237,49 @@ with structured outputs, reasoning effort and caching, and who is billed?
 
 ---
 
-## 9. What worked well
+## 9. Signing a user in
+
+Worked out on 2026-09-17 to build this app's sign-in. The guide shows the flow only as
+`build_oauth_url(...)` and `verify_callback(code=..., user_id=None, username=None)` from
+`paradigm_client.auth`; the SDK repository (`Radius-of-Self/paradigm_sdk`) is private, and the
+`API_REFERENCE.md` the CLI's skill points to is not shipped (5.3). So everything below was *read* in
+the authorize page's public JavaScript, or *observed* by calling the API with this app's key.
+
+**9.1 The callback carries the user id in the address, beside a literal `code=success`.** *Read.*
+After approval the page redirects to
+`<redirect_uri>?code=success&client_id=…&user_id=…&username=…&sid_code=…`. `code` is always the
+string `success`, and `user_id` is whatever the address says. The guide's
+`verify_callback(code, user_id, username)` signature suggests an app checks exactly these, and an
+app that trusts them signs a visitor in as any user a link names.
+
+**9.2 `sid_code` is what proves who approved, and nothing documents it.** *Read and observed.* The
+page gets it from `POST /auth/session/start` and appends it only if that call succeeds — a failure is
+swallowed and the redirect goes ahead without it. An app redeems it at
+**`POST /api/v1/auth/session/exchange`** with `X-API-Key` and `{"code": …}`, found by probing: a
+made-up code answers `404 INVALID_CODE` ("Invalid or already-used code"), no body answers
+`400 VALIDATION_ERROR`, no key `401 MISSING_API_KEY`. What a success returns is not yet seen.
+*Suggest:* document the exchange and its response, and make `sid_code` required — a callback without
+it cannot be verified at all.
+
+**9.3 No `state` parameter.** *Read.* The page neither reads nor echoes `state`, so an app cannot tie
+a callback to the sign-in it started, which leaves login CSRF open: a visitor can be signed in to an
+app as someone else. This app sets a short-lived cookie at `/oauth/login` and refuses a callback
+without it, which narrows the gap and does not close it.
+*Suggest:* echo an app-supplied `state` on the redirect, as OAuth 2.0 specifies.
+
+**9.4 Three forms of the authorize address.** *From the docs, the skill and the page.* The guide's
+`build_oauth_url` takes `paradigm_frontend_url="https://paradigm.ofself.ai"`; the CLI's skill says
+`app.ofself.ai/authorize/<app_id>`; webhook `reauth_url`s and Personas use
+`app.ofself.ai/authorize?client_id=…`. The page itself reads `client_id` and `redirect_uri` (or
+`return_url`) from the query, and `app.ofself.ai` redirects to `nucleus.ofself.com`.
+
+**9.5 `redirect_uri` is sent to the server at approval.** *Read.* The approval request includes it,
+so the server can check it against the app's registered URIs before the page redirects. Whether it
+does was not tested; if it did not, `sid_code` could be delivered to any address a link supplied.
+
+---
+
+## 10. What worked well
 
 - **The design gate.** `crux validate` resolving schemas against the registry, and the prompts to
   search before inventing a schema, caught nothing wrong here but asked the right questions.
@@ -260,3 +302,6 @@ Raised in this project on the date shown. Fill in when each was put to Ofself, a
 | Does any app record a `trip` before it happens? | 2026-09-17 | — | — |
 | Is direct model access available behind the `ofself` provider, and who is billed? (8) | 2026-09-17 | — | — |
 | Is a DLR `fields` restriction enforced on a real grant? (1.3, 4.1) | 2026-09-17 | — | — |
+| What does `POST /auth/session/exchange` return on success, and can `sid_code` be relied on? (9.2) | 2026-09-17 | — | — |
+| Will the authorize redirect echo a `state` value? (9.3) | 2026-09-17 | — | — |
+| Is `redirect_uri` checked against the registered URIs at approval? (9.5) | 2026-09-17 | — | — |

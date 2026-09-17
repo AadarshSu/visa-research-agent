@@ -313,7 +313,7 @@ request and nothing is stored under a user id, so revocation leaves nothing behi
 is the part that still applies — **authorisation is checked before the node is read and again before
 a plan is returned**, because a plan takes about 55s. One store does hold traveller detail: model
 drafts (entry 178) are written from the whole profile and never deleted, and that is item 55's
-step 5.
+step 6.
 
 ### Hosting
 

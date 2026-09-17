@@ -4,8 +4,28 @@
     {
       "name": "visa-research-agent",
       "runtimeExecutable": ".venv/bin/python",
-      "runtimeArgs": ["-m", "uvicorn", "visa_research_agent.api.app:create_app", "--factory", "--port", "8099"],
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "visa_research_agent.api.app:create_app",
+        "--factory",
+        "--port",
+        "8099"
+      ],
       "port": 8099
+    },
+    {
+      "name": "visa-research-agent-signin",
+      "runtimeExecutable": ".venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "visa_research_agent.api.app:create_app",
+        "--factory",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
     }
   ]
 }

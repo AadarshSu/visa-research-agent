@@ -86,6 +86,17 @@ class Settings(BaseSettings):
     paradigm_api_key: SecretStr | None = None
     paradigm_base_url: str = "https://api.ofself.ai"
     paradigm_timeout_seconds: float = 10.0
+    # Sign-in with Ofself. The client id is public — it appears in the authorize link — and the
+    # redirect URI must be one registered on the app. Sign-in stays off unless the client id, the
+    # API key and a session secret are all set, so the anonymous form keeps working without them.
+    paradigm_client_id: str | None = None
+    paradigm_authorize_url: str = "https://app.ofself.ai/authorize"
+    paradigm_redirect_uri: str = "http://localhost:8000/oauth/callback"
+    # Signs the session cookie. A secret: generate one per deployment, never commit it.
+    session_secret: SecretStr | None = None
+    session_max_age_hours: float = 12.0
+    # True wherever the app is served over HTTPS. False only so a localhost session works.
+    session_cookie_secure: bool = False
 
     maximum_model_input_characters: int = 80_000
     openai_api_key: SecretStr | None = None

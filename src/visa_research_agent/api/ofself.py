@@ -19,6 +19,7 @@ belongs to the anonymous form alone (rule 4).
 - **Retry.** A refused or lost authorisation is the user's decision, and is reported as such.
 """
 
+import logging
 import uuid
 
 import httpx
@@ -28,6 +29,8 @@ from visa_research_agent.api.countries import normalise_country
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.research.errors import VisaResearchError
 from visa_research_agent.research.live_sources import transport_failure_reason
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_BASE_URL = "https://api.ofself.ai"
 WORK_AUTHORIZATION_SCHEMA = "work-authorization"
@@ -66,6 +69,14 @@ class OfselfAuthorizationLost(OfselfError):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+class OfselfSignInRejected(OfselfError):
+    """Paradigm refused a sign-in's session code: invalid, expired or already used."""
+
+
+SIGN_IN_REJECTION_CODES = frozenset({"INVALID_CODE", "VALIDATION_ERROR"})
+"""What `POST /auth/session/exchange` answered to a made-up and to a missing code (2026-09-17)."""
 
 
 class PassportNationalities(StrictModel):
@@ -120,6 +131,52 @@ class OfselfIdentity:
 
         return _normalise(values)
 
+    async def exchange_session_code(self, code: str) -> str:
+        """The user a sign-in's single-use `sid_code` belongs to, asked of Paradigm itself.
+
+        **This is the only source of a signed-in user id.** Ofself's authorize page sends the
+        browser back with `user_id` in the query string beside the code, where anyone can write any
+        id; only this server-to-server exchange, made with this app's key, says who actually
+        approved. Found by reading the authorize page's own code and probing with a dummy code
+        (2026-09-17): the developer guide documents neither the parameter nor the endpoint.
+        """
+
+        if not code.strip():
+            raise OfselfSignInRejected("The sign-in carried no session code to verify")
+        try:
+            async with httpx.AsyncClient(
+                transport=self.transport,
+                timeout=self.timeout_seconds,
+                headers={"Accept": "application/json", "X-API-Key": self.api_key},
+            ) as client:
+                response = await client.post(
+                    f"{self.base_url}/api/v1/auth/session/exchange", json={"code": code}
+                )
+        except httpx.HTTPError as exc:
+            raise OfselfUnavailable(
+                f"Ofself could not be reached: {transport_failure_reason(exc)}"
+            ) from exc
+
+        if response.status_code != httpx.codes.OK:
+            error_code, _ = _error_of(response)
+            if error_code in SIGN_IN_REJECTION_CODES:
+                raise OfselfSignInRejected(
+                    "Ofself did not recognise this sign-in: the code is invalid, expired or used"
+                )
+            raise _refusal(response)
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise OfselfUnavailable("Ofself answered the sign-in with a non-JSON body") from exc
+        user_id = _exchanged_user_id(payload)
+        if user_id is None:
+            # A success is single-use and its shape has not been seen, so say what it held —
+            # field names only, never values — for the one chance there is to learn it.
+            shape = sorted(payload) if isinstance(payload, dict) else type(payload).__name__
+            logger.warning("Ofself session exchange named no user id; response fields: %s", shape)
+            raise OfselfUnavailable("Ofself confirmed the sign-in without saying which user it was")
+        return user_id
+
     async def _list_nodes(self, user_id: str, offset: int) -> dict[str, list[object]]:
         headers = {
             "Accept": "application/json",
@@ -151,6 +208,28 @@ class OfselfIdentity:
         if not isinstance(payload, dict) or not isinstance(payload.get("nodes"), list):
             raise OfselfUnavailable("Ofself answered without a list of nodes")
         return payload
+
+
+def _exchanged_user_id(payload: object) -> str | None:
+    """The user id in a successful exchange, or None when it names none as a UUID.
+
+    What a success looks like has not been seen yet: it needs a real sign-in. So this accepts the
+    two shapes Paradigm uses elsewhere — `user_id` at the top, or a `user` object with an `id` —
+    and nothing looser. Tighten it to the observed shape once one has been seen.
+    """
+
+    if not isinstance(payload, dict):
+        return None
+    candidate = payload.get("user_id")
+    user = payload.get("user")
+    if candidate is None and isinstance(user, dict):
+        candidate = user.get("id")
+    if not isinstance(candidate, str):
+        return None
+    try:
+        return str(uuid.UUID(candidate))
+    except ValueError:
+        return None
 
 
 def _citizenships_of(node: object) -> list[object]:

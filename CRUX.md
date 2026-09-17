@@ -220,4 +220,4 @@ Ofself user id. In the graph: only what is read, and nothing written.
 **Kept in step.** Nothing to keep in step: the traveller's details are read from Paradigm on each
 request and not stored. One caveat is the draft store: a draft is written from the whole traveller
 profile, so it can mention a city or a residence status, and it is reused for 24 hours but nothing
-deletes it afterwards. That has to be fixed before real users (TODO item 55).
+deletes it afterwards. That has to be fixed before real users (TODO item 55, step 6).
