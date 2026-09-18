@@ -15,6 +15,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How is it built — trust model, pipeline, retrieval, discovery |
 | [AGENTS.md](AGENTS.md) | How do I contribute, and how do I debug a corridor |
 | [OFSELF_FEEDBACK.md](OFSELF_FEEDBACK.md) | What has integrating with Ofself shown about **their** platform — kept for Ofself's developers; add to it whenever the platform surprises you |
+| [docs/ofself/](docs/ofself/README.md) | **Before any Ofself work:** Ofself's own Paradigm and Personas guides, as dated snapshots — where they disagree with the live platform, OFSELF_FEEDBACK.md wins |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
 what has wasted the most time here — see the corrections table further down, whose rows — over two hundred and fifty now — are
