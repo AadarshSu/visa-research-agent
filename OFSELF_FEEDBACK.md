@@ -166,7 +166,31 @@ JavaScript and confirmed with one real sign-in.
   `nodes:read` on `work-authorization`, `fields: ["citizenships"]`, and no other records were
   readable. The grant expires in 30 days, and the guide doesn't say if that's the default.
 
-## 10. What worked well
+## 10. Making it easier to connect an existing app
+
+In order of what would have saved the most time here:
+
+1. **Machine-readable docs that match the CLI.** Paradigm's guide and API reference as plain markdown,
+   like Personas' `/api/v1/docs`, plus an OpenAPI spec. One source of truth for where the DLR lives
+   (2.1, 5.3).
+2. **Sign-in as HTTP, not SDK helpers.** Document the authorize URL, the callback's parameters, the
+   `sid_code` exchange (request, response, expiry) and `state`, and warn never to trust `user_id` from
+   the address. Make the SDK public, or say what `verify_callback` checks (9.1–9.3).
+3. **A path for existing projects.** A register-only command that scaffolds nothing, touches no
+   `.venv` and overwrites nothing (3.1). And a ~100-line plain-HTTP example covering login,
+   callback, session, one schema read, each authorisation error, and logout.
+4. **Sandbox users that behave like real ones.** A sandbox grant equal to the DLR, and a way to
+   put it into paused, revoked or expired (4.1).
+5. **CLI state and next steps.** Say whether a change is staged or live (3.2). End `app push` with
+   what comes next (3.3). Add a readiness check for a connected app: key valid, DLR live, redirect
+   registered, test exchange passes.
+6. **For AI assistants.** `--json` and non-interactive flags on every step except consent. Help text
+   saying which commands need a person and why, as `crux sync` does (3.4). A bundled skill that
+   doesn't assume a new project.
+7. **Safe defaults, written down.** Install without the token in a URL (7.1). Redact or quickly
+   expire `sid_code` (9.7). Echo `state` (9.3). Show `--fields` in the guide's DLR examples (1.3).
+
+## 11. What worked well
 
 - **`crux validate`** resolves schemas against the registry and pushes reuse over invention.
 - **`paradigm dlr preview`** shows the exact consent card before publishing.
