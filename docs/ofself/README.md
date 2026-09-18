@@ -8,7 +8,8 @@ history. **They are Ofself's words, not this project's**, and they go stale.
 | [PARADIGM_DEVELOPER_GUIDE.md](PARADIGM_DEVELOPER_GUIDE.md) | Paradigm's developer guide: auth, nodes, schemas, DLR, exposure profiles, encryption, plugins | Pasted by the owner. The hosted copy is a JavaScript page that can't be fetched, and `paradigm-cli` 0.5.0 doesn't ship it |
 | [PERSONAS_GUIDE.md](PERSONAS_GUIDE.md) | Personas' guide to running agents in headless mode | `https://personas.ofself.com/api/v1/docs?format=md`. **The live endpoint is authoritative**, since it's versioned with Personas' deployment |
 
-**Date each snapshot** at the top of its file when you refresh it.
+**Both were filled in by the owner on 2026-09-18.** Date each snapshot at the top of its file when
+you refresh it.
 
 **Where the guides are wrong, the live platform wins.** Everything checked against the live API or
 CLI is in [OFSELF_FEEDBACK.md](../../OFSELF_FEEDBACK.md). Read it before trusting a guide on:
