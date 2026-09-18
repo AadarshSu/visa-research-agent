@@ -7,6 +7,8 @@ const generateButton = document.querySelector("#generate-button");
 const progress = document.querySelector("#progress");
 const errorMessage = document.querySelector("#error-message");
 const results = document.querySelector("#results");
+const passportNote = document.querySelector("#passport-note");
+const passportChoices = document.querySelector("#passport-choices");
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -629,3 +631,106 @@ async function generatePlan(event) {
 }
 
 form.addEventListener("submit", generatePlan);
+
+// Signed in with Ofself, the passport field starts from the citizenships the traveller's account
+// records (TODO item 55). One is filled in and stays editable; several are offered with none
+// chosen, because a dual national's answer depends on which passport the trip is on; none leaves
+// the field to them. Nothing here is ever the default traveller.
+
+function countryName(code) {
+  const option = nationalitySelect.querySelector(`option[value="${code}"]`);
+  return option ? option.textContent.trim() : code;
+}
+
+function showPassportNote(parts, tone = "") {
+  passportNote.replaceChildren(...parts);
+  passportNote.className = tone ? `field-note field-note--${tone}` : "field-note";
+  passportNote.hidden = false;
+}
+
+function markPassportChoice(code) {
+  passportChoices.querySelectorAll("button").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.code === code));
+  });
+}
+
+function offerPassports(codes) {
+  passportChoices.replaceChildren(
+    ...codes.map((code) => {
+      const button = element("button", "passport-choice", countryName(code));
+      button.type = "button";
+      button.dataset.code = code;
+      button.setAttribute("aria-pressed", "false");
+      button.addEventListener("click", () => {
+        nationalitySelect.value = code;
+        markPassportChoice(code);
+      });
+      return button;
+    }),
+  );
+  passportChoices.hidden = false;
+}
+
+function unreadableSentence(payload) {
+  const notes = [];
+  if ((payload.unrecognised || []).length) {
+    notes.push(
+      ` It also lists ${payload.unrecognised.map((value) => `“${value}”`).join(", ")}, which this app has no country data for.`,
+    );
+  }
+  if (payload.encrypted_values) {
+    notes.push(" Some of it is encrypted, and this app does not read encrypted details.");
+  }
+  return notes.join("");
+}
+
+async function prefillPassport() {
+  if (document.body.dataset.signedIn !== "true") return;
+
+  let response;
+  let payload = {};
+  try {
+    response = await fetch("/oauth/passport", { headers: { Accept: "application/json" } });
+    payload = await response.json();
+  } catch {
+    showPassportNote(["Your Ofself account could not be reached. Choose your passport."], "warn");
+    return;
+  }
+
+  if (!response.ok) {
+    const detail = payload.detail || {};
+    if (detail.reconnect || detail.sign_in) {
+      const link = element("a", "", "Reconnect with Ofself");
+      link.href = "/oauth/login";
+      showPassportNote(
+        ["This app no longer has access to your Ofself account. ", link, " or choose your passport."],
+        "warn",
+      );
+      return;
+    }
+    showPassportNote(
+      [`${detail.message || "Your Ofself details could not be read."} Choose your passport.`],
+      "warn",
+    );
+    return;
+  }
+
+  const recorded = payload.nationalities || [];
+  const extra = unreadableSentence(payload);
+  if (recorded.length === 1) {
+    nationalitySelect.value = recorded[0];
+    showPassportNote([
+      `From your Ofself account. Change it if this trip is on another passport.${extra}`,
+    ]);
+  } else if (recorded.length > 1) {
+    offerPassports(recorded);
+    showPassportNote([
+      `Your Ofself account lists ${recorded.length} citizenships. Choose the passport this trip is on.${extra}`,
+    ]);
+  } else {
+    showPassportNote([`Your Ofself account records no citizenship. Choose your passport.${extra}`]);
+  }
+}
+
+nationalitySelect.addEventListener("change", () => markPassportChoice(nationalitySelect.value));
+prefillPassport();

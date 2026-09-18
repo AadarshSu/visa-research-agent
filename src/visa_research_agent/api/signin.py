@@ -41,9 +41,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import RedirectResponse
 
 from visa_research_agent.api.ofself import (
+    OfselfAuthorizationLost,
     OfselfError,
     OfselfIdentity,
     OfselfSignInRejected,
+    PassportNationalities,
 )
 from visa_research_agent.config.settings import settings
 
@@ -267,6 +269,37 @@ async def session(
 
     user_id = sign_in.signed_in_user(request) if sign_in else None
     return {"configured": sign_in is not None, "signed_in": user_id is not None, "user_id": user_id}
+
+
+@router.get("/passport")
+async def passport(
+    request: Request, sign_in: Annotated[SignIn, Depends(require_sign_in)]
+) -> PassportNationalities:
+    """The signed-in traveller's recorded citizenships, for the page to offer — never to decide.
+
+    One fills the passport field in; several are offered with none chosen; none leaves it for the
+    traveller (DECISIONS entry 180). Nothing read here is kept.
+    """
+
+    user_id = sign_in.signed_in_user(request)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"message": "Sign in with Ofself first.", "sign_in": True},
+        )
+    try:
+        return await sign_in.identity.passport_nationalities(user_id)
+    except OfselfAuthorizationLost as exc:
+        # The grant is gone, paused or expired: the one honest answer is to ask them to reconnect,
+        # never to carry on as if a traveller had been described (item 55, rule 4).
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"message": str(exc), "code": exc.code, "reconnect": True},
+        ) from exc
+    except OfselfError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail={"message": str(exc)}
+        ) from exc
 
 
 @router.post("/logout", include_in_schema=False)

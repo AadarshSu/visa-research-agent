@@ -16,6 +16,7 @@ from visa_research_agent.api.schemas import (
     HealthResponse,
     VisaPlanRequest,
 )
+from visa_research_agent.api.signin import SignIn, get_sign_in
 from visa_research_agent.api.templates import static_asset_version, templates
 from visa_research_agent.api.traveller import TravellerSource
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
@@ -39,8 +40,11 @@ router = APIRouter()
 
 
 @router.get("/", response_class=HTMLResponse, include_in_schema=False)
-async def index(request: Request) -> HTMLResponse:
+async def index(
+    request: Request, sign_in: Annotated[SignIn | None, Depends(get_sign_in)]
+) -> HTMLResponse:
     policy = get_runtime_policy()
+    signed_in = sign_in is not None and sign_in.signed_in_user(request) is not None
     return templates.TemplateResponse(
         request,
         "index.html",
@@ -48,7 +52,11 @@ async def index(request: Request) -> HTMLResponse:
             "destinations": researchable_destinations(),
             "countries": sorted(get_country_registry().countries, key=lambda c: c.name),
             "purposes": get_args(TravelPurpose),
-            "traveller": DEFAULT_TRAVELLER_PROFILE,
+            # A signed-in traveller is asked, never handed the default (TODO item 55, rule 4):
+            # their passport comes from Ofself or from them, and where they apply from from them.
+            "traveller": None if signed_in else DEFAULT_TRAVELLER_PROFILE,
+            "sign_in_configured": sign_in is not None,
+            "signed_in": signed_in,
             "source_mode": policy.source_mode,
             "extraction_mode": policy.extraction_mode,
             "static_asset_version": static_asset_version(),

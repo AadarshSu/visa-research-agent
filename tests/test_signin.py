@@ -318,3 +318,113 @@ def test_a_session_code_never_reaches_the_access_log() -> None:
     assert "TW2dWyWr0djO4" not in line
     assert "sid_code=[redacted]&username=x" in line
     assert f"user_id={USER}" in line
+
+
+# --- the page and the passport it is offered ------------------------------------------------
+
+
+def paradigm(*, exchange_user: str = USER, nodes: Handler | None = None) -> Handler:
+    """One fake Paradigm answering both the sign-in exchange and the node read."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/api/v1/auth/session/exchange":
+            return httpx.Response(200, json={"user_id": exchange_user})
+        if nodes is not None:
+            return nodes(request)
+        return httpx.Response(200, json={"nodes": [], "total": None})
+
+    return handler
+
+
+def recorded(*citizenships: str) -> Handler:
+    return lambda _: httpx.Response(
+        200,
+        json={"nodes": [{"id": "n", "value_json": {"citizenships": list(citizenships)}}]},
+    )
+
+
+async def signed_in(started: Start, nodes: Handler) -> httpx.AsyncClient:
+    client = await started(paradigm(nodes=nodes))
+    response = await client.get("/oauth/callback", params=callback_query())
+    assert response.status_code == 303
+    return client
+
+
+async def test_the_passport_needs_a_signed_in_traveller(started: Start) -> None:
+    client = await started(paradigm())
+
+    response = await client.get("/oauth/passport")
+
+    assert response.status_code == 401
+    assert response.json()["detail"]["sign_in"] is True
+
+
+async def test_a_signed_in_traveller_is_offered_their_recorded_citizenships(
+    started: Start,
+) -> None:
+    client = await signed_in(started, recorded("IND", "GB"))
+
+    response = await client.get("/oauth/passport")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "nationalities": ["IN", "GB"],
+        "unrecognised": [],
+        "encrypted_values": 0,
+    }
+
+
+async def test_a_lost_grant_asks_the_traveller_to_reconnect(started: Start) -> None:
+    lost = refused(403, "EP_REVOKED")
+    client = await signed_in(started, lost)
+
+    response = await client.get("/oauth/passport")
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == {
+        "message": "no",
+        "code": "EP_REVOKED",
+        "reconnect": True,
+    }
+
+
+async def test_an_unreachable_ofself_is_a_502_not_an_empty_passport(started: Start) -> None:
+    client = await signed_in(started, refused(503, "SERVICE_UNAVAILABLE"))
+
+    response = await client.get("/oauth/passport")
+
+    assert response.status_code == 502
+
+
+async def test_the_page_asks_a_signed_in_traveller_rather_than_assuming_the_default(
+    started: Start,
+) -> None:
+    """Rule 4: the default traveller belongs to the anonymous form alone."""
+
+    client = await signed_in(started, recorded("IN"))
+
+    page = (await client.get("/")).text
+
+    assert 'data-signed-in="true"' in page
+    assert '<option value="" selected>Choose a passport</option>' in page
+    assert '<option value="" selected>Choose a country</option>' in page
+    assert '<option value="IN" selected>' not in page
+    assert '<option value="GB" selected>' not in page
+    assert "Sign out" in page
+
+
+async def test_the_anonymous_page_offers_sign_in_and_keeps_its_default() -> None:
+    async with client_for(sign_in(paradigm())) as client:
+        page = (await client.get("/")).text
+
+    assert 'data-signed-in="false"' in page
+    assert 'href="/oauth/login"' in page
+    assert '<option value="IN" selected>' in page
+
+
+async def test_the_page_says_nothing_of_ofself_where_sign_in_is_not_configured() -> None:
+    async with client_for(None) as client:
+        page = (await client.get("/")).text
+
+    assert "Ofself" not in page
+    assert '<option value="IN" selected>' in page

@@ -85,6 +85,86 @@ a {
   background: var(--green-soft);
 }
 
+.masthead-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.account {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+}
+
+.account-state {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.account-action,
+button.account-action {
+  display: inline-flex;
+  min-height: 0;
+  align-items: center;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--green);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 760;
+  text-decoration: none;
+}
+
+.account-action:hover,
+button.account-action:hover {
+  background: var(--green-soft);
+}
+
+.field-note {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.field-note--warn {
+  color: var(--amber);
+}
+
+.field-note a {
+  color: inherit;
+  font-weight: 760;
+}
+
+.passport-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+button.passport-choice {
+  min-height: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--green);
+  border-radius: 999px;
+  color: var(--green);
+  background: var(--surface);
+  font-size: 13px;
+}
+
+button.passport-choice:hover,
+button.passport-choice[aria-pressed="true"] {
+  color: #fff;
+  background: var(--green);
+}
+
 .status-dot {
   width: 7px;
   height: 7px;
@@ -688,6 +768,21 @@ footer p {
 
   .mode-chip {
     font-size: 10px;
+  }
+
+  /* One column on a phone: two squeezed a country name to a few letters. */
+  .research-form {
+    grid-template-columns: 1fr;
+  }
+
+  .masthead {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 0;
+  }
+
+  .masthead-actions {
+    justify-content: flex-start;
   }
 }
 

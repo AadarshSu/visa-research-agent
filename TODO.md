@@ -740,6 +740,17 @@ exists, which is why this is sized small:
      returns none — the owner's `profile` is out of reach. **Whether a read returns only that field
      is still unseen:** the owner's account holds no `work-authorization` record. The grant **expires
      2026-10-17**, thirty days on, after which the app gets `EP_EXPIRED` (step 5).
+   - **The page uses it, 2026-09-18.** Signed out, the header offers "Sign in with Ofself" and the
+     form keeps its default traveller; with sign-in unconfigured, nothing mentions Ofself. Signed
+     in, the passport and applying-from fields start empty and required — never the default
+     (rule 4) — and `GET /oauth/passport` fills the passport in: one citizenship is selected with a
+     note that it came from Ofself, several are offered as buttons with none chosen, none leaves it
+     to the traveller, and unrecognised or encrypted values are named. A lost grant (`403`,
+     `reconnect: true`) shows a "Reconnect with Ofself" link. Seen in the browser for the sandbox
+     user's `IND, GB` at desktop and phone width; the phone layout, two columns that cut country
+     names to a few letters even before this, is now one. **Not yet seen on the owner's own account**,
+     which holds no `work-authorization` record. `POST /visa-plans` still takes the traveller from
+     the body as confirmed on the page, and does not check the grant — that is step 5.
    - **`sid_code` was in the access log.** Uvicorn logs the whole callback address, and a callback
      refused before its exchange leaves its code unredeemed. `RedactSessionCodes` now replaces it
      with `[redacted]` on uvicorn's access logger; confirmed in the live log.

@@ -8,16 +8,26 @@
     <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}?v={{ static_asset_version }}">
     <script src="{{ url_for('static', path='/app.js') }}?v={{ static_asset_version }}" defer></script>
   </head>
-  <body>
+  <body data-signed-in="{{ 'true' if signed_in else 'false' }}">
     <div class="page-shell">
       <header class="masthead">
         <a class="wordmark" href="/" aria-label="Visa Research Desk home">
           <span class="wordmark-mark">VR</span>
           <span>Visa Research Desk</span>
         </a>
-        <span class="mode-chip">
-          <span class="status-dot"></span>{{ source_mode }} sources · {{ extraction_mode }} extraction
-        </span>
+        <div class="masthead-actions">
+          <span class="mode-chip">
+            <span class="status-dot"></span>{{ source_mode }} sources · {{ extraction_mode }} extraction
+          </span>
+          {% if signed_in %}
+            <form class="account" method="post" action="/oauth/logout">
+              <span class="account-state">Signed in with Ofself</span>
+              <button class="account-action" type="submit">Sign out</button>
+            </form>
+          {% elif sign_in_configured %}
+            <a class="account-action" href="/oauth/login">Sign in with Ofself</a>
+          {% endif %}
+        </div>
       </header>
 
       <main>
@@ -46,19 +56,23 @@
             </div>
             <div class="field-group">
               <label for="nationality">Passport</label>
-              <select id="nationality" name="nationality">
+              <select id="nationality" name="nationality" {% if signed_in %}required{% endif %}>
+                {% if signed_in %}<option value="" selected>Choose a passport</option>{% endif %}
                 {% for country in countries %}
-                  <option value="{{ country.code }}" {% if country.code == traveller.passport_nationality %}selected{% endif %}>
+                  <option value="{{ country.code }}" {% if traveller and country.code == traveller.passport_nationality %}selected{% endif %}>
                     {{ country.name }}
                   </option>
                 {% endfor %}
               </select>
+              <p id="passport-note" class="field-note" role="status" hidden></p>
+              <div id="passport-choices" class="passport-choices" hidden></div>
             </div>
             <div class="field-group">
               <label for="residence">Applying from</label>
-              <select id="residence" name="residence">
+              <select id="residence" name="residence" {% if signed_in %}required{% endif %}>
+                {% if signed_in %}<option value="" selected>Choose a country</option>{% endif %}
                 {% for country in countries %}
-                  <option value="{{ country.code }}" {% if country.code == traveller.country_of_residence %}selected{% endif %}>
+                  <option value="{{ country.code }}" {% if traveller and country.code == traveller.country_of_residence %}selected{% endif %}>
                     {{ country.name }}
                   </option>
                 {% endfor %}
@@ -68,7 +82,7 @@
               <label for="purpose">Purpose</label>
               <select id="purpose" name="purpose">
                 {% for value in purposes %}
-                  <option value="{{ value }}" {% if value == traveller.travel_purpose %}selected{% endif %}>
+                  <option value="{{ value }}" {% if traveller and value == traveller.travel_purpose %}selected{% endif %}>
                     {{ value | capitalize }}
                   </option>
                 {% endfor %}
