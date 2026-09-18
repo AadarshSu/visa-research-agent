@@ -6,7 +6,7 @@ history. **They are Ofself's words, not this project's**, and they go stale.
 | File | What it is | Where it came from |
 | --- | --- | --- |
 | [PARADIGM_DEVELOPER_GUIDE.md](PARADIGM_DEVELOPER_GUIDE.md) | Paradigm's developer guide: auth, nodes, schemas, DLR, exposure profiles, encryption, plugins | Pasted by the owner. The hosted copy is a JavaScript page that can't be fetched, and `paradigm-cli` 0.5.0 doesn't ship it |
-| [PERSONAS_GUIDE.md](PERSONAS_GUIDE.md) | Personas' guide to running agents in headless mode | `https://personas.ofself.com/api/v1/docs?format=md`. **The live endpoint is authoritative**, since it's versioned with Personas' deployment |
+| [PERSONAS_GUIDE.md](PERSONAS_GUIDE.md) | Personas' guide to running agents in headless mode Lines 1–589 are `https://personas.ofself.com/api/v1/docs?format=md`. **The live endpoint is authoritative**, since it's versioned with Personas' deployment. The second document from line 590, *"Personas Headless Agent — Developer Guide"*, isn't served there (checked 2026-09-18), and it disagrees with the first (feedback 8.9–8.13) |
 
 **Both were filled in by the owner on 2026-09-18.** Date each snapshot at the top of its file when
 you refresh it.

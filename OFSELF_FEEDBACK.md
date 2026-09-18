@@ -118,15 +118,63 @@ rather than deleting it.
 
 ## 8. Personas, for this app's model calls
 
-Evaluated 2026-09-17 after Personas headless mode was suggested for model credits [docs]:
-- **No structured output.** This app needs a JSON schema on every model call.
-- **A wrapper prompt that can't be switched off.** Small prompt changes here have altered visa
+First evaluated 2026-09-17 against a shorter guide, after Personas headless mode was suggested for
+model credits. Re-read 2026-09-18 against the full snapshot in
+[docs/ofself/PERSONAS_GUIDE.md](docs/ofself/PERSONAS_GUIDE.md) and the live `/api/v1/docs`. Every
+point from the first reading still holds.
+
+- **8.1 No structured output** [docs]. The guide says *"There is no `response_format` / JSON-schema
+  enforcement."* The nearest thing is asking the agent in the prompt to call `save_artifact`, which
+  is a request, not a constraint. This app needs a JSON schema on every model call.
+- **8.2 A wrapper prompt that can't be switched off** [docs]. Personas builds the system prompt
+  *"fresh, in layers"*: its sandbox rules, then the app's prompt, a state-machine block, a context
+  block fetched from Paradigm, and its formatting rules. Stored silent context is also injected
+  before each message. No field removes any of it. Small prompt changes here have altered visa
   decisions.
-- **Model settings stop at provider, model and temperature.** There's no reasoning effort or cache
-  control, and passing `llm_model` once changes the agent permanently.
-- **Every run needs a Paradigm user.**
-- **`hmac_key` travels in the body as well as signing it.**
-- **Cost and limits are undocumented.**
+- **8.3 Model settings stop at provider, model and temperature** [docs]. There's no reasoning effort
+  and no cache control. Passing `llm_model` once changes the agent permanently.
+- **8.4 Every run needs a Paradigm user** [docs]. `paradigm_user_id` is required on every endpoint.
+- **8.5 `hmac_key` travels in the body as well as signing it** [docs].
+- **8.6 Cost and limits are undocumented** [docs]. Nothing says who pays, what `llm_provider:
+  "ofself"` costs, or what the limits are.
+- **8.7 No model-only mode** [docs]. Every documented entry point runs the full agent loop:
+  - `/run` and `/run/stream`
+  - `/internal/headless/invoke`
+  - `/plugin/invoke`
+  - `/automation/run`
+
+  None of them sends one prompt, returns one schema-checked reply and stops. So an app can't use
+  Ofself's model access for calls that aren't about a user's data. *Suggest:* a completion endpoint
+  authenticated by the app alone. It would take a JSON schema, pass through provider settings such
+  as reasoning effort and caching, add nothing to the prompt, store nothing, and return full usage
+  and cost.
+- **8.8 Every run is stored as a conversation** [docs]. *"All messages saved to DB (full loop history
+  + thinking)."* The only way to remove them is to delete them afterwards. That matters for an app
+  sending third-party text that the user never sees.
+- **8.9 Usage has three shapes, and none of them gives cache or reasoning tokens** [docs].
+  - The first guide's `done.usage` is `{input_tokens, output_tokens, total_tokens}`, and its
+    `message_complete` carries per-message tokens and the model.
+  - The second guide's `done.usage` has no `total_tokens`, and its `message_complete` has no tokens.
+  - The blocking `/run` returns `{total_input_tokens, total_output_tokens, model}`.
+
+  None separates cached, cache-written or reasoning tokens, and none gives a cost. So an app can't
+  price a call the way this one does (DECISIONS entries 164 and 167).
+- **8.10 Which models `llm_model` accepts isn't listed** [docs]. The default is `gpt-5.5`, the
+  examples use `gpt-5.2`, and `llm_provider` is `'anthropic' | 'ofself'`. Nothing says what
+  `ofself` routes to.
+- **8.11 When `temperature` applies is stated two ways** [docs]. The first guide says it *"truly
+  applies only at creation"*. The second lists it in the run body as `0.0–2.0` with no caveat, and
+  `PATCH` can change it.
+- **8.12 The second guide's Python signing example fails verification** [docs; checked locally].
+  `sign_body` signs `json.dumps(body, separators=(',', ':'))`, then sends `requests.post(json=payload)`.
+  `requests` re-serialises with spaces, so the bytes sent aren't the bytes signed. The first guide
+  warns about exactly this (*"serialize once, sign those bytes, send those bytes"*). Its JS example
+  is consistent.
+- **8.13 `/api/v1/docs` serves only the first guide** [observed]. The snapshot's second document,
+  *"Personas Headless Agent — Developer Guide"*, isn't served there. It disagrees with the first on
+  usage shapes (8.9), `temperature` (8.11) and signing (8.12). The served guide also changed on
+  2026-09-18: agents are now owned by the app that created them. *Suggest:* serve one guide, or
+  mark the other superseded.
 
 ## 9. Signing a user in
 
@@ -207,7 +255,7 @@ In order of what would have saved the most time here:
 | --- | --- | --- | --- |
 | Does Ofself host apps; linked out or embedded? (5.1) | 09-17 | — | — |
 | Does any app record a `trip` before it happens? | 09-17 | — | — |
-| Direct model access behind the `ofself` provider, and who pays? (8) | 09-17 | — | — |
+| Direct model access behind the `ofself` provider, and who pays? (8) | 09-17 | — | The full guide (09-18) documents no direct mode (8.7) and doesn't say who pays (8.6). Still open with Ofself |
 | Does a read return only a DLR's `fields`? (1.3, 9.8) | 09-17 | — | In the grant yes (9.8); on data, untested |
 | What does `/auth/session/exchange` return, and can `sid_code` be relied on? (9.2) | 09-17 | — | — |
 | Will the authorize redirect echo `state`? (9.3) | 09-17 | — | — |
