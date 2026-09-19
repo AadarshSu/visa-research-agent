@@ -170,11 +170,15 @@ point from the first reading still holds.
   `requests` re-serialises with spaces, so the bytes sent aren't the bytes signed. The first guide
   warns about exactly this (*"serialize once, sign those bytes, send those bytes"*). Its JS example
   is consistent.
-- **8.13 `/api/v1/docs` serves only the first guide** [observed]. The snapshot's second document,
-  *"Personas Headless Agent — Developer Guide"*, isn't served there. It disagrees with the first on
-  usage shapes (8.9), `temperature` (8.11) and signing (8.12). The served guide also changed on
-  2026-09-18: agents are now owned by the app that created them. *Suggest:* serve one guide, or
-  mark the other superseded.
+- **8.13 Two current guides that disagree, and one endpoint serves only the first** [observed]. Both
+  are current Ofself developer docs, the owner confirmed on 2026-09-19:
+  - the *Personas App Integration Guide*, which `/api/v1/docs` serves
+  - the *Personas Headless Agent API*, which it doesn't
+
+  The docs don't yet say how the two relate, and Ofself plans to make that clear. Until then they
+  disagree on usage shapes (8.9), `temperature` (8.11) and signing (8.12). The served guide also
+  changed on 2026-09-18: agents are now owned by the app that created them. *Suggest:* serve both
+  from `/api/v1/docs` and reconcile the three points.
 
 ## 9. Signing a user in
 
