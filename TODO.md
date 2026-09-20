@@ -801,11 +801,15 @@ it was moved into `.env` as `PARADIGM_API_KEY`, where every other secret lives, 
   `paradigm readiness` refuses to score it — it reads the CRUX, and calls the feature table the only
   evidence for what the platform cannot observe. The file is fine: `crux check` reports all sixteen
   sections filled and `crux validate` passes, resolving the one schema. **To publish:**
-  `paradigm crux push --app-id ed21d312-1c8a-487e-9de3-38ed61abb013 -m "<summary>"`, which bumps
-  `spec_version` to 3. Two things to watch: it prefers a JSON block in a `CRUX.html` this project
-  has never had and otherwise does a *"best-effort extraction"* from the markdown, so check
-  `crux pull` or `crux show` afterwards; and whether a spec bump pauses the owner's live grant is
-  untested, though it changes no DLR and the only grants are the owner's and the sandbox user's.
+  `paradigm crux push -m "<summary>"`, which bumps `spec_version` to 3. **No `--app-id` is needed**
+  — corrected 2026-09-21 by reading `appref.py`: the binding is `app_id` in
+  `.paradigm/secrets.toml`, written at registration, and `pending.toml` was only ever the input to
+  `app push`. **The markdown path is not the loss it sounds:** `crux push` prefers a JSON answers
+  block in a `CRUX.html`, but with only a `CRUX.md` it sends `{format: "md", sections: {…}, dlr:
+  {…}}`, every filled section's full text included, so the *"best-effort extraction"* drops no
+  prose. Nothing in `paradigm-cli` 0.5.0 writes a `CRUX.html`, so there was never one to have.
+  Whether a spec bump pauses the owner's live grant is untested, though it changes no DLR and the
+  only grants are the owner's and the sandbox user's.
 
 **What the platform itself got wrong or left unsaid is in [OFSELF_FEEDBACK.md](OFSELF_FEEDBACK.md)**, for
 Ofself's developers; the traps below are the ones that shape this item's work.

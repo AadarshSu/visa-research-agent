@@ -81,11 +81,20 @@ rather than deleting it.
   holds both, and `✓ crux validates` while the live record's `crux` is `null`. So it passes the one
   thing that is actually missing and warns about two that aren't. *Suggest:* read the app record and
   compare the two.
-- **3.7 `crux push` prefers a file the CLI doesn't require you to have** [read]. It reads a JSON
-  answers block from `CRUX.html`, and without one falls back to *"a best-effort extraction from
-  CRUX.md"*. Nothing says what survives that extraction, and `crux pull` writes `CRUX.html` rather
-  than the markdown a developer wrote. *Suggest:* say what the fallback keeps, or make the markdown
-  the source of truth.
+- **3.7 `crux push` prefers a file the CLI cannot produce** [read]. It reads a JSON answers block
+  from `CRUX.html`, and without one falls back to *"a best-effort extraction from CRUX.md"*. But
+  nothing in `paradigm-cli` 0.5.0 writes a `CRUX.html`: `crux init` renders `CRUX.md.tmpl` and there
+  is no HTML template, while `crux pull` only injects into an HTML file that already exists and
+  otherwise prints the live CRUX to the terminal. So a CLI-only developer never has the preferred
+  file, is told about it in two commands' help, and is never told where it comes from — presumably
+  an authoring surface in the portal. *Suggest:* say which surface writes it, and have `crux pull`
+  offer to create one.
+
+  The fallback is better than its name: it sends every filled section's full text plus the parsed
+  DLR block, so no prose is lost. What differs is the shape — `format: "md"` with sections keyed by
+  the CLI's own heading *regexes* rather than the structured answers the HTML block carries.
+  *Suggest:* say whether a markdown CRUX scores the same as an HTML one, since `readiness` grades
+  what the record holds.
 
 ## 4. Sandbox users
 
