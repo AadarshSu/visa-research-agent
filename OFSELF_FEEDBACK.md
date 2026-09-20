@@ -122,6 +122,19 @@ rather than deleting it.
 - **5.5 No app-side per-user cost cap** [docs]. Only the user can set an exposure profile's
   `rate_limit`. That matters for an app paying about $0.31 in search and model calls per request.
 
+- **5.6 The readiness ladder requires writing to the graph** [observed, 2026-09-21]. With the CRUX
+  pushed, `paradigm readiness` scores this app **2/5, "Wired"**, and to reach 3 it asks that *"It has
+  written to the graph"*. The "What compounds" section marks it down the same way: *"The app requests
+  no write access, so nothing it does is available to anything else."*
+
+  This app writes nothing on purpose, and the reason is the strongest one it has: what it concludes
+  is a rendering of pages read at that moment, never a fact (DECISIONS entry 44). A wrong "needs a
+  visa" sitting in a graph every other app reads, with no citation and no age, is exactly the
+  failure it exists to prevent. As scored, an app is penalised for that restraint and could raise
+  its grade by writing something. *Suggest:* let a CRUX declare that an app writes nothing by
+  design, have the review judge that claim, and score a justified read-only app on its own terms.
+  The ladder currently measures contribution to the graph, not value to the person.
+
 ## 6. Schema registry
 
 - **6.1 Nothing for travel identity** [observed]. No passport, nationality, residence or

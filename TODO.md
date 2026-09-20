@@ -795,7 +795,16 @@ it was moved into `.env` as `PARADIGM_API_KEY`, where every other secret lives, 
   DLR — it does not read `CRUX.md` — and `crux sync` refuses a non-interactive shell so that the
   developer, not an assistant, confirms what users will consent to. Then `paradigm commit` applies
   the staged change and `paradigm dlr preview` shows the consent card.
-- **The CRUX document itself is still unpublished, found 2026-09-21.** `crux sync` publishes only
+- **The CRUX is published as of 2026-09-21**, `spec_version` 3, with the owner's go-ahead. The
+  record stores `format: md`, all sixteen sections (10,027 characters) and the DLR block; the DLR
+  itself is unchanged. `paradigm readiness` now scores the app and passes **8 of 11 checks**: the
+  design document, what it asks for and sign-in all pass, and the five review criteria are
+  unassessed until someone runs `paradigm crux review`, which asks Paradigm's own model to read the
+  CRUX. **Readiness is 2 of 5, "Wired", and reaching 3 requires having written to the graph** — which
+  entry 44 and this item's sixth rule forbid. That is a ceiling to accept deliberately rather than
+  design around; it is feedback 5.6, and worth raising with Ofself alongside the questions below.
+  The paragraph that follows is kept for how the state was found.
+- **The CRUX document was unpublished until then, found the same day.** `crux sync` publishes only
   the DLR; `crux push` stores the design doc on the registration. Only the first was ever run, so
   `paradigm app show` reports `crux: null`, the portal says the app has no CRUX, and
   `paradigm readiness` refuses to score it — it reads the CRUX, and calls the feature table the only
