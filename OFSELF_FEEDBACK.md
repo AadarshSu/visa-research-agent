@@ -65,6 +65,27 @@ rather than deleting it.
   saying when it finishes.
 - **3.4 Good: `crux sync` refuses a non-interactive shell** [read], so an AI assistant can't confirm a
   consent screen on a developer's behalf.
+- **3.5 Publishing the DLR doesn't publish the CRUX, and nothing says so** [observed, 2026-09-21].
+  `crux sync` pushes §9 to the DLR; `crux push` is a separate command that stores the design doc on
+  the app registration. This app ran the first and not the second, so four days later the portal
+  reported no CRUX and `paradigm readiness` refused to score the app:
+
+  > This app has no CRUX yet. The evaluations read it … Write it first.
+
+  Its remedies are `crux init` and `crux questions`, which scaffold and fill a file that already
+  existed, validated and was committed. The accurate advice was `crux push`. *Suggest:* have
+  `crux sync` end by saying the doc itself is not published, and have readiness distinguish "no
+  CRUX written" from "written but never pushed".
+- **3.6 `paradigm doctor` reports the local scaffold, not the registered app** [observed]. In this
+  project it said `dlr schemas none declared` and `redirect uris none declared` while the live record
+  holds both, and `✓ crux validates` while the live record's `crux` is `null`. So it passes the one
+  thing that is actually missing and warns about two that aren't. *Suggest:* read the app record and
+  compare the two.
+- **3.7 `crux push` prefers a file the CLI doesn't require you to have** [read]. It reads a JSON
+  answers block from `CRUX.html`, and without one falls back to *"a best-effort extraction from
+  CRUX.md"*. Nothing says what survives that extraction, and `crux pull` writes `CRUX.html` rather
+  than the markdown a developer wrote. *Suggest:* say what the fallback keeps, or make the markdown
+  the source of truth.
 
 ## 4. Sandbox users
 

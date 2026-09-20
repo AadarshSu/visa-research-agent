@@ -795,6 +795,17 @@ it was moved into `.env` as `PARADIGM_API_KEY`, where every other secret lives, 
   DLR — it does not read `CRUX.md` — and `crux sync` refuses a non-interactive shell so that the
   developer, not an assistant, confirms what users will consent to. Then `paradigm commit` applies
   the staged change and `paradigm dlr preview` shows the consent card.
+- **The CRUX document itself is still unpublished, found 2026-09-21.** `crux sync` publishes only
+  the DLR; `crux push` stores the design doc on the registration. Only the first was ever run, so
+  `paradigm app show` reports `crux: null`, the portal says the app has no CRUX, and
+  `paradigm readiness` refuses to score it — it reads the CRUX, and calls the feature table the only
+  evidence for what the platform cannot observe. The file is fine: `crux check` reports all sixteen
+  sections filled and `crux validate` passes, resolving the one schema. **To publish:**
+  `paradigm crux push --app-id ed21d312-1c8a-487e-9de3-38ed61abb013 -m "<summary>"`, which bumps
+  `spec_version` to 3. Two things to watch: it prefers a JSON block in a `CRUX.html` this project
+  has never had and otherwise does a *"best-effort extraction"* from the markdown, so check
+  `crux pull` or `crux show` afterwards; and whether a spec bump pauses the owner's live grant is
+  untested, though it changes no DLR and the only grants are the owner's and the sandbox user's.
 
 **What the platform itself got wrong or left unsaid is in [OFSELF_FEEDBACK.md](OFSELF_FEEDBACK.md)**, for
 Ofself's developers; the traps below are the ones that shape this item's work.
