@@ -218,6 +218,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [181](#181-the-data-request-asks-now-for-what-a-future-plan-could-use-and-the-app-reads-only-what-a-built-feature-uses) | **The data request asks ahead, the app reads on use** — fields a future plan could use are requested while the only grant is the owner's; never what only an application would use, never another app's rules; granted is not read |
 | [180](#180-the-first-ofself-integration-reads-one-field-writes-nothing-and-asks-the-rest-on-the-page) | **The first Ofself integration reads one field** — `work-authorization` for nationality, nothing written back, residence and trip asked on the page; Paradigm hosts data, not the app |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
 | [37](#37-a-per-run-allowance-may-not-be-counted-on-an-object-that-outlives-the-run) | A per-run allowance may not live on an object that outlives the run |
@@ -229,6 +230,84 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 181. The data request asks now for what a future plan could use, and the app reads only what a built feature uses
+
+**2026-09-21 · TODO item 55. The owner's decision, on the six travel schemas that appeared in the
+registry that day. Changes `CRUX.md`, not code.**
+
+### The decision
+
+The owner: *"we should use schemas for information we don't support yet but could do in the
+future. For example expiry date of the passport is not currently used — our plans just state the
+requirement — but in the future we could have the plan integrate that info directly per
+traveller."*
+
+So the DLR requests fields a **future** plan could use, not only those today's plan uses. It
+replaces entry 180's "`work-authorization` and nothing else", and item 55's first rule changes
+from *ask* for only what selects guidance to *read* only what selects guidance.
+
+### Why now rather than when each feature is built
+
+**Widening a DLR later pauses every existing user's access until they re-authorise** (feedback
+2.2). Today the only real grant is the owner's. Every field asked for now is free; every field
+asked for after launch costs a re-consent from each user. Entry 180 made the same argument about
+`trip` and deferred it; the travel schemas are what make it worth acting on.
+
+### Four bounds, each of which is what keeps this from being "ask for everything"
+
+1. **Never what only an application would use.** This app never submits applications, books
+   appointments or fills forms, so no future *plan* can use a passport number, a scan, a name, a
+   place of birth, a sex, an application reference or a free-text note. Those are not requested at
+   any point. The bound comes from a rule, not from taste, which is why it holds.
+2. **Never another app's rules or verdicts, as evidence or otherwise.** `travel-requirement`,
+   `travel-zone` and `fact` are not requested. A rule in the graph has passed none of entry 2's
+   domain checks and may be older than `source_maximum_stale_hours` permits (TODO item 55's
+   evaluation). This is not a "later"; it is a standing refusal.
+3. **Requested is not read.** The adapter reads only fields a built feature uses. A field granted
+   for later never enters `TravellerProfile`, a model packet, a draft or a log. Rule 1's real
+   purpose was keeping unused personal data away from OpenAI, and that is unchanged — it now sits
+   at the adapter rather than at the DLR.
+4. **Said plainly where the person consents.** Every requested field is on the consent card, and
+   `crux review` checks that each permission is justified by a workflow. So `CRUX.md` names the
+   later workflows as *planned*, and a field is never justified by a workflow presented as built.
+
+### And one rule the schemas bring with them
+
+`travel-document`'s `field_provenance` states that a self-declared value *"may RAISE a question
+and may never CLOSE one"*, and `travel-stay` repeats it. When the plan does integrate expiry, a
+typed-in date can prompt "check your passport is valid until …" and can never clear the
+requirement. That is entry 6's rule about alarming wrong answers, arriving in the other direction:
+a wrong *all clear* is the alarming one here.
+
+### What is requested
+
+| schema | fields | used today |
+| --- | --- | --- |
+| `work-authorization` | `citizenships` | yes — passport default |
+| `travel-document` | `kind`, `document_code`, `nationality`, `issuing_state`, `issued_at`, `expires_at`, `grants`, `field_provenance`, `status`, `holder_ref`, `label`, `date_of_birth` | no |
+| `travel-plan` | `label`, `candidates`, `window`, `commitment`, `status`, `travellers` | no |
+| `travel-stay` | `entry_at`, `exit_at`, `place_ref`, `exempt`, `provenance`, `entered_under_ref`, `traveller_ref`, `purpose`, `status` | no |
+| `travel-obligation` | `kind`, `state`, `decided_at`, `where` | no |
+| `place` | `kind`, `country_code`, `parent_ref`, `status` | no |
+
+**`place` is requested now and entry 180 declined it.** Entry 180's objection was rows: every
+place the person holds, to learn one country. It still returns every row, but narrowed to four
+fields that is each place's grain and a two-letter code — no address, name or coordinates — and
+it is the only way to turn the references in `travel-plan`, `travel-stay` and a residence into a
+country. Without it three of the other schemas cannot be used at all.
+
+**Two fields are the owner's to overrule.** `date_of_birth` is requested because a future plan
+could name the consent letters minors need and apply age-based fee waivers, and the schema says
+exactly that; it is also the most personal field on the list. `travel-obligation.refusal_reason` is
+**not** requested: a prior refusal changes later checklists, but the verbatim reason can hold
+anything, and `state` with `decided_at` says a refusal happened.
+
+**Not requested yet, because nothing could use them:** `travel-document.resident_address_ref` needs
+a residence workflow first, and `person`, which `travellers` and `holder_ref` point at, needs a plan
+for more than one traveller.
 
 ---
 

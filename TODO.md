@@ -780,8 +780,15 @@ restate it.
 
 **Six travel schemas appeared in the registry on 2026-09-21, and they change what this item can
 ask for.** All public, all v1: `travel-plan`, `travel-document`, `travel-requirement`,
-`travel-stay`, `travel-obligation`, `travel-zone`. Evaluated the day they appeared; **nothing is
-built and the DLR is unchanged.**
+`travel-stay`, `travel-obligation`, `travel-zone`. Evaluated the day they appeared. **The owner then decided to request
+ahead (entry 181), and `CRUX.md`'s DLR now asks for fields from five of them plus `place`**; it
+passes `crux validate` with six schemas resolved. **It is not live.** Publishing is the owner's,
+because `crux sync` refuses a non-interactive shell:
+`paradigm crux sync`, then `paradigm commit`, then `paradigm dlr preview` to see the consent card.
+That pauses the owner's existing grant until they re-authorise. Then `paradigm crux push`, which
+marks the review stale; a fresh `crux review` is billable (feedback 5.7). No code reads any new
+field — each waits for its planned workflow in `CRUX.md` §7. The evaluation below is what that
+field list was built from.
 - **Read `travel-document`, narrowed to fields — the one clear win.** It answers the three gaps
   entry 180 recorded as having no schema: the passport as a document with `document_code`
   (`P`/`PD`/`PS`), so rule 2's refusal of a non-ordinary passport becomes possible instead of
@@ -871,12 +878,16 @@ Ofself's developers; the traps below are the ones that shape this item's work.
   Paradigm material and are not committed.
 
 **Six things an adapter must not lose, each easy to lose by mapping fields one to one:**
-1. **Ask for only the fields that select guidance, and drop anything else that arrives.** The shared
-   identity will hold a name, a date of birth, a passport number, an address. `build_research_packet`
+1. **Read only the fields that select guidance, and drop anything else that arrives.** *Changed
+   2026-09-21 by entry 181:* the DLR now **asks** ahead for fields a future plan could use, and this
+   rule moved from the request to the adapter. The shared identity will hold a name, a date of
+   birth, a passport number, an address. `build_research_packet`
    (`research/openai_extraction.py:108`) sends `traveller_profile.model_dump()` to OpenAI **whole**,
-   so any field added to `TravellerProfile` goes to a third party on every plan. Request only what
-   `CRUX.md` declares; the adapter drops what the plan does not use, and `TravellerProfile` is not widened to
-   hold it. Keep `StrictModel`'s `extra="forbid"`, which stops a stray field at construction.
+   so any field added to `TravellerProfile` goes to a third party on every plan. A field granted for
+   a planned workflow is not read until that workflow is built; the adapter drops what the plan does
+   not use, and `TravellerProfile` is not widened to hold it. Keep `StrictModel`'s
+   `extra="forbid"`, which stops a stray field at construction. **What is never requested at all**
+   is entry 181's first bound: anything only an application form could use.
 2. **A passport type the program cannot research is refused, never coerced.** `to_profile()`
    hard-codes `passport_type="ordinary"`, which is safe only because the form has no type field. A
    shared identity recording a diplomatic or official passport must be refused at the adapter, as

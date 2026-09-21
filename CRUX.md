@@ -3,7 +3,7 @@
 > The design of this app **as an Ofself app**, in the form `paradigm crux validate` reads. It is the
 > one home for that design; the rest of the project is described where it always was —
 > [CLAUDE.md](CLAUDE.md), [ARCHITECTURE.md](ARCHITECTURE.md) and [DECISIONS.md](DECISIONS.md), whose
-> entry 180 records why this document says what it says. TODO item 55 is the work.
+> entries 180 and 181 record why this document says what it says. TODO item 55 is the work.
 >
 > Scaffolded by `paradigm crux init` (paradigm-cli 0.5.0). The template's own preamble is dropped;
 > its sixteen headings are kept, because the validator reads them.
@@ -28,7 +28,8 @@ than guesses.
 
 **Already there.** A `work-authorization` node, written by the career apps (its `source` is
 `self_reported`, `resume_parse` or `verified`), holding the person's `citizenships`. That is the one
-field this app reads.
+field this app reads today. The travel schemas are requested for the planned workflows in §7 and
+read only once each is built (§11).
 
 **Inherited on day one.** Which passports the person may hold. It is offered as the default, never
 used unconfirmed: it may have been parsed from a CV rather than stated, and a person with two
@@ -36,7 +37,8 @@ citizenships chooses which passport this trip is on.
 
 **Without the graph.** Sign-in, and one form field. That is the true answer today. Sign-in matters
 more than it sounds: a fresh plan costs about $0.31 in search and model calls, so the app cannot
-sit behind an unauthenticated URL. The larger answer waits on a visa schema (§12).
+sit behind an unauthenticated URL. The larger answer is §7's planned workflows, on the travel
+schemas.
 
 ## 3. Reuse
 
@@ -92,6 +94,32 @@ with a citation on every claim, or refuses and says why. Nothing is in the graph
 reconnect. The app never substitutes a default traveller, and a plan is not shown if access was
 withdrawn while it was being written.
 
+**Planned — not built.** Each of these is why a field is requested today (§11). Each shares one
+rule, stated by the schemas themselves: a value the person typed in may raise a question and may
+never close one, so nothing self-declared is ever shown as a requirement met.
+
+**Planned A — the plan checks the traveller's own passport.** Today a plan states the destination's
+rule: "valid for three months beyond departure", "issued within ten years". With
+`travel-document`'s `expires_at` and `issued_at` it can say, for this traveller, whether their
+passport meets it — or, when the dates were typed in, that they should check. `date_of_birth`
+lets it name the consent letters a minor needs and an age-based fee waiver.
+
+**Planned B — the right passport and the right residence.** `document_code` lets the app refuse a
+diplomatic or service passport instead of researching it as an ordinary one. A residence permit's
+`issuing_state` and `grants` give the country applied from and the status a non-citizen resident
+must prove; the traveller still confirms both.
+
+**Planned C — a plan being considered becomes the starting point.** A `travel-plan`'s candidates
+and window pre-fill destination and purpose, one candidate researched at a time, confirmed before
+any research runs. `place` turns a candidate's reference into a country.
+
+**Planned D — a rolling allowance is flagged.** Where a destination counts days across a zone —
+90 in any 180 for Schengen — `travel-stay` records let the plan say that past stays may count
+against this one. It never states days remaining from self-declared stays.
+
+**Planned E — a prior refusal is noticed.** A `travel-obligation` whose `state` records a refusal
+lets the plan say that the application form will ask about it. The reason is not read.
+
 ## 8. Views
 
 **Screens.** One page: the research form (destination, passport, country applied from, purpose), a
@@ -113,33 +141,46 @@ form starts empty.
   that decides the visa answer.
 - **Reading `fact` nodes as evidence.** Other apps already store visa rules there with a source URL,
   but a URL in another app's record has passed none of this app's official-domain checks.
+- **Reading `travel-requirement` or `travel-zone` at all.** A published rule in the graph has the
+  same problem as a `fact`, and may be older than this app is permitted to serve. They are not in
+  the DLR, and that is permanent rather than deferred (DECISIONS entry 181).
 - **Submitting applications, booking appointments, filling forms, or promising approval.**
 - **Keeping a mirror of the user's data.** It stores nothing under a user id, so there is nothing to
   keep in step and nothing left behind when access is revoked.
 
 **Not asked for.**
-- **`place`, for country of residence.** Its `home` kind carries a country. A DLR can restrict the
-  fields it reads but not the rows, so even `kind` and `country_code` alone would return every place
-  the person holds — properties, towns, airports — to learn where they live. Residence is asked on
-  the page.
+- **`place` beyond four fields.** It is requested as `kind`, `country_code`, `parent_ref` and
+  `status` only, to resolve references in the travel schemas. Every place the person holds still
+  arrives, since a DLR narrows fields and not rows, but only as its grain and a country code.
+  Residence is still asked on the page until planned workflow B is built.
 - **`profile.location`.** Free text, "as coarse as you want"; turning it into a country is a guess.
-- **`trip`, for destination and purpose.** Fields can be restricted, so companions and highlights need
-  not come, but rows cannot: it would bring every past trip's destination and dates. Whether any
-  Ofself app records a trip before it happens is unknown and is a question for Ofself.
+- **`trip`, for destination and purpose.** Rows cannot be narrowed, so it would bring every past
+  trip. `travel-plan` holds journeys being considered, which is what this app needs.
 - **Any encrypted field.** Reading one means holding the user's whole private key at runtime.
 
 ---
 
 ## 11. Schemas used, and why
 
-**Schemas.** `work-authorization` (read) — its `citizenships` field is the nearest thing to a
-passport nationality in the registry: `paradigm schema search` for passport, nationality,
-residence, residency and immigration returns nothing. It is unencrypted, one node per user.
+**Schemas.** All read-only, and every read narrowed to named fields.
+- **`work-authorization`** — `citizenships`, the passport default the app uses today.
+- **`travel-document`** — the passport as a document, and residence permits: type, nationality,
+  issuing state, dates, what it grants, and where each value came from. For §7's planned
+  workflows A and B.
+- **`travel-plan`** — a journey being considered, with its candidate destinations and rough
+  window. For planned workflow C.
+- **`travel-stay`** — dated entries and exits. For planned workflow D.
+- **`travel-obligation`** — whether something was applied for and how it ended, without the
+  reason text. For planned workflow E.
+- **`place`** — only `kind`, `country_code`, `parent_ref` and `status`, to turn a reference in the
+  schemas above into a country. No address, name or coordinates.
 
-**The DLR.** Read-only, one schema, one field: `fields` restricts the read to `citizenships`, so
-`notes`, `work_authorized_in` and the rest never reach this app. `paradigm crux validate` reads this
-block and `paradigm crux sync` pushes it; the template has no section of its own for it, while the
-validator requires one.
+**Asked now, read on use** (DECISIONS entry 181). Fields for the planned workflows are requested
+today, while widening the request costs nobody a re-consent, and the app reads a field only once a
+built feature uses it. Nothing requested is sent to a model or stored until then.
+
+**The DLR.** `paradigm crux validate` reads this block and `paradigm crux sync` pushes it; the
+template has no section of its own for it, while the validator requires one.
 
 ```yaml
 dlr:
@@ -148,24 +189,51 @@ dlr:
       verb: read
       schemas: [work-authorization]
       fields: [citizenships]
+    - resource: nodes
+      verb: read
+      schemas: [travel-document]
+      fields: [kind, document_code, nationality, issuing_state, issued_at, expires_at, grants,
+               field_provenance, status, holder_ref, label, date_of_birth]
+    - resource: nodes
+      verb: read
+      schemas: [travel-plan]
+      fields: [label, candidates, window, commitment, status, travellers]
+    - resource: nodes
+      verb: read
+      schemas: [travel-stay]
+      fields: [entry_at, exit_at, place_ref, exempt, provenance, entered_under_ref,
+               traveller_ref, purpose, status]
+    - resource: nodes
+      verb: read
+      schemas: [travel-obligation]
+      fields: [kind, state, decided_at, where]
+    - resource: nodes
+      verb: read
+      schemas: [place]
+      fields: [kind, country_code, parent_ref, status]
 ```
+
+**Never requested, at any point.** A document or application `number` or `reference_number`,
+scans and evidence files, names, place of birth, sex, free-text notes and a refusal's verbatim
+reason. This app never fills a form or submits an application, so no plan could use them.
 
 **Golden schemas.** None. The app touches nothing in self, belief, value, goal, percept, act or
 learn.
 
 **Nearly right.**
-- **`work-authorization`**: citizenship, not the passport held, and no passport type. The app
-  researches ordinary passports only and must not approximate any other kind.
-- **`place`**: no schema holds only where a person lives.
-- **Residence status and permit expiry**: no schema at all. They are frequently decisive — Brazil and
-  China both ask a non-citizen resident for proof of status.
+- **`work-authorization`**: citizenship, not the passport held, and no passport type. Until the
+  planned workflows are built, the app researches ordinary passports only and must not
+  approximate any other kind.
+- **`place`**: no schema holds only where a person lives, and a DLR narrows fields but not rows, so
+  every place the person holds arrives — as its grain and a country code only.
+- **`travel-plan`**: holds several candidates and several travellers; one plan here is one traveller
+  and one destination, so each candidate is researched on its own.
 
 ## 12. Custom schemas
 
-**Only if you have one.** None registered. A visa schema is planned by the owner (2026-09-17), to
-hold what `work-authorization` cannot: the passport as a document of a type, and residence with
-its status and expiry. Until then this app reads `work-authorization` for nationality and asks the
-rest on the page.
+**Only if you have one.** None. The travel schemas published on 2026-09-21 hold what this app
+would otherwise have needed its own schema for: the passport as a document of a type, and
+residence with its status and expiry.
 
 ## 13. Cross-app connections
 
@@ -187,7 +255,7 @@ inference, and it waits on a decision entry.
 
 | Feature | Using it | Why / why not |
 |---|---|---|
-| `nodes:read` | yes | `work-authorization`, for passport nationality |
+| `nodes:read` | yes | `work-authorization` for passport nationality today; the travel schemas and `place` for §7's planned workflows |
 | `nodes:create` | no | Nothing concluded is stored; §4 |
 | `nodes:edit` | no | Another app's record is not this app's to change |
 | `nodes:delete` | no | As above |
