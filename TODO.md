@@ -801,8 +801,16 @@ researches. Twelve new offline tests. Checked in the browser against a fake Ofse
 records, at desktop and phone width — **not against live data**, which needs the DLR published
 first, and then records in a real account. **Nothing a plan says changed**: `TravellerProfile`, the
 request and the model packet are untouched, and entry 181 says why the rest is held back.
-- **Next, once the DLR is live:** put real `travel-document` and `travel-plan` records in the owner's
-  account and see the form fill from them. That is the first time the live node shapes are seen.
+- **The DLR is live and the owner has re-authorised, 2026-09-21.** `paradigm commit --ep-action
+  continue` published it (spec version 5), and after the owner signed in again `effective_access`
+  held all six schemas with exactly the requested fields — no document number, scans or names. The
+  grant's expiry did not move: still **2026-10-17** (feedback 9.8).
+- **Next:** put real `travel-document` and `travel-plan` records in the owner's account — it holds
+  none in any of the six schemas — and see the form fill from them. That is the first time the live
+  node shapes are seen.
+- **One statement above the form, the owner's call the same day.** Whether Ofself filled anything,
+  nothing, or could not be reached is said once above the form rather than in each field; a
+  field's own note is only for what that field was filled with, or what it withheld.
 - **Destination and purpose now start empty for a signed-in traveller**, as passport and residence
   already did — the first entry in each list had been passing as a choice.
 

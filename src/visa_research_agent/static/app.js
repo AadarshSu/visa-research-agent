@@ -646,15 +646,18 @@ const destinationChoices = document.querySelector("#destination-choices");
 const residenceNote = document.querySelector("#residence-note");
 const residenceChoices = document.querySelector("#residence-choices");
 const purposeNote = document.querySelector("#purpose-note");
+const ofselfNote = document.querySelector("#ofself-note");
 
 function countryName(code) {
   const option = nationalitySelect.querySelector(`option[value="${code}"]`);
   return option ? option.textContent.trim() : code;
 }
 
+// A note keeps its own style — a field's note or the form's — and only its tone changes.
 function showNote(note, parts, tone = "") {
+  const base = note.dataset.base || (note.dataset.base = note.classList[0]);
   note.replaceChildren(...parts);
-  note.className = tone ? `field-note field-note--${tone}` : "field-note";
+  note.className = tone ? `${base} ${base}--${tone}` : base;
   note.hidden = parts.length === 0;
 }
 
@@ -758,8 +761,10 @@ function prefillPassport(payload) {
     showNote(passportNote, [
       `Your Ofself account lists ${passports.length} passports or citizenships. Choose the one this trip is on.${extra}`,
     ]);
-  } else {
-    showNote(passportNote, [`Nothing shared from your Ofself account names a passport. Choose yours.${extra}`]);
+  } else if (extra) {
+    // Nothing to offer; what was withheld or unreadable is still said. That nothing was shared at
+    // all is said once, above the form.
+    showNote(passportNote, [extra.trim()]);
   }
   nationalitySelect.addEventListener("change", () => {
     markChoice(passportChoices, nationalitySelect.value);
@@ -875,7 +880,7 @@ async function prefillFromOfself() {
     response = await fetch("/oauth/traveller", { headers: { Accept: "application/json" } });
     payload = await response.json();
   } catch {
-    showNote(passportNote, ["Your Ofself account could not be reached. Choose your passport."], "warn");
+    showNote(ofselfNote, ["Your Ofself account could not be reached. Fill the form in yourself."], "warn");
     return;
   }
 
@@ -885,14 +890,14 @@ async function prefillFromOfself() {
       const link = element("a", "", "Reconnect with Ofself");
       link.href = "/oauth/login";
       showNote(
-        passportNote,
+        ofselfNote,
         ["This app no longer has access to your Ofself account. ", link, " or fill the form in yourself."],
         "warn",
       );
       return;
     }
     showNote(
-      passportNote,
+      ofselfNote,
       [`${detail.message || "Your Ofself details could not be read."} Fill the form in yourself.`],
       "warn",
     );
@@ -902,6 +907,17 @@ async function prefillFromOfself() {
   prefillDestination(payload);
   prefillPassport(payload);
   prefillResidence(payload);
+  showNote(ofselfNote, [formSentence(payload)]);
+}
+
+// One statement for the whole form, so an empty field does not each say the same thing. It never
+// says the traveller has no documents or plans: Ofself answers a schema this app was not granted
+// exactly as it answers one with nothing recorded.
+function formSentence(payload) {
+  const found =
+    (payload.passports || []).length + (payload.residences || []).length + (payload.plans || []).length;
+  if (!found) return "Nothing shared from your Ofself account fills this form yet. Fill it in yourself.";
+  return "Fields filled from your Ofself account say so. Check them, and fill in the rest.";
 }
 
 prefillFromOfself();

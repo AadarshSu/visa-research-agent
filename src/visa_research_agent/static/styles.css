@@ -210,6 +210,27 @@ h1 {
   line-height: 1.65;
 }
 
+.form-note {
+  max-width: 720px;
+  margin: 28px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.form-note--warn {
+  color: var(--amber);
+}
+
+.form-note a {
+  color: inherit;
+  font-weight: 760;
+}
+
+.form-note:not([hidden]) + .research-form {
+  margin-top: 12px;
+}
+
 .research-form {
   display: grid;
   grid-template-columns: minmax(220px, 1fr) auto;

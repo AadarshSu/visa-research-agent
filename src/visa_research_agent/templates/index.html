@@ -40,6 +40,7 @@
             {% if source_mode == 'live' %}the configured official pages, retrieved live{% else %}saved official-source snapshots{% endif %}.
           </p>
 
+          {% if signed_in %}<p id="ofself-note" class="form-note" role="status" hidden></p>{% endif %}
           <form id="plan-form" class="research-form">
             <div class="field-group">
               <label for="destination">Destination</label>

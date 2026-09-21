@@ -415,6 +415,8 @@ async def test_the_page_asks_a_signed_in_traveller_rather_than_assuming_the_defa
     # Destination and purpose too: a list's first entry must not pass as the traveller's choice.
     assert '<option value="" selected>Choose a destination</option>' in page
     assert '<option value="" selected>Choose a purpose</option>' in page
+    # What Ofself filled, or that it filled nothing, is said once above the form.
+    assert 'id="ofself-note"' in page
     assert '<option value="IN" selected>' not in page
     assert '<option value="GB" selected>' not in page
     assert "Sign out" in page
@@ -429,6 +431,7 @@ async def test_the_anonymous_page_offers_sign_in_and_keeps_its_default() -> None
     assert '<option value="IN" selected>' in page
     assert '<option value="" selected>Choose a destination</option>' not in page
     assert '<option value="" selected>Choose a purpose</option>' not in page
+    assert 'id="ofself-note"' not in page
 
 
 async def test_the_page_says_nothing_of_ofself_where_sign_in_is_not_configured() -> None:
