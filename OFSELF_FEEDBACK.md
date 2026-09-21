@@ -306,6 +306,10 @@ JavaScript and confirmed with one real sign-in.
 - **9.8 A real grant carries the DLR's `fields`** [observed]. `effective_access` was exactly
   `nodes:read` on `work-authorization`, `fields: ["citizenships"]`, and no other records were
   readable. The grant expires in 30 days, and the guide doesn't say if that's the default.
+  **Re-consenting doesn't restart it** [observed, 2026-09-21]: after the DLR widened and the owner
+  approved the new request, `effective_access` held all six schemas with exactly the requested
+  fields, and `expires_at` was still 2026-10-17 — the first grant's date. So a user who re-approves a
+  larger request on day 29 gets one more day of it.
 
 ## 10. Making it easier to connect an existing app
 
