@@ -778,6 +778,43 @@ restate it.
   status and permit expiry (no schema). The form does not ask the last two today either.
 - **Nothing is written back, and `fact` nodes are never read as evidence.**
 
+**Six travel schemas appeared in the registry on 2026-09-21, and they change what this item can
+ask for.** All public, all v1: `travel-plan`, `travel-document`, `travel-requirement`,
+`travel-stay`, `travel-obligation`, `travel-zone`. Evaluated the day they appeared; **nothing is
+built and the DLR is unchanged.**
+- **Read `travel-document`, narrowed to fields — the one clear win.** It answers the three gaps
+  entry 180 recorded as having no schema: the passport as a document with `document_code`
+  (`P`/`PD`/`PS`), so rule 2's refusal of a non-ordinary passport becomes possible instead of
+  hard-coding `ordinary`; `expires_at` and `issued_at`, without which passport-validity and the
+  Schengen ten-year condition cannot be checked at all; and `kind: residence_permit` with `grants`,
+  which is residence status and permit expiry — decisive for Brazil and China, and named as missing
+  in CRUX §11. Its `field_provenance` rule is this project's own doctrine in Ofself's words, and it
+  agrees with rule 3: what is read is a default the traveller confirms.
+  **Ask for a narrow field list and never the whole node.** `number` and `photo_ids` are a passport
+  number and scans; `surname`, `given_names`, `date_of_birth`, `place_of_birth` and `sex` decide no
+  guidance. Rule 1 is why this matters: `build_research_packet` sends the profile whole to OpenAI.
+- **`travel-plan` answers entry 180's objection to `trip`.** It is *"a journey someone is
+  considering but has not committed to"*, so reading it does not drag in every past trip the way
+  `trip` would. It also carries `travellers` and several `candidates`, which this app has no shape
+  for — one corridor is one traveller and one destination. Worth reading as a default to confirm,
+  not as a corridor.
+- **Never read `travel-requirement` as evidence.** It is the decision table entry 44 refused to
+  build, held in a store every app can write. A row's `source_url` has passed none of entry 2's
+  domain rules, and its `read_at` can be older than `source_maximum_stale_hours` allows this app to
+  serve. The same argument as `fact` nodes, and it needs its own line in CRUX §13.
+- **Writing is where the platform pulls hardest, and the answer is still no.** `travel-requirement`
+  is the graph write that would lift readiness past 2 (feedback 5.6), and its `outcome` field is
+  required — so any row this app wrote would carry a model-derived verdict, which is exactly entry
+  44's refusal. `travel-obligation` is the one write that would not: it records what *happened*, and
+  states outright that *"the eligibility verdict is derived and never stored."* But this app books
+  and submits nothing, so it has no history to record. **Either way, a decision entry first.**
+- **`travel-stay` is a capability this app does not have** — entry and exit legs, for rolling
+  allowances like 90 days in any 180. If it is ever read, the schema's own caveat is binding and is
+  entry 6 restated: a total built from self-declared stays may raise a question and may never state
+  days remaining.
+- **`travel-zone` is not needed.** Zone membership is committed reference data here already, and a
+  roster in the graph is another app's assertion.
+
 **Open, for the owner to ask Ofself:**
 - **Does any Ofself app record a trip before it happens?** If one does, `trip` is worth adding before
   launch. Widening a DLR later pauses every existing user's access until they re-authorise, which

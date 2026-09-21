@@ -159,7 +159,15 @@ rather than deleting it.
 
 - **6.1 Nothing for travel identity** [observed]. No passport, nationality, residence or
   immigration schema. `work-authorization.citizenships` is the nearest. The owner plans to propose
-  one.
+  one. **Resolved 2026-09-21:** six public v1 schemas now exist — `travel-plan`, `travel-document`,
+  `travel-requirement`, `travel-stay`, `travel-obligation`, `travel-zone`. They cover what CRUX §12
+  said this app would otherwise have to invent, and their descriptions hold the distinctions that
+  matter: `document_code` so a diplomatic passport is refused rather than scored as ordinary,
+  `issuing_state` kept apart from `nationality`, and `field_provenance` with the rule that a
+  self-declared value *"may RAISE a question and may never CLOSE one"*. **One request:** say which
+  fields a reader is expected to need, since a DLR narrows fields but not rows and
+  `travel-document` carries a document number and photographs this app must never receive (6.3, and
+  item 55's first rule).
 - **6.2 `citizenships` allows alpha-2 or alpha-3** [observed], so every reader must accept both. One
   format would spare them.
 - **6.3 A DLR narrows fields but not rows** [docs, CLI]. `place` can't be limited to a home, or
