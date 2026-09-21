@@ -60,6 +60,9 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py312"
+# Ofself's own guides, kept verbatim as dated snapshots; ruff 0.16 formats code blocks inside
+# Markdown, and reformatting them would change another company's documentation.
+extend-exclude = ["docs/ofself"]
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "I", "UP"]
