@@ -140,6 +140,14 @@ rather than deleting it.
   design, have the review judge that claim, and score a justified read-only app on its own terms.
   The ladder currently measures contribution to the graph, not value to the person.
 
+- **5.7 A billable command that names no price and no payer** [read, observed]. `crux review` runs a
+  model on Ofself's backend over the app's CRUX. Its own docstring says *"Slower and billable, so it
+  is its own command"*, and nothing — help text, output, guide — says who is billed, how much, or
+  whether a developer account has a budget. The verdicts are cached against the `spec_version` they
+  were made about, so every `crux push` marks them stale and a re-review presumably bills again.
+  *Suggest:* print the price before running it, and say in the help whether the developer or the
+  platform pays.
+
 ## 6. Schema registry
 
 - **6.1 Nothing for travel identity** [observed]. No passport, nationality, residence or
