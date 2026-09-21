@@ -797,10 +797,12 @@ it was moved into `.env` as `PARADIGM_API_KEY`, where every other secret lives, 
   the staged change and `paradigm dlr preview` shows the consent card.
 - **The CRUX is published as of 2026-09-21**, `spec_version` 3, with the owner's go-ahead. The
   record stores `format: md`, all sixteen sections (10,027 characters) and the DLR block; the DLR
-  itself is unchanged. `paradigm readiness` now scores the app and passes **8 of 11 checks**: the
-  design document, what it asks for and sign-in all pass, and the five review criteria are
-  unassessed until someone runs `paradigm crux review`, which asks Paradigm's own model to read the
-  CRUX. **Readiness is 2 of 5, "Wired", and reaching 3 requires having written to the graph** — which
+  itself is unchanged. `paradigm crux review` — Paradigm's own model reading the CRUX — then
+  **passed all five of its criteria**, taking the app to **13 of 16 checks**: every permission
+  justified by a workflow, the inference and its confirmer named, the schema choices justified, the
+  identity thesis a real claim, and the workflows complete jobs. The three that fail are all
+  traffic: two are usage counts a private incubator app cannot have, and the third is the write-back
+  below. **Readiness is 2 of 5, "Wired", and reaching 3 requires having written to the graph** — which
   entry 44 and this item's sixth rule forbid. That is a ceiling to accept deliberately rather than
   design around; it is feedback 5.6, and worth raising with Ofself alongside the questions below.
   The paragraph that follows is kept for how the state was found.

@@ -127,6 +127,11 @@ rather than deleting it.
   written to the graph"*. The "What compounds" section marks it down the same way: *"The app requests
   no write access, so nothing it does is available to anything else."*
 
+  The value score says the same thing in prose. After `crux review` passed all five criteria, the
+  app scores **1/5, "Convenience"**, with: *"the claim is still travel administration that writes
+  nothing reusable, feeds no other app, and does not reshape daily decisions or self-understanding."*
+  So two of the three headline scores are capped by the same decision.
+
   This app writes nothing on purpose, and the reason is the strongest one it has: what it concludes
   is a rendering of pages read at that moment, never a fact (DECISIONS entry 44). A wrong "needs a
   visa" sitting in a graph every other app reads, with no citation and no age, is exactly the
