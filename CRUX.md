@@ -27,25 +27,35 @@ than guesses.
 ## 2. Why Paradigm
 
 **Already there.** A `work-authorization` node, written by the career apps (its `source` is
-`self_reported`, `resume_parse` or `verified`), holding the person's `citizenships`. That is the one
-field this app reads today. The travel schemas are requested for the planned workflows in §7 and
-read only once each is built (§11).
+`self_reported`, `resume_parse` or `verified`), holding the person's `citizenships`; and, from
+whichever app records them, the person's `travel-document`s, the `travel-plan`s they are
+considering, and the `place`s those point at. The rest of what the DLR asks for is read only once
+the workflow that needs it is built (§11).
 
-**Inherited on day one.** Which passports the person may hold. It is offered as the default, never
-used unconfirmed: it may have been parsed from a CV rather than stated, and a person with two
-citizenships chooses which passport this trip is on.
+**Inherited on day one.** Which passports the person holds and when each expires, the country
+their residence permit was issued by, and the destinations they are already considering. Each is
+offered as a default, never used unconfirmed: a citizenship may have been parsed from a CV rather
+than stated, a date may have been typed in rather than read off the document, and a person with
+two passports chooses which one this trip is on.
 
-**Without the graph.** Sign-in, and one form field. That is the true answer today. Sign-in matters
+**Without the graph.** Sign-in, and a form filled in by hand. With it, a traveller who keeps
+their documents and plans in Ofself starts from them. Sign-in matters
 more than it sounds: a fresh plan costs about $0.31 in search and model calls, so the app cannot
 sit behind an unauthenticated URL. The larger answer is §7's planned workflows, on the travel
 schemas.
 
 ## 3. Reuse
 
-**Read verbatim.** `work-authorization.citizenships`, from whichever career app wrote it. Codes
-arrive as ISO alpha-2 or alpha-3 and are normalised to alpha-2 at the edge.
+**Read verbatim.** `work-authorization.citizenships`; a `travel-document`'s kind, code,
+nationality, issuing state, expiry, status, holder, label, the class a permit grants, and where its
+expiry came from; an open `travel-plan`'s label, window and candidates; and a `place`'s kind,
+country code and parent. Codes arrive as ISO alpha-2 or alpha-3 and are normalised to alpha-2 at
+the edge.
 
-**Made possible.** Nothing the app could not otherwise do — it saves the traveller one question.
+**Made possible.** Showing a traveller their own passport's expiry beside the rule they must meet,
+refusing a diplomatic passport before it is researched as an ordinary one, and starting from a
+trip they are already considering. None of it changes what a plan says; it changes what the
+traveller confirms before one is written.
 
 ## 4. Derivation
 
@@ -85,33 +95,38 @@ the owner outside the codebase, on purpose (DECISIONS entry 68).
 
 ## 7. Workflows
 
-**Workflow 1.** The traveller signs in through Ofself and authorises the app. They pick a
-destination and purpose, confirm or change the passport pre-filled from `citizenships`, and choose
-the country they apply from. The app researches the destination's official pages and shows a plan
+**Workflow 1.** The traveller signs in through Ofself and authorises the app. The form starts from
+their account: a destination and purpose from a `travel-plan` they are considering, the passport
+from their `travel-document`s and `citizenships` — with its expiry, and whether that date was read
+off the passport or typed in — and the country they apply from from a residence permit. A
+diplomatic or service passport is named and not offered. They confirm or change every field. The app researches the destination's official pages and shows a plan
 with a citation on every claim, or refuses and says why. Nothing is in the graph afterwards.
 
 **Workflow 2.** A traveller whose authorisation was paused, revoked or has expired is asked to
 reconnect. The app never substitutes a default traveller, and a plan is not shown if access was
 withdrawn while it was being written.
 
-**Planned — not built.** Each of these is why a field is requested today (§11). Each shares one
+**Planned — partly built.** Each of these is why a field is requested today (§11). What is built
+is said in each; the rest waits. Each shares one
 rule, stated by the schemas themselves: a value the person typed in may raise a question and may
 never close one, so nothing self-declared is ever shown as a requirement met.
 
-**Planned A — the plan checks the traveller's own passport.** Today a plan states the destination's
-rule: "valid for three months beyond departure", "issued within ten years". With
-`travel-document`'s `expires_at` and `issued_at` it can say, for this traveller, whether their
-passport meets it — or, when the dates were typed in, that they should check. `date_of_birth`
-lets it name the consent letters a minor needs and an age-based fee waiver.
+**Planned A — the plan checks the traveller's own passport.** A plan states the destination's
+rule: "valid for three months beyond departure", "issued within ten years". **Built:** the form
+shows the chosen passport's expiry and says whether it was read off the passport or typed in.
+**Not built:** the plan itself saying, for this traveller, whether their passport meets the rule,
+which changes what the plan's model call is given; and `issued_at` and `date_of_birth`, which
+would let it check the ten-year rule and name the consent letters a minor needs.
 
-**Planned B — the right passport and the right residence.** `document_code` lets the app refuse a
-diplomatic or service passport instead of researching it as an ordinary one. A residence permit's
-`issuing_state` and `grants` give the country applied from and the status a non-citizen resident
-must prove; the traveller still confirms both.
+**Planned B — the right passport and the right residence.** **Built:** a passport whose
+`document_code` is not an ordinary one is named and not offered, and a residence permit's
+`issuing_state` fills the country applied from, with its class and expiry shown. **Not built:** the
+plan using the permit's status, which a non-citizen resident must prove.
 
-**Planned C — a plan being considered becomes the starting point.** A `travel-plan`'s candidates
-and window pre-fill destination and purpose, one candidate researched at a time, confirmed before
-any research runs. `place` turns a candidate's reference into a country.
+**Planned C — a plan being considered becomes the starting point.** **Built.** An open
+`travel-plan`'s candidates are offered as destinations, with the plan's window, and a candidate's
+purpose fills the purpose when it is one this app researches. `place` turns a candidate's
+reference into a country. One candidate is researched at a time.
 
 **Planned D — a rolling allowance is flagged.** Where a destination counts days across a zone —
 90 in any 180 for Schengen — `travel-stay` records let the plan say that past stays may count
@@ -129,9 +144,10 @@ official page it came from.
 
 ## 9. First run
 
-**Before they have done anything.** The form, with the passport pre-filled from `citizenships` when
-the node exists and marked as needing confirmation, and empty when it does not. The rest of the
-form starts empty.
+**Before they have done anything.** The form, every field empty and required, filled from the
+account where it holds an answer: one candidate destination, one passport or one residence permit
+fills its field in with a note saying where it came from; several are offered with none chosen.
+Nothing shared is never read as nothing recorded — Ofself answers both the same way.
 
 ## 10. What it deliberately doesn't do
 
@@ -141,9 +157,10 @@ form starts empty.
   that decides the visa answer.
 - **Reading `fact` nodes as evidence.** Other apps already store visa rules there with a source URL,
   but a URL in another app's record has passed none of this app's official-domain checks.
-- **Reading `travel-requirement` or `travel-zone` at all.** A published rule in the graph has the
-  same problem as a `fact`, and may be older than this app is permitted to serve. They are not in
-  the DLR, and that is permanent rather than deferred (DECISIONS entry 181).
+- **Reading `travel-requirement` or `travel-zone` as evidence.** A published rule in the graph has
+  the same problem as a `fact`, and may be older than this app is permitted to serve. Neither is in
+  the DLR. A rule's address could one day be read as a *lead* — fetched and checked by this app like
+  a search result — but nothing would use it today (DECISIONS entry 181).
 - **Submitting applications, booking appointments, filling forms, or promising approval.**
 - **Keeping a mirror of the user's data.** It stores nothing under a user id, so there is nothing to
   keep in step and nothing left behind when access is revoked.

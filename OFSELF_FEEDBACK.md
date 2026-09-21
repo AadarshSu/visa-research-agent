@@ -6,7 +6,7 @@ item 55; this file is only about the platform.
 
 Each point says how it is known — **[observed]** against the live API or CLI, **[read]** in the CLI's
 source or the authorize page's JavaScript, **[docs]** from the developer guide alone. Seen with
-`paradigm-cli` 0.5.0 against `api.ofself.ai`, 2026-09-16 to 2026-09-18. Mark a point resolved
+`paradigm-cli` 0.5.0 against `api.ofself.ai`, 2026-09-16 to 2026-09-21. Mark a point resolved
 rather than deleting it.
 
 ---
@@ -25,6 +25,12 @@ rather than deleting it.
 - **1.4 `GET /my-permissions` also returns `effective_access`** [observed], the full granted access
   document. The guide doesn't mention it, and it's the field that shows which schemas and fields were
   granted.
+- **1.5 A schema outside the grant reads as empty, not refused** [observed, 2026-09-21]. With a grant
+  covering only `work-authorization`, `GET /nodes?schema_id=travel-document` and `?schema_id=place`
+  answered `200` with `"nodes": []` — the same answer as a granted schema with nothing recorded. So
+  an app cannot tell "not shared with you" from "doesn't exist", and one that says "you have no
+  passport on file" will be wrong for every user whose grant predates a DLR change. *Suggest:* a
+  `403` with a scope code, or a header naming what was filtered.
 
 ## 2. The docs disagree with themselves or the CLI
 
@@ -177,6 +183,13 @@ rather than deleting it.
   as evidence. Worth a note on what `basis` and `source` establish.
 - **6.5 `schema search` repeats names** [observed], e.g. `nutrition:food`, apparently once per
   version.
+- **6.6 Two defects in the travel schemas' v1** [observed, 2026-09-21].
+  - **`travel-plan.candidates[].place_ref` is malformed.** Its JSON Schema carries a stray property
+    key, `"normally of kind country.": null` — the description was split at a comma, and the second
+    half became a key. A strict validator may reject the schema, or silently ignore it.
+  - **`travel-document.number` is not encrypted.** Its own description says it is SENSITIVE and
+    *"should be turned on before any real document is stored"*, but `encrypted_fields` is `[]`. So
+    passport numbers written today are stored in plaintext. This app never requests the field.
 
 ## 7. Security and setup
 

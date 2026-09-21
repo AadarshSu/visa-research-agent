@@ -254,7 +254,7 @@ ran `--destination usa` without the United States corpus.
 **[TODO.md](TODO.md) is the queue — go there.** This file deliberately does not copy it. What
 follows is only the state a cold session needs to read the queue.
 
-**The Ofself integration is designed and not built (entry 180, 2026-09-17).** Ofself's developer
+**The Ofself integration is partly built (entries 180 and 181).** Ofself's developer
 platform is Paradigm, and [CRUX.md](CRUX.md) — which `paradigm crux validate` passes — holds the
 design. The app reads only `work-authorization.citizenships` as a passport nationality the traveller
 confirms, writes nothing back, and asks everything else on the page. **The app is registered** — 2026-09-17, "Visa Research Desk", app id
@@ -267,7 +267,12 @@ and 2 of item 55 are built — the route takes its traveller from an injected `T
 the country check is in `api/countries.py` — and the Ofself adapter
 (`api/ofself.py`, step 3) is built, tested offline, and run against a live sandbox user. Sign-in with Ofself (`api/signin.py`) is
 built, and the owner has signed in with it for real. Signed in, the page fills the passport from
-Ofself (seen for the sandbox user); the owner's own account has no citizenship recorded yet. Paradigm stores user data and does not host apps, as far as
+Ofself (seen for the sandbox user); the owner's own account has no citizenship recorded yet.
+**Since 2026-09-21 (entry 181) it also starts from Ofself's travel schemas** — passports with their
+expiry, a residence permit, trips being considered — as defaults the traveller confirms. That is
+tested offline and seen against a fake Ofself only: the DLR asking for those schemas is written in
+`CRUX.md` and **not yet published**, which is the owner's `paradigm crux sync`. Nothing a plan says
+changed. Paradigm stores user data and does not host apps, as far as
 its documentation shows, so item 7 still needs a host. The CLI is `~/.local/bin/paradigm`,
 logged in as the owner.
 

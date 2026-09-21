@@ -34,6 +34,7 @@ import secrets
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from typing import Annotated
 from urllib.parse import urlencode
 
@@ -45,7 +46,7 @@ from visa_research_agent.api.ofself import (
     OfselfError,
     OfselfIdentity,
     OfselfSignInRejected,
-    PassportNationalities,
+    TravellerDefaults,
 )
 from visa_research_agent.config.settings import settings
 
@@ -271,14 +272,16 @@ async def session(
     return {"configured": sign_in is not None, "signed_in": user_id is not None, "user_id": user_id}
 
 
-@router.get("/passport")
-async def passport(
+@router.get("/traveller")
+async def traveller(
     request: Request, sign_in: Annotated[SignIn, Depends(require_sign_in)]
-) -> PassportNationalities:
-    """The signed-in traveller's recorded citizenships, for the page to offer — never to decide.
+) -> TravellerDefaults:
+    """What the signed-in traveller's Ofself account holds that can start the form.
 
-    One fills the passport field in; several are offered with none chosen; none leaves it for the
-    traveller (DECISIONS entry 180). Nothing read here is kept.
+    Passports, a residence permit and journeys being considered — each offered, never decided. One
+    passport fills the field in; several are offered with none chosen; none leaves it for the
+    traveller (DECISIONS entries 180 and 181). Nothing read here is kept, and none of it reaches a
+    plan except through the form the traveller submits.
     """
 
     user_id = sign_in.signed_in_user(request)
@@ -288,7 +291,7 @@ async def passport(
             detail={"message": "Sign in with Ofself first.", "sign_in": True},
         )
     try:
-        return await sign_in.identity.passport_nationalities(user_id)
+        return await sign_in.identity.traveller_defaults(user_id, today=date.today())
     except OfselfAuthorizationLost as exc:
         # The grant is gone, paused or expired: the one honest answer is to ask them to reconnect,
         # never to carry on as if a traveller had been described (item 55, rule 4).

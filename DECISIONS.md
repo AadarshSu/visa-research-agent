@@ -218,7 +218,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
-| [181](#181-the-data-request-asks-now-for-what-a-future-plan-could-use-and-the-app-reads-only-what-a-built-feature-uses) | **The data request asks ahead, the app reads on use** — fields a future plan could use are requested while the only grant is the owner's; never what only an application would use, never another app's rules; granted is not read |
+| [181](#181-the-data-request-asks-now-for-what-a-future-plan-could-use-and-the-app-reads-only-what-a-built-feature-uses) | **The data request asks ahead, the app reads on use** — fields a future plan could use are requested while the only grant is the owner's; never what only an application would use, never another app's rules as evidence; the form now starts from the travel schemas, and the plan is unchanged |
 | [180](#180-the-first-ofself-integration-reads-one-field-writes-nothing-and-asks-the-rest-on-the-page) | **The first Ofself integration reads one field** — `work-authorization` for nationality, nothing written back, residence and trip asked on the page; Paradigm hosts data, not the app |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
 | [37](#37-a-per-run-allowance-may-not-be-counted-on-an-object-that-outlives-the-run) | A per-run allowance may not live on an object that outlives the run |
@@ -262,10 +262,14 @@ asked for after launch costs a re-consent from each user. Entry 180 made the sam
    appointments or fills forms, so no future *plan* can use a passport number, a scan, a name, a
    place of birth, a sex, an application reference or a free-text note. Those are not requested at
    any point. The bound comes from a rule, not from taste, which is why it holds.
-2. **Never another app's rules or verdicts, as evidence or otherwise.** `travel-requirement`,
-   `travel-zone` and `fact` are not requested. A rule in the graph has passed none of entry 2's
-   domain checks and may be older than `source_maximum_stale_hours` permits (TODO item 55's
-   evaluation). This is not a "later"; it is a standing refusal.
+2. **Never another app's rules or verdicts as evidence.** `travel-requirement`, `travel-zone` and
+   `fact` are not requested. A rule in the graph has passed none of entry 2's domain checks and may
+   be older than `source_maximum_stale_hours` permits (TODO item 55's evaluation). *Reworded the
+   same day:* this first said "as evidence or otherwise", which overstated it. A rule's address
+   could be read as a **lead** — fetched and checked by this app, exactly as a search result is —
+   and under this entry's own principle that would qualify. The owner left it unrequested for now:
+   search already finds official pages on every corridor, and nothing has measured what other
+   apps' rows would add.
 3. **Requested is not read.** The adapter reads only fields a built feature uses. A field granted
    for later never enters `TravellerProfile`, a model packet, a draft or a log. Rule 1's real
    purpose was keeping unused personal data away from OpenAI, and that is unchanged — it now sits
@@ -308,6 +312,32 @@ anything, and `state` with `decided_at` says a refusal happened.
 **Not requested yet, because nothing could use them:** `travel-document.resident_address_ref` needs
 a residence workflow first, and `person`, which `travellers` and `holder_ref` point at, needs a plan
 for more than one traveller.
+
+### Built the same day, and what building it found
+
+The owner: *"use these schemas now."* Built: the form starts from the account — passports from
+`travel-document` and `citizenships`, the country applied from from a residence permit,
+destination and purpose from an open `travel-plan` — each a default the traveller confirms.
+`CRUX.md` §7 says which parts of workflows A, B and C that covers.
+
+**Held back, deliberately: everything that changes what a plan says.** Checking a passport's
+expiry against the destination's rule, a rolling allowance from stays, a prior refusal, a minor's
+consent letter — each means handing the plan's model call traveller facts it does not see today,
+and entries 174 and 177 are two packet changes that flipped visa decisions. So the form shows the
+expiry and the plan is unchanged. Each of those is its own change, measured before it ships.
+
+**Three things building it found:**
+- **A schema outside the grant answers `200` with no nodes**, the same as nothing recorded — seen
+  2026-09-21 with the owner's grant, which covers `work-authorization` only. So the page never says
+  a traveller *has* no document or plan; it says nothing shared names one.
+- **Destination and purpose defaulted to the first entry in their lists** for a signed-in traveller
+  — Afghanistan and tourism — while passport and residence started empty. Harmless until the plan
+  choices sat beside them and the list's first entry read as a choice. All four now start empty and
+  required when signed in, which is rule 4 applied to the two fields it had missed.
+- **No committed data says which countries are in Schengen.** Item 55's evaluation said zone
+  membership was "committed reference data here already"; it is not. `destinations.yaml` marks
+  `route_type: schengen_member` on its few configured entries, and every other country is
+  `national`. Planned workflow D needs a roster first, and where it comes from is its own question.
 
 ---
 

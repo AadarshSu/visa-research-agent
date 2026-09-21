@@ -1,8 +1,15 @@
-"""Reading a traveller's passport nationality from their Ofself identity (TODO item 55, step 3).
+"""Reading a traveller's details from their Ofself identity (TODO item 55, step 3).
 
-Ofself's developer platform is Paradigm. This app is registered there with one DLR request —
-`nodes:read` on `work-authorization`, restricted to its `citizenships` field — and DECISIONS entry
-180 and `CRUX.md` say why that is the whole of it. This module is the one place that reads it.
+Ofself's developer platform is Paradigm. This app's DLR asks for `work-authorization`'s
+`citizenships`, and — since DECISIONS entry 181 — for named fields of Ofself's travel schemas. This
+module is the one place that reads any of it.
+
+**It reads only fields a built feature uses** (entry 181's third bound). The DLR asks ahead for
+more — stays, obligations, a date of birth — and none of those is read here until a feature needs
+it. What is read today: citizenships; a travel document's kind, code, nationality, issuing state,
+expiry, status, holder, label, the class a permit grants, and where each date came from; an open
+travel plan's label, window and candidates; and a place's kind, country code and parent, to turn a
+candidate into a country.
 
 **What it returns is a default for the traveller to confirm, never a corridor.** The node may have
 been parsed out of a CV by another app rather than stated by the person, and someone with two
@@ -19,14 +26,18 @@ belongs to the anonymous form alone (rule 4).
 - **Retry.** A refused or lost authorisation is the user's decision, and is reported as such.
 """
 
+import asyncio
 import logging
 import uuid
+from datetime import date
+from typing import cast, get_args
 
 import httpx
 from pydantic import Field
 
 from visa_research_agent.api.countries import normalise_country
-from visa_research_agent.domain.models import StrictModel
+from visa_research_agent.discovery.lexicon import get_country_registry
+from visa_research_agent.domain.models import StrictModel, TravelPurpose
 from visa_research_agent.research.errors import VisaResearchError
 from visa_research_agent.research.live_sources import transport_failure_reason
 
@@ -34,6 +45,29 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_BASE_URL = "https://api.ofself.ai"
 WORK_AUTHORIZATION_SCHEMA = "work-authorization"
+TRAVEL_DOCUMENT_SCHEMA = "travel-document"
+TRAVEL_PLAN_SCHEMA = "travel-plan"
+PLACE_SCHEMA = "place"
+
+ORDINARY_PASSPORT_CODES = frozenset({"P", "P<"})
+"""ICAO 9303 document codes read as an ordinary passport. `PD` is diplomatic and `PS` service,
+and a state may use the second letter for other kinds, so any other code is refused rather than
+assumed ordinary (item 55, rule 2). A passport recorded with no code at all is treated as the form
+has always treated one: as ordinary, which is what the page says it researches."""
+
+RETIRED_DOCUMENT_STATUSES = frozenset({"lost", "stolen", "cancelled", "replaced", "superseded"})
+"""A document in one of these states is not one a trip could be made on, so it is not offered.
+`expired` is not here: an expired passport is offered, marked, because saying so is the point."""
+
+ATTESTED_VERIFICATIONS = frozenset({"cryptographic", "checksum"})
+"""`travel-document.field_provenance` values that mean a date was read off the document itself.
+Anything else — `none`, or no provenance at all — is a person's memory of it, which by the
+schema's own rule may raise a question and may never close one."""
+
+MAXIMUM_PLACE_DEPTH = 6
+"""How far up `parent_ref` a place is walked to find its country — a home, its town, region and
+country is four. A deeper or circular chain is left unresolved rather than followed."""
+
 PAGE_SIZE = 100
 """`GET /nodes` caps a page at 100. `work-authorization` is one node per user, so one page is the
 ordinary case, but more than one node is read correctly rather than assumed away.
@@ -92,6 +126,103 @@ class PassportNationalities(StrictModel):
     """Values that arrived encrypted, which this app cannot and does not read."""
 
 
+class OfselfPassport(StrictModel):
+    """A passport the traveller may be travelling on, offered for them to choose — never chosen."""
+
+    nationality: str
+    """Alpha-2."""
+
+    label: str | None = None
+    """What the person calls it — "my Indian passport". Absent for a bare citizenship."""
+
+    expires_at: date | None = None
+    expiry_attested: bool = False
+    """True only when the expiry was read off the document (a chip, or an MRZ that passed its
+    check digits). A typed-in date is shown as something to check, never as a fact."""
+
+    expired: bool = False
+    """Recorded as expired, or its expiry has passed."""
+
+    from_document: bool = True
+    """False when all Ofself holds is a citizenship: no document, so no expiry to show."""
+
+
+class WithheldPassport(StrictModel):
+    """A passport this app will not research, and says why rather than silently dropping it."""
+
+    nationality: str | None = None
+    label: str | None = None
+    document_code: str
+
+
+class OfselfResidence(StrictModel):
+    """A residence permit, offered as the country applied from — for the traveller to confirm."""
+
+    country: str
+    """Alpha-2 of the state that issued the permit."""
+
+    label: str | None = None
+    permit_class: str | None = None
+    """The coded class the permit grants — "Skilled Worker" — as recorded."""
+
+    expires_at: date | None = None
+    expiry_attested: bool = False
+    expired: bool = False
+
+
+class OfselfPlanCandidate(StrictModel):
+    """One destination a traveller's plan is considering."""
+
+    destination: str
+    """Alpha-2."""
+
+    destination_slug: str
+    """How the page's destination list names the same country."""
+
+    purpose: TravelPurpose | None = None
+    """Only a purpose this app researches. Anything else is left for the traveller to choose."""
+
+    recorded_purpose: str | None = None
+    """The plan's own purpose when it is not one this app researches — "family", "medical"."""
+
+
+class OfselfTravelPlan(StrictModel):
+    """A journey the traveller is considering, as they labelled it."""
+
+    label: str
+    earliest: date | None = None
+    latest: date | None = None
+    candidates: list[OfselfPlanCandidate] = Field(default_factory=list)
+
+
+class TravellerDefaults(StrictModel):
+    """What Ofself holds that can start the form — every part for the traveller to confirm.
+
+    **Empty means not shared, or not recorded, and the two cannot be told apart.** Paradigm
+    answers a read of a schema outside the grant with `200` and no nodes (observed 2026-09-21), so
+    nothing here may say that a traveller *has* no document or plan.
+    """
+
+    passports: list[OfselfPassport] = Field(default_factory=list)
+    withheld_passports: list[WithheldPassport] = Field(default_factory=list)
+    residences: list[OfselfResidence] = Field(default_factory=list)
+    plans: list[OfselfTravelPlan] = Field(default_factory=list)
+
+    other_holders: int = 0
+    """Documents recorded for another person on the account, which are not offered as this
+    traveller's."""
+
+    unresolved_candidates: int = 0
+    """Plan candidates whose place could not be turned into a country this program researches."""
+
+    unrecognised: list[str] = Field(default_factory=list)
+    encrypted_values: int = 0
+
+
+Node = tuple[str | None, dict[str, object]]
+"""A node as read: its id, and its `value_json` narrowed to the fields the grant allows."""
+
+
 class OfselfIdentity:
     """Reads one Paradigm user's identity on this app's behalf, within the grant they gave it."""
 
@@ -113,23 +244,29 @@ class OfselfIdentity:
     async def passport_nationalities(self, user_id: str) -> PassportNationalities:
         """The citizenships recorded in the user's `work-authorization`, normalised, unconfirmed."""
 
-        try:
-            user = str(uuid.UUID(user_id))
-        except ValueError as exc:
-            raise OfselfUnavailable("An Ofself user id must be a UUID") from exc
-
+        user = _user(user_id)
         values: list[object] = []
-        offset = 0
-        while True:
-            page = await self._list_nodes(user, offset)
-            nodes = page["nodes"]
-            for node in nodes:
-                values.extend(_citizenships_of(node))
-            offset += len(nodes)
-            if len(nodes) < PAGE_SIZE:
-                break
-
+        for _, value_json in await self._read_all(user, WORK_AUTHORIZATION_SCHEMA):
+            values.extend(_citizenships_of(value_json))
         return _normalise(values)
+
+    async def traveller_defaults(self, user_id: str, *, today: date) -> TravellerDefaults:
+        """What Ofself holds that can start the form: passports, residence and trips considered.
+
+        Every part is a default the traveller confirms (item 55, rule 3), and nothing read here
+        reaches a plan except through the form they submit. `today` decides what has expired.
+        """
+
+        user = _user(user_id)
+        citizenships, documents, plans = await asyncio.gather(
+            self.passport_nationalities(user),
+            self._read_all(user, TRAVEL_DOCUMENT_SCHEMA),
+            self._read_all(user, TRAVEL_PLAN_SCHEMA),
+        )
+        # Places are read only when a plan needs one resolved: every place the person holds
+        # arrives, as a grain and a country code, so it is not asked for without a reason.
+        places = await self._read_all(user, PLACE_SCHEMA) if plans else []
+        return _defaults(citizenships, documents, plans, places, today=today)
 
     async def exchange_session_code(self, code: str) -> str:
         """The user a sign-in's single-use `sid_code` belongs to, asked of Paradigm itself.
@@ -177,14 +314,32 @@ class OfselfIdentity:
             raise OfselfUnavailable("Ofself confirmed the sign-in without saying which user it was")
         return user_id
 
-    async def _list_nodes(self, user_id: str, offset: int) -> dict[str, list[object]]:
+    async def _read_all(self, user_id: str, schema: str) -> list[Node]:
+        """Every node of one schema the grant lets this app see, as its id and `value_json`.
+
+        Paging stops on a short page, never on `total`, which Paradigm answers as `null`.
+        """
+
+        values: list[Node] = []
+        offset = 0
+        while True:
+            page = await self._list_nodes(user_id, schema, offset)
+            nodes = page["nodes"]
+            for node in nodes:
+                if isinstance(node, dict) and isinstance(node.get("value_json"), dict):
+                    values.append((_text(node.get("id")), node["value_json"]))
+            offset += len(nodes)
+            if len(nodes) < PAGE_SIZE:
+                return values
+
+    async def _list_nodes(self, user_id: str, schema: str, offset: int) -> dict[str, list[object]]:
         headers = {
             "Accept": "application/json",
             "X-API-Key": self.api_key,
             "X-User-ID": user_id,
         }
         params: dict[str, str | int] = {
-            "schema_id": WORK_AUTHORIZATION_SCHEMA,
+            "schema_id": schema,
             "fields": "id,value_json",
             "limit": PAGE_SIZE,
             "offset": offset,
@@ -232,16 +387,224 @@ def _exchanged_user_id(payload: object) -> str | None:
         return None
 
 
-def _citizenships_of(node: object) -> list[object]:
+def _user(user_id: str) -> str:
+    try:
+        return str(uuid.UUID(user_id))
+    except ValueError as exc:
+        raise OfselfUnavailable("An Ofself user id must be a UUID") from exc
+
+
+def _citizenships_of(value_json: dict[str, object]) -> list[object]:
     """A node's `citizenships`, or nothing where the field is absent, hidden or not a list."""
 
-    if not isinstance(node, dict):
-        return []
-    value_json = node.get("value_json")
-    if not isinstance(value_json, dict):
-        return []
     citizenships = value_json.get("citizenships")
     return list(citizenships) if isinstance(citizenships, list) else []
+
+
+def _defaults(
+    citizenships: PassportNationalities,
+    documents: list[Node],
+    plans: list[Node],
+    places: list[Node],
+    *,
+    today: date,
+) -> TravellerDefaults:
+    unrecognised = list(citizenships.unrecognised)
+    encrypted = citizenships.encrypted_values
+    passports: dict[str, OfselfPassport] = {}
+    withheld: list[WithheldPassport] = []
+    residences: list[OfselfResidence] = []
+    other_holders = 0
+
+    def country(value: object) -> str | None:
+        nonlocal encrypted
+        if not isinstance(value, str) or not value.strip():
+            return None
+        if value.startswith(ENCRYPTED_VALUE_PREFIX):
+            encrypted += 1
+            return None
+        try:
+            return normalise_country(value)
+        except ValueError:
+            if value not in unrecognised:
+                unrecognised.append(value)
+            return None
+
+    for _, document in documents:
+        if _text(document.get("status")) in RETIRED_DOCUMENT_STATUSES:
+            continue
+        # Absent means the account holder; anyone else's document is not this traveller's to use.
+        if document.get("holder_ref"):
+            other_holders += 1
+            continue
+        kind = _text(document.get("kind"))
+        expires_at = _date(document.get("expires_at"))
+        expired = _text(document.get("status")) == "expired" or (
+            expires_at is not None and expires_at < today
+        )
+        attested = _attested(document, "expires_at")
+        label = _text(document.get("label"))
+
+        if kind == "passport":
+            nationality = country(document.get("nationality"))
+            code = (_text(document.get("document_code")) or "").upper()
+            if code and code not in ORDINARY_PASSPORT_CODES:
+                withheld.append(
+                    WithheldPassport(nationality=nationality, label=label, document_code=code)
+                )
+                continue
+            if nationality is None:
+                continue
+            candidate = OfselfPassport(
+                nationality=nationality,
+                label=label,
+                expires_at=expires_at,
+                expiry_attested=attested,
+                expired=expired,
+            )
+            if _preferred(candidate, passports.get(nationality)):
+                passports[nationality] = candidate
+        elif kind == "residence_permit":
+            issued_by = country(document.get("issuing_state"))
+            if issued_by is None:
+                continue
+            grants = document.get("grants")
+            permit_class = _text(grants.get("class")) if isinstance(grants, dict) else None
+            residences.append(
+                OfselfResidence(
+                    country=issued_by,
+                    label=label,
+                    permit_class=permit_class,
+                    expires_at=expires_at,
+                    expiry_attested=attested,
+                    expired=expired,
+                )
+            )
+
+    # A citizenship with no passport recorded is still offered, as it was before the travel
+    # schemas: the passport exists even where Ofself holds no record of the document.
+    for nationality in citizenships.nationalities:
+        passports.setdefault(
+            nationality, OfselfPassport(nationality=nationality, from_document=False)
+        )
+
+    place_countries = _place_countries(places)
+    travel_plans: list[OfselfTravelPlan] = []
+    unresolved = 0
+    for _, plan in plans:
+        if _text(plan.get("status")) in {"committed", "abandoned"}:
+            continue
+        if _text(plan.get("commitment")) == "abandoned":
+            continue
+        label = _text(plan.get("label"))
+        if label is None:
+            continue
+        candidates: list[OfselfPlanCandidate] = []
+        raw_candidates = plan.get("candidates")
+        for raw in raw_candidates if isinstance(raw_candidates, list) else []:
+            if not isinstance(raw, dict) or _text(raw.get("ruled_out_reason")):
+                continue
+            destination = place_countries.get(_text(raw.get("place_ref")) or "")
+            if destination is None:
+                unresolved += 1
+                continue
+            recorded = _text(raw.get("purpose"))
+            researched = (
+                cast(TravelPurpose, recorded) if recorded in get_args(TravelPurpose) else None
+            )
+            candidates.append(
+                OfselfPlanCandidate(
+                    destination=destination,
+                    destination_slug=_slug(destination),
+                    purpose=researched,
+                    recorded_purpose=recorded if researched is None else None,
+                )
+            )
+        if not candidates:
+            continue
+        raw_window = plan.get("window")
+        window: dict[str, object] = raw_window if isinstance(raw_window, dict) else {}
+        travel_plans.append(
+            OfselfTravelPlan(
+                label=label,
+                earliest=_date(window.get("earliest")),
+                latest=_date(window.get("latest")),
+                candidates=candidates,
+            )
+        )
+
+    return TravellerDefaults(
+        passports=list(passports.values()),
+        withheld_passports=withheld,
+        residences=residences,
+        plans=travel_plans,
+        other_holders=other_holders,
+        unresolved_candidates=unresolved,
+        unrecognised=unrecognised,
+        encrypted_values=encrypted,
+    )
+
+
+def _preferred(candidate: OfselfPassport, current: OfselfPassport | None) -> bool:
+    """Of two passports of one nationality, offer the one still valid, then the later expiry."""
+
+    if current is None:
+        return True
+    if candidate.expired != current.expired:
+        return not candidate.expired
+    return (candidate.expires_at or date.min) > (current.expires_at or date.min)
+
+
+def _place_countries(places: list[Node]) -> dict[str, str]:
+    """Each place id the grant shows, mapped to the alpha-2 country it sits in, where it resolves.
+
+    A place carries its own `country_code` when known; otherwise its `parent_ref` is walked upward
+    — Catral, Alicante, Spain — to a place that does.
+    """
+
+    by_id = {identifier: place for identifier, place in places if identifier}
+
+    resolved: dict[str, str] = {}
+    for identifier in by_id:
+        current: dict[str, object] | None = by_id[identifier]
+        for _ in range(MAXIMUM_PLACE_DEPTH):
+            if current is None:
+                break
+            code = _text(current.get("country_code"))
+            if code:
+                try:
+                    resolved[identifier] = normalise_country(code)
+                except ValueError:
+                    pass
+                break
+            current = by_id.get(_text(current.get("parent_ref")) or "")
+    return resolved
+
+
+def _slug(code: str) -> str:
+    country = get_country_registry().get(code)
+    return country.slug if country is not None else code.lower()
+
+
+def _attested(document: dict[str, object], field: str) -> bool:
+    provenance = document.get("field_provenance")
+    if not isinstance(provenance, dict):
+        return False
+    entry = provenance.get(field)
+    return isinstance(entry, dict) and entry.get("verification") in ATTESTED_VERIFICATIONS
+
+
+def _text(value: object) -> str | None:
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def _date(value: object) -> date | None:
+    if not isinstance(value, str):
+        return None
+    try:
+        return date.fromisoformat(value[:10])
+    except ValueError:
+        return None
 
 
 def _normalise(values: list[object]) -> PassportNationalities:

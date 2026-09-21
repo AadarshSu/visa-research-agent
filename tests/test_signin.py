@@ -320,7 +320,7 @@ def test_a_session_code_never_reaches_the_access_log() -> None:
     assert f"user_id={USER}" in line
 
 
-# --- the page and the passport it is offered ------------------------------------------------
+# --- the page and the traveller it is offered ------------------------------------------------
 
 
 def paradigm(*, exchange_user: str = USER, nodes: Handler | None = None) -> Handler:
@@ -337,10 +337,15 @@ def paradigm(*, exchange_user: str = USER, nodes: Handler | None = None) -> Hand
 
 
 def recorded(*citizenships: str) -> Handler:
-    return lambda _: httpx.Response(
-        200,
-        json={"nodes": [{"id": "n", "value_json": {"citizenships": list(citizenships)}}]},
-    )
+    """Citizenships in `work-authorization`, and nothing in any other schema."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.params.get("schema_id") != "work-authorization":
+            return httpx.Response(200, json={"nodes": [], "total": None})
+        node = {"id": "n", "value_json": {"citizenships": list(citizenships)}}
+        return httpx.Response(200, json={"nodes": [node], "total": None})
+
+    return handler
 
 
 async def signed_in(started: Start, nodes: Handler) -> httpx.AsyncClient:
@@ -353,7 +358,7 @@ async def signed_in(started: Start, nodes: Handler) -> httpx.AsyncClient:
 async def test_the_passport_needs_a_signed_in_traveller(started: Start) -> None:
     client = await started(paradigm())
 
-    response = await client.get("/oauth/passport")
+    response = await client.get("/oauth/traveller")
 
     assert response.status_code == 401
     assert response.json()["detail"]["sign_in"] is True
@@ -364,21 +369,20 @@ async def test_a_signed_in_traveller_is_offered_their_recorded_citizenships(
 ) -> None:
     client = await signed_in(started, recorded("IND", "GB"))
 
-    response = await client.get("/oauth/passport")
+    response = await client.get("/oauth/traveller")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "nationalities": ["IN", "GB"],
-        "unrecognised": [],
-        "encrypted_values": 0,
-    }
+    body = response.json()
+    assert [passport["nationality"] for passport in body["passports"]] == ["IN", "GB"]
+    assert all(passport["from_document"] is False for passport in body["passports"])
+    assert body["residences"] == [] and body["plans"] == []
 
 
 async def test_a_lost_grant_asks_the_traveller_to_reconnect(started: Start) -> None:
     lost = refused(403, "EP_REVOKED")
     client = await signed_in(started, lost)
 
-    response = await client.get("/oauth/passport")
+    response = await client.get("/oauth/traveller")
 
     assert response.status_code == 403
     assert response.json()["detail"] == {
@@ -391,7 +395,7 @@ async def test_a_lost_grant_asks_the_traveller_to_reconnect(started: Start) -> N
 async def test_an_unreachable_ofself_is_a_502_not_an_empty_passport(started: Start) -> None:
     client = await signed_in(started, refused(503, "SERVICE_UNAVAILABLE"))
 
-    response = await client.get("/oauth/passport")
+    response = await client.get("/oauth/traveller")
 
     assert response.status_code == 502
 
@@ -408,6 +412,9 @@ async def test_the_page_asks_a_signed_in_traveller_rather_than_assuming_the_defa
     assert 'data-signed-in="true"' in page
     assert '<option value="" selected>Choose a passport</option>' in page
     assert '<option value="" selected>Choose a country</option>' in page
+    # Destination and purpose too: a list's first entry must not pass as the traveller's choice.
+    assert '<option value="" selected>Choose a destination</option>' in page
+    assert '<option value="" selected>Choose a purpose</option>' in page
     assert '<option value="IN" selected>' not in page
     assert '<option value="GB" selected>' not in page
     assert "Sign out" in page
@@ -420,6 +427,8 @@ async def test_the_anonymous_page_offers_sign_in_and_keeps_its_default() -> None
     assert 'data-signed-in="false"' in page
     assert 'href="/oauth/login"' in page
     assert '<option value="IN" selected>' in page
+    assert '<option value="" selected>Choose a destination</option>' not in page
+    assert '<option value="" selected>Choose a purpose</option>' not in page
 
 
 async def test_the_page_says_nothing_of_ofself_where_sign_in_is_not_configured() -> None:

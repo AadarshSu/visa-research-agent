@@ -6,6 +6,7 @@ guide: `total` is `null`, not a count.
 """
 
 from collections.abc import Callable
+from datetime import date
 
 import httpx
 import pytest
@@ -215,3 +216,249 @@ async def test_a_user_id_that_is_not_a_uuid_is_refused_before_anything_is_sent()
 def test_an_adapter_without_an_api_key_cannot_be_built() -> None:
     with pytest.raises(OfselfUnavailable, match="API key"):
         OfselfIdentity("  ")
+
+
+# --- the travel schemas: passports, residence and plans (DECISIONS entry 181) ---------------
+
+TODAY = date(2026, 9, 21)
+
+
+def by_schema(**schemas: list[dict[str, object]]) -> Callable[[httpx.Request], httpx.Response]:
+    """A fake Paradigm answering each schema with its own nodes, and any other with none — which
+    is also how the live API answers a schema outside the grant (2026-09-21)."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        schema = request.url.params["schema_id"].replace("-", "_")
+        listed = [
+            {"id": str(value.pop("_id", f"{schema}-{i}")), "value_json": value}
+            for i, value in enumerate(dict(entry) for entry in schemas.get(schema, []))
+        ]
+        return httpx.Response(200, json={"nodes": listed, "total": None})
+
+    return handler
+
+
+def passport(**fields: object) -> dict[str, object]:
+    return {"kind": "passport", "nationality": "IND", "status": "valid", **fields}
+
+
+def typed(*fields: str) -> dict[str, object]:
+    return {field: {"source": "manual", "verification": "none"} for field in fields}
+
+
+def chip_read(*fields: str) -> dict[str, object]:
+    return {field: {"source": "nfc_chip", "verification": "cryptographic"} for field in fields}
+
+
+async def test_each_schema_is_asked_for_as_this_app_and_places_only_when_a_plan_needs_them() -> (
+    None
+):
+    asked: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        asked.append(request.url.params["schema_id"])
+        assert request.headers["X-User-ID"] == USER
+        return nodes()
+
+    await identity(handler).traveller_defaults(USER, today=TODAY)
+
+    assert sorted(asked) == ["travel-document", "travel-plan", "work-authorization"]
+
+
+async def test_a_passport_is_offered_with_its_expiry_and_whether_it_was_read_off_the_document() -> (
+    None
+):
+    """A typed-in date may raise a question and never close one, so the two are kept apart."""
+
+    found = await identity(
+        by_schema(
+            travel_document=[
+                passport(
+                    label="my Indian passport",
+                    expires_at="2031-03-02",
+                    field_provenance=chip_read("expires_at"),
+                ),
+                passport(
+                    nationality="GBR", expires_at="2029-01-01", field_provenance=typed("expires_at")
+                ),
+            ]
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    indian, british = found.passports
+    assert (indian.nationality, indian.label, indian.expires_at) == (
+        "IN",
+        "my Indian passport",
+        date(2031, 3, 2),
+    )
+    assert indian.expiry_attested is True and indian.expired is False
+    assert british.nationality == "GB" and british.expiry_attested is False
+
+
+async def test_a_diplomatic_passport_is_withheld_and_never_offered() -> None:
+    """Rule 2: a passport this program cannot research is refused, never scored as ordinary."""
+
+    found = await identity(
+        by_schema(
+            travel_document=[
+                passport(document_code="PD", label="diplomatic"),
+                passport(nationality="GBR", document_code="P"),
+                passport(nationality="USA"),
+            ]
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    assert [p.nationality for p in found.passports] == ["GB", "US"]
+    (withheld,) = found.withheld_passports
+    assert (withheld.nationality, withheld.document_code) == ("IN", "PD")
+
+
+async def test_an_expired_passport_is_offered_marked_and_a_lost_one_not_at_all() -> None:
+    found = await identity(
+        by_schema(
+            travel_document=[
+                passport(expires_at="2026-01-01"),
+                passport(nationality="GBR", status="expired"),
+                passport(nationality="USA", status="lost"),
+                passport(nationality="CAN", status="replaced"),
+            ]
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    assert [(p.nationality, p.expired) for p in found.passports] == [("IN", True), ("GB", True)]
+
+
+async def test_of_two_passports_of_one_nationality_the_valid_one_is_offered() -> None:
+    found = await identity(
+        by_schema(
+            travel_document=[
+                passport(label="the old one", expires_at="2025-05-01"),
+                passport(label="the new one", expires_at="2035-05-01"),
+            ]
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    (offered,) = found.passports
+    assert offered.label == "the new one"
+
+
+async def test_a_citizenship_with_no_document_is_still_offered_and_a_document_supersedes_it() -> (
+    None
+):
+    found = await identity(
+        by_schema(
+            work_authorization=[{"citizenships": ["IND", "PH"]}],
+            travel_document=[passport(expires_at="2031-03-02")],
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    by_nationality = {p.nationality: p for p in found.passports}
+    assert by_nationality["IN"].from_document is True
+    assert by_nationality["IN"].expires_at == date(2031, 3, 2)
+    assert by_nationality["PH"].from_document is False
+
+
+async def test_another_persons_document_is_counted_and_never_offered() -> None:
+    found = await identity(
+        by_schema(travel_document=[passport(holder_ref="a-child"), passport(nationality="GBR")])
+    ).traveller_defaults(USER, today=TODAY)
+
+    assert [p.nationality for p in found.passports] == ["GB"]
+    assert found.other_holders == 1
+
+
+async def test_a_residence_permit_offers_the_country_that_issued_it() -> None:
+    found = await identity(
+        by_schema(
+            travel_document=[
+                {
+                    "kind": "residence_permit",
+                    "issuing_state": "GBR",
+                    "label": "BRP",
+                    "grants": {"class": "Skilled Worker"},
+                    "expires_at": "2027-06-30",
+                    "field_provenance": typed("expires_at"),
+                }
+            ]
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    (residence,) = found.residences
+    assert (residence.country, residence.permit_class, residence.expires_at) == (
+        "GB",
+        "Skilled Worker",
+        date(2027, 6, 30),
+    )
+    assert residence.expiry_attested is False and found.passports == []
+
+
+async def test_an_open_plan_offers_its_candidates_resolved_through_their_places() -> None:
+    """A candidate's place may carry its own country or sit under one — Lisbon under Portugal."""
+
+    found = await identity(
+        by_schema(
+            travel_plan=[
+                {
+                    "label": "Ana's wedding",
+                    "status": "open",
+                    "window": {"earliest": "2027-02-01", "latest": "2027-02-28"},
+                    "candidates": [
+                        {"place_ref": "lisbon", "purpose": "tourism"},
+                        {"place_ref": "japan", "purpose": "family"},
+                        {"place_ref": "brazil", "ruled_out_reason": "too far"},
+                        {"place_ref": "nowhere"},
+                    ],
+                },
+                {
+                    "label": "given up",
+                    "commitment": "abandoned",
+                    "candidates": [{"place_ref": "japan"}],
+                },
+                {
+                    "label": "booked already",
+                    "status": "committed",
+                    "candidates": [{"place_ref": "japan"}],
+                },
+            ],
+            place=[
+                {"_id": "portugal", "kind": "country", "country_code": "PT"},
+                {"_id": "lisbon", "kind": "town", "parent_ref": "portugal"},
+                {"_id": "japan", "kind": "country", "country_code": "JP"},
+                {"_id": "brazil", "kind": "country", "country_code": "BR"},
+            ],
+        )
+    ).traveller_defaults(USER, today=TODAY)
+
+    (plan,) = found.plans
+    assert (plan.label, plan.earliest, plan.latest) == (
+        "Ana's wedding",
+        date(2027, 2, 1),
+        date(2027, 2, 28),
+    )
+    portugal, japan = plan.candidates
+    assert (portugal.destination, portugal.destination_slug, portugal.purpose) == (
+        "PT",
+        "portugal",
+        "tourism",
+    )
+    # "family" is not a purpose this app researches, so the traveller chooses one.
+    assert (japan.destination, japan.purpose, japan.recorded_purpose) == ("JP", None, "family")
+    assert found.unresolved_candidates == 1
+
+
+async def test_nothing_shared_is_an_empty_answer_never_a_claim_that_nothing_exists() -> None:
+    """Paradigm answers a schema outside the grant with `200` and no nodes."""
+
+    found = await identity(lambda _: nodes()).traveller_defaults(USER, today=TODAY)
+
+    assert found.passports == [] and found.residences == [] and found.plans == []
+
+
+async def test_a_lost_grant_on_any_schema_asks_the_traveller_to_reconnect() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.url.params["schema_id"] == "travel-plan":
+            return httpx.Response(403, json={"error": {"code": "EP_PAUSED", "message": "paused"}})
+        return nodes()
+
+    with pytest.raises(OfselfAuthorizationLost):
+        await identity(handler).traveller_defaults(USER, today=TODAY)

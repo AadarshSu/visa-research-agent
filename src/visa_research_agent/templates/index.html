@@ -43,7 +43,8 @@
           <form id="plan-form" class="research-form">
             <div class="field-group">
               <label for="destination">Destination</label>
-              <select id="destination" name="destination">
+              <select id="destination" name="destination" {% if signed_in %}required{% endif %}>
+                {% if signed_in %}<option value="" selected>Choose a destination</option>{% endif %}
                 {% for destination in destinations %}
                   <option
                     value="{{ destination.slug }}"
@@ -53,6 +54,8 @@
                   </option>
                 {% endfor %}
               </select>
+              <p id="destination-note" class="field-note" role="status" hidden></p>
+              <div id="destination-choices" class="field-choices" hidden></div>
             </div>
             <div class="field-group">
               <label for="nationality">Passport</label>
@@ -65,7 +68,7 @@
                 {% endfor %}
               </select>
               <p id="passport-note" class="field-note" role="status" hidden></p>
-              <div id="passport-choices" class="passport-choices" hidden></div>
+              <div id="passport-choices" class="field-choices" hidden></div>
             </div>
             <div class="field-group">
               <label for="residence">Applying from</label>
@@ -77,16 +80,20 @@
                   </option>
                 {% endfor %}
               </select>
+              <p id="residence-note" class="field-note" role="status" hidden></p>
+              <div id="residence-choices" class="field-choices" hidden></div>
             </div>
             <div class="field-group">
               <label for="purpose">Purpose</label>
-              <select id="purpose" name="purpose">
+              <select id="purpose" name="purpose" {% if signed_in %}required{% endif %}>
+                {% if signed_in %}<option value="" selected>Choose a purpose</option>{% endif %}
                 {% for value in purposes %}
                   <option value="{{ value }}" {% if traveller and value == traveller.travel_purpose %}selected{% endif %}>
                     {{ value | capitalize }}
                   </option>
                 {% endfor %}
               </select>
+              <p id="purpose-note" class="field-note" role="status" hidden></p>
             </div>
             <button id="generate-button" type="submit">
               Generate Plan

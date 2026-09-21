@@ -632,47 +632,94 @@ async function generatePlan(event) {
 
 form.addEventListener("submit", generatePlan);
 
-// Signed in with Ofself, the passport field starts from the citizenships the traveller's account
-// records (TODO item 55). One is filled in and stays editable; several are offered with none
-// chosen, because a dual national's answer depends on which passport the trip is on; none leaves
-// the field to them. Nothing here is ever the default traveller.
+// Signed in with Ofself, the form starts from what the traveller's account holds (TODO item 55,
+// DECISIONS entries 180 and 181): their passports, a residence permit, and journeys they are
+// considering. Every part is a default they confirm. One is filled in and stays editable; several
+// are offered with none chosen, because a dual national's answer depends on which passport the
+// trip is on; none leaves the field to them. Nothing here is ever the default traveller.
+//
+// An empty answer never becomes "you have none": Ofself answers a schema this app was not granted
+// exactly as it answers one with nothing recorded.
+
+const destinationNote = document.querySelector("#destination-note");
+const destinationChoices = document.querySelector("#destination-choices");
+const residenceNote = document.querySelector("#residence-note");
+const residenceChoices = document.querySelector("#residence-choices");
+const purposeNote = document.querySelector("#purpose-note");
 
 function countryName(code) {
   const option = nationalitySelect.querySelector(`option[value="${code}"]`);
   return option ? option.textContent.trim() : code;
 }
 
-function showPassportNote(parts, tone = "") {
-  passportNote.replaceChildren(...parts);
-  passportNote.className = tone ? `field-note field-note--${tone}` : "field-note";
-  passportNote.hidden = false;
+function showNote(note, parts, tone = "") {
+  note.replaceChildren(...parts);
+  note.className = tone ? `field-note field-note--${tone}` : "field-note";
+  note.hidden = parts.length === 0;
 }
 
-function markPassportChoice(code) {
-  passportChoices.querySelectorAll("button").forEach((button) => {
-    button.setAttribute("aria-pressed", String(button.dataset.code === code));
+function formatDate(value) {
+  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
-function offerPassports(codes) {
-  passportChoices.replaceChildren(
-    ...codes.map((code) => {
-      const button = element("button", "passport-choice", countryName(code));
+function markChoice(container, key) {
+  container.querySelectorAll("button").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.key === key));
+  });
+}
+
+// Choices are offered with none pressed; picking one fills the field and says what it came with.
+function offerChoices(container, choices, onPick) {
+  container.replaceChildren(
+    ...choices.map((choice) => {
+      const button = element("button", "field-choice", choice.label);
       button.type = "button";
-      button.dataset.code = code;
+      button.dataset.key = choice.key;
       button.setAttribute("aria-pressed", "false");
       button.addEventListener("click", () => {
-        nationalitySelect.value = code;
-        markPassportChoice(code);
+        markChoice(container, choice.key);
+        onPick(choice.value);
       });
       return button;
     }),
   );
-  passportChoices.hidden = false;
+  container.hidden = choices.length === 0;
 }
 
-function unreadableSentence(payload) {
+// A date the person typed in may raise a question and never close one, so the note says which
+// kind of date it is, and an expired document is said plainly.
+function expirySentence(record, noun) {
+  if (!record.expires_at) return { text: "", tone: "" };
+  const when = formatDate(record.expires_at);
+  if (record.expired) {
+    return { text: ` Ofself records that this ${noun} expired on ${when}.`, tone: "warn" };
+  }
+  if (record.expiry_attested) {
+    return { text: ` Expires ${when}, read from the ${noun} itself.`, tone: "" };
+  }
+  return {
+    text: ` Expires ${when}, as entered in Ofself — check it against the ${noun} itself.`,
+    tone: "",
+  };
+}
+
+function passportSentences(payload) {
   const notes = [];
+  for (const withheld of payload.withheld_passports || []) {
+    const name = withheld.label || (withheld.nationality ? `${countryName(withheld.nationality)} passport` : "A passport");
+    notes.push(
+      ` ${name} (document code ${withheld.document_code}) is not offered: this app researches ordinary passports only.`,
+    );
+  }
+  if (payload.other_holders) {
+    notes.push(
+      ` ${payload.other_holders === 1 ? "One travel document belongs" : `${payload.other_holders} travel documents belong`} to someone else on your account and ${payload.other_holders === 1 ? "is" : "are"} not offered.`,
+    );
+  }
   if ((payload.unrecognised || []).length) {
     notes.push(
       ` It also lists ${payload.unrecognised.map((value) => `“${value}”`).join(", ")}, which this app has no country data for.`,
@@ -684,16 +731,151 @@ function unreadableSentence(payload) {
   return notes.join("");
 }
 
-async function prefillPassport() {
+function describePassport(passport, lead, extra) {
+  const expiry = passport.from_document ? expirySentence(passport, "passport") : { text: "", tone: "" };
+  showNote(passportNote, [`${lead}${expiry.text}${extra}`], expiry.tone);
+}
+
+function prefillPassport(payload) {
+  const passports = payload.passports || [];
+  const extra = passportSentences(payload);
+  const pick = (passport) => {
+    nationalitySelect.value = passport.nationality;
+    describePassport(passport, "From your Ofself account. Change it if this trip is on another passport.", extra);
+  };
+  if (passports.length === 1) {
+    pick(passports[0]);
+  } else if (passports.length > 1) {
+    offerChoices(
+      passportChoices,
+      passports.map((passport) => ({
+        key: passport.nationality,
+        label: passport.label || countryName(passport.nationality),
+        value: passport,
+      })),
+      pick,
+    );
+    showNote(passportNote, [
+      `Your Ofself account lists ${passports.length} passports or citizenships. Choose the one this trip is on.${extra}`,
+    ]);
+  } else {
+    showNote(passportNote, [`Nothing shared from your Ofself account names a passport. Choose yours.${extra}`]);
+  }
+  nationalitySelect.addEventListener("change", () => {
+    markChoice(passportChoices, nationalitySelect.value);
+    const chosen = passports.find((passport) => passport.nationality === nationalitySelect.value);
+    if (chosen) describePassport(chosen, "From your Ofself account.", extra);
+    else showNote(passportNote, []);
+  });
+}
+
+function prefillResidence(payload) {
+  // A permit that has expired is still shown, marked, but a current one is offered first.
+  const residences = [...(payload.residences || [])].sort((a, b) => Number(a.expired) - Number(b.expired));
+  const describe = (residence) => {
+    const kind = residence.permit_class ? `residence permit (${residence.permit_class})` : "residence permit";
+    const expiry = expirySentence(residence, "permit");
+    showNote(
+      residenceNote,
+      [`From your ${kind} in Ofself. Change it if you apply from somewhere else.${expiry.text}`],
+      expiry.tone,
+    );
+  };
+  const pick = (residence) => {
+    residenceSelect.value = residence.country;
+    describe(residence);
+  };
+  if (residences.length === 1) {
+    pick(residences[0]);
+  } else if (residences.length > 1) {
+    offerChoices(
+      residenceChoices,
+      residences.map((residence, index) => ({
+        key: `${residence.country}-${index}`,
+        label: residence.label || countryName(residence.country),
+        value: residence,
+      })),
+      pick,
+    );
+    showNote(residenceNote, ["Your Ofself account lists more than one residence permit. Choose where you apply from."]);
+  }
+}
+
+function destinationLabel(select, slug) {
+  const option = select.querySelector(`option[value="${slug}"]`);
+  return option ? option.textContent.trim() : slug;
+}
+
+function windowSentence(plan) {
+  if (!plan.earliest && !plan.latest) return "";
+  if (plan.earliest && plan.latest) return `, ${formatDate(plan.earliest)} to ${formatDate(plan.latest)}`;
+  return `, ${formatDate(plan.earliest || plan.latest)}`;
+}
+
+function prefillDestination(payload) {
+  const choices = [];
+  for (const plan of payload.plans || []) {
+    for (const candidate of plan.candidates) {
+      // A destination this page cannot research is not offered at all.
+      const option = destinationSelect.querySelector(`option[value="${candidate.destination_slug}"]`);
+      if (!option || option.disabled) continue;
+      choices.push({ plan, candidate });
+    }
+  }
+  const unresolved = payload.unresolved_candidates
+    ? ` ${payload.unresolved_candidates === 1 ? "One place" : `${payload.unresolved_candidates} places`} in your plans could not be matched to a country.`
+    : "";
+
+  const pick = ({ plan, candidate }) => {
+    destinationSelect.value = candidate.destination_slug;
+    showNote(destinationNote, [`From your Ofself plan “${plan.label}”${windowSentence(plan)}.${unresolved}`]);
+    if (candidate.purpose) {
+      purposeSelect.value = candidate.purpose;
+      showNote(purposeNote, ["From the same plan."]);
+    } else if (candidate.recorded_purpose) {
+      showNote(
+        purposeNote,
+        [`Your plan says “${candidate.recorded_purpose}”, which this app does not research. Choose the closest purpose.`],
+        "warn",
+      );
+    } else {
+      showNote(purposeNote, []);
+    }
+  };
+
+  if (choices.length === 1) {
+    pick(choices[0]);
+  } else if (choices.length > 1) {
+    offerChoices(
+      destinationChoices,
+      choices.map((choice, index) => ({
+        key: String(index),
+        label: `${destinationLabel(destinationSelect, choice.candidate.destination_slug)} · ${choice.plan.label}`,
+        value: choice,
+      })),
+      pick,
+    );
+    showNote(destinationNote, [`From your Ofself plans. Choose a destination to research.${unresolved}`]);
+  } else if (unresolved) {
+    showNote(destinationNote, [unresolved.trim()]);
+  }
+  destinationSelect.addEventListener("change", () => {
+    markChoice(destinationChoices, "");
+    showNote(destinationNote, []);
+    showNote(purposeNote, []);
+  });
+}
+
+async function prefillFromOfself() {
   if (document.body.dataset.signedIn !== "true") return;
 
   let response;
   let payload = {};
   try {
-    response = await fetch("/oauth/passport", { headers: { Accept: "application/json" } });
+    response = await fetch("/oauth/traveller", { headers: { Accept: "application/json" } });
     payload = await response.json();
   } catch {
-    showPassportNote(["Your Ofself account could not be reached. Choose your passport."], "warn");
+    showNote(passportNote, ["Your Ofself account could not be reached. Choose your passport."], "warn");
     return;
   }
 
@@ -702,35 +884,24 @@ async function prefillPassport() {
     if (detail.reconnect || detail.sign_in) {
       const link = element("a", "", "Reconnect with Ofself");
       link.href = "/oauth/login";
-      showPassportNote(
-        ["This app no longer has access to your Ofself account. ", link, " or choose your passport."],
+      showNote(
+        passportNote,
+        ["This app no longer has access to your Ofself account. ", link, " or fill the form in yourself."],
         "warn",
       );
       return;
     }
-    showPassportNote(
-      [`${detail.message || "Your Ofself details could not be read."} Choose your passport.`],
+    showNote(
+      passportNote,
+      [`${detail.message || "Your Ofself details could not be read."} Fill the form in yourself.`],
       "warn",
     );
     return;
   }
 
-  const recorded = payload.nationalities || [];
-  const extra = unreadableSentence(payload);
-  if (recorded.length === 1) {
-    nationalitySelect.value = recorded[0];
-    showPassportNote([
-      `From your Ofself account. Change it if this trip is on another passport.${extra}`,
-    ]);
-  } else if (recorded.length > 1) {
-    offerPassports(recorded);
-    showPassportNote([
-      `Your Ofself account lists ${recorded.length} citizenships. Choose the passport this trip is on.${extra}`,
-    ]);
-  } else {
-    showPassportNote([`Your Ofself account records no citizenship. Choose your passport.${extra}`]);
-  }
+  prefillDestination(payload);
+  prefillPassport(payload);
+  prefillResidence(payload);
 }
 
-nationalitySelect.addEventListener("change", () => markPassportChoice(nationalitySelect.value));
-prefillPassport();
+prefillFromOfself();

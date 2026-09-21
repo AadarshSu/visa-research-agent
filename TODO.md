@@ -786,9 +786,25 @@ passes `crux validate` with six schemas resolved. **It is not live.** Publishing
 because `crux sync` refuses a non-interactive shell:
 `paradigm crux sync`, then `paradigm commit`, then `paradigm dlr preview` to see the consent card.
 That pauses the owner's existing grant until they re-authorise. Then `paradigm crux push`, which
-marks the review stale; a fresh `crux review` is billable (feedback 5.7). No code reads any new
-field — each waits for its planned workflow in `CRUX.md` §7. The evaluation below is what that
-field list was built from.
+marks the review stale; a fresh `crux review` is billable (feedback 5.7).
+
+**Built 2026-09-21, the owner: "use these schemas now."** `OfselfIdentity.traveller_defaults` in
+`api/ofself.py` reads `travel-document`, `travel-plan` and — only when a plan needs a candidate
+resolved — `place`, beside `citizenships`; `GET /oauth/traveller` replaces `/oauth/passport`; and
+the signed-in form starts from it. Passports come with their expiry and whether it was read off the
+passport or typed in; a passport whose code is not ordinary is named and not offered; another
+person's document is counted and not offered; a residence permit fills "applying from"; an open
+plan's candidates are offered as destinations, filling purpose where the plan's is one this app
+researches. Twelve new offline tests. Checked in the browser against a fake Ofself serving invented
+records, at desktop and phone width — **not against live data**, which needs the DLR published
+first, and then records in a real account. **Nothing a plan says changed**: `TravellerProfile`, the
+request and the model packet are untouched, and entry 181 says why the rest is held back.
+- **Next, once the DLR is live:** put real `travel-document` and `travel-plan` records in the owner's
+  account and see the form fill from them. That is the first time the live node shapes are seen.
+- **Destination and purpose now start empty for a signed-in traveller**, as passport and residence
+  already did — the first entry in each list had been passing as a choice.
+
+The evaluation below is what the field list was built from.
 - **Read `travel-document`, narrowed to fields — the one clear win.** It answers the three gaps
   entry 180 recorded as having no schema: the passport as a document with `document_code`
   (`P`/`PD`/`PS`), so rule 2's refusal of a non-ordinary passport becomes possible instead of
@@ -819,8 +835,10 @@ field list was built from.
   allowances like 90 days in any 180. If it is ever read, the schema's own caveat is binding and is
   entry 6 restated: a total built from self-declared stays may raise a question and may never state
   days remaining.
-- **`travel-zone` is not needed.** Zone membership is committed reference data here already, and a
-  roster in the graph is another app's assertion.
+- **`travel-zone` is not requested**, because a roster in the graph is another app's assertion.
+  *Corrected the same day:* this said zone membership was "committed reference data here
+  already". It is not — only the few configured destinations carry `route_type: schengen_member`.
+  Planned workflow D needs a roster from somewhere, and that is its own question (entry 181).
 
 **Open, for the owner to ask Ofself:**
 - **Does any Ofself app record a trip before it happens?** If one does, `trip` is worth adding before
