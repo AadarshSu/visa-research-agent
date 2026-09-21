@@ -170,15 +170,7 @@ rather than deleting it.
 
 - **6.1 Nothing for travel identity** [observed]. No passport, nationality, residence or
   immigration schema. `work-authorization.citizenships` is the nearest. The owner plans to propose
-  one. **Resolved 2026-09-21:** six public v1 schemas now exist — `travel-plan`, `travel-document`,
-  `travel-requirement`, `travel-stay`, `travel-obligation`, `travel-zone`. They cover what CRUX §12
-  said this app would otherwise have to invent, and their descriptions hold the distinctions that
-  matter: `document_code` so a diplomatic passport is refused rather than scored as ordinary,
-  `issuing_state` kept apart from `nationality`, and `field_provenance` with the rule that a
-  self-declared value *"may RAISE a question and may never CLOSE one"*. **One request:** say which
-  fields a reader is expected to need, since a DLR narrows fields but not rows and
-  `travel-document` carries a document number and photographs this app must never receive (6.3, and
-  item 55's first rule).
+  one. **Resolved 2026-09-21:** six public v1 travel schemas now exist, and this app reads them.
 - **6.2 `citizenships` allows alpha-2 or alpha-3** [observed], so every reader must accept both. One
   format would spare them.
 - **6.3 A DLR narrows fields but not rows** [docs, CLI]. `place` can't be limited to a home, or
@@ -188,13 +180,6 @@ rather than deleting it.
   as evidence. Worth a note on what `basis` and `source` establish.
 - **6.5 `schema search` repeats names** [observed], e.g. `nutrition:food`, apparently once per
   version.
-- **6.6 Two defects in the travel schemas' v1** [observed, 2026-09-21].
-  - **`travel-plan.candidates[].place_ref` is malformed.** Its JSON Schema carries a stray property
-    key, `"normally of kind country.": null` — the description was split at a comma, and the second
-    half became a key. A strict validator may reject the schema, or silently ignore it.
-  - **`travel-document.number` is not encrypted.** Its own description says it is SENSITIVE and
-    *"should be turned on before any real document is stored"*, but `encrypted_fields` is `[]`. So
-    passport numbers written today are stored in plaintext. This app never requests the field.
 
 ## 7. Security and setup
 
