@@ -148,6 +148,13 @@ rather than deleting it.
   *Suggest:* print the price before running it, and say in the help whether the developer or the
   platform pays.
 
+  **The verdict also records nothing about what produced it** [observed]. `readiness --json` keeps
+  `available`, `ran_at`, `spec_version` and `stale` — no model, no provider, no rubric version —
+  while the 503 path shows the provider is a backend setting (`CRUX_REVIEW_PROVIDER`). So a grade
+  can move because Ofself changed a prompt or a model, with nothing on the app's side to show it,
+  and a developer can neither reproduce a verdict nor diff two. *Suggest:* record the model and
+  rubric version alongside `ran_at`.
+
 ## 6. Schema registry
 
 - **6.1 Nothing for travel identity** [observed]. No passport, nationality, residence or
