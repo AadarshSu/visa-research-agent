@@ -251,8 +251,12 @@ from *ask* for only what selects guidance to *read* only what selects guidance.
 
 ### Why now rather than when each feature is built
 
-**Widening a DLR later pauses every existing user's access until they re-authorise** (feedback
-2.2). Today the only real grant is the owner's. Every field asked for now is free; every field
+**Widening a DLR later costs every existing user a re-authorisation** (feedback 2.2). *Corrected
+2026-09-21:* this said widening *pauses* every user's access, following the developer guide's §15.
+Committing the widened request showed the real choice, which is the developer's: `cancel` revokes
+every existing grant, and `continue` keeps them while the new fields fail for each user until they
+re-authorise. Either way the new fields reach nobody who has not consented again. Today the only
+real grant is the owner's. Every field asked for now is free; every field
 asked for after launch costs a re-consent from each user. Entry 180 made the same argument about
 `trip` and deferred it; the travel schemas are what make it worth acting on.
 
@@ -391,7 +395,8 @@ schema they plan exists.
   every past trip — restricted to `destination`, `start_date` and `purpose`, but every one of them. Only `destination` is required, so an undated
   trip cannot be told from an old one. And nobody knows whether any Ofself app records a trip before
   it happens — the owner's point was that the trip that matters is one being planned. Ask Ofself
-  first. Widening a DLR later pauses every existing user's access, which costs nothing while there
+  first. Widening a DLR later costs every existing user a re-authorisation (entry 181 corrects
+  "pauses"), which costs nothing while there
   are none.
 - **Encrypted fields.** Reading one requires `paradigm app keygen`, and Paradigm then hands the app
   the user's whole private key at runtime — enough to decrypt every encrypted field they hold. None

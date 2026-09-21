@@ -785,7 +785,9 @@ ahead (entry 181), and `CRUX.md`'s DLR now asks for fields from five of them plu
 passes `crux validate` with six schemas resolved. **It is not live.** Publishing is the owner's,
 because `crux sync` refuses a non-interactive shell:
 `paradigm crux sync`, then `paradigm commit`, then `paradigm dlr preview` to see the consent card.
-That pauses the owner's existing grant until they re-authorise. Then `paradigm crux push`, which
+`paradigm commit` then asks `--ep-action cancel` (revoke every existing grant) or `continue` (keep
+them; the new fields fail until each user re-authorises) — `continue` was recommended. Then the
+owner re-authorises by signing in again, and runs `paradigm crux push`, which
 marks the review stale; a fresh `crux review` is billable (feedback 5.7).
 
 **Built 2026-09-21, the owner: "use these schemas now."** `OfselfIdentity.traveller_defaults` in
@@ -842,8 +844,8 @@ The evaluation below is what the field list was built from.
 
 **Open, for the owner to ask Ofself:**
 - **Does any Ofself app record a trip before it happens?** If one does, `trip` is worth adding before
-  launch. Widening a DLR later pauses every existing user's access until they re-authorise, which
-  costs nothing while there are no users.
+  launch. Widening a DLR later costs every existing user a re-authorisation, which costs nothing
+  while there are no users.
 - **Does Ofself host apps?** Nothing in the guide or `paradigm-cli` 0.5.0 says so. See item 7.
 
 **Registered on 2026-09-17** as "Visa Research Desk" (app id `ed21d312-1c8a-487e-9de3-38ed61abb013`),

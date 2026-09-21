@@ -41,8 +41,13 @@ rather than deleting it.
   - `crux validate` then fails until a `dlr.requests` block is added, while `crux check` reports the
     same file complete.
   - The bundled skill still says §9.
-- **2.2 When a DLR expands** [docs]. §15 says existing grants are paused. §34.4 says `app push`
-  requires `--ep-action cancel|continue`, which is what the CLI does.
+- **2.2 When a DLR expands** [docs; observed 2026-09-21]. §15 says existing grants are paused. §34.4
+  says `app push` requires `--ep-action cancel|continue`, which is what the CLI does. **Observed:**
+  `paradigm commit` of a widened DLR answered `EP_ACTION_REQUIRED` — *"cancel (revoke existing
+  authorizations) or continue (keep existing authorizations; new permissions will fail until users
+  re-authorize)"*. Nothing is paused; §15 is wrong. Two smaller points: `crux sync`'s own prompt
+  doesn't mention that the commit will ask, and "will fail" doesn't say how — a schema outside the
+  grant already reads as empty rather than refused (1.5).
 - **2.3 Two error envelopes, two code vocabularies** [docs; one observed].
   - §18 shows `{"error": "forbidden", …}` and §29 shows `{"error": {"code", "message"}}`.
   - The codes are `NO_AUTHORIZATION`, `NO_PERMISSIONS` and the `EP_*` family.
