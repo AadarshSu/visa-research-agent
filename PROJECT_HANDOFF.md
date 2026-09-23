@@ -63,8 +63,10 @@ Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which
   - Questions still to put to Ofself: does it host apps, and does any of its apps record trips.
   - **Model calls go through Personas (item 62, entry 188, 2026-09-24).** `model_route: personas`
     routes selection, role adjudication and the plan call through one plain Personas call each, on
-    Ofself's account, as the owner's user. One Japan `IN/GB` run worked end to end. **Not graded
-    yet** — item 62's repeated Japan and Singapore runs come before trusting its answers.
+    Ofself's account, as the owner's user. **Graded 2026-09-24** without an OpenAI arm: selection
+    41 of 48 roles against a direct 39 of 48, and Germany and Singapore's decisions as baseline.
+    **Open:** Japan answered "visa required" once in six, inferred from an exemption list, which
+    rule 8e rules out — a matched A/B needs OpenAI credit.
   - The one redirect URI is `localhost`, and has to change when item 7 picks a host.
 
 **The goal:** produce visa application plans where every claim is grounded in an official government

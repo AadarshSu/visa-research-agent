@@ -223,7 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
-| [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked; one line of `runtime.yaml` reverts it |
+| [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked. Graded: selection 41/48 against 39/48, decisions as baseline except one Japan "visa required" in six |
 | [181](#181-the-data-request-asks-now-for-what-a-future-plan-could-use-and-the-app-reads-only-what-a-built-feature-uses) | **The data request asks ahead, the app reads on use** — fields a future plan could use are requested while the only grant is the owner's; never what only an application would use, never another app's rules as evidence; the form now starts from the travel schemas, and the plan is unchanged |
 | [180](#180-the-first-ofself-integration-reads-one-field-writes-nothing-and-asks-the-rest-on-the-page) | **The first Ofself integration reads one field** — `work-authorization` for nationality, nothing written back, residence and trip asked on the page; Paradigm hosts data, not the app |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
@@ -304,9 +304,47 @@ Japan `IN/GB`, fresh, through `visa-discover corridor` and then the web app:
 
 Five of six roles filled from the pages this corridor has answered from before — MOFA's exemption
 list, the London embassy's checklist, eVISA page and fee table. The plan left the visa decision
-open, which is the baseline: entry 177's three direct runs did the same. **One run is not a grade.**
-Item 62's rule stands: Japan `IN/GB` and Singapore `PH/PH` several times each, and entry 170's
-selection A/B, before anything is read into the route's accuracy.
+open, which is the baseline: entry 177's three direct runs did the same.
+
+### Graded the same day
+
+**The OpenAI arm could not be re-run** — that account is out of credit — so each result is compared
+with the closest recorded direct-route baseline, and says so.
+
+**Selection and roles: the ten `IN/GB` oracle corridors, one run each through Personas.** 20 calls,
+none failed. Selection 5.8s and roles 9.0s on average (entry 177's direct means: 6.2s and 7.9s).
+Graded by `visa-discover selection-recall`:
+
+| | roles hit | baseline |
+| --- | --- | --- |
+| Personas, ten corridors | **41 of 48 (85%)** | entry 170, same ten, today's packet, direct: **39 of 48 (81%)** |
+| Personas, the nine with an older direct log | 36 of 42 | those logs, 29 Aug – 14 Sep, older code: 38 of 42 |
+
+The two lost against the older logs are the UK (4 against 5) and the United States (0 against 1,
+with 2 pages readable, both US hosts answering `403`). By corridor, **nine of ten left exactly the
+same roles unresolved as their last direct run, and Sweden one fewer** — it found the checklist it
+missed on 29 August. Inside entry 81's run-to-run noise: no sign of a loss, and one run each proves
+no gain either. The earlier recall logs are kept in `var/recall/_before_personas_2026-09-24/`.
+
+**The plan call: 14 calls on fixed packets** — Japan and Germany `IN/GB`, Singapore `PH/PH`, built
+from the corridors stored on 2026-09-15, the ones entry 177 used — through the real extractor, reuse
+off, interleaved:
+
+| corridor | decisions | status | seconds | entry 177, direct |
+| --- | --- | --- | --- | --- |
+| Japan | open ×5, **visa required ×1** | partial ×5, verified ×1 | 25.8 | open ×3 |
+| Germany | visa required ×4 | verified ×4 | 27.5 | visa required ×3 |
+| Singapore | no visa ×4 | verified ×4 | 9.3 | no visa ×3 |
+
+**No refusal, no failed call, no wrong "no visa required".** The one departure is Japan's fifth run:
+it read MOFA's exemption list, found India absent and answered "visa required", graded `verified`.
+The answer is true, and it is the inference rule 8e and entry 174 rule out — a list of who does
+not need a visa says nothing about a country it leaves out — and the one entry 177 counted against
+reasoning `none` (3 of 3). **Whether it is the route is not known.** The direct route's recorded rate
+is entry 177's 0 of 3; entry 174's 16 Japan calls counted only the opposite wrong answer. It runs in
+the less damaging direction — a needless application, where a wrong "no" sends someone to the
+border with nothing (entry 6) — but it is a claim no page makes. **Settle it with a matched A/B once
+OpenAI is topped up**: a dozen Japan calls on each route, the same packet.
 
 ---
 

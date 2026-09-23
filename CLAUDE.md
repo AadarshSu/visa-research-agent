@@ -39,7 +39,7 @@ owner outside this repository on purpose (entry 68). **Do not build a truth set,
 or an accuracy metric without asking**; entry 147 is a priority, not that rule being lifted.
 
 **The owner's five goals, 2026-09-23 (entry 182)**, are unordered:
-- model calls paid through Ofself Personas (item 62 — routed 2026-09-24, entry 188; not yet graded);
+- model calls paid through Ofself Personas (item 62 — routed and graded 2026-09-24, entry 188; one Japan inference open);
 - about 30s a corridor with information on screen (items 57, 58, 60);
 - a URL (items 7, 20);
 - accurate and useful answers for most corridors (item 63, with entry 68's bound unchanged);

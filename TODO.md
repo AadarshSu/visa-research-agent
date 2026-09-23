@@ -15,7 +15,7 @@ points at the items that do the work. The detail lives in the items, not here.
 
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
-| **Model calls paid through Ofself Personas**, on their OpenAI key | **Routed 2026-09-24 (entry 188):** `model_route: personas` sends all three calls through Personas on Ofself's account. One Japan run worked end to end; not yet graded | **62** | the repeated Japan and Singapore runs |
+| **Model calls paid through Ofself Personas**, on their OpenAI key | **Routed and graded 2026-09-24 (entry 188):** all three calls go through Personas on Ofself's account. Selection and decisions match their baselines, except one Japan "visa required" in six | **62** | a matched A/B on Japan once OpenAI is topped up |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
@@ -1460,8 +1460,15 @@ reply's model is checked. The credentials are in `.env` as `PERSONAS_APP_ID`, `P
 - **One live run, Japan `IN/GB`:** five of six roles, from the pages this corridor has answered from
   before. Selection 5.4s, roles 8.6s, plan 20.8s — in line with entry 177's direct means. The plan
   left the decision open, as entry 177's three direct runs did.
-- **Next: grade it.** Japan `IN/GB` and Singapore `PH/PH` several times each, and entry 170's
-  selection A/B, as below. Until then, its answers carry no more weight than one run.
+- **Graded 2026-09-24 (entry 188), without an OpenAI arm, which is out of credit.** Selection on the
+  ten `IN/GB` oracle corridors: 41 of 48 roles, against entry 170's direct 39 of 48, and nine of ten
+  corridors left the same roles unresolved as before. The plan call on fixed packets, 14 calls:
+  Germany and Singapore matched their baselines 8 of 8, no refusals, no wrong "no visa". **Japan
+  answered "visa required" once in six**, inferred from India's absence on the exemption list —
+  true, and ruled out by rule 8e.
+- **Next: settle that one with a matched A/B when OpenAI is topped up** — a dozen Japan calls per
+  route on the same packet. The direct route's recorded rate is 0 of 3 (entry 177), too small to
+  say whether Personas differs.
 - **Lost against the OpenAI route:** prompt caching, cached and reasoning token counts, and
   selection's client retries (entry 188).
 - **Every run is stored** as a conversation in the owner's Personas history; deleting them is the
