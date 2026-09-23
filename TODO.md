@@ -7,6 +7,23 @@ picked up cold.
 **Later** is real but not urgent; **Done** keeps finished work because what building it found is usually
 why the item after it exists; **Smaller things** are one-paragraph defects with no owner yet.
 
+## The five goals — the owner, 2026-09-23 (entry 182)
+
+**Unordered, as the owner gave them.** Until the owner orders them, entry 148's order is the
+tie-break: correctness, then optimisation, then expansion. Each row says where the goal stands and
+points at the items that do the work. The detail lives in the items, not here.
+
+| goal | where it stands | items | waits on |
+| --- | --- | --- | --- |
+| **Model calls paid through Ofself Personas**, on their OpenAI key | Not started. Personas documents no model-only call, no structured output and no reasoning or tier setting (OFSELF_FEEDBACK 8.1–8.3, 8.7) | **62** | **Ofself** documenting how |
+| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
+| **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
+| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
+| **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23) | **64**, **2** | nothing external — search credit only |
+
+**What is left half-done** — the loose ends a cold session trips on — is listed once, in
+[PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) under *Where it stands*.
+
 **The goal this list serves — the owner, 2026-09-07 (entry 147).** **The objective is providing the
 right information. Latency and cost are the constraint it fits inside, not the goal.** A country is
 built offline — corpus plus page-text index — and a corridor answers from that store; **search does
@@ -268,9 +285,9 @@ and item 25 got the answering page into the shortlist it was falling five-deep o
 19 are the corpus work item 22 grew out of, and 19 closed on 2026-09-15 — the crawl went, and search stays (entries 159
 and 173).
 
-Status: `next` · `soon` · `later` — the label on each heading matches the section it sits in, so the two
-can never disagree. There is no **Blocked** section at the moment; give one its own section again if an
-item acquires a dependency it cannot clear itself.
+Status: `next` · `soon` · `blocked` · `later` — the label on each heading matches the section it sits in, so the two
+can never disagree. **Blocked** holds an item with a dependency it cannot clear itself; today that is
+item 62, which waits on Ofself.
 
 **Every open item has a number, and numbering is append-only** so that the cross-references in
 [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) stay valid. The numbers are names, not an order: **the section
@@ -289,8 +306,11 @@ one-paragraph defects rather than items.
 |  | 55. Take the traveller from Ofself's shared identity, through one adapter | `soon` |
 |  | 57. Stream the plan to the screen as it is written | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
-| **Later** | 58. What is left of model-call cost and research latency | `later` |
-|  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
+|  | 58. What is left of model-call cost and research latency | `soon` |
+|  | 63. Make most corridors return accurate and useful information | `soon` |
+|  | 64. Expand from 53 countries to 100+ | `soon` |
+| **Blocked** | 62. Pay for model calls through Ofself Personas | `blocked` |
+| **Later** | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
 |  | 46. Decide what to do about a refusal served as `HTTP 200` | `later` |
@@ -782,8 +802,8 @@ restate it.
 ask for.** All public, all v1: `travel-plan`, `travel-document`, `travel-requirement`,
 `travel-stay`, `travel-obligation`, `travel-zone`. Evaluated the day they appeared. **The owner then decided to request
 ahead (entry 181), and `CRUX.md`'s DLR now asks for fields from five of them plus `place`**; it
-passes `crux validate` with six schemas resolved. **It is not live.** Publishing is the owner's,
-because `crux sync` refuses a non-interactive shell:
+passes `crux validate` with six schemas resolved. **It went live the same day** — see the bullet
+below. Publishing was the owner's, because `crux sync` refuses a non-interactive shell:
 `paradigm crux sync`, then `paradigm commit`, then `paradigm dlr preview` to see the consent card.
 `paradigm commit` then asks `--ep-action cancel` (revoke every existing grant) or `continue` (keep
 them; the new fields fail until each user re-authorises) — `continue` was recommended. Then the
@@ -968,6 +988,9 @@ could appear seconds after the plan call starts rather than when it ends. **Item
 **Measured, 2026-09-16 (entry 177).** The plan call's first visible token arrives 7–15s in today and
 4–7s on Fast mode, so streaming would put text on the screen that early.
 
+**The owner's goal settles half of this (entry 182):** about 30 seconds, *with information on
+screen while it runs*. So at least the progress shape is wanted, whatever else is decided.
+
 **Open for whoever picks it up:** whether streaming progress alone is enough, and whether any plan
 content can be shown before validation without breaking entry 6's rule against unverified claims that
 would alarm a traveller if wrong.
@@ -993,11 +1016,11 @@ output for the *whole* request — the `gpt-5.6-terra` model page, read 2026-09-
   option (`selection.py`'s module docstring).
 - **Whether to warn near the threshold.** `var/usage/` already records every call's `input_tokens`.
 
----
+### 58. What is left of model-call cost and research latency — `soon`, **split from item 19 on 2026-09-15 (entry 173)**
 
-## Later
-
-### 58. What is left of model-call cost and research latency — `later`, **split from item 19 on 2026-09-15 (entry 173)**
+**The owner's target, 2026-09-23 (entry 182): about 30 seconds, with information on screen while
+it runs.** Fast mode on every call projects to ~39s, so the rest has to come from the research
+latency below, or be made to feel shorter through item 57.
 
 **Where it stands.** A fresh corridor that resolves costs **$0.251 in model calls**, plus about $0.054 of
 search, and takes about **55s**: ~25s of research and ~29s of writing the plan (entry 171). The plan
@@ -1042,6 +1065,90 @@ cache, and Canada still took 12s.
   the corridor refuses, as it would have without the pin.
 
 **Do not re-propose** conditional search (entries 159 and 160) or refusing on a miss (entry 173).
+
+### 63. Make most corridors return accurate and useful information — `soon`, **added 2026-09-23 (entry 182)**
+
+**Why it matters.** It is the owner's goal and the objective entry 147 set: right information first.
+
+**The bound on it.** Correctness is checked by the owner, outside this repository (entry 68). **Do
+not build a truth set, a correctness grader or an accuracy metric here without asking.** What this
+item may do on its own is measure what corridors *answer*, and report it with known problem 26's
+caveat.
+
+**Where it stands.**
+- **The last broad measurement is 2026-08-24's twenty corridors** (entry 58). 75% confirmed the
+  decision and 50% yielded a checklist, a marginal pass. That sample was five destinations, each
+  replicated four times.
+- **All 53 corpora were rebuilt on 2026-09-15, and only Norway, Thailand and Japan have been re-run
+  on the new ones** (entry 161). What the rebuild did to the other fifty is expected, not shown.
+- **Since then, the plan has changed in ways that show up in its answers.** The decision and every
+  requirement now carry a checked quote (entry 156), a missing checklist is worded as what was found
+  (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
+  Singapore only).
+
+**First step, once OpenAI has credit.** Re-run a sample chosen by **destination**, as entry 58
+advised, over the rebuilt corpora. Report decision and checklist rates beside entry 58's, and hand
+the plans to the owner to check. Agree the sample with the owner first, because the owner is the one
+checking it.
+
+### 64. Expand from 53 countries to 100+ — `soon`, **added 2026-09-23 (entry 182)**
+
+**Why it matters.** It is the owner's goal. The page offers 198 destinations and refuses 143 of them
+(known problem 23).
+
+**What adding a country takes — the three stages of entry 68.**
+1. **Reachable:** a row in `config/authority_domains.yaml`, from `visa-discover registry`. Where the
+   rule cannot confirm a domain, ask Wikidata about the domain and review it by hand (entries 67,
+   110 and 111). Item 2 covers the governments with no marker, and the rule itself never bends.
+2. **Resolves:** a corpus and page-text index from `visa-discover corpus --country XX`. Then run
+   corridors and read every refusal's reason, as stage 2 of batch 1 did (entry 70).
+3. **Fast:** the corridor answers from the store without crawling.
+
+**What it costs, as arithmetic, not measured.**
+- **The registry sweep:** about 4 searches a country, so the remaining 143 countries come to about
+  $3 of search.
+- **Corpus builds:** about 49 queries a country in the 2026-09-15 rebuild (~2,590 for 53). Fifty more
+  countries is about **$12**, and roughly ten hours at two builds at a time.
+- **No model cost to build.** Corridor runs for stage 2 need OpenAI credit.
+
+**Order.** Entry 148 puts expansion after correctness and optimisation. The owner listed the five
+goals unordered, so ask before starting a large batch. Pick countries by traveller volume, as batch
+1 did (entry 67).
+
+## Blocked
+
+### 62. Pay for model calls through Ofself Personas — `blocked`, **added 2026-09-23 (entry 182)**
+
+**Why it matters.** The model calls are the whole of a corridor's model bill. A fresh corridor is
+$0.251 of model calls and about $0.054 of search (entry 171), so running them on Ofself's key would
+take most of the per-request cost off this project. Search would still be ours.
+
+**What it waits on — Ofself.** Ofself's docs say nothing yet on doing this through Personas.
+OFSELF_FEEDBACK section 8 records what the current guides leave missing:
+- **8.7:** there is no model-only call. Every entry point runs the full agent loop.
+- **8.1:** there is no JSON-schema output. Every call here needs one.
+- **8.2:** a wrapper system prompt is added that cannot be switched off.
+- **8.3:** settings stop at provider, model and temperature. There is no reasoning effort and no
+  service tier.
+- **8.6:** cost and limits are undocumented.
+
+**When Ofself documents it, grade it as a provider change, not a key swap.**
+- **What changes:** `openai_reasoning_effort: low` and item 60's Fast mode may not be available
+  there. Entry 177 measured reasoning `none` answering Japan "visa required" where no page says it.
+- **What to re-run:** Japan `IN/GB` and Singapore `PH/PH`, several times each, as any change to the
+  plan call requires (entry 174), and entry 170's selection A/B for the selection call.
+- **Where to route it:** keep it behind the existing adjudicator and extractor interfaces, so one
+  line of `runtime.yaml` reverts it.
+- **How failures behave:** a failed call still refuses (entry 31). It never falls back to a worse
+  decider.
+
+**For the owner to ask Ofself:** a completion endpoint authenticated by the app alone, with JSON
+schema and pass-through provider settings, which is feedback 8.7's suggestion. Also ask who pays, and
+what the limits are.
+
+---
+
+## Later
 
 ### 49. The family is walked at 25 members a build and has 169 — decide if that is enough — `later`, **stopped 2026-09-14 (entry 148)**
 

@@ -227,9 +227,77 @@ not — and stored text ranks, it never speaks).
 ### Whether this is a product
 | | |
 | --- | --- |
+| [182](#182-the-owner-names-five-goals-unordered-and-the-docs-are-brought-back-to-where-things-are) | **The owner names five goals, unordered** — model calls through Ofself Personas, ~30s with progress on screen, a URL, accurate and useful answers, 100+ countries; what each waits on, and where two of them pull against each other |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 182. The owner names five goals, unordered, and the docs are brought back to where things are
+
+**2026-09-23. The owner's statement of direction. Changes TODO, the handoff and CLAUDE.md; no code.**
+
+### The goals
+
+The owner said the project was in limbo, with a lot left undone, and named five big-picture goals.
+**They are not in order.** In the owner's words, lightly shortened:
+
+1. **Connect Personas to the app so model calls use Ofself's OpenAI key**, so this project stops
+   paying for them. This depends on Ofself documenting how to do it through Personas.
+2. **Stop a corridor taking 50+ seconds on average.** The target is about 30 seconds, **while showing
+   the user information on screen** to improve the experience.
+3. **Host it on a platform so users can reach it at a URL.**
+4. **Make sure most corridors return accurate and useful information.**
+5. **Expand from 53 countries to 100+.**
+
+TODO now opens with one row per goal, naming the items that serve it and what each waits on. Three
+goals had no item and now have one: **62** (Personas), **63** (accuracy) and **64** (expansion).
+Latency is items 57, 58 and 60, and hosting is items 7 and 20.
+
+### What this does not change
+
+- **Entry 68 still holds for goal 4.** Correctness is verified by the owner outside this repository.
+  Goal 4 names an outcome. It does not license a truth set, a correctness grader or an accuracy
+  metric here, so **ask before building one**. What item 63 may do without asking is re-run
+  corridors and report what they *answered* (known problem 26).
+- **Entry 148's order is the tie-break until the owner orders these:** correctness, then
+  optimisation, then expansion.
+- **Every rule in CLAUDE.md applies to each goal.** Moving the model calls to another provider is a
+  change to every call's prompt and settings. Entries 174 and 177 showed that such changes can flip
+  Japan's visa decision.
+
+### What was found in writing it down
+
+- **Goals 1 and 2 pull against each other, on what Ofself documents today** (OFSELF_FEEDBACK 8.1–8.3,
+  8.7):
+  - Personas has no model-only endpoint and no structured output.
+  - Its settings stop at provider, model and temperature, so it has no reasoning effort and no
+    service tier.
+  - That means no Fast mode (item 60) and no `openai_reasoning_effort: low`. Entry 177 measured that
+    reasoning `none` broke Japan's decision.
+  - It also wraps every call in its own system prompt.
+
+  So "use their key" is not just "swap the key". It is a provider change to be graded on Japan
+  `IN/GB` and Singapore `PH/PH` several times, as item 56 required of any change to the plan call.
+- **Fast mode alone does not reach 30 seconds.** A fresh request is about 55s: roughly 25s of
+  research and 29s of writing the plan (entry 171). Fast mode on every call projects to about 39s
+  (entry 177, arithmetic, not timed). The rest has to come from research (item 58) or from the wait
+  *feeling* shorter (item 57).
+  A repeat within 24 hours already skips the plan call (entry 178), but that is not timed live.
+- **Nothing that needs a model can be run today.** The OpenAI account ran out of credit on
+  2026-09-16. The only two calls logged since, on 2026-09-17, both failed. That blocks:
+  - live timing for goal 2;
+  - any re-run for goal 4;
+  - checking entry 178 live.
+- **Goal 5 is mostly registry and crawl work, and it is cheap in search.** The rough costs:
+  - 143 countries have no registry row, at about 4 searches each.
+  - A corpus build was about 49 queries a country in the 2026-09-15 rebuild.
+  - At $5 per 1,000 queries, fifty more countries is on the order of $15 of search and a day of
+    builds. That is arithmetic, not measured.
+
+  **Reachable is stage 1 of three** (entry 68), and item 2's markerless governments decide which
+  countries can be added without a reviewed row.
 
 ---
 

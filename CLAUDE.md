@@ -38,6 +38,17 @@ On **reliability nothing here can answer it** — every number this project quot
 owner outside this repository on purpose (entry 68). **Do not build a truth set, a correctness grader
 or an accuracy metric without asking**; entry 147 is a priority, not that rule being lifted.
 
+**The owner's five goals, 2026-09-23 (entry 182)**, are unordered:
+- model calls paid through Ofself Personas (item 62, blocked on Ofself);
+- about 30s a corridor with information on screen (items 57, 58, 60);
+- a URL (items 7, 20);
+- accurate and useful answers for most corridors (item 63, with entry 68's bound unchanged);
+- 100+ countries (item 64).
+
+Where each stands is the table at the top of [TODO.md](TODO.md). What is left half-done is listed in
+[PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). **OpenAI has been out of credit since 2026-09-16**, so
+nothing that needs a model call can be run until it is topped up.
+
 **[TODO.md](TODO.md) item 19 is closed (entry 173).**
 - **Settled:** search stays on every corridor (entries 159, 160).
 - **Delivered:** its cost work took a fresh corridor from $0.394 to $0.251 in model calls (entries

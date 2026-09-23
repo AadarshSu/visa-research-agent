@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-16 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-23 — update this line when you touch the handoff |
 | **Tests** | 806: 805 passing and 1 skipped, run 2026-09-16 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -36,6 +36,33 @@ disproved. Link instead of copying.
 ---
 
 ## Where it stands
+
+**The owner's five goals, 2026-09-23 (entry 182)**, are unordered:
+- model calls paid through Ofself Personas;
+- about 30 seconds a corridor, with information on screen while it runs;
+- a URL;
+- accurate and useful answers for most corridors;
+- 100+ countries.
+
+Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which items serve it.
+
+**What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
+- **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
+  (`var/usage/`, 2026-09-17) both failed. Every web request, corridor run and live timing waits on a
+  top-up.
+- **Three decisions are waiting on the owner:**
+  - item 60, where Fast mode goes;
+  - item 61, what a corridor may spend answering a challenge;
+  - item 7's question of whether to store a refusal before deploying (entry 151).
+- **Shipped and not measured live:**
+  - entry 178's plan reuse has not been timed;
+  - the 2026-09-15 rebuild of all 53 corpora has been re-run for only Norway, Thailand and Japan;
+  - entries 134 and 135 were never priced (entry 136).
+- **Ofself:** the wider data request is live and the owner has re-authorised, but the owner's
+  account holds no travel records. So the form has only been seen filling from a fake Ofself.
+  - Questions still to put to Ofself: does it host apps, does any of its apps record trips, and how
+    should model calls run through Personas (item 62).
+  - The one redirect URI is `localhost`, and has to change when item 7 picks a host.
 
 **The goal:** produce visa application plans where every claim is grounded in an official government
 source, and the traveller is told plainly when something could not be verified. Permanently out of
@@ -271,7 +298,9 @@ Ofself (seen for the sandbox user); the owner's own account has no citizenship r
 **Since 2026-09-21 (entry 181) it also starts from Ofself's travel schemas** — passports with their
 expiry, a residence permit, trips being considered — as defaults the traveller confirms. That is
 tested offline and seen against a fake Ofself only: the DLR asking for those schemas is written in
-`CRUX.md` and **not yet published**, which is the owner's `paradigm crux sync`. Nothing a plan says
+`CRUX.md` and **went live the same day**, after the owner ran `paradigm crux sync` and signed in
+again. The form has still not been seen filling from live data, because the owner's account holds
+no travel records yet. Nothing a plan says
 changed. Paradigm stores user data and does not host apps, as far as
 its documentation shows, so item 7 still needs a host. The CLI is `~/.local/bin/paradigm`,
 logged in as the owner.
