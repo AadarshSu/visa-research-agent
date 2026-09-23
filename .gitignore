@@ -29,6 +29,10 @@ var/pagetext/*
 !var/pagetext/.gitkeep
 var/usage/*
 !var/usage/.gitkeep
+# Model drafts of a plan (entry 178). Each is written from a whole traveller profile, so it can
+# hold a city or a residence status: never commit one.
+var/plans/*
+!var/plans/.gitkeep
 
 # Machine-local tool settings. The shared launch configuration is tracked.
 .claude/settings.local.json
