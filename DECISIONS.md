@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [187](#187-scoring-links-with-their-context-would-recover-2-of-83-answer-pages-japans-remaining-gap-is-a-refusal) | **Link context would recover 2 of 83 answer pages** — 48 already score, 32 are search seeds; Japan's 7 remaining misses are Edinburgh's consulate answering `403` to everything; problem 2 is a later refinement, rebuild with entry 186 first |
 | [186](#186-a-scored-link-may-read-past-its-hosts-even-share-and-one-that-scored-nothing-may-not--measured-on-four-countries) | **A scored link may read past its host's even share; one scoring nothing may not** — `scored_host_ceiling`, corpus builds only; Japan's oracle pages read 0/20 → 12/20, the UK's 13/17 → 17/17, Australia's immigration host absent → 267 pages; `gov.uk` stops at 392 and mostly visa guidance; the Netherlands unchanged |
 | [185](#185-why-builds-open-mostly-zero-scoring-pages-the-even-per-host-split-drops-the-visa-sites-links-and-spends-the-rest-on-unrelated-sites) | **Why builds open mostly zero-scoring pages** — an even split gave Japan's 47 hosts 25 pages each; `mofa.go.jp`'s scored links were dropped at the cap, including the oracle's decision, fee, time and route pages for both Japan corridors, while unrelated hosts spent 74% of opens on zero-score pages and 288 of 1,200 went unspent; ordering and the family share are not causes |
 | [184](#184-offline-work-may-cost-what-it-takes-if-it-makes-each-live-request-better) | **Offline work may cost what it takes, if it makes each live request better** — the owner: build time and higher one-time cost are acceptable; the live ~30s target, entries 44, 78, 83 and 148 are unchanged; storing a model's judgement about a page needs its own entry |
@@ -235,6 +236,60 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 187. Scoring links with their context would recover 2 of 83 answer pages; Japan's remaining gap is a refusal
+
+**2026-09-23 · TODO item 68, problem 2, measured before building. Offline, plus one GET and one
+`robots.txt` request to the host involved.**
+
+**The question.** Item 68's problem 2 proposed scoring each link with the text around it, where it
+sits on the page and what the linking page is about. That only pays if answering pages are being
+missed because their *links* score nothing.
+
+**Japan's 8 unread oracle pages first.**
+- **7 are on `www.edinburgh.uk.emb-japan.go.jp`, and that host refuses this client.** It answers
+  `403 Access Denied` from Akamai for every page and for its own `robots.txt`. The corpus already
+  records **28** of its pages as *"refused automated retrieval (HTTP 403)"*.
+- **They are linked with good anchors** — "【eVISA checklist】", "visa fees list", "Temporary
+  Visitor Visa" — so they score, and their context was never the problem.
+- **CLAUDE.md's block rule governs them.** Never work around a refusal. The page may be named to the
+  traveller and never read.
+- **The eighth** is a MOFA checklist PDF that was not read in the PDF pass.
+
+**Every oracle page, by the score of its stored link.** For each distinct answering page across the
+21 oracle rows, the corpus entry was rescored with `score_role_vocabulary`:
+
+| | pages |
+| --- | --- |
+| link scores above zero | 48 |
+| a search seed (depth 0), so no link needed | 32 |
+| **link scores zero** | **2** |
+| not in the corpus | 1 |
+
+**The two that score zero are exactly the case the proposal describes.**
+- **Netherlands.** The EES leaflet PDF, linked as *"Download in English: Travel to Europe (English)"*
+  under a heading in Chinese.
+- **Czechia.** The supporting-documents list for applicants in the UK, linked as *"United Kingdom
+  (PDF, 332 KB)"* under an A–Z heading. It is entry 127's page.
+
+Surrounding text would likely lift both.
+
+**What it means.**
+- **On the oracle, link context is worth about 2 of 83 answer pages.**
+- **Since entry 186, unscored links only spend what scored links leave**, so the budget cost of
+  noise has shrunk too.
+- **Its remaining value is precision:** `careers.homeoffice.gov.uk`, `design.homeoffice.gov.uk` and
+  `gov.uk/email-signup` spending shares. That is cheaper to handle through `is_boilerplate`.
+- **This is not a verdict on the idea everywhere.** The oracle is 21 corridors in 10 countries,
+  curated from pages the scorer already admitted (entry 123). A country whose answers hide behind
+  bare "here" or "PDF" links would not show up in it.
+
+**Recommended, not decided:**
+- **Rebuild the stores with entry 186's fix now,** rather than waiting for problem 2.
+- **Treat context capture as a later refinement.** Build it if a country is found whose answer pages
+  score zero on their links.
 
 ---
 

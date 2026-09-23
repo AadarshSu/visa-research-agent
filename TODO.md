@@ -425,6 +425,15 @@ Every build now reports where its allowance went.
 3. **Two pieces of noise the fix exposed, for problem 2:** `email-signup` pages count as guidance on
    `gov.uk`, and hosts like `careers.homeoffice.gov.uk` spend a full share under either rule.
 
+**Problem 2 was measured before building, and it is small (entry 187).**
+- **On the oracle, 2 of 83 answer pages have a link scoring zero**: the Dutch EES leaflet and
+  Czechia's UK supporting-documents list. 48 score and 32 are search seeds.
+- **Japan's 7 remaining misses are a refusal.** The Edinburgh consulate answers `403` to everything,
+  so no scoring change can reach them.
+- **So what follows is a later refinement,** to build if a country turns up whose answer pages score
+  zero on their links.
+- **The cheap part worth doing now:** add `email-signup` and similar paths to `is_boilerplate`.
+
 **Problem 2: a link is judged on too little context.** `extract_links` (`crawl.py`) keeps the anchor
 text and the most recent heading in document order, and nothing else. It has the whole page in hand
 when it does so, and throws away:
