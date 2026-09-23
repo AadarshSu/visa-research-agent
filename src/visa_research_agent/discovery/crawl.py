@@ -283,11 +283,58 @@ def page_title_of(html: str) -> str:
     return ""
 
 
-def extract_links(html: str, base_url: str, *, maximum_links: int = 400) -> list[PageLink]:
+# The element a link's surrounding text is read from: the smallest block that usually holds one
+# item's description. A `div` is deliberately not one — it can be the whole page.
+CONTEXT_BLOCK_TAGS = ("li", "p", "td", "th", "dd", "dt", "figcaption", "caption")
+
+# Page regions that say what a link is for, by element and by ARIA landmark role.
+REGION_TAGS = ("nav", "header", "footer", "aside")
+REGION_ROLES = {
+    "navigation": "nav",
+    "banner": "header",
+    "contentinfo": "footer",
+    "complementary": "aside",
+}
+
+
+def link_region(element: Tag) -> str:
+    """Which landmark of the page a link sits in, or empty for the main content."""
+
+    for parent in element.parents:
+        if not isinstance(parent, Tag):
+            continue
+        if parent.name in REGION_TAGS:
+            return parent.name
+        role = parent.get("role")
+        if isinstance(role, str) and role in REGION_ROLES:
+            return REGION_ROLES[role]
+    return ""
+
+
+def link_context(element: Tag) -> str:
+    """The words around a link: its block's text, then its `title` and `aria-label`."""
+
+    parts: list[str] = []
+    block = element.find_parent(CONTEXT_BLOCK_TAGS)
+    if isinstance(block, Tag):
+        parts.append(block.get_text(" ", strip=True))
+    for attribute in ("title", "aria-label"):
+        value = element.get(attribute)
+        if isinstance(value, str) and value.strip():
+            parts.append(value.strip())
+    return " ".join(" ".join(parts).split())[:300]
+
+
+def extract_links(
+    html: str, base_url: str, *, maximum_links: int = 400, linking_title: str = ""
+) -> list[PageLink]:
     """Collect the links on a page, keeping the text and heading that give each its meaning.
 
     This deliberately does not use `clean_source_html`: that strips navigation and returns plain
     text, which destroys the anchors this needs. Do not "simplify" it to share that function.
+
+    Each link also keeps its surroundings — `context`, `region` and the page's own title — which
+    only a corpus build reads (entry 188). The request path scores links without them.
     """
 
     soup = BeautifulSoup(html, "html.parser")
@@ -329,6 +376,9 @@ def extract_links(html: str, base_url: str, *, maximum_links: int = 400) -> list
                 heading=heading,
                 depth=0,
                 discovered_from=base_url[:2000],
+                context=link_context(element),
+                region=link_region(element),
+                linking_title=linking_title[:300],
             )
         )
         if len(links) >= maximum_links:
@@ -1251,7 +1301,7 @@ class LinkCrawler:
         # family is a fact about its siblings on *this* page, so it is not knowable until they have
         # all been seen.
         queued: list[tuple[float, int, str, int, PageLink]] = []
-        for found in extract_links(html, base):
+        for found in extract_links(html, base, linking_title=page_title or ""):
             if found.url in visited or not is_crawlable(found.url, destination):
                 # An off-domain link is still refused, and that is not weakened here. It is only
                 # *written down* when it points at a reviewed delegate, because a government page

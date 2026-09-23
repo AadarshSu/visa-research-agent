@@ -9,7 +9,8 @@ of why it is expected to beat the request path rather than merely cache it.
 Three things it does differently from `resolver.py`, each deliberate.
 
 **No traveller.** Queries name the destination and nothing else, and links are scored with
-`score_role_vocabulary` — the corridor-independent half. A corpus guided by one nationality's
+`score_role_vocabulary` — the corridor-independent half — read with the link's surroundings
+(`score_link_in_context`, entry 188). A corpus guided by one nationality's
 vocabulary would be a corpus quietly built for that nationality.
 
 **It keeps pages about other countries.** `resolver.py` vetoes those, correctly: for one corridor a
@@ -49,7 +50,11 @@ from visa_research_agent.discovery.lexicon import (
 )
 from visa_research_agent.discovery.models import CandidatePage, PageLink, RoleScores, SearchResult
 from visa_research_agent.discovery.page_text import PageTextStore, StoredPage
-from visa_research_agent.discovery.scoring import is_archived, is_boilerplate, score_role_vocabulary
+from visa_research_agent.discovery.scoring import (
+    is_archived,
+    is_boilerplate,
+    score_link_in_context,
+)
 from visa_research_agent.discovery.search import (
     DEFAULT_SEARCH_CONCURRENCY,
     SearchError,
@@ -854,7 +859,8 @@ async def build_country_corpus(
                 mission_seeds += 1
 
     def score(link: PageLink) -> RoleScores:
-        return score_role_vocabulary(link, words)
+        # With the link's surroundings, which only a build reads (entry 188).
+        return score_link_in_context(link, words)
 
     # Buffered rather than written page by page: one transaction at the end of a crawl, against
     # thousands mid-crawl. The cost is that a build killed halfway keeps no text, which is the

@@ -61,9 +61,9 @@ Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which
 - **Ofself:** the wider data request is live and the owner has re-authorised, but the owner's
   account holds no travel records. So the form has only been seen filling from a fake Ofself.
   - Questions still to put to Ofself: does it host apps, and does any of its apps record trips.
-  - **Model calls through Personas are now documented (item 62, 2026-09-23)**: `capabilities: []`
-    with `llm_config` is a plain model call on Ofself's account. Untested; the open points are in
-    item 62.
+  - **Model calls through Personas work (item 62, probed 2026-09-24).** At `capabilities: []` the
+    prompt goes through untouched, strict JSON schema and reasoning effort apply, and
+    `gpt-5.6-terra` runs on Ofself's account. The app is registered; nothing routes through it yet.
   - The one redirect URI is `localhost`, and has to change when item 7 picks a host.
 
 **The goal:** produce visa application plans where every claim is grounded in an official government

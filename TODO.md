@@ -15,7 +15,7 @@ points at the items that do the work. The detail lives in the items, not here.
 
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
-| **Model calls paid through Ofself Personas**, on their OpenAI key | Not started. **Unblocked 2026-09-23:** Personas' live guide now documents a model-only call (`capabilities: []`) with `response_format` and reasoning effort; untested | **62** | the owner agreeing to register and run a test |
+| **Model calls paid through Ofself Personas**, on their OpenAI key | **Probed live 2026-09-24:** at `capabilities: []` our prompt goes through untouched, strict JSON schema and reasoning effort apply, and `gpt-5.6-terra` runs on Ofself's account. Not yet wired in | **62** | routing the three calls through it, then grading |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
@@ -1422,11 +1422,42 @@ out of credit here since 2026-09-16, while a Personas call on Ofself's account n
 side as a conversation per user and agent (§9), deletable afterwards. That storage means page text and
 traveller details sit in Personas, which needs deciding before live traffic goes through it.
 
-**The test, once the owner agrees to it.** It needs a Personas registration, a user id to run as, and
-calls billed to Ofself's account. Run one call of each kind with `capabilities: []`, `llm_config` and
-`debug: true`. Then read back exactly what the model received with
-`POST /internal/headless/conversations/<id>/context`, which settles the date-line and wrapper
-questions without guessing.
+**Registered and probed live, 2026-09-24, with the owner's agreement.** The app is registered with
+Personas (app id `668f0915-09c1-438a-bd27-f881ae4f03b1`), bound to our Paradigm client id, with its
+HMAC key in `.paradigm/secrets.toml`. Every probe ran under the owner's user on Ofself's account,
+with tiny prompts: a dozen calls, none of our real packets.
+
+| question | result |
+| --- | --- |
+| does our prompt reach the model with nothing added? | **yes** — at `capabilities: []`, the `debug` event's request was exactly our system line and our message: no platform text, no date line. Billed 23 input tokens for two short lines |
+| strict JSON schema? | **yes** — `llm_config.response_format` with `json_schema`, `strict: true` was applied without our key. A question asking for "a sentence or two" came back as exactly the schema |
+| reasoning effort? | **yes** — `llm_config.reasoning.effort` applies: `none` used 10 output tokens and answered a counting question wrongly (190 for 183), `xhigh` used 175 and answered right. `low` and `high` looked alike only because the question was easy |
+| `gpt-5.6-terra` on Ofself's account? | **yes, but not through `llm_config`** — without our own key its `model` is ignored, and every such run used `gpt-5.5`. The older `llm_model` field on the agent works: set once on a dedicated agent, the run reported `gpt-5.6-terra` |
+| a user to run as? | the owner's id worked with no handshake, because our registration is bound to our Paradigm app and the owner has authorised it |
+| usage per call? | input and output tokens per message; no cached or reasoning split |
+
+**Three traps found on the way:**
+- **`paradigm personas register` failed with "App not found".** The CLI's default host is
+  `personas.ofself.ai`, which now answers a `301` to `.com`. Python's HTTP client follows a `301`
+  by re-sending a POST as a GET without its body, and a GET on `…/apps/register` reads `register` as
+  an app id. `--base-url https://personas.ofself.com` fixes it.
+- **The "exact context" read-back is not what was sent.** `POST …/conversations/<id>/context`
+  returned the full platform prompt for a call billed 23 input tokens. The `debug: true` request
+  event on `/run/stream` is the one to trust.
+- **`debug` reports `temperature: 0.4` in the request**, where the guide says temperature never
+  reaches a provider. Unclear which is true; harmless either way.
+
+**Not yet known:** whether a real ~70,000-token selection packet goes through (body limits,
+timeouts), how much latency Personas adds on a large call, whether any prompt caching happens (none
+is reported or configurable), and what Ofself's account charges. Our OpenAI account is out of
+credit, so no like-for-like timing is possible yet.
+
+**Next: route the three calls through Personas behind the existing interfaces, then grade it.** One
+dedicated agent per call type, holding `llm_model: gpt-5.6-terra`. Each run carries
+`capabilities: []` and an `llm_config` with the call's strict schema and `reasoning.effort: low`.
+The key moves from `.paradigm/secrets.toml` into `.env`, where every other secret lives. Every run is
+stored as a conversation in the owner's Personas history; deleting them afterwards is a decision for
+the owner.
 
 **Grade it as a provider change, not a key swap.**
 - **What changes:** `openai_reasoning_effort: low` and item 60's Fast mode may not be available

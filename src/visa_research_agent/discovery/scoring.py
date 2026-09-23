@@ -390,6 +390,60 @@ def score_role_vocabulary(link: PageLink, lexicon: Lexicon) -> RoleScores:
     return RoleScores(scores=scores, signals=signals)
 
 
+def score_link_in_context(link: PageLink, lexicon: Lexicon) -> RoleScores:
+    """`score_role_vocabulary`, plus what surrounds the link — **for a corpus build only.**
+
+    A build decides what to open from a link's label, heading and address, and a label like
+    "United Kingdom (PDF, 332 KB)" or "here" says nothing. Three things from the page that held the
+    link say more, and each is weighted below the label (entry 188):
+
+    - **the text around it** — its list item, paragraph or table cell, and its `title` and
+      `aria-label` — counted at `context_weight` for phrases the label and heading do not already
+      carry, so a link is not paid twice for one phrase;
+    - **the page's own title**, inherited only by a **document** link with no signal of its own, at
+      `linking_title_weight`. A crawl never follows a PDF, so this reorders the PDF pass and cannot
+      give a host's HTML links a score that lets them read past its share (entry 186);
+    - **a footer**, which halves everything, because that is where site furniture lives.
+
+    Never used to rank a corridor's candidates. A corridor's link score decides what its selector
+    is shown, so a change there is a recall change priced in model input (entries 126 and 158);
+    here it only decides what an offline build reads.
+    """
+
+    base = score_role_vocabulary(link, lexicon)
+    scores = dict(base.scores)
+    signals = {role: list(reasons) for role, reasons in base.signals.items()}
+    own = f"{link.text} {link.heading}".lower()
+    context = link.context.lower()
+
+    for role_name in ROLE_ORDER:
+        role_terms = lexicon.roles.get(role_name)
+        if role_terms is None or not context:
+            continue
+        for term in role_terms.terms:
+            if _contains_phrase(context, term.phrase) and not _contains_phrase(own, term.phrase):
+                weighted = term.weight * lexicon.context_weight
+                scores[role_name] = scores.get(role_name, 0.0) + weighted
+                signals.setdefault(role_name, []).append(f"context:{term.phrase}+{weighted:g}")
+
+    if not scores and link.linking_title and is_pdf_url(link.url):
+        inherited = score_role_vocabulary(
+            PageLink(url=link.url, text=link.linking_title, depth=link.depth), lexicon
+        )
+        for inherited_role, value in inherited.scores.items():
+            if value > 0:
+                weighted = value * lexicon.linking_title_weight
+                scores[inherited_role] = weighted
+                signals[inherited_role] = [f"linking-title:{weighted:g}"]
+
+    if link.region == "footer":
+        for scored_role in list(scores):
+            scores[scored_role] *= lexicon.footer_factor
+            signals.setdefault(scored_role, []).append(f"footer x{lexicon.footer_factor:g}")
+
+    return RoleScores(scores=scores, signals=signals)
+
+
 def score_link(
     link: PageLink,
     corridor: Corridor,

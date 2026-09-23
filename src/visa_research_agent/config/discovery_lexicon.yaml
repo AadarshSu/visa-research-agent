@@ -18,6 +18,22 @@ link_text_weight: 1.2
 # under a "Visa Application Documents" heading would otherwise look like a checklist.
 heading_weight: 0.5
 
+# **Offline corpus builds only (DECISIONS entry 188).** A link's surroundings, used to decide what a
+# build opens and never to rank a corridor's candidates, so no live request reads these three.
+#
+# The text around a link — its list item, paragraph or table cell, and its `title`/`aria-label` —
+# counts like a heading, and only for phrases the link's own label and heading do not already carry.
+context_weight: 0.5
+# A document link (a PDF) with no signal of its own inherits the title of the page it sits on, at a
+# quarter weight. Czechia's supporting-documents list for applicants in the United Kingdom is linked
+# as "United Kingdom (PDF, 332 KB)" from a page titled "Harmonized List of Supporting Documents"
+# (entry 187). Documents only, because a crawl never follows one: this reorders the PDF pass and
+# cannot hand a host's HTML links a score that lets them read past its even share (entry 186).
+linking_title_weight: 0.25
+# A link in a page's footer is usually site furniture, so it is halved. Halved rather than zeroed:
+# a footer "Visas" link is still a way into the section.
+footer_factor: 0.5
+
 # A link that names the traveller's purpose is worth considering even with no other signal.
 # Japan's tourism checklist is reached by a link labelled only "Tourism", at a URL that says
 # nothing and never mentions visas.
@@ -275,6 +291,9 @@ boilerplate_tokens:
   - disclaimer
   - copyright
   - credits
+  # A subscription form for updates about a topic. Its address repeats the topic's words, so on
+  # `www.gov.uk` 21 of them read as visa guidance in one build (entry 186).
+  - email-signup
 
 # A blank form is not a list of what to bring. Both say "application" and "documents", and the
 # forms are usually PDFs, so without this they outrank the real checklist. Observed on Japan's

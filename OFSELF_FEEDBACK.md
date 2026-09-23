@@ -6,7 +6,7 @@ item 55; this file is only about the platform.
 
 Each point says how it is known — **[observed]** against the live API or CLI, **[read]** in the CLI's
 source or the authorize page's JavaScript, **[docs]** from the developer guide alone. Seen with
-`paradigm-cli` 0.5.0 against `api.ofself.ai`, 2026-09-16 to 2026-09-23. Mark a point resolved
+`paradigm-cli` 0.5.0 against `api.ofself.ai`, 2026-09-16 to 2026-09-24. Mark a point resolved
 rather than deleting it.
 
 ---
@@ -272,18 +272,40 @@ TODO item 62, and 8.14–8.16 are what the new sections raised.
   The table says OpenAI's is *"native"* and §5.2 speaks of *"your own schema"*, but the only example
   is `{"type": "json_object"}`, which guarantees JSON and not its shape. This app's calls use strict
   `json_schema`. *Suggest:* show a `json_schema` example with `strict: true`, or say it isn't
-  supported.
+  supported. **Answered by a probe, 2026-09-24** [observed]: a strict `json_schema` is applied, even
+  on Ofself's account. Still worth an example in the guide.
 - **8.15 A date line may be added even at zero capabilities** [docs, 2026-09-23]. §4.2 prices the
   platform text at 0 characters for `[]`. But the run body's `timezone` sets *"what 'today' means in
   the prompt's date line"*, and the `scope` event's `timezone` is *"always a string"*. So either
   every prompt carries a date line, or `[]` is an exception nobody wrote down. For an app whose
-  output shifts with small prompt changes, that is the difference. *Suggest:* say which.
+  output shifts with small prompt changes, that is the difference. *Suggest:* say which. **Answered
+  by a probe, 2026-09-24** [observed]: at `[]` the `debug` request event held exactly the app's
+  system prompt and message, with no date line.
 - **8.16 Model-only calls still need a user and are still stored** [docs, 2026-09-23]. The floor is
   documented as *"that call"*, but `paradigm_user_id` is required and every run becomes a stored
   conversation per user and agent. An app calling a model for work that serves no one — ranking,
   classifying, an offline build — has to borrow some person's identity, and its prompts accumulate
   in that person's history. *Suggest:* let an app-authenticated call with `capabilities: []` omit
   the user and skip storage.
+- **8.17 Without the app's own key, `llm_config.model` is ignored** [observed, 2026-09-24]. Asked
+  for `gpt-5.6-terra` with `provider` set to `openai` or `ofself`, every run used the agent's stored
+  `gpt-5.5`. `response_format` and `reasoning` in the same `llm_config` *were* applied, and the
+  agent-level `llm_model` did select `gpt-5.6-terra`. The guide's *"Omit `api_key` and nothing
+  changes"* reads as billing; in practice it also means the model. *Suggest:* apply the model, or
+  refuse it with a reason, as `base_url` is refused.
+- **8.18 The CLI registers against a host that redirects, and fails misleadingly** [observed,
+  2026-09-24]. `paradigm personas register` defaults to `personas.ofself.ai`, which answers `301` to
+  `.com`. Python's `urllib` follows a `301` on a POST by sending a GET without the body, and a GET on
+  `…/apps/register` answers `404 "App not found"`, reading `register` as an app id. *Suggest:* change
+  the default host, and answer a POST route's GET with `405`.
+- **8.19 The "exact context" read-back isn't what the model received** [observed, 2026-09-24].
+  `POST …/conversations/<id>/context` returned the full platform prompt — tool doctrine, the
+  `paradigm.*` reference — for a `capabilities: []` run billed 23 input tokens, whose `debug` request
+  event held only two short messages. The endpoint seems to rebuild the agent's default rather than
+  the run's own. *Suggest:* return what the run actually sent.
+- **8.20 `debug` reports a temperature the guide says is never sent** [observed, 2026-09-24]. The
+  request event shows `"temperature": 0.4`; §3.2 says it *"is in the kwargs of neither"* provider.
+  One of the two is wrong.
 
 ## 9. Signing a user in
 

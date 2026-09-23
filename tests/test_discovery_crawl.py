@@ -33,9 +33,12 @@ from visa_research_agent.discovery.lexicon import get_country_registry, get_lexi
 from visa_research_agent.discovery.models import Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.scoring import (
     is_archived,
+    is_boilerplate,
     rank_for_role,
     score_body,
     score_link,
+    score_link_in_context,
+    score_role_vocabulary,
     wrong_audience,
     wrong_country,
 )
@@ -968,3 +971,115 @@ async def test_a_healthy_host_keeps_its_ordinary_spacing() -> None:
             await fetcher.fetch_html(client, f"https://{AUTHORITY}/page-{n}", destination())
 
     assert slept == [0.5, 0.5, 0.5]
+
+
+def test_a_link_keeps_the_words_around_it_and_where_it_sits() -> None:
+    """Entry 188. A label like "here" says nothing; the list item around it and the page's own
+    landmarks say what it is for."""
+
+    html = (
+        '<html><body><nav><a href="/visa/">Visas</a></nav>'
+        "<ul><li>The documents required for a tourist visa are listed "
+        '<a href="/list.html" title="Tourist checklist">here</a></li></ul>'
+        '<footer><a href="/help.html">Help</a></footer></body></html>'
+    )
+
+    links = {
+        link.url.rsplit("/", 1)[-1] or "visa": link
+        for link in extract_links(html, f"https://{MISSION}/", linking_title="Consular services")
+    }
+
+    assert "documents required" in links["list.html"].context
+    assert "Tourist checklist" in links["list.html"].context
+    assert links["list.html"].region == ""
+    assert links["visa"].region == "nav"
+    assert links["help.html"].region == "footer"
+    assert links["list.html"].linking_title == "Consular services"
+
+
+def test_the_words_around_a_link_lift_one_whose_label_says_nothing() -> None:
+    lexicon = get_lexicon()
+    link = PageLink(
+        url=f"https://{MISSION}/list.html",
+        text="here",
+        depth=1,
+        context="The documents required for a tourist visa are listed here",
+    )
+
+    assert score_role_vocabulary(link, lexicon).score_for("document_checklist") == 0
+    assert score_link_in_context(link, lexicon).score_for("document_checklist") > 0
+
+
+def test_a_phrase_the_label_already_carries_is_not_paid_for_twice() -> None:
+    lexicon = get_lexicon()
+    bare = PageLink(url=f"https://{MISSION}/a.html", text="Documents required", depth=1)
+    echoed = bare.model_copy(update={"context": "Documents required"})
+
+    assert (
+        score_link_in_context(echoed, lexicon).scores == score_role_vocabulary(bare, lexicon).scores
+    )
+
+
+def test_only_a_document_inherits_the_title_of_the_page_linking_it() -> None:
+    """Czechia's list for applicants in the United Kingdom is linked as "United Kingdom (PDF,
+    332 KB)" from a page titled "Harmonized List of Supporting Documents" (entry 187). An HTML link
+    on the same page does not inherit it: a crawl follows HTML links, and a score would let them
+    read past their host's share (entry 186)."""
+
+    lexicon = get_lexicon()
+    title = "Harmonized List of Supporting Documents"
+    pdf = PageLink(
+        url="https://mzv.gov.example/public/UK_EN.PDF",
+        text="United Kingdom (PDF, 332 KB)",
+        depth=2,
+        linking_title=title,
+    )
+    page = pdf.model_copy(update={"url": "https://mzv.gov.example/uk.html"})
+
+    assert score_link_in_context(pdf, lexicon).score_for("document_checklist") > 0
+    assert score_link_in_context(page, lexicon).scores == {}
+
+
+def test_a_footer_link_is_halved() -> None:
+    lexicon = get_lexicon()
+    body = PageLink(url=f"https://{MISSION}/visa/fees.html", text="Visa fees", depth=1)
+    footer = body.model_copy(update={"region": "footer"})
+
+    in_body = score_link_in_context(body, lexicon).score_for("fees")
+    assert in_body > 0
+    assert (
+        score_link_in_context(footer, lexicon).score_for("fees") == in_body * lexicon.footer_factor
+    )
+
+
+def test_a_corridor_scores_a_link_without_its_surroundings() -> None:
+    """The request path must not move: a corridor's link score decides what its selector is shown,
+    so a change there is a recall change priced in model input (entries 126 and 158)."""
+
+    plain = scores_for(f"https://{MISSION}/list.html", "here")
+    registry = get_country_registry()
+    surrounded = score_link(
+        PageLink(
+            url=f"https://{MISSION}/list.html",
+            text="here",
+            depth=1,
+            discovered_from="seed",
+            context="The documents required for a tourist visa are listed here",
+            region="footer",
+            linking_title="Harmonized List of Supporting Documents",
+        ),
+        corridor(),
+        get_lexicon(),
+        registry.require("IN"),
+        registry.require("GB"),
+    )
+
+    assert surrounded.scores == plain.scores
+
+
+def test_an_email_signup_page_is_site_furniture() -> None:
+    """21 `gov.uk/email-signup` pages read as visa guidance in one UK build (entry 186)."""
+
+    assert is_boilerplate(
+        "https://www.gov.uk/email-signup?link=/browse/visas-immigration", get_lexicon()
+    )

@@ -165,6 +165,9 @@ class Lexicon(StrictModel):
     schema_version: Literal[1]
     link_text_weight: float = 1.2
     heading_weight: float = 0.5
+    context_weight: float = 0.5
+    linking_title_weight: float = 0.25
+    footer_factor: float = 0.5
     boilerplate_tokens: list[str] = Field(default_factory=list)
     """Path segments that mark site furniture — a legal notice is never visa guidance."""
     base_purpose_weight: float = 18.0
