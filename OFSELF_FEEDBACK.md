@@ -307,6 +307,14 @@ TODO item 62, and 8.14–8.16 are what the new sections raised.
   request event shows `"temperature": 0.4`; §3.2 says it *"is in the kwargs of neither"* provider.
   One of the two is wrong.
 
+- **8.21 Which models the account serves is undocumented, and a missing one surfaces as an Azure
+  error** [observed, 2026-09-25]. Asked for `gpt-6-sol` and `gpt-6-luna` (released by OpenAI on
+  2026-09-22) on a probe agent, each run failed with `AGENT_ERROR … 404 DeploymentNotFound: The API
+  deployment for this resource does not exist`. `gpt-5.6-terra` answered on the same agent shape.
+  The guide names defaults (`gpt-5.5`, examples with `gpt-5.2`) and no list. *Suggest:* publish
+  the models `llm_provider: "ofself"` serves (or a `GET /models`), and answer an unknown model with a
+  plain "model not available on this account" rather than the provider's deployment error.
+
 ## 9. Signing a user in
 
 The guide shows only SDK helpers (`build_oauth_url`, `verify_callback`), the SDK repository is

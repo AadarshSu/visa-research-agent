@@ -377,6 +377,14 @@ against `OPENAI_MODEL`, so a model the account lacks fails loudly rather than be
 is one probe: does Personas serve `gpt-6-sol` at all?** Its price there is Ofself's, not the list
 price below, and Ofself reports no cached tokens, so the cost column compares token counts only.
 
+**Step 0 result, 2026-09-25: Personas does not serve it.** A one-call probe on a separate agent
+(`visa-probe-<model>`, so the production agents' stored model was untouched) answered on
+`gpt-5.6-terra` in 2.5s and failed for `gpt-6-sol` and `gpt-6-luna` with Azure's
+`DeploymentNotFound` — Ofself serves models through Azure deployments, and has none for GPT-6
+(OFSELF_FEEDBACK 8.21). **So this item waits on Ofself deploying GPT-6 Sol, or on OpenAI credit for
+the direct route.** Ask Ofself which models the account serves. Until then, the rebuild sequence
+goes on with Terra, and item 65 is re-run before step 3's baseline only if Sol arrives first.
+
 **It must also settle entry 188's open Japan question.** One of six Personas runs answered Japan
 `IN/GB` "visa required" from MOFA's list of who does *not* need a visa, the inference rule 8e and
 entry 174 rule out. Run a dozen Japan calls on the same packet for each model and count it.
