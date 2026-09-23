@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [184](#184-offline-work-may-cost-what-it-takes-if-it-makes-each-live-request-better) | **Offline work may cost what it takes, if it makes each live request better** — the owner: build time and higher one-time cost are acceptable; the live ~30s target, entries 44, 78, 83 and 148 are unchanged; storing a model's judgement about a page needs its own entry |
 | [183](#183-can-a-heuristic-replace-a-model-call-not-at-the-same-page-budget-but-it-could-cut-the-selection-packet-by-a-third-to-a-half) | **Can a heuristic replace a model call?** — no heuristic matches the selector at its page budget (60% against 83%); a link+text fusion keeping the top 80 of the pool keeps every answer the model found at 52–63% of the packet; the heuristic role decider is confidently wrong on 34%; nothing shipped, item 66 |
 | [9](#9-a-page-can-fill-several-roles) | A page can fill several roles |
 | [15](#15-brazil-the-out-of-sample-test-discovery-ranks-the-wrong-page-confidently) | Brazil: the heuristic ranks the wrong page, confidently |
@@ -232,6 +233,43 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 184. Offline work may cost what it takes, if it makes each live request better
+
+**2026-09-23. The owner's statement of direction, made while asking for the embeddings test (TODO
+item 67). Changes no rule and no code.**
+
+The owner: *"I am willing to incur any amount of latency and a higher amount of one time cost to
+build offline features that will help make this work better live for each individual request."*
+
+Read as it was meant:
+- **The latency is a build's, not a request's.** Hours of corpus building or indexing are acceptable.
+  The ~30s target for a live request (entry 182) is unchanged.
+- **A higher one-time cost is acceptable, not an unlimited one.** A build that would cost well past
+  the ~$13 of 2026-09-15's 53-country rebuild is still worth stating before it runs.
+
+**What it changes.** When a live problem could be solved either per request or once offline, prefer
+offline, and do not reject an offline fix because the build gets slower or more expensive. This
+builds on entry 147, and fits entry 148: the offline store holds what every traveller shares.
+
+**What it does not change.**
+- **Stored text ranks and never speaks** (entries 78 and 83).
+- **A page may be stored, an answer may not** (entry 44).
+- **Traveller-specific pages stay live search's job** (entry 148), so it does not reopen items 35,
+  47 or 49 on its own.
+
+An offline feature that stores a model's judgement about a page — a role label, a summary — would be
+stored model output. It needs its own decision entry arguing it against entries 44 and 83 before any
+code.
+
+**The offline levers it makes affordable, none of them decided:**
+- **Embed every stored page for ranking** (item 67).
+- **Open more of what a build records.** A build opens 3–15% of the addresses it keeps (entry 88), and
+  only 49% of the candidates the selector was shown on the oracle corridors had stored text (entry
+  183). Everything without text is judged on a ~29-character link. Reading more of it is
+  traveller-neutral, so it is inside entry 148's rule.
 
 ---
 

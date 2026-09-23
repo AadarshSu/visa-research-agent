@@ -21,6 +21,10 @@ points at the items that do the work. The detail lives in the items, not here.
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
 | **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23) | **64**, **2** | nothing external — search credit only |
 
+**Offline cost is not the constraint — the owner, 2026-09-23 (entry 184).** Build time and a higher
+one-time cost are acceptable for anything that makes each live request better. Prefer an offline
+fix to a per-request one.
+
 **What is left half-done** — the loose ends a cold session trips on — is listed once, in
 [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) under *Where it stands*.
 
@@ -309,6 +313,7 @@ one-paragraph defects rather than items.
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 66. Show the selector a fused top 80 instead of the whole pool | `soon` |
+|  | 67. Test ranking by embeddings of stored page text | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
 | **Blocked** | 62. Pay for model calls through Ofself Personas | `blocked` |
@@ -1168,6 +1173,51 @@ Grade them one at a time.
 
 **Untested alternative:** rank with embeddings of stored text, about $1 once to embed every stored
 body, as the pre-filter or as the selector. It needs credit or a local model.
+
+### 67. Test ranking by embeddings of stored page text — `soon`, **added 2026-09-23 (entries 183, 184); waits on OpenAI credit**
+
+**Why it matters.** Entry 183 found that what separates the model selector from the heuristics is
+**judgement, not information**:
+- **Same inputs, different results.** Both see stored text where it exists and a ~29-character link
+  where it does not, and the model finds 83% of answers against the heuristics' 53–60%.
+- **Even on pages read in full, the keyword decider was confidently wrong on 34%.**
+
+The keyword scorer matches listed phrases. Embeddings match meaning, so they may rank better:
+- other wordings, such as "supporting documents", "what to bring" and other languages;
+- a page that *is* a checklist over one that mentions one.
+
+**What embeddings cannot do.**
+- **They cannot help a page with no stored text.** Embedding a 29-character link adds nothing. That
+  gap is closed by reading more pages at build time (entry 184).
+- **They may not separate near-identical pages for different travellers**, such as a London and a
+  New Delhi checklist. That is the part expected to stay the model's.
+
+**Build — offline, once, then per rebuild.**
+1. **Embed every stored body** in `var/pagetext/` (~43,000 when last counted, more since the 2026-09-15
+   rebuild) with `text-embedding-3-small` or `-large`. At $0.02/M tokens for small, that is about
+   $1 once. Entry 184 allows more if a larger model ranks better. Chunk long pages rather than
+   truncating them, keeping the best-matching chunk's score per page.
+2. **Store the vectors beside the text index.** They are ranking input and **never evidence**, as the
+   text itself is (entries 78 and 83), and nothing may read a sentence back out of them. Vectors of
+   stored text are a derivative of stored text and carry its age.
+
+**Measure — offline, with the harness entry 183 used.**
+- **Per corridor and role, embed a short query** such as "document checklist for a tourist visa,
+  Indian passport, applying in the United Kingdom". The query embeddings are the only per-request
+  cost, and they are tiny. Pages without text fall back to their link rank, as fusion does.
+- **Grade it two ways against `oracle/selection_oracle.yaml`:**
+  - **As a selector** at the model's own per-corridor page count. The bar is the model's **83%**, and
+    anything short of it is entry 86's finding again.
+  - **As item 66's pre-filter.** Does it keep every answer the model found at a smaller top K than
+    fusion's 80, and at what share of the packet? Also try it fused with link rank.
+- **Check it on the 81 non-oracle model runs**, by the model's picks kept, as entry 183 did.
+- **Record the time per request** of the query embeddings and the similarity ranking. It should be
+  well under a second. Anything more is a finding.
+
+**Then decide.**
+- **As a filter,** it replaces fusion in item 66's live A/B.
+- **As a selector,** it would have to reach the model's recall before a live test is worth running.
+- **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
 
 ### 63. Make most corridors return accurate and useful information — `soon`, **added 2026-09-23 (entry 182)**
 
