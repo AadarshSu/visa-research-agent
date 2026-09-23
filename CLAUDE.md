@@ -925,6 +925,7 @@ cause, and only running the thing showed it.
 | a web page at `/robots.txt` should close the host | 401 origins, 4,687 read pages; the one real policy among them is already obeyed (entry 179) |
 | a DLR asks for a whole schema; only the user can narrow fields | `dlr add-read --fields` asks for single fields; the app reads `citizenships` alone (entry 180) |
 | a better heuristic could replace the selection call | at the same page count the best reaches 60% to the model's 83%; it can only shrink the packet (entry 183) |
+| builds open zero-scoring pages because of frontier order or the family share | an even per-host split drops the visa host's scored links at the cap — Japan's decision page among them (entry 185) |
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
 **measure the proposal before implementing it** — three of the rows above are proposals that were

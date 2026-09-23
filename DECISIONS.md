@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [185](#185-why-builds-open-mostly-zero-scoring-pages-the-even-per-host-split-drops-the-visa-sites-links-and-spends-the-rest-on-unrelated-sites) | **Why builds open mostly zero-scoring pages** — an even split gave Japan's 47 hosts 25 pages each; `mofa.go.jp`'s scored links were dropped at the cap, including the oracle's decision, fee, time and route pages for both Japan corridors, while unrelated hosts spent 74% of opens on zero-score pages and 288 of 1,200 went unspent; ordering and the family share are not causes |
 | [184](#184-offline-work-may-cost-what-it-takes-if-it-makes-each-live-request-better) | **Offline work may cost what it takes, if it makes each live request better** — the owner: build time and higher one-time cost are acceptable; the live ~30s target, entries 44, 78, 83 and 148 are unchanged; storing a model's judgement about a page needs its own entry |
 | [183](#183-can-a-heuristic-replace-a-model-call-not-at-the-same-page-budget-but-it-could-cut-the-selection-packet-by-a-third-to-a-half) | **Can a heuristic replace a model call?** — no heuristic matches the selector at its page budget (60% against 83%); a link+text fusion keeping the top 80 of the pool keeps every answer the model found at 52–63% of the packet; the heuristic role decider is confidently wrong on 34%; nothing shipped, item 66 |
 | [9](#9-a-page-can-fill-several-roles) | A page can fill several roles |
@@ -233,6 +234,90 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 185. Why builds open mostly zero-scoring pages: the even per-host split drops the visa site's links and spends the rest on unrelated sites
+
+**2026-09-23 · TODO item 68, problem 1. Measured with one instrumented build of Japan into a
+scratch store; `var/corpus` and `var/pagetext` untouched. 70 search queries, no model.**
+
+### The question
+
+Rescoring every stored entry with today's scorer showed two things over all 53 corpora:
+- **71% of the pages builds had opened scored zero** — 35,156 of 49,285.
+- **14,356 scored links were never opened.**
+
+The stored snapshot could not say why, for two reasons:
+- **`merge` only raises a status,** so "opened" sums every build since August, under older budgets and
+  thresholds.
+- **It keeps the first anchor ever seen,** not the one a build queued.
+
+Two clues were already in it. **83% of the scored-but-unopened links sit on each country's top two
+hosts**, and those hosts had been opened about up to an even share — `ircc.canada.ca` 102 against
+~109, `gov.uk` 132 against ~133. Of the zero-score pages opened, **68% were on hosts with no scored
+link left, and only 3% were family members.**
+
+### The instrumented build
+
+It used `LinkCrawler._next_wave`, unchanged in behaviour, with every page opened and every link
+dropped written down. It started from Japan's real seeds.
+
+- **The budget.** 47 seed hosts, so `_budget_for` gave each **25 pages** — `min(400, 1200 // 47)` —
+  with no floor or surplus, because `DEFAULT_CORPUS_HOST_FLOOR` is 0.
+- **What it opened.** **912 pages of a 1,200 budget**: 204 seeds and 708 by link. **The budget was
+  not even spent.** A link on a host at its cap is *dropped*, not deferred, so once every host had
+  used its share the frontier ran dry.
+- **Zero-score pages.** **524 of the 708 (74%)**, every one on a host that had nothing scored left.
+  Those hosts are ones search surfaced and the build must share with: the legal affairs bureau, the
+  commercial registry, `data.e-gov.go.jp`, `developer.e-gov.go.jp`. Each spent all 25 of its pages
+  on pages scoring zero.
+- **Ordering is not a cause.** **No** zero-score page was opened while a scored link waited in the
+  frontier, so best-first works within what the cap allows. The "29% on hosts with scored links
+  left" in the snapshot is an artefact of builds being summed.
+- **The family share is not a cause** either: 0 family members opened this build, and 3% in the
+  snapshot.
+- **What the cap dropped.** **149 unique scored links**: 477 sightings on `www.mofa.go.jp` — the
+  Ministry of Foreign Affairs, which publishes Japan's visa guidance — and 51 on `moj.go.jp`. None
+  was opened.
+
+**Among them are the oracle's answers for both Japan corridors.** Checked against
+`oracle/selection_oracle.yaml`, the pages dropped at the cap included:
+- **`visa_decision` for both `IN/GB` and `PH/PH`** — `…/visa/short/novisa.html`, the exemption list;
+- **`fees`** for both — `…/procedure/pagewe_000001_00391.html`;
+- **`processing_times`** for both — `…/procedure/day.html`;
+- **`application_route`** — `…/procedure/note.html` and `…/visaonline.html`;
+- **`general_entry`** — `…/visa/index.html`.
+
+They are in the corpus today only because earlier builds, under a different split, read them. A
+fresh build of this country would not.
+
+### What it means
+
+- **The budget follows how many hosts search surfaced, not where the visa guidance is.**
+- **The main visa host is starved,** and unrelated hosts spend their full share on nothing. A third of
+  the allowance is not spent at all.
+
+This is item 32's even-split defect (entry 82), which entry 82 closed on the UK's fee host. That
+host was not budget-limited, because its pages are behind a form. Japan's are ordinary links.
+
+**Why not simply raise the floor or turn the surplus on, as `HostBudget` allows.** The surplus
+was tried on the UK and went to `www.gov.uk`: 4,252 entries, mostly not about visas
+(`DEFAULT_CORPUS_HOST_FLOOR`'s comment). That surplus competed on score with `expansion_threshold`
+0, so zero-score links could take it. This build shows the real distinction is **scored against
+zero-score**, not large against small. The UK had only 316 scored-but-unopened links on `gov.uk`,
+so a surplus limited to scored links could have added no more than that.
+
+**The fix proposed, not built — TODO item 68:**
+- **Scored links on a host at its share are deferred, not dropped.**
+- **Scored links may exceed the share** up to the existing ceiling.
+- **Zero-score links get only a host's even share,** or only what is left once no scored link is
+  waiting anywhere.
+
+Measure it by rebuilding Japan into a scratch store and comparing: scored links dropped, zero-score
+pages opened, budget spent, and which oracle answers are opened. Then repeat on a large host fan-out
+(Australia, 47 hosts) and a small one (the Netherlands, 3), and on the UK to check `gov.uk` does not
+balloon.
 
 ---
 

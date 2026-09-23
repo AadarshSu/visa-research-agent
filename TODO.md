@@ -301,7 +301,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
+| **Now** | 68. Read more of what a build records, and choose what to open with more context | `next` |
+|  | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
 |  | 60. Decide where Fast mode goes | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
@@ -314,7 +315,6 @@ one-paragraph defects rather than items.
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 66. Show the selector a fused top 80 instead of the whole pool | `soon` |
 |  | 67. Test ranking by embeddings of stored page text | `soon` |
-|  | 68. Read more of what a build records, and choose what to open with more context | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
 | **Blocked** | 62. Pay for model calls through Ofself Personas | `blocked` |
@@ -349,6 +349,112 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+### 68. Read more of what a build records, and choose what to open with more context — `next`, **added 2026-09-23 (entries 183, 184, 185); moved to Now the same day — it needs no OpenAI credit**
+
+**Why it matters.** A candidate with no stored text is judged on its link alone, a median of ~29
+characters (entry 78). That is true for the model selector, for every heuristic and for item 67's
+embeddings. Where coverage stands:
+- **The whole store is 23% covered.** Measured 2026-09-23: **54,629 bodies against 237,303 recorded
+  addresses**, the same 23% as before the 2026-09-15 rebuild.
+- **The selector's pool is 49% covered.** On the 21 oracle corridors, 3,554 of 7,267 candidates the
+  selector was shown had text (entry 183).
+- **A build opens only 3–15% of what it records** (entry 88). The rest are addresses no one has read.
+
+Entry 184 makes a slower, larger build acceptable, and reading more is traveller-neutral, so it sits
+inside entry 148's rule.
+
+**Rules it must keep.**
+- **Order the extra reading on what the store lacks, never on a traveller** (entries 44 and 139). A
+  traveller-neutral signal is fine — a link that scores for any role on the role vocabulary alone
+  (`score_role_vocabulary`), a PDF, an address never opened. The traveller's passport or residence
+  is not.
+- **Every retrieval rule holds.** Obey `robots.txt`, never render past a refusal, give up on a host
+  that stops answering (entries 35, 36 and 139). A build that reads more meets more of each.
+- **The text is ranking input, never evidence** (entry 78).
+
+**Measure before building.**
+1. **Which unopened addresses matter.** Over the oracle corridors and the 81 other model runs, count
+   the pool candidates with no stored text, and how many of them the model picked anyway on the
+   link alone. Those are the pages this would inform.
+2. **What reading them buys, offline.** For a few countries, open the pool's text-less candidates
+   into a scratch copy of the index. Then re-run entry 183's harness and item 67's embeddings arm on
+   it. If recall and the pre-filter's K do not move, stop here.
+3. **What it costs.** Opening recorded addresses spends no search, only fetch time and renders. Time
+   one country's extra pass, and extrapolate to 53 before running them all. Entry 184 accepts the
+   hours; say how many first.
+
+**Then build.** Either a second pass in `visa-discover corpus` that opens the recorded addresses in
+the order above, until a budget is spent, or a separate `pagetext --fill` command, so an existing
+corpus is extended rather than rebuilt. The second avoids re-running every search a rebuild costs.
+
+**How a build chooses what to open today, and two problems with it — found 2026-09-23.** The
+frontier is best-first on `score_role_vocabulary`: keyword matches in the link's text, the nearest
+preceding heading and the address, with no traveller involved. On top of that, 40% of the budget is
+reserved for per-country families (`DEFAULT_CORPUS_FAMILY_SHARE`), and the mission index is seeded.
+
+**Problem 1: the cause is found (entry 185), and the fix is next.** An instrumented fresh build of
+Japan showed:
+- **The split.** It divides the budget evenly between the hosts search surfaced: 47 hosts, 25 pages
+  each.
+- **The visa host is cut off.** `mofa.go.jp` hit its 25, and **149 scored links were dropped at the
+  cap**. They include the oracle's `visa_decision`, `fees`, `processing_times` and
+  `application_route` pages for both Japan corridors.
+- **The rest goes on noise.** Unrelated hosts — the legal affairs bureau, the commercial registry,
+  e-Gov's developer portal — spent their full share: **74% of pages opened by link scored zero.**
+- **Budget goes unspent.** Only **912 of 1,200 pages were opened**, because a capped host's links
+  are dropped, not deferred.
+- **Not causes:** frontier ordering and the family share.
+
+**Do next — no OpenAI credit needed:**
+1. **Change the budget rule in `LinkCrawler`, for corpus builds only:**
+   - defer, rather than drop, a scored link on a capped host;
+   - let scored links exceed the even share, up to `HostBudget`'s ceiling;
+   - give zero-score links only the even share, or only what is left once no scored link is waiting.
+
+   The request path keeps `HostBudget.even`. Entry 185 says why this is not the `gov.uk` surplus
+   that `DEFAULT_CORPUS_HOST_FLOOR` records.
+2. **Rebuild Japan into a scratch store with the instrumented runner, and compare** scored links
+   dropped, zero-score pages opened, budget spent and oracle answers opened.
+3. **Repeat on Australia (47 hosts), the Netherlands (3) and the UK**, to check `gov.uk` does not
+   balloon.
+4. **Only then rebuild the real stores.** Put the per-page reasons into `CorpusBuild` permanently
+   rather than in a scratch script.
+5. **Separately, open the scored links today's stores hold unopened** — 14,356, no search.
+
+**Problem 2: a link is judged on too little context.** `extract_links` (`crawl.py`) keeps the anchor
+text and the most recent heading in document order, and nothing else. It has the whole page in hand
+when it does so, and throws away:
+- **The text around the link.** "The list of required documents for a tourist visa is available
+  here (PDF)" is a checklist link whose anchor, "here" or "PDF", scores zero.
+- **Where the link sits.** `nav`, `header`, `footer`, `aside`, breadcrumbs and the main content score
+  alike today; only address patterns such as `/privacy` are filtered (`is_boilerplate`).
+- **What the page holding the link is about.** A link on a visa checklist page and one on a press
+  release score the same, though the parent's text is being indexed at that moment.
+- **`title` and `aria-label` attributes,** which often say more than the visible anchor.
+- **The heading's scope.** "Most recent heading" can be a menu's heading, not the section's.
+
+**Two ways to use it, measured one after the other.**
+- **Deterministic.** Add the fields to `PageLink` and the stored entry, and score them in
+  `score_role_vocabulary`:
+  - surrounding text at a lower weight than the anchor, as the heading already is;
+  - a penalty for navigation and footer regions;
+  - a bonus that carries over from the parent page's own text score.
+
+  It is cheap, traveller-neutral and testable offline, but it is the keyword method entry 183 found
+  short on judgement.
+- **A model or item 67's embeddings, offline, reading each link with its context** to order the
+  frontier. Entry 184 makes the cost acceptable. Its output only decides what a build opens, never
+  a word a traveller reads. It is still a model judgement shaping the store, so write a short
+  decision entry first, arguing it against entries 44 and 83.
+
+**Grade either by what it opens, not by corridors.** On a few countries, rebuild into a scratch
+store. Count how many oracle answering pages and how many previously scored-but-unopened pages it
+now reads, and how many zero-score pages it spends budget on. Only then re-run entry 183's harness.
+Entries 81 and 136 say why a corridor run cannot grade a crawl change.
+
+**Related:** item 67 needs this to help pages that have no text today. Item 35's family reservation
+is the same idea aimed at per-traveller pages, which entry 148 parked.
 
 ### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `next`, **added 2026-09-23**
 
@@ -1219,103 +1325,6 @@ The keyword scorer matches listed phrases. Embeddings match meaning, so they may
 - **As a filter,** it replaces fusion in item 66's live A/B.
 - **As a selector,** it would have to reach the model's recall before a live test is worth running.
 - **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
-
-### 68. Read more of what a build records, and choose what to open with more context — `soon`, **added 2026-09-23 (entries 183, 184)**
-
-**Why it matters.** A candidate with no stored text is judged on its link alone, a median of ~29
-characters (entry 78). That is true for the model selector, for every heuristic and for item 67's
-embeddings. Where coverage stands:
-- **The whole store is 23% covered.** Measured 2026-09-23: **54,629 bodies against 237,303 recorded
-  addresses**, the same 23% as before the 2026-09-15 rebuild.
-- **The selector's pool is 49% covered.** On the 21 oracle corridors, 3,554 of 7,267 candidates the
-  selector was shown had text (entry 183).
-- **A build opens only 3–15% of what it records** (entry 88). The rest are addresses no one has read.
-
-Entry 184 makes a slower, larger build acceptable, and reading more is traveller-neutral, so it sits
-inside entry 148's rule.
-
-**Rules it must keep.**
-- **Order the extra reading on what the store lacks, never on a traveller** (entries 44 and 139). A
-  traveller-neutral signal is fine — a link that scores for any role on the role vocabulary alone
-  (`score_role_vocabulary`), a PDF, an address never opened. The traveller's passport or residence
-  is not.
-- **Every retrieval rule holds.** Obey `robots.txt`, never render past a refusal, give up on a host
-  that stops answering (entries 35, 36 and 139). A build that reads more meets more of each.
-- **The text is ranking input, never evidence** (entry 78).
-
-**Measure before building.**
-1. **Which unopened addresses matter.** Over the oracle corridors and the 81 other model runs, count
-   the pool candidates with no stored text, and how many of them the model picked anyway on the
-   link alone. Those are the pages this would inform.
-2. **What reading them buys, offline.** For a few countries, open the pool's text-less candidates
-   into a scratch copy of the index. Then re-run entry 183's harness and item 67's embeddings arm on
-   it. If recall and the pre-filter's K do not move, stop here.
-3. **What it costs.** Opening recorded addresses spends no search, only fetch time and renders. Time
-   one country's extra pass, and extrapolate to 53 before running them all. Entry 184 accepts the
-   hours; say how many first.
-
-**Then build.** Either a second pass in `visa-discover corpus` that opens the recorded addresses in
-the order above, until a budget is spent, or a separate `pagetext --fill` command, so an existing
-corpus is extended rather than rebuilt. The second avoids re-running every search a rebuild costs.
-
-**How a build chooses what to open today, and two problems with it — found 2026-09-23.** The
-frontier is best-first on `score_role_vocabulary`: keyword matches in the link's text, the nearest
-preceding heading and the address, with no traveller involved. On top of that, 40% of the budget is
-reserved for per-country families (`DEFAULT_CORPUS_FAMILY_SHARE`), and the mission index is seeded.
-
-**Problem 1: the ordering is not doing what it is meant to.** Every recorded link was rescored with
-today's scorer on its stored link text and heading, over all 53 corpora, excluding seeds:
-- **71% of the pages builds opened scored zero** — 35,156 of 49,285.
-- **14,356 links that did score were never opened**: 5,777 at depth 1, 4,538 at depth 2, 1,753 at
-  depth 3, and 2,288 PDFs.
-
-The cause is not established. Candidates, none measured:
-- **the family share,** whose members score 0.0 by design (entry 138);
-- **the 400-page per-host cap;**
-- **discovery order** — early on, the best link *known so far* may score zero, because the good
-  ones are not found yet;
-- **entries carried over from earlier builds,** whose stored anchor may differ from the one that was
-  queued.
-
-**Fix it first:**
-1. **Record why each page was opened** in a build: its score at the time, and whether it came from
-   the ordinary frontier, a family queue or a seed. Then rerun one country.
-2. **As a first step of its own,** open the scored-but-unopened links with a `pagetext --fill` style
-   pass. It costs no search.
-
-**Problem 2: a link is judged on too little context.** `extract_links` (`crawl.py`) keeps the anchor
-text and the most recent heading in document order, and nothing else. It has the whole page in hand
-when it does so, and throws away:
-- **The text around the link.** "The list of required documents for a tourist visa is available
-  here (PDF)" is a checklist link whose anchor, "here" or "PDF", scores zero.
-- **Where the link sits.** `nav`, `header`, `footer`, `aside`, breadcrumbs and the main content score
-  alike today; only address patterns such as `/privacy` are filtered (`is_boilerplate`).
-- **What the page holding the link is about.** A link on a visa checklist page and one on a press
-  release score the same, though the parent's text is being indexed at that moment.
-- **`title` and `aria-label` attributes,** which often say more than the visible anchor.
-- **The heading's scope.** "Most recent heading" can be a menu's heading, not the section's.
-
-**Two ways to use it, measured one after the other.**
-- **Deterministic.** Add the fields to `PageLink` and the stored entry, and score them in
-  `score_role_vocabulary`:
-  - surrounding text at a lower weight than the anchor, as the heading already is;
-  - a penalty for navigation and footer regions;
-  - a bonus that carries over from the parent page's own text score.
-
-  It is cheap, traveller-neutral and testable offline, but it is the keyword method entry 183 found
-  short on judgement.
-- **A model or item 67's embeddings, offline, reading each link with its context** to order the
-  frontier. Entry 184 makes the cost acceptable. Its output only decides what a build opens, never
-  a word a traveller reads. It is still a model judgement shaping the store, so write a short
-  decision entry first, arguing it against entries 44 and 83.
-
-**Grade either by what it opens, not by corridors.** On a few countries, rebuild into a scratch
-store. Count how many oracle answering pages and how many previously scored-but-unopened pages it
-now reads, and how many zero-score pages it spends budget on. Only then re-run entry 183's harness.
-Entries 81 and 136 say why a corridor run cannot grade a crawl change.
-
-**Related:** item 67 needs this to help pages that have no text today. Item 35's family reservation
-is the same idea aimed at per-traveller pages, which entry 148 parked.
 
 ### 63. Make most corridors return accurate and useful information — `soon`, **added 2026-09-23 (entry 182)**
 
