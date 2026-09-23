@@ -300,9 +300,9 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 68. Read more of what a build records, and choose what to open with more context | `next` |
-|  | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
-|  | 60. Decide where Fast mode goes | `next` |
+| **Now** | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
+|  | 68. Read more of what a build records, and choose what to open with more context | `next` |
+|  | 63. Make most corridors return accurate and useful information | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -314,8 +314,8 @@ one-paragraph defects rather than items.
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 66. Show the selector a fused top 80 instead of the whole pool | `soon` |
 |  | 67. Test ranking by embeddings of stored page text | `soon` |
-|  | 63. Make most corridors return accurate and useful information | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
+| **Blocked** | 60. Decide where Fast mode goes | `blocked` |
 | **Later** | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
@@ -347,6 +347,97 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+**The sequence to the full rebuild — the owner, 2026-09-24.** Item 68's fixes (entries 186 and 189)
+are measured on scratch stores and not yet in the real ones. A rebuild only adds, so it is done
+once, and in this order:
+1. **Item 65 — settle the model.** Model choice changes answers, and the owner's review in step 5
+   should happen once, on the model that will serve. On Personas this costs search only.
+2. **Item 68 — check the scanned PDFs.** Before anything else touches the store, check whether any
+   oracle answer page, or any page scoring for a role, is among the 1,001 PDFs whose text layer came
+   back empty. Only if one is does text recognition belong before the rebuild.
+3. **Item 63 — capture the baseline, then pilot.** Back up `var/corpus` and `var/pagetext` for the
+   ten oracle countries, as entry 161 did. Run a destination-spread set of corridors on the current
+   store, at least two runs each. Then rebuild those ten with item 68's fixes.
+4. **Grade the pilot.** Re-run the same corridors, clearing `var/corridors` and `var/plans` in both
+   arms or neither (entries 136 and 178). `selection-recall` grades the store offline. **The owner
+   reviews only the plans that changed**, plus a few unchanged ones as a spot check.
+5. **Rebuild the rest** — the other 43 corpora plus Brazil and Uruguay, which have never been built.
+   About $13 of search and ten-plus hours.
+6. **Then items 66 and 67 on the new store, then item 64.**
+
+Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
+55 (Ofself).
+
+### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `next`, **added 2026-09-23**
+
+**On the Personas route (entry 188) this tests what Ofself's account offers, and needs no OpenAI
+credit.** The model is set on each call's agent (`llm_model`), and every reply's model is checked
+against `OPENAI_MODEL`, so a model the account lacks fails loudly rather than being swapped. **Step 0
+is one probe: does Personas serve `gpt-6-sol` at all?** Its price there is Ofself's, not the list
+price below, and Ofself reports no cached tokens, so the cost column compares token counts only.
+
+**It must also settle entry 188's open Japan question.** One of six Personas runs answered Japan
+`IN/GB` "visa required" from MOFA's list of who does *not* need a visa, the inference rule 8e and
+entry 174 rule out. Run a dozen Japan calls on the same packet for each model and count it.
+
+**Why it matters.** OpenAI released GPT-6 Sol on 2026-09-22 at Terra's input price and a lower
+output price: $2.00 input, $0.20 cached, $2.50 cache write and **$10.00 output** per million tokens,
+against Terra's $12.00. It is the tier above Terra, and the first published scores put it ahead:
+- **Artificial Analysis:** 48 against Terra's 34.
+- **BenchLM overall:** 82.2 against 72.8.
+- **Individual tests are mixed**, and none of them resembles this project's task. It is ahead on
+  OSWorld 2.0 (60.5% against 50.2%) and behind on DeepSWE (68.8% against 69.6%) and HealthBench
+  Hard (30.1% against 32.7%).
+
+Those figures do not answer the question for this project, for three reasons:
+- **Sol's 48 was scored at `max` reasoning effort, and every call here runs at `low`.** At `max`,
+  Artificial Analysis measured about 107s to the first token.
+- **Nothing is published yet for Sol on the qualities this project depends on:** instruction
+  following, long-document reading and hallucination.
+- **A model change has broken a decision before.** In entry 177, `gpt-5.6-luna` wrote Japan a
+  "no visa required" plan.
+
+**What it could buy.** If it is at least as good, it would be a quality upgrade at slightly lower
+cost. Repricing 2026-09-15's logged calls puts the saving at about **2–3% a fresh corridor**
+(~$0.251 → ~$0.245). The plan call gets about 11% cheaper, and selection and roles barely move
+because they are almost all input. How Sol's speed compares to Terra's is unknown. With Fast mode out
+of reach on Personas (item 60), this is the only model-side lever left for speed as well as quality.
+
+**How to run it — all three calls are one setting.** `OPENAI_MODEL` in `.env` drives selection,
+roles, blocked-page judgement and the plan call alike (`config/settings.py`), and
+`openai_reasoning_effort` stays `low` in both arms.
+1. **First, record the model name in each usage record.** `ModelCallRecord`
+   (`research/model_usage.py`) holds no model today, so a Sol call and a Terra call in
+   `var/usage/` cannot be told apart or priced separately. This is a small code change with a
+   test.
+2. **Clear `var/cache/`, `var/corridors/` and `var/plans/` before each arm, or before neither.**
+   Otherwise one arm runs on reused corridors and drafts (entries 136 and 178).
+3. **Run several times per arm.** Model seconds swing about 40% between identical runs (entry 144),
+   and one run per arm cannot separate the models. Three per corridor per arm is the least.
+4. **Corridors:**
+   - **Japan `IN/GB` and Singapore `PH/PH`.** Any change to the plan call must pass these (entry 174),
+     and rule 8e's "no visa" bounds live only in the prompt.
+   - **Entry 170's ten graded corridors**, for selection, whose method is the selection A/B.
+5. **Record, per arm:**
+   - **Answers:** each corridor's visa decision (required / not required / open), whether it
+     resolved or refused, and roles filled. Put any decision that differs from Terra's in front of
+     the owner.
+   - **Time:** `phase_seconds` and each call's seconds from the recall log, plus the whole request.
+   - **Cost:** tokens per call priced at each model's rates, including cache writes (entry 167). Sol
+     may reason more or less than Terra at `low`, so its output tokens must be measured, not assumed.
+
+**The bound on grading it.** Correctness is the owner's to judge (entry 68). This item compares what
+the two models *answer* and flags every disagreement; it does not build a grader. **Any
+disagreement on a visa decision blocks the switch** until the owner has read both plans. Where
+Terra was open and Sol commits, that counts as a disagreement, and it is the worst direction.
+
+**Cost of the test itself:** search only on the Personas route, about $0.05 a corridor.
+
+**If Sol wins:** changing `OPENAI_MODEL` is one line of `.env`, and the Personas agents are
+re-created with it. Record the result as a decision
+entry and update the headline cost and time figures in CLAUDE.md, the handoff and TODO, which all
+quote Terra's.
 
 ### 68. Read more of what a build records, and choose what to open with more context — `next`, **added 2026-09-23 (entries 183, 184, 185); moved to Now the same day — it needs no OpenAI credit**
 
@@ -472,108 +563,34 @@ Entries 81 and 136 say why a corridor run cannot grade a crawl change.
 **Related:** item 67 needs this to help pages that have no text today. Item 35's family reservation
 is the same idea aimed at per-traveller pages, which entry 148 parked.
 
-### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `next`, **added 2026-09-23**
+### 63. Make most corridors return accurate and useful information — `next`, **added 2026-09-23 (entry 182); moved to Now 2026-09-24 as step 3 of the rebuild sequence**
 
-**On the Personas route (entry 188) this tests what Ofself's account offers.** The model is set on
-each call's agent (`llm_model`), and every reply's model is checked, so a model the account lacks
-fails loudly rather than being swapped. Whether GPT-6 Sol is available there is one probe; its price
-there is Ofself's, not the list price below.
+**Why it matters.** It is the owner's goal and the objective entry 147 set: right information first.
 
-**Why it matters.** OpenAI released GPT-6 Sol on 2026-09-22 at Terra's input price and a lower
-output price: $2.00 input, $0.20 cached, $2.50 cache write and **$10.00 output** per million tokens,
-against Terra's $12.00. It is the tier above Terra, and the first published scores put it ahead:
-- **Artificial Analysis:** 48 against Terra's 34.
-- **BenchLM overall:** 82.2 against 72.8.
-- **Individual tests are mixed**, and none of them resembles this project's task. It is ahead on
-  OSWorld 2.0 (60.5% against 50.2%) and behind on DeepSWE (68.8% against 69.6%) and HealthBench
-  Hard (30.1% against 32.7%).
+**The bound on it.** Correctness is checked by the owner, outside this repository (entry 68). **Do
+not build a truth set, a correctness grader or an accuracy metric here without asking.** What this
+item may do on its own is measure what corridors *answer*, and report it with known problem 26's
+caveat.
 
-Those figures do not answer the question for this project, for three reasons:
-- **Sol's 48 was scored at `max` reasoning effort, and every call here runs at `low`.** At `max`,
-  Artificial Analysis measured about 107s to the first token.
-- **Nothing is published yet for Sol on the qualities this project depends on:** instruction
-  following, long-document reading and hallucination.
-- **A model change has broken a decision before.** In entry 177, `gpt-5.6-luna` wrote Japan a
-  "no visa required" plan.
+**Where it stands.**
+- **The last broad measurement is 2026-08-24's twenty corridors** (entry 58). 75% confirmed the
+  decision and 50% yielded a checklist, a marginal pass. That sample was five destinations, each
+  replicated four times.
+- **All 53 corpora were rebuilt on 2026-09-15, and only Norway, Thailand and Japan have been re-run
+  on the new ones** (entry 161). What the rebuild did to the other fifty is expected, not shown.
+- **Since then, the plan has changed in ways that show up in its answers.** The decision and every
+  requirement now carry a checked quote (entry 156), a missing checklist is worded as what was found
+  (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
+  Singapore only).
 
-**What it could buy.** If it is at least as good, it would be a quality upgrade at slightly lower
-cost. Repricing 2026-09-15's logged calls puts the saving at about **2–3% a fresh corridor**
-(~$0.251 → ~$0.245). The plan call gets about 11% cheaper, and selection and roles barely move
-because they are almost all input. How Sol's speed compares to Terra's is unknown. **Decide item
-60 after this, since Fast mode's price and gain depend on which model it runs on.**
-
-**How to run it — all three calls are one setting.** `OPENAI_MODEL` in `.env` drives selection,
-roles, blocked-page judgement and the plan call alike (`config/settings.py`), and
-`openai_reasoning_effort` stays `low` in both arms.
-1. **First, record the model name in each usage record.** `ModelCallRecord`
-   (`research/model_usage.py`) holds no model today, so a Sol call and a Terra call in
-   `var/usage/` cannot be told apart or priced separately. This is a small code change with a
-   test.
-2. **Clear `var/cache/`, `var/corridors/` and `var/plans/` before each arm, or before neither.**
-   Otherwise one arm runs on reused corridors and drafts (entries 136 and 178).
-3. **Run several times per arm.** Model seconds swing about 40% between identical runs (entry 144),
-   and one run per arm cannot separate the models. Three per corridor per arm is the least.
-4. **Corridors:**
-   - **Japan `IN/GB` and Singapore `PH/PH`.** Any change to the plan call must pass these (entry 174),
-     and rule 8e's "no visa" bounds live only in the prompt.
-   - **Entry 170's ten graded corridors**, for selection, whose method is the selection A/B.
-5. **Record, per arm:**
-   - **Answers:** each corridor's visa decision (required / not required / open), whether it
-     resolved or refused, and roles filled. Put any decision that differs from Terra's in front of
-     the owner.
-   - **Time:** `phase_seconds` and each call's seconds from the recall log, plus the whole request.
-   - **Cost:** tokens per call priced at each model's rates, including cache writes (entry 167). Sol
-     may reason more or less than Terra at `low`, so its output tokens must be measured, not assumed.
-
-**The bound on grading it.** Correctness is the owner's to judge (entry 68). This item compares what
-the two models *answer* and flags every disagreement; it does not build a grader. **Any
-disagreement on a visa decision blocks the switch** until the owner has read both plans. Where
-Terra was open and Sol commits, that counts as a disagreement, and it is the worst direction.
-
-**Cost of the test itself:** a few dollars of model calls and search. It needs OpenAI credit.
-
-**If Sol wins:** changing `OPENAI_MODEL` is one line of `.env`. Record the result as a decision
-entry and update the headline cost and time figures in CLAUDE.md, the handoff and TODO, which all
-quote Terra's.
-
-### 60. Decide where Fast mode goes — `next`, **added 2026-09-16 (entry 177)**
-
-**Decide it after item 65.** Fast mode was measured on Terra, and its price and gain depend on
-the model it runs on.
-
-**And it is out of reach on the Personas route, the route from 2026-09-24 (entry 188).** Fast mode
-is OpenAI's `service_tier`, and Personas' `llm_config` has no such field and refuses unknown ones.
-Turning it on needs Ofself to add a tier setting, or this project back on the OpenAI route with its
-own credit.
-
-**Why it matters.** It is the one latency lever measured that is both large and safe.
-- **The plan call is 39–48% faster** on Fast mode, with no decision changed: Japan open, Germany
-  "visa required" and Singapore "no visa" in every call.
-- **Selection is 23% faster and roles 13%**, because selection's seconds are mostly fixed.
-- **It costs twice the standard price** of whatever it is turned on for.
-
-**The choice — the owner's.**
-
-| option | fresh request | repeat | model cost, fresh | model cost, repeat |
-| --- | --- | --- | --- | --- |
-| today | ~55s | ~24s | $0.251 | ~$0.035 |
-| Fast mode on the plan call | ~42s | ~14s | ~$0.30 | ~$0.07 |
-| Fast mode on every call | ~39s | ~14s | ~$0.50 | ~$0.07 |
-
-Projected from entry 171's split, not timed end to end. Since entry 178 a repeat inside the
-24-hour reuse window makes no plan call at all, so Fast mode's gain is for fresh requests and for
-repeats after the window.
-
-**If it ships.**
-- **Make the tier reviewable policy, per call** — a setting beside `openai_reasoning_effort`, never a
-  hidden default, so each call's tier can be chosen on its own.
-- **Record the tier each call was served** in `var/usage/`. OpenAI downgrades to the standard tier
-  when traffic grows past its ramp limit and says so only in `service_tier`.
-- **Time real requests afterwards, several each**, on fresh and repeated corridors, before quoting the
-  new seconds. The table above is arithmetic.
-
-**Do not take the cheaper shortcuts instead.** Reasoning `none` answered Japan "visa required" where
-no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 177).
+**First step — the baseline half of the rebuild pilot (the sequence at the top of Now).** Corridor
+runs cost search only on the Personas route, about $0.05 each.
+- **Choose the corridors by destination, as entry 58 advised,** across the ten oracle countries.
+  Agree the number with the owner first, because the owner is the one checking them.
+- **Run each at least twice on the current store,** before the pilot rebuild changes it, then again
+  after it.
+- **Report decision and checklist rates beside entry 58's.** Put the plans that changed between
+  arms in front of the owner, with a few unchanged ones as a spot check.
 
 ## Next up
 
@@ -1352,31 +1369,6 @@ The keyword scorer matches listed phrases. Embeddings match meaning, so they may
 - **As a selector,** it would have to reach the model's recall before a live test is worth running.
 - **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
 
-### 63. Make most corridors return accurate and useful information — `soon`, **added 2026-09-23 (entry 182)**
-
-**Why it matters.** It is the owner's goal and the objective entry 147 set: right information first.
-
-**The bound on it.** Correctness is checked by the owner, outside this repository (entry 68). **Do
-not build a truth set, a correctness grader or an accuracy metric here without asking.** What this
-item may do on its own is measure what corridors *answer*, and report it with known problem 26's
-caveat.
-
-**Where it stands.**
-- **The last broad measurement is 2026-08-24's twenty corridors** (entry 58). 75% confirmed the
-  decision and 50% yielded a checklist, a marginal pass. That sample was five destinations, each
-  replicated four times.
-- **All 53 corpora were rebuilt on 2026-09-15, and only Norway, Thailand and Japan have been re-run
-  on the new ones** (entry 161). What the rebuild did to the other fifty is expected, not shown.
-- **Since then, the plan has changed in ways that show up in its answers.** The decision and every
-  requirement now carry a checked quote (entry 156), a missing checklist is worded as what was found
-  (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
-  Singapore only).
-
-**First step, once OpenAI has credit.** Re-run a sample chosen by **destination**, as entry 58
-advised, over the rebuilt corpora. Report decision and checklist rates beside entry 58's, and hand
-the plans to the owner to check. Agree the sample with the owner first, because the owner is the one
-checking it.
-
 ### 64. Expand from 53 countries to 100+ — `soon`, **added 2026-09-23 (entry 182)**
 
 **Why it matters.** It is the owner's goal. The page offers 198 destinations and refuses 143 of them
@@ -1405,7 +1397,45 @@ goals unordered, so ask before starting a large batch. Pick countries by travell
 
 ## Blocked
 
-Nothing is blocked today. Item 62 left on 2026-09-23, when Ofself documented a model-only call.
+### 60. Decide where Fast mode goes — `blocked`, **added 2026-09-16 (entry 177); blocked 2026-09-24 on Ofself adding a tier setting**
+
+**Decide it after item 65.** Fast mode was measured on Terra, and its price and gain depend on
+the model it runs on.
+
+**And it is out of reach on the Personas route, the route from 2026-09-24 (entry 188).** Fast mode
+is OpenAI's `service_tier`, and Personas' `llm_config` has no such field and refuses unknown ones.
+Turning it on needs Ofself to add a tier setting, or this project back on the OpenAI route with its
+own credit.
+
+**Why it matters.** It is the one latency lever measured that is both large and safe.
+- **The plan call is 39–48% faster** on Fast mode, with no decision changed: Japan open, Germany
+  "visa required" and Singapore "no visa" in every call.
+- **Selection is 23% faster and roles 13%**, because selection's seconds are mostly fixed.
+- **It costs twice the standard price** of whatever it is turned on for.
+
+**The choice — the owner's.**
+
+| option | fresh request | repeat | model cost, fresh | model cost, repeat |
+| --- | --- | --- | --- | --- |
+| today | ~55s | ~24s | $0.251 | ~$0.035 |
+| Fast mode on the plan call | ~42s | ~14s | ~$0.30 | ~$0.07 |
+| Fast mode on every call | ~39s | ~14s | ~$0.50 | ~$0.07 |
+
+Projected from entry 171's split, not timed end to end. Since entry 178 a repeat inside the
+24-hour reuse window makes no plan call at all, so Fast mode's gain is for fresh requests and for
+repeats after the window.
+
+**If it ships.**
+- **Make the tier reviewable policy, per call** — a setting beside `openai_reasoning_effort`, never a
+  hidden default, so each call's tier can be chosen on its own.
+- **Record the tier each call was served** in `var/usage/`. OpenAI downgrades to the standard tier
+  when traffic grows past its ramp limit and says so only in `service_tier`.
+- **Time real requests afterwards, several each**, on fresh and repeated corridors, before quoting the
+  new seconds. The table above is arithmetic.
+
+**Do not take the cheaper shortcuts instead.** Reasoning `none` answered Japan "visa required" where
+no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 177).
+
 
 ---
 
