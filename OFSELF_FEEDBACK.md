@@ -6,7 +6,7 @@ item 55; this file is only about the platform.
 
 Each point says how it is known — **[observed]** against the live API or CLI, **[read]** in the CLI's
 source or the authorize page's JavaScript, **[docs]** from the developer guide alone. Seen with
-`paradigm-cli` 0.5.0 against `api.ofself.ai`, 2026-09-16 to 2026-09-21. Mark a point resolved
+`paradigm-cli` 0.5.0 against `api.ofself.ai`, 2026-09-16 to 2026-09-23. Mark a point resolved
 rather than deleting it.
 
 ---
@@ -197,16 +197,28 @@ model credits. Re-read 2026-09-18 against the full snapshot in
 [docs/ofself/PERSONAS_GUIDE.md](docs/ofself/PERSONAS_GUIDE.md) and the live `/api/v1/docs`. Every
 point from the first reading still holds.
 
+**Re-read 2026-09-23 against the live guide, which had grown from 589 lines to 1,321.** It now
+documents a model-only call — `capabilities: []` with a per-run `llm_config` — so 8.1, 8.2, 8.3,
+8.7 and 8.11 are resolved or mostly resolved, as marked. What that still leaves for this app is in
+TODO item 62, and 8.14–8.16 are what the new sections raised.
+
 - **8.1 No structured output** [docs]. The guide says *"There is no `response_format` / JSON-schema
   enforcement."* The nearest thing is asking the agent in the prompt to call `save_artifact`, which
-  is a request, not a constraint. This app needs a JSON schema on every model call.
+  is a request, not a constraint. This app needs a JSON schema on every model call. **Resolved
+  2026-09-23** [docs]: `llm_config.response_format` goes to OpenAI natively and is refused, with a
+  reason, on Anthropic. Its only example is `{"type": "json_object"}`; see 8.14.
 - **8.2 A wrapper prompt that can't be switched off** [docs]. Personas builds the system prompt
   *"fresh, in layers"*: its sandbox rules, then the app's prompt, a state-machine block, a context
   block fetched from Paradigm, and its formatting rules. Stored silent context is also injected
   before each message. No field removes any of it. Small prompt changes here have altered visa
-  decisions.
+  decisions. **Mostly resolved 2026-09-23** [docs]: `capabilities: []` sends *"your system prompt
+  and the conversation, no platform text, no tools"*, priced at 0 characters in §4.2. One exception
+  is unclear; see 8.15.
 - **8.3 Model settings stop at provider, model and temperature** [docs]. There's no reasoning effort
-  and no cache control. Passing `llm_model` once changes the agent permanently.
+  and no cache control. Passing `llm_model` once changes the agent permanently. **Mostly resolved
+  2026-09-23** [docs]: `llm_config` sets `reasoning.effort`, `max_tokens` and an optional key per run,
+  and does not persist onto the agent. Cache control is still absent, and unknown `llm_config`
+  fields are refused, so none can be passed through.
 - **8.4 Every run needs a Paradigm user** [docs]. `paradigm_user_id` is required on every endpoint.
 - **8.5 `hmac_key` travels in the body as well as signing it** [docs].
 - **8.6 Cost and limits are undocumented** [docs]. Nothing says who pays, what `llm_provider:
@@ -221,7 +233,9 @@ point from the first reading still holds.
   Ofself's model access for calls that aren't about a user's data. *Suggest:* a completion endpoint
   authenticated by the app alone. It would take a JSON schema, pass through provider settings such
   as reasoning effort and caching, add nothing to the prompt, store nothing, and return full usage
-  and cost.
+  and cost. **Resolved 2026-09-23** [docs]: §0 now opens *"at zero capabilities this IS that
+  call"*. Two parts of the suggestion remain open: every run still needs a user (8.4) and is still
+  stored (8.8).
 - **8.8 Every run is stored as a conversation** [docs]. *"All messages saved to DB (full loop history
   + thinking)."* The only way to remove them is to delete them afterwards. That matters for an app
   sending third-party text that the user never sees.
@@ -238,7 +252,8 @@ point from the first reading still holds.
   `ofself` routes to.
 - **8.11 When `temperature` applies is stated two ways** [docs]. The first guide says it *"truly
   applies only at creation"*. The second lists it in the run body as `0.0–2.0` with no caveat, and
-  `PATCH` can change it.
+  `PATCH` can change it. **Resolved 2026-09-23** [docs]: the live guide says it *"had never reached
+  a model"* on any path, and `llm_config` now refuses it.
 - **8.12 The second guide's Python signing example fails verification** [docs; checked locally].
   `sign_body` signs `json.dumps(body, separators=(',', ':'))`, then sends `requests.post(json=payload)`.
   `requests` re-serialises with spaces, so the bytes sent aren't the bytes signed. The first guide
@@ -253,6 +268,22 @@ point from the first reading still holds.
   disagree on usage shapes (8.9), `temperature` (8.11) and signing (8.12). The served guide also
   changed on 2026-09-18: agents are now owned by the app that created them. *Suggest:* serve both
   from `/api/v1/docs` and reconcile the three points.
+- **8.14 Whether `response_format` accepts a strict JSON schema is unstated** [docs, 2026-09-23].
+  The table says OpenAI's is *"native"* and §5.2 speaks of *"your own schema"*, but the only example
+  is `{"type": "json_object"}`, which guarantees JSON and not its shape. This app's calls use strict
+  `json_schema`. *Suggest:* show a `json_schema` example with `strict: true`, or say it isn't
+  supported.
+- **8.15 A date line may be added even at zero capabilities** [docs, 2026-09-23]. §4.2 prices the
+  platform text at 0 characters for `[]`. But the run body's `timezone` sets *"what 'today' means in
+  the prompt's date line"*, and the `scope` event's `timezone` is *"always a string"*. So either
+  every prompt carries a date line, or `[]` is an exception nobody wrote down. For an app whose
+  output shifts with small prompt changes, that is the difference. *Suggest:* say which.
+- **8.16 Model-only calls still need a user and are still stored** [docs, 2026-09-23]. The floor is
+  documented as *"that call"*, but `paradigm_user_id` is required and every run becomes a stored
+  conversation per user and agent. An app calling a model for work that serves no one — ranking,
+  classifying, an offline build — has to borrow some person's identity, and its prompts accumulate
+  in that person's history. *Suggest:* let an app-authenticated call with `capabilities: []` omit
+  the user and skip storage.
 
 ## 9. Signing a user in
 
@@ -337,7 +368,7 @@ In order of what would have saved the most time here:
 | --- | --- | --- | --- |
 | Does Ofself host apps; linked out or embedded? (5.1) | 09-17 | — | — |
 | Does any app record a `trip` before it happens? | 09-17 | — | — |
-| Direct model access behind the `ofself` provider, and who pays? (8) | 09-17 | — | The full guide (09-18) documents no direct mode (8.7) and doesn't say who pays (8.6). Still open with Ofself |
+| Direct model access behind the `ofself` provider, and who pays? (8) | 09-17 | — | **Documented 2026-09-23:** `capabilities: []` with `llm_config` (8.7). Billed to Ofself's account unless the app sends its own key. Price and limits still unstated (8.6) |
 | Does a read return only a DLR's `fields`? (1.3, 9.8) | 09-17 | — | In the grant yes (9.8); on data, untested |
 | What does `/auth/session/exchange` return, and can `sid_code` be relied on? (9.2) | 09-17 | — | — |
 | Will the authorize redirect echo `state`? (9.3) | 09-17 | — | — |

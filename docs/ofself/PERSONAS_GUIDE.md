@@ -1,3 +1,5 @@
+> **Snapshot, 2026-09-23.** Everything down to the second guide's title is `https://personas.ofself.com/api/v1/docs?format=md` as served that day. The *Personas Headless Agent API* below it is the owner's copy of 2026-09-18, and has not been re-checked.
+
 # Integrating Your App with Personas
 
 > A lifecycle guide for external developers building apps that talk to a Personas agent.
@@ -9,8 +11,8 @@
 
 | | |
 |---|---|
-| **API (prod)** | `https://personas.ofself.ai` |
-| **Frontend (prod)** | `https://personas.ofself.ai` |
+| **API (prod)** | `https://personas.ofself.com` |
+| **Frontend (prod)** | `https://personas.ofself.com` |
 | **API base path** | all endpoints below are under `/api/v1` (e.g. `…/api/v1/internal/headless/run/stream`) |
 
 ---
@@ -21,9 +23,9 @@ It is served by the deployment it describes, so the copy you fetch always matche
 code you are calling — no cloning, no auth:
 
 ```bash
-curl https://personas.ofself.ai/api/v1/docs                    # the whole guide
-curl https://personas.ofself.ai/api/v1/docs/sections           # section slugs
-curl "https://personas.ofself.ai/api/v1/docs?section=register-your-app"
+curl https://personas.ofself.com/api/v1/docs                    # the whole guide
+curl https://personas.ofself.com/api/v1/docs/sections           # section slugs
+curl "https://personas.ofself.com/api/v1/docs?section=register-your-app"
 ```
 
 The `paradigm` CLI wraps the whole lifecycle below, so most of this is one command
@@ -43,7 +45,62 @@ below is what it does under the hood.
 
 ## 0. The mental model (read this first)
 
-Personas runs an **agent** on behalf of one of your users. The agent reasons with an LLM and acts on the user's data in **Paradigm** by writing and running Python in a sandbox. Your app never touches Paradigm directly through Personas — the agent does, and only within the permissions (the *Exposure Profile*, "EP") the user granted.
+### Why not just call OpenAI?
+
+Wrong question, and the honest answer is a bit funny: **at zero capabilities this
+IS that call.** `capabilities: []` sends your system prompt and the conversation,
+no platform text, no tools — your provider, your model, optionally your key. If
+you only ever want a paragraph rewritten, Personas costs you nothing over calling
+the vendor yourself, and buys you auth, persistence and token accounting on the
+way past.
+
+So the question is not *which one*. It is **what happens the day you want more.**
+
+Wanting more means wanting the model to act on one person's data, and that is
+four problems you would otherwise build:
+
+| | you would have to build | Personas already has |
+|---|---|---|
+| **Permission** | ask the user what this agent may touch, store it, enforce it on every call | the Exposure Profile, enforced server-side in the sandbox |
+| **Execution** | a sandbox that runs model-written code against their data without exfiltrating it | RestrictedPython + the `paradigm` SDK, scoped to the EP |
+| **Attribution** | a ledger of what the agent did, as the agent, on whose behalf | every write carries the sub-entity and the calling app |
+| **Composition** | decide what the model is told it can do, and keep that honest as the grant changes | capabilities (§4) |
+
+**The point is that you do not choose upfront.** Adding `"graph"` to a list is a
+one-field change to a call you already make — not a migration onto a different
+platform. Start at the floor, move when you need to, and the integration does not
+change shape underneath you.
+
+The cost of *not* choosing is the thing to know: an agent that declares nothing
+gets everything, which is **~37,000 characters** of platform instruction every
+turn — artifact doctrine, sandbox rules, a pandas cookbook, markdown house style,
+the full `paradigm.*` reference — whether or not it can use any of it. On a real
+agent the app's own prompt is 5–15% of what the model reads. Capabilities are how
+you get that back.
+
+### The shape of it
+
+Personas runs an **agent** on behalf of one of your users. The agent reasons with
+an LLM and acts on the user's data in **Paradigm** by writing and running Python
+in a sandbox. Your app never touches Paradigm directly through Personas — the
+agent does, and only within the permissions (the *Exposure Profile*, "EP") the
+user granted.
+
+Four things you choose, and the rest follows:
+
+```
+call_ofself_agent(
+    credential,      # your Personas HMAC key — `paradigm personas register`
+    capabilities,    # what the agent is MADE OF        (§4)
+    system_prompt,   # what it SAYS                     (§3.2)
+    llm_config,      # which model, on whose key        (§5.1)
+)
+```
+
+What the agent may **reach** is deliberately not in that list. That is the user's
+EP intersected with the sub-entity's ceiling, resolved per request — see §3.
+Election decides whether the agent is *told* a surface exists; the EP decides how
+far it reaches. Keep those apart and the rest of this document is easy.
 
 There are **two directions** of traffic, and one decision dominates everything:
 
@@ -70,7 +127,7 @@ The rest of this guide follows the streaming path.
 Registration is open and unauthenticated. It issues a **per-app HMAC key** — your app's secret. You get it **once**; store it securely.
 
 ```bash
-curl -X POST https://personas.ofself.ai/api/v1/internal/headless/apps/register \
+curl -X POST https://personas.ofself.com/api/v1/internal/headless/apps/register \
   -H "Content-Type: application/json" \
   -d '{"name": "My Journaling App", "paradigm_client_id": "tp_your_paradigm_app_client_id"}'
 ```
@@ -95,7 +152,7 @@ users authorize it), bind that identity to your tenant — at registration
 (`"paradigm_client_id": "tp_..."` in the register body) or later:
 
 ```bash
-curl -X PATCH https://personas.ofself.ai/api/v1/internal/headless/apps/<app_id> \
+curl -X PATCH https://personas.ofself.com/api/v1/internal/headless/apps/<app_id> \
   -H "Content-Type: application/json" -H "X-Internal-Signature: sha256=<sig>" \
   -d '{"hmac_key": "sk_hdls_...", "paradigm_client_id": "tp_..."}'
 ```
@@ -114,6 +171,54 @@ Unbound tenants (`paradigm_client_id: null`) get neither: agents derive only fro
 user's Personas grant, and users who never authorized Personas hit the handshake.
 
 > **`paradigm_client_id` (recommended) — your OWN Paradigm app's client id.** Setting it caps your agents by *your* app's per-user grant, not just Personas' (see §3). Omit it and your agents fall back to Personas' ceiling alone. You can set it later with `PATCH /internal/headless/apps/<app_id>` (`{hmac_key, paradigm_client_id}`). Prerequisite: register a Paradigm app and have your users authorize it.
+
+### 1.2 Give the agent your own tools (optional)
+
+Beyond `execute_code`, an app can register **its own HTTP endpoints as tools** the
+agent may call. Personas proxies the call for you: the agent picks the tool, Personas
+hits your URL, and the response comes back into the agent's reasoning.
+
+```bash
+curl -X PUT https://personas.ofself.com/api/v1/internal/headless/apps/<app_id>/tools \
+  -H "Content-Type: application/json" \
+  -d '{"hmac_key": "sk_hdls_...", "tools": [
+        {"tool_name": "lookup_order",
+         "description": "Look up an order by id.",
+         "parameters": {"type": "object", "properties": {"order_id": {"type": "string"}}},
+         "endpoint_url": "https://api.yourapp.com/orders/lookup",
+         "http_method": "POST",
+         "static_headers": {"X-Env": "prod"},
+         "secret_id": "<from the secrets route below>"}]}'
+```
+
+`PUT` **replaces the whole set** — a tool you omit is deleted. Amend one with
+`PATCH /apps/<app_id>/tools/<tool_name>`, remove one with `DELETE` on the same path.
+`parameters` is a JSON-Schema object; it is what the model sees when deciding whether
+to call your tool, so describe it as carefully as you would a prompt.
+
+**Never put a credential in `static_headers`** — that field is stored and returned in
+plain text by `GET /apps/<app_id>`. Register the credential as a secret instead and
+reference it by id:
+
+```bash
+curl -X POST https://personas.ofself.com/api/v1/internal/headless/apps/<app_id>/secrets \
+  -H "Content-Type: application/json" \
+  -d '{"hmac_key": "sk_hdls_...", "label": "Orders API key",
+       "header_name": "Authorization", "header_value": "Bearer abc123"}'
+```
+
+It returns a `secret_id`. The value is **encrypted at rest and never returned again**;
+Personas injects it as `header_name` when it calls your endpoint. Rotate by POSTing a
+new one and re-pointing the tool. `DELETE /apps/<app_id>/secrets/<secret_id>` removes
+it and nulls the `secret_id` on any tool still referencing it — those tools keep
+working, unauthenticated, so re-point them **before** you delete.
+
+> **`renders_node_refs` — accepted, but not yet active.** The registration endpoint
+> takes this field and currently ignores it: the backing column is not live yet, so it
+> is stored nowhere and changes nothing. It is the future opt-in for agents citing
+> graph nodes inline as pressable pills. Setting it today is harmless and has no
+> effect; there is also no way to change it later, since `PATCH /apps/<app_id>`
+> accepts only `name` and `paradigm_client_id`. Don't build against it yet.
 
 ---
 
@@ -142,6 +247,22 @@ headers = {"Content-Type": "application/json", "X-Internal-Signature": sign_body
 
 A bad/missing signature returns `401 UNAUTHORIZED`.
 
+**Two auth tiers — don't sign the wrong one.** The signature above is required by the
+**runtime** routes: running an agent, creating/updating agents, conversations,
+artifacts, context, automations.
+
+The **app-management** routes are different. `PATCH`/`GET /apps/<app_id>`, the tool
+routes and the secret routes (§1, §11) authenticate on the **bare `hmac_key` in the
+body alone** — they do not verify `X-Internal-Signature`, and sending one is harmless
+but pointless. Two consequences worth knowing:
+
+- These calls are **strictly server-side**. The raw key travels in the body, so a
+  request you could safely make from a signed backend is one you must never make from
+  a browser or a mobile client.
+- `GET /apps/<app_id>` also accepts the key as a **`?hmac_key=` query parameter**.
+  Prefer the body: query strings end up in access logs, proxy logs and browser
+  history, and this one is your app's long-lived secret.
+
 ---
 
 ## 3. The identity & permission model (read before declaring an agent)
@@ -150,6 +271,7 @@ This is the part most integrations get wrong, so be precise about who is who:
 
 - **Personas holds the API key; your app brings its own Paradigm identity.** Personas is a registered Paradigm app (it holds the Paradigm API key). Your app should ALSO be its own registered Paradigm app — you tell Personas its `client_id` via `paradigm_client_id` at registration (§1). Agents you drive are then capped by **both** grants (below). If you skip `paradigm_client_id`, your app is a pure Personas tenant and agents run under Personas' ceiling alone.
 - **Each agent is a Paradigm sub-entity** under Personas, keyed by its slug (`sub_entity_key`, derived from `agent_name`).
+- **Agents are owned by the app that created them.** Every runtime operation that names an agent by `agent_id` — fetch, run, update, delete — is scoped to your HMAC-authenticated `app_id`: an `agent_id` that belongs to a *different* app returns `404 NOT_FOUND`, exactly as if it didn't exist. Agents a user created directly in the Personas UI (owned by the user, not an app) are likewise not reachable over the app API. You never borrow or operate another app's agents.
 - **The user grants access to the agent, once,** via a Paradigm authorization page (§3.3). That grant gives the agent a **privacy realm** + an Exposure Profile (EP). If you set `paradigm_client_id`, the user must **also** have authorized *your* Paradigm app (a one-time consent), or runtime calls fail `403 CALLING_APP_NOT_AUTHORIZED`.
 - **`consent` is the agent's ceiling.** At creation you may pass a `consent` blob that caps what the agent can ever do, *within* what the user's realm grant allows.
 
@@ -166,8 +288,9 @@ This is the part most integrations get wrong, so be precise about who is who:
                           "nodes":   [<node_id>, ...] } } }
 ```
 
-- **resources:** `nodes`, `relationships`, `plugins` (the resources an agent typically narrows; `discovery` and `activity` are also valid resources but rarely part of an agent's consent ceiling)
-- **node verbs:** `read`, `create`, `edit`, `delete`, `propose` (`edit_content` is a legacy alias the SDK now canonicalizes to `edit`)
+- **resources:** `nodes`, `relationships`, `plugins` (the resources an agent typically narrows). `discovery`, `activity`, `automations` and `sub_entity` are also valid, but are rarely part of an agent's consent ceiling.
+- **node verbs — six of them:** `read`, `create`, `edit`, `delete`, `propose`, `modify`. `modify` is not a synonym for `edit`: it is the broader verb that satisfies **both** `edit` and `delete`, so an agent holding `modify` can do either. Grant `edit` alone if you do not want deletes.
+- `edit_content` is a **seventh name you will see** but not a seventh grant: it appears in an app's DLR and folds to `edit` at check time. Write `edit` in a consent blob.
 - `schemas` scopes the verb to specific schema ids (and optionally specific `fields` / a `filter`); `nodes` scopes it to specific node ids. Empty/omitted inner objects mean "all in realm."
 
 Example — an agent that may read and propose changes to one schema:
@@ -195,15 +318,15 @@ POST /internal/headless/agents
 |---|---|---|
 | `app_id`, `hmac_key` | ✅ | Auth (§2). |
 | `paradigm_user_id` | ✅ | The user the agent acts for. |
-| `agent_name` | ✅ | Stable name → becomes the agent's `sub_entity_key` slug. |
+| `agent_name` | ✅ | Stable name. Slugified into the agent's `sub_entity_key` — the slug **is** the key. If you also declare a roster, this must match its `key`; see §3.5 for the exact rule and the collision case. |
 | `system_prompt` | ✅ | **Required.** The agent's identity/instructions, stored permanently. Creation fails with `VALIDATION_ERROR` without it. |
 | `app_name` | — | Your app's display name (shown in the user's data console). |
 | `description` | — | Human description. |
 | `consent` | — | Permission ceiling (§3.1). |
 | `llm_provider` | — | Default `"ofself"`. |
 | `llm_model` | — | Default `"gpt-5.5"`. |
-| `temperature` | — | Default `0.4`. |
-| `web_search` / `wikipedia_search` | — | Booleans → folded into the agent's `tools_config`. |
+| `temperature` | — | **Has no effect.** Stored on the agent and never sent to a provider — it is in the kwargs of neither, on none of the four chat paths. Accepted here for backward compatibility; `llm_config` (§5.1) refuses it outright rather than repeat the lie. |
+| `web_search` | — | Boolean → the agent's `tools_config`. Prefer electing the `web.search` capability (§4). `wikipedia_search` is **gone** — it was ungated where its sibling was gated, and advertised to agents with no internet capability at all. |
 
 **Response:**
 
@@ -211,7 +334,17 @@ POST /internal/headless/agents
 { "agent_id": "…", "agent_name": "My Coach", "created": true }
 ```
 
-It's idempotent on `(user, agent_name)`: a second call returns the existing agent with `"created": false`. The stored `system_prompt` and `tools_config` are **locked at creation** — pass a per-request `system_prompt` on `/run` to override for a single turn (§5). `llm_provider` / `llm_model` are the exception: any call that carries them **updates the stored agent** (see §5's caution — a one-off model override silently becomes permanent).
+It's idempotent on `(user, agent_name)`: a second call returns the existing agent with `"created": false`.
+
+**What a second creation call will and won't change.** Re-POSTing here never rewrites the stored `system_prompt`, `tools_config`, `consent` or `temperature` — those take effect only on the call that actually creates the agent (and `temperature` takes effect nowhere — see its row above). `llm_provider` / `llm_model` are the exception: any call carrying them **updates the stored agent** (see §5's caution — a one-off model override silently becomes permanent).
+
+**To change an agent afterwards, use the dedicated update route** — creation-time immutability is not permanent immutability:
+
+```
+PATCH /internal/headless/agents/<agent_id>
+```
+
+Body `{app_id, hmac_key, paradigm_user_id, ...}`. It updates `system_prompt`, `llm_provider`, `llm_model` and `temperature` on the stored agent — though `temperature` changes nothing about a run, since it reaches no provider. `tools_config` and `consent` are **not** editable here: tools are fixed at creation, and re-narrowing an agent's ceiling means re-declaring its sub-entity, not patching a row. For a single turn without persisting anything, pass a per-request `system_prompt` on the run instead (§5).
 
 ### 3.3 The one-time authorization handshake
 
@@ -250,38 +383,418 @@ The handshake below only fires for a user who has **neither authorized the Perso
 
 ---
 
-## 4. The agent boots — anatomy of its system prompt
+### 3.4 Agent modes — read, ask, act
 
-When a run starts, Personas builds the agent's system prompt **fresh, in layers**, every turn. You don't send this prompt — Personas assembles it — but understanding it tells you exactly what the agent knows and can do:
+One agent, three ceilings. A person talking to your agent about their own data
+should be able to choose how much it may do, and that choice has to be a **ceiling,
+not an instruction**. A prompt saying "ask before you rewrite" is a promise the model
+can break; a mode is a real permission ceiling the platform enforces.
+
+| Mode | `mode` value | The agent may | It may not |
+|---|---|---|---|
+| **Act** | omit the field | Read, create, edit, delete, run plugins | — |
+| **Ask** | `"propose"` | Read, and **propose** changes you approve one by one | Write directly; run plugins |
+| **Read** | `"read"` | Read only | Write, propose, run plugins |
+
+**Read is deliberately not the same as ask.** A proposal writes a row into the
+person's approval queue and asks for their attention — small, but not nothing. Read
+promises their **queue** stays empty; ask promises their **data** doesn't change
+without a press. Someone exploring a graph they don't own wants the first.
+
+**Ask mode does not need `propose` in your DLR.** If your app holds any write verb,
+ask mode converts exactly those verbs into proposable ones. It cannot widen you: a
+create-only app in ask mode still cannot propose a delete.
+
+**Plugins are withheld below act mode, not deferred.** There is no plugin-execution
+proposal type, so a plugin call can't degrade into a question. In read or ask mode
+`paradigm.execute_plugin(...)` fails.
+
+Pass it per run:
+
+```json
+{ "agent_name": "coach", "message": "tidy up my notes", "mode": "read" }
+```
+
+Three things to know about how it behaves:
+
+- **Personas validates nothing.** A mode only ever narrows, so the worst a caller can
+  do is give itself less. Paradigm enforces it. An unrecognised value is **ignored**
+  (you get act mode), not rejected — so typo-check your own input.
+- **The agent is told which mode it's in, every turn**, so it says "I can only read
+  right now" instead of attempting a write and handing your user a 403.
+- **The `scope` event echoes the mode** that actually applied (§6), so your UI can
+  show it and a transcript can be read back knowing which ceiling was in force.
+
+> **You are expected to build the control.** In read mode the agent is instructed to
+> tell users they can change the mode "with the control beside the message box" — so
+> if you offer modes at all, put a visible switch near your composer. Without one,
+> the agent refers to something that doesn't exist. Offering no control and never
+> sending `mode` is also fine: the agent then runs in act mode and never mentions it.
+
+### 3.5 Declaring your roster in Paradigm (`agents.yaml`)
+
+Everything above declares an agent **at runtime**, by calling Personas. You can also
+declare the agents your app offers **at build time**, in a file in your repo, pushed to
+your Paradigm app record:
+
+```bash
+paradigm agents init          # scaffold agents.yaml
+paradigm agents declare       # push it (--check validates locally, pushes nothing)
+paradigm agents list          # the roster as Paradigm actually holds it
+```
+
+```yaml
+agents:
+  - key: reflections-partner
+    display_name: Reflection Assistant
+    description: Reads what you are writing and thinks with you about it.
+    default: true
+    consent: inherit
+```
+
+**This is optional.** An app that never declares a roster works exactly as described
+above; its agents are simply marked `undeclared`, which is the common case. Note the
+credential differs from everything else in this guide: `paradigm agents` authenticates
+as **you, the developer**, with your Paradigm PAT — not with your app's Personas HMAC
+key.
+
+**What declaring buys you.** Each agent is a named subset of your app's own DLR, so
+the platform can check the chain at push time:
 
 ```
-┌─ _ARTIFACT_STRATEGY_PROMPT ─────────────────────────────────────────┐
-│ How to use the execute_code sandbox, the RestrictedPython rules,     │
-│ the shape of Paradigm node data, error-recovery discipline,          │
-│ and how/when to persist artifacts.                                   │
-├─ agent.system_prompt ───────────────────────────────────────────────┤
-│ YOUR agent's own instructions. Override per-request with the         │
-│ `system_prompt` field (see §5) to steer behaviour or output shape.   │
-├─ state-machine block (optional) ────────────────────────────────────┤
-│ Only present if the agent has a state machine; lists the current     │
-│ state and allowed transitions.                                       │
-├─ context block (DYNAMIC — fetched from Paradigm at boot) ────────────┤
-│ Built from the live Exposure Profile (GET /third-party/me):          │
-│   • which verbs the agent has (read / create / edit / propose /      │
-│     delete / execute_plugins)                                        │
-│   • which SCHEMAS are in scope — WITH their field definitions, so    │
-│     the agent knows the exact value_json shape to read/write         │
-│   • pinned nodes and the realm name                                  │
-├─ _RESPONSE_FORMATTING_PROMPT ───────────────────────────────────────┤
-│ Markdown rules + interactive widget syntax (widget:choice,           │
-│ widget:node, widget:schema) the agent can emit for the UI.           │
-└─────────────────────────────────────────────────────────────────────┘
+agent consent  ⊆  app DLR  ⊆  what the user granted
 ```
 
-Two consequences worth internalizing:
+The left link is verified when you push. An agent asking for a verb your app was never
+granted fails in CI, rather than on a user's consent screen. You also get a real
+picker: `display_name`, `description` and the derived mode list (§3.4) come back from
+the roster, so a person choosing an agent sees what it is and what it may do.
 
-- **The agent's capabilities are not hard-coded — they are fetched from the EP at runtime.** If the EP is empty or misconfigured, the agent is told it can do *nothing* (the permission computation fails secure and denies all). An agent that "sees 0 schemas" almost always means a broken/deactivated EP, not a Personas bug.
-- The agent has **one real tool: `execute_code`.** It does not call `read_nodes` as a named function — it writes Python that calls `paradigm.list_nodes(...)` inside the sandbox. The schema field definitions injected above are how it knows what to write.
+**`consent` is required, and its two extremes are both meaningful:**
+
+| Value | Means |
+|---|---|
+| `inherit` | This agent carries the app's **whole** grant. |
+| `{}` | This agent has **no** access to the graph at all — a plain model. |
+| *omitted* | An **error**, deliberately. An omission is not a decision, and a field whose whole job is narrowing must never widen by accident. |
+
+> **⚠ The `key` is the join between two services — get it wrong and nothing lines up.**
+> An agent has two records: Personas holds its behaviour, Paradigm holds its
+> permissions. Personas derives the link from `agent_name` by **slugifying** it —
+> lowercase, every run of non-alphanumeric characters becomes a single `-`, leading
+> and trailing `-` stripped, truncated to 100 characters. That slug **is** the
+> `sub_entity_key`, and your `agents.yaml` `key` must equal it exactly.
+>
+> So `agent_name: "Reflection Assistant"` produces `reflection-assistant`. If your
+> file says anything else, the halves come apart in a way that looks like three
+> separate bugs: the picker lists an agent nothing runs, the ceiling is attached to an
+> agent nobody uses, and the one actually running shows up as `undeclared`.
+>
+> **One collision case to watch.** Slugs are unique per user, so if that user already
+> has an agent on `coach`, the next one named "Coach" silently becomes `coach-2` — and
+> no longer matches a roster key of `coach`. Keep agent names distinct per user, or
+> pre-create agents (§3.2) and check the returned slug.
+
+---
+
+## 3.6 The same lifecycle from the terminal (`paradigm`)
+
+Everything above has a CLI equivalent, and for building and debugging it is
+usually faster. The full reference is `paradigm_sdk/CLAUDE.md`; what matters here
+is **which credential each namespace uses**, because that is what the split is
+for:
+
+| namespace | talks to | with |
+|---|---|---|
+| `paradigm agents …` | **Paradigm** | your developer PAT (`~/.paradigm/credentials.toml`) |
+| `paradigm personas …` | **Personas** | this app's HMAC key (`.paradigm/secrets.toml`) |
+
+### Register the app with Personas — once
+
+```bash
+paradigm personas register              # → app_id + hmac_key, stored + gitignored
+paradigm personas status                # registered? bound? which host?
+```
+
+**Binding matters.** `register` sends this project's `[app].client_id` as
+`paradigm_client_id`. A bound tenant gets agents capped by the user's grant to
+*your* app, and its already-authorized users skip the one-time handshake (§3.3).
+An unbound one gets neither, and registering while unbound is now refused rather
+than warned — `--unbound` is the deliberate way through. `paradigm doctor` reports
+the state.
+
+The host resolves env → secrets → default: `PARADIGM_PERSONAS_BASE`, then
+`[personas].base_url`, then `https://personas.ofself.com`. **Never hardcode it** —
+and note that both `paradigm login` and `paradigm personas register` default to
+**prod**, so local work needs `--api-base http://localhost:5001` and
+`--base-url http://localhost:5050` respectively. Registering a local app against
+prod Personas fails as *"App not found"*, which reads like a problem with the app
+rather than with the host.
+
+### The agent's identity and ceiling — Paradigm side
+
+An agent is a **sub-entity**: an ExposureProfileGrant per (app, user), with a verb
+ceiling of its own. The chain is `agent consent ⊆ app DLR ⊆ user grant`.
+
+```bash
+paradigm agents list                    # the agents this app declared for you
+paradigm agents show <key>              # ceiling / consent / effective — all three
+paradigm agents declare <key>           # create one (acts as THE APP — needs an app key)
+paradigm agents update <key>            # change what it may do, in place
+paradigm agents expandable <key>        # what it is missing that its app now holds
+paradigm agents sync <key> [--all]      # raise its consent to that
+paradigm agents revoke <key>            # withdraw access (soft — the row survives)
+```
+
+`show` prints **three** values because they disagree by design: `ceiling` (the
+most it may ever hold), `consent` (what it holds now, stable across realm edits)
+and `effective` (what it can do right now, once the user's realm has had its say).
+A read-only realm makes a write-capable agent read-only at runtime while its
+consent still says write — both are true, and printing one is being wrong about
+the other.
+
+`declare` is the one command that acts as **the app** rather than as you, so it
+needs `paradigm app key create` first. Naming an app by `client_id` proves nothing
+about controlling it, and a PAT path there would let anyone declare an agent on
+anyone's app.
+
+### The roster — what your app OFFERS
+
+```bash
+paradigm agents roster init             # scaffold a roster file
+paradigm agents roster push --check     # validate locally, push nothing
+paradigm agents roster push             # push it
+paradigm agents roster show             # what Paradigm holds
+```
+
+The roster is a field on the app record (`declared_agents`); a YAML file is only
+how you author it, so `--file` takes any path and the name is never stored.
+Pushing **replaces** the roster — an agent dropped from the file stops being
+offered, though it does not revoke an EP a user already granted.
+
+`consent: inherit` means the app's whole grant; `consent: {}` means **no graph
+access at all**; omitting `consent` is an **error**, because inheriting
+everything is the widest reading of an omission and this field exists to narrow.
+
+### What the agent SAYS — Personas side
+
+```bash
+paradigm personas agent create <name> --user <id> --system-prompt "..."
+paradigm personas agent list --user <id>     # `authorized: NO` → needs §3.3
+paradigm personas agent show <agent-id> --user <id>
+paradigm personas run <agent> "message" --user <id> [--conversation <id>]
+```
+
+**`--user` should be you, or a test user** (`paradigm app test-users create`) —
+never one of your real end users. The CLI is a developer tool: you are still
+authenticated as the APP here, and `--user` only says whose graph the agent is
+created against. In production nothing runs these commands — your app calls
+`/internal/headless/agents` per person as they arrive (§3.2).
+
+It is not optional, though, and that is structural rather than a CLI choice: a
+Personas agent has a non-null `user_id` with `UNIQUE(user_id, slug)`. There is no
+userless agent to create. What the flag decides is *whose*, and from a terminal
+the only right answers are yourself and a sandbox user.
+
+There is no `--group-id` on any of these, for the same reason. An agent CAN act on
+a group's graph — `group_id` is a run-body field and the runner passes it through
+— but a group agent is made by an app serving that group's members at runtime, not
+by a developer naming a group at a prompt.
+
+Three that bite: `--system-prompt` is required at creation and **locked
+afterwards**; `--model` on a run **persists onto the agent** rather than applying
+once; and an unauthorized user makes `/run/stream` answer **JSON, not SSE**.
+
+---
+
+## 4. Capabilities — what your agent is made of
+
+Personas assembles the agent's system prompt and tool list **fresh every turn**
+from the capabilities the agent elected. You do not write that assembly; you
+choose what goes into it.
+
+**The rule:** a capability contributes its own prompt fragments, its own sandbox
+globals and its own tools when elected, and **none of them** when not. Elect
+nothing and the agent is a plain LLM call.
+
+### 4.1 The tree
+
+Capabilities nest, because most of them *are* functions inside the sandbox.
+`save_artifact` is a sandbox global — remove code execution and artifacts do not
+get smaller, they lose their body. **Electing a child elects its parents.**
+
+```
+system_prompt                        ← yours. The floor everything attaches to.
+│
+├─ code.execute                      the execute_code tool + the sandbox
+│  ├─ artifacts                      save / get / preview / list_artifact
+│  ├─ dataframes                     the pandas cookbook (95 lines)
+│  ├─ web.search                     web_search
+│  └─ graph                          paradigm.* — nodes, schemas, relationships
+│     ├─ files                       paradigm.download_file (user uploads)
+│     ├─ graph.propose               create / update / list_proposal
+│     ├─ plugins                     list / get / execute_plugin
+│     ├─ automations                 list / trigger / status / runs — AND flows
+│     │                               (chained automations, a.k.a. a canvas)
+│     ├─ citations                   {{title|id|schema}} pills      ⟨app flag⟩
+│     └─ node_cards                  ```widget:node cards           ⟨app flag⟩
+│
+├─ formatting                        markdown house style
+│  └─ choices                        ```widget:choice               ⟨app flag⟩
+│
+├─ conduct                           platform voice ("be concise", "finish
+│                                    autonomously") — default OFF is defensible
+│
+└─ identity                          who the agent acts for — the one profile
+                                     face Paradigm resolves for your grant:
+                                     display_name and @username, from
+                                     /me/contexts. The profile node is never
+                                     read. Pure prompt; one lookup per turn.
+```
+
+Two edges cross the tree:
+
+- `query_nodes(..., artifact_name=…)` reads from **graph** and writes to
+  **artifacts**, so it needs both.
+- `citations` and `node_cards` sit under `graph` but are also gated on the **app
+  record**, because they are claims about what your surface can draw. An embedder
+  that cannot render the token prints raw braces, which is worse than not citing.
+
+⟨app flag⟩ means exactly that: electing it is necessary and not sufficient.
+
+### 4.2 What each one costs
+
+Characters the model reads, per turn, before your prompt and the conversation:
+
+| elected | system (platform) | tool schema | tools |
+|---|---|---|---|
+| *nothing set — the legacy default* | 20,371 | 16,915 | 1 |
+| `graph`, `graph.propose`, `formatting`, `citations` | 11,569 | 10,074 | 1 |
+| `graph`, `artifacts`, `dataframes` | 16,925 | 6,345 | 1 |
+| `graph`, `formatting` | 11,569 | 4,955 | 1 |
+| `code.execute`, `web.search`, `artifacts`, `formatting` | 8,480 | 2,611 | 1 |
+| `[]` | **0** | **0** | **0** |
+
+Those are three different places in the request:
+
+```jsonc
+{
+  "messages": [
+    { "role": "system", "content": "<platform fragments> + <YOUR system_prompt>" },
+    { "role": "user",   "content": "…" }
+  ],
+  "tools": [                                   // ← "tools" column: the count
+    { "name": "execute_code",
+      "description": "<the tool schema column>",
+      "parameters": { … } }
+  ]
+}
+```
+
+`execute_code` is the **only** tool there is. Every other capability is a
+function inside it — which is why not electing `code.execute` returns an empty
+`tools` array rather than a smaller one.
+
+### 4.3 Declaring them
+
+```jsonc
+// at creation — POST /internal/headless/agents
+{ "capabilities": ["code.execute", "graph", "artifacts"] }
+
+// per run — /internal/headless/run | invoke | run/stream | invoke/stream
+{ "capabilities": ["graph"] }        // narrows THIS run only
+```
+
+- **Omitting the field means "do not touch."** A client that has never heard of
+  capabilities cannot strip an agent by updating its name.
+- **`null` ≠ `[]`.** `null` is "never elected" and resolves to *everything* —
+  every agent created before capabilities existed. `[]` is "elected nothing" and
+  is the floor. Collapsing them would either break every existing agent or make
+  the floor unreachable.
+- **A run may narrow, never widen.** `run ⊆ agent ⊆ app`. Asking for more than
+  the agent holds is `403 CAPABILITY_EXCEEDS_AGENT`; more than the app declared
+  is `403 CAPABILITY_EXCEEDS_APP`.
+- **Stored closed.** Electing `artifacts` records `code.execute` too, so reading
+  the column tells you what the agent has without knowing the tree.
+
+### 4.4 What the agent is actually told
+
+The dynamic part is the **Data Access Context**, derived from the live EP:
+
+```
+--- Paradigm Data Access Context ---
+
+Nodes: read, view history, create
+Schema catalogue: list and inspect any schema definition (this is not data access)
+Code execution: available (sandboxed Python)
+
+Data scope:
+  • nodes limited to 5 schema(s)
+
+Only call tools listed in your available tools. Operations outside your grant will be rejected.
+--- End Paradigm Context ---
+```
+
+Two things that are **no longer** in the prompt, and were until recently:
+
+- **Schema definitions.** Personas used to fetch every schema and paste up to
+  twenty full `json_schema` bodies in, every turn, truncated silently at twenty.
+  It does not any more — the agent calls `paradigm.get_schema_by_name()` in the
+  sandbox when it needs one. If your agent was leaning on them being free, this
+  is the one behavioural change to test.
+- **A promise about PDFs.** It said *"For PDFs, extracted text is included when
+  possible"*, which told the model to expect a transcript. PDFs now arrive as
+  documents — see §5.2.
+- **A state machine block.** Removed, along with the `set_state` tool.
+
+Note the deliberate distinction in that block: the **schema catalogue** (which
+schemas exist) is gated by visibility, not by the EP; **data scope** (whose nodes
+you may touch) is the EP. Knowing a `belief` schema exists reveals nothing about a
+person; reading their beliefs does.
+
+Capabilities are not the permission system. **The EP still decides what the agent
+can reach** — if it is empty or deactivated the agent can do nothing, and an agent
+that "sees 0 schemas" is almost always a broken EP rather than a Personas bug.
+
+### 4.5 What de-electing actually removes — and how it fails
+
+**Nothing is disabled. The agent is simply not told.** The `paradigm.*` bridge in
+the sandbox is not capability-gated; election decides what goes into the prompt
+and the tool description. So de-electing a capability does not make its functions
+raise — it makes the model unaware they exist, and a model that does not know
+about `create_automation_flow` never calls it.
+
+That matters because of how it fails:
+
+| | a permission failure | a de-elected capability |
+|---|---|---|
+| the agent tries and | is refused by the EP | never tries |
+| you see | an error, a log line, a 403 | **nothing** |
+| you notice | immediately | weeks later, "it used to do that" |
+
+There is no error to grep for. If an agent quietly stops doing something it used
+to do, **check its election before anything else** — that is the one failure on
+this platform with no symptom other than absence.
+
+**Two capabilities carry more than their name suggests.** Read the tree in §4.1
+as a list of *surfaces*, not of functions:
+
+- **`automations`** carries **flows** — chained automations, what the UI calls a
+  canvas. An agent without it is never told that chaining exists, so it will
+  build a single automation, or nothing, where it would previously have wired a
+  flow.
+- **`graph`** carries `files`, `graph.propose`, `plugins`, `automations`,
+  `citations` and `node_cards` as children, but **a parent does not elect its
+  children** — `["graph"]` gets you nodes and schemas and none of those. Only the
+  reverse closes: electing a child elects its parents, because a child is a
+  function inside the parent's sandbox.
+
+**And the converse of §4.4's warning.** That section says capabilities are not
+the permission system. The reverse is equally true: **permission is not
+capability.** An agent can hold a perfectly valid EP for automations, with every
+verb granted, and still never touch one — because nothing in its prompt said
+they were there. A grant you can see in the portal is not a behaviour you will
+see in the product.
 
 ---
 
@@ -304,19 +817,148 @@ X-Internal-Signature: sha256=<...>
 | `agent_id` *or* `agent_name` | ✅ | Identify the agent. `agent_name` auto-creates/reuses (and then `system_prompt` is required — see below). |
 | `conversation_id` | — | Omit to start a new thread; pass to **continue** one (see §9). |
 | `conversation_title` | — | Title for a new conversation. |
+| `mode` | — | `"read"` or `"propose"` (ask). Omit for act mode. A **permission ceiling** for this run, enforced by Paradigm — see §3.4. Unknown values are ignored. |
+| `group_id` | — | Run the agent against a **group's** graph rather than the user's own. The agent's key is namespaced per group, and Paradigm re-checks membership regardless of what you send. |
 | `system_prompt` | — | **Per-request override** of the agent's instructions (single turn). **Required** if this call auto-creates the agent. The strongest lever for steering output shape. |
 | `consent` | — | Permission ceiling (§3.1), applied only when the agent is created on this call. |
-| `llm_provider` / `llm_model` / `temperature` | — | Defaults `ofself` / `gpt-5.5` / `0.4`. **Caution:** `llm_provider`/`llm_model` are NOT creation-only — if passed on any run, they are **persisted onto the agent** when they differ from what's stored. Omit them to keep the agent's config; `temperature` truly applies only at creation. |
-| `web_search` / `wikipedia_search` | — | Booleans → agent `tools_config`, at creation. |
+| `llm_provider` / `llm_model` | — | Defaults `ofself` / `gpt-5.5`. **Caution:** these are NOT creation-only — if passed on any run they are **persisted onto the agent** when they differ from what is stored. Omit them to keep the agent's config, or use `llm_config` (§5.1), which does not persist. |
+| `temperature` | — | **Has no effect anywhere.** See the creation table above. |
+| `capabilities` | — | **What the agent is made of** (§4). A list narrows THIS run; omit to use the agent's own election. Cannot widen past the agent, or the app. |
+| `llm_config` | — | **Which model, on whose key** (§5.1). Supersedes `llm_provider`/`llm_model`/`temperature` and does not persist onto the agent. |
+| `web_search` | — | Boolean → agent `tools_config`, at creation. Prefer electing the `web.search` capability. |
 | `return_to` | — | URL to send the user back to after the authorization handshake (§3.3). |
 | `client_id` | — | **Ignored** (a per-request `client_id` is no longer read). Your app's Paradigm identity is the `paradigm_client_id` on your registration record (§1, §3), not a run-body field. |
 | `artifact_ids` | — | Pin existing artifacts into context. |
+| `timezone` | — | IANA zone (`"America/New_York"`) the person is in — what "today" means in the prompt's date line. Omit and it falls through to the Paradigm user's stored zone when `identity` is elected (same call, no extra cost), else UTC. Unvalidated; junk falls through too. |
 | `callback_url` | — | Optional completion callback. |
 | `debug` | — | `true` adds `debug` events (raw request/response summaries). |
+
+### 5.1 `llm_config` — which model, and on whose key
+
+```jsonc
+{
+  "provider":       "openai",           // an ALLOWLISTED NAME, never a URL
+  "model":          "gpt-5.5",
+  "api_key":        "sk-…",             // BRING YOUR OWN KEY. Omit → the ofself account
+  "context_window": 200000,             // REQUIRED with a key on an unlisted model
+  "max_tokens":     8192,
+
+  // How the model should ANSWER, and how hard it should THINK. One shape in,
+  // translated per provider on the way out — you should not have to know which
+  // vendor you are talking to.
+  "response_format": { "type": "json_object" },
+  "reasoning":       { "effort": "high" }      // or { "budget_tokens": 8192 }
+}
+```
+
+| field | OpenAI | Anthropic |
+|---|---|---|
+| `reasoning.effort` | `reasoning_effort` | `thinking: {enabled, budget_tokens}`, `max_tokens` raised above it |
+| `reasoning.budget_tokens` | mapped to the nearest effort | used directly |
+| `response_format` | native | **refused — `400 RESPONSE_FORMAT_UNSUPPORTED`** |
+| `max_tokens` | `max_completion_tokens` | `max_tokens` |
+
+`response_format` on Anthropic fails **at validation, before the run starts**,
+rather than warning and proceeding. An app asking for a schema is about to parse
+the answer; letting the call through returns prose that breaks `json.loads()`
+somewhere downstream, at a point that says nothing about the cause — which is
+the exact failure the field exists to remove. The error names the way forward
+(use an OpenAI model, or ask for JSON in the prompt and parse defensively).
+
+**`temperature` is gone**, and is refused with a reason rather than ignored. It
+was accepted here, stored on the agent and documented — and put into the kwargs
+of neither provider, on none of the four chat paths. It had never reached a
+model. A setting that silently does nothing is worse than an absent one: it
+reads as a lever someone already pulled.
+
+Omit `api_key` and nothing changes: the run is on the ofself account and billed as
+it is today. Send one and the call is yours — your provider, your quota, your
+rate limits.
+
+**Four rules a key brings with it.**
+
+**1. The provider is a name, not a URL.** `base_url`, `azure_endpoint` and
+`api_base` are refused by name. This endpoint carries a person's identity graph,
+so a caller-supplied host is not "someone pinged an internal service" — it is
+that, with their data in hand. Unknown fields are refused rather than ignored,
+because a silently dropped field reads as accepted to whoever sent it.
+
+**2. `context_window` is mandatory for a model we do not know.** Personas
+compacts a conversation by comparing the last turn's *real* `input_tokens`
+against the model's window. For a model the registry has never listed that falls
+back to a default: a 1M-context model would compact at ~90k for no reason, and a
+smaller one would overflow into a provider-side error instead of compacting. So a
+key plus an unlisted model without a declared window is
+`400 CONTEXT_WINDOW_REQUIRED` rather than a quiet wrong answer. A declared window
+beats the registry — you know your model and we do not.
+
+**3. The key is never logged, echoed, or returned.** Anything reporting config
+reports it as `<redacted:N chars>` — the length is kept so "no key was sent" and
+"a key was sent and hidden" stay distinguishable, which is the whole of whether a
+run was billed to you or to us.
+
+**4. Your key, your failures.** A 401 or a rate limit from your provider is
+surfaced as your provider's error, not rewritten as a Personas one. It is your
+account to fix and we would only send you to the wrong place.
+
+Token usage is reported either way — `input_tokens`/`output_tokens` land on the
+assistant message as they always have. What changes is who pays, not whether the
+numbers exist.
 
 ### Response
 
 An SSE stream (`Content-Type: text/event-stream`). The server emits a `: heartbeat` comment during long silences to keep proxies from dropping the connection — ignore lines starting with `:`.
+
+---
+
+### 5.2 Attachments — images and PDFs reach the model directly
+
+`artifact_ids` on a run pins existing artifacts into the turn. What happens next
+depends on what they are:
+
+| attachment | how it reaches the model |
+|---|---|
+| **image** (`image/*`) | an image block — the model sees the pixels |
+| **PDF** (`application/pdf`) | a **document block** — the model sees the pages |
+| anything else | inlined as text above your message |
+
+**A PDF is no longer a transcript.** It used to take the third row: extracted
+text, or whatever string the artifact happened to hold. So a chart, a diagram or
+a scanned page was gone by the time the model read it — and the model had no way
+to know something was missing, so it would answer confidently about a document it
+had never seen. It now goes to the provider as the file: Anthropic as a
+`document` block, OpenAI as a `file` part.
+
+Four things worth knowing:
+
+- **The bytes decide, not the declared type.** A `%PDF-` magic number, not the
+  upload's `mime_type` — a renamed archive does not sail through.
+- **Current turn only**, unlike images. A PDF is one to two orders of magnitude
+  more tokens than a photo, so silently re-sending every document in a thread
+  would exhaust the window by turn three. Attach it again if it matters again.
+- **32 MB cap**, checked before the provider sees it, so the error names your
+  attachment rather than a vendor complaining about a request body.
+- **The filename travels** on the OpenAI path, because the model reads it —
+  `q3-results.pdf` is a hint that `document.pdf` is not.
+
+#### Getting a figure back out
+
+You may want the actual picture of a chart, not a description. The model cannot
+return one — no chat API emits images, and asking for base64 in a JSON field
+gets you hallucinated bytes. But it can now **see** the page, which is enough:
+
+```jsonc
+// llm_config.response_format, with your own schema
+{ "figures": [ { "label": "Figure 2", "page": 3,
+                 "bbox": [0.12, 0.34, 0.88, 0.71],
+                 "caption": "Revenue by segment, FY24" } ] }
+```
+
+Your app crops from the PDF it already has. No code execution anywhere, and the
+document never leaves Paradigm. Pad the crop — a model reading a rendered page
+gives roughly-right boxes, not pixel-exact ones; if you need exactness,
+`pdfplumber` can find image XObjects and their true rectangles, which is text
+extraction and needs no rasteriser.
 
 ---
 
@@ -326,11 +968,15 @@ Each event is `event: <type>\ndata: <json>\n\n`. Subscribe by type:
 
 | Event | When | Payload | What to do with it |
 |---|---|---|---|
-| `scope` | First, before the LLM | `permissions`, `enabled_tools`, `selected_schema_ids`, `selected_node_ids`, `realm_name`, `force_read_only` | Optional: show what the agent can access this run. |
+| `scope` | First, before the LLM | `permissions`, `enabled_tools`, `selected_schema_ids`, `selected_node_ids`, `realm_name`, `mode`, `force_read_only`, `identity`, `timezone` | Show what the agent can access this run. `mode` is the ceiling that actually applied (§3.4). `identity` is who it was told it acts for — `{kind, display_name, username, identity_node_id}` (+ `group_id`, `member` on a group run); `null` when `identity` is not elected or nothing resolved. `timezone` is what the prompt's date line used — always a string, `"UTC"` when nothing else resolved. |
 | `thinking` | During reasoning (Claude models) | `{text}` — incremental | Render as a dim "thinking…" stream, separate from the answer. |
 | `content` | The final answer | `{text}` — incremental tokens | **This is the answer.** Append chunks to render live. |
 | `tool_call_start` | Agent invokes a tool | `{id, name}` | Show "running code…" / a spinner. |
 | `tool_result` | Tool finished (incl. `execute_code`) | `{tool_call_id, name, arguments, result, exec_duration_ms}` | Code stdout/output lives in `result` (see §7). |
+| `inline_reasoning` | During `execute_code`, **before** its `tool_result` | `{tool_call_id, seq, text, evidence}` | One `reason()` call the agent made from inside its own code. Render as the agent's voice, attached to the step named by `tool_call_id` (see §6.1). |
+| `write_receipt` | After a code block that wrote to Paradigm | `{tool_call_id, ledger:{nodes_created,…}, manifest:[…]}` | What the bridge actually recorded. Only sent when something was written. Render as a record, not as prose (see §6.1). |
+| `tool_error` | A tool failed — usually just before a silent retry | `{tool_call_id, name, kind:"code"\|"system", error}` | Show the attempt and its cause. Without this, two failed attempts and one slow call look identical. |
+| `authorization_required` | Before the LLM, when the agent's grant is gone | `{agent_id, agent_name, sub_entity_key, scope:"user"\|"group", reason, message}` | The exposure profile expired or was revoked. **Nothing self-heals this and no retry helps** — offer the user a re-authorization action. The turn still runs; only data access is dead. |
 | `message_complete` | A full message is finalized | `{role, content, thinking, tool_calls, input_tokens, output_tokens, llm_provider, llm_model, error, exec_duration_ms}` | Authoritative per-message record; good for token accounting. |
 | `paradigm_write` | The agent mutated Paradigm | `{tool, summary, success, error, timestamp, tool_call_id, meta}` | Surface "Created node X" / "Proposal pending". |
 | `artifact` | A structured artifact was produced | full artifact dict (see §7) | **Render by `artifact_type`.** |
@@ -340,11 +986,60 @@ Each event is `event: <type>\ndata: <json>\n\n`. Subscribe by type:
 | `done` | End of run | `{conversation_id, agent_id, usage:{input_tokens, output_tokens, total_tokens}}` | Persist `conversation_id`; record usage. |
 | `error` | Failure | `{message}` | Surface and stop. |
 
+> **Do not build on `force_read_only`.** It is still present in the `scope` payload
+> for backward compatibility, but it is **reported and not enforced** — an agent with
+> that flag set can still write. It was superseded by `mode` (§3.4), which is a real
+> ceiling held by Paradigm rather than a label attached by Personas. If you are
+> currently reading `force_read_only` to decide whether to show a read-only badge,
+> switch to `mode`, or you are promising your users something nothing enforces.
+
 ### Thinking vs. answer vs. code output — how to tell them apart
 
 - **Thinking** → `thinking` events. Render separately/dimmed.
 - **Final answer** → `content` events. This is the user-facing text.
-- **Code execution output** is **not** streamed token-by-token (the sandbox runs synchronously). Its stdout/result arrives as a block in the `tool_result` event and in the `role:"tool"` `message_complete`, as JSON: `{"success": true, "data": {"stdout": "...", "saved_artifacts": [...], "proposals_created": [...]}}`.
+- **Code execution output** is **not** streamed token-by-token (the sandbox runs synchronously). Its stdout/result arrives as a block in the `tool_result` event and in the `role:"tool"` `message_complete`, as JSON: `{"success": true, "data": {"stdout": "...", "saved_artifacts": [...], "proposals_created": [...], "reasoning": [...], "write_ledger": {...}, "write_manifest": [...]}}`.
+
+> **A FAILED block returns its payload FLAT.** Success nests everything under
+> `data`; a block that raised returns `{"stdout": …, "error": "<traceback>",
+> "reasoning": [...], "write_ledger": {...}}` with **no `data` wrapper**. Read
+> `result.data ?? result`, or your integration will show nothing on exactly the
+> runs where the user most needs an explanation. A transport-level failure is a
+> third shape again — `{"error": true, "message": "…"}` — so `error` carries its
+> kind in its *type*: `true` means the call failed, a *string* IS the traceback.
+
+### 6.1 Inline reasoning and the write receipt — narration and record
+
+`execute_code` runs synchronously, so a long block is silent by default and the
+user cannot tell a slow job from a stuck one. Two events fill that gap, and they
+are deliberately **not** the same kind of thing:
+
+**`inline_reasoning` is authored.** The agent calls `reason(text, evidence)` from
+inside the code it is running. *Which* call fires is decided by the data — a line
+appearing proves its branch executed — but the words were written by the agent
+before it saw any data. It is an honest account, not a proof: nothing stops
+narration that misdescribes the line beside it. `evidence` is the computed value
+that made the branch fire, and it is what lets a reader check the claim instead of
+taking an adjective on trust.
+
+**`write_receipt` is observed.** The bridge increments the ledger on each real
+write and sandbox code cannot reach it. Thin on meaning, un-forgeable.
+
+Each is weak where the other is strong, so **render the pair and let them agree**.
+If narration claims three nodes and the ledger shows zero, that disagreement is
+real signal — and it is only visible because the agent could not author the second
+half. Style them differently for the same reason: narration as the agent's voice,
+the receipt as a record. Styled alike, an authored claim borrows the credibility
+of an observed fact.
+
+`reason()` is **opt-in**. The system prompt asks for it at decision points, but
+nothing validates, retries, or requires it — an agent that never calls it simply
+emits no `inline_reasoning` events. Do not build a UI that depends on their
+presence.
+
+Both also persist: they are serialized into the `role:"tool"` message's `content`,
+so a **blocking** `/internal/headless/run` caller finds them under
+`messages[].content` → `data.reasoning` / `data.write_ledger`, and a UI that
+reloads a conversation can rebuild exactly what the live stream showed.
 
 ---
 
@@ -354,7 +1049,14 @@ Each event is `event: <type>\ndata: <json>\n\n`. Subscribe by type:
 
 From weakest to strongest control:
 
-1. **Default — free text.** Concatenate `content` chunks, render as markdown. The prompt also permits interactive widgets (`widget:choice`, `widget:node`, `widget:schema`) inline.
+1. **Default — free text.** Concatenate `content` chunks, render as markdown.
+
+   The agent may also emit interactive widgets inline — but **only if you elected
+   the capability AND your app record carries the flag** (§4.1). `widget:choice`
+   comes with `choices`, `widget:node` with `node_cards`, and `{{title|id|schema}}`
+   pills with `citations`. If you do not render them, do not elect them: an agent
+   told to emit a widget your surface cannot draw prints the raw markup at the
+   person, which is worse than never offering the choice.
 2. **Steer with `system_prompt`.** Per request, instruct the agent to produce a specific shape or to emit an artifact. This is the most practical lever.
 3. **Artifacts — the structured channel.** When the agent calls `save_artifact(...)` or creates a Paradigm object, you get an `artifact` event carrying:
 
@@ -374,7 +1076,16 @@ From weakest to strongest control:
    `proposal`, `relationship`, `raw_file`, `custom`.
    `render_inline` tells you whether to show it in the chat flow or a side panel.
 
-4. **Paradigm nodes / proposals — schema-validated.** For data the agent writes, schemas validate `value_json` server-side. Writes surface as `artifact` + `paradigm_write`. Note the **propose vs. write** distinction: when the agent only has `propose` rights, it creates a **proposal** (pending the user's approval) rather than mutating data directly.
+4. **Paradigm nodes / proposals — schema-validated.** For data the agent writes, schemas validate `value_json` server-side. Writes surface as `artifact` + `paradigm_write`.
+
+   **Propose and write are not mutually exclusive.** An older rule said an agent
+   creates a proposal only when it *lacks* write rights. That is no longer true: an
+   agent that may perform an action directly may also **ask first**, on the principle
+   that asking is strictly safer than doing and shouldn't be gated harder. So expect
+   proposals from write-capable agents too — in ask mode (§3.4) every change arrives
+   that way by construction. A proposal is inert until approved, and approval
+   re-checks the same permission, so this never becomes a route to an effect your app
+   was not granted.
 
 **Recommendation:** if you need reliable machine-readable output, instruct the agent (via `system_prompt`) to emit a `save_artifact(artifact_type="data_table" | "custom", content=...)` and render off the `artifact` event — don't parse the free-text `content`.
 
@@ -412,8 +1123,14 @@ Conversations persist server-side per `(user, agent)`; your app can list, read, 
 | POST | `/internal/headless/conversations` | `{ paradigm_user_id, app_name, agent_name, include_messages? }` | `{ conversations: [{id, title, created_at, updated_at, messages?}] }` (newest first, max 50) |
 | POST | `/internal/headless/conversations/<id>` | `{ paradigm_user_id }` | `{ id, title, ..., messages: [{role, content, created_at}] }` |
 | DELETE | `/internal/headless/conversations/<id>` | `{ paradigm_user_id }` | `{ message, conversation_id }` — removes the thread and its messages |
+| POST | `/internal/headless/conversations/<id>/timeline` | `{ paradigm_user_id }` | `{ jobs: [{message_id, created_at, revert_status, events: [{tool, summary, success, error, timestamp, tool_call_id, meta}]}] }` |
+| POST | `/internal/headless/conversations/<id>/messages/<message_id>/revert` | `{ paradigm_user_id }` | `{ status, results: [...], at, by_user_id }` |
 
 Notes: `include_messages` returns only `user`/`assistant` messages with content (tool traffic is filtered). If your app prepends context to each user message (a data snapshot, instructions), remember that history returns the **full stored content** — strip your preamble before display, and set `conversation_title` explicitly so list titles aren't the preamble. The DELETE route was added 2026-08-12; a deployment predating it answers `405` — treat that as "not yet supported", not an error.
+
+**Timeline & revert.** Timeline groups a conversation's Paradigm writes by *job* — one job is one agent turn, however many `paradigm_write` events it produced across however many `execute_code` calls (§6) — the same grouping `/revert` acts on. A turn that made no writes is left out entirely. `revert` undoes one job: a `create` is trashed, a `delete` is restored, a content `edit` is reconstructed from Paradigm's own version history (nothing your app needs to have captured — Paradigm snapshots every write on its own). Paradigm itself has no revert endpoint open to third-party apps at all (its own is permanently closed to the allowlist), so this is Personas' own mechanism, not a proxy to one.
+
+`revert_status` on a job is `null` until someone reverts it, then `{status, results, at, by_user_id}`. `status` is `"reverted"` (everything in that turn undid cleanly), `"partial"` (some did, some didn't), or `"failed"` (none did) — each entry in `results` has its own `outcome`, including `"conflict"`: the node changed since this write (a different app, a human, a later turn), so nothing was touched rather than silently discarding that change. Reverting a turn with no writes returns `400 NOTHING_TO_REVERT`; reverting one already fully `"reverted"` returns `409 ALREADY_REVERTED` — a `"partial"` or `"failed"` job can be retried.
 
 ### Clearing silent context
 `DELETE /internal/headless/conversations/<id>/context` (body `{ paradigm_user_id }`) clears a conversation's silent context without deleting the thread.
@@ -421,7 +1138,7 @@ Notes: `include_messages` returns only `user`/`assistant` messages with content 
 ### Automations (scheduled agents)
 Create one via `POST /agents/<agent_id>/automations` with a cron `trigger_config`. This registers a **scheduled automation in Paradigm**, not in Personas. When it fires, Paradigm's worker calls Personas back (signed) at `/internal/automation/run` with the `action_config` (agent, message, model). The automation runs under the agent's **own sub-entity EP** — if that EP is deactivated, the run silently produces nothing. Manage with `GET` / `DELETE` / `.../toggle` on the same route.
 
-> **Creating/editing automations is governed by the EP verb — nothing else.** The agent's grant must hold `automations:write` (create/edit) or `automations:execute` (trigger/inspect). The agent's sub-entity EP **is** the per-agent grant, so the grant is the opt-in — there is no separate Personas-side flag. Grant `automations:write` in the realm/consent and the agent (including one creating automations from its own code via `paradigm.create_automation(...)`) can create them; grant only `execute` and it can trigger/inspect but not create/edit. (Earlier builds also required a `tools_config.automations_manage` opt-in; that redundant second gate was removed — the Scope panel now matches the realm/EP grant.) The Paradigm-side automation *callback endpoint* is registered for you automatically the first time an automation-capable agent runs — you don't set it up.
+> **Creating/editing automations is governed by the EP verb — nothing else.** The agent's grant must hold `automations:write` (create/edit) or `automations:execute` (trigger/inspect). The agent's sub-entity EP **is** the per-agent grant, so the grant is the opt-in — there is no separate Personas-side flag. Grant `automations:write` in the realm/consent and the agent (including one creating automations from its own code via `paradigm.create_automation(...)`) can create them; grant only `execute` and it can trigger/inspect but not create/edit. (Earlier builds also required a `tools_config.automations_manage` opt-in; that redundant second gate was removed — the Scope panel now matches the realm/EP grant.) The Paradigm-side automation *callback endpoint* (`/internal/automation/run`) is registered for you automatically **at Personas startup** — it's an app-level setting on Personas' own Paradigm app record, not something declared per agent or per run — so you never set it up.
 
 ### Plugins
 Two senses: (a) the agent can **call** Paradigm plugins from code (`paradigm.execute_plugin(...)`), gated by an `execute_plugins` EP verb; (b) an agent can itself be **published as** a discoverable plugin (`.../publish-plugin`) and invoked by other apps via `/internal/headless/invoke`.
@@ -429,6 +1146,14 @@ Two senses: (a) the agent can **call** Paradigm plugins from code (`paradigm.exe
 ### Error model
 Errors come back as either an HTTP error response or an `error` SSE event, with a code + message. Common codes:
 `VALIDATION_ERROR` (400), `UNAUTHORIZED` (401, bad signature/key), `NOT_FOUND` (404, e.g. unknown `conversation_id`), `AGENT_ERROR` (500, run failed), `AGENT_EXCEEDS_CALLING_APP` (403, agent's grant exceeds a *calling app's* grant on the plugin/broker path — auto-repaired; not seen in the basic embedded flow). Also handle the non-error `requires_realm_assignment` branch (§3).
+
+> **Proposal 403s are rarer than they used to be.** Creating, updating, approving,
+> rejecting, cancelling, applying and deleting a proposal no longer require a separate
+> `propose` permission on top of the underlying action. The check that remains is the
+> one that matters: you may propose or apply what you could have performed directly,
+> and an app still only ever touches **its own** proposals. If you wrote retry or
+> fallback logic around a `PERMISSION_DENIED` on these routes, it is now mostly dead
+> code.
 
 ---
 
@@ -439,7 +1164,7 @@ A complete, copy-pasteable Python client: signs the request, opens the stream, d
 ```python
 import hashlib, hmac, json, requests
 
-PERSONAS_HOST = "https://personas.ofself.ai"
+PERSONAS_HOST = "https://personas.ofself.com"
 APP_ID   = "a1b2c3d4-..."        # from /apps/register
 HMAC_KEY = "sk_hdls_..."         # from /apps/register — keep secret
 
@@ -563,7 +1288,11 @@ The same stream works from JS, but `EventSource` only does GET — use `fetch` w
 |---|---|---|
 | GET | `/docs` | **This guide**, served by the deployment you're calling. Open — no signature. `?format=md\|json`, `?section=<slug>`; `GET /docs/sections` lists the slugs. |
 | POST | `/internal/headless/apps/register` | Get `app_id` + `hmac_key` (once). |
+| GET / PATCH | `/internal/headless/apps/<app_id>` | Read the app + its tools / update `name`, `paradigm_client_id`. Bare-key auth (§2). |
+| PUT | `/internal/headless/apps/<app_id>/tools` | Replace the app's custom tool set (§1.2). `PATCH`/`DELETE` on `.../tools/<tool_name>` for one. |
+| POST | `/internal/headless/apps/<app_id>/secrets` | Store an encrypted header credential → `secret_id` (§1.2). `DELETE .../secrets/<id>` removes it. |
 | POST | `/internal/headless/agents` | Pre-create/fetch an agent (`system_prompt` required) → `{agent_id, created}`. |
+| PATCH | `/internal/headless/agents/<agent_id>` | Update `system_prompt`, `llm_provider`, `llm_model`, `temperature` (§3.2). |
 | POST | `/internal/headless/list-agents` | A user's active agents. Body `{paradigm_user_id}` → `{agents: [{id, name, description, slug, has_realm, sub_entity_plugin_id}]}`. `has_realm: false` = created but not yet authorized (§3.3). |
 | POST | `/internal/headless/run/stream` | **Run, streaming (use this for UX).** |
 | POST | `/internal/headless/run` | Run, blocking (final JSON only). |
@@ -573,19 +1302,25 @@ The same stream works from JS, but `EventSource` only does GET — use `fetch` w
 | POST | `/internal/headless/conversations/<id>` | Full thread with messages. |
 | DELETE | `/internal/headless/conversations/<id>` | Delete a thread (added 2026-08-12; older deploys 405). |
 
-**Auth (every runtime call):** body `app_id` + `hmac_key`, header `X-Internal-Signature: sha256=hmac_sha256(raw_body, hmac_key)`.
+This table is the lifecycle path, not the whole API. There are further routes for
+artifacts, silent context, usage, agent scope, timelines, file upload and plugin
+publication; see `HEADLESS_API_REFERENCE.md` for endpoint-level detail.
+
+**Auth (every runtime call):** body `app_id` + `hmac_key`, header `X-Internal-Signature: sha256=hmac_sha256(raw_body, hmac_key)`. App-management routes (apps, tools, secrets) take the bare `hmac_key` in the body and verify no signature — §2.
 
 **Golden rules**
 - User-facing? Use `/run/stream`. Blocking `/run` is why it "feels slow."
+- `mode` is a real ceiling; `force_read_only` is not. Build read-only UI on `mode` (§3.4).
+- If you declare an `agents.yaml` roster, its `key` must equal the slug of your `agent_name` (§3.5). A mismatch silently splits one agent into two half-records.
 - The answer is the `content` stream; structured data is the `artifact` stream; code output is in `tool_result`.
 - Persist `conversation_id` from `done` to continue threads; set `conversation_title` on new ones.
 - Never pass `llm_provider`/`llm_model` casually — they persist onto the agent.
 - Handle `requires_realm_assignment` — it's a one-time authorization handshake (§3.3), not an error.
 - The agent can only ever do `(its consent ceiling) ∩ (what the user authorized for its realm)` — and, for bound tenants, `∩ (the user's grant to YOUR app)`. No authorization anywhere ⇒ agent can do nothing.
+- **You can only operate agents your app created.** A different app's `agent_id` returns `404 NOT_FOUND` — agents are owned by the app that created them (§3), never shared across apps by id.
 - Bind `paradigm_client_id` (§1.1): it caps agents to your app's grant AND lets your already-authorized users skip the handshake entirely.
 - A realm-less agent heals on its next run once the tenant is bound and the user has authorized the bound app (requires a deploy carrying the 2026-08-12 heal patch).
 - Your app authenticates as a Personas tenant (HMAC key) AND should carry its own Paradigm identity — set `paradigm_client_id` at registration so agents are capped by your app's grant too (§1, §3). A run-body `client_id` is ignored.
-
 
 # Personas Headless Agent — Developer Guide
 

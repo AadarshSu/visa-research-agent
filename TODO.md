@@ -15,7 +15,7 @@ points at the items that do the work. The detail lives in the items, not here.
 
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
-| **Model calls paid through Ofself Personas**, on their OpenAI key | Not started. Personas documents no model-only call, no structured output and no reasoning or tier setting (OFSELF_FEEDBACK 8.1–8.3, 8.7) | **62** | **Ofself** documenting how |
+| **Model calls paid through Ofself Personas**, on their OpenAI key | Not started. **Unblocked 2026-09-23:** Personas' live guide now documents a model-only call (`capabilities: []`) with `response_format` and reasoning effort; untested | **62** | the owner agreeing to register and run a test |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
@@ -290,8 +290,7 @@ and item 25 got the answering page into the shortlist it was falling five-deep o
 and 173).
 
 Status: `next` · `soon` · `blocked` · `later` — the label on each heading matches the section it sits in, so the two
-can never disagree. **Blocked** holds an item with a dependency it cannot clear itself; today that is
-item 62, which waits on Ofself.
+can never disagree. **Blocked** holds an item with a dependency it cannot clear itself; today there is none.
 
 **Every open item has a number, and numbering is append-only** so that the cross-references in
 [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) stay valid. The numbers are names, not an order: **the section
@@ -317,7 +316,7 @@ one-paragraph defects rather than items.
 |  | 67. Test ranking by embeddings of stored page text | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
-| **Blocked** | 62. Pay for model calls through Ofself Personas | `blocked` |
+|  | 62. Pay for model calls through Ofself Personas | `soon` |
 | **Later** | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
@@ -1387,24 +1386,49 @@ checking it.
 goals unordered, so ask before starting a large batch. Pick countries by traveller volume, as batch
 1 did (entry 67).
 
-## Blocked
-
-### 62. Pay for model calls through Ofself Personas — `blocked`, **added 2026-09-23 (entry 182)**
+### 62. Pay for model calls through Ofself Personas — `soon`, **added 2026-09-23 (entry 182), unblocked the same day**
 
 **Why it matters.** The model calls are the whole of a corridor's model bill. A fresh corridor is
 $0.251 of model calls and about $0.054 of search (entry 171), so running them on Ofself's key would
-take most of the per-request cost off this project. Search would still be ours.
+take most of the per-request cost off this project. Search would still be ours. And OpenAI has been
+out of credit here since 2026-09-16, while a Personas call on Ofself's account needs none of ours.
 
-**What it waits on — Ofself.** Ofself's docs say nothing yet on doing this through Personas.
-OFSELF_FEEDBACK section 8 records what the current guides leave missing:
-- **8.7:** there is no model-only call. Every entry point runs the full agent loop.
-- **8.1:** there is no JSON-schema output. Every call here needs one.
-- **8.2:** a wrapper system prompt is added that cannot be switched off.
-- **8.3:** settings stop at provider, model and temperature. There is no reasoning effort and no
-  service tier.
-- **8.6:** cost and limits are undocumented.
+**Unblocked: Ofself documented a model-only call, 2026-09-23.** It is not in the snapshot in
+`docs/ofself/`, which predates it. It is in the guide Personas serves live at
+`https://personas.ofself.com/api/v1/docs?format=md`, which grew from 589 lines to 1,321:
+- **`capabilities: []` is a plain model call.** In the guide's words: *"at zero capabilities this IS
+  that call"* — *"your system prompt and the conversation, no platform text, no tools"*. §4.2 prices
+  the platform text at 0 characters and 0 tools, against ~37,000 characters when nothing is declared.
+- **`llm_config` carries the model settings, per run, and does not persist onto the agent (§5.1).**
+  `provider` is an allowlisted name such as `openai`, and `model` is any model name.
+  `response_format` goes to OpenAI natively, and `reasoning.effort` maps to OpenAI's
+  `reasoning_effort`. `max_tokens` is there too. `api_key` is optional: without it *"the run is on the
+  ofself account"*, and with it the call is billed to the key's owner.
+- **Tokens are reported** on each message and in `done`: input and output only.
 
-**When Ofself documents it, grade it as a provider change, not a key swap.**
+**Against what our three calls need, from the guide alone — nothing registered or run yet:**
+
+| need | what the guide says | still to check |
+| --- | --- | --- |
+| JSON-schema output | `response_format`, native on OpenAI | its only example is `{"type": "json_object"}`; whether a strict `json_schema` passes through is unstated |
+| our prompt, nothing added | none at `capabilities: []` | a *"date line"* is in *"the prompt"* on every run (the `timezone` field, and the `scope` event says it is *"always a string"*) |
+| `gpt-5.6-terra`, reasoning `low` | any model name; `reasoning.effort` | whether that model is on Ofself's account without our key |
+| prompt caching (entries 167–171) | not mentioned; unknown `llm_config` fields are refused | so `prompt_cache_options` cannot be passed |
+| no Paradigm user | `paradigm_user_id` is still required on every run | whether a fixed service identity is acceptable for selection, adjudication and corpus builds, which serve nobody |
+| token usage per call | input and output tokens | no cached, cache-written or reasoning split, so entries 164 and 167 cannot be reproduced |
+| who is billed | Ofself's account, or ours with a key | price and limits on Ofself's account |
+
+**Two things it brings that we don't have:** runs can stream (item 57), and a run is stored server
+side as a conversation per user and agent (§9), deletable afterwards. That storage means page text and
+traveller details sit in Personas, which needs deciding before live traffic goes through it.
+
+**The test, once the owner agrees to it.** It needs a Personas registration, a user id to run as, and
+calls billed to Ofself's account. Run one call of each kind with `capabilities: []`, `llm_config` and
+`debug: true`. Then read back exactly what the model received with
+`POST /internal/headless/conversations/<id>/context`, which settles the date-line and wrapper
+questions without guessing.
+
+**Grade it as a provider change, not a key swap.**
 - **What changes:** `openai_reasoning_effort: low` and item 60's Fast mode may not be available
   there. Entry 177 measured reasoning `none` answering Japan "visa required" where no page says it.
 - **What to re-run:** Japan `IN/GB` and Singapore `PH/PH`, several times each, as any change to the
@@ -1414,9 +1438,11 @@ OFSELF_FEEDBACK section 8 records what the current guides leave missing:
 - **How failures behave:** a failed call still refuses (entry 31). It never falls back to a worse
   decider.
 
-**For the owner to ask Ofself:** a completion endpoint authenticated by the app alone, with JSON
-schema and pass-through provider settings, which is feedback 8.7's suggestion. Also ask who pays, and
-what the limits are.
+---
+
+## Blocked
+
+Nothing is blocked today. Item 62 left on 2026-09-23, when Ofself documented a model-only call.
 
 ---
 
