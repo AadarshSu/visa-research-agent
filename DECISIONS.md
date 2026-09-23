@@ -269,7 +269,7 @@ code.
 - **Open more of what a build records.** A build opens 3–15% of the addresses it keeps (entry 88), and
   only 49% of the candidates the selector was shown on the oracle corridors had stored text (entry
   183). Everything without text is judged on a ~29-character link. Reading more of it is
-  traveller-neutral, so it is inside entry 148's rule.
+  traveller-neutral, so it is inside entry 148's rule. TODO item 68.
 
 ---
 

@@ -314,6 +314,7 @@ one-paragraph defects rather than items.
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 66. Show the selector a fused top 80 instead of the whole pool | `soon` |
 |  | 67. Test ranking by embeddings of stored page text | `soon` |
+|  | 68. Read more of what a build records, so more candidates carry stored text | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
 | **Blocked** | 62. Pay for model calls through Ofself Personas | `blocked` |
@@ -1218,6 +1219,47 @@ The keyword scorer matches listed phrases. Embeddings match meaning, so they may
 - **As a filter,** it replaces fusion in item 66's live A/B.
 - **As a selector,** it would have to reach the model's recall before a live test is worth running.
 - **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
+
+### 68. Read more of what a build records, so more candidates carry stored text — `soon`, **added 2026-09-23 (entries 183, 184)**
+
+**Why it matters.** A candidate with no stored text is judged on its link alone, a median of ~29
+characters (entry 78). That is true for the model selector, for every heuristic and for item 67's
+embeddings. Where coverage stands:
+- **The whole store is 23% covered.** Measured 2026-09-23: **54,629 bodies against 237,303 recorded
+  addresses**, the same 23% as before the 2026-09-15 rebuild.
+- **The selector's pool is 49% covered.** On the 21 oracle corridors, 3,554 of 7,267 candidates the
+  selector was shown had text (entry 183).
+- **A build opens only 3–15% of what it records** (entry 88). The rest are addresses no one has read.
+
+Entry 184 makes a slower, larger build acceptable, and reading more is traveller-neutral, so it sits
+inside entry 148's rule.
+
+**Rules it must keep.**
+- **Order the extra reading on what the store lacks, never on a traveller** (entries 44 and 139). A
+  traveller-neutral signal is fine — a link that scores for any role on the role vocabulary alone
+  (`score_role_vocabulary`), a PDF, an address never opened. The traveller's passport or residence
+  is not.
+- **Every retrieval rule holds.** Obey `robots.txt`, never render past a refusal, give up on a host
+  that stops answering (entries 35, 36 and 139). A build that reads more meets more of each.
+- **The text is ranking input, never evidence** (entry 78).
+
+**Measure before building.**
+1. **Which unopened addresses matter.** Over the oracle corridors and the 81 other model runs, count
+   the pool candidates with no stored text, and how many of them the model picked anyway on the
+   link alone. Those are the pages this would inform.
+2. **What reading them buys, offline.** For a few countries, open the pool's text-less candidates
+   into a scratch copy of the index. Then re-run entry 183's harness and item 67's embeddings arm on
+   it. If recall and the pre-filter's K do not move, stop here.
+3. **What it costs.** Opening recorded addresses spends no search, only fetch time and renders. Time
+   one country's extra pass, and extrapolate to 53 before running them all. Entry 184 accepts the
+   hours; say how many first.
+
+**Then build.** Either a second pass in `visa-discover corpus` that opens the recorded addresses in
+the order above, until a budget is spent, or a separate `pagetext --fill` command, so an existing
+corpus is extended rather than rebuilt. The second avoids re-running every search a rebuild costs.
+
+**Related:** item 67 needs this to help pages that have no text today. Item 35's family reservation
+is the same idea aimed at per-traveller pages, which entry 148 parked.
 
 ### 63. Make most corridors return accurate and useful information — `soon`, **added 2026-09-23 (entry 182)**
 
