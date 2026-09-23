@@ -39,7 +39,7 @@ owner outside this repository on purpose (entry 68). **Do not build a truth set,
 or an accuracy metric without asking**; entry 147 is a priority, not that rule being lifted.
 
 **The owner's five goals, 2026-09-23 (entry 182)**, are unordered:
-- model calls paid through Ofself Personas (item 62 — probed live 2026-09-24 and workable; not yet wired in);
+- model calls paid through Ofself Personas (item 62 — routed 2026-09-24, entry 188; not yet graded);
 - about 30s a corridor with information on screen (items 57, 58, 60);
 - a URL (items 7, 20);
 - accurate and useful answers for most corridors (item 63, with entry 68's bound unchanged);
@@ -49,8 +49,10 @@ or an accuracy metric without asking**; entry 147 is a priority, not that rule b
 request better (entry 184). The live ~30s target and every storage rule are unchanged.
 
 Where each stands is the table at the top of [TODO.md](TODO.md). What is left half-done is listed in
-[PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). **OpenAI has been out of credit since 2026-09-16**, so
-nothing that needs a model call can be run until it is topped up.
+[PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). **OpenAI has been out of credit since 2026-09-16**, and
+since 2026-09-24 **model calls go through Ofself Personas instead** (`model_route: personas`, entry
+188), so corridors and plans run again. Setting `model_route: openai` needs the OpenAI account topped
+up.
 
 **[TODO.md](TODO.md) item 19 is closed (entry 173).**
 - **Settled:** search stays on every corridor (entries 159, 160).

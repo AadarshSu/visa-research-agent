@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked; one line of `runtime.yaml` reverts it |
 | [181](#181-the-data-request-asks-now-for-what-a-future-plan-could-use-and-the-app-reads-only-what-a-built-feature-uses) | **The data request asks ahead, the app reads on use** — fields a future plan could use are requested while the only grant is the owner's; never what only an application would use, never another app's rules as evidence; the form now starts from the travel schemas, and the plan is unchanged |
 | [180](#180-the-first-ofself-integration-reads-one-field-writes-nothing-and-asks-the-rest-on-the-page) | **The first Ofself integration reads one field** — `work-authorization` for nationality, nothing written back, residence and trip asked on the page; Paradigm hosts data, not the app |
 | [29](#29-langgraph-is-not-adopted-and-the-placeholder-goes-with-it) | **LangGraph is declined, not deferred** |
@@ -236,6 +237,76 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 188. Model calls go through Ofself Personas as one plain call each, checked for the model that answered
+
+**2026-09-24 · TODO item 62. The owner's decision ("route the calls through Personas"), after live
+probes. `model_route: personas` in `runtime.yaml`; one line reverts it.**
+
+### What Personas turned out to offer
+
+Personas runs agents, and until 2026-09-23 its guide documented nothing else (OFSELF_FEEDBACK 8.7).
+The guide it serves live then grew a floor: **at `capabilities: []` a run is one model call** — the
+system prompt and one message, no platform text, no tools, so no agent loop — with a per-run
+`llm_config` for the model settings. Probed live on 2026-09-24, under the owner's user, on Ofself's
+account:
+- **nothing is added to the prompt** — the `debug` request event held our two messages and no date
+  line;
+- **a strict JSON schema is applied**, through `llm_config.response_format`;
+- **reasoning effort is applied** — `none` answered a counting question in 10 tokens and wrongly,
+  `xhigh` in 175 and rightly;
+- **`llm_config.model` is ignored without the app's own key**, and the agent's stored model answers
+  instead. The agent-level `llm_model` does select the model, and sending both on a run selects it
+  on a fresh agent.
+
+### How it is built
+
+`research/personas.py` implements the three interfaces the OpenAI classes already implement —
+`RoleAdjudicator` (roles and the refused-page judgement), `CandidateSelector` and
+`StructuredPlanGenerator` — over one client. **What each call sends is what the OpenAI route
+sends:** the same prompt, the same lead-in and packet (now one constant per call, shared by both
+routes), the same strict schema (built by the OpenAI SDK's own converter, which LangChain's strict
+structured output uses), the same reasoning effort and output ceiling.
+
+- **Every reply's reported model is checked** against `OPENAI_MODEL`, and any other model is a
+  failed call. That is entry 177's lesson applied to a platform that swaps models silently.
+- **One agent per kind of call** — `visa-selection`, `visa-roles`, `visa-plan` — each holding the
+  model on the agent.
+- **Every run is made as the owner's user**, because these calls serve no particular traveller.
+  The owner agreed to it; OFSELF_FEEDBACK 8.16 asks for app-owned calls instead.
+- **A failed call refuses, as before** (entry 31). A failed selection still falls back to the
+  heuristic, which is that call's existing behaviour.
+- **A plan draft carries the route in its reuse key**, so a draft from one route is never served as
+  the other's (entry 178).
+
+### What is lost, and what nobody knows yet
+
+- **Prompt caching.** The OpenAI route caches the instructions of every call (entry 169). Personas
+  offers no cache control and refuses unknown `llm_config` fields, and reports no cached tokens.
+- **Cost accounting.** Only input and output tokens come back, so entries 164 and 167's pricing
+  cannot be reproduced. What Ofself's account charges is unstated.
+- **Selection's two client retries**, kept on the OpenAI route (entry 166). A failed selection here
+  falls back to the heuristic at once.
+- **Every run is stored** as a conversation in the owner's Personas history. Deleting them is the
+  owner's call.
+
+### Measured once, on one corridor — not yet graded
+
+Japan `IN/GB`, fresh, through `visa-discover corridor` and then the web app:
+
+| call | seconds | input tokens | output tokens | direct-OpenAI mean (entry 177) |
+| --- | --- | --- | --- | --- |
+| selection | 5.4 | 57,567 | 189 | 6.2s |
+| roles | 8.6 | 15,062 | 588 | 7.9s |
+| plan | 20.8 | 7,863 | 2,254 | 23.9s |
+
+Five of six roles filled from the pages this corridor has answered from before — MOFA's exemption
+list, the London embassy's checklist, eVISA page and fee table. The plan left the visa decision
+open, which is the baseline: entry 177's three direct runs did the same. **One run is not a grade.**
+Item 62's rule stands: Japan `IN/GB` and Singapore `PH/PH` several times each, and entry 170's
+selection A/B, before anything is read into the route's accuracy.
 
 ---
 

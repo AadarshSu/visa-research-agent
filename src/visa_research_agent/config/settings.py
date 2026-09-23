@@ -98,6 +98,16 @@ class Settings(BaseSettings):
     # True wherever the app is served over HTTPS. False only so a localhost session works.
     session_cookie_secure: bool = False
 
+    # Model calls through Ofself Personas, when `model_route: personas` (TODO item 62). The app id
+    # and HMAC key come from `paradigm personas register`; the key is a secret. Every run is made as
+    # one Paradigm user, because these calls serve no particular traveller (OFSELF_FEEDBACK 8.16).
+    personas_app_id: str | None = None
+    personas_hmac_key: SecretStr | None = None
+    personas_user_id: str | None = None
+    personas_base_url: str = "https://personas.ofself.com"
+    # Longer than the OpenAI timeout: Personas adds a hop in front of the same call.
+    personas_timeout_seconds: float = 120.0
+
     maximum_model_input_characters: int = 80_000
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None

@@ -24,6 +24,7 @@ DiscoverySelector = Literal["heuristic", "model"]
 #   automatic  — an unconfigured destination is resolved by discovery at request time, trusting
 #                only domains belonging to that country's own government.
 DestinationMode = Literal["configured", "automatic"]
+ModelRoute = Literal["openai", "personas"]
 # Why a source produced no usable evidence. These are kept apart because they need different
 # remedies and, more importantly, they support different statements to a traveller.
 #
@@ -570,6 +571,10 @@ class RuntimePolicy(StrictModel):
     adjudicator still decides, on text fetched in this run.
     """
     destination_mode: DestinationMode = "configured"
+    model_route: ModelRoute = "openai"
+    """How the model calls reach the model: OpenAI directly, on this project's key, or Ofself
+    Personas as a plain call on Ofself's account (TODO item 62). The same prompts, packets, schemas
+    and reasoning effort either way; one line of `runtime.yaml` switches them all."""
     source_cache_ttl_hours: float = Field(gt=0)
     source_maximum_stale_hours: float = Field(gt=0)
     plan_reuse_hours: float = Field(default=0, ge=0)

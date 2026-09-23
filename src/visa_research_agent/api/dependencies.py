@@ -18,6 +18,10 @@ from visa_research_agent.research.openai_extraction import (
     LangChainStructuredPlanGenerator,
     OpenAIVisaPlanExtractor,
 )
+from visa_research_agent.research.personas import (
+    PersonasPlanGenerator,
+    personas_client_from_settings,
+)
 from visa_research_agent.research.plan_store import FilePlanStore, PlanReuse
 from visa_research_agent.research.rendering import build_page_renderer
 from visa_research_agent.research.service import VisaPlanService
@@ -52,18 +56,24 @@ def build_visa_plan_service(policy: RuntimePolicy) -> VisaPlanService:
     if policy.extraction_mode == "fixture":
         return VisaPlanService(source_fetcher, FixtureVisaPlanExtractor())
 
-    if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
-        raise LLMConfigurationError("OPENAI_API_KEY is required for OpenAI extraction")
-    if settings.openai_model is None or not settings.openai_model.strip():
-        raise LLMConfigurationError("OPENAI_MODEL is required for OpenAI extraction")
-
-    generator = LangChainStructuredPlanGenerator(
-        api_key=settings.openai_api_key.get_secret_value(),
-        model_name=settings.openai_model,
-        request_timeout_seconds=settings.openai_request_timeout_seconds,
-        max_output_tokens=settings.openai_max_output_tokens,
-        reasoning_effort=settings.openai_reasoning_effort,
-    )
+    generator: LangChainStructuredPlanGenerator | PersonasPlanGenerator
+    if policy.model_route == "personas":
+        generator = PersonasPlanGenerator(personas_client_from_settings())
+    else:
+        if (
+            settings.openai_api_key is None
+            or not settings.openai_api_key.get_secret_value().strip()
+        ):
+            raise LLMConfigurationError("OPENAI_API_KEY is required for OpenAI extraction")
+        if settings.openai_model is None or not settings.openai_model.strip():
+            raise LLMConfigurationError("OPENAI_MODEL is required for OpenAI extraction")
+        generator = LangChainStructuredPlanGenerator(
+            api_key=settings.openai_api_key.get_secret_value(),
+            model_name=settings.openai_model,
+            request_timeout_seconds=settings.openai_request_timeout_seconds,
+            max_output_tokens=settings.openai_max_output_tokens,
+            reasoning_effort=settings.openai_reasoning_effort,
+        )
     extractor = OpenAIVisaPlanExtractor(
         generator,
         maximum_input_characters=settings.maximum_model_input_characters,

@@ -90,6 +90,12 @@ VisaPlanExtractor.extract(destination, traveller, report) ──▶ VisaPlan
                                      openai  → one structured model call
 ```
 
+**Every model call reaches the model by one of two routes**, chosen by `model_route` in
+`runtime.yaml`: OpenAI directly, or Ofself Personas at `capabilities: []`, which is one plain call on
+Ofself's account (`research/personas.py`, DECISIONS entry 188). The prompts, packets, schemas and
+reasoning effort are the same on both, and on Personas every reply's model is checked against the
+one asked for.
+
 `research/service.py` is the whole orchestration, and its pipeline is two lines.
 `api/dependencies.py` chooses the implementations from `runtime.yaml`, and the traveller a plan is
 for comes from an injected `TravellerSource` (`api/traveller.py`) — today the request body, and
@@ -889,7 +895,7 @@ Split by what a thing *is*, not by convenience.
 | `config/runtime.yaml` | source mode, extraction mode, cache TTL, stale ceiling | **Yes** — these decide whether government sites are contacted, whether a paid model runs, and when stale guidance is refused, so they belong under review |
 | `config/destinations.yaml` | destinations, trusted domains, appointed providers, required sources | **Yes** — the trust anchor |
 | `config/discovery_*.yaml`, `countries.yaml` | scoring vocabulary, denylist, country reference data | **Yes** — tunable without code changes |
-| `.env` | `OPENAI_API_KEY`, `SEARCH_API_KEY`, timeouts, limits, cache directory | **Never** |
+| `.env` | `OPENAI_API_KEY`, `SEARCH_API_KEY`, `PERSONAS_APP_ID`, `PERSONAS_HMAC_KEY`, `PERSONAS_USER_ID`, timeouts, limits, cache directory | **Never** |
 
 ---
 

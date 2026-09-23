@@ -15,7 +15,7 @@ points at the items that do the work. The detail lives in the items, not here.
 
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
-| **Model calls paid through Ofself Personas**, on their OpenAI key | **Probed live 2026-09-24:** at `capabilities: []` our prompt goes through untouched, strict JSON schema and reasoning effort apply, and `gpt-5.6-terra` runs on Ofself's account. Not yet wired in | **62** | routing the three calls through it, then grading |
+| **Model calls paid through Ofself Personas**, on their OpenAI key | **Routed 2026-09-24 (entry 188):** `model_route: personas` sends all three calls through Personas on Ofself's account. One Japan run worked end to end; not yet graded | **62** | the repeated Japan and Singapore runs |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
@@ -1452,12 +1452,20 @@ timeouts), how much latency Personas adds on a large call, whether any prompt ca
 is reported or configurable), and what Ofself's account charges. Our OpenAI account is out of
 credit, so no like-for-like timing is possible yet.
 
-**Next: route the three calls through Personas behind the existing interfaces, then grade it.** One
-dedicated agent per call type, holding `llm_model: gpt-5.6-terra`. Each run carries
-`capabilities: []` and an `llm_config` with the call's strict schema and `reasoning.effort: low`.
-The key moves from `.paradigm/secrets.toml` into `.env`, where every other secret lives. Every run is
-stored as a conversation in the owner's Personas history; deleting them afterwards is a decision for
-the owner.
+**Routed, 2026-09-24 (entry 188).** `research/personas.py` implements the three existing
+interfaces over one Personas client, and `model_route: personas` in `runtime.yaml` selects it. One
+agent per call type (`visa-selection`, `visa-roles`, `visa-plan`) holds `gpt-5.6-terra`, and every
+reply's model is checked. The credentials are in `.env` as `PERSONAS_APP_ID`, `PERSONAS_HMAC_KEY` and
+`PERSONAS_USER_ID`. Seventeen offline tests.
+- **One live run, Japan `IN/GB`:** five of six roles, from the pages this corridor has answered from
+  before. Selection 5.4s, roles 8.6s, plan 20.8s — in line with entry 177's direct means. The plan
+  left the decision open, as entry 177's three direct runs did.
+- **Next: grade it.** Japan `IN/GB` and Singapore `PH/PH` several times each, and entry 170's
+  selection A/B, as below. Until then, its answers carry no more weight than one run.
+- **Lost against the OpenAI route:** prompt caching, cached and reasoning token counts, and
+  selection's client retries (entry 188).
+- **Every run is stored** as a conversation in the owner's Personas history; deleting them is the
+  owner's decision.
 
 **Grade it as a provider change, not a key swap.**
 - **What changes:** `openai_reasoning_effort: low` and item 60's Fast mode may not be available

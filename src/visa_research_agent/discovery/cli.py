@@ -136,6 +136,11 @@ from visa_research_agent.domain.trust import host_is_within
 from visa_research_agent.research.errors import LLMConfigurationError, VisaResearchError
 from visa_research_agent.research.live_sources import LiveSourceFetcher
 from visa_research_agent.research.model_usage import FileModelUsageLog
+from visa_research_agent.research.personas import (
+    PersonasCandidateSelector,
+    PersonasRoleAdjudicator,
+    personas_client_from_settings,
+)
 from visa_research_agent.research.rendering import (
     PageRenderer,
     PlaywrightPageRenderer,
@@ -158,6 +163,8 @@ def build_role_adjudicator(policy: RuntimePolicy) -> RoleAdjudicator | None:
 
     if policy.discovery_decider == "heuristic":
         return None
+    if policy.model_route == "personas":
+        return PersonasRoleAdjudicator(personas_client_from_settings())
     if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
         raise LLMConfigurationError("OPENAI_API_KEY is required for model role adjudication")
     if settings.openai_model is None or not settings.openai_model.strip():
@@ -180,6 +187,8 @@ def build_candidate_selector(policy: RuntimePolicy) -> CandidateSelector | None:
 
     if policy.discovery_selector != "model":
         return None
+    if policy.model_route == "personas":
+        return PersonasCandidateSelector(personas_client_from_settings())
     if settings.openai_api_key is None or not settings.openai_api_key.get_secret_value().strip():
         raise LLMConfigurationError("OPENAI_API_KEY is required for model candidate selection")
     if settings.openai_model is None or not settings.openai_model.strip():

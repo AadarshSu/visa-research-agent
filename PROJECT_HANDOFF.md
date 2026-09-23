@@ -61,9 +61,10 @@ Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which
 - **Ofself:** the wider data request is live and the owner has re-authorised, but the owner's
   account holds no travel records. So the form has only been seen filling from a fake Ofself.
   - Questions still to put to Ofself: does it host apps, and does any of its apps record trips.
-  - **Model calls through Personas work (item 62, probed 2026-09-24).** At `capabilities: []` the
-    prompt goes through untouched, strict JSON schema and reasoning effort apply, and
-    `gpt-5.6-terra` runs on Ofself's account. The app is registered; nothing routes through it yet.
+  - **Model calls go through Personas (item 62, entry 188, 2026-09-24).** `model_route: personas`
+    routes selection, role adjudication and the plan call through one plain Personas call each, on
+    Ofself's account, as the owner's user. One Japan `IN/GB` run worked end to end. **Not graded
+    yet** — item 62's repeated Japan and Singapore runs come before trusting its answers.
   - The one redirect URI is `localhost`, and has to change when item 7 picks a host.
 
 **The goal:** produce visa application plans where every claim is grounded in an official government

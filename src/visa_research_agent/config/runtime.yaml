@@ -58,6 +58,17 @@ discovery_selector: model
 # still refused rather than guessed at.
 destination_mode: automatic
 
+# How every model call — selection, role adjudication, the refused-page judgement and the plan —
+# reaches the model.
+#   openai   — OpenAI directly, on this project's OPENAI_API_KEY.
+#   personas — Ofself Personas at `capabilities: []`: one plain call, nothing added to the prompt,
+#              the same strict schema and reasoning effort, billed to Ofself's account. Needs
+#              PERSONAS_APP_ID, PERSONAS_HMAC_KEY and PERSONAS_USER_ID, and OPENAI_MODEL for the
+#              model name. Every run is stored as a conversation in that user's Personas history.
+# Either way the model named in OPENAI_MODEL answers, and a failed call refuses rather than falling
+# back. Personas since 2026-09-24 (TODO item 62, DECISIONS entry 188).
+model_route: personas
+
 # Live retrieval freshness window, in hours. Cached pages are reused below the TTL and
 # revalidated above it.
 source_cache_ttl_hours: 24
