@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [183](#183-can-a-heuristic-replace-a-model-call-not-at-the-same-page-budget-but-it-could-cut-the-selection-packet-by-a-third-to-a-half) | **Can a heuristic replace a model call?** — no heuristic matches the selector at its page budget (60% against 83%); a link+text fusion keeping the top 80 of the pool keeps every answer the model found at 52–63% of the packet; the heuristic role decider is confidently wrong on 34%; nothing shipped, item 66 |
 | [9](#9-a-page-can-fill-several-roles) | A page can fill several roles |
 | [15](#15-brazil-the-out-of-sample-test-discovery-ranks-the-wrong-page-confidently) | Brazil: the heuristic ranks the wrong page, confidently |
 | [16](#16-judgement-decides-the-last-step-heuristics-decide-everything-before-it) | Judgement decides the last step; heuristics everything before it |
@@ -231,6 +232,121 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 183. Can a heuristic replace a model call? Not at the same page budget, but it could cut the selection packet by a third to a half
+
+**2026-09-23. The owner asked whether any of the three model calls could be replaced by something
+cheaper and faster. Measured offline, with no network and no model, over stored recall logs and
+page text. Nothing shipped. What it proposes is TODO item 66.**
+
+### How it was measured
+
+- **Replay.** For each of the 21 selection-oracle corridors with a model-run recall log, the
+  recorded candidate set was replayed, and every candidate's stored text was scored with the
+  project's own `score_body`. That is the same `score_held` a corridor runs at step 3b.
+- **Arms.** Each selector was graded on role recall against `oracle/selection_oracle.yaml`, at the
+  model's own per-corridor pick count ("matched budget") and at fixed budgets of 15, 20 and 35.
+  Five arms:
+  - the shipped link shortlist;
+  - the same shortlist with the stored-text lift switched on everywhere;
+  - text first, per role;
+  - reciprocal-rank fusion of link rank and text rank per role;
+  - a logistic ranker trained leave-one-corridor-out on 12 features.
+- **The scripts were run from the session scratchpad and are not committed.** Re-deriving these
+  numbers means rebuilding the arms above.
+
+### Selection: no heuristic matches the model at the same budget
+
+| arm (roles found, of 92) | matched budget (214 pages) | 20 a corridor | 35 a corridor |
+| --- | --- | --- | --- |
+| model (recorded) | **76 (83%)** | — | — |
+| link shortlist, shipped | 49 (53%) | 65 (71%) | 74 (80%) |
+| link + stored-text lift | 55 (60%) | 66 (72%) | 71 (77%) |
+| text first, per role | 41 (45%) | 58 (63%) | 62 (67%) |
+| link + text rank fusion | 52 (57%) | 62 (67%) | **77 (84%)** |
+| learned ranker (LOCO) | 52 (57%) | 62 (67%) | 74 (80%) |
+
+- **A heuristic reaches the model's recall only by reading about 3.4× the pages.**
+- **Priced, that trade is small.** The roles call costs about 1,400–4,000 input tokens per page read
+  (recall logs with `model_calls`), so 35 pages cost roughly $0.15 against about $0.05 today. Dropping
+  selection saves about $0.16. **Net, about $0.25 → $0.19 a corridor, roughly −22%**, with seconds
+  unmeasured: about 6–9s of selection is saved, and 3.4× the fetches and a larger roles call are added.
+- **Not pursued.** A matched-budget loss of 23 points is entry 86's finding again.
+- **The learned ranker learned only one thing:** "found by search" (+1.18) and text score (+0.67)
+  are what the oracle rewards. With 21 corridors that is a hint, not a model. Rank fusion does as
+  well with no fitted weights.
+
+### Selection: a heuristic can shrink what the model is shown
+
+The model's cost is its input, and the input is the whole pool — **111 to 615 candidates** on the
+oracle corridors. The measure here is how much of that the fusion ranking can drop before the model
+loses an answer it found. Packet size comes from `build_selection_packet` itself, so it includes the
+longer excerpts a smaller pool gets.
+
+| fusion top K | oracle roles reachable | model's answers kept | packet, oracle corridors | packet, 81 other model runs |
+| --- | --- | --- | --- | --- |
+| 45 | 83/92 | 69/76 | 33% | — |
+| 60 | 83/92 | 70/76 | 41% | 51% |
+| **80** | **86/92** | **76/76** | **52%** | **63%** |
+| 100 | 86/92 | 76/76 | 62% | 73% |
+| 150 | 90/92 | 76/76 | 84% | — |
+
+- **At K = 80, every role the model answered keeps an answering page in what it would be shown**, at
+  about half to two thirds of today's packet. Selection is ~63% of the model bill and almost all
+  input, so that is **roughly 25–30% off a fresh corridor's model cost**. This is arithmetic from
+  packet characters, not a bill.
+- **It is not a latency lever.** Selection's seconds barely follow its input (entries 144, 177).
+- **Held out, it is consistent but not proven.** The 81 other model runs have no oracle, so the
+  measure there is "the model's picks kept": **79%** at K = 80, against 73% on the oracle corridors.
+  On those same oracle corridors, 92% of answering pages and 100% of answered roles were kept. The
+  pre-filter drops the model's *redundant* picks faster than its answering ones.
+- **K was chosen on the same 21 corridors it was measured on.** Fusion has no fitted weights, but
+  the cut-off is tuned.
+
+**Why this is not entry 158's rejected cap.**
+- That cap let pages with text push link-scored pages out, and 1,813 of those it displaced had no
+  text.
+- Fusion ranks by link rank *and* text rank. A page with no text still enters on its link rank, and
+  it is the link side that takes it to the top 80.
+- Entry 158's own measure still has to be taken before anything ships: count the pooled pages
+  without text that a top-80 cut would drop.
+
+**It changes what the selector is shown.** Entries 146 and 158 treat that as a recall change, so it
+needs a live A/B — TODO item 66.
+
+### Roles: the heuristic decider is still the Brazil decider
+
+- **Method.** On the pages the model chose to read, for every role whose answer was among them, the
+  `rank_for_role` top pick was compared with the oracle. Stored-text scores stood in for fetched
+  bodies.
+- **Result.** The top pick was an answering page in **49 of 76 (64%)**. It **confidently picked a
+  non-answering page in 26 (34%)**, including 4 of 12 document checklists.
+  `visa_decision` was 12 of 12, too few to lean on.
+- **Conclusion.** Entry 31 stands. A third of roles confidently wrong is the failure that made the
+  heuristic a forbidden fallback. The roles call also names questionnaires and delegates, which
+  entries 57 and 60 say only a model reading the page may do.
+
+### The plan call and the blocked-page call
+
+- **The plan call writes prose with checked quotes**, so nothing deterministic replaces it. Its
+  levers remain:
+  - reuse for identical inputs (entry 178);
+  - a different model (item 65);
+  - Fast mode (item 60).
+- **The blocked-page call runs only when the decision is missing and a page was refused**, so it is
+  a negligible share of cost. With no adjudicator it already falls back to the deterministic keyword
+  test.
+
+### Not measured, and why
+
+- **Dense retrieval with embeddings.** Embed each stored page once at corpus build, then rank per
+  role by similarity. At $0.02/M tokens the ~43,000 stored bodies would cost about $1 once, and
+  about nothing per corridor. It could replace fusion as the pre-filter, or be tried as a selector.
+  It needs OpenAI credit or a local model, and neither was available.
+- **A cheaper model on the selection call.** This is `gpt-6-luna` from items 58 and 65, and it
+  combines with the pre-filter.
 
 ---
 

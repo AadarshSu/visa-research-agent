@@ -308,6 +308,7 @@ one-paragraph defects rather than items.
 |  | 57. Stream the plan to the screen as it is written | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
+|  | 66. Show the selector a fused top 80 instead of the whole pool | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
 | **Blocked** | 62. Pay for model calls through Ofself Personas | `blocked` |
@@ -1092,6 +1093,9 @@ model call goes to `var/usage/model-calls-YYYY-MM-DD.jsonl`, and every stage's s
 log's `phase_seconds`.
 
 **Cost, biggest first — none of it decided.**
+- **Shrink what selection reads — item 66.** A heuristic cannot replace the call at the same page
+  budget, but a fused ranking keeping the top 80 of the pool kept every answer the model found at
+  52–63% of the packet (entry 183).
 - **A cheaper model for selection only.** Selection is ~63% of the model bill, and `gpt-5.6-luna` is
   listed at a tenth of `gpt-5.6-terra`'s price a token, which could take a corridor from about $0.25 to
   about $0.11. It changes what picks the pages, so it needs grading and the owner's decision. Entry
@@ -1128,6 +1132,42 @@ cache, and Canada still took 12s.
   the corridor refuses, as it would have without the pin.
 
 **Do not re-propose** conditional search (entries 159 and 160) or refusing on a miss (entry 173).
+
+### 66. Show the selector a fused top 80 instead of the whole pool — `soon`, **added 2026-09-23 (entry 183)**
+
+**Why it matters.** Selection is about 63% of a fresh corridor's model bill, and almost all of it is
+input, because the model reads every candidate in the pool (111–615 on the oracle corridors).
+Measured offline (entry 183):
+- **The cut.** Ranking the pool by reciprocal-rank fusion of link rank and stored-text rank, per role,
+  and keeping the top 80 keeps an answering page for **every role the model found (76 of 76)**.
+- **The packet** is **52%** of today's on the oracle corridors and **63%** over 81 other model runs.
+- **The saving** is roughly **25–30% of a fresh corridor's model cost**, about $0.25 → $0.18, by
+  arithmetic. Seconds barely move.
+
+**It changes what the selector is shown, so it is graded live before it ships.**
+1. **Count what it drops first**, offline: pooled pages with no stored text that a top-80 cut would
+   remove. That is entry 158's objection to the cap it rejected, and fusion should answer it, because
+   a page with no text still enters on its link rank. Show it.
+2. **A/B on entry 170's ten graded corridors**, whole pool against fused top 80, several runs each
+   (entry 144). Grade with `selection-recall`, compare `unresolved_roles`, and price both from
+   `var/usage/`. That is about $2 and needs OpenAI credit.
+3. **Pick K from that run, not from entry 183.** K = 80 was tuned on the same 21 corridors it was
+   measured on. A proportional cut, such as a share of the pool with a floor, may suit small pools
+   better, where 80 of 129 saves little.
+4. **Nothing may be dropped silently** (`selection.py`'s docstring). If this ships, the corridor's
+   notes must say how many candidates the pre-filter held back.
+
+**It combines with a cheaper selection model** (items 58 and 65): a smaller packet on `gpt-6-luna`.
+Grade them one at a time.
+
+**Declined in the same entry, so do not re-propose without a new argument:**
+- **Replacing selection with a heuristic.** The best one found 60% against the model's 83% at the
+  same page count. It matched the model only by reading 35 pages, for about −22% model cost.
+- **Replacing the roles call.** The heuristic decider was confidently wrong on 34% of roles, which
+  is entry 31's reason in new numbers.
+
+**Untested alternative:** rank with embeddings of stored text, about $1 once to embed every stored
+body, as the pre-filter or as the selector. It needs credit or a local model.
 
 ### 63. Make most corridors return accurate and useful information — `soon`, **added 2026-09-23 (entry 182)**
 
