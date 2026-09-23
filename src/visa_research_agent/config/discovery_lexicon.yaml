@@ -18,7 +18,7 @@ link_text_weight: 1.2
 # under a "Visa Application Documents" heading would otherwise look like a checklist.
 heading_weight: 0.5
 
-# **Offline corpus builds only (DECISIONS entry 188).** A link's surroundings, used to decide what a
+# **Offline corpus builds only (DECISIONS entry 189).** A link's surroundings, used to decide what a
 # build opens and never to rank a corridor's candidates, so no live request reads these three.
 #
 # The text around a link — its list item, paragraph or table cell, and its `title`/`aria-label` —

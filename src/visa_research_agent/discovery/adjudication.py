@@ -633,7 +633,6 @@ class LangChainRoleAdjudicator:
         chat_model = ChatOpenAI(
             api_key=SecretStr(api_key),
             model=model_name,
-            temperature=0,
             reasoning_effort=reasoning_effort,
             use_responses_api=True,
             http_async_client=counting_http_client(transport),

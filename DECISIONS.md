@@ -223,6 +223,8 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [190](#190-the-prompt-audit-of-2026-09-24-four-dead-lines-out-of-the-model-prompts-and-claudemd-halved) | **The prompt audit** — dead `temperature=0` and three dead prompt lines removed; CLAUDE.md 105K → 48K characters, its status narrative replaced by standing decisions and its corrections table moved to CORRECTIONS.md; the owner waived entry 174's re-runs for it |
+| [189](#189-a-corpus-build-reads-a-link-with-its-surroundings-and-a-pdf-inherits-its-pages-title) | **A build reads a link with its surroundings** — text around it, its landmark, and for a PDF its page's title; offline only; Japan's oracle pages read 11 → 15 of 20, nothing regressed; reached `main` inside `1ca066e` |
 | [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked. Graded: selection 41/48 against 39/48, decisions as baseline except one Japan "visa required" in six |
 | [181](#181-the-data-request-asks-now-for-what-a-future-plan-could-use-and-the-app-reads-only-what-a-built-feature-uses) | **The data request asks ahead, the app reads on use** — fields a future plan could use are requested while the only grant is the owner's; never what only an application would use, never another app's rules as evidence; the form now starts from the travel schemas, and the plan is unchanged |
 | [180](#180-the-first-ofself-integration-reads-one-field-writes-nothing-and-asks-the-rest-on-the-page) | **The first Ofself integration reads one field** — `work-authorization` for nationality, nothing written back, residence and trip asked on the page; Paradigm hosts data, not the app |
@@ -237,6 +239,92 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 190. The prompt audit of 2026-09-24: four dead lines out of the model prompts, and CLAUDE.md halved
+
+**2026-09-24. The owner ran `/claude-api prompt-audit` and asked for every proposed hunk to be
+applied. The owner also waived entry 174's rule — re-running Japan `IN/GB` and Singapore `PH/PH`
+several times before a plan-prompt change ships — for this change.**
+
+**Target model and scope.**
+- **The prompts** were audited against the GPT-5.x generation they were written for (Aug–Sep 2026),
+  now reached through Ofself Personas (entry 188).
+- **`CLAUDE.md` and `AGENTS.md`** were audited as rule files that Claude Code reads.
+- **No old-model idioms were found:** no "think step by step", no scratchpad tags, no prefill, no
+  capitalised MUST/NEVER. Every bolded instruction carries its reason.
+
+**What changed:**
+- **`temperature=0` removed from the three OpenAI model classes.** `langchain_openai` drops any
+  temperature but 1 for a `gpt-5*` model with reasoning on (`chat_models/base.py`), so it was never
+  sent. It implied determinism entry 144 measured is not there. For a model whose name does not
+  start `gpt-5` — item 65's `gpt-6-sol` — it would have been sent. `personas.py` never set it.
+- **"Return only the structured output requested by the schema" removed** from the roles and plan
+  prompts. Both calls already use strict JSON-schema output.
+- **"Say nothing else" removed** from the blocked-page prompt. Its schema requires a `reason`, so
+  the line contradicted the contract.
+- **`CLAUDE.md` went from 105,754 to 48,098 characters.**
+  - **The status narrative is gone:** "as of 2026-09-02", a median of 27.4s, 186,596 addresses. It
+    duplicated `PROJECT_HANDOFF.md` and had drifted from it. It is replaced by eight standing
+    decisions, each naming its entry.
+  - **The corrections table moved, verbatim,** to [CORRECTIONS.md](CORRECTIONS.md). `CLAUDE.md` says
+    to read an area's rows before changing it.
+
+**Flagged, not changed:**
+- The plan prompt's "never submit an application…" line, to a call with no tools.
+- The plan prompt's description of the quote checker.
+- `AGENTS.md`, which was not read line by line.
+
+**Kept deliberately:**
+- the prompt-injection guards;
+- "refusing is correct";
+- the checklist definition;
+- the schema-enforced step-title limit;
+- the step-count range;
+- the 20–150-character quote length (entry 175);
+- rule 8e's bounds.
+
+---
+
+## 189. A corpus build reads a link with its surroundings, and a PDF inherits its page's title
+
+**2026-09-23/24 · TODO item 68, problem 2, version A — offline builds only, the owner's choice
+after entry 187.** The code reached `main` inside commit `1ca066e`, whose message is about
+Personas. It was swept in from the working tree before this measurement finished, so this entry is
+its record.
+
+**What it does (`score_link_in_context`, corpus builds only):**
+- **`extract_links` keeps three more things per link:**
+  - the text of the list item, paragraph or table cell around it, plus its `title` and
+    `aria-label`;
+  - its page landmark (`nav`, `header`, `footer`, `aside`);
+  - the title of the page holding it.
+- **A build scores them below the link's own words:**
+  - surrounding text at `context_weight` 0.5, for phrases the label and heading do not carry;
+  - footer links halved;
+  - **only a PDF** with no signal of its own inherits the linking page's title, at 0.25. A crawl
+    never follows a PDF, so this reorders the PDF pass without letting HTML links read past their
+    host's share (entry 186).
+- **`email-signup` joins `boilerplate_tokens`.**
+- **Nothing is stored in a corpus entry,** and a corridor's `score_link` ignores the new fields —
+  pinned by a test.
+
+**Measured.** Ten fresh scratch builds on 2026-09-24, with and without context and the same code
+otherwise. Oracle answer pages read:
+
+| | Czechia | Japan | Netherlands | United Kingdom | Australia |
+| --- | --- | --- | --- | --- | --- |
+| without context | 2/2 | 11/20 | 8/11 | 17/17 | no oracle row |
+| with context | 2/2 | **15/20** | 8/11 | 17/17 | no oracle row |
+
+- **Japan gains four answer pages,** and pages opened by a scored link rose 220 → 338.
+- **The Netherlands** opened 342 scored links against 292.
+- **Nothing regressed.**
+- **Czechia's UK list,** the page the PDF rule was written for, is read in both arms, because the
+  PDF pass reached it either way (161 PDFs).
+- **`email-signup` pages opened: 0** in every build.
+- **Australia:** the no-context build had not finished when this was written.
 
 ---
 

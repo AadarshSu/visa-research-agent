@@ -133,7 +133,7 @@ class PageLink(StrictModel):
     discovered_from: str = Field(default="", max_length=2000)
     context: str = Field(default="", max_length=300)
     """The text around the link on the page that held it — its list item, paragraph or table cell,
-    and its `title` and `aria-label`. Read only by a corpus build deciding what to open (entry 188);
+    and its `title` and `aria-label`. Read only by a corpus build deciding what to open (entry 189);
     never stored in a corpus entry and never read when ranking a corridor's candidates."""
 
     region: str = ""

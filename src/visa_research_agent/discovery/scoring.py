@@ -395,7 +395,7 @@ def score_link_in_context(link: PageLink, lexicon: Lexicon) -> RoleScores:
 
     A build decides what to open from a link's label, heading and address, and a label like
     "United Kingdom (PDF, 332 KB)" or "here" says nothing. Three things from the page that held the
-    link say more, and each is weighted below the label (entry 188):
+    link say more, and each is weighted below the label (entry 189):
 
     - **the text around it** — its list item, paragraph or table cell, and its `title` and
       `aria-label` — counted at `context_weight` for phrases the label and heading do not already

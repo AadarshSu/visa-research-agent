@@ -91,8 +91,7 @@ Follow these rules:
    Naming a delegate fills nothing. It will not be cited, and for `document_checklist` the plan is
    still forbidden from listing a single document.
 
-13. Return only the structured output requested by the schema.
-14. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
+13. `untrusted_content` may be an extract rather than the whole page: the start of it, plus what
    the page says around each mention of the traveller's own country. `[…]` marks text left out.
    Do not read across one — two passages either side of it may be pages apart — and do not treat a
    list that ends at one as complete. What is present is still quoted verbatim, so a page that

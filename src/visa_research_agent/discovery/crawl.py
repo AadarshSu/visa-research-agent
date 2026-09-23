@@ -334,7 +334,7 @@ def extract_links(
     text, which destroys the anchors this needs. Do not "simplify" it to share that function.
 
     Each link also keeps its surroundings — `context`, `region` and the page's own title — which
-    only a corpus build reads (entry 188). The request path scores links without them.
+    only a corpus build reads (entry 189). The request path scores links without them.
     """
 
     soup = BeautifulSoup(html, "html.parser")

@@ -18,7 +18,7 @@ This file is loaded automatically; the documents below are not. **Read them befo
 | [docs/ofself/](docs/ofself/README.md) | **Before any Ofself work:** Ofself's own Paradigm and Personas guides, as dated snapshots — where they disagree with the live platform, OFSELF_FEEDBACK.md wins |
 
 Each fact has one home. When one of these files summarises another, the two drift, and the drift is
-what has wasted the most time here — see the corrections table further down, whose rows — over two hundred and fifty now — are
+what has wasted the most time here — see [CORRECTIONS.md](CORRECTIONS.md), whose rows — over two hundred and fifty now — are
 mostly a written-down diagnosis that a run then contradicted.
 
 **The goal, stated so everything below reads against it — the owner, 2026-09-07 (entry 147).**
@@ -29,14 +29,6 @@ be justified as giving reliable information at a cost that is not high.** The co
 general-purpose and the traveller arrives with the corridor, so search is the legitimate
 traveller-specific complement to a traveller-neutral store; what it may *do* is unchanged, and every
 rule below still holds.
-
-**Half of that justification is measured and half is not.** On **cost and time search passes**: a
-fresh corridor is about **$0.31** — **$0.251** of model calls, measured live (entry 171), and about
-**$0.054** of search (entry 159) — so search is roughly 18% of its money and 8% of its seconds.
-On **reliability nothing here can answer it** — every number this project quotes measures whether it
-*answered*, not whether the answer was *right* (known problem 26), and correctness is verified by the
-owner outside this repository on purpose (entry 68). **Do not build a truth set, a correctness grader
-or an accuracy metric without asking**; entry 147 is a priority, not that rule being lifted.
 
 **The owner's five goals, 2026-09-23 (entry 182)**, are unordered:
 - model calls paid through Ofself Personas — **done 2026-09-24, and the route from now on** (entry 188);
@@ -54,15 +46,6 @@ since 2026-09-24 **model calls go through Ofself Personas instead, and will from
 owner; `model_route: personas`, entry 188), so corridors and plans run again. Setting
 `model_route: openai` needs the OpenAI account topped up.
 
-**[TODO.md](TODO.md) item 19 is closed (entry 173).**
-- **Settled:** search stays on every corridor (entries 159, 160).
-- **Delivered:** its cost work took a fresh corridor from $0.394 to $0.251 in model calls (entries
-  164–171).
-- **What is left:** item 58. The plan call's ~29s wait is item 57, and the 272K-token price
-  threshold is item 59.
-- **Still on:** the instrumentation — `phase_seconds` and `model_calls` are recorded every run, and every
-  model call is appended to `var/usage/`.
-
 **The hybrid, settled — the owner, 2026-09-14 (entry 148).** **The corpus holds what every traveller
 shares; live search fetches what this traveller needs, and stays the minority** of what a corridor
 reads and pays for. Making the store cover every nationality and residence offline is not the
@@ -71,177 +54,28 @@ traveller-neutral gap still is — item 48, where the gap turned out to be pages
 found and discarded (entry 161). **The order is
 correctness, then optimisation, then expansion.**
 
-**Search stays on every corridor, measured — 2026-09-15 (entry 159).** Letting the corpus answer first
-and searching only to fill what it leaves was tried two ways, and neither pays:
-- **Searching after the corpus leaves a role open** projects −3% money and **+4% seconds**, because
-  7 of 15 corridors would do select, fetch and adjudicate twice. It also never searches where the
-  corpus filled a role with a general page while search held the traveller's own embassy page.
-- **Deciding per query from what the corpus holds** skips the searches that found 5–6 of the 8
-  search-only pages that answered.
+**Standing decisions from the measurement work.** Each is argued in the entry named; the current
+numbers — seconds, dollars, store sizes — live in [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) and
+nowhere else.
 
-Search was $0.054 of a $0.322 corridor then; the model calls are the rest, and since entries 169–171
-they are $0.251 of about $0.31. **Do not re-propose conditional
-search without a new argument against both.** **The purpose query stays too (entry 160).** It
-alone returns 28 of the 45 pages it was first to find. Without it, Japan `IN/GB`'s London-embassy
-checklist became a questionnaire and Norway `IN/IN` moved to an older checklist, in both runs of
-each arm. All three of `corridor_queries`' templates are kept.
-
-**The constraint, sized — and paused (entry 147).** What follows is where a corridor's seconds and dollars go, kept because it is measured and whoever resumes should not re-derive it — not because it is the next thing to do.
-
-**The seconds were not where these files assumed, and 16.4 of them are now gone (entries 140, 141).**
-`search_all` was **19.0s of a 27.4s corridor** — fifteen queries, three per trusted domain against a
-five-domain cap, serialised by a 1.3s lock, where one query alone is 1.0s. Asked directly, Brave
-answers `x-ratelimit-policy: 50;w=1`: **fifty queries a second**, so the lock was pacing at 0.77/s,
-about **65× more conservative than the ceiling**. `DEFAULT_QUERY_INTERVAL_SECONDS` is now **0.05s**
-and the same fifteen queries take **2.6s** and return the identical 148 results, **at identical
-spend** — the account is pay-as-you-go at $5 per 1,000 queries, so pace costs nothing.
-
-**And a corridor now says where its seconds go (entries 142, 143).** `ResolutionTrace` accumulates a
-duration per stage, `RecallRecord.phase_seconds` keeps it and `visa-discover corridor` prints it.
-**Measured over six corridors, 199.8s total:** `fetch` **31%**, `adjudicate` **29%**, `select`
-**23%**, `search` 8%, `crawl` 7%, `corpus` 2%. **So the two model calls are 52% — the majority — and
-search is 8% where two entries ago it was 69%.**
-
-**Read that as an aggregate and never from one corridor.** The per-corridor range is wider than the
-gap between the stages — `fetch` runs 14% to 51% and `adjudicate` 13% to 50% — so Australia names
-fetch, Japan names adjudication and Singapore names selection. Entry 142 measured Australia alone and
-concluded fetch was the target; entry 143 withdraws that. Australia's 20.9s of fetch is mostly
-*failing*: a render budget exhausted and an `HTTP 500`, with the page cache unchanged at 357.
-
-**And "read fewer pages" is not the obvious lever it looks.** The three page-related stages are 83%
-of a corridor, but per page they run 1.29s (Canada) to 2.78s (Germany, the Netherlands) — Canada
-reads 20 pages in 25.8s and Japan 16 in 43.0s. Entry 84's *"a fetch is cheap and a missed role is
-not"* is not refuted by this.
-
-**Inside the model calls, input size does not explain the spread either (entry 144).** `ModelCall`
-records each call's prompt and packet characters, its seconds, whether it raised, and what the
-provider said it billed. Correlation of packet size with time is **+0.33** for selection and **+0.48**
-for roles; the Netherlands sends the *second-largest* selection packet and has the *fastest*
-selection, and the per-100k rate varies 4×. **"Send the model less" is not a latency lever.**
-
-**It is the whole of the money, though (entries 145 and 167–171).**
-- **Today:** a fresh corridor that resolves costs **$0.251 in model calls**, measured live through the
-  web app (entry 171) — selection about 63%, roles 19%, the plan call 18% — plus about $0.054 of
-  search.
-- **That morning it was $0.394.** OpenAI bills a token written to its prompt cache at $2.50/M against
-  $2.00 for input, and the model was writing every call's whole prompt (entry 167). Entry 169 caches
-  only instructions, and entry 170 cut a third of selection's input.
-- **Entry 145's $0.28** was six corridors priced without the write charge. Input was **96% of the
-  model bill** there: 588,363 input tokens against 4,191 output.
-So latency and cost pull opposite ways and a change must be priced on both. **Item 31 widened the
-pool the selector reads, priced on both before it shipped: +16% selection input over 53 corpora, and
-no second scoring pass (entry 158).** Two things
-checked rather than assumed: reasoning tokens are *inside* `output_tokens` (185 out, 131 reasoning),
-so nothing is undercounted; and prompt caching is real but mostly unavailable — the same corridor
-re-run minutes later cost **4.4× less** with 48,395 of 48,398 select tokens cached, while six
-*distinct* corridors cached only the 2,029-token shared prompt. **Making it available is five
-changes and the fifth is item 31's pool gate** (entry 146): reordering alone buys ~500 tokens,
-under the 1,024 cache minimum, while all five make the whole **69,902-token** packet a prefix and
-take a corridor to **~$0.154**. Nothing shipped — every one of the five changes what the selector
-is shown or the order it sees it in, which is a recall change.
-
-**A third of the variance is not the corridor at all.** The same six corridors, run twice on the same
-code, swing a mean of **40% (select) and 33% (roles)** — Germany moved 69% and 67%. So entry 143's
-"4× spread" is substantially provider-side noise, and **a model-latency change cannot be graded on
-single runs**, which is entry 81's rule arriving in a new place. What is left to measure is *output*
-— tokens and reasoning effort — which is only visible inside the two providers.
-**`openai_reasoning_effort` is already `low`; do not lower it without an accuracy measurement.**
-
-**A stage is the span between two numbered steps of `_resolve`, not the act it is named after.**
-That first run printed `crawl 2.0s` while its own notes said the crawl was skipped; both are true,
-and the 2.0s is the decision plus the candidate merge. Do not read a stage name as a network act.
-And do not read that run's 1-of-6 role fill as a cost of anything here: its causes were a transient
-`HTTP 500` (the host answers `200` minutes later) and a spent render budget, with **no matched
-baseline** — entry 136's rule.
-
-**Where it stands, as of 2026-09-02.** The pipeline works end to end and passed a bar committed in
-advance (entry 35, measured in entry 58). Corridors are served from stored per-country corpora at a
-median 27.4s. **55 of 198 destinations are researchable and every row now carries a confirmable
-domain** (entry 110), and **53 of those 55 now have a corpus and a page-text index** — item 41 is
-done, entry 116. A questionnaire is treated as an answer rather than a blockade (entries 59, 60),
-and guidance an authority contracts out is named the same way (entry 89).
-
-**And the store is far larger than what any corridor can reach (entries 123–125).** The 53 corpora
-hold **186,596 addresses**; the text index holds bodies for **43,153 of them (23%)**, because a build
-opens 3–15% of what it records; and `_choose_what_to_read` shows the model selector only candidates
-the anchor heuristic scores above zero, which is **6%** of a run's candidate set — Liechtenstein
-offers **2 of 7,482**. **The discarded 94% holds real answers, and the gate's cost is
-concentrated rather than general.** Of the 35 role-cells the pool cannot answer, **3 are recoverable
-outside it (8.6%), in 2 of 21 corridors — the other 19 lose nothing** (entry 128). Measure the
-**marginal** cost that way, never "is there a relevant page out there": a corridor already filling
-six roles from the pool gains nothing from widening it. It took a new fixture to see any of this —
-the oracle was curated from inside that same 6% and so agreed with the gate by construction (entry
-127), and 19 of the 21 rows still are, so read that 19 with the caveat in entry 128. **Item 31 is done (entry 158):** the pool
-now also admits the five best candidates per role that the link scored zero, ranked by their own
-stored text, and removes nothing — all four hidden fixture answers recovered, for +16% selection input
-over 53 corpora. The search-dependence figure (entries 129 and 173) is still an upper bound, because the link test
-admits 49% of search results against 5.5% of corpus pages and that gap was not re-measured.
-
-**And what the scorer's number is actually used for is a boolean (entry 126).**
-`_choose_what_to_read` pools on `best_combined() > 0` and hands that pool to the model **unsorted**;
-`build_selection_packet` withholds the scores on purpose, because passing them *"would anchor the
-model to the ranking this call exists to replace"*. So `score_link`'s ordering is consumed by
-nothing on the shipped path — it decides **admission** and no more. Ranking still governs the
-heuristic fallback (no selector, no stored text, or a failed model call) and nowhere else. **Read
-every ranking measurement in this project against that**, including the ones in entries 124–126.
-
-**The scorer now has a residence signal, and it adds and never subtracts (entry 126).** `score_link`
-rewarded a page for being about the traveller's **passport** country and had nothing for the country
-they apply from, so Canada's `?country=GB` page scored -8.0 for `application_route` — outside the
-pool — while its `?country=IN` sibling scored 32.0. A page about the residence now earns
-`residence_weight` on the four `POST_SPECIFIC_ROLES`, and the two **tie**. It shipped as a *swap*,
-withdrawing the passport bonus from those roles, and that half was removed after measurement: it
-took **25 pages out of the pool and added none**, and it cost New Zealand's only Indian visitor
-checklist 40 points for a traveller in Britain, where New Zealand publishes no British one to lose
-to. The rule fires only where the two countries differ, so an `X/X` corridor is untouched;
-`visa_decision` and `general_entry` stay out of post-preference, as entry 72 left them. The whole
-change admits **35 pages of 186,596** — a weighting change is not a way past a boolean gate, which
-is the argument for item 31.
-
-**The corpus generalises to a traveller it was never tuned for** (entry 112). Every number in this
-project came from `IN/GB` and `PH/PH` until a Nigerian passport from Nigeria was run across the ten
-built countries with no oracle and no curation: **52 of 60 roles accounted for, 87%**, against the
-tuned travellers' 82.5%. It answered from per-Nigeria pages in five countries — `nigeria.diplo.de`,
-`…/schengen-visa/apply-nigeria`, `…/visa-detail-page/nigeria`, the UK's Nigeria fee table and
-`france-visas.gouv.fr/en/nigeria` — so the store is serving each traveller their own pages rather
-than generic guidance. Six of ten countries account for all six roles.
-
-**The open ledger on those ten is six role slots**, and both causes are understood: one
-`general_entry` in Germany, and five in the United States behind a Cloudflare **block** that cannot
-be answered and never will be (entry 109). Four more in Singapore correctly do not arise, because a
-visa-free traveller makes no application (entry 94).
-
-**The trust configuration was the biggest single lever, and it is not the crawler** (entries 107,
-110, 111). Germany sat at 1,565 entries on **one host** because `diplo.de` — where every German
-mission publishes — was `unconfirmable`; reviewed, it went to **5,712 entries across 87 hosts** and
-from four filled roles to six. Eighteen domains were then added across nine more countries. **If a
-build comes back on one host, read `authority_domains.yaml` before touching crawl settings.**
-
-**The visa-free plan is an entry plan, it is built, and a model has produced one** (entries 95–96
-and 98). `singapore/PH/PH/tourism` returns `visa_required: false`, nowhere to apply, no checklist, no
-unresolved questions, **`verified`**, and five entry steps citing ICA's entry page. The floor entry
-95 left open turned out not to be a number — three visa-free corridors state 3, ~5 and ~7 duties —
-though **the floor never bit in the runs that passed**, so that choice rests on entry 96's argument
-rather than on a run.
-
-**The selector experiment is closed** (entry 106, the owner's decision). The model wins and has on
-every measurement since entry 84 — 92% of roles against the matched heuristic's 47%, most recently
-90% against 59%. **The twenty corridors are no longer re-run to refresh that number.**
-
-**But read those figures with their denominator (entry 123).** `_choose_what_to_read` pools only
-candidates the anchor heuristic scores above zero, so **the model is shown 6% of the corpus** — 4,450
-of 71,798 candidates over 24 runs, Liechtenstein 2 of 7,482. The *comparison* is unaffected, because
-both arms filter on `> 0` and raced over the same 6%. What is narrower than it reads is the absolute
-recall: the oracle was curated "from every candidate that scored above zero", so it **cannot detect
-the filter it shares**, and whether the discarded 94% holds any answer is unmeasured. The gate is
-also not neutral between sources — **49% of search results are admitted against 5.5% of corpus
-pages** (entry 125), so the search-dependence figure of entries 129 and 173 is an upper bound. Item 31 closed as entry 158.
-`visa-discover selection-recall` stays as an offline regression check, and entries 87, 100 and 106
-say how to read it: it measures agreement with pages a person named, not corridor health, and its
-known errors run against the model so the figure is a floor.
+- Search stays on every corridor, and so does the purpose query. Do not re-propose conditional
+  search without a new argument against both measured shapes (entries 159, 160).
+- Do not build a truth set, a correctness grader or an accuracy metric without asking — correctness
+  is checked by the owner outside this repository (entries 68, 147).
+- `openai_reasoning_effort` is `low`; do not lower it without an accuracy measurement (entry 177).
+- Grade a model-latency or cost change on several runs, never one, and price it in both seconds and
+  dollars — they pull opposite ways (entries 144, 145).
+- Read stage timings as an aggregate over corridors. A stage is the span between two numbered steps
+  of `_resolve`, not the act it is named after (entries 142, 143).
+- Measure the selector pool's gate by the roles it hides at the margin, never by whether a relevant
+  page exists outside it (entry 128).
+- The selector experiment is closed: the model selector stays, and the twenty corridors are not
+  re-run to refresh it (entry 106).
+- If a build comes back on one host, read `authority_domains.yaml` before touching crawl settings
+  (entries 107, 110).
 
 **Read entries 78–87 before touching discovery ranking.** Five of them correct the ones before them,
-and the corrections table below carries the specific traps.
+and [CORRECTIONS.md](CORRECTIONS.md) carries the specific traps.
 
 ## Rules that must not be broken
 
@@ -617,320 +451,12 @@ These files are read by someone with no other context.
 and the pattern has now repeated in five separate sessions: the written-down diagnosis named the wrong
 cause, and only running the thing showed it.
 
-| what the file said | what a run showed |
-| --- | --- |
-| the trust rule's gap is in the TLD half | it is the governmental half (entry 33) |
-| a blocked authority never reaches the plan | it reaches it by two routes (known problem 7) |
-| consuming the corpus is slow because of *scoring* | it was `wrong_country`, 33× (entry 50) |
-| removing the crawl risks *reporting* | reporting held; **qualification** broke (entries 55–56) |
-| `visa_decision` needs its floor guard removed | the vocabulary could not recognise an answer (entry 56) |
-| bot-blocks are the largest coverage limit | the **wizard** is (entry 58) |
-| the UK's wizard page "was ranked, shortlisted and fetched" | for NG and PH; **not** for IN or CN (entry 59) |
-| the UK answer is behind a tool we cannot drive | it is on a static URL — the reason not to is different (entry 59) |
-| a wizard is a blockade in front of the guidance | it **is** the guidance, in the form published (entry 60) |
-| the UK checker misses the shortlist because one host hogs places | it is **5th** for its role and three were reserved (entry 61) |
-| a wider shortlist is the cheap fix for bad ranking | widening alone does nothing; the *per-role depth* is the gate (entry 61) |
-| the scorer rewards *naming* a country, not being about one | it is token-based already; the page really is about India (entry 62) |
-| a floor-only role score is safe to withhold bonuses from | a terse per-nationality decision page is floor-only too (entry 62) |
-| the corpus ranks the answering page too low | it files it under the **wrong role**; no shortlist depth recovers it (entry 78) |
-| junk anchors like "click here" are what lose the page | 2% of entries; the real case is a *good* 40-char label (entry 78) |
-| a bigger page budget bought nothing, so depth is not the issue | 91% of links never cleared the *request path's* score threshold (entry 78) |
-| BM25 is a safe way to pick what the real scorer sees | the answering page is 116th of 122 by BM25 (entry 78) |
-| index text can just be assigned to `body_scores` | a zero would then *sink* a page for holding its text (entry 79) |
-| the corpus-only arm lost its checklist to ranking | both pages were shortlisted **and fetched**; it is adjudication variance (entry 79) |
-| ...so the checklist loss was adjudication noise | 3 of 3 identical runs: a stable *worse* answer, not noise (entry 80) |
-| a lift that never lowers a score is safe | it protects the score, not the **place** — a shortlist is finite (entry 80) |
-| the index made japan fill all six roles | one run; three of the same configuration give 3, 5, 5 (entry 80) |
-| the lift ranked by who was crawled | the no-lift shortlist was **already 94% indexed** (entry 81) |
-| ...so the lift cost japan two roles | six runs of *identical* code give 4,4,4,4,5,6 — it is inside the noise (entry 81) |
-| role count measures a ranking change | it grades the adjudicator; the pages were shortlisted in every arm (entry 81) |
-| raising the page budget will lift text coverage past the bar | 90% of candidates score zero and can never be shortlisted (entry 81) |
-| ...so it is the even *split*, not the total, that starves a host | the UK's fee host went 15 → 20 nationalities; it was never budget-limited (entry 82) |
-| a per-nationality URL space is crawlable, canada proves it | canada published a link index; the UK published a **form** (entry 82) |
-| letting a productive host spend more is a clean win | the surplus goes to the *largest* host — gov.uk took 4,252 entries (entry 82) |
-| a model picking 7 pages beats a heuristic picking 35 | it picked a landing page over its content child, with no redundancy left (entry 83) |
-| ...so a model selector is worse than ranking | let it pick 20 and it finds 85% against 55%, reading half as many (entry 84) |
-| ...and that +30 points is what it buys | four of those five corridors were the UK; over ten it is **+7** (entry 85) |
-| ...and +7 is the selector's margin | that compared 35 picks against 11; at matched budget it is **+41** (entry 86) |
-| the model lost the UAE and the US on thin text | at matched budget it wins the UAE and ties the US — it was the budget (entry 86) |
-| "prefer fewer" is sensible advice for a page budget | a fetch is cheap and a missed role is not — it had the trade backwards (entry 84) |
-| ...and +41 is the selector's margin | on an oracle neither arm built it is **+30**; both arms made the old one (entry 87) |
-| a page proven to fill a role is one page | ICA publishes the same page at three addresses; the old oracle held one (entry 87) |
-| the UK's per-nationality fee table is the answer it hides | it is keyed on the country you *apply from*, not the passport (entry 87) |
-| a page titled "Document Checklist" is a checklist | `imm5484.html` is a download page whose text explains Acrobat Reader (entry 87) |
-| a fetch-everything oracle is the automatable version of the same thing | it would still be URLs somebody fetched, so it inherits the alias bug (entry 87) |
-| one oracle row per country is enough, the pages are the pages | the same store answers 47 of 60 roles for one traveller and 41 for another (entry 91) |
-| a 100% held means the corpus is ready for that traveller | it is 100% of what *can* be answered; the denominator is the finding (entry 91) |
-| ...and that 100% held is a finding for both travellers | curating from the corpus makes it circular; only `IN/GB` was curated wider (entry 91) |
-| a keyed service not applying means the country cannot answer | one UAE page answers five roles for anybody; the row was three candidates deep (entry 91) |
-| a page that answers a role scores something for that role | it answers `fees`, `times` and `entry` scoring **0.0** for all three (entry 91) |
-| re-check a shallow row by ranking its unanswered roles again | that ranking filters on the link score, so a 0.0 page still cannot appear (entry 91) |
-| the whole fixture needs redoing, the method was too shallow | the `IN/GB` rows already named the pages; only the new curation was thin (entry 91) |
-| a corridor with no answers can be skipped when totalling | dropping the two that answered none read 24 of **48**, not 24 of 60 (entry 91) |
-| singapore's three entry duties say what a visa-free list looks like | japan states ~5 and the UK ~7 — the range has no floor to pick (entry 96) |
-| a visa-free plan has nowhere to apply, so force `where_to_apply` to null | a visa-free american still needs a UK ETA; forcing null deletes it (entry 96) |
-| entry 95 named the three validators in the way | there were five — the checklist's third clause and the status grade (entry 96) |
-| entry 91 fixed the log so it records which selector ran | it records which was *configured*; a failed model call logs as `model` (entry 97) |
-| a model selector configured is a model selector that chose | four paths fall back to the heuristic, and a credit outage took seven (entry 97) |
-| entry 95 named three validators, entry 96 found five | there are six — a guard in extraction reads an empty checklist as failure (entry 98) |
-| the entry plan passed, so the no-floor decision is proven | three runs gave 6, 4 and 5 steps; the floor never bit (entry 98) |
-| 46% text coverage in contention means the selector picks blind | France scores 100% at 7%; all 7 misses had text the model read (entry 99) |
-| the UK's `PH/PH` row is the weakest, so look there next | it scores 2/5 and filled **every** role — the oracle names another page (entry 99) |
-| `selection-recall`'s role recall says how well a corridor did | it says how well the model agreed with pages a person named (entry 99) |
-| the UK row's misses are the oracle naming other valid pages | one is the *same document* at another URL; one is the oracle being wrong (entry 100) |
-| a wrong oracle row makes the selector number untrustworthy | the errors run against the model, so 92% is a floor — leave it (entry 100) |
-| a rebuild opens the addresses the last build recorded and skipped | it re-walks from search seeds; 2,965 pages crawled bought 27 entries (entry 101) |
-| a family member nothing was discovered from was never fetched | it was fetched and linked nothing — 72 "opened" against 185 read (entry 101) |
-| the netherlands is `incomplete` because its gateway is 39% walked | it is 100% walked; three of the families holding the verdict are out of scope (entry 101) |
-| a family gate matching `apply` finds pages travellers apply on | it finds dutch citizens renewing passports; require a *visa* word (entry 102) |
-| `document_checklist` is the gap that recurs, 8 of 20 corridors | that counts tool-settled roles; open is `general_entry` 7, checklist 3 (entry 103) |
-| a role goes unanswered because the pages are not in the corpus | the three thinnest vocabularies are the three scoring **zero** candidates (entry 103) |
-| widening a role's vocabulary will fill it | germany stays 0 of 83 — its pages are in the index, not the corpus (entry 103) |
-| a term that raises a role's top score is a term that helps | `payment` raised it by promoting the checkout page over the fee table (entry 104) |
-| a role with zero scoring candidates cannot be filled | germany fills fees and times off a page that entered as `application_route` (entry 105) |
-| widening the vocabulary helps the model selector most | it helps the **heuristic** most, +12 points — that is the arm made of words (entry 105) |
-| 21 unfilled roles is 21 problems to go and solve | 4 are correct, 7 just closed, 9 are two named causes (entry 106) |
-| germany's corpus is thin because the crawl did not reach | it is 1,565 pages of **one host**: `diplo.de` is `unconfirmable` (entry 106) |
-| the US render gap is application portals, expect little | it is `travel.state.gov` — the whole guidance tree, 0 pages stored (entry 106) |
-| a domain the trust rule refused leaves evidence to review later | it leaves none — `is_crawlable` drops it before recording (entry 107) |
-| the US corpus just needs the render budget france and sweden got | it got it; `travel.state.gov` still stores **0** (entry 108) |
-| ...so the US challenge is one our renderer cannot answer | it is not a challenge — "you have been blocked", and we rendered past it (entry 109) |
-| a cloudflare marker in the body means a challenge to answer | `cdn-cgi/challenge-platform` is on the **block** page too (entry 109) |
-| the US corridor cannot be helped, the pages are refused | naming them turns a 503 into a plan: `resolved_decision_blocked` (entry 109) |
-| `unconfirmable` is a shortlist of the authority's real domains | three for three the right one was absent — ask Wikidata, don't promote (entry 110) |
-| a domain under the country's own TLD that migration bodies use is fine | `iom.sk` is the **International** Organization for Migration (entry 110) |
-| `reviewed` in `authority_domains.yaml` means independently confirmed | it means a person decided — three tiers, each marked in the entry (entry 111) |
-| the corpus is tuned for two travellers, expect a third to do worse | `NG/NG` scores **87%** against their 82.5%, on per-country pages (entry 112) |
-| a reviewed domain is confirmed, so it is safe to ship | `gov.bg` is a public suffix; Bulgaria failed at *construction*, not at crawl (entry 113) |
-| a bad page costs a build that page | one PDF's NUL bytes discarded China's whole 18-minute crawl (entry 114) |
-| a shallow crawl needs a bigger page budget | the Philippines spent 425 of 1,200 and stopped anyway (entry 115) |
-| `coverage` is the promotion gate for a new country | outside the oracle its verdict defers to an empty half — vacuous (entry 116) |
-| a two-host corpus is starved, like germany's one-host one | HR and SI have exactly two domains and both are the right ministries (entry 116) |
-| a TLS failure is a missing intermediate to bundle | egypt's certificate expired in May 2025; bundling cannot fix that (entry 116) |
-| DK, LT and SK refuse every passport and no corpus will fix them | with corpora DK fills 4 roles and SK 2; only LT still fills none (entry 116) |
-| a corridor exiting 0 answered its six roles | bulgaria exits 0 having filled two — the other four are silent, not counted (entry 116) |
-| a country with a large corpus no longer needs live search | bulgaria holds 7,098 pages and gets its decision from a search-only pdf (entry 173) |
-| the corpus write-back keeps every run's findings | it runs on the api path only; `visa-discover corridor` folds nothing back (entry 173) |
-| liechtenstein fills nothing because its corpus is thin or german | it holds the right 29 pages; each stores a cloudflare interstitial (entry 117) |
-| a challenge marker test only needs the top of the page | cloudflare puts `_cf_chl_opt` at index 24,915 of 29,336 (entry 117) |
-| the renderer waits out a challenge until it clears | it polled on `is_challenge`, which said 'cleared' on iteration one (entry 117) |
-| retrieval re-checks an answered challenge the way the crawl does | it checked thinness only; the interstitial became a citable source (entry 117) |
-| the philippines is thin — it never finds a checklist | it is **visa-free** for an indian passport; no application, no checklist (entry 118) |
-| lithuania's corridor is stopped by the robots `Disallow` entry 116 found | that limits its *corpus*; the corridor loses 8 pages to a challenge and 1 to NXDOMAIN (entry 118) |
-| all five US role gaps are `travel.state.gov` | 4 are `uk.usembassy.gov`, never requested at all (entry 118) |
-| purging the interstitials will surface `egov.uscis.gov/processing-times` | it is in neither the US corpus nor its index; purging never adds a candidate (entry 118) |
-| the model flip costs a role, never a corridor | two US runs, no search: one refused, one resolved `resolved_decision_blocked` (entry 118) |
-| a re-run adds a row to the recall log | it is keyed on the corridor — the baseline is **overwritten** (entry 118) |
-| an oversized `robots.txt` means the authority publishes a huge crawl policy | 5 of 5 such hosts served a **web page**; not one was a policy (entry 119) |
-| `no per-traveller dimension` is a verdict the families computed | it is a **deferral** to half one — and for 42 of 53 countries that half was empty (entry 120) |
-| the 43 need oracle rows so the gate can grade them | 17 of 42 already resolve every passport; of the 9 that resolve none, 6 have a named cause (entry 120) |
-| a country that has never resolved a passport needs curating | 5 of the 9 were last run **before their corpus existed** — re-run first (entry 120) |
-| romania's `mae.ro` hosts answer 503, so the verdict will stand | `eviza.mae.ro` answers everything — romania fills **5 of 6** (entry 121) |
-| austria loses 23 pages to a `Disallow`, so the verdict will stand | 6 now, and it fills the checklist and the route (entry 121) |
-| a page with too little text to trust is a thin or broken page | morocco's is an F5 *"Request Rejected"* — a refusal served as **HTTP 200** (entry 121) |
-| a country reported as having no per-traveller family has none | romania has **58**, named in romanian; the detector matches english slugs (entry 121) |
-| a sibling-run probe can count families without a country list | it missed romania's own — its members sit under different numeric parents (entry 121) |
-| `str(exc)` is a reason | `httpx.ConnectTimeout` carries an empty one: *"the request failed ()"* (entry 122) |
-| the model selector replaced the shortlist, so ranking no longer gates recall | it pools `score > 0` — the model is shown **6%** of the corpus (entry 123) |
-| the model-vs-heuristic numbers are invalid if ranking gates the pool | both arms filter `> 0`; they raced the same 6%, the comparison stands (entry 123) |
-| "100% role recall" means the selector found what the corpus holds | the oracle was curated from candidates scoring above zero (entry 123) |
-| entry 91's 0.0 UAE page proves the pool gate hides answers | its `best_combined()` is **49.6** — it is *in* the pool; that was a per-role filter (entry 123) |
-| check the pool gate by finding oracle pages that score zero | 88 of 88 are in the pool — a fixture curated from the pool cannot name one outside it (entry 123) |
-| the pool gate is why liechtenstein and romania fill little | romania's discards are legislation pdfs; the miss was a **missing residence score** (entry 124) |
-| the scorer weighs passport against residence, so retune it | there is **no residence signal at all** — only a passport one (entry 124) |
-| canada ranks the right per-residence page below the wrong one | it scores the wrong one **32.0** and the right one **0.0** — not a ranking, an absence (entry 124) |
-| romania's family is invisible because it is named in romanian | its anchor text is english; `country_family_keys` reads the **URL** only (entry 124) |
-| the family detector needs 198 country names in every language | the blind spot is english **aliases and territories** — `czech-republic`, `kosovo` (entry 124) |
-| search is load-bearing for 17 roles, so the corpus is not ready | the gate admits search at 49% and the corpus at 5.5% — that 17 is an upper bound (entry 125) |
-| adding a residence bonus fixes the page scored below its wrong sibling | adding without withdrawing gives a **tie**, 32 against 32 — they must swap (entry 126) |
-| ...so the two bonuses must swap, or the defect stands | the swap took **25 pages out of the pool and added none**; the tie was the answer (entry 126) |
-| the scorer ranks the candidates the model then chooses between | the pool goes to the model **unsorted**, scores withheld — ranking is consumed by nothing (entry 126) |
-| a page whose path ends `/united-kingdom` is a page about the UK | the token carries a space and the segment does not — every multi-word country was invisible (entry 126) |
-| a demoted page is safe because it keeps a positive score | 37 role-scores fell to zero or below, and zero is the whole gate (entry 126) |
-| the per-country dimension is 21 corpora and 5,901 pages | the *application* families inside it are **4 corpora and 944 pages** (entry 126) |
-| `country_family_keys` misses a family when the slug is foreign | it also misses Canada's `?country=IN` — a two-letter code below its floor (entry 126) |
-| a residence bonus widens the pool the anchor scorer gates | 12,573 → 12,583 of 186,596 — it re-orders the 6%, it does not widen it (entry 126) |
-| the discarded 94% is chaff, so the gate may be fine | czechia's UK supporting-documents list is in it, at **0.0 for every role** (entry 127) |
-| curate the gate's blind spot from the corridors with the smallest pools | LI's whole discarded set is its law collection — the answer was in CZ, pool 268 (entry 127) |
-| `selection-recall` can grade a change that widens the pool | its oracle shares the filter, so 88 of 88 was a tautology until entry 127 |
-| the discarded 94% holds answers, so widen the gate | 19 of 21 corridors lose **nothing** to it; the prize is 3 roles of 35 (entry 128) |
-| a relevant page outside the pool is a page the gate cost us | not if the pool already answers that role — measure the **marginal** cost (entry 128) |
-| "19 of 21 lose nothing" is the measured result | 19 of those rows were curated *from* the pool; of the 2 curated outside it, **both** lose (entry 128) |
-| a role the corpus cannot answer is a crawling gap | **40% are an official tool** holding the answer — not a gap at all (entry 129) |
-| search finds hosts the trust configuration missed | all 78 pages it supplied are on hosts the corpus already crawls (entry 129) |
-| a finding in one traveller's oracle row is that traveller's | the Dutch EES leaflet was already true of the other row; nobody had looked (entry 129) |
-| take search out of the request path | 18 of 25 load-bearing pages are countries with a **named permanent ceiling** — make it per country (entry 129) |
-| a page the corpus lacks is a page the crawl could not reach | 52% of hosts were entered below their root, which was never visited (entry 130) |
-| a superset check over `canonical_key` is exact | it counts `…/en/index.html` as missing when a run fetched `…/en`; 1 of 78 here (entry 130) |
-| thailand's corpus is 4,393 pages, so it is well covered | 2,617 are **provincial office** WordPress sites; the national site has 41 (entry 130) |
-| a huge host eats the crawl budget | it does not — TH opened 41-42 on *every* host; fair shares between unequal hosts (item 48) |
-| the per-host budget counts an authority once | `host_of` keeps `www.`, so BG's interior ministry took 3 shares and 72% of the budget (item 48) |
-| a corpus failure reason describes the site | BG's "redirected off the approved domains" is Radware's CAPTCHA host (entry 131) |
-| check a suspect crawl failure by opening the URL in a browser | a browser passes the bot check the crawler is failing — it cannot see it (entry 131) |
-| a rebuild will clear a stale failure | 7,149 pages crawled bought 193 entries and the failure count went **up** (entry 131) |
-| the corpus holds a country's mission network, so it holds the post that serves you | AU holds 1,599 pages on `embassy.gov.au` and **0** on `uae.embassy.gov.au` (entry 132) |
-| "too little readable text" means the page is thin | 12 of them were one host that ate the corridor's whole render budget (entry 132) |
-| the request path has 12 renders per corridor | 12 is the *crawl* fetcher's; the shortlist shares **5** in one `fetch` call (entry 135) |
-| a page reported as having too little readable text was read by a browser | it may have been rendered, or never opened — one sentence said both (entry 135) |
-| cap a greedy host with a share of the render budget | a share throttles a host where rendering **works**; count consecutive failures (entry 135) |
-| capping a greedy host recovers the roles it was hiding | AU is 4/6 before **and** after — a cap stops it starving *others* (entry 136) |
-| clear `var/cache` to test a retrieval change, then compare | a cold arm against a warm baseline is not a comparison: blocked 1 → 15 (entry 136) |
-| a two-point drop after a change is the change's cost | 28 extra **network** failures explained it; the code contributed nothing (entry 136) |
-| the corpus is tuned for three travellers, a fourth will do worse | `BD/AE` filled **88%** over 27 countries, 75% of it corpus-served (entry 132) |
-| the corpus missed the UAE post because search never surfaced it | **24 of 27** hold no post for *either* residence tried (entry 133) |
-| a post absent from a corpus is a post the crawl could not reach | AU holds its Riyadh post and 0 on its Dubai one — same domain (entry 133) |
-| `Country.mission_labels` is even enough to measure posts with | AE carries six, SA carries **one** — it cannot match `saudiarabia.embassy.gov.au` (entry 133) |
-| enriching mission labels only helps, it is a lookup table | it widens the **-45** too; 141 pages left Germany's pool (entry 134) |
-| ...so enriching them cost recall | all 141 were other countries' German missions; 0 of 154 oracle pages moved (entry 134) |
-| the nine countries with new domains still need a corpus rebuild | all 53 corpora already carry their current domains — nothing to run (entry 123) |
-| the interface tells a challenged authority it "does not permit" retrieval | `challenged` is its own outcome; `app.js` branches on `blocked` (entry 123) |
-| the grader compares a model against a heuristic | nothing recorded which selector ran; six logs put the heuristic in both arms (entry 91) |
-| a corpus that holds a page can serve any traveller who needs it | it holds 219 apply pages and **five** checklists; the leaf is a hop deeper (entry 88) |
-| a gateway yields more children than a leaf, so count them | 2.4 apiece against 1.5 — ask if the child is *per traveller* (entry 90) |
-| the netherlands is the covered case, entry 88 finished it | three complete families were never opened; it reads `incomplete` (entry 90) |
-| CA, JP and GB have no per-traveller family | GB has one — the fee wizard; `_queue` groups per *page* (entry 90) |
-| the corpus-sufficiency number is 47/47, so build the gate around it | the gate's verdict ignores it; one traveller cannot outvote 197 (entry 90) |
-| the corpus is thin because the crawl did not go deep enough | it opened 3–15% of what it recorded; the rest are addresses (entry 88) |
-| reserving budget for a family is enough to reach it | one pool is score-ordered, so the fee family took all of it (entry 88) |
-| a family key can blank the first country it finds | the destination is named in its own path; all 219 got different keys (entry 88) |
-| opening the gateway buys a checklist per residence | 113 of 185 link nothing — the checklist is on VFS Global (entry 88) |
-| the biggest country-shaped family is the one worth crawling | Canada's is 176 travel advisories, Japan's 141 country pages (entry 88) |
-| a contractor's checklist is a ceiling on what we can offer | it is a ceiling on *reading*; naming it was always allowed (entry 89) |
-| the authority's own page linking it is warrant enough | the link comes out of HTML, which is untrusted content (entry 89) |
-| most contractor links are the guidance | 44 of 236 are "track your application"; 30 are documents (entry 89) |
-| singapore is the next family reservation win, it fills five roles | its page is a leaf, and ICA's index yields 6 children not 198 |
-| the corpus build does not answer a browser challenge, unlike the request path | it always did; the budget was **12** renders against France's 64 challenges (entry 92) |
-| france is the corpus the render budget cost most | sweden lost 216 pages to it against france's 66 — count before crawling (entry 92) |
-| rebuilding france fixes its two weak oracle rows | 92 newly readable pages bought **one** role; the rest is behind the wizard (entry 92) |
-| the wizard states the 3 roles, so reading it would answer them | its first step needs 4 fields a corridor lacks; 2 of them change the answer (entry 92) |
-| ...so a role behind a tool is a gap in the coverage metric | the product has called it *resolved* since entry 63; only the metric disagreed (entry 93) |
-| france answers 2 of 6 for a filipino traveller | 2 by page and 3 by the wizard — the traveller can act on **5** (entry 93) |
-| singapore answers 2 of 6, so its corpus is thin there | 4 of the 6 questions do not arise — no visa, so no application (entry 94) |
-| a corpus build records whether it could read a page | it wrote only `unreadable` or `unknown`, so a stale failure never cleared (entry 92) |
-| raising the render budget is the whole fix | an unanswerable host would then spend 400 renders proving it — cap per host (entry 92) |
-| the corpus is not yet good enough to serve a corridor alone | for `IN/GB` it holds 47 of 47 answerable roles, and did before entry 88 |
-| so a corpus-sufficiency number settles it | that one is blind to the traveller dimension; 100% and uninformative |
-| a page per nationality is the real nationality risk | not one of 41 countries had that shape; the shape is the **post** (entry 70) |
-| a missing demonym can cost the answering page its place | the 22 places demonyms won were all noise, none filled a role (entry 70) |
-| an outright `403` has not cost a corridor yet | Lithuania and Slovakia lose their whole trusted set to one (entry 70) |
-| a wider sweep only tests the countries it runs | breadth found two defects five countries never could (entry 71) |
-| a challenge just needs a longer settle | 9,000ms is *worse* than 2,500ms — it races the redirect (entry 75) |
-| japan's corpus misses the london embassy on recall | that host answers a genuine `403`; nothing can fetch it (entry 77) |
-| the corpus exists to reach depth the request path cannot | it exists for **latency**; both paths must find the right page (entry 77) |
-| a corpus is judged by how deep it crawled | judge it by its hit rate on role-filling pages — Japan 3/5 (entry 77) |
-| Cyprus's `403` is a refusal, so entry 41 does not apply | Azure declares its challenge in the **body**; it is answerable (entry 73) |
-| three countries send a UK resident to their New Delhi post | Brazil sent them to Edinburgh; only one case was real (entry 72) |
-| treating another country's label as another post is the fix | it broke 165 correct pages — the destination's own code (entry 72) |
-| a build seeds from search, so seed the mission index from search | 44 of 53 corpora already record it and 34 never opened it (entry 137) |
-| so open the mission index where the corpus recorded it | its far end is depth 4 against a ceiling of 3 — only a seed reaches it (entry 137) |
-| the family gate finds the per-traveller families a corpus holds | it refused Australia's largest: `…/australian-embassy-{}` has no visa word (entry 137) |
-| canada has no per-traveller family, `coverage` says so | it has one — `travel.gc.ca/assistance/embassies-consulates/{}`; the gate could not see it (entry 137) |
-| widening a crawl gate only changes the crawl | `coverage` shares it: `ungraded` went 42 → 37 and bulgaria became `incomplete` (entry 137) |
-| the mission index yields 194 members for the reservation | it groups **70**; 124 name their country mid-address and form no family (entry 137) |
-| seeding the index gets the post into the corpus | it gets the *family* in: 1 member recorded → 166, the post still 0 (entry 138) |
-| a rebuild's new mission hosts are the new seed working | all ten came from their own search seeds; one page came from a mission page (entry 138) |
-| a reserved family queue opens its members | all members score 0.0, so the order is the page's — the alphabet's tail is never reached (entry 138) |
-| order the family queue by the traveller's residence | a corpus build has no traveller — order on what the **store** lacks (entry 139) |
-| giving up on a host that will not answer loses pages | it freed the budget: +445 entries, +14 hosts, reads 3 → 12 (entry 139) |
-| the ordering fix will reach the post it was built for | 6 of 11 new hosts came through the directory; the UAE is 169 members deep (entry 139) |
-| the goal is a corpus that answers without searching | the goal is **latency**; the owner's re-scoping keeps search in the flow (entry 140) |
-| adjudication is ~60% of a corridor, optimise there | `search_all` is 19.0s of 27.4s — it was timed at 2 domains, not 5 (entry 140) |
-| the search phase is the search engine | one query is 1.0s; 18.2s of the 19.0s is our own pacing lock (entry 140) |
-| a goal stated in seconds has seconds behind it | the recall log records no timings at all — nobody could produce the number (entry 140) |
-| the search pace is protecting a rate limit | brave allows **50 q/s**; the lock paced at 0.77 — 65× too slow (entry 141) |
-| 70 queries failed four-at-a-time, so pacing fixed it | that outage was a **spend cap**, which pacing cannot affect (entry 141) |
-| going faster costs more | the same 15 queries are sent either way; pace is free (entry 141) |
-| a corridor's role count after a change is that change's doing | a transient 500 and a spent render budget, with no matched baseline (entry 141) |
-| adjudication is the model cost in a corridor | **selection** is bigger — 7.3s against 6.1s, and nobody had priced it (entry 142) |
-| with search fixed, the rest is adjudication | **fetch is 43%** and was never the suspect (entry 142) |
-| a phase named `crawl` measures crawling | it is the span between two steps — 2.0s on a run that skipped the crawl (entry 142) |
-| fetch is 43% of a corridor, optimise it | that was one corridor; over six it is **31%** and the model calls are 52% (entry 143) |
-| one corridor's timings say where the program spends time | fetch ranges 14–51% — every corridor names a different winner (entry 143) |
-| the page-related stages scale with pages read, so read fewer | CA reads 20 in 25.8s, JP 16 in 43.0s — page count is not the variable (entry 143) |
-| a slow model call was given more to read | r=+0.33 and +0.48; NL sends the 2nd-biggest packet and is fastest (entry 144) |
-| the 4× adjudication spread is a property of the corridor | the same corridor swings 40% between identical runs (entry 144) |
-| time a model change on one corridor before and after | germany moved 69% on its own — entry 81's rule, new place (entry 144) |
-| input size does not matter, entry 144 measured it | that was latency; it is **96% of the money** (entry 145) |
-| output tokens are the expensive half of a model bill | 588k in against 4k out — input is 96% of it (entry 145) |
-| a reasoning model bills reasoning on top of output | it is inside `output_tokens`: 185 out, 131 of them reasoning (entry 145) |
-| prompt caching will cut the selection bill | only for a corridor just run; six distinct ones cached 2,029 tokens (entry 145) |
-| put the country-stable part of the packet first and it caches | reordering alone is ~500 tokens, under the 1,024 minimum (entry 146) |
-| the traveller block is what breaks the cache prefix | it is five things; the fifth is the corridor-dependent pool gate (entry 146) |
-| a traveller-independent candidate set means showing far more | JP's three pools intersect at 93% of their union — about 7% more (entry 146) |
-| the goal is latency, so search should leave the request path | the goal is **right information**; latency and cost are the constraint (entry 147) |
-| search is justified because it finds pages nothing else does | that is recall; nothing here measures whether the answer was **true** (entry 147) |
-| a corpus gap search already covers is next in the queue | per-traveller pages are search's job; the corpus holds what all share (entry 148) |
-| `visa-discover corridor` measured what the web app served | for SG and JP the app served hand-pinned pages, the command ran discovery (entry 149) |
-| a hand-pinned checklist hands a Filipino London's list | the model declined it and a guard turned that into a 503 (entry 149) |
-| a plan with an unconfirmed decision is never `verified` | only a block or a tool downgraded it; a model's own null did not (entry 150) |
-| the US flip was the blocked-page judgement answering both ways | the refusing run filled no role, so it refused whatever that said (entry 151) |
-| a repeat corpus-routed US run spends no search | search runs on every corridor — 15 queries a run (entry 151) |
-| a refusal is not retried, only re-searching on refusal would do that | refusals are not stored, so the next request retries them (entry 151) |
-| a stored corridor only risks serving an older page | the US plan came from one 16 days old and omitted the London embassy (entry 152) |
-| a corridor's notes tell the traveller what was not requested | notes never reach a plan or the interface (entry 152) |
-| a missing checklist means none exists or we failed to find it | nobody can show none exists — say what was found among pages read (entry 153) |
-| a plan with no checklist only hedges about what it could not find | the prompt told the model the authority "publishes no document checklist" (entry 153) |
-| a reviewed per-country declaration can settle that none exists | a reviewer can no more prove absence than the pipeline — withdrawn (entry 153) |
-| a recall log's `fetched` marks every page a run tried to read | only pages it read; a refused page is not `fetched`, so count failures apart (entry 153) |
-| the refused-page judgement picks the same pages each run | 08-29 marked `visitor.html`; 09-14 marked the India page and not it (entry 155) |
-| a model's copied quotes need fuzzy matching to verify | 80 of 80 matched after normalising only spacing, quote marks, dashes and case (entry 156) |
-| a quote found on the cited page supports its claim | it proves the words exist, not that they fit — one decision quote was a caveat (entry 156) |
-| capping the pool is the most attractive fix for the gate | it displaced 1,813 pooled pages with no text, and 5 the fixture names (entry 158) |
-| reading stored text at the gate adds seconds to every corridor | step 3b already scored every candidate's text, then threw it away (entry 158) |
-| admitting every page whose text scores fixes the gate | it recovers the same 4 answers at +68% input, mostly chaff — five per role costs +16% (entry 158) |
-| czechia has never been run, so it has no recall log | it had one from 08-25, before its corpus and before logs named a selector — ungradable, not absent (entry 158) |
-| a search page's recall log names the query that found it | not if the corpus holds the same page scoring higher — the corpus record replaces it (item 51) |
-| searching only when the corpus leaves a gap saves what search costs | a gap corridor redoes select, fetch and adjudicate — projected −3% money, +4% seconds (entry 159) |
-| a corridor without search is a much cheaper corridor | search is $0.054 of $0.322; the model calls barely shrink without it (entry 159) |
-| a role the corpus fills needs no search | Japan and UK `PH/PH` filled it with a general page; search held the traveller's own (entry 159) |
-| a corpus holding pages from a post holds that post's answer | Japan holds 5 London-embassy pages and none of the 4 that answered (entry 159) |
-| a role a corpus-only run leaves open is a page the corpus lacks | 6 of 9 were on pages it holds — the model picked differently (entry 159) |
-| the purpose query only finds what the corpus already holds | first to return 45 of 194 search-only reads, 25 checklist-shaped (entry 159) |
-| the purpose query carries no traveller detail, so it finds nothing traveller-specific | `site:` a post's domain, it returns that post's checklist — Japan's London embassy, Norway's India PDF (entry 160) |
-| "first query to return a page" overstates what a query alone finds | re-issued, 28 of 45 purpose-first pages came back from the purpose query alone (entry 160) |
-| role counts show what dropping a query costs | it swapped pages: Norway's checklist became an older file, Japan's a questionnaire (entry 160) |
-| seeding a host's root reaches the pages a build entered sideways | 0 of 9 targets from 8 roots — Thailand's root *is* the form, Japan London's answers 404 (entry 161) |
-| a page a build's search returned is a page its corpus holds | a seed was kept only if something linked to it — Norway's rebuild kept 174 of 198 (entry 161) |
-| the corpus lacks what only live search supplies | the build's own search returned Norway's checklist and TDAC's form, and threw them away (entry 161) |
-| a PDF a build's search returns is read in the PDF pass | that pass read only linked PDFs; a PDF seed was never read at all (entry 161) |
-| a kept seed only matters when live search misses a page it usually finds | Thailand's decision PDF comes from a build query corridors never ask — old corpus 0 of 4, new 4 of 4 (entry 161) |
-| a page the corpus holds and pools is a page the model reads | Norway's January 2024 checklist was pooled and passed over for its 2018 sibling (entry 161) |
-| one failed search query costs a corpus build one query | `search_all` raised and the command exited — Japan's whole build lost to a DNS blip (entry 162) |
-| a host is a site for a crawl's budget | `host_of` keeps `www.` — 44 of 53 corpora held a split site taking two shares (entry 163) |
-| catching `httpx.HTTPError` catches every way a fetch can fail | a malformed redirect raises `httpx.InvalidURL`, which is not one — it ended China's rebuild (entry 176) |
-| a 53-country corpus rebuild is about $18.55 of search | measured 2026-09-15: ~2,590 queries, ~$13, ten hours two at a time (entry 161) |
-| a corridor's model cost is the selection and roles calls | the plan-writing call runs on every web request, stored corridors too, and was never priced (entry 164) |
-| the recorded tokens price the model calls exactly | OpenAI bills cache writes at 1.25× on GPT-5.6+ and the recorder never reads them (entry 164) |
-| japan's 93% pool overlap makes a traveller-independent pool cheap | across four travellers JP, DE and GB overlap 79–80% (entry 164) |
-| a selection packet's tokens are candidate evidence | 13–40% is repeated notes and JSON layout; half the UK's excerpt text is lines repeated across pages (entry 164) |
-| a cache write happens only where a prefix gets reused | on gpt-5.6-terra all 24 live calls wrote every uncached input token but 3 (entry 167) |
-| the plan call could be a large share of a request | 13% of a fresh corridor, and 69% of its own cost is output (entry 167) |
-| a corridor priced at $2/M input is priced completely | written prompt tokens bill at $2.50/M and this model writes nearly all of them — a fifth low (entry 167) |
-| the usage dashboard can check one sweep | it buckets by day, and its costs implied fewer tokens than the window alone logged (entry 167) |
-| a cache only pays for itself once there is traffic | implicit caching was *costing* a fifth on every call; explicit mode stops that with no traffic at all (entry 169) |
-| stripping boilerplate from excerpts cuts selection cost | excerpts are cut to a budget, so it saves 0–4%; the repeated notes and layout were the cost (entry 170) |
-| a leaner selection packet costs recall | 39 of 48 roles with either packet over ten corridors, at −31% input — one run each (entry 170) |
-| a plan that turns `partial` after a selection change was caused by selection | Singapore's pages were identical; its plan call leaves the decision open in both message shapes (entry 171) |
-| time windows alone attribute a sweep's calls to its requests | a request's last call lands in the second the next starts — match on corridor too (entry 171) |
-| a fully cached plan call is a cheap one | the five warm repeats read their whole prompt from cache and cost about the same — output (entry 167) |
-| short source ids in the plan packet change nothing a traveller reads | 2 refused plans and 2 wrong "no visa" for Japan in 48 calls; none in 48 on today's ids (entry 174) |
-| rule 8e's bounds are proven, Singapore checked them | Japan's exemption list held 16 of 16 — and a packet change broke it twice (entry 174) |
-| trim 2 shortens a quote by quoting the checklist heading | it drops the second quote: under-40-character quotes 7% → 5%, mean 86 → 81 characters (entry 175) |
-| a prompt that shortens the plan's prose shortens its wait as much | visible plan −5–13%, billed output ~150 tokens: hidden reasoning did not shrink with it (entry 175) |
-| a faster, cheaper model is a safe latency lever for the plan call | `gpt-5.6-luna` halved it and wrote Japan a "no visa required" plan (entry 177) |
-| reasoning effort `none` only costs detail | Japan answered "visa required" 3 of 3 where no page states it (entry 177) |
-| Fast mode speeds every call about the same | plan −43%, selection −23%, roles −13% — it speeds generation, and selection is mostly fixed (entry 177) |
-| item 5 is undone — a `403` never reaches the renderer | built 08-25; four files kept saying otherwise (entry 179) |
-| the challenge scripts are same-origin, so answering one trusts nothing new | 12 of 24 need `challenges.cloudflare.com`; the gate aborts it and all 12 stay challenged (entry 179) |
-| france's corridor loses its portal to the challenge | to the budget — 14 of 17 challenged pages were never rendered (entry 179) |
-| lithuania's challenge fingerprints past the user agent | what was seen is the gate aborting cloudflare's script; passing with it is untested (entry 179) |
-| a web page at `/robots.txt` should close the host | 401 origins, 4,687 read pages; the one real policy among them is already obeyed (entry 179) |
-| a DLR asks for a whole schema; only the user can narrow fields | `dlr add-read --fields` asks for single fields; the app reads `citizenships` alone (entry 180) |
-| a better heuristic could replace the selection call | at the same page count the best reaches 60% to the model's 83%; it can only shrink the packet (entry 183) |
-| builds open zero-scoring pages because of frontier order or the family share | an even per-host split drops the visa host's scored links at the cap — Japan's decision page among them (entry 185) |
+Over two hundred and fifty written-down diagnoses have been contradicted by a run; they are in
+[CORRECTIONS.md](CORRECTIONS.md). **Read the rows for the area before changing it**, and add a row
+whenever a run contradicts what a file said.
 
 Prefer a run, a test, or a printed result over a careful reading. When a TODO item proposes a fix,
-**measure the proposal before implementing it** — three of the rows above are proposals that were
+**measure the proposal before implementing it** — three of the rows in CORRECTIONS.md are proposals that were
 wrong, and each was cheap to disprove and expensive to have shipped.
 
 **Commits:** one lowercase subject line, no body, no attribution trailers, straight to `main`. One

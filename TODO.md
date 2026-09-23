@@ -339,7 +339,7 @@ parts of entry 35 — asking authorities for access, and the client-side retriev
 nobody has argued yet (item 4).
 
 **One habit matters more than the list.** Repeatedly, a constraint has turned out not to be where the
-documentation said it was — the corrections table in [CLAUDE.md](CLAUDE.md) has over two hundred and fifty rows and every
+documentation said it was — the corrections table in [CORRECTIONS.md](CORRECTIONS.md) has over two hundred and fifty rows and every
 one cost a session. **Prefer running a corridor to reading a code path**, and when an item below
 proposes a fix, measure the proposal before implementing it. Several items here were written from a
 careful reading and were wrong.
@@ -422,6 +422,12 @@ Every build now reports where its allowance went.
    under the fix would reach most of them, so do this only if the rebuild waits.
 3. **Two pieces of noise the fix exposed, for problem 2:** `email-signup` pages count as guidance on
    `gov.uk`, and hosts like `careers.homeoffice.gov.uk` spend a full share under either rule.
+
+**Problem 2's version A is built and measured (entry 189).** Corpus builds now score a link with
+the text around it, its page landmark, and — for a PDF — the linking page's title. Live requests
+are unchanged. Japan read 15 of 20 oracle pages against 11 without it, and nothing regressed. **What
+is left of item 68 is rebuilding the real stores (the owner's call) and version B, which stays
+declined.**
 
 **Problem 2 was measured before building, and it is small (entry 187).**
 - **On the oracle, 2 of 83 answer pages have a link scoring zero**: the Dutch EES leaflet and

@@ -18,7 +18,7 @@ Follow these rules:
 1. Choose only from the `source_id` values given. Never invent an id, a URL or a page. An invented
    id is discarded.
 2. Answer for each page with the role `visa_decision` if that page could plausibly have stated
-   whether this traveller needs a visa, and `irrelevant` if it could not. Say nothing else.
+   whether this traveller needs a visa, and `irrelevant` if it could not.
 3. **Never infer, guess or state what a refused page contains.** Your `reason` must be about the
    address and the label only — what the page is evidently *for* — never about what it says.
 4. `visa_decision` means the page establishes whether a visa is needed at all: a country-by-country

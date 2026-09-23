@@ -307,7 +307,6 @@ class LangChainCandidateSelector:
         chat_model = ChatOpenAI(
             api_key=SecretStr(api_key),
             model=model_name,
-            temperature=0,
             reasoning_effort=reasoning_effort,
             use_responses_api=True,
             # The client's two default retries are kept, unlike the other two calls, and are now

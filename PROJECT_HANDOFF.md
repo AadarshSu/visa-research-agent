@@ -25,11 +25,12 @@ and each kind of question has one home:
 | How is it built — trust model, pipeline, retrieval, discovery | [ARCHITECTURE.md](ARCHITECTURE.md) |
 | What are the rules I must not break | [CLAUDE.md](CLAUDE.md) — loaded automatically |
 | How do I contribute, and how do I debug a corridor | [AGENTS.md](AGENTS.md) |
+| What has a run contradicted before — read the rows for an area before changing it | [CORRECTIONS.md](CORRECTIONS.md) |
 | What is this project, for someone who has never seen it | [README.md](README.md) |
 
 **Do not restate a fact from one of those here.** Every time this file has summarised DECISIONS or
 TODO, the summary and the original have drifted, and the drift is what has wasted the most time. The
-corrections table in [CLAUDE.md](CLAUDE.md) has over two hundred and fifty rows; three of them are *this file's* known
+corrections table in [CORRECTIONS.md](CORRECTIONS.md) has over two hundred and fifty rows; three of them are *this file's* known
 problems being confidently wrong, and the rest are TODO items proposing a fix that measurement then
 disproved. Link instead of copying.
 

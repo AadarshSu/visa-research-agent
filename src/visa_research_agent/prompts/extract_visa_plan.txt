@@ -142,4 +142,3 @@ Follow these rules:
    explicit confirmation action and unresolved question. Qualify estimates and approval-dependent
    steps clearly. Never submit an application, book an appointment, create an account or fill a form.
 12. The destination must use the configured display name from the research packet.
-13. Return only the structured output requested by the schema.

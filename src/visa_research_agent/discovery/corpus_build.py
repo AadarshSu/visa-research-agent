@@ -10,7 +10,7 @@ Three things it does differently from `resolver.py`, each deliberate.
 
 **No traveller.** Queries name the destination and nothing else, and links are scored with
 `score_role_vocabulary` — the corridor-independent half — read with the link's surroundings
-(`score_link_in_context`, entry 188). A corpus guided by one nationality's
+(`score_link_in_context`, entry 189). A corpus guided by one nationality's
 vocabulary would be a corpus quietly built for that nationality.
 
 **It keeps pages about other countries.** `resolver.py` vetoes those, correctly: for one corridor a
@@ -859,7 +859,7 @@ async def build_country_corpus(
                 mission_seeds += 1
 
     def score(link: PageLink) -> RoleScores:
-        # With the link's surroundings, which only a build reads (entry 188).
+        # With the link's surroundings, which only a build reads (entry 189).
         return score_link_in_context(link, words)
 
     # Buffered rather than written page by page: one transaction at the end of a crawl, against
