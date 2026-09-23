@@ -324,7 +324,8 @@ otherwise. Oracle answer pages read:
 - **Czechia's UK list,** the page the PDF rule was written for, is read in both arms, because the
   PDF pass reached it either way (161 PDFs).
 - **`email-signup` pages opened: 0** in every build.
-- **Australia:** the no-context build had not finished when this was written.
+- **Australia** has no oracle row and is essentially unchanged: 586 pages opened by a scored link
+  against 570, and `immi.homeaffairs.gov.au` read 270 pages against 268.
 
 ---
 
