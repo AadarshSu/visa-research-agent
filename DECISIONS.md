@@ -245,6 +245,10 @@ not — and stored text ranks, it never speaks).
 **2026-09-24 · TODO item 62. The owner's decision ("route the calls through Personas"), after live
 probes. `model_route: personas` in `runtime.yaml`; one line reverts it.**
 
+**And the route from now on — the owner, the same day, after the grading below.** Item 62 is
+closed. What the OpenAI route offered that this one does not — prompt caching, Fast mode, cached and
+reasoning token counts — is recorded below and in TODO items 60 and 65.
+
 ### What Personas turned out to offer
 
 Personas runs agents, and until 2026-09-23 its guide documented nothing else (OFSELF_FEEDBACK 8.7).
