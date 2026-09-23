@@ -142,6 +142,44 @@ def budget_host(url: str) -> str:
     return host[4:] if host.startswith("www.") else host
 
 
+@dataclass
+class BudgetLedger:
+    """Where a crawl's page allowance went, counted as it is spent.
+
+    A corpus's statuses cannot answer this after the fact: `merge` only ever raises a status and
+    keeps the first anchor it saw, so "opened" sums every build under every rule. It took a patched
+    scratch build to find that Japan's allowance went 74% on links scoring nothing while
+    `mofa.go.jp`'s scored links were dropped at an even share (entry 185). Counted here, the next
+    build says so itself.
+    """
+
+    seeds: int = 0
+    scored: int = 0
+    unscored: int = 0
+    family: int = 0
+    over_share: int = 0
+    """Pages a host read past its even share on links that scored: `scored_host_ceiling`."""
+    dropped_unscored: int = 0
+    dropped_scored: set[str] = field(default_factory=set)
+    """Scored links turned away at a host's cap. A set, because one link is popped once per page
+    that links to it and it is the pages lost, not the sightings, that matter."""
+
+    def open(self, score: float, *, seed: bool, over_share: bool) -> None:
+        if seed:
+            self.seeds += 1
+        elif score > 0:
+            self.scored += 1
+        else:
+            self.unscored += 1
+        self.over_share += over_share
+
+    def drop(self, url: str, score: float) -> None:
+        if score > 0:
+            self.dropped_scored.add(url)
+        else:
+            self.dropped_unscored += 1
+
+
 class HostBudget:
     """How many pages each host may take, and why one number for all of them was wrong.
 
@@ -898,6 +936,7 @@ class LinkCrawler:
         provider_domains: frozenset[str] = frozenset(),
         on_page: PageReader | None = None,
         maximum_text_characters: int = DEFAULT_KEPT_TEXT_CHARACTERS,
+        scored_host_ceiling: int = 0,
     ) -> None:
         self.fetcher = fetcher
         self.score_link = score_link
@@ -961,6 +1000,15 @@ class LinkCrawler:
         # hand it over once at the end. The request path passes nothing and is unaffected.
         self.on_page = on_page
         self.maximum_text_characters = maximum_text_characters
+        # **How far past its share a host may read on links that scored — zero keeps the even split
+        # for everything, which is the request path.** Only a corpus build raises it (entry 185).
+        # A link that scored nothing still stops at the share, which is what keeps this from being
+        # the surplus that filled the United Kingdom's corpus with 4,252 `gov.uk` pages: that
+        # surplus could be spent on anything, and this can be spent only on what the scorer rates.
+        self.scored_host_ceiling = scored_host_ceiling
+        # Why each page was opened and what the budget turned away, so a build can say where its
+        # allowance went rather than leaving it to be reconstructed (entry 185).
+        self.ledger = BudgetLedger()
 
     async def crawl(
         self,
@@ -1133,23 +1181,31 @@ class LinkCrawler:
                 hosts.add(host)
                 families.spent += 1
                 wave.append((depth, url, link))
+                self.ledger.family += 1
 
         while frontier and len(wave) < wanted:
             entry = heapq.heappop(frontier)
-            _, depth, url, _sequence, link = entry
+            negated, depth, url, _sequence, link = entry
             if url in visited:
                 continue
             # One site, one share, and one page of it per wave: both spellings are the same server.
             host = budget_host(url)
-            # Over its share of the budget: dropped rather than deferred, exactly as before, or a
-            # large portal would keep its links circulating forever.
-            if not host_budget.allows(host, per_host):
+            score = -negated
+            over_share = not host_budget.allows(host, per_host)
+            # Over its share: a link that scored may go on up to `scored_host_ceiling`, and one that
+            # scored nothing is dropped rather than deferred, or a large portal would keep its links
+            # circulating forever. Entry 185: dropping *scored* links at an even share is what cut
+            # Japan's build off from `mofa.go.jp`'s visa pages while unrelated hosts spent theirs on
+            # pages that scored nothing.
+            if over_share and not (score > 0 and per_host.get(host, 0) < self.scored_host_ceiling):
+                self.ledger.drop(url, score)
                 continue
             if host in hosts:
                 deferred.append(entry)
                 continue
             hosts.add(host)
             wave.append((depth, url, link))
+            self.ledger.open(score, seed=depth == 0, over_share=over_share)
 
         for entry in deferred:
             heapq.heappush(frontier, entry)

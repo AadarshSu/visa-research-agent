@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [186](#186-a-scored-link-may-read-past-its-hosts-even-share-and-one-that-scored-nothing-may-not--measured-on-four-countries) | **A scored link may read past its host's even share; one scoring nothing may not** — `scored_host_ceiling`, corpus builds only; Japan's oracle pages read 0/20 → 12/20, the UK's 13/17 → 17/17, Australia's immigration host absent → 267 pages; `gov.uk` stops at 392 and mostly visa guidance; the Netherlands unchanged |
 | [185](#185-why-builds-open-mostly-zero-scoring-pages-the-even-per-host-split-drops-the-visa-sites-links-and-spends-the-rest-on-unrelated-sites) | **Why builds open mostly zero-scoring pages** — an even split gave Japan's 47 hosts 25 pages each; `mofa.go.jp`'s scored links were dropped at the cap, including the oracle's decision, fee, time and route pages for both Japan corridors, while unrelated hosts spent 74% of opens on zero-score pages and 288 of 1,200 went unspent; ordering and the family share are not causes |
 | [184](#184-offline-work-may-cost-what-it-takes-if-it-makes-each-live-request-better) | **Offline work may cost what it takes, if it makes each live request better** — the owner: build time and higher one-time cost are acceptable; the live ~30s target, entries 44, 78, 83 and 148 are unchanged; storing a model's judgement about a page needs its own entry |
 | [183](#183-can-a-heuristic-replace-a-model-call-not-at-the-same-page-budget-but-it-could-cut-the-selection-packet-by-a-third-to-a-half) | **Can a heuristic replace a model call?** — no heuristic matches the selector at its page budget (60% against 83%); a link+text fusion keeping the top 80 of the pool keeps every answer the model found at 52–63% of the packet; the heuristic role decider is confidently wrong on 34%; nothing shipped, item 66 |
@@ -234,6 +235,62 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 186. A scored link may read past its host's even share, and one that scored nothing may not — measured on four countries
+
+**2026-09-23 · TODO item 68, problem 1's fix (entry 185).** `LinkCrawler` gains
+`scored_host_ceiling`, and a corpus build sets it to `maximum_pages_per_host` (400).
+
+**The rule.** When a link's host has used its even share:
+- **a link scoring above zero is opened anyway,** until the host reaches the ceiling;
+- **a link scoring nothing is dropped, as before.**
+
+The frontier is best-first across hosts, so every scored link is opened before any unscored one,
+and unscored pages spend only what is left.
+
+**Where it applies.** The request path passes nothing, so the ceiling is 0 and the even split holds
+exactly as before. `BudgetLedger` counts where each build's allowance went, and `CorpusBuild` and
+`visa-discover corpus` report it.
+
+### Measured
+
+Eight fresh builds into scratch stores, one per rule per country. The same runner and the same
+day, so both rules face the same web; search seeds still vary between runs.
+
+| | Japan | Australia | Netherlands | United Kingdom |
+| --- | --- | --- | --- | --- |
+| opened on scored links, even → new | 2 → **347** | 261 → **592** | 288 → 288 | 218 → **478** |
+| opened on unscored links | 282 → 563 | 676 → **222** | 280 → 280 | 211 → 213 |
+| scored links turned away at a cap | 85 → **0** | 397 → **0** | 0 → 0 | 306 → 287 |
+| pages opened, of 1,200 | 488 → **1,193** | 1,157 → 1,200 | 1,200 → 1,200 | 577 → 839 |
+| oracle answer pages read | 0/20 → **12/20** | no oracle row | 6/11 → 6/11 | 13/17 → **17/17** |
+
+- **Japan.** Under the even split the build opened **2** pages by a scored link and read **none**
+  of the oracle's 20. The new rule reads `mofa.go.jp`'s visa-exemption list, fees, processing times,
+  application routes and visa index for both corridors. The 8 still unread are on the Edinburgh
+  consulate host, which no build reached under either rule, plus one checklist PDF.
+- **Australia.** `immi.homeaffairs.gov.au` was not among the top eight hosts under the even split;
+  embassy hosts took 26 pages each. Under the new rule it read **267**, and unscored opens fell by
+  two thirds.
+- **The Netherlands** is identical, as it should be. With three seed hosts the even share is already
+  the 400 ceiling.
+- **The United Kingdom was the risk.** Entry 82's surplus once gave `gov.uk` 4,252 entries. Here
+  `gov.uk` went **149 → 392** and stopped at the ceiling. **272 of its 392 paths** name visas,
+  entry or immigration (`entering-staying-uk`, `uk-border-control`, `uk-family-visa`), against 117
+  of 149 before. The visible noise is 21 `email-signup` pages. The UK still turns away 287 scored
+  links, at `gov.uk`'s ceiling.
+
+**Not measured.** How much any corridor answers differently. The real stores are unchanged, and
+grading a crawl change through corridors is entries 81 and 136's trap anyway. Seconds varied with
+host speed rather than rule: Australia took 43 minutes new and 55 even.
+
+**Noticed and not acted on.**
+- `careers.homeoffice.gov.uk` (149) and `design.homeoffice.gov.uk` (81) spend a full share in the UK
+  under either rule, and `email-signup` pages count as guidance. Both are what problem 2 — scoring
+  links with their context — and `is_boilerplate` are for.
+- A kept seed now counts as a scored link, so a host's seeds may also exceed its share.
 
 ---
 

@@ -1067,6 +1067,22 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
             print(f"        {query}: {reason}", file=stream)
     depths = ", ".join(f"depth {d}: {n}" for d, n in sorted(build.by_depth.items()))
     print(f"      {depths}", file=stream)
+    # Where the page allowance went. Entry 185 needed a patched build to learn this.
+    print(
+        f"      opened {build.opened_seeds} seeds, {build.opened_scored} scored links, "
+        f"{build.opened_unscored} links that scored nothing, {build.opened_family} family members"
+        + (
+            f"; {build.opened_over_share} past a host's even share"
+            if build.opened_over_share
+            else ""
+        )
+        + (
+            f"; {build.dropped_scored} scored links turned away at a host's cap"
+            if build.dropped_scored
+            else ""
+        ),
+        file=stream,
+    )
     if build.indexed_text:
         print(
             f"      {build.indexed_text} pages kept their text for the index"

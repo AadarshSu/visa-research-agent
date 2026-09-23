@@ -406,21 +406,24 @@ Japan showed:
   are dropped, not deferred.
 - **Not causes:** frontier ordering and the family share.
 
-**Do next — no OpenAI credit needed:**
-1. **Change the budget rule in `LinkCrawler`, for corpus builds only:**
-   - defer, rather than drop, a scored link on a capped host;
-   - let scored links exceed the even share, up to `HostBudget`'s ceiling;
-   - give zero-score links only the even share, or only what is left once no scored link is waiting.
+**Fixed and measured (entry 186).** A scored link may now read past its host's even share, up to
+the 400-page cap, and a link scoring nothing may not; corpus builds only. Over four countries, each
+built both ways:
+- **Japan** read 12 of its 20 oracle answer pages, against none under the old rule.
+- **The UK** read 17 of 17, against 13, and `gov.uk` stopped at 392 pages, mostly visa guidance.
+- **Australia's** immigration host went from not among the top eight to 267 pages.
+- **The Netherlands** is unchanged, as expected.
 
-   The request path keeps `HostBudget.even`. Entry 185 says why this is not the `gov.uk` surplus
-   that `DEFAULT_CORPUS_HOST_FLOOR` records.
-2. **Rebuild Japan into a scratch store with the instrumented runner, and compare** scored links
-   dropped, zero-score pages opened, budget spent and oracle answers opened.
-3. **Repeat on Australia (47 hosts), the Netherlands (3) and the UK**, to check `gov.uk` does not
-   balloon.
-4. **Only then rebuild the real stores.** Put the per-page reasons into `CorpusBuild` permanently
-   rather than in a scratch script.
-5. **Separately, open the scored links today's stores hold unopened** — 14,356, no search.
+Every build now reports where its allowance went.
+
+**Left of problem 1:**
+1. **Rebuild the real stores with the fix — the owner's call.** About $13 of search and ten-plus
+   hours for all 53 (entry 161). Australia alone took 43 minutes. Nothing in `var/corpus` or
+   `var/pagetext` has the fix yet.
+2. **Separately, open the scored links today's stores hold unopened** — 14,356, no search. A rebuild
+   under the fix would reach most of them, so do this only if the rebuild waits.
+3. **Two pieces of noise the fix exposed, for problem 2:** `email-signup` pages count as guidance on
+   `gov.uk`, and hosts like `careers.homeoffice.gov.uk` spend a full share under either rule.
 
 **Problem 2: a link is judged on too little context.** `extract_links` (`crawl.py`) keeps the anchor
 text and the most recent heading in document order, and nothing else. It has the whole page in hand

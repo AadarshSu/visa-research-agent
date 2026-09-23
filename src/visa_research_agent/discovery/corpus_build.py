@@ -163,6 +163,11 @@ DEFAULT_CORPUS_RENDERS = 400
 # Raise this only with a measurement behind it. The floor half is the part worth revisiting: it
 # guarantees a small mission host its pages, which is known problem 24's failure, and it is only
 # the surplus half that inflated the corpus.
+#
+# **The even split now binds only links that scored nothing** (entry 186). A scored link may read
+# past its host's share up to `maximum_pages_per_host`, which is what the surplus above got wrong:
+# that surplus could be spent on any link, and `gov.uk` has endless ones. Limited to scored links,
+# `gov.uk` stopped at 392 pages, most of them visa guidance.
 DEFAULT_CORPUS_HOST_FLOOR = 0
 
 # How much of an offline build may be spent opening per-traveller families — one page published once
@@ -497,6 +502,20 @@ class CorpusBuild(StrictModel):
     a page can be fetched and still contribute no text — too short to rank, or a render that came
     back empty. It is also **not** comparable to `found`, which counts discovered links rather than
     pages read. Zero here with a non-zero `crawled` means the build was asked to keep nothing."""
+
+    opened_seeds: int = 0
+    opened_scored: int = 0
+    opened_unscored: int = 0
+    """Pages opened by a link that scored nothing on role vocabulary. Entry 185 found 74% of
+    Japan's link-opened pages were these, all on hosts with nothing scored left to read."""
+
+    opened_family: int = 0
+    opened_over_share: int = 0
+    """Pages a host read past its even share because their links scored (`scored_host_ceiling`)."""
+
+    dropped_scored: int = 0
+    """Distinct scored links turned away at a host's cap and never opened. Entry 185: 149 in
+    Japan's build under the even split, including the oracle's visa-decision page."""
 
     lost_host_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
     """The same hosts keyed to the typed outcome, so a count never rests on parsing prose.
@@ -872,8 +891,12 @@ async def build_country_corpus(
         # Where the last build stopped, so this one does not start at the alphabet again.
         family_revisit=family_revisit_ranks(existing),
         provider_domains=(providers or get_service_providers()).domains,
+        # Scored links may read past an even share, up to the per-host cap; links that scored
+        # nothing may not. Entry 185.
+        scored_host_ceiling=maximum_pages_per_host,
     )
     crawled = await crawler.crawl(destination, seeds)
+    ledger = crawler.ledger
     seeded = _search_seed_candidates(searched, crawled, score, words)
     pdfs_read = 0
     if page_text is not None:
@@ -938,6 +961,12 @@ async def build_country_corpus(
         lost_host_outcomes=lost_outcomes,
         indexed_text=indexed_text,
         pdfs_read=pdfs_read,
+        opened_seeds=ledger.seeds,
+        opened_scored=ledger.scored,
+        opened_unscored=ledger.unscored,
+        opened_family=ledger.family,
+        opened_over_share=ledger.over_share,
+        dropped_scored=len(ledger.dropped_scored - crawler.read),
     )
 
 

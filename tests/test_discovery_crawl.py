@@ -678,6 +678,105 @@ async def test_a_www_and_a_bare_spelling_of_one_site_share_one_budget() -> None:
     assert {host_of(url) for url in fetched} >= {AUTHORITY, f"www.{AUTHORITY}"}
 
 
+def two_host_crawler(
+    scored_host_ceiling: int, fetched: list[str], *, per_host: int = 10
+) -> LinkCrawler:
+    """The authority links to endless scored visa pages; the mission to twenty that score nothing.
+
+    Entry 185's shape in miniature: Japan's `mofa.go.jp` had scored links to spare when it hit its
+    even share, while unrelated hosts spent theirs on links scoring nothing.
+    """
+
+    pages = iter(range(10_000))
+
+    async def fetch_html(client: Any, url: str, destination: Any) -> str:
+        fetched.append(url)
+        page = next(pages)
+        if host_of(url) == AUTHORITY:
+            links = "".join(
+                f'<a href="https://{AUTHORITY}/visa/p{page}-{i}.html">visa</a>' for i in range(10)
+            )
+        elif url.endswith("/start.html"):
+            links = "".join(
+                f'<a href="https://{MISSION}/about/p{i}.html">about us</a>' for i in range(20)
+            )
+        else:
+            links = ""
+        return f"<html><body>{links}</body></html>"
+
+    fetcher = CrawlFetcher(
+        transport=httpx.MockTransport(lambda request: httpx.Response(200)),
+        host_delay_seconds=0.0,
+    )
+    fetcher.fetch_html = fetch_html  # type: ignore[method-assign]
+    return LinkCrawler(
+        fetcher,
+        lambda link: RoleScores(scores={"visa_decision": 20.0} if "/visa/" in link.url else {}),
+        maximum_pages=30,
+        maximum_pages_per_host=per_host,
+        # A corpus build's settings: follow links that score nothing, three hops deep.
+        expansion_threshold=0.0,
+        maximum_depth=3,
+        scored_host_ceiling=scored_host_ceiling,
+    )
+
+
+SEEDS = [f"https://{AUTHORITY}/visa/a.html", f"https://{MISSION}/start.html"]
+
+
+@pytest.mark.anyio
+async def test_a_scored_link_may_read_past_an_even_share_and_an_unscored_one_may_not() -> None:
+    """Entry 185: an even split dropped the visa host's scored links at its cap and left a quarter
+    of Japan's allowance unspent. With a ceiling for scored links, the authority reads on past its
+    share, the mission's links that score nothing still stop at the mission's share, and the whole
+    budget is used."""
+
+    fetched: list[str] = []
+    crawler = two_host_crawler(20, fetched)
+
+    await crawler.crawl(destination(), SEEDS)
+
+    by_host = {
+        host: sum(1 for url in fetched if host_of(url) == host) for host in (AUTHORITY, MISSION)
+    }
+    assert by_host[AUTHORITY] == 20, "scored links read on to the ceiling, past the share of 10"
+    assert by_host[MISSION] == 10, "links that score nothing still stop at the even share"
+    assert len(fetched) == 30, "and the allowance is spent rather than left over"
+    assert crawler.ledger.over_share == 10
+    assert crawler.ledger.unscored == 9, (
+        "the mission's seed is a seed; its nine others scored nothing"
+    )
+
+
+@pytest.mark.anyio
+async def test_a_scored_link_past_the_ceiling_is_still_turned_away() -> None:
+    """The ceiling is a ceiling: one host with endless scored links may not take the whole crawl."""
+
+    fetched: list[str] = []
+    crawler = two_host_crawler(15, fetched)
+
+    await crawler.crawl(destination(), SEEDS)
+
+    assert sum(1 for url in fetched if host_of(url) == AUTHORITY) == 15
+    assert crawler.ledger.dropped_scored
+
+
+@pytest.mark.anyio
+async def test_the_request_path_still_drops_a_scored_link_at_an_even_share() -> None:
+    """`scored_host_ceiling` defaults to zero, which is the even split exactly as before. A corridor
+    runs under a stopwatch against a shortlist it will mostly skip (entry 51)."""
+
+    fetched: list[str] = []
+    crawler = two_host_crawler(0, fetched)
+
+    await crawler.crawl(destination(), SEEDS)
+
+    assert sum(1 for url in fetched if host_of(url) == AUTHORITY) == 10
+    assert len(fetched) == 20, "a capped host's links are dropped, so budget goes unspent"
+    assert crawler.ledger.over_share == 0
+    assert crawler.ledger.dropped_scored
+
+
 @pytest.mark.anyio
 async def test_an_unreadable_pdf_costs_one_page_and_not_the_build() -> None:
     """Entry 54's defect, reintroduced on 2026-08-26 and caught by a real build dying.
