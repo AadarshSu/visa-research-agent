@@ -316,7 +316,8 @@ one-paragraph defects rather than items.
 |  | 67. Test ranking by embeddings of stored page text | `soon` |
 |  | 64. Expand from 53 countries to 100+ | `soon` |
 | **Blocked** | 60. Decide where Fast mode goes | `blocked` |
-| **Later** | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
+| **Later** | 69. Read scanned PDFs — for ranking first, and as evidence only after a decision | `later` |
+|  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
 |  | 47. Find out how much of the world the family detector cannot see | `later` |
 |  | 46. Decide what to do about a refusal served as `HTTP 200` | `later` |
@@ -353,9 +354,9 @@ are measured on scratch stores and not yet in the real ones. A rebuild only adds
 once, and in this order:
 1. **Item 65 — settle the model.** Model choice changes answers, and the owner's review in step 5
    should happen once, on the model that will serve. On Personas this costs search only.
-2. **Item 68 — check the scanned PDFs.** Before anything else touches the store, check whether any
-   oracle answer page, or any page scoring for a role, is among the 1,001 PDFs whose text layer came
-   back empty. Only if one is does text recognition belong before the rebuild.
+2. **Item 68 — check the scanned PDFs. Done 2026-09-25: it does not block the rebuild.** None of
+   the oracle's answer pages is among the 1,001 PDFs with an empty text layer or the 215 that could
+   not be parsed. 196 of them score for a role, which is item 69, for later.
 3. **Item 63 — capture the baseline, then pilot.** Back up `var/corpus` and `var/pagetext` for the
    ten oracle countries, as entry 161 did. Run a destination-spread set of corridors on the current
    store, at least two runs each. Then rebuild those ten with item 68's fixes.
@@ -1448,6 +1449,30 @@ no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" p
 ---
 
 ## Later
+
+### 69. Read scanned PDFs — for ranking first, and as evidence only after a decision — `later`, **added 2026-09-25**
+
+**Why it matters.** The rebuild sequence's step 2 checked the PDFs whose text could not be read
+before the rebuild. None holds an oracle answer, so this waits. But **196 score for a role on their
+link alone**, and they are guidance nobody can currently use, in the corpus or in a live corridor:
+- **95 of 1,001 with an empty text layer (scanned)** — Thailand's visa-fee tables (updated 15 July
+  2024) and its 60-day visa-exemption notice, Czechia's consular fees for August 2026, a South
+  African visa-exemption notice, Swiss fee sheets, Norwegian checklists for other residences.
+- **101 of 215 that could not be parsed** — mostly IRCC's document checklists (IMM 5484 and its
+  siblings). These are dynamic Adobe forms that show a "please wait" shell to any other reader, so
+  text recognition would not help them either. They need a different reading, or stay named.
+
+**Two uses, with very different risk:**
+- **Ranking — low risk.** Text recognition at corpus-build time puts a scanned page's words into
+  `var/pagetext`, which ranks and never speaks (entry 78). A misread word costs a ranking.
+- **Evidence — needs a decision entry first.** A live corridor would quote recognised text to a
+  traveller. A misread digit in a fee table is a wrong fee with a citation. `QuoteChecker` would
+  compare the quote against the recognised text, so it cannot catch a recognition error. Argue it
+  against entries 5 and 156 before any code.
+
+**First step:** count how often a corridor's selection or shortlist includes one of the 95. That
+says whether this is a real gap for travellers or a store curiosity. It is offline, over
+`var/recall`.
 
 ### 49. The family is walked at 25 members a build and has 169 — decide if that is enough — `later`, **stopped 2026-09-14 (entry 148)**
 
