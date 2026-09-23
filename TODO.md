@@ -16,7 +16,7 @@ points at the items that do the work. The detail lives in the items, not here.
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
 | **Model calls paid through Ofself Personas**, on their OpenAI key | Not started. Personas documents no model-only call, no structured output and no reasoning or tier setting (OFSELF_FEEDBACK 8.1–8.3, 8.7) | **62** | **Ofself** documenting how |
-| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
+| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60; OpenAI credit to time anything |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | OpenAI credit; the owner's own checking (entry 68) |
 | **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23) | **64**, **2** | nothing external — search credit only |
@@ -297,7 +297,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 60. Decide where Fast mode goes | `next` |
+| **Now** | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
+|  | 60. Decide where Fast mode goes | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -342,7 +343,69 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
+### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `next`, **added 2026-09-23**
+
+**Why it matters.** OpenAI released GPT-6 Sol on 2026-09-22 at Terra's input price and a lower
+output price: $2.00 input, $0.20 cached, $2.50 cache write and **$10.00 output** per million tokens,
+against Terra's $12.00. It is the tier above Terra, and the first published scores put it ahead:
+- **Artificial Analysis:** 48 against Terra's 34.
+- **BenchLM overall:** 82.2 against 72.8.
+- **Individual tests are mixed**, and none of them resembles this project's task. It is ahead on
+  OSWorld 2.0 (60.5% against 50.2%) and behind on DeepSWE (68.8% against 69.6%) and HealthBench
+  Hard (30.1% against 32.7%).
+
+Those figures do not answer the question for this project, for three reasons:
+- **Sol's 48 was scored at `max` reasoning effort, and every call here runs at `low`.** At `max`,
+  Artificial Analysis measured about 107s to the first token.
+- **Nothing is published yet for Sol on the qualities this project depends on:** instruction
+  following, long-document reading and hallucination.
+- **A model change has broken a decision before.** In entry 177, `gpt-5.6-luna` wrote Japan a
+  "no visa required" plan.
+
+**What it could buy.** If it is at least as good, it would be a quality upgrade at slightly lower
+cost. Repricing 2026-09-15's logged calls puts the saving at about **2–3% a fresh corridor**
+(~$0.251 → ~$0.245). The plan call gets about 11% cheaper, and selection and roles barely move
+because they are almost all input. How Sol's speed compares to Terra's is unknown. **Decide item
+60 after this, since Fast mode's price and gain depend on which model it runs on.**
+
+**How to run it — all three calls are one setting.** `OPENAI_MODEL` in `.env` drives selection,
+roles, blocked-page judgement and the plan call alike (`config/settings.py`), and
+`openai_reasoning_effort` stays `low` in both arms.
+1. **First, record the model name in each usage record.** `ModelCallRecord`
+   (`research/model_usage.py`) holds no model today, so a Sol call and a Terra call in
+   `var/usage/` cannot be told apart or priced separately. This is a small code change with a
+   test.
+2. **Clear `var/cache/`, `var/corridors/` and `var/plans/` before each arm, or before neither.**
+   Otherwise one arm runs on reused corridors and drafts (entries 136 and 178).
+3. **Run several times per arm.** Model seconds swing about 40% between identical runs (entry 144),
+   and one run per arm cannot separate the models. Three per corridor per arm is the least.
+4. **Corridors:**
+   - **Japan `IN/GB` and Singapore `PH/PH`.** Any change to the plan call must pass these (entry 174),
+     and rule 8e's "no visa" bounds live only in the prompt.
+   - **Entry 170's ten graded corridors**, for selection, whose method is the selection A/B.
+5. **Record, per arm:**
+   - **Answers:** each corridor's visa decision (required / not required / open), whether it
+     resolved or refused, and roles filled. Put any decision that differs from Terra's in front of
+     the owner.
+   - **Time:** `phase_seconds` and each call's seconds from the recall log, plus the whole request.
+   - **Cost:** tokens per call priced at each model's rates, including cache writes (entry 167). Sol
+     may reason more or less than Terra at `low`, so its output tokens must be measured, not assumed.
+
+**The bound on grading it.** Correctness is the owner's to judge (entry 68). This item compares what
+the two models *answer* and flags every disagreement; it does not build a grader. **Any
+disagreement on a visa decision blocks the switch** until the owner has read both plans. Where
+Terra was open and Sol commits, that counts as a disagreement, and it is the worst direction.
+
+**Cost of the test itself:** a few dollars of model calls and search. It needs OpenAI credit.
+
+**If Sol wins:** changing `OPENAI_MODEL` is one line of `.env`. Record the result as a decision
+entry and update the headline cost and time figures in CLAUDE.md, the handoff and TODO, which all
+quote Terra's.
+
 ### 60. Decide where Fast mode goes — `next`, **added 2026-09-16 (entry 177)**
+
+**Decide it after item 65.** Fast mode was measured on Terra, and its price and gain depend on
+the model it runs on.
 
 **Why it matters.** It is the one latency lever measured that is both large and safe.
 - **The plan call is 39–48% faster** on Fast mode, with no decision changed: Japan open, Germany

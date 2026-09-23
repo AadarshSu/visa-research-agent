@@ -346,7 +346,8 @@ not shown.
 **Item 5 closed on 2026-09-16 (entry 179).** It was mostly built already. What was left measured
 two things, and both are now the owner's decision as **item 61**: half the challenges met today need a
 Cloudflare script the render gate refuses, and France's corridor runs out of renders before it runs
-out of pages. **Now holds only item 60**, also the owner's decision. The pre-rebuild copies of Norway, Thailand
+out of pages. **Now holds item 65, then item 60.** Item 65 tests GPT-6 Sol, released 2026-09-22, against Terra on
+answers, time and cost. Item 60, where Fast mode goes, is the owner's decision and waits on 65. The pre-rebuild copies of Norway, Thailand
 and Japan that the matched test compared against were deleted on 2026-09-15, once the test was
 recorded; `var/corpus/` and `var/pagetext/` hold only the rebuilt stores.
 
