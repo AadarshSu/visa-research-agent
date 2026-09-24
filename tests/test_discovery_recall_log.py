@@ -918,3 +918,34 @@ def test_the_record_keeps_model_calls_and_an_older_log_reads_as_unrecorded(
         ).model_calls
         == []
     )
+
+
+async def test_a_pool_cut_for_the_selector_says_so_and_the_log_marks_what_was_withheld(
+    tmp_path: Path,
+) -> None:
+    """Entry 195: a big pool is cut before the model sees it, and nothing is dropped silently.
+
+    The fixture's pool is small, so the cut is set to one to exercise it. The corridor's notes say
+    how many were not shown and why, and each withheld row in the recall log says so — which is how
+    a later reader tells "never offered" from "offered and not picked".
+    """
+
+    log = RecordingLog()
+    resolver = build_resolver(tmp_path, [INDEX, MISSION_INDEX, DETAIL_INDIA], log)
+    selector = OfferRecordingSelector()
+    resolver.selector = selector
+    resolver.page_text = text_store(tmp_path, [INDEX, MISSION_INDEX, DETAIL_INDIA])
+    resolver.selection_shown = 1
+    resolver.selection_blind = 0
+
+    resolved = await resolver.resolve(indexed_destination(), corridor())
+
+    assert len(selector.offered[0]) == 1
+    rows = log.records[-1].candidates
+    withheld = [row for row in rows if row.withheld_from_selection]
+    assert withheld, "the pool held more than one candidate, so something was withheld"
+    assert not any(row.url in selector.offered[0] for row in withheld)
+    assert any(
+        f"{len(withheld)} of the" in note and "were not shown to it" in note
+        for note in resolved.notes
+    )

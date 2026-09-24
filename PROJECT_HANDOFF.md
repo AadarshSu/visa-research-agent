@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-24 — update this line when you touch the handoff |
-| **Tests** | 918: 917 passing and 1 skipped, run 2026-09-24 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 923: 922 passing and 1 skipped, run 2026-09-24 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -47,6 +47,13 @@ disproved. Link instead of copying.
 
 Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which items serve it.
 
+**The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
+195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more
+oracle roles at about 42% less selection input (entry 194); it was checked live on one corridor and
+**not A/B'd**, by the owner's decision. Each corridor's notes say how many were withheld, and the
+recall log flags them `withheld_from_selection` — read that first if a corridor misses a page it
+holds. Germany's five-run confirmation below predates it.
+
 **A corridor that works every time, confirmed 2026-09-25: `germany/IN/GB/tourism`.** The owner asked for
 one corridor that gives the same verified answer on every fresh run, and chose this one. Five fresh
 runs through the real API route (Personas, current store, empty corridor and plan-draft folders each
@@ -63,10 +70,7 @@ posts to `/visa-plans` in-process with `CORRIDOR_DIRECTORY`, `PLAN_DIRECTORY` an
 - **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
   (`var/usage/`, 2026-09-17) both failed. Every web request, corridor run and live timing waits on a
   top-up.
-- **Four decisions are waiting on the owner:**
-  - item 66, whether selection may be shown a ranked top 120 (+ 40 pages with no stored text)
-    instead of every pooled candidate — more roles found at 42% less input on replayed packets, but
-    it reverses the rule that no candidate is dropped (entry 194);
+- **Three decisions are waiting on the owner:**
   - item 60, where Fast mode goes;
   - item 61, what a corridor may spend answering a challenge;
   - item 7's question of whether to store a refusal before deploying (entry 151).

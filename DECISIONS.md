@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [195](#195-the-selector-is-shown-the-ranked-top-120-plus-40-pages-with-no-stored-text-and-the-rule-that-no-candidate-is-dropped-goes) | **The selector sees the top 120 + 40 blind** — the owner's decision after entry 194, without the live A/B; `selection.py`'s no-drop rule goes; the notes count what was withheld and the recall log flags each row; UK `IN/GB` live: 160 of 567 shown, checklist found, selection input 57.6k against 106k |
 | [194](#194-item-66-on-replayed-pools-the-rebuilds-loss-is-small-and-in-secondary-roles-and-showing-the-model-fewer-candidates-recovers-it-at-half-the-input) | **Item 66 on replayed pools** — the pilot's 75 → 68 was half noise, a month-old baseline and one address; the real loss is −2.8 of 90, all secondary, while decision + checklist rose 23.2 → 25.0; fusion top 120 reads 82.4 at 45% less input, top 120 + 40 blind 80.0 and keeps the traveller's own posts; `selection-recall` gains a same-page column; not shipped — it reverses the no-drop rule |
 | [193](#193-the-ten-country-pilot-rebuild-the-stores-hold-every-answer-and-the-selector-picks-fewer-of-them-from-bigger-pools) | **The ten-country pilot rebuild** — all ten built; oracle roles found 75 → 68 of 92, every lost page in the pool and not picked, as pools grew (Singapore 150 → 482); unresolved decisions and checklists 13 → 14; item 66 is more pressing |
 | [192](#192-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
@@ -243,6 +244,46 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 195. The selector is shown the ranked top 120 plus 40 pages with no stored text, and the rule that no candidate is dropped goes
+
+**2026-09-24 · TODO item 66, closed. The owner's decision, after entry 194: ship the top 120 + 40
+blind cut, without the live A/B, and drop `selection.py`'s rule that no candidate is dropped for
+want of room.**
+
+**What changed.**
+- `shown_to_selector` orders the pool by `fusion_order` — entry 183's ranking, per role, roles taken
+  in turn — and offers the top `DEFAULT_SELECTION_SHOWN` (120) plus the `DEFAULT_SELECTION_BLIND`
+  (40) best-linked candidates with no stored text, added and never displacing. A pool of 120 or
+  fewer is shown whole.
+- **Nothing is dropped silently.** The corridor's notes say how many of the pool were withheld and
+  why, and each withheld row in the recall log is `withheld_from_selection`, so "never offered" can
+  be told from "offered and not picked".
+- The shipped function produces, **byte for byte, the packets entry 194 graded** — checked on all
+  40 captured pools, rebuilt and pre-rebuild.
+
+**Why the rule went.** It was written so the heuristic would stop being the recall gate: a page the
+old 35-place shortlist ranked out was never fetched or judged (entry 40). The cut makes a ranking the
+gate again for the tail of a big pool. Entry 194 measured that tail costing more in distraction than
+it returned: 76.6 roles of 90 with the whole pool, 80.0 with the cut, and 73.3 when the model was
+given more text instead. The blind 40 keep entry 158's route open, and the model picked them in
+every replay run: they are the traveller's own posts.
+
+**Why 80.0 and not the 82.4 of the plain top 120.** The oracle can only credit a page somebody
+could read, so it charges pages with no stored text their cost and credits none of their value.
+Plain top 120 keeps 172 of 4,021 such pages and would hide France's page for applicants in the UK
+and the US embassy in London without the grade noticing.
+
+**Checked live once, not A/B'd.** `united-kingdom/IN/GB`: 567 pooled, 160 shown, 407 withheld and
+reported; the checklist found (the whole-pool selector found it 1 run in 5); selection input 57.6k
+tokens against 106k on the pilot's run; 21.8s in the resolver. **What was not measured:** whether the
+withheld tail ever held a page that would have changed an answer. That is the question the live
+A/B would have asked, and the owner waived it.
+
+**If it needs undoing,** `DEFAULT_SELECTION_SHOWN` set above any pool size restores the old
+behaviour, and the recall log's flag says which pages a corridor was never shown.
 
 ---
 
@@ -350,6 +391,9 @@ roles taken in turn. "Blind" is the 40 candidates with no stored text whose link
   reaches the model on its link.
 
 ### Not settled, and not shipped
+
+**Shipped the same day as top 120 + 40 blind, without the live A/B — the owner's decision, entry
+195.** What follows is what was open when this entry was written.
 
 - **It reverses `selection.py`'s rule that no candidate is dropped for want of room.** That rule was
   written so the heuristic would stop being the recall gate; a fusion cut makes a heuristic the

@@ -56,6 +56,11 @@ class ConsideredCandidate(StrictModel):
     Until then a `best_score` of 0.0 meant the selector never saw the page; on a row with this set
     it did. False on every log written before the field existed, which is true of them — nothing was
     admitted that way."""
+    withheld_from_selection: bool = False
+    """In the pool, and **not shown** to the model selector, because the pool was cut to the ranked
+    top plus pages with no stored text (entry 195). Tells "never offered" from "offered and not
+    picked", which the recall log could not say once a pool member could be withheld. False on every
+    log written before the field existed, which is true of them — nothing was withheld then."""
 
 
 class ModelCall(StrictModel):
@@ -220,6 +225,7 @@ def considered(
     shortlisted: set[str],
     fetched: set[str],
     admitted_on_text: set[str] | frozenset[str] = frozenset(),
+    withheld_from_selection: set[str] | frozenset[str] = frozenset(),
 ) -> list[ConsideredCandidate]:
     """Flatten the candidate set, best-scoring first, which is the order it was cut in."""
 
@@ -236,6 +242,7 @@ def considered(
             shortlisted=url in shortlisted,
             fetched=url in fetched,
             admitted_on_text=url in admitted_on_text,
+            withheld_from_selection=url in withheld_from_selection,
         )
         for url, candidate in candidates.items()
     ]

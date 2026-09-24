@@ -95,12 +95,15 @@ from visa_research_agent.discovery.search import (
     usable_results,
 )
 from visa_research_agent.discovery.selection import (
+    DEFAULT_SELECTION_BLIND,
+    DEFAULT_SELECTION_SHOWN,
     CandidateSelector,
     SelectionError,
     admitted_on_text,
     build_selection_packet,
     load_selection_prompt,
     selected_candidates,
+    shown_to_selector,
     validated_selection,
 )
 from visa_research_agent.discovery.urls import (
@@ -309,6 +312,8 @@ class ResolutionTrace:
     fetched: set[str] = field(default_factory=set)
     admitted_on_text: set[str] = field(default_factory=set)
     """Candidates offered to the model selector on their stored text alone (entry 158)."""
+    withheld_from_selection: set[str] = field(default_factory=set)
+    """Pooled candidates the model selector was not shown, because the pool was cut (entry 195)."""
     crawl_failures: dict[str, str] = field(default_factory=dict)
     fetch_failures: list[SourceFailure] = field(default_factory=list)
     """What reading the shortlist could not read, kept typed rather than flattened to a sentence.
@@ -501,6 +506,8 @@ class CorridorResolver:
         corpus: CountryCorpus | None = None,
         page_text: PageTextStore | None = None,
         text_scoring_coverage_bar: float = DEFAULT_TEXT_COVERAGE_BAR,
+        selection_shown: int = DEFAULT_SELECTION_SHOWN,
+        selection_blind: int = DEFAULT_SELECTION_BLIND,
         selector: CandidateSelector | None = None,
         pinned: list[str] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
@@ -538,6 +545,10 @@ class CorridorResolver:
         # country with no index behaves exactly as it did before one existed (entry 78).
         self.page_text = page_text
         self.text_scoring_coverage_bar = text_scoring_coverage_bar
+        # How much of a big pool the model selector sees: the best by `fusion_order`, plus pages
+        # with no stored text on their links alone (entries 194, 195).
+        self.selection_shown = selection_shown
+        self.selection_blind = selection_blind
         # Chooses what to fetch by reading stored page text, replacing `_shortlist` as the recall
         # gate. Optional and off unless one is supplied: without it the corridor behaves exactly as
         # it did before, which keeps the heuristic path as the regression baseline.
@@ -968,10 +979,17 @@ class CorridorResolver:
             )
             return self._shortlist(list(candidates.values()))
 
+        offered, withheld = shown_to_selector(
+            pool,
+            stored_scores,
+            lambda url: url in held,
+            shown=self.selection_shown,
+            blind=self.selection_blind,
+        )
         taken: set[str] = set()
         by_id: dict[str, CandidatePage] = {}
         text_by_id: dict[str, str] = {}
-        for candidate in pool:
+        for candidate in offered:
             source_id = build_source_id(destination.slug, candidate.link.url, taken)
             by_id[source_id] = candidate
             if candidate.link.url in held:
@@ -980,6 +998,7 @@ class CorridorResolver:
         packet = build_selection_packet(corridor, by_id, text_by_id)
         # Recorded once the packet exists, whatever the call then does: these pages were offered.
         trace.admitted_on_text = {candidate.link.url for candidate in admitted}
+        trace.withheld_from_selection = {candidate.link.url for candidate in withheld}
         try:
             self.selection_calls += 1
             selection_prompt = load_selection_prompt()
@@ -1000,16 +1019,28 @@ class CorridorResolver:
                 "candidate selection named no page, so the heuristic ranking chose instead"
             )
             return self._shortlist(list(candidates.values()))
+        # Counted among what was shown, not what was pooled: the cut may withhold an admitted page.
+        admitted_shown = sum(
+            1 for candidate in admitted if candidate.link.url not in trace.withheld_from_selection
+        )
         admitted_note = (
-            f"; {len(admitted)} of those were offered on their stored text, the links to them "
+            f"; {admitted_shown} of those were offered on their stored text, the links to them "
             "having scored nothing for any role"
-            if admitted
+            if admitted_shown
+            else ""
+        )
+        withheld_note = (
+            f"; {len(withheld)} of the {len(pool)} were not shown to it — it saw the "
+            f"{self.selection_shown} ranked likeliest on their links and stored text, and "
+            f"{len(offered) - self.selection_shown} more with no stored text on their links "
+            "alone, because a longer list chose worse (entry 194)"
+            if withheld
             else ""
         )
         notes.append(
-            f"{len(chosen)} of {len(pool)} candidates were chosen to read by a model shown what "
+            f"{len(chosen)} of {len(offered)} candidates were chosen to read by a model shown what "
             f"{len(text_by_id)} of them say, rather than by ranking the links to them"
-            f"{admitted_note}"
+            f"{admitted_note}{withheld_note}"
         )
         # The only exit where a model picked the pages. Every `return self._shortlist(...)` above
         # is the heuristic doing the choosing, and each leaves the trace's default alone — which is
@@ -1809,6 +1840,7 @@ class CorridorResolver:
                         shortlisted=trace.shortlisted,
                         fetched=trace.fetched,
                         admitted_on_text=trace.admitted_on_text,
+                        withheld_from_selection=trace.withheld_from_selection,
                     ),
                     unreadable=unreadable,
                     unreadable_outcomes=outcomes,

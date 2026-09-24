@@ -19,7 +19,9 @@ from visa_research_agent.discovery.selection import (
     admitted_on_text,
     build_selection_packet,
     excerpt_budget,
+    fusion_order,
     load_selection_prompt,
+    shown_to_selector,
     validated_selection,
 )
 
@@ -260,3 +262,79 @@ def test_only_a_page_outside_the_pool_can_be_admitted() -> None:
     }
 
     assert admitted_on_text([outside], scored) == [outside]
+
+
+# --- what of a big pool the selector is shown, entries 194 and 195 -----------------------------
+
+
+def linked(url: str, **by_role: float) -> CandidatePage:
+    return CandidatePage(
+        link=PageLink(url=url, text="", heading="", depth=1, discovered_from="seed"),
+        link_scores=RoleScores(scores=dict(by_role)),
+    )
+
+
+def test_every_roles_best_comes_before_any_roles_second() -> None:
+    """Roles are taken in turn, so a role with many strong candidates cannot fill the front of the
+    list — the ranking is per role for the reason the shortlist's per-role depth is (entry 61)."""
+
+    decisions = [
+        linked(f"https://a.gov.example/decision-{i}", visa_decision=90.0 - i) for i in range(3)
+    ]
+    fee = linked("https://a.gov.example/fees", fees=10.0)
+
+    order = fusion_order([*decisions, fee], {})
+
+    assert [c.link.url for c in order[:2]] == [
+        "https://a.gov.example/decision-0",
+        "https://a.gov.example/fees",
+    ]
+
+
+def test_a_page_with_no_stored_text_still_ranks_on_its_link() -> None:
+    """What separates this from the cap entry 158 rejected: text can lift a page, and the absence of
+    text never sinks one below a page that scored nothing at all."""
+
+    unread = linked("https://a.gov.example/unread", document_checklist=40.0)
+    read = linked("https://a.gov.example/read", document_checklist=10.0)
+    nothing = linked("https://a.gov.example/nothing")
+
+    order = fusion_order(
+        [nothing, read, unread], {read.link.url: text_scores(document_checklist=80.0)}
+    )
+
+    assert order[-1] is nothing
+    assert unread in order[:2]
+
+
+def test_a_pool_no_larger_than_the_cut_is_shown_whole() -> None:
+    pool = [linked(f"https://a.gov.example/{i}", fees=float(i)) for i in range(5)]
+
+    offered, withheld = shown_to_selector(pool, {}, lambda url: True, shown=5, blind=2)
+
+    assert len(offered) == 5
+    assert withheld == []
+
+
+def test_a_big_pool_shows_the_ranked_top_plus_the_best_linked_pages_nobody_read() -> None:
+    """The blind share is entry 158's route kept: a page with no stored text reaches the model on
+    its link. It is added, never displacing the top, and everything else is withheld and returned
+    so the caller can say so."""
+
+    read = [linked(f"https://a.gov.example/read-{i}", fees=100.0 - i) for i in range(4)]
+    unread = [linked(f"https://a.gov.example/unread-{i}", fees=50.0 - i) for i in range(3)]
+    has_text = {c.link.url for c in read}.__contains__
+
+    offered, withheld = shown_to_selector(read + unread, {}, has_text, shown=2, blind=2)
+
+    assert [c.link.url for c in offered] == [
+        "https://a.gov.example/read-0",
+        "https://a.gov.example/read-1",
+        "https://a.gov.example/unread-0",
+        "https://a.gov.example/unread-1",
+    ]
+    assert {c.link.url for c in withheld} == {
+        "https://a.gov.example/read-2",
+        "https://a.gov.example/read-3",
+        "https://a.gov.example/unread-2",
+    }

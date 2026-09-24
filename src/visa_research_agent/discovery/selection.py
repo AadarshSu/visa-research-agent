@@ -27,13 +27,18 @@ can be told which candidates it is judging blind and weigh them accordingly, whi
 why this is worth trying. It is a hypothesis; `no_stored_text` in the packet is what makes it
 testable.
 
-**No candidate is ever dropped for want of room.** When the set is wide the per-candidate excerpt
-shortens instead, down to `MINIMUM_EXCERPT_CHARACTERS`. Dropping the 300th candidate would rebuild
-the recall gate this module exists to remove, one layer up.
+**A big pool is cut before the model sees it, and the cut is reported.** This module was written
+with the opposite rule — no candidate dropped for want of room, excerpts shortened instead — so the
+heuristic would stop being the recall gate. Entry 194 measured what that cost once the rebuilt
+stores fed it pools of 500 to 860: the model chose worse from the long list, and giving it more text
+made that worse still. So the selector is shown the best `DEFAULT_SELECTION_SHOWN` by
+`fusion_order`, plus `DEFAULT_SELECTION_BLIND` pages with no stored text on their links alone, and
+the corridor's notes say how many were withheld — the owner's decision, entry 195. Within what is
+shown, excerpts still shorten rather than candidates drop.
 """
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from importlib.resources import files
 from typing import Any, Protocol
 
@@ -84,6 +89,23 @@ DEFAULT_SELECTION_SIZE = 20
 # corpora for an `IN/GB` traveller: 9,642 candidates become 10,731, and selection input rises 16%.
 DEFAULT_TEXT_ADMISSIONS_PER_ROLE = 5
 
+# How many of the pool the selector is shown, best first by `fusion_order`, plus how many pages with
+# no stored text are added on their link's own score. DECISIONS entries 194 and 195.
+#
+# **A shorter list, not more text, is what a big pool needed.** Replayed over the 20 oracle
+# corridors on the rebuilt stores, five runs each: the whole pool (~500 candidates) found 76.6 roles
+# of 90, doubling the text budget 73.3, the top 120 82.4 and the top 120 plus 40 blind 80.0, at 42%
+# less input. **The 40 are the part the oracle cannot see**: it can only credit a page somebody
+# could read, and the pages with no stored text that the model picked, every run, were the
+# traveller's own posts — France's page for applicants in the UK, the Manila missions, the US
+# embassy in London.
+DEFAULT_SELECTION_SHOWN = 120
+DEFAULT_SELECTION_BLIND = 40
+
+# Reciprocal-rank fusion's damping constant, the conventional one. Entry 183 measured the ranking
+# with it and entry 194 graded the cut with it; it is not tuned.
+FUSION_RANK_CONSTANT = 60
+
 
 class SelectionError(VisaResearchError):
     """Raised when candidate selection cannot produce a usable, validated answer."""
@@ -133,10 +155,9 @@ def load_selection_prompt() -> str:
 def excerpt_budget(candidates: int, *, total: int) -> int:
     """How many characters each candidate gets, given how many there are.
 
-    Shrinking rather than dropping. With 705 candidates and a 400,000-character budget every one is
-    still shown something, where a fixed excerpt would have had to cut roughly two thirds of the
-    field — and which two thirds would have been decided by the heuristic this call exists to stop
-    deciding.
+    Shrinking rather than dropping, within what `shown_to_selector` offers. At its 160 at most and a
+    400,000-character budget every candidate gets the full `MAXIMUM_EXCERPT_CHARACTERS`; the
+    shrinking is what a caller passing a whole pool gets, as every corridor did before entry 195.
     """
 
     if candidates <= 0:
@@ -277,6 +298,92 @@ def admitted_on_text(
         for _, candidate in scored[:per_role]:
             admitted.setdefault(candidate.link.url, candidate)
     return list(admitted.values())
+
+
+def fusion_order(
+    pool: Sequence[CandidatePage], text_scores: Mapping[str, RoleScores]
+) -> list[CandidatePage]:
+    """The pool, likeliest first: per role, reciprocal-rank fusion of link and stored-text rank,
+    then the roles taken in turn so every role's best candidates come before any role's tenth.
+
+    Entry 183's ranking, with no fitted weights. **A page with no stored text still ranks on its
+    link**, which is what separates this from the cap entry 158 rejected — that one let pages with
+    text push link-scored pages out. A page scoring nothing for any role on either comes last, in
+    pool order. Ties break by address, so the order is the same on every run.
+
+    It decides who is shown, never what anyone is told: the scores are withheld from the packet as
+    they always were, and entry 78's rule is untouched.
+    """
+
+    per_role: dict[str, list[str]] = {}
+    for role in ROLE_ORDER:
+        fused: dict[str, float] = {}
+        by_link = sorted(
+            (c for c in pool if c.link_scores.score_for(role) > 0),
+            key=lambda c: (-c.link_scores.score_for(role), c.link.url),
+        )
+        by_text = sorted(
+            (
+                c
+                for c in pool
+                if (scores := text_scores.get(c.link.url)) is not None
+                and scores.score_for(role) > 0
+            ),
+            key=lambda c: (-text_scores[c.link.url].score_for(role), c.link.url),
+        )
+        for ranking in (by_link, by_text):
+            for rank, candidate in enumerate(ranking, start=1):
+                url = candidate.link.url
+                fused[url] = fused.get(url, 0.0) + 1 / (FUSION_RANK_CONSTANT + rank)
+        per_role[role] = sorted(fused, key=lambda url: (-fused[url], url))
+
+    by_url = {candidate.link.url: candidate for candidate in pool}
+    ordered: list[CandidatePage] = []
+    seen: set[str] = set()
+    for depth in range(max((len(urls) for urls in per_role.values()), default=0)):
+        for role in ROLE_ORDER:
+            urls = per_role[role]
+            if depth < len(urls) and urls[depth] not in seen:
+                seen.add(urls[depth])
+                ordered.append(by_url[urls[depth]])
+    ordered.extend(candidate for candidate in pool if candidate.link.url not in seen)
+    return ordered
+
+
+def shown_to_selector(
+    pool: Sequence[CandidatePage],
+    text_scores: Mapping[str, RoleScores],
+    has_text: Callable[[str], bool],
+    *,
+    shown: int = DEFAULT_SELECTION_SHOWN,
+    blind: int = DEFAULT_SELECTION_BLIND,
+) -> tuple[list[CandidatePage], list[CandidatePage]]:
+    """Which of the pool the selector sees, in the order it sees them, and which it does not.
+
+    The best `shown` by `fusion_order`, plus the `blind` best-linked pages with **no stored text**
+    among the rest — added, never displacing, and kept in fusion order so a position means the same
+    thing either way. A pool no larger than `shown` is returned whole.
+
+    **This reverses the rule this module was written with**, that no candidate is dropped for want
+    of room — the owner's decision, entry 195. That rule kept the heuristic from being the recall
+    gate; this makes a ranking the gate again for the tail of a big pool, because entry 194 measured
+    the tail costing more in distraction than it returned. The blind share is entry 158's route kept
+    open: a page nobody read still reaches the model on its link. The caller must say what was
+    withheld — nothing is dropped silently.
+    """
+
+    ordered = fusion_order(pool, text_scores)
+    if len(ordered) <= shown:
+        return ordered, []
+    rest = ordered[shown:]
+    unread = sorted(
+        (c for c in rest if not has_text(c.link.url)),
+        key=lambda c: (-c.link_scores.best()[1], c.link.url),
+    )[:blind]
+    added = {candidate.link.url for candidate in unread}
+    offered = ordered[:shown] + [c for c in rest if c.link.url in added]
+    withheld = [c for c in rest if c.link.url not in added]
+    return offered, withheld
 
 
 SELECTION_REQUEST_PREFIX = (

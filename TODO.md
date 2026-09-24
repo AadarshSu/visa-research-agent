@@ -300,8 +300,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 66. Keep the selector's picks as good as its pools grow | `next` |
-|  | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
+| **Now** | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
 |  | 68. Read more of what a build records, and choose what to open with more context | `next` |
 |  | 63. Make most corridors return accurate and useful information | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
@@ -349,51 +348,9 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 66. Keep the selector's picks as good as its pools grow — `next`, **added 2026-09-23 (entry 183); measured 2026-09-24 (entry 194) — waiting on the owner's decision about a pre-filter**
+### The sequence to the full rebuild
 
-**What is now known (entry 194).** Only the selection call was replayed, on fixed pools, five runs
-per corridor, with a pick of the same page at another address counted:
-- **The pilot's 75 → 68 was about half noise.** Four of its seven lost roles move the same way on
-  both stores, and the `PH/PH` "before" logs were a month old, on the direct OpenAI route.
-- **The real loss is −2.8 roles of 90 (79.4 → 76.6), all in fees, entry, processing and route.**
-  The decision and the checklist *rose*, 23.2 → 25.0 of 27. The rebuild is not hurting the roles
-  that matter.
-- **Showing the model fewer candidates recovers it.** Entry 183's fusion ranking, cut to the top
-  120, reads **82.4** (26.8 of 27 load-bearing) at **45% less selection input**. With the 40 best
-  no-text candidates added back, it reads **80.0** at 42% less. Both beat the old stores.
-- **A bigger text budget, more picks and stripping site chrome do not help.** The 800k budget made
-  recall worse.
-- **`selection-recall` now prints a `same page` column.** Use it: the strict column under-counts
-  every store by about five roles.
-
-**The decision, the owner's.** A fusion cut reverses `selection.py`'s rule that no candidate is
-dropped for want of room — a heuristic becomes the recall gate again, one layer up, for about 400
-candidates a corridor. The recommended shape is **top 120 + 40 blind**, not plain top 120: the model
-picked the blind pages in every run, and they are the traveller's own posts (France's page for
-applicants in the UK, the Manila missions, the US embassy in London), which the oracle cannot credit
-because they hold no stored text. That keeps entry 158's route for pages nobody read.
-
-**If the owner agrees, the next step is the live A/B entry 183 asked for** — not another replay:
-1. Put the cut behind a runtime setting, off by default, with the corridor's notes saying how many
-   candidates were withheld and why (the "nothing is dropped silently" rule).
-2. Run the 20 oracle corridors three times each way, full corridors, fresh caches for both arms.
-3. Grade `unresolved_roles` and `selection-recall`'s `same page` column; the owner reviews the
-   answers (entry 68). Price seconds and dollars from `var/usage/`.
-
-**If the owner does not agree, item 66 closes** at "the rebuild costs 2.8 secondary roles and no
-load-bearing one", and the full rebuild does not wait on it.
-
-**Constraints any shipped version keeps:** `Selection` carries ids only (entry 83); stored text
-ranks and never speaks (entry 78); a page with no stored text can reach the model (entry 158);
-correctness is the owner's to judge (entry 68).
-
-**Where things are.** The replay — scripts, a README and all 960 results — is
-`var/selection-replay-2026-09-24/`; its captured candidate sets (~130 MB) are not committed and
-`capture.py` recreates them for about 195 searches. Run replays **one call at a time**: four at once
-was followed by ten minutes of Personas `504`s (OFSELF_FEEDBACK 8.22). Pre-rebuild stores are still
-in `var/_backup_before_pilot_2026-09-25/`.
-
-**The sequence to the full rebuild — the owner, 2026-09-24.** Item 68's fixes (entries 186 and 189)
+**The owner, 2026-09-24.** Item 68's fixes (entries 186 and 189)
 are measured on scratch stores and not yet in the real ones. A rebuild only adds, so it is done
 once, and in this order:
 1. **Item 65 — settle the model.** Model choice changes answers, and the owner's review in step 5
@@ -414,15 +371,16 @@ once, and in this order:
    re-run Germany's five fresh plans, since it was confirmed on the old store.
    **Pilot built and graded (entry 193).** All ten built. Oracle roles found fell 75 → 68 of 92, but
    every lost page was in the pool and not picked, as pools grew (Singapore `PH/PH` 150 → 482).
-   Unresolved decisions and checklists went 13 → 14. **Item 66 measured (entry 194):** the loss is
-   −2.8 of 90 and all secondary, so the rebuild does not wait on the selector. **Next:** re-run
-   Germany's five plans on its rebuilt store, and the owner's decision on item 66's pre-filter.
+   Unresolved decisions and checklists went 13 → 14. **Item 66 done (entries 194, 195):** the loss
+   was −2.8 of 90 and all secondary, and the selector now sees a ranked top 120 plus 40 pages with
+   no stored text, which beats the old stores on replay. **Next:** re-run Germany's five plans on
+   its rebuilt store, then the full rebuild.
    **First run, 2026-09-25:** GB, JP, DE and NL built cleanly. FR and SE failed at once because the
    headless browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error),
    and SG, AE and US because the network dropped (every search failed on DNS). CA was cut off. None
    of the failures wrote anything. **Start any build that may render from the owner's own terminal**
    — the owner re-ran `run.sh` there, and it resumes with the six not in `done.txt`.
-4. **Then items 66 and 67 on the new store, then item 64.**
+4. **Then item 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
 55 (Ofself).
@@ -1333,10 +1291,8 @@ model call goes to `var/usage/model-calls-YYYY-MM-DD.jsonl`, and every stage's s
 log's `phase_seconds`.
 
 **Cost, biggest first — none of it decided.**
-- **Shrink what selection reads — item 66.** A heuristic cannot replace the call at the same page
-  budget, but a fused ranking cut to the top 120, plus 40 candidates with no stored text, reads
-  *more* roles than the whole pool on replayed packets, at 42% less selection input (entries 183,
-  194). Waiting on the owner, because it reverses the rule that no candidate is dropped.
+- ~~**Shrink what selection reads.**~~ **Done 2026-09-24 (entry 195):** the selector sees the fusion
+  top 120 plus 40 pages with no stored text, at about 42% less selection input.
 - **A cheaper model for selection only.** Selection is ~63% of the model bill, and `gpt-5.6-luna` is
   listed at a tenth of `gpt-5.6-terra`'s price a token, which could take a corridor from about $0.25 to
   about $0.11. It changes what picks the pages, so it needs grading and the owner's decision. Entry
@@ -1408,14 +1364,15 @@ The keyword scorer matches listed phrases. Embeddings match meaning, so they may
 - **Grade it two ways against `oracle/selection_oracle.yaml`:**
   - **As a selector** at the model's own per-corridor page count. The bar is the model's **83%**, and
     anything short of it is entry 86's finding again.
-  - **As item 66's pre-filter.** Does it keep every answer the model found at a smaller top K than
-    fusion's 80, and at what share of the packet? Also try it fused with link rank.
+  - **As the selector's cut** (entry 195). Does it rank the pages the model picks above
+    `fusion_order`'s top 120, at a smaller cut? `var/selection-replay-2026-09-24/` grades a new
+    ordering on fixed pools, five runs each; also try it fused with link rank.
 - **Check it on the 81 non-oracle model runs**, by the model's picks kept, as entry 183 did.
 - **Record the time per request** of the query embeddings and the similarity ranking. It should be
   well under a second. Anything more is a finding.
 
 **Then decide.**
-- **As a filter,** it replaces fusion in item 66's live A/B.
+- **As a filter,** it replaces `fusion_order` in `shown_to_selector` if it beats 80.0 of 90 there.
 - **As a selector,** it would have to reach the model's recall before a live test is worth running.
 - **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
 
@@ -1939,6 +1896,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 66. Keep the selector's picks as good as its pools grow | 09-24 | 194, 195 | **The pilot's 75 → 68 was half noise, a month-old baseline and one address**; replaying only the selection call, five runs a corridor, the real loss was −2.8 of 90, all in secondary roles, while decision + checklist rose 23.2 → 25.0. **A shorter list, not more text, fixed it**: the whole pool 76.6, an 800k text budget 73.3, the fusion top 120 82.4, top 120 + 40 pages with no stored text 80.0 at 42% less input. **The owner shipped top 120 + 40 blind without the live A/B** and dropped the rule that no candidate is dropped — the blind 40 are where the model found the traveller's own posts, which the oracle cannot credit. `selection-recall` gained a same-page column, because the oracle names one address per page |
 | 62. Pay for model calls through Ofself Personas | 09-24 | 188 | **Blocked on Ofself, then documented overnight**: Personas' live guide grew a model-only call, `capabilities: []` — one plain call, nothing added to the prompt (the `debug` request event showed only our two messages), with strict JSON schema and reasoning effort in `llm_config`. **`llm_config.model` is ignored without the app's own key**, so each call's agent holds the model and every reply's model is checked. `research/personas.py` implements the three existing interfaces; `model_route: personas` switches all of them. **Graded without an OpenAI arm**: selection 41 of 48 oracle roles against entry 170's direct 39 of 48, nine of ten corridors unresolved exactly as before; 14 plan calls with no refusal and no wrong "no visa", Germany and Singapore as baseline, Japan "visa required" once in six — a *Smaller thing*. Lost: prompt caching, Fast mode, cached and reasoning token counts. **The owner made it the route from now on** |
 | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | 09-16 | 75, 92, 93, 109, 179 | **Steps 1–4 were built on 08-25 (entry 75), and the item still called them undone**, as did four other files. France's checklist is behind the Visa Wizard — named, never driven (92, 93). Step 5, measured: **12 of 24 challenges answered, and the 12 that were not all needed `challenges.cloudflare.com`**, which the render gate aborts. France's corridors lose 14 of 17 challenged pages to the five-render total, not to the challenge. The `robots.txt` count: **401 of 3,471 origins serve a web page there**, holding 4,687 read pages and 171 corridor reads; one is a real policy labelled `text/html`, already obeyed, so the verdict stays. Both spending decisions are item 61 |
 | 48. Test root seeding before building it, and separate discovery from allocation | 09-15 | 161–163, 176 | **Root seeding was probed and rejected**: 0 of 9 target pages reached from eight hosts' roots. **The gap was a build discarding its own search seeds**, kept only if another page linked to them; fixed, and a matched test found Thailand `IN/GB` resolving in 4 of 4 runs where it had refused in 4 of 4, for ~9% more a corridor. Before rebuilding, a failed search query stopped costing a build (162) and a `www.`/bare host pair became one budget share (163). **All 53 corpora rebuilt the same day**: 190,491 → 237,283 entries, 7,289 seeds kept, no failed queries, ~2,590 queries (~$13) over ~10 hours two at a time. China crashed on a redirect to an address that is not a URL (176); fixed and rebuilt. Equal budget shares for unequal hosts moved to *Smaller things* |

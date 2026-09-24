@@ -572,7 +572,12 @@ retrieval cache for nothing. It is **ranking input only** — see the rule above
 pages to fetch, replacing the shortlist as the recall gate, at the cost of a second model call per
 corridor. **What "every candidate in contention" means is `best_combined() > 0` — 6% of the corpus
 (entry 123) — plus the five best per role that the link scored zero and their own stored text puts
-back (entry 158). A page scoring zero on its link with no stored text is still never shown.** Graded against `oracle/selection_oracle.yaml` —
+back (entry 158). A page scoring zero on its link with no stored text is still never shown.**
+**And a big pool is cut before the model sees it (entry 195, the owner's decision):** the 120
+likeliest by `fusion_order` — link rank and stored-text rank per role — plus the 40 best-linked
+pages with no stored text, so at most 160; the notes say how many were withheld, and the recall
+log marks each one `withheld_from_selection`. On replayed packets that found more roles than the
+whole pool at 42% less input (entry 194). Graded against `oracle/selection_oracle.yaml` —
 ground truth neither selector helped build, though curated from that same 6%
 — it reaches **100% role recall to the heuristic's 70% at matched budget**, and 91% when the
 heuristic is allowed its shipped 35 places and 3.1× the fetches (entry 87; entries 85 and 86 read

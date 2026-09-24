@@ -65,8 +65,12 @@ class Contention:
 
     corridor: Corridor
     candidates: tuple[CandidatePage, ...]
-    """The pool `_choose_what_to_read` shows the selector: everything `best_combined() > 0`, plus
-    what stored text put back when `contention_for` was given the index (entry 158)."""
+    """The pool `_choose_what_to_read` chooses from: everything `best_combined() > 0`, plus what
+    stored text put back when `contention_for` was given the index (entry 158).
+
+    **Before the cut, not what the model sees.** Since entry 195 a big pool is cut to
+    `shown_to_selector`'s ranked top plus pages with no stored text, so a pooled page may still have
+    been withheld; a corridor's recall log marks those rows `withheld_from_selection`."""
 
     unpooled: tuple[CandidatePage, ...]
     """Everything that survived the rejection rules, scored zero for every role, and was not put

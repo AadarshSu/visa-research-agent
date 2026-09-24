@@ -499,7 +499,18 @@ The heuristic is not replaced, and **what it now gates is larger than "the short
 Liechtenstein offering 2 of 7,482 (entry 123) — **plus what `admitted_on_text` puts back**: for each
 role, the five best candidates the link scored zero, ranked by `score_body` over their stored text
 (entry 158). It adds and never removes. A candidate that scores zero on its link and has no stored
-text, or text that scores nothing, is still never shown, fetched or judged. The link score also
+text, or text that scores nothing, is still never shown, fetched or judged.
+
+**Then the pool is cut, and the cut is reported (entries 194, 195).** `shown_to_selector` orders the
+pool by `fusion_order` — per role, reciprocal-rank fusion of link rank and stored-text rank, roles
+taken in turn — and shows the model the top 120 plus the 40 best-linked candidates with **no**
+stored text, added and never displacing. A pool of 500 to 860 is therefore judged as 160 at full
+2,000-character excerpts rather than all of them at 460–700. The notes give the count withheld and
+the recall log flags each withheld row. This reverses the module's earlier rule that no candidate is
+dropped for want of room: replayed five times over the 20 oracle corridors, the whole pool found
+76.6 roles of 90 and the cut 80.0, and doubling the text budget instead made it worse (73.3). The
+blind 40 are where the model found the traveller's own posts — pages the oracle cannot credit
+because nobody could read them. The link score also
 answers when no adjudicator is configured, and it is recorded beside the model's choice so a reviewer
 can see where the two disagreed.
 
