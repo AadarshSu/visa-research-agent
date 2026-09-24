@@ -390,6 +390,8 @@ async def test_a_lost_grant_asks_the_traveller_to_reconnect(started: Start) -> N
         "code": "EP_REVOKED",
         "reconnect": True,
     }
+    # The session ends with the grant, so the page no longer presents the browser as signed in.
+    assert (await client.get("/oauth/session")).json()["signed_in"] is False
 
 
 async def test_an_unreachable_ofself_is_a_502_not_an_empty_passport(started: Start) -> None:

@@ -1008,6 +1008,16 @@ exists, which is why this is sized small:
    plan, because a plan takes about 55s and access can be withdrawn while it is written. Handle
    `EP_NOT_FOUND`, `EP_REVOKED`, `EP_PAUSED`, `EP_EXPIRED` and the legacy `NO_AUTHORIZATION` — the
    guide names both vocabularies — and none of them may fall back to `DEFAULT_TRAVELLER_PROFILE`.
+   **Ofself's review of sign-in, 2026-09-24, on what happens when a grant is revoked:**
+   - **A lost grant now ends the session — fixed the same day.** `/oauth/traveller` answered `403`
+     with `reconnect` and left the session cookie in place, so the browser still looked signed in.
+     It now deletes the cookie with the same `403`, and a test checks the browser is signed out.
+   - **Revoking doesn't log anyone out, because the session is ours.** Sign-in exchanges the
+     `sid_code` for a user id and keeps its own 12-hour cookie, discarding the session id Ofself
+     returns. Holding that id would let a revocation end the session here; what the exchange
+     returns has still not been recorded (item 55, step 4), so read it on the next real sign-in.
+   - **Ofself fires `session.revoked` to a webhook, and none is registered.** Receiving it needs a
+     public address, so it waits on item 7's host; `localhost` cannot receive it.
 6. **Stop keeping model drafts past their reuse window.** `FilePlanStore` reuses a draft for 24 hours
    (entry 178) and never deletes it, and a draft is written from the whole `TravellerProfile`, so a
    city or a residence status can sit on disk indefinitely. Harmless for one developer; not for

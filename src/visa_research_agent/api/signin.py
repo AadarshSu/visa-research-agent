@@ -39,7 +39,7 @@ from typing import Annotated
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from visa_research_agent.api.ofself import (
     OfselfAuthorizationLost,
@@ -272,10 +272,10 @@ async def session(
     return {"configured": sign_in is not None, "signed_in": user_id is not None, "user_id": user_id}
 
 
-@router.get("/traveller")
+@router.get("/traveller", response_model=TravellerDefaults)
 async def traveller(
     request: Request, sign_in: Annotated[SignIn, Depends(require_sign_in)]
-) -> TravellerDefaults:
+) -> TravellerDefaults | JSONResponse:
     """What the signed-in traveller's Ofself account holds that can start the form.
 
     Passports, a residence permit and journeys being considered — each offered, never decided. One
@@ -294,11 +294,16 @@ async def traveller(
         return await sign_in.identity.traveller_defaults(user_id, today=date.today())
     except OfselfAuthorizationLost as exc:
         # The grant is gone, paused or expired: the one honest answer is to ask them to reconnect,
-        # never to carry on as if a traveller had been described (item 55, rule 4).
-        raise HTTPException(
+        # never to carry on as if a traveller had been described (item 55, rule 4). And the session
+        # ends here too: a browser whose grant is gone is not signed in to anything this app can
+        # read, and leaving the cookie kept it looking signed in (pointed out by Ofself,
+        # 2026-09-24).
+        response = JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail={"message": str(exc), "code": exc.code, "reconnect": True},
-        ) from exc
+            content={"detail": {"message": str(exc), "code": exc.code, "reconnect": True}},
+        )
+        response.delete_cookie(SESSION_COOKIE)
+        return response
     except OfselfError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail={"message": str(exc)}
