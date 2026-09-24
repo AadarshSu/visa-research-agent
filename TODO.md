@@ -707,6 +707,9 @@ reading its own portal after five pages.
 - **France's two latest corridors left 14 of 17 challenged pages unrendered**, because the run's five
   renders were spent. The challenge itself is answered in about five seconds.
 
+**Decided for one host, 2026-09-25 (entry 201):** EUR-Lex pages may reach AWS's challenge-token host,
+committed as `challenge_script_hosts`, because the EU tier needs EUR-Lex. Cloudflare's is still open.
+
 **Two decisions, both the owner's.**
 1. **May a challenge render load Cloudflare's own challenge script?** Entry 13 says a render trusts
    nothing new, because script running in the page decides what the evidence says. The exception
@@ -722,6 +725,10 @@ reading its own portal after five pages.
 with the cache warm in both (entry 136), and count roles rather than pages.
 
 ### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`, **and Germany is the worked example**
+
+**Schengen done 2026-09-25 (entry 201): the EU may answer a member's visa decision.** The
+consolidated regulation on EUR-Lex and the ETIAS page, read from a shared EU store; Croatia `BD/AE`
+answers from it. What is left here is the other half — governments with no hostname marker.
 
 **Six more domains landed for five countries on 2026-08-29 (entry 110), and `audit` now reads
 `row, no confirmable domain: 0`** — Iceland and Liechtenstein were refused outright and are now
@@ -2024,6 +2031,12 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**`canonicalise_url` drops a trailing slash before a query string, and some servers care.** Found on
+EUR-Lex (entry 201): `…/TXT/HTML/?uri=…` is the regulation, `…/TXT/HTML?uri=…` is "Page Not Found".
+Every crawled link goes through it, so a store may hold addresses that 404 where the page linked
+works. Unmeasured: count stored addresses with a query whose path had a slash (the raw `href` is not
+kept, so this needs a crawl), and change it only with a rebuild, since it changes stored addresses.
 
 **A failed model call is told to the traveller as a missing page.** When both role-adjudication
 attempts fail (`adjudication_failed`), the refusal reads *"no page could be confirmed as the visa

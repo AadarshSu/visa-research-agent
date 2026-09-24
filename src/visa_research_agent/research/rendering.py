@@ -32,7 +32,7 @@ from visa_research_agent.domain.models import (
     StrictModel,
     is_challenge,
 )
-from visa_research_agent.domain.trust import host_of
+from visa_research_agent.domain.trust import host_is_within, host_of
 from visa_research_agent.research.errors import VisaResearchError
 
 if TYPE_CHECKING:  # pragma: no cover - imported for typing only, never at runtime.
@@ -84,6 +84,22 @@ def is_render_request_allowed(url: str, destination: DestinationConfig) -> bool:
         # about:blank, data: and blob: URLs have no host and never reach the network.
         return url.startswith(("about:", "data:", "blob:"))
     return destination.trusts_host(host)
+
+
+def may_answer_challenge_from(
+    request_url: str, page_url: str, destination: DestinationConfig
+) -> bool:
+    """True when rendering `page_url` may reach `request_url` to answer the page's challenge.
+
+    The one exception to the gate above, and it is committed data, not a judgement: a host listed
+    under the page's own host in `challenge_script_hosts`. EUR-Lex's AWS token host is the only one
+    (DECISIONS entry 201, a narrow ruling on TODO item 61). It widens nothing for any other page:
+    a render of any other host is gated exactly as before.
+    """
+
+    allowed = destination.challenge_script_hosts.get(host_of(page_url), [])
+    host = host_of(request_url)
+    return bool(host) and bool(allowed) and host_is_within(host, allowed)
 
 
 class PlaywrightPageRenderer:
@@ -207,7 +223,9 @@ class PlaywrightPageRenderer:
 
         async def gate(route: "Route") -> None:
             target = route.request.url
-            if is_render_request_allowed(target, destination):
+            if is_render_request_allowed(target, destination) or may_answer_challenge_from(
+                target, url, destination
+            ):
                 await route.continue_()
                 return
             blocked.setdefault(host_of(target) or target[:60], None)

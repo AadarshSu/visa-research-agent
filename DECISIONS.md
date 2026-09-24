@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [201](#201-the-eu-may-answer-the-visa-decision-for-a-schengen-member--one-reviewed-tier-beside-the-destinations-own-government) | **The EU may answer a Schengen member's visa decision** — the owner's decision; a reviewed supranational tier (EUR-Lex, ETIAS) beside a country's own list, for the decision only, 29 members; EUR-Lex's AWS challenge answered as a narrow ruling on item 61; a shared EU store follows EUR-Lex's own link to the newest consolidation; five corridors "visa required" 15 of 15, Croatia and Poland from refused and null |
 | [200](#200-before-the-full-rebuild-the-build-says-what-its-rules-threw-away-and-the-depth-1-rule-waits) | **Before the full rebuild** — each build now reports, per rule, what it rejected and how much of it mentions visas; newsletter and subscription pages are site furniture (not `signup`, which e-visa portals use); opening zero-scoring links only one hop from a seed is not adopted, because entry 192 could not see what it would lose |
 | [199](#199-item-70s-next-work-four-answers-that-were-reachable-and-lost-fixed-and-a-visa-on-arrival-is-a-visa) | **Item 70's next work** — a link stating who must hold a visa scored as the decision (Belgium; 94 of 94 oracle answers kept, no pool changed), after a PDF-only rule was withdrawn, the selector shown the text around the traveller's country (Slovenia 2 of 5 → 5 of 5 on a fixed packet, 3 of 3 live), the plan's input guard 80k → 160k (India answered 3 of 3 on its refused input), an uncited step link cited instead of refused (Germany); rule 8g, a visa on arrival is a visa (UAE 1 of 5 → 4 of 4), approved and shipped with no change on 5 regression inputs |
 | [198](#198-item-70-the-fourteen-corridors-re-run--the-roles-call-was-right-and-what-broke-was-around-it) | **Item 70: fourteen corridors re-run, three times each** — the roles call was right on every packet it refused, so step 4 had nothing to test; fixed: a plan naming an unread page is `partial` (the UAE's 503), the residence-permit veto yields to the visa question (the Dutch checker), a year under `uploads/` is a date, not an archive (Malta 0 of 6 → 5 of 6); Malta rebuilt and kept; the owner's intent — an answer page we can reach, we should get — makes the depth penalty, the selector's misses and the plan's size guard the next work |
@@ -250,6 +251,135 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 201. The EU may answer the visa decision for a Schengen member — one reviewed tier beside "the destination's own government"
+
+**2026-09-25 · the owner's decision (TODO item 2), with a narrow ruling on item 61.**
+
+Whether a nationality needs a visa for a short stay in a Schengen state is set once, in EU law:
+Regulation (EU) 2018/1806. Annex I lists who needs a visa, Annex II who is exempt, and Article 3
+states the rule. Member states publish copies, or say only that their regime "is part of the EU
+acquis" (Croatia, entry 198). The trust rule — governmental **and** under the destination's own
+top-level domain — refused the one authority that states it. Item 2 called this "a definition
+problem, not a bug", and the fix amends the rule, so it is recorded here.
+
+### What is decided
+
+- **A second trust tier, in committed data** (`config/supranational_authorities.yaml`). It holds a
+  union, the countries it answers for, the roles it may answer, and its domains, each with evidence.
+  - Its domains travel on `DestinationConfig` as `supranational_domains`, beside
+    `trusted_domains`. They never enter a country's own list.
+  - Every check that reads a trusted host reads them too: `trusts_host`, redirects,
+    meta-refreshes, the render gate.
+  - `is_supranational` tells them apart wherever that matters.
+- **The EU, for the visa decision only** (`confined_to_permitted_roles`). The list is the law
+  itself and the same for every member, so the reason `belongs_to_destination` exists — another
+  country's page answering for this one — does not arise.
+  - An EU page chosen for any other role loses it; the role stays unresolved unless a country page
+    answers it, and the notes say why.
+  - The limit is applied to the decision as a whole, so it holds on the model's path and the
+    heuristic's.
+  - Where to apply, checklists, long-stay visas and a state's own transit rules stay national.
+- **Members: the 29 Schengen states.** Ireland (not bound by the list) and Cyprus (in the EU, not
+  fully in Schengen) are left out until each is checked.
+- **A plan cites an EU page as the EU's** — "European Union (eur-lex.europa.eu)", kind
+  `supranational_authority` — never as the member state's.
+
+### Which domains, and why not the obvious one
+
+The first proposal was EUR-Lex plus the Commission's Home Affairs site. Checked before any code,
+under our own user agent:
+
+| Source | Readable by us | What it states |
+| --- | --- | --- |
+| EUR-Lex, the consolidated regulation (to 30.12.2025) | only through an AWS WAF challenge | the rule (Article 3), Annex I and Annex II |
+| `home-affairs.ec.europa.eu` | yes | only the **original 2018** regulation, since amended, and a spreadsheet of diplomatic-passport exemptions |
+| `travel-europe.europa.eu` (ETIAS) | yes, rendered with only its own host | the visa-exempt list (Annex II); never the general rule |
+
+Home Affairs is left out: an outdated list cited with confidence is the dangerous kind of wrong. The
+two kept, each confirmed independently of its own pages (entry 111's first tier):
+- `eur-lex.europa.eu` — Wikidata Q1276282 (EUR-Lex) gives it as its official website (P856). Its
+  owner is the Publications Office of the European Union (Q480222).
+- `travel-europe.europa.eu` — Wikidata Q55442335 (ETIAS) gives `travel-europe.europa.eu/etias`.
+
+### Item 61, narrowly: EUR-Lex's AWS challenge may be answered
+
+EUR-Lex answers every request, `robots.txt` included, with AWS WAF's challenge: HTTP `202`,
+`x-amzn-waf-action: challenge`, and a page loading `challenge.js` from `<id>.token.awswaf.com`. The
+render gate refuses every host outside the trusted set, so the challenge could never be answered.
+**The owner allowed it, for EUR-Lex pages only.**
+- `challenge_script_hosts` maps a page host to the hosts its render may reach. There is one entry:
+  `eur-lex.europa.eu` → `token.awswaf.com`.
+- Every other render is gated exactly as before, and the other half of item 61 — Cloudflare's
+  `challenges.cloudflare.com` — is not decided here.
+- The token proves only that a browser ran it, under our own user agent. The text still comes from
+  EUR-Lex.
+
+Three things had to change for it to work at all:
+- `is_challenge` now recognises AWS's `202` with that header, and the `AwsWafIntegration` marker.
+  The `captcha` value is not a challenge this program may answer, and is left alone.
+- Both fetchers test for a challenge before treating a `2xx` as a page. Otherwise the challenge read
+  as an empty success.
+- A challenged `robots.txt` means no policy was served, as France's Cloudflare one already did. AWS's
+  empty `202` had parsed as a published empty policy, which reached the same verdict by accident.
+
+### The shared EU store, and why its address is read, never written
+
+`visa-discover eu-store` reads the union's listed pages through `CrawlFetcher` — trust, robots and
+challenge rules unchanged — and stores their addresses and text as `var/corpus/EU.json` and
+`var/pagetext/EU.sqlite3`. It uses no search.
+
+**There is no undated address for the latest consolidation.** Each consolidation's address carries
+its date (`CELEX:02018R1806-20251230`), so a committed one would go stale at the next amendment. The
+refresh therefore reads EUR-Lex's permanent page for the regulation (`/eli/reg/2018/1806`) and
+follows the newest HTML link it gives, exactly as written. Two defects showed on the way:
+- `canonicalise_url` drops a trailing slash before a query string. EUR-Lex answers
+  `…/TXT/HTML?uri=…` with "Page Not Found" where `…/TXT/HTML/?uri=…` is the text, so the refresh
+  reads the raw `href`. The general defect is a *Smaller thing* in TODO, unmeasured.
+- The refresh stored that 388-character "Page Not Found" page before a minimum of 1,000 characters
+  was added.
+
+Every member corridor then reads the stored pages on every run, after selection whichever selector
+ran (`always_read`). It fetches each one live, through `LiveSourceFetcher`, before a word of it is
+used. The store decides only *which* address to read.
+
+A fetch filter had dropped them silently: `_fetch_bodies` tested `trusted_domains` directly. It now
+also admits `is_supranational` hosts, and not `trusts_host`, which would admit a hand-configured
+appointed provider this path never reads.
+
+### Measured
+
+**Croatia `BD/AE`**, which had refused 3 of 3 with its authority read (entry 198), answered **visa
+required, `verified`** on the first run.
+- The adjudicator: "Bangladesh is explicitly listed in Annex I, whose nationals must hold a visa when
+  crossing Schengen external borders".
+- The plan quoted Article 3 verbatim: "Nationals of third countries listed in Annex I shall be
+  required to be in possession of a visa when crossing the external borders of the Member States."
+- The source was cited as "European Union (eur-lex.europa.eu)".
+
+**Five Schengen corridors, three fresh runs each: "visa required" 15 of 15.** Every decision
+rests on an authority's own page:
+
+| corridor | before today (entry 198) | with the EU tier | decision rests on |
+| --- | --- | --- | --- |
+| Croatia `BD/AE` | refused 3 of 3 | required 3 of 3, `verified` | EUR-Lex, twice with Croatia's page |
+| Poland `BD/AE` | null 3 of 3 (rule 8f) | required 3 of 3, `verified` | EUR-Lex and Poland's list |
+| Malta `BD/AE` | 5 of 6 after its rebuild | required 3 of 3 | EUR-Lex once, Malta's own lists twice |
+| Belgium `BD/AE` | 2 of 3 | required 3 of 3, `verified` | Belgium's own list — the EU page was read and not needed |
+| Slovenia `BD/AE` | 3 of 3 with entry 199's anchoring | required 3 of 3 | EUR-Lex, twice with Slovenia's page |
+
+Malta and Slovenia are `partial` for their checklists, not their decisions.
+
+### Limits, stated
+
+- **A live fetch keeps 50,000 characters** (`maximum_source_characters`), and the consolidated text
+  is 55,651. Annex I is complete within it; the end of Annex II may not be. ETIAS carries Annex II
+  whole for visa-exempt travellers.
+- **The store is as current as its last refresh.** A new consolidation needs `visa-discover
+  eu-store` to be run: before every rebuild, and after the regulation is amended.
+- Every member corridor on a cold evidence cache spends one of its five renders on EUR-Lex.
 
 ---
 

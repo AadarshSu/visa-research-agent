@@ -429,10 +429,62 @@ def build_source_id(destination_slug: str, url: str, taken: set[str]) -> str:
     return candidate
 
 
+def confined_to_permitted_roles(
+    decision: "RoleDecision", destination: DestinationConfig, notes: list[str]
+) -> "RoleDecision":
+    """Keep a supranational page to the roles its tier may answer, whoever assigned them.
+
+    Applied to the decision as a whole, so it holds on the model's path and the heuristic's alike:
+    the EU may answer a Schengen member's visa decision and nothing else (entry 201). A role taken
+    from such a page is left unresolved unless another page answers it, and the notes say so. A
+    tool on such a page is dropped the same way.
+    """
+
+    if not destination.supranational_domains:
+        return decision
+    permitted = set(destination.supranational_roles)
+    sources: list[ResolvedSource] = []
+    for source in decision.sources:
+        if not destination.is_supranational(host_of(str(source.url))):
+            sources.append(source)
+            continue
+        kept = [role for role in source.roles if role in permitted]
+        for role in source.roles:
+            if role not in permitted:
+                notes.append(
+                    f"{source.url} is {destination.supranational_authority}'s, which may answer "
+                    f"only {', '.join(sorted(permitted))}, so it was not used for {role}"
+                )
+        if kept:
+            sources.append(source.model_copy(update={"roles": kept}))
+    filled = {role for source in sources for role in source.roles}
+    unresolved = list(decision.unresolved) + [
+        role
+        for source in decision.sources
+        for role in source.roles
+        if role in REPORTED_ROLES and role not in filled and role not in decision.unresolved
+    ]
+    tools = [
+        tool
+        for tool in decision.tools
+        if not destination.is_supranational(host_of(tool.url)) or tool.role in permitted
+    ]
+    return RoleDecision(
+        sources=sources,
+        unresolved=list(dict.fromkeys(unresolved)),
+        model_calls=decision.model_calls,
+        tools=tools,
+        delegates=decision.delegates,
+    )
+
+
 def derive_authority(url: str, destination: DestinationConfig) -> tuple[str, SourceKind]:
     """Name the authority behind a URL, preferring what a human already wrote down."""
 
     host = host_of(url)
+    # Before anything else: an EU page is the EU's, never the member state's (entry 201).
+    if destination.is_supranational(host) and destination.supranational_authority:
+        return f"{destination.supranational_authority} ({host})", "supranational_authority"
     for configured in destination.sources:
         if host_of(str(configured.url)) == host:
             return configured.authority, configured.kind
@@ -517,6 +569,7 @@ class CorridorResolver:
         selection_blind: int = DEFAULT_SELECTION_BLIND,
         selector: CandidateSelector | None = None,
         pinned: list[str] | None = None,
+        always_read: list[tuple[PageLink, str]] | None = None,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         monotonic: Callable[[], float] = time.monotonic,
     ) -> None:
@@ -566,6 +619,10 @@ class CorridorResolver:
         # URLs that already filled a role for this corridor. They keep their shortlist places
         # whatever the ranking says; see `_shortlist`.
         self.pinned = list(pinned or [])
+        # Pages read on every corridor for this destination whatever the selector picks: the EU's
+        # regulation and ETIAS page for a Schengen member, from the shared EU store (entry 201).
+        # Traveller-neutral by construction — the same two pages for every nationality.
+        self.always_read = list(always_read or [])
         # What this run considered, kept so the caller can fold it back into the corpus. A resolver
         # is built per corridor, so this is per-run state rather than something outliving a run —
         # the mistake entry 37 records about render budgets.
@@ -851,6 +908,7 @@ class CorridorResolver:
         shortlist = await self._choose_what_to_read(
             destination, corridor, candidates, stored_scores, notes, trace
         )
+        shortlist = self._with_always_read(shortlist, score, trace)
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         trace.begin("fetch")
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
@@ -868,7 +926,9 @@ class CorridorResolver:
         # 5. Assign roles from the combined evidence.
         trace.begin("adjudicate")
         try:
-            decision = await self._decide_roles(destination, corridor, fetched, notes)
+            decision = confined_to_permitted_roles(
+                await self._decide_roles(destination, corridor, fetched, notes), destination, notes
+            )
             sources = decision.sources
             unresolved = decision.unresolved
             tools = decision.tools
@@ -936,6 +996,29 @@ class CorridorResolver:
             model_calls=model_calls,
             ran_without_search=not searched_without_error,
         )
+
+    def _with_always_read(
+        self,
+        shortlist: list[CandidatePage],
+        score: Callable[[PageLink], RoleScores],
+        trace: "ResolutionTrace",
+    ) -> list[CandidatePage]:
+        """The shortlist plus the pages read on every corridor, each once."""
+
+        if not self.always_read:
+            return shortlist
+        held = {canonical_key(candidate.link.url) for candidate in shortlist}
+        added: list[CandidatePage] = []
+        for link, title in self.always_read:
+            if canonical_key(link.url) in held:
+                continue
+            held.add(canonical_key(link.url))
+            candidate = CandidatePage(
+                link=link, link_scores=score(link), title=title or None, found_by="corpus"
+            )
+            trace.candidates.setdefault(link.url, candidate)
+            added.append(candidate)
+        return [*shortlist, *added]
 
     async def _choose_what_to_read(
         self,
@@ -1414,7 +1497,10 @@ class CorridorResolver:
         shortlist = [
             candidate
             for candidate in shortlist
+            # The country's own domains, or the union's for a member (entry 201). Not `trusts_host`,
+            # which also admits a hand-configured appointed provider this path never reads.
             if host_is_within(host_of(candidate.link.url), destination.trusted_domains)
+            or destination.is_supranational(host_of(candidate.link.url))
         ]
         if not shortlist:
             return FetchedShortlist()

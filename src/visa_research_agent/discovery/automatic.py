@@ -60,6 +60,7 @@ from visa_research_agent.discovery.registry import (
 )
 from visa_research_agent.discovery.resolver import CorridorResolver
 from visa_research_agent.discovery.search import SearchProvider
+from visa_research_agent.discovery.supranational import union_of, union_pages, with_union
 from visa_research_agent.domain.models import DestinationConfig, StrictModel
 from visa_research_agent.research.errors import VisaResearchError
 
@@ -295,12 +296,17 @@ def trusted_domains_for(
 
 
 def base_config_for(country: Country, corridor: Corridor, trusted: list[str]) -> DestinationConfig:
-    return DestinationConfig(
-        slug=corridor.destination_slug,
-        display_name=country.name,
-        route_type="national",
-        implementation_status="available",
-        trusted_domains=trusted,
+    # A Schengen member also carries the EU's reviewed domains, for the visa decision only
+    # (entry 201). Attached here, the one place every destination is built from.
+    return with_union(
+        DestinationConfig(
+            slug=corridor.destination_slug,
+            display_name=country.name,
+            route_type="national",
+            implementation_status="available",
+            trusted_domains=trusted,
+        ),
+        country.code,
     )
 
 
@@ -409,7 +415,13 @@ class AutomaticDestinationService:
         # inputs to the resolver rather than things it discovers: the corpus is what search no
         # longer has to rediscover, and the pins are what the ranking no longer has to re-win.
         corpus = self.corpus.load(country.code) if self.corpus else None
-        resolver = self.build_resolver(corpus=corpus, pinned=self._pinned(corridor))
+        # A Schengen member also reads the EU's regulation and ETIAS page on every run, from the
+        # shared EU store (entry 201).
+        resolver = self.build_resolver(
+            corpus=corpus,
+            pinned=self._pinned(corridor),
+            always_read=union_pages(union_of(base), self.corpus),
+        )
         resolved = await resolver.resolve(base, corridor)
         if not resolved.is_usable:
             missing = ", ".join(role.replace("_", " ") for role in resolved.unresolved_roles)

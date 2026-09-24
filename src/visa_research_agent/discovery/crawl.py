@@ -767,7 +767,9 @@ class CrawlFetcher:
                     + _robots_reason(landing, self.robots.unreadable_detail(final_url)),
                 )
                 return None
-        if response.status_code in BLOCKING_STATUS_CODES:
+        if response.status_code in BLOCKING_STATUS_CODES or is_challenge(
+            response.status_code, response.headers, response.text
+        ):
             # Which of the two this is decides what may be said about the authority. A challenge is
             # a browser check and the authority stated nothing; a refusal is the authority saying
             # no. Entries 41 and 73.

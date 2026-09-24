@@ -71,6 +71,26 @@ Global. Such a domain **cannot** pass domain trust, by design. It is authorised 
 official page that appoints it (`appointed_by`), and that page must itself be a configured source.
 Authorising a provider is a human judgement and is never automated.
 
+### A supranational tier: the EU, for a Schengen member's visa decision
+
+Who needs a short-stay Schengen visa is EU law, not any member's, so the EU may answer that one role
+for the 29 Schengen states (DECISIONS entry 201). Its reviewed domains are committed in
+`config/supranational_authorities.yaml` and reach a member's `DestinationConfig` through
+`with_union`. They sit as `supranational_domains`, beside `trusted_domains` and never in it, and they
+pass every fetch, redirect and render check a trusted domain passes.
+
+What keeps the tier narrow:
+- **One role.** `confined_to_permitted_roles` strips any other role from an EU page, on the model's
+  path and the heuristic's alike.
+- **Named as the EU's.** `derive_authority` names it "European Union (…)".
+- **One render exception.** `challenge_script_hosts` lets a render of an EUR-Lex page reach AWS's
+  challenge-token host, and no other page anything new.
+
+The pages come from a shared store that `visa-discover eu-store` refreshes offline. It holds
+EUR-Lex's newest consolidation of the regulation, found by following the link EUR-Lex's own
+permanent page gives, and the ETIAS page. A member corridor reads them on every run, after
+selection (`always_read`), and fetches each live before quoting it.
+
 ---
 
 ## The plan pipeline

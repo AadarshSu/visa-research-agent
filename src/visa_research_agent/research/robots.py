@@ -56,6 +56,8 @@ from urllib.parse import urlsplit, urlunsplit
 
 import httpx
 
+from visa_research_agent.domain.models import is_challenge
+
 # Google refuses to parse past 500 KiB and so does everyone else. A file larger than this is not a
 # crawl policy, and guessing at the part that fit would be inventing permission.
 MAXIMUM_ROBOTS_BYTES = 512_000
@@ -348,6 +350,11 @@ class RobotsCache:
             url, headers={"Accept": "text/plain"}, timeout=self.timeout_seconds
         )
 
+        if is_challenge(response.status_code, response.headers, response.text):
+            # A browser check stands where the policy would be, so none was served — France's
+            # Cloudflare answer, and EUR-Lex's AWS `202`, which would otherwise parse as a
+            # published empty policy and reach the same verdict by accident (entry 201).
+            return _Policy.OPEN
         if response.is_server_error:
             self.unreadable[origin] = f"answered HTTP {response.status_code}"
             return _Policy.CLOSED

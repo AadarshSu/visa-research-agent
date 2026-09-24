@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-24 — update this line when you touch the handoff |
-| **Tests** | 934: 931 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 942: 939 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -58,9 +58,11 @@ then fixed and measured (entry 199): a link stating the answer that the lexicon 
 selector shown only each page's head (Slovenia), the plan's input guard (India) and an uncited step
 link (Germany). Rule 8g, a visa on arrival is a visa, shipped with the owner's approval (the
 UAE, 1 of 5 → 4 of 4 on replay, no change on five regression inputs). **Next: the full rebuild of the 44 stores
-not yet rebuilt** (entry 200 readied it: each build now reports what its rules rejected). The owner
-plans to let EU-level pages answer for Schengen countries (TODO item 2) first, since that changes
-which domains those countries crawl. The recall log now keeps the adjudicator's reason for every role.
+not yet rebuilt** (entry 200 readied it: each build now reports what its rules rejected). Before it,
+the EU tier shipped (entry 201): the EU may answer a Schengen member's visa decision, from EUR-Lex's
+consolidated regulation and the ETIAS page, read from a shared store. Five Schengen corridors said
+"visa required" 15 of 15 (Croatia and Poland had refused and been null). **Run `visa-discover
+eu-store` before the rebuild.** The recall log now keeps the adjudicator's reason for every role.
 
 **The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
 195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more

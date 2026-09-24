@@ -1,0 +1,47 @@
+# Authorities above a country that may answer part of its visa question (DECISIONS entry 201).
+#
+# **A second trust tier, beside "the destination's own government", and narrower than it.** A
+# domain here never enters a country's own list in `authority_domains.yaml`; it may be read for the
+# countries in `members`, and a page from it may fill only the roles in `roles`. Everything else a
+# fetched page is held to still holds: domain checks at load and after every redirect and
+# meta-refresh, TLS verification, robots.txt, and the block and challenge rules.
+#
+# **Every domain carries its evidence**, exactly as `reviewed` does in `authority_domains.yaml`, and
+# from entry 111's first tier: a source independent of the domain's own pages.
+
+unions:
+  - code: EU
+    name: European Union
+    # The 29 Schengen states, for which the list of nationalities needing a short-stay visa is EU
+    # law: Regulation (EU) 2018/1806, Annex I (visa required) and Annex II (exempt), with Article 3
+    # stating the rule. Ireland is not bound by the list and Cyprus is in the EU but not fully in
+    # Schengen, so both are left out until each is checked.
+    # Quoted: YAML reads a bare NO (Norway) as false.
+    members: ["AT", "BE", "BG", "CH", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IS",
+              "IT", "LI", "LT", "LU", "LV", "MT", "NL", "NO", "PL", "PT", "RO", "SE", "SI", "SK"]
+    # The decision only. Where to apply, each consulate's checklist, fees in practice, long-stay
+    # visas and airport-transit rules a state adds all stay national.
+    roles: [visa_decision]
+    reviewed:
+      eur-lex.europa.eu: >-
+        Wikidata Q1276282 (EUR-Lex, "service providing legal texts of the European Union") gives
+        http://eur-lex.europa.eu as its official website (P856); its owner is the Publications
+        Office of the European Union (Q480222, parent the European Union Q458). Checked 2026-09-25.
+      travel-europe.europa.eu: >-
+        Wikidata Q55442335 (European Travel Information and Authorisation System) gives
+        http://travel-europe.europa.eu/etias as its official website (P856). Checked 2026-09-25.
+    # A challenge whose script is served from another host may be answered only where it is listed
+    # here, for pages of the host it is listed under (DECISIONS entry 201, a narrow ruling on TODO
+    # item 61). EUR-Lex answers every request, robots.txt included, with an AWS WAF challenge whose
+    # token script is served from `<id>.token.awswaf.com`. Run under our own user agent it proves
+    # only that a browser ran it; the page's text still comes from EUR-Lex.
+    challenge_script_hosts:
+      eur-lex.europa.eu: [token.awswaf.com]
+    # What the offline refresh reads (`visa-discover eu-store`). The permanent page for the
+    # regulation always links its newest consolidated version, whose address carries its date, so
+    # the refresh follows the newest link EUR-Lex itself gives there — the HTML text — rather than
+    # a committed address that would go stale at the next amendment.
+    sources:
+      - url: https://eur-lex.europa.eu/eli/reg/2018/1806
+        follow_newest: 'legal-content/EN/TXT/HTML/?\?uri=CELEX(?::|%3A)02018R1806-(\d{8})$'
+      - url: https://travel-europe.europa.eu/etias/who-should-apply_en

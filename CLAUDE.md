@@ -114,6 +114,17 @@ produces a serious defect.
   country's own top-level domain** — which is why `iom.sk` stays refused: the International
   Organization for Migration passes the second half and fails the first.
 
+  **One reviewed exception, a supranational tier — the owner's decision, entry 201.** For a Schengen
+  member the EU may answer **the visa decision and nothing else**: who needs a short-stay visa is EU
+  law (Regulation 2018/1806), the same for all 29. The EU's domains live in
+  `config/supranational_authorities.yaml`, each with independent evidence, travel beside
+  `trusted_domains` and never in it, and a page from them chosen for any other role loses it
+  (`confined_to_permitted_roles`). Where to apply, checklists and long-stay visas stay national.
+  Ireland and Cyprus are not members until checked. A plan cites such a page as the EU's, never the
+  member state's. Its one render exception — EUR-Lex pages may reach AWS's challenge-token host — is
+  committed data (`challenge_script_hosts`) and extends to no other page. **Do not add a union, a
+  role or a challenge host without a decision entry.**
+
   **Which domains are trusted is now committed data, not a live search (entry 38).**
   `config/authority_domains.yaml` is generated offline by `visa-discover registry` and read at
   construction; a country missing from it is **refused**, never bootstrapped live, because falling back
@@ -567,6 +578,9 @@ therefore gets a reserved share of an offline build's budget, one queue per fami
 **zero on the request path**, where a corridor has one traveller. Only the Netherlands has been
 rebuilt this way. The ceiling it hit is not the crawler's: for most residences the Netherlands
 publishes its checklist on **VFS Global**, which the trust rule refuses — see TODO items 35 and 36.
+
+**Run `visa-discover eu-store` before a rebuild and after the EU visa regulation is amended** — the
+Schengen corridors read the newest consolidation it last found (entry 201).
 
 Clear `var/cache/` when testing a retrieval change, and `var/corridors/` when testing a discovery
 change — either one will serve a pre-change result and make a fix appear not to work. **And clear it

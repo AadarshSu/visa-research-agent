@@ -84,7 +84,12 @@ from visa_research_agent.discovery.lexicon import (
     get_denylist,
     get_lexicon,
 )
-from visa_research_agent.discovery.models import CandidatePage, Corridor, ResolvedCorridor
+from visa_research_agent.discovery.models import (
+    CandidatePage,
+    Corridor,
+    PageLink,
+    ResolvedCorridor,
+)
 from visa_research_agent.discovery.page_text import (
     BackfillReport,
     PageTextStore,
@@ -132,6 +137,12 @@ from visa_research_agent.discovery.selection_recall import (
     read_recall_logs,
     same_pages,
     unattributed_logs,
+)
+from visa_research_agent.discovery.supranational import (
+    get_supranational_registry,
+    refresh_union_store,
+    union_of,
+    union_pages,
 )
 from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
 from visa_research_agent.domain.trust import host_is_within
@@ -210,6 +221,7 @@ def build_resolver(
     *,
     corpus: CountryCorpus | None = None,
     pinned: list[str] | None = None,
+    always_read: list[tuple[PageLink, str]] | None = None,
 ) -> CorridorResolver:
     # One renderer for both fetchers, so a corridor starts at most one browser and its render
     # budget is shared between finding pages and reading them.
@@ -252,6 +264,7 @@ def build_resolver(
         page_text=PageTextStore(settings.page_text_directory),
         selector=build_candidate_selector(get_runtime_policy()),
         pinned=pinned,
+        always_read=always_read,
     )
 
 
@@ -983,7 +996,14 @@ async def resolve_once(
     renderer = build_page_renderer(policy)
     adjudicator = build_role_adjudicator(policy)
     try:
-        resolver = build_resolver(renderer, adjudicator, corpus=corpus_for(destination))
+        resolver = build_resolver(
+            renderer,
+            adjudicator,
+            corpus=corpus_for(destination),
+            always_read=union_pages(
+                union_of(destination), FileCorpusStore(settings.corpus_directory)
+            ),
+        )
         return await resolver.resolve(destination, corridor)
     finally:
         # The browser outlives the resolver, so closing it is this function's job.
@@ -1623,6 +1643,46 @@ def run_contention(args: argparse.Namespace, stream: TextIO) -> int:
     return 0
 
 
+async def run_eu_store(args: argparse.Namespace, stream: TextIO) -> int:
+    """Refresh a union's shared store: its pages and the newest version they link (entry 201).
+
+    Offline, like `corpus`, and small: no search, only the pages `supranational_authorities.yaml`
+    lists. Run it after the regulation is amended, and before a rebuild; a corridor reads the store
+    as it was last refreshed, and fetches the page itself live before a word of it is used.
+    """
+
+    union = get_supranational_registry().by_code(args.union.strip().upper())
+    if union is None:
+        print(f"{args.union} is not a union in supranational_authorities.yaml.", file=stream)
+        return 2
+    policy = get_runtime_policy()
+    renderer = build_page_renderer(policy)
+    fetcher = CrawlFetcher(
+        timeout_seconds=settings.source_fetch_timeout_seconds,
+        user_agent=settings.source_user_agent,
+        host_delay_seconds=settings.discovery_host_delay_seconds,
+        renderer=renderer,
+        maximum_renders=args.renders,
+    )
+    try:
+        report = await refresh_union_store(
+            union,
+            fetcher,
+            FileCorpusStore(settings.corpus_directory),
+            PageTextStore(settings.page_text_directory),
+            now=datetime.now(UTC),
+        )
+    finally:
+        if isinstance(renderer, PlaywrightPageRenderer):
+            await renderer.aclose()
+    print(f"{union.name}: {len(report.stored)} pages stored", file=stream)
+    for url in report.stored:
+        print(f"  stored  {url}", file=stream)
+    for url, reason in report.failed.items():
+        print(f"  failed  {url}: {reason}", file=stream)
+    return 0 if report.stored and not report.failed else 1
+
+
 async def run_corpus(args: argparse.Namespace, stream: TextIO) -> int:
     """Build one country's page corpus, offline and deliberately (DECISIONS entry 44).
 
@@ -1728,6 +1788,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--only",
         default="",
         help="comma-separated ISO codes to build, e.g. FR,DE,JP; the rest of the file is kept",
+    )
+
+    eu_store = commands.add_parser(
+        "eu-store",
+        help="refresh a union's shared store (the EU's regulation and ETIAS page), entry 201",
+    )
+    eu_store.add_argument("--union", default="EU", help="the union's code in the YAML file")
+    eu_store.add_argument(
+        "--renders", type=int, default=10, help="renders for the pages' challenges"
     )
 
     corpus = commands.add_parser(
@@ -1887,6 +1956,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return asyncio.run(run_registry(args, sys.stderr))
         if args.command == "corpus":
             return asyncio.run(run_corpus(args, sys.stderr))
+        if args.command == "eu-store":
+            return asyncio.run(run_eu_store(args, sys.stderr))
         if args.command == "pagetext":
             return run_page_text(args, sys.stderr)
         if args.command == "audit":

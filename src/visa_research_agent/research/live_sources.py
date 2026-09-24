@@ -472,7 +472,11 @@ class LiveSourceFetcher:
             self.cache.store(revalidated)
             return self._build(configured_source, revalidated, from_cache=True, is_stale=False)
 
-        if response.status_code in BLOCKING_STATUS_CODES or response.status_code == 503:
+        if (
+            response.status_code in BLOCKING_STATUS_CODES
+            or response.status_code == 503
+            or is_challenge(response.status_code, response.headers, response.text)
+        ):
             # Establish *which* of the two this is before saying anything about the authority.
             # A challenge is a capability test — the authority stated nothing — and answering it by
             # running the page's own scripts under our own user agent misrepresents us to nobody

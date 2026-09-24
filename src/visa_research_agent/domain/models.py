@@ -66,9 +66,15 @@ FailureOutcome = Literal[
 # as the refusal it is. Widening these strings until a refusal matches would quietly convert entry
 # 18's rule into its opposite.
 CHALLENGE_HEADER = "cf-mitigated"
+AWS_CHALLENGE_HEADER = "x-amzn-waf-action"
+"""AWS WAF's header. Its challenge arrives as `202` with the value `challenge` — not a refusal's
+status at all, so without this it read as an empty success (EUR-Lex, entry 201). The value
+`captcha` is not a challenge this program may answer, and is left to read as what it is."""
 CHALLENGE_BODY_MARKERS = (
     "azure waf js challenge",
     "_cf_chl_opt",
+    # AWS WAF's interstitial, which loads its token script and reloads the page (entry 201).
+    "awswafintegration",
 )
 """Markers that appear on a page **asking** a question, and not on one stating a refusal.
 
@@ -102,6 +108,9 @@ def is_challenge(status_code: int, headers: Mapping[str, str], body: str) -> boo
     thrown away.
     """
 
+    if status_code == 202:
+        # AWS WAF's challenge is the only `202` that is one, and it says so in its own header.
+        return headers.get(AWS_CHALLENGE_HEADER, "").strip().lower() == "challenge"
     if status_code not in {401, 403, 503}:
         return False
     # The **whole** body, not a prefix. It was capped at 20,000 characters, and Cloudflare puts
@@ -153,6 +162,8 @@ SourceKind = Literal[
     "foreign_ministry",
     "embassy_or_high_commission",
     "official_application_provider",
+    # An authority above the country — the EU for a Schengen member (DECISIONS entry 201).
+    "supranational_authority",
 ]
 SourcePass = Literal["primary", "follow_up"]
 
@@ -336,6 +347,21 @@ class DestinationConfig(StrictModel):
     appointed_providers: list[AppointedProvider] = Field(default_factory=list)
     required_source_ids: list[str] = Field(default_factory=list)
 
+    supranational_authority: str | None = None
+    """An authority above this country that may answer part of its question — the European Union,
+    for a Schengen member (DECISIONS entry 201). `None` for every other destination."""
+
+    supranational_domains: list[str] = Field(default_factory=list)
+    """That authority's reviewed domains. Fetched under every rule a trusted domain is, and kept
+    apart from `trusted_domains` so they never pass as this country's own government."""
+
+    supranational_roles: list[str] = Field(default_factory=list)
+    """The only roles a page from those domains may fill. The EU answers the visa decision."""
+
+    challenge_script_hosts: dict[str, list[str]] = Field(default_factory=dict)
+    """Per page host, the other hosts a render may reach to answer that page's challenge — only
+    EUR-Lex's AWS token host, a narrow ruling on TODO item 61 (entry 201)."""
+
     unreadable_authorities: list[UnreadableAuthority] = Field(default_factory=list)
     """The destination's own authorities that refused this program, for the plan to point at."""
 
@@ -391,8 +417,19 @@ class DestinationConfig(StrictModel):
     def trusts_host(self, host: str) -> bool:
         """True when a host is an approved authority domain or an appointed provider domain."""
 
-        return host_is_within(host, self.trusted_domains) or host_is_within(
-            host, [provider.domain for provider in self.appointed_providers]
+        return (
+            host_is_within(host, self.trusted_domains)
+            or host_is_within(host, [provider.domain for provider in self.appointed_providers])
+            or host_is_within(host, self.supranational_domains)
+        )
+
+    def is_supranational(self, host: str) -> bool:
+        """True when a host belongs to the authority above this country rather than to it."""
+
+        return (
+            bool(self.supranational_domains)
+            and host_is_within(host, self.supranational_domains)
+            and not host_is_within(host, self.trusted_domains)
         )
 
     @model_validator(mode="after")
@@ -446,7 +483,7 @@ class DestinationConfig(StrictModel):
             if not self.trusts_host(host_of(str(tool.url))):
                 raise ValueError(f"official tool {tool.url} is not on an approved domain")
 
-        for domain in self.trusted_domains:
+        for domain in [*self.trusted_domains, *self.supranational_domains]:
             if is_bare_public_suffix(domain):
                 raise ValueError(
                     f"trusted domain {domain} is a public suffix and would trust every site "
