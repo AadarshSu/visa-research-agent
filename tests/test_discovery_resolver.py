@@ -45,6 +45,7 @@ from visa_research_agent.discovery.resolver import (
     build_source_id,
     clean_title,
     derive_authority,
+    scored_as_stored,
 )
 from visa_research_agent.discovery.search import SearchError, SearchQuotaExhausted
 from visa_research_agent.domain.trust import host_of
@@ -1217,3 +1218,33 @@ def test_stored_text_may_refile_a_page_but_never_rescue_an_irrelevant_one() -> N
         "https://a.gov.example/long/professor.html", {}, {"document_checklist": 65.0}
     )
     assert irrelevant.combined("document_checklist") == 0.0
+
+
+def test_a_stored_document_is_scored_without_its_build_depth() -> None:
+    """TODO item 70. Belgium's list of nationalities that need a visa was recorded two hops from a
+    build seed, scored +6 − 20 and never reached the selector. A crawl never follows a PDF, so its
+    depth says only which page linked it; a page keeps its penalty, measured to be worth keeping."""
+
+    from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
+    from visa_research_agent.discovery.scoring import score_link
+    from visa_research_agent.discovery.search import resolve_corridor_countries
+
+    pdf = PageLink(
+        url="https://dofi.example.be/files/2024-12/third-countries-required-to-hold-a-visa.pdf",
+        text="List of third countries that are required to hold a visa",
+        heading="",
+        depth=2,
+        discovered_from="https://dofi.example.be/visa/list",
+    )
+    page = pdf.model_copy(update={"url": "https://dofi.example.be/visa/list-deep"})
+    corridor = Corridor(
+        destination_slug="belgium", passport_nationality="BD", applying_from="AE", purpose="tourism"
+    )
+    nationality, residence = resolve_corridor_countries(corridor, get_country_registry())
+
+    def best(link: PageLink) -> float:
+        return score_link(link, corridor, get_lexicon(), nationality, residence).best()[1]
+
+    assert best(pdf) <= 0 < best(scored_as_stored(pdf))
+    assert scored_as_stored(page) is page
+    assert scored_as_stored(pdf).url == pdf.url and pdf.depth == 2

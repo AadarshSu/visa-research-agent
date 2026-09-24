@@ -377,10 +377,14 @@ it against prompt changes) had nothing to test. What broke was around it:
 should get it** — lost before the pool, in the pool, or after it was credited, it is a defect.
 
 **What is left, in order.**
-1. **Before the pool: the depth penalty on corpus entries (Belgium `BD/AE`).** −10 a level from the
-   build's seed kept Belgium's list PDF out of the pool until a run folded it back at depth 0.
-   Dropping it for corpus entries widens every pool; replay pools with entry 194's method, several
-   runs, before it ships. Also count how many answer pages sit at depth ≥ 2 with a link score ≤ 0.
+1. **Before the pool: the depth penalty on corpus entries (Belgium `BD/AE`). Done 2026-09-24.** −10 a
+   level from the build's seed kept Belgium's list PDF out of the pool. Measured offline on the 21
+   oracle corridors plus three item-70 ones, search stubbed out, no model
+   (`var/item70-2026-09-24/measure_depth.py`): dropping the penalty for every corpus entry grew
+   pools up to 3.3× and pushed 3 of 94 shown answers out of Germany `PH/PH`'s 160; dropping it for
+   **documents only** kept all 94, grew pools 0–60%, and put Belgium's PDF — reset to depth 2 in a
+   scratch copy — into the pool and the shown set. Shipped as `scored_as_stored`: a corpus PDF is
+   scored at depth 0.
 2. **In the pool, not picked: the selector (Slovenia 2 of 3).** Capture the pool for the runs that
    missed and replay the selection call (`var/selection-replay-2026-09-24/`) to see why the New
    Delhi page loses.
