@@ -29,6 +29,9 @@ var/pagetext/*
 !var/pagetext/.gitkeep
 var/usage/*
 !var/usage/.gitkeep
+# Local backups of the stores, taken before a rebuild or a re-run. Copies of the stores above, so
+# never committed either.
+var/_backup*/
 # Model drafts of a plan (entry 178). Each is written from a whole traveller profile, so it can
 # hold a city or a residence status: never commit one.
 var/plans/*
