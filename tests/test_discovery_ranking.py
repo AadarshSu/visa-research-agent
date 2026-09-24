@@ -606,6 +606,10 @@ def test_site_furniture_is_vetoed_however_well_it_scores() -> None:
     assert is_boilerplate("https://in.diplomatie.gouv.fr/en/donnees-personnelles", lexicon)
     assert is_boilerplate("https://in.diplomatie.gouv.fr/mentions-legales", lexicon)
     assert is_boilerplate("https://example.gov.uk/privacy", lexicon)
+    assert is_boilerplate("https://canada.diplo.de/ca-en/newsletter", lexicon)
+    assert is_boilerplate("https://www.gov.za/af/subscribe-mailing-lists", lexicon)
+    # An e-visa portal's account page is where a traveller applies, not site furniture (entry 200).
+    assert not is_boilerplate("https://thaievisa.go.th/sign-up", lexicon)
     # Real guidance is untouched, including a path that merely mentions a document.
     assert not is_boilerplate("https://uk.diplomatie.gouv.fr/en/applying-for-a-visa", lexicon)
     assert not is_boilerplate(f"{EDINBURGH}", lexicon)

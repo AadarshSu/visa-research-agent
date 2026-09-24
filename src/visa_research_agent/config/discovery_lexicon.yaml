@@ -314,6 +314,15 @@ boilerplate_tokens:
   # A subscription form for updates about a topic. Its address repeats the topic's words, so on
   # `www.gov.uk` 21 of them read as visa guidance in one build (entry 186).
   - email-signup
+  # The same kind of page under other names, counted across the 53 stores on 2026-09-25 (entry
+  # 200): Luxembourg's 31 newsletter pages, a German mission's 14, South Africa's mailing lists.
+  # Whole segments only, and deliberately not `signup` or `sign-up`: Egypt's and Thailand's e-visa
+  # portals use those for the account a traveller applies through, which is application guidance.
+  - newsletter
+  - newsletters
+  - subscribe
+  - subscribe-via-email
+  - subscribe-mailing-lists
 
 # A blank form is not a list of what to bring. Both say "application" and "documents", and the
 # forms are usually PDFs, so without this they outrank the real checklist. Observed on Japan's
