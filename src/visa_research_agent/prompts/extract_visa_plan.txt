@@ -145,6 +145,20 @@ Follow these rules:
      say in the explanation that the traveller's country is not on the authority's exemption list,
      so they can check that list themselves.
 
+8g. A visa issued on arrival is still a visa. Where the sources describe, for this traveller's
+   passport, only ways in that each end in the traveller holding a visa — one applied for in
+   advance, one issued on arrival, or one whose eligibility turns on a residence permit or another
+   country's visa that the profile does not establish — set visa_required to true, even though
+   which route applies is not known. It holds only within these bounds:
+   - Every route the sources describe for this passport must issue a visa. If any source describes
+     a way in without a visa that this traveller might meet, rule 5 governs and visa_required is
+     null. A route that issues a visa is not an exemption under rule 8f.
+   - Each route must be stated by a source for this passport; never infer one from another
+     nationality's page.
+   - Cite the sources stating the routes, say in the explanation which route applies on which
+     condition, and record the condition the profile does not settle — whether the traveller holds
+     the qualifying residence permit, for example — as an unresolved question.
+
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it
    run past the limit: a title that stops mid-clause reads as a broken interface. Everything the

@@ -349,7 +349,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 70. Find why a corridor that read its authority's pages still has no visa decision — `in progress`, **added 2026-09-24, the owner's top accuracy priority; steps 1–4 and next-work 1–3 done (entries 198, 199); the UAE's rule waits on the owner**
+### 70. Find why a corridor that read its authority's pages still has no visa decision — `in progress`, **added 2026-09-24, the owner's top accuracy priority; steps 1–4 and next-work 1–3 done (entries 198, 199); rule 8g shipped**
 
 **The problem.** Of 86 corridor runs logged since 2026-09-01, 24 refused for want of a visa
 decision, and **14 of them had read the authority's pages**: Croatia, Malta ×2, Italy, Poland,
@@ -401,12 +401,10 @@ should get it** — lost before the pool, in the pool, or after it was credited,
    added to the step's `source_ids`, and a linked id that is not a packet source still fails the
    plan as an unknown source. The other two sentinel runs gave the confirmed answer: verified, 12
    documents, the UK missions' checklist.
-4. **Credited, then held back: the UAE — measured, waiting on the owner (entry 199).** A draft rule
-   8g (`var/item70-2026-09-24/extract_visa_plan_8g.txt`): where every route the sources describe
-   issues a visa — in advance or on arrival — the decision is "visa required", and the condition the
-   profile does not settle becomes an unresolved question. Replayed on two UAE plan inputs: 1 of 5 →
-   4 of 4, and 2 of 2 → 5 of 5. Before shipping, re-run entry 197's regression on fixed packets
-   (Singapore "no visa", Japan, Germany).
+4. **Credited, then held back: the UAE. Done 2026-09-25 — rule 8g, the owner's approval (entry
+   199).** Where every route the sources describe issues a visa, in advance or on arrival, the plan
+   says "visa required" and asks the condition the profile does not settle. UAE plan inputs: 1 of 5
+   → 4 of 4 and 2 of 2 → 5 of 5; no change on five regression inputs, 40 calls.
 5. **The other 13 stores the uploads fix changes** — AE, CZ, EE, GR, ID, IE, IT, MY, PH, RO, TH, US, ZA
    — in batches, only if a corridor needs one: Malta answered from search before its rebuild. Use
    `var/item70-2026-09-24/rebuild.sh`, which backs up and resumes.

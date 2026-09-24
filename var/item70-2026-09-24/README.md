@@ -20,8 +20,8 @@ the owner's terminal: headless Chromium cannot start from Claude Code's sandboxe
   stubbed out and reports which oracle answers reach the pool and the shown set, per scoring arm.
 - `replay_select.py` and `replay_plan.py` — replay the selection or plan call alone on a captured
   packet (`select_packet.txt`, `plan_packet.json`, which `run.py` now keeps), per variant; results in
-  `select_replay.jsonl` and `plan_replay.jsonl`. `extract_visa_plan_8g.txt` is the draft rule 8g,
-  not shipped.
+  `select_replay.jsonl`, `plan_replay.jsonl` (the UAE under rule 8g) and `plan_regress.jsonl` (8g's
+  regression, entry 199).
 - `trace.md` — the working notes, per corridor. `run.log` — every run's one-line outcome.
 
 `runs/` (the baseline, 42 runs), `fixed/` (the fixed arm, 12 runs) and `rebuilt/` (Malta after its

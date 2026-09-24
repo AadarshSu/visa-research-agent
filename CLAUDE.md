@@ -406,6 +406,12 @@ produces a serious defect.
   8e's, the rule must be stated rather than inferred from the list existing, any exemption the
   traveller might meet keeps the decision null, and **an exemption list never decides "no visa"**.
 
+  **A visa on arrival is a visa — the owner's decision, entry 199.** Where every route the sources
+  describe for the passport issues a visa, in advance or on arrival, the plan says a visa **is**
+  required even when which route applies turns on something the profile does not say (a UK
+  residence visa, for the UAE); that condition becomes an unresolved question (rule 8g). Any
+  visa-free way in the traveller might meet keeps the decision null.
+
   **The entry-step floor is no floor, and that is a decision rather than an omission (entry 96).**
   Three visa-free corridors state **3**, **~5** and **~7** entry duties, so the honest list has no
   natural minimum and its low end is already under the application's four. A floor there would be a
