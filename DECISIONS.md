@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [193](#193-the-ten-country-pilot-rebuild-the-stores-hold-every-answer-and-the-selector-picks-fewer-of-them-from-bigger-pools) | **The ten-country pilot rebuild** — all ten built; oracle roles found 75 → 68 of 92, every lost page in the pool and not picked, as pools grew (Singapore 150 → 482); unresolved decisions and checklists 13 → 14; item 66 is more pressing |
 | [192](#192-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
 | [191](#191-a-plan-is-spent-only-for-a-browser-signed-in-with-ofself-and-the-requirement-fails-closed) | **A plan needs an Ofself sign-in** — `POST /visa-plans` answers `401` without a session; `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured refuses every plan rather than serving anonymously |
 | [190](#190-the-prompt-audit-of-2026-09-24-four-dead-lines-out-of-the-model-prompts-and-claudemd-halved) | **The prompt audit** — dead `temperature=0` and three dead prompt lines removed; CLAUDE.md 105K → 48K characters, its status narrative replaced by standing decisions and its corrections table moved to CORRECTIONS.md; the owner waived entry 174's re-runs for it |
@@ -241,6 +242,52 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 193. The ten-country pilot rebuild: the stores hold every answer, and the selector picks fewer of them from bigger pools
+
+**2026-09-25 · TODO item 68. The owner's pilot: the ten oracle countries rebuilt with entries 186
+and 189, then the 20 oracle corridors run once each through Personas and graded.** Stores were
+backed up first (`var/_backup_before_pilot_2026-09-25/`) and so were the recall logs
+(`var/recall/_before_pilot_grading_2026-09-25/`).
+
+**The builds.**
+- **All ten succeeded.** The first run lost six countries: France and Sweden because Chromium cannot
+  start from Claude Code's sandboxed shell, Singapore, the UAE and the US to a network drop, and
+  Canada cut off. None of those wrote anything, and the owner re-ran the runner from a terminal.
+- **Timing.** Most countries took 6–20 minutes. Canada took 41, the UAE 29 and the US 27, where
+  websites stopped answering and where entry 186 lets one site read hundreds of pages one at a time.
+
+**Grading (`selection-recall`, model arm, one run per corridor, compared with the backed-up logs).**
+- **Answer roles found: 75 of 92 before, 68 after.**
+- **Seven corridors lost one role each and none gained:** Canada `PH`, France `IN`, Japan `IN` and
+  `PH`, Singapore `PH`, the UK `IN` and the US `PH`.
+- **Every lost page was in the pool and not picked** — none left the store or the pool.
+
+**The pools grew with the richer stores:**
+- Singapore `PH/PH` 150 → 482;
+- the US `PH/PH` 293 → 553;
+- the UK `IN/GB` 431 → 567;
+- Canada `PH/PH` 499 → 666.
+
+The model still picks about 10–16 pages, from a longer list, with shorter excerpts inside the same
+`DEFAULT_SELECTION_CHARACTERS`. Japan `IN/GB`'s pool barely moved (174 → 176) and it lost a role too,
+so run-to-run variance is part of it. One run each cannot separate the two.
+
+**What the corridors answered is almost unchanged.** Across the 20, unresolved reported roles — the
+visa decision and the checklist — went 13 → 14. The one difference is the UK `PH/PH`, whose decision
+lives behind its questionnaire and has moved between runs before. The roles lost against the oracle
+were mostly fees and entry conditions, which `unresolved_roles` does not track.
+
+**What it means for the full rebuild.**
+- **The store side worked:** the answers are held and pooled.
+- **The selector side is where the loss shows.** A bigger pool is harder for the model to choose
+  from at a fixed packet size.
+- **That is item 66's question** — show the selector a ranked top slice instead of the whole pool —
+  and it is now more pressing, because the rebuilt stores feed it bigger pools.
+- **Before building on this, re-run the seven corridors two or three times,** to see how much of the
+  drop is variance (entry 144).
 
 ---
 

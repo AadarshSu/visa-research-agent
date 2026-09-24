@@ -368,6 +368,11 @@ once, and in this order:
    `done.txt`. Their stores were backed up first to `var/_backup_before_pilot_2026-09-25/`,
    verified byte for byte. After it: read every build's report, grade with `selection-recall`, and
    re-run Germany's five fresh plans, since it was confirmed on the old store.
+   **Pilot built and graded (entry 193).** All ten built. Oracle roles found fell 75 → 68 of 92, but
+   every lost page was in the pool and not picked, as pools grew (Singapore `PH/PH` 150 → 482).
+   Unresolved decisions and checklists went 13 → 14. **Next:** re-run the seven corridors that lost
+   a role two or three times, re-run Germany's five plans, then decide on item 66 before the full
+   rebuild.
    **First run, 2026-09-25:** GB, JP, DE and NL built cleanly. FR and SE failed at once because the
    headless browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error),
    and SG, AE and US because the network dropped (every search failed on DNS). CA was cut off. None
