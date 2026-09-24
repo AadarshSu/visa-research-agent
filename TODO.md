@@ -359,31 +359,27 @@ once, and in this order:
 2. **Item 68 — check the scanned PDFs. Done 2026-09-25: it does not block the rebuild.** None of
    the oracle's answer pages is among the 1,001 PDFs with an empty text layer or the 215 that could
    not be parsed. 196 of them score for a role, which is item 69, for later.
-3. **Paused by the owner, 2026-09-25.** The owner dropped the before-and-after comparison (a rebuilt
-   store should give good answers on its own merits), then paused the full rebuild in favour of one
-   corridor that works every time. `germany/IN/GB/tourism` was confirmed without a rebuild: five
-   fresh runs, the same verified answer (PROJECT_HANDOFF). When the rebuild resumes it covers all
-   55 — the 53 corpora plus Brazil and Uruguay — with a full backup first.
-   **Pilot started 2026-09-25, the owner's call: the ten oracle countries** (JP, GB, CA, DE, NL, FR,
-   SE, SG, AE, US), rebuilt with entries 186 and 189, two at a time, from
-   `var/rebuild-pilot-2026-09-25/run.sh` — resumable, one log per country, finished ones in
-   `done.txt`. Their stores were backed up first to `var/_backup_before_pilot_2026-09-25/`,
-   verified byte for byte. After it: read every build's report, grade with `selection-recall`, and
-   re-run Germany's five fresh plans, since it was confirmed on the old store.
-   **Pilot built and graded (entry 193).** All ten built. Oracle roles found fell 75 → 68 of 92, but
-   every lost page was in the pool and not picked, as pools grew (Singapore `PH/PH` 150 → 482).
-   Unresolved decisions and checklists went 13 → 14. **Item 66 done (entries 194, 195):** the loss
-   was −2.8 of 90 and all secondary, and the selector now sees a ranked top 120 plus 40 pages with
-   no stored text, which beats the old stores on replay. **Next:** re-run Germany's five plans on
-   its rebuilt store, then the full rebuild.
-   **First run, 2026-09-25:** GB, JP, DE and NL built cleanly. FR and SE failed at once because the
-   headless browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error),
-   and SG, AE and US because the network dropped (every search failed on DNS). CA was cut off. None
-   of the failures wrote anything. **Start any build that may render from the owner's own terminal**
-   — the owner re-ran `run.sh` there, and it resumes with the six not in `done.txt`.
-4. **Resumed 2026-09-25, for a fresh session — the runbook is PROJECT_HANDOFF's *Next session*.**
-   The 44 not yet rebuilt (42 corpora plus Brazil and Uruguay), after `visa-discover eu-store`.
-   Entries 198–201 landed everything that changes what a build records.
+3. **The pilot: done (entry 193).** The owner first dropped the before-and-after comparison (a
+   rebuilt store should give good answers on its own merits) and paused the rebuild for one corridor
+   that works every time — `germany/IN/GB/tourism`, confirmed without a rebuild (PROJECT_HANDOFF).
+   Then, the owner's call, the ten oracle countries (JP, GB, CA, DE, NL, FR, SE, SG, AE, US) were
+   rebuilt with entries 186 and 189 on 2026-09-24 (UTC; the folder says 09-25), two at a time, from
+   `var/rebuild-pilot-2026-09-25/run.sh`. Their stores were backed up first to
+   `var/_backup_before_pilot_2026-09-25/`, verified byte for byte.
+   - **The first attempt** built GB, JP, DE and NL. FR and SE failed at once because the headless
+     browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error), SG, AE
+     and US because the network dropped, and CA was cut off; none of the failures wrote anything.
+     **Start any build that may render from the owner's own terminal.** The owner re-ran `run.sh`
+     there and it finished the other six.
+   - **Graded:** oracle roles found fell 75 → 68 of 92, but every lost page was in the pool and not
+     picked, as pools grew (Singapore `PH/PH` 150 → 482). Unresolved decisions and checklists went
+     13 → 14. **Item 66 (entries 194, 195)** answered it: the loss was −2.8 of 90 and all secondary,
+     and the selector now sees a ranked top 120 plus 40 pages with no stored text, which beats the
+     old stores on replay. Germany's plans were re-run on its rebuilt store (PROJECT_HANDOFF).
+4. **The full rebuild of the other 44 (42 corpora plus Brazil and Uruguay) — started 2026-09-25.**
+   The runbook is PROJECT_HANDOFF's *Next session*. Entries 198–201 landed everything that changes
+   what a build records; Malta was rebuilt with them first (entry 198). The owner's first six (IT
+   RO GR ZA TH CZ) run first and their reports are read before the other 38.
 5. **Then item 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),

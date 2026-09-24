@@ -7,7 +7,7 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-24 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-25 — update this line when you touch the handoff |
 | **Tests** | 942: 939 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
@@ -45,6 +45,15 @@ TODO's *The sequence to the full rebuild*, then DECISIONS entries 200 and 201.
 **Which 44.** Of the 55 destinations (53 corpora plus Brazil and Uruguay), 11 are already rebuilt:
 the ten pilot countries (JP, GB, CA, DE, NL, FR, SE, SG, AE, US, 2026-09-24) and Malta (2026-09-24,
 entry 198). The other 42 corpora date from 2026-09-15. Brazil and Uruguay have never been built.
+**Do not read a store's `built_at` as its rebuild date.** A corridor that resolves writes its pages
+back into the store and `merge` resets `built_at` to that moment (`discovery/corpus.py`), which is
+why IT, EG, IN, HR, PL, BE and SI carry 2026-09-24 without having been rebuilt. What was rebuilt is
+what the `done.txt` files under `var/rebuild-pilot-2026-09-25/` and `var/item70-2026-09-24/rebuild/`
+list.
+
+**Started 2026-09-25, from the owner's Terminal panel, without refreshing the EU store (the
+owner's call):** the owner's first six, as two queues (IT GR TH and RO ZA CZ). Their reports are
+read before the other 38 start. Progress is `var/item70-2026-09-24/rebuild/results.txt`.
 
 **How to run it:**
 1. **From the owner's terminal, or Bash with the sandbox off** — never the sandboxed shell, where
@@ -136,9 +145,9 @@ exemption list decides that a visa is needed. Singapore's "no visa" held 8 of 8 
 58.6k tokens.
 
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
-- **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
-  (`var/usage/`, 2026-09-17) both failed. Every web request, corridor run and live timing waits on a
-  top-up.
+- **OpenAI is out of credit** since 2026-09-16, and nothing waits on it any more: model calls go
+  through Personas (below). Only `model_route: openai`, and item 65's GPT-6 test while Personas does
+  not serve that model, need a top-up.
 - **Three decisions are waiting on the owner:**
   - item 60, where Fast mode goes;
   - item 61, what a corridor may spend answering a challenge;
@@ -283,9 +292,9 @@ draft instead; that is not yet timed live.
 - **Checked:** offline by 15 tests, and by identical keys on two real consecutive requests for three
   stored corridors. **Not timed live.**
 
-**The OpenAI account ran out of credits on 2026-09-16.** Every model call fails with `429
-credit_balance_exhausted` until it is topped up — so does every web request that needs one. The live
-reuse check in entry 178 waits on it.
+**The OpenAI account ran out of credits on 2026-09-16**, and model calls have gone through
+Personas since 2026-09-24 (entry 188), so the live reuse check in entry 178 no longer waits on a
+top-up — it has simply not been run.
 
 **Latency and cost pull opposite ways, and both are now measured.** Input size explains ~none of the
 *time* and ~all of the *money*, so a change must be priced on both — and **item 31, which widened
