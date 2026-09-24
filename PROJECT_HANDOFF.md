@@ -52,7 +52,7 @@ Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which
 oracle roles at about 42% less selection input (entry 194); it was checked live on one corridor and
 **not A/B'd**, by the owner's decision. Each corridor's notes say how many were withheld, and the
 recall log flags them `withheld_from_selection` — read that first if a corridor misses a page it
-holds. Germany's five-run confirmation below predates it.
+holds. Germany was re-run on it the same day — below.
 
 **A corridor that works every time, confirmed 2026-09-25: `germany/IN/GB/tourism`.** The owner asked for
 one corridor that gives the same verified answer on every fresh run, and chose this one. Five fresh
@@ -62,9 +62,23 @@ C-visa documents page), the same 11 documents, and the same place to apply, in 4
 variation: a 12th item, "translations, where needed", in 4 of 5 runs; the decision cited the Foreign
 Office's list in four runs and the UK missions' "Do I need a visa" page in one — both say the same.
 The open questions (3–5) are things only the traveller knows: their UK city, residence permission
-and employment. **Germany was not rebuilt; it did not need to be.** The runner is not committed; it
-posts to `/visa-plans` in-process with `CORRIDOR_DIRECTORY`, `PLAN_DIRECTORY` and
-`RECALL_LOG_DIRECTORY` pointed at empty folders.
+and employment. The runner is not committed; it posts to `/visa-plans` in-process with
+`CORRIDOR_DIRECTORY`, `PLAN_DIRECTORY` and `RECALL_LOG_DIRECTORY` pointed at empty folders, and
+`REQUIRE_SIGN_IN=false`, which entry 191 allows where nothing else can reach the app.
+
+**Re-run 2026-09-24 on the rebuilt store and the selector cut (entry 195): 4 of 6 answered, and the
+two that did not were the plan call, not the research.** Every run resolved with no role missing.
+The four plans were the confirmed answer — visa required, `verified`, the UK missions' C-visa
+documents page, 12 documents, the German missions in the UK and TLScontact — in 48–60s. **Two
+answered `503`**: the plan call's reply broke `ApplicationStep.validate_link_target` — a step linked
+to the "where can I apply" page without listing it in its own `source_ids` (the second run's error
+was captured; the first went unrecorded, since the route discards the reason). The plan call's input
+was within 40 characters of the confirmation runs' (70,448 against 70,411), so neither the rebuild
+nor the cut caused it: over the day, 2 of 11 Germany plan calls on that packet refused. Entry 174
+saw the same failure twice in 48, only under short ids. **The plan prompt's rule 11 never states that
+`link_source_id` must also be in `source_ids`.** Not fixed yet — a plan-prompt change needs the
+Japan and Singapore re-checks first (entry 175). Selection input on this corridor fell 102.6k →
+58.6k tokens.
 
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
 - **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
