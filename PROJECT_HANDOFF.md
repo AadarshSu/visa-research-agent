@@ -47,6 +47,11 @@ disproved. Link instead of copying.
 
 Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which items serve it.
 
+**Next, the owner's top accuracy priority: TODO item 70.** Corridors that read their authority's
+pages and still credit no visa decision — 14 of the 24 refusals logged since 2026-09-01. In at least
+six, a page naming the traveller's nationality was read; the plan there is to record the
+adjudicator's reasons, re-run the 14, and trace each down the chain before fixing anything.
+
 **The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
 195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more
 oracle roles at about 42% less selection input (entry 194); it was checked live on one corridor and

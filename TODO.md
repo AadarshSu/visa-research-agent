@@ -300,7 +300,8 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
+| **Now** | 70. Find why a corridor that read its authority's pages still has no visa decision | `next` |
+|  | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
 |  | 68. Read more of what a build records, and choose what to open with more context | `next` |
 |  | 63. Make most corridors return accurate and useful information | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
@@ -347,6 +348,70 @@ careful reading and were wrong.
 ---
 
 ## Now — pick these up in this order
+
+### 70. Find why a corridor that read its authority's pages still has no visa decision — `next`, **added 2026-09-24, the owner's top accuracy priority; for a separate session**
+
+**The problem, and which one it is.** Of 86 corridor runs logged since 2026-09-01, 24 refused for
+want of a visa decision. **14 of them read the authority's pages** — 5 to 14 each, mostly scored as
+decision pages — and still credited none. That is the blocker the owner wants fixed. The other 10
+could not read the authority at all (pages nearly empty without JavaScript, Cloudflare challenges,
+`robots.txt`), which the owner has set aside, as are questionnaires and blocked decision pages
+(named by design, not blockers). The 14: Croatia, Malta ×2, Italy, Poland, Belgium ×2, Slovenia
+(all `BD/AE` or `BD/SA`), India `BD/SA`, Egypt `BD/SA`, Mexico `IN/GB`, Saudi Arabia `IN/GB`, the UAE
+`IN/GB` and the Netherlands `PH/PH`. **Most of their logs are from 2026-09-05**, before the 2026-09-15
+rebuild of all 53 stores and every change since — some may already answer.
+
+**The strongest lead, found offline on 2026-09-24: the evidence was read and not credited.** In at
+least 6 of the 14, a page the run read names the traveller's nationality (checked against today's
+stored text, so confirm it against a fresh run):
+- **The UAE `IN/GB`** read the oracle's answer page — its first line is *"Visa on arrival for citizens
+  of the Republic of India residing in (America, Britain, European Union countries)"* — on
+  2026-09-24, and no decision was credited.
+- **Italy** read its list of countries whose nationals need a Schengen visa, Bangladesh 911
+  characters into a 3,205-character page, whole in the adjudicator's excerpt. **The extracted text
+  has lost the page's structure**: the heading reads *"subject to Schengen visa requirements or
+  not:"* above one flat list, so which list Bangladesh is on cannot be told from the text.
+- Croatia, Poland, the Netherlands `PH/PH` and India `BD/SA` each read a page naming the nationality.
+- The adjudicator's excerpt is not the cause for short pages: it shows 20,000 characters, the first
+  6,000 plus windows around the traveller's country (`DEFAULT_EXCERPT_*` in `resolver.py`).
+
+**What to do, in order.**
+1. **Record the adjudicator's reasons.** Rule 10 of `adjudicate_roles.txt` makes it give a reason for
+   every choice and say what was missing for a role it leaves null, and nothing keeps them. Add
+   them to the recall log as a diagnostic nothing renders, as the selection note is. Without this
+   every refusal below has to be re-derived by guessing.
+2. **Re-run the 14 fresh, three times each**, from the owner's terminal (the renderer cannot start
+   from Claude Code's shell), clearing `var/corridors/` for both arms. About 42 corridors and ~$2 of
+   search. The ones that now answer leave the list; what is left is the real blocker 2.
+3. **Trace each survivor down the chain** and name the first link that broke:
+   - **not in the store** — no page naming the passport in the country's page-text index (search it
+     under every name the registry gives the country; Italy's list uses Italian names);
+   - **in the store, never shown** — not pooled, or withheld by the selector's cut
+     (`withheld_from_selection`, entry 195);
+   - **shown, not picked** — the selection replay in `var/selection-replay-2026-09-24/` answers
+     this on a fixed pool;
+   - **picked, not readable** — fetch failure or a thin page;
+   - **read, not credited** — the adjudicator's recorded reason says why;
+   - **credited, then dropped by the plan** — `decision_is_unverified`, or rule 8e/8f's bounds;
+   - **stated only off the trusted domains** — the EU's list of nationalities needing a Schengen
+     visa, or a linked PDF.
+4. **Test the likeliest fixes on fixed packets before touching a corridor**, the way entry 194 did
+   for selection: capture each survivor's adjudication packet and replay the roles call alone, five
+   times, against each candidate fix. Candidates, each a hypothesis:
+   - the roles prompt does not treat a residence-conditioned answer (the UAE) or membership of a
+     published list (Italy) as stating the decision for this passport;
+   - extraction flattens lists and tables, losing which list a country is on — fix in the fetch
+     path, so **no rebuild**;
+   - Schengen states its list at EU level — a trust-rule question for the owner (item 2), not a
+     prompt fix.
+5. **Only a fix to what a build records needs a rebuild**, and then only the affected countries, in
+   batches. Steps 1–4 read the existing stores; the ten pilot countries are already rebuilt and the
+   other 43 were rebuilt on 2026-09-15.
+
+**What not to do.** Do not build an accuracy metric or truth set without asking (entries 68, 147);
+the selection oracle may gain decision rows for these corridors if a trace needs ground truth, one
+row at a time. Grade every change on several runs (entry 144). Refusing stays a correct output:
+a fix that makes these corridors answer must make them answer *from a page that says so*.
 
 ### The sequence to the full rebuild
 
