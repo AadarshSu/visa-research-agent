@@ -265,6 +265,20 @@ hard_off_scope:
   - residence permit
   - long-term resident
 
+# A residence permit is a different audience from a tourist — except on the page that asks the
+# visa question for everyone. The Netherlands' own checker is linked as "Do I need a visa and/or a
+# residence permit for the Netherlands?", and the veto above removed it from every corridor that
+# did not happen to find it by search under its page title; Germany's Visa-Navigator went the same
+# way (TODO item 70). Terms listed here stop vetoing a link that also carries a visa-question term
+# below. The `off_scope` penalty still applies to them, so the link competes on score like any
+# other rather than being waved through.
+hard_off_scope_beside_visa_question:
+  - residence permit
+visa_question_terms:
+  - need a visa
+  - visa required
+  - visa navigator
+
 # Path tokens that mark a page as archived or otherwise not current guidance. Auto-reject, not a
 # penalty: an archived checklist that still reads plausibly is precisely what must never be used.
 archive_tokens: [archive, archived, old, backup, legacy, superseded]

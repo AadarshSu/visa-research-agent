@@ -297,6 +297,25 @@ def test_a_diplomatic_passport_page_is_vetoed_not_merely_penalised() -> None:
     assert wrong_audience(link_for(DETAIL_INDIA, "India"), corridor(), lexicon) is None
 
 
+def test_the_page_asking_the_visa_question_is_not_vetoed_for_naming_a_residence_permit() -> None:
+    """TODO item 70. The Netherlands links its own checker as "Do I need a visa and/or a residence
+    permit for the Netherlands?", and the residence-permit veto removed it from `netherlands/PH/PH`.
+    Only terms the lexicon lists yield: a diplomatic page asking the same question is still vetoed,
+    and a residence-permit page asking nothing about visas still is."""
+
+    lexicon = get_lexicon()
+    checker = link_for(
+        "https://www.netherlandsworldwide.nl/visa-the-netherlands/visa-required",
+        "Do I need a visa and/or a residence permit for the Netherlands?",
+    )
+    permit = link_for("https://ind.example/residence-permit", "Apply for a residence permit")
+    diplomatic = link_for("https://mofa.example/diplomatic", "Diplomatic passport: need a visa?")
+
+    assert wrong_audience(checker, corridor(), lexicon) is None
+    assert wrong_audience(permit, corridor(), lexicon) == "residence permit"
+    assert wrong_audience(diplomatic, corridor(), lexicon) == "diplomatic"
+
+
 def test_a_students_own_pages_are_not_vetoed_for_a_study_corridor() -> None:
     lexicon = get_lexicon()
     student = link_for("https://immigration.gov.example/visa/student.html", "Student Visa")

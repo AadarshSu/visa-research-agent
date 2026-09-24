@@ -299,8 +299,15 @@ def wrong_audience(link: PageLink, corridor: Corridor, lexicon: Lexicon) -> str 
 
     own = {term.lower() for term in lexicon.purposes.get(corridor.purpose, PurposeTerms()).terms}
     haystack = f"{link.text} {link.heading} {searchable_url(link.url)}".lower()
+    # A page that asks the visa question for everyone is not for another audience because it also
+    # mentions one of them: the Netherlands' checker is "Do I need a visa and/or a residence permit"
+    # (TODO item 70). Only the terms the lexicon lists yield, so a diplomatic list never does.
+    asks_visa_question = any(term.lower() in haystack for term in lexicon.visa_question_terms)
+    yielding = {term.lower() for term in lexicon.hard_off_scope_beside_visa_question}
     for term in lexicon.hard_off_scope:
         if term.lower() in own:
+            continue
+        if asks_visa_question and term.lower() in yielding:
             continue
         if term.lower() in haystack:
             return term

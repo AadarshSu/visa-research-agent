@@ -179,6 +179,10 @@ class Lexicon(StrictModel):
     off_scope: OffScopeTerms = Field(default_factory=OffScopeTerms)
     archive_tokens: list[str] = Field(default_factory=list)
     hard_off_scope: list[str] = Field(default_factory=list)
+    hard_off_scope_beside_visa_question: list[str] = Field(default_factory=list)
+    """`hard_off_scope` terms that do not veto a link which also asks whether a visa is needed
+    (TODO item 70). Still penalised through `off_scope`; only the veto is lifted."""
+    visa_question_terms: list[str] = Field(default_factory=list)
     form_penalty: float = -35.0
     form_terms: list[str] = Field(default_factory=list)
     language_penalty: float = -25.0

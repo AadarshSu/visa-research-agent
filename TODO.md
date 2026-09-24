@@ -385,6 +385,14 @@ stored text, so confirm it against a fresh run):
    the status was graded from the fetch alone, so the plan came out `verified` beside a named
    unavailable page, `VisaPlan` refused the pair, and the traveller got a 503 — 2 of 2 runs whose
    plan stated a decision. `resolve_plan_status` now sees those pages (`names_unread_pages`).
+   **Fixed 2026-09-24: the residence-permit veto no longer removes the page that asks the visa
+   question.** The Dutch checker is linked as "Do I need a visa and/or a residence permit for the
+   Netherlands?", and `wrong_audience` dropped it from `netherlands/PH/PH` before anything scored
+   it. `residence permit` now yields to a visa-question term (`visa_question_terms` in the
+   lexicon); the `off_scope` penalty still applies. Across the 53 stores it frees a handful of
+   pages among the 2,326 the term vetoes — the Dutch checker twice, Germany's Visa-Navigator, a
+   Norwegian exemption page. Three fresh runs each: `netherlands/PH/PH` named the checker as the
+   decision tool 3 of 3, against refused, tool, refused.
 2. **Re-run the 14 fresh, three times each**, from the owner's terminal (the renderer cannot start
    from Claude Code's shell), clearing `var/corridors/` for both arms. About 42 corridors and ~$2 of
    search. The ones that now answer leave the list; what is left is the real blocker 2.
