@@ -388,8 +388,11 @@ should get it** — lost before the pool, in the pool, or after it was credited,
 2. **In the pool, not picked: the selector (Slovenia 2 of 3).** Capture the pool for the runs that
    missed and replay the selection call (`var/selection-replay-2026-09-24/`) to see why the New
    Delhi page loses.
-3. **Credited, then lost: the plan's input guard (India 2 of 3 refused).** Trim the research packet
-   or raise `maximum_model_input_characters`, priced in seconds and dollars on several runs.
+3. **Credited, then lost: the plan's input guard (India). Done 2026-09-24.** Five more runs: four
+   plan inputs of 72–74k answered, one of 91,787 refused — 3 of 8 refused over the day. Across 131
+   logged plan calls the median input is 17,918 and the largest 73,630, so the 80,000 guard sat
+   just above normal traffic. Replayed on the 91,787 input, the plan answered "visa required" 3 of
+   3 in 17–22s. `maximum_model_input_characters` is now 160,000: only calls that refused change.
 4. **Credited, then held back: the UAE.** The plan should probably say "visa required — on arrival
    if you hold a UK residence visa, otherwise in advance". Answer-changing, so the owner approves
    the prompt change first.
@@ -2013,11 +2016,6 @@ attempts fail (`adjudication_failed`), the refusal reads *"no page could be conf
 decision, document checklist"* — true, and it hides that a model call failed. Seen on 2026-09-24
 when Personas answered HTTP 500 for two minutes (entry 198). Say that the check could not be run and
 that trying again may answer.
-
-**The plan refuses a corridor whose pages exceed 80,000 characters.** `india/BD/SA` read 14 pages
-and the plan call refused before it was sent, 2 of 3 runs (entry 198); the largest plan input that
-succeeded that day was 71,369. The guard is `maximum_model_input_characters`. Raising it or trimming
-the packet is a cost decision — price it in seconds and dollars on several runs (entries 144, 145).
 
 **A visa on arrival the plan cannot confirm leaves the decision null.** `united-arab-emirates/IN/GB`:
 GDRFA's visa on arrival for Indians holding a UK residence visa was credited, and the plan left the

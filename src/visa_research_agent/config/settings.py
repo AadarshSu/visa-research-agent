@@ -113,7 +113,13 @@ class Settings(BaseSettings):
     # Longer than the OpenAI timeout: Personas adds a hop in front of the same call.
     personas_timeout_seconds: float = 120.0
 
-    maximum_model_input_characters: int = 80_000
+    # The plan call's input guard. 80,000 until 2026-09-24, which sat just above normal traffic —
+    # median 17,918, 90th percentile 70,448, largest 73,630 over 131 logged plan calls — and
+    # refused `india/BD/SA` in 3 of 8 runs at 91,787 after the answer was already credited. Replayed
+    # on that input the plan answered "visa required" 3 of 3 in 17–22s (TODO item 70). Doubled:
+    # it changes only calls that refused, and stays far below the 272K-token price threshold
+    # (item 59).
+    maximum_model_input_characters: int = 160_000
     openai_api_key: SecretStr | None = None
     openai_model: str | None = None
     openai_request_timeout_seconds: float = 60.0
