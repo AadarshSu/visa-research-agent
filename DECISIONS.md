@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [191](#191-a-plan-is-spent-only-for-a-browser-signed-in-with-ofself-and-the-requirement-fails-closed) | **A plan needs an Ofself sign-in** — `POST /visa-plans` answers `401` without a session; `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured refuses every plan rather than serving anonymously |
 | [190](#190-the-prompt-audit-of-2026-09-24-four-dead-lines-out-of-the-model-prompts-and-claudemd-halved) | **The prompt audit** — dead `temperature=0` and three dead prompt lines removed; CLAUDE.md 105K → 48K characters, its status narrative replaced by standing decisions and its corrections table moved to CORRECTIONS.md; the owner waived entry 174's re-runs for it |
 | [189](#189-a-corpus-build-reads-a-link-with-its-surroundings-and-a-pdf-inherits-its-pages-title) | **A build reads a link with its surroundings** — text around it, its landmark, and for a PDF its page's title; offline only; Japan's oracle pages read 11 → 15 of 20, nothing regressed; reached `main` inside `1ca066e` |
 | [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked. Graded: selection 41/48 against 39/48, decisions as baseline except one Japan "visa required" in six |
@@ -239,6 +240,44 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 191. A plan is spent only for a browser signed in with Ofself, and the requirement fails closed
+
+**2026-09-24. The owner: "require the ofself sign-in", after a hosting survey found that the host
+costs less than an open `POST /visa-plans` could.**
+
+**What it does.**
+- **`POST /visa-plans` now answers `401` to a browser with no valid Ofself session.** The check is a
+  route dependency (`require_signed_in_for_plans` in `api/signin.py`), so it runs before any
+  search, fetch or model call. The session is the signed cookie sign-in already set (TODO item 55,
+  step 4); a forged or expired one is not signed in.
+- **`REQUIRE_SIGN_IN` controls it and defaults to on.** Set it false only where nobody else can reach
+  the app.
+- **Required but not configured refuses every plan with `503`.** That is when any of
+  `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` or `SESSION_SECRET` is missing, and the message names
+  them. It never falls back to serving plans anonymously.
+- **The page says so up front.** Not signed in, it shows "Sign in with Ofself to generate a plan"
+  and disables the button. A session that expires while the page is open gets the same link in
+  place of a refusal panel, because nothing was researched, so there is no evidence to report as
+  missing.
+
+**Why on by default.** The failure being prevented is a deployment that forgot a setting. With the
+default off, forgetting it opens the wallet silently; with it on, forgetting it locks plans with a
+message naming the fix. That is entry 5's asymmetry applied to money rather than to evidence.
+
+**What it does not do.**
+- **It is not a rate limit.** A signed-in user can still ask for as many plans as they like.
+- **Who may sign in is decided on Ofself, not here.** In incubator mode only the users the app is
+  shown to can authorise it (TODO item 7), so for now that list is the allowlist.
+- **Nothing about the user reaches the plan.** The user id gates the request and goes no further;
+  the traveller is still the form's (entry 180).
+- **The CLI is untouched.** Running a command already needs the keys.
+
+**To deploy with it**, besides the three sign-in secrets:
+- set `PARADIGM_REDIRECT_URI` to the host's `/oauth/callback` and register that URI on the app;
+- set `SESSION_COOKIE_SECURE=true` once the host serves HTTPS.
 
 ---
 

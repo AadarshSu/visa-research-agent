@@ -41,6 +41,16 @@
           </p>
 
           {% if signed_in %}<p id="ofself-note" class="form-note" role="status" hidden></p>{% endif %}
+          {% set plans_locked = sign_in_required and not signed_in %}
+          {% if plans_locked %}
+            <p id="sign-in-note" class="form-note form-note--warn" role="status">
+              {% if sign_in_configured %}
+                <a href="/oauth/login">Sign in with Ofself</a> to generate a plan.
+              {% else %}
+                Plans need sign-in with Ofself, which is not configured on this server.
+              {% endif %}
+            </p>
+          {% endif %}
           <form id="plan-form" class="research-form">
             <div class="field-group">
               <label for="destination">Destination</label>
@@ -96,7 +106,7 @@
               </select>
               <p id="purpose-note" class="field-note" role="status" hidden></p>
             </div>
-            <button id="generate-button" type="submit">
+            <button id="generate-button" type="submit" {% if plans_locked %}disabled{% endif %}>
               Generate Plan
             </button>
           </form>

@@ -311,7 +311,9 @@ owner may confirm. Steps 1
 and 2 of item 55 are built — the route takes its traveller from an injected `TravellerSource`, and
 the country check is in `api/countries.py` — and the Ofself adapter
 (`api/ofself.py`, step 3) is built, tested offline, and run against a live sandbox user. Sign-in with Ofself (`api/signin.py`) is
-built, and the owner has signed in with it for real. Signed in, the page fills the passport from
+built, and the owner has signed in with it for real. **Since 2026-09-24 a plan requires it**
+(entry 191): `POST /visa-plans` answers `401` without a session, `REQUIRE_SIGN_IN` defaults on, and
+locally the owner signs in on port 8000 (or sets `REQUIRE_SIGN_IN=false` in `.env`). Signed in, the page fills the passport from
 Ofself (seen for the sandbox user); the owner's own account has no citizenship recorded yet.
 **Since 2026-09-21 (entry 181) it also starts from Ofself's travel schemas** — passports with their
 expiry, a residence permit, trips being considered — as defaults the traveller confirms. That is

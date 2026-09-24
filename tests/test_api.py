@@ -13,6 +13,7 @@ from visa_research_agent.api.dependencies import (
 )
 from visa_research_agent.api.routes import resolve_destination
 from visa_research_agent.api.schemas import VisaPlanRequest
+from visa_research_agent.api.signin import require_signed_in_for_plans
 from visa_research_agent.discovery.automatic import AutomaticDestinationService, find_country
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import Corridor
@@ -49,7 +50,10 @@ async def client(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[httpx.AsyncCl
         )
     get_visa_plan_service.cache_clear()
     get_automatic_destinations.cache_clear()
-    transport = httpx.ASGITransport(app=create_app())
+    app = create_app()
+    # These tests are about the plan, not who asked for it; test_signin covers the gate.
+    app.dependency_overrides[require_signed_in_for_plans] = lambda: None
+    transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
         yield test_client
     get_visa_plan_service.cache_clear()
@@ -396,6 +400,7 @@ async def researching(
     app = create_app()
     app.dependency_overrides[get_automatic_destinations] = lambda: automatic
     app.dependency_overrides[get_visa_plan_service] = StoppingPlanService
+    app.dependency_overrides[require_signed_in_for_plans] = lambda: None
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as test_client:
         yield test_client, automatic
@@ -461,6 +466,7 @@ async def test_the_plan_is_researched_for_the_traveller_the_injected_source_supp
     app = create_app()
     app.dependency_overrides[get_automatic_destinations] = lambda: automatic
     app.dependency_overrides[get_visa_plan_service] = StoppingPlanService
+    app.dependency_overrides[require_signed_in_for_plans] = lambda: None
     app.dependency_overrides[get_traveller_source] = lambda: source
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:

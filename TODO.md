@@ -17,7 +17,7 @@ points at the items that do the work. The detail lives in the items, not here.
 | --- | --- | --- | --- |
 | **Model calls paid through Ofself Personas**, on their OpenAI key | **Done 2026-09-24 (entry 188), and the route from now on — the owner.** All three calls go through Personas on Ofself's account; graded against the direct route's baselines. One Japan inference is a *Smaller thing* | 62 (done) | — |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60, which the Personas route cannot send without an Ofself tier setting |
-| **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` spends money unauthenticated, and the stores are local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
+| **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` needs an Ofself sign-in since 2026-09-24 (entry 191); the stores are still local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | the owner's own checking (entry 68); model calls run through Personas now |
 | **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23) | **64**, **2** | nothing external — search credit only |
 
@@ -843,9 +843,11 @@ makes **every** request cold. That is item 20, which this item should be planned
 3. **Set three secrets:** `OPENAI_API_KEY`, `OPENAI_MODEL`, `SEARCH_API_KEY`.
 4. **Keep `render_mode: never`** unless the host can carry Chromium (~150MB plus system libraries).
    Vietnam will refuse without it, which is correct rather than broken.
-5. **Put a key or a rate limit on `POST /visa-plans`.** It is unauthenticated and a cold corridor spends
-   real money — search plus two model calls — so a public URL is a public wallet. Ofself's login
-   is the likely answer; plan this step with item 55.
+5. **Put a key or a rate limit on `POST /visa-plans`.** **Done as a key, 2026-09-24 (entry 191):**
+   a plan needs an Ofself session, `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured
+   refuses every plan. On the host, set the three sign-in secrets, `PARADIGM_REDIRECT_URI` (and
+   register it on the app) and `SESSION_COOKIE_SECURE=true`. There is still no rate limit per user;
+   while the app is in incubator mode, who may sign in is the allowlist.
 
 **Ofself provides sign-in, not a host — as far as its documentation shows (2026-09-17, entry 180).**
 Paradigm stores the user's data and handles OAuth. The app registers its own redirect URI,
@@ -873,9 +875,9 @@ interface rather than only in these files.
 ### 20. Make the stores substrate-swappable and durable — `soon`
 
 **Why:** `var/cache/`, `var/corridors/` and `var/recall/` are local directories, so **a disposable host
-makes every request cold** — up to fifteen searches, twenty-five fetches, two model calls, on an
-unauthenticated endpoint. Item 7 already notes this; entry 44 makes it structural, because a corpus that
-does not survive a restart is not a corpus. Both existing stores are small classes with `load`/`store`,
+makes every request cold** — up to fifteen searches, twenty-five fetches, two model calls, though
+since entry 191 only for a signed-in user. Item 7 already notes this; entry 44 makes it structural,
+because a corpus that does not survive a restart is not a corpus. Both existing stores are small classes with `load`/`store`,
 so the seam is already there.
 
 **Do:** put the corpus, the source snapshots and the corridor resolutions behind their existing
@@ -979,7 +981,9 @@ exists, which is why this is sized small:
      with `SESSION_SECRET`, a purpose stamp so the pending cookie cannot pass as a session, and a
      12-hour expiry. No new dependency. `GET /oauth/session` says who is signed in; `POST
      /oauth/logout` forgets it here and leaves the grant on Ofself alone.
-   - **Off until configured:** `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` and `SESSION_SECRET`.
+   - **Off until configured:** `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` and `SESSION_SECRET`. But
+     since entry 191 a plan **requires** it unless `REQUIRE_SIGN_IN=false`, so unconfigured means
+     no plans rather than anonymous plans.
      `.claude/launch.json` has `visa-research-agent-signin` on port 8000, the registered redirect.
    - **The real sign-in, 2026-09-17.** The owner authorised the app under Full Access and was signed
      in as `43b82f83-66c4-449b-a9ce-eb1f690c433b`. Two earlier callbacks, from a browser that had not
@@ -1202,8 +1206,8 @@ Ofself's developers; the traps below are the ones that shape this item's work.
    that could be argued for is what the traveller *stated* here, such as which passport they chose,
    and that argument has not been made.
 
-**Plan it with item 7.** Ofself's login is also the likely answer to item 7's fifth step: `POST
-/visa-plans` is unauthenticated and a cold corridor spends real money.
+**Plan it with item 7.** Ofself's login now answers item 7's fifth step: `POST /visa-plans` needs a
+signed-in session (entry 191).
 
 ### 57. Stream the plan to the screen as it is written — `soon`, **a UX improvement, added 2026-09-15**
 

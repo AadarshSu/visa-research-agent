@@ -614,6 +614,15 @@ async function generatePlan(event) {
     if (!response.ok) {
       // A refusal names the evidence it could not verify, rather than failing opaquely.
       const detail = payload.detail || {};
+      if (detail.sign_in) {
+        // Not a refusal about evidence: nothing was researched, because nobody is signed in — or
+        // the session expired since the page loaded.
+        const link = element("a", "", "Sign in with Ofself");
+        link.href = "/oauth/login";
+        errorMessage.replaceChildren(link, " to generate a plan.");
+        errorMessage.hidden = false;
+        return;
+      }
       renderRefusal(detail);
       results.scrollIntoView({ behavior: "smooth", block: "start" });
       return;

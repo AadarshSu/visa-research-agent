@@ -97,6 +97,11 @@ class Settings(BaseSettings):
     session_max_age_hours: float = 12.0
     # True wherever the app is served over HTTPS. False only so a localhost session works.
     session_cookie_secure: bool = False
+    # Whether a plan may be asked for without signing in with Ofself. On by default because a plan
+    # spends money — searches and two model calls — and a deployment that forgot to set this must
+    # not become a public wallet. Set it false only where nobody else can reach the app, such as a
+    # laptop without sign-in configured (DECISIONS entry 191).
+    require_sign_in: bool = True
 
     # Model calls through Ofself Personas, when `model_route: personas` (TODO item 62). The app id
     # and HMAC key come from `paradigm personas register`; the key is a secret. Every run is made as

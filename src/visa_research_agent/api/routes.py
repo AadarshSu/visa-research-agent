@@ -16,10 +16,11 @@ from visa_research_agent.api.schemas import (
     HealthResponse,
     VisaPlanRequest,
 )
-from visa_research_agent.api.signin import SignIn, get_sign_in
+from visa_research_agent.api.signin import SignIn, get_sign_in, require_signed_in_for_plans
 from visa_research_agent.api.templates import static_asset_version, templates
 from visa_research_agent.api.traveller import TravellerSource
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
+from visa_research_agent.config.settings import settings
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
 from visa_research_agent.discovery.automatic import (
     AutomaticDestinationService,
@@ -56,6 +57,7 @@ async def index(
             # their passport comes from Ofself or from them, and where they apply from from them.
             "traveller": None if signed_in else DEFAULT_TRAVELLER_PROFILE,
             "sign_in_configured": sign_in is not None,
+            "sign_in_required": settings.require_sign_in,
             "signed_in": signed_in,
             "source_mode": policy.source_mode,
             "extraction_mode": policy.extraction_mode,
@@ -242,10 +244,13 @@ async def resolve_destination(
     "/visa-plans",
     response_model=VisaPlan,
     responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Not signed in with Ofself"},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Unsupported destination"},
         status.HTTP_503_SERVICE_UNAVAILABLE: {"description": "Could not be verified"},
     },
     tags=["visa research"],
+    # Checked before anything is spent: nothing past this line runs for a browser not signed in.
+    dependencies=[Depends(require_signed_in_for_plans)],
 )
 async def create_visa_plan(
     request: VisaPlanRequest,

@@ -13,6 +13,7 @@ import httpx
 import pytest
 
 from visa_research_agent.api.app import create_app
+from visa_research_agent.api.dependencies import get_automatic_destinations, get_visa_plan_service
 from visa_research_agent.api.ofself import OfselfIdentity, OfselfSignInRejected, OfselfUnavailable
 from visa_research_agent.api.signin import (
     PENDING_COOKIE,
@@ -22,6 +23,9 @@ from visa_research_agent.api.signin import (
     SignIn,
     get_sign_in,
 )
+from visa_research_agent.config.settings import settings
+from visa_research_agent.domain.models import VisaPlan
+from visa_research_agent.research.errors import VisaResearchError
 
 pytestmark = pytest.mark.anyio
 
@@ -436,9 +440,126 @@ async def test_the_anonymous_page_offers_sign_in_and_keeps_its_default() -> None
     assert 'id="ofself-note"' not in page
 
 
-async def test_the_page_says_nothing_of_ofself_where_sign_in_is_not_configured() -> None:
+async def test_the_page_says_nothing_of_ofself_where_sign_in_is_neither_configured_nor_required(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings, "require_sign_in", False)
     async with client_for(None) as client:
         page = (await client.get("/")).text
 
     assert "Ofself" not in page
     assert '<option value="IN" selected>' in page
+    assert 'id="sign-in-note"' not in page
+
+
+# --- a plan is spent only for a signed-in traveller (DECISIONS entry 191) --------------------
+
+
+PLAN_REQUEST = {
+    "destination": "singapore",
+    "traveller": {
+        "passport_nationality": "IN",
+        "country_of_residence": "GB",
+        "travel_purpose": "tourism",
+    },
+}
+
+
+class SpendingNothing:
+    """Stands in for every service a plan spends through, and records whether any was reached."""
+
+    reached = False
+
+    def __init__(self) -> None:
+        SpendingNothing.reached = True
+
+    async def generate(self, destination: object, traveller: object) -> VisaPlan:
+        raise VisaResearchError("reached the plan")
+
+
+def plan_client(configured: SignIn | None) -> httpx.AsyncClient:
+    app = create_app()
+    app.dependency_overrides[get_sign_in] = lambda: configured
+    app.dependency_overrides[get_visa_plan_service] = SpendingNothing
+    app.dependency_overrides[get_automatic_destinations] = lambda: None
+    return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
+
+
+@pytest.fixture
+def required(monkeypatch: pytest.MonkeyPatch) -> None:
+    # Pinned rather than read from a developer's `.env`, which may turn it off.
+    monkeypatch.setattr(settings, "require_sign_in", True)
+    SpendingNothing.reached = False
+
+
+@pytest.mark.usefixtures("required")
+async def test_a_plan_is_refused_to_a_browser_not_signed_in() -> None:
+    async with plan_client(sign_in(paradigm())) as client:
+        response = await client.post("/visa-plans", json=PLAN_REQUEST)
+
+    assert response.status_code == 401
+    assert response.json()["detail"]["sign_in"] is True
+    assert SpendingNothing.reached is False
+
+
+@pytest.mark.usefixtures("required")
+async def test_a_forged_session_is_not_signed_in() -> None:
+    forged = SignedCookies("another-secret-that-is-also-long-enough-to-use").sign(
+        SESSION_COOKIE, {"user_id": USER}
+    )
+    async with plan_client(sign_in(paradigm())) as client:
+        client.cookies.set(SESSION_COOKIE, forged)
+        response = await client.post("/visa-plans", json=PLAN_REQUEST)
+
+    assert response.status_code == 401
+    assert SpendingNothing.reached is False
+
+
+@pytest.mark.usefixtures("required")
+async def test_required_but_unconfigured_refuses_every_plan_rather_than_serving_anonymously() -> (
+    None
+):
+    async with plan_client(None) as client:
+        response = await client.post("/visa-plans", json=PLAN_REQUEST)
+        page = (await client.get("/")).text
+
+    assert response.status_code == 503
+    assert "REQUIRE_SIGN_IN" in response.json()["detail"]["message"]
+    assert SpendingNothing.reached is False
+    assert "not configured on this server" in page
+    assert 'id="generate-button" type="submit" disabled' in page
+
+
+@pytest.mark.usefixtures("required")
+async def test_a_signed_in_traveller_reaches_the_plan() -> None:
+    async with plan_client(sign_in(paradigm())) as client:
+        assert (await client.get("/oauth/login")).status_code == 303
+        assert (await client.get("/oauth/callback", params=callback_query())).status_code == 303
+
+        response = await client.post("/visa-plans", json=PLAN_REQUEST)
+        page = (await client.get("/")).text
+
+    assert SpendingNothing.reached is True
+    assert response.status_code == 503
+    assert 'id="sign-in-note"' not in page
+
+
+@pytest.mark.usefixtures("required")
+async def test_the_anonymous_page_locks_the_form_behind_sign_in() -> None:
+    async with client_for(sign_in(paradigm())) as client:
+        page = (await client.get("/")).text
+
+    assert 'id="sign-in-note"' in page
+    assert 'id="generate-button" type="submit" disabled' in page
+
+
+async def test_an_unrequired_plan_needs_no_session(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "require_sign_in", False)
+    SpendingNothing.reached = False
+    async with plan_client(sign_in(paradigm())) as client:
+        response = await client.post("/visa-plans", json=PLAN_REQUEST)
+        page = (await client.get("/")).text
+
+    assert SpendingNothing.reached is True
+    assert response.status_code == 503
+    assert 'id="generate-button" type="submit" disabled' not in page

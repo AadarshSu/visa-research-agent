@@ -197,6 +197,38 @@ def require_sign_in(sign_in: Annotated[SignIn | None, Depends(get_sign_in)]) -> 
     return sign_in
 
 
+def require_signed_in_for_plans(
+    request: Request, sign_in: Annotated[SignIn | None, Depends(get_sign_in)]
+) -> str | None:
+    """The Ofself user a plan is spent for, or None where `REQUIRE_SIGN_IN` is off.
+
+    A plan costs searches and two model calls, so a public address without this is a public wallet
+    (TODO item 7, step 5). It fails closed: required but not configured refuses every plan rather
+    than quietly serving them anonymously (DECISIONS entry 191).
+    """
+
+    if not settings.require_sign_in:
+        return None
+    if sign_in is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "message": (
+                    "Plans need sign-in with Ofself, which is not configured here: "
+                    "PARADIGM_CLIENT_ID, PARADIGM_API_KEY and SESSION_SECRET must all be set, or "
+                    "REQUIRE_SIGN_IN set to false where nobody else can reach this app."
+                )
+            },
+        )
+    user_id = sign_in.signed_in_user(request)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={"message": "Sign in with Ofself to generate a plan.", "sign_in": True},
+        )
+    return user_id
+
+
 router = APIRouter(prefix="/oauth", tags=["sign-in"])
 
 
