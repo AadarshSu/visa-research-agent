@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping, Sequence
 from datetime import date, datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -765,6 +765,29 @@ class ApplicationStep(StrictModel):
         """
 
         return value.strip().rstrip(",;:").strip() or value.strip()
+
+    @model_validator(mode="before")
+    @classmethod
+    def cite_the_linked_page(cls, data: Any) -> Any:
+        """A step linking a page cites it, when the model left it out of `source_ids`.
+
+        The model links the application page as `source` and cites the pages that state the step,
+        and the check below then refused the whole plan — Germany `IN/GB` in 4 of 79 calls by
+        entry 197, and again on 2026-09-24 after a verified answer was in hand (TODO item 70). Entry
+        197 named this as one of two fixes should it recur. It adds no page: the id must still be a
+        packet source, which `VisaPlan` checks for every step, and the page is where the step sends
+        the traveller.
+        """
+
+        if (
+            isinstance(data, dict)
+            and data.get("link_target") == "source"
+            and isinstance(data.get("link_source_id"), str)
+            and isinstance(data.get("source_ids"), list)
+            and data["link_source_id"] not in data["source_ids"]
+        ):
+            return {**data, "source_ids": [*data["source_ids"], data["link_source_id"]]}
+        return data
 
     @model_validator(mode="after")
     def validate_link_target(self) -> "ApplicationStep":

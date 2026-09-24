@@ -397,6 +397,12 @@ should get it** — lost before the pool, in the pool, or after it was credited,
    logged plan calls the median input is 17,918 and the largest 73,630, so the 80,000 guard sat
    just above normal traffic. Replayed on the 91,787 input, the plan answered "visa required" 3 of
    3 in 17–22s. `maximum_model_input_characters` is now 160,000: only calls that refused change.
+   **And fixed the same day: a step linking a page it did not cite no longer refuses the plan.** The
+   sentinel `germany/IN/GB` refused once in three on it after a verified answer was in hand — entry
+   197's step link, recurring. Entry 197 named the fix should it recur: the linked page is now
+   added to the step's `source_ids`, and a linked id that is not a packet source still fails the
+   plan as an unknown source. The other two sentinel runs gave the confirmed answer: verified, 12
+   documents, the UK missions' checklist.
 4. **Credited, then held back: the UAE.** The plan should probably say "visa required — on arrival
    if you hold a UK residence visa, otherwise in advance". Answer-changing, so the owner approves
    the prompt change first.
@@ -2027,13 +2033,6 @@ decision open because the profile does not say the traveller holds one — 4 of 
 credited (entry 198). Either way a visa is needed, on arrival or in advance. Whether the plan should
 say "visa required" and name both routes is an answer-changing prompt decision for the owner, like
 entry 172.
-
-**A plan step sometimes links the application URL as a `source` it does not cite, and the plan
-refuses.** Germany `IN/GB`: 4 of 16 plan calls on one packet on 2026-09-24, none in the 12 after, 4
-in 79 overall (entry 197). The page is `where_to_apply.application_url`, which rule 11 says to link
-as `application_route`. **No retry — the owner's decision.** If it recurs, the fix is in code: treat
-a `source` link whose page is the application URL as that `application_route` link, or accept a
-linked page as cited. The route discards a refused draft's reason; record it before measuring.
 
 **A per-host fair share treats unequal hosts equally.** Moved here from item 48, closed
 2026-09-15; unmeasured, and it changes what a build spends, so it needs its own rebuild. Thailand opened 1,041 pages across 63

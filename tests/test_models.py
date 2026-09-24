@@ -128,11 +128,14 @@ def test_application_steps_are_structured_and_bounded() -> None:
         )
 
 
-def test_source_step_link_must_be_cited_by_the_step() -> None:
+def test_a_step_link_to_a_page_that_is_not_a_source_fails_the_plan() -> None:
+    """Since TODO item 70 an uncited link is cited rather than refused, so the containment is the
+    plan's: a linked id that is not a packet source is an unknown source."""
+
     steps = [step.model_dump() for step in application_steps()]
     steps[0]["link_source_id"] = "uncited-source"
 
-    with pytest.raises(ValidationError, match="must also appear in source_ids"):
+    with pytest.raises(ValidationError, match="unknown source IDs"):
         VisaPlan.model_validate(
             {
                 "destination": "Singapore",
@@ -155,6 +158,7 @@ def test_source_step_link_must_be_cited_by_the_step() -> None:
                 ],
                 "unresolved_questions": [],
                 "last_checked": datetime(2026, 8, 5, tzinfo=UTC),
+                "status": "verified",
             }
         )
 
@@ -539,3 +543,21 @@ def test_the_draft_holds_the_same_line_before_the_app_sees_it() -> None:
 
     with pytest.raises(ValidationError, match="at least 4 steps"):
         VisaPlanDraft.model_validate({**draft, "visa_required": True})
+
+
+def test_a_step_linking_a_page_it_did_not_cite_cites_it() -> None:
+    """TODO item 70, and entry 197's fix should it recur — it did, on Germany `IN/GB`. The model
+    linked the "where can I apply" page as `source` and cited only the pages stating the step, and
+    the whole plan was refused. The linked page is now cited; it adds no page, because an id that
+    is not a packet source still fails the plan."""
+
+    step = ApplicationStep(
+        title="Book the appointment",
+        action="Book a C-visa appointment at the centre serving you.",
+        timing="Before travel.",
+        source_ids=["faq"],
+        link_target="source",
+        link_source_id="where-to-apply",
+    )
+
+    assert step.source_ids == ["faq", "where-to-apply"]
