@@ -224,6 +224,7 @@ not — and stored text ranks, it never speaks).
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [191](#191-a-plan-is-spent-only-for-a-browser-signed-in-with-ofself-and-the-requirement-fails-closed) | **A plan needs an Ofself sign-in** — `POST /visa-plans` answers `401` without a session; `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured refuses every plan rather than serving anonymously |
+| [191](#191-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
 | [190](#190-the-prompt-audit-of-2026-09-24-four-dead-lines-out-of-the-model-prompts-and-claudemd-halved) | **The prompt audit** — dead `temperature=0` and three dead prompt lines removed; CLAUDE.md 105K → 48K characters, its status narrative replaced by standing decisions and its corrections table moved to CORRECTIONS.md; the owner waived entry 174's re-runs for it |
 | [189](#189-a-corpus-build-reads-a-link-with-its-surroundings-and-a-pdf-inherits-its-pages-title) | **A build reads a link with its surroundings** — text around it, its landmark, and for a PDF its page's title; offline only; Japan's oracle pages read 11 → 15 of 20, nothing regressed; reached `main` inside `1ca066e` |
 | [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked. Graded: selection 41/48 against 39/48, decisions as baseline except one Japan "visa required" in six |
@@ -278,6 +279,57 @@ message naming the fix. That is entry 5's asymmetry applied to money rather than
 **To deploy with it**, besides the three sign-in secrets:
 - set `PARADIGM_REDIRECT_URI` to the host's `/oauth/callback` and register that URI on the app;
 - set `SESSION_COOKIE_SECURE=true` once the host serves HTTPS.
+
+---
+
+## 191. Zero-scoring opens: they reach 7 of 94 answering pages, all through one hop from a search seed
+
+**2026-09-25 · TODO item 68, asked by the owner ("why do we ever open zero-scoring links?").
+Offline, over the stores as they stand after the ten-country pilot rebuild. Nothing changed.**
+
+**Why they are opened at all** (`CORPUS_EXPANSION_THRESHOLD`, entry 78):
+- **A link is scored on its label, and labels mislabel pages.** Only an opened page has stored text,
+  and stored text is what the selector's pool admits a zero-scoring page on (entry 158).
+- **A menu page scoring nothing is how a build reaches what is behind it.**
+- **Since entry 186 they spend only budget no scored link can use.**
+
+**Measured.** Targets are every page known to answer something: the oracle's answer pages, the
+sources of the stored corridors, and the five Germany plans of 2026-09-25 — 95 distinct pages, 94
+of them in their country's store. For each: is it a search seed, does its own link score, and does
+its recorded discovery path pass a zero-scoring page.
+
+| | pages |
+| --- | --- |
+| a search seed — no link needed | 46 |
+| scores, and its route scores throughout | 41 |
+| **scores, but its recorded route passes a zero-scoring page** | **5** |
+| **scores zero itself** | **2** |
+
+- **The five routes** run through four hub pages, all at depth 1:
+  - UAE `u.ae/en/information-and-services`, linked as "Life in the UAE" (three pages);
+  - France "Visiting France";
+  - a US DHS report page, an odd route to `travel.state.gov`'s visitor page.
+
+  This is an upper bound. Each page records one route, the shallowest, and may have a scored one
+  too.
+- **The two that score zero are PDFs**, the Dutch EES leaflet and Czechia's UK list (entry 187).
+  They are read by the PDF pass, not the crawl frontier. Entry 189 now lets a PDF inherit its page's
+  title.
+- **Depth.** Over the ten rebuilt corpora, 6,969 opened pages score zero: 3,727 at depth 1, 2,452 at
+  depth 2, 790 at depth 3. **None at depth 2 or 3 is on any answering page's route.**
+
+**What it suggests — not built, the owner's call:**
+- **Opening zero-scoring links only at depth 1**, one hop from a search seed, keeps every route found
+  here.
+- **It would skip 47% of zero-scoring opens** and shorten builds. Entry 186 made builds longer:
+  Canada took 41 minutes.
+- **Stopping them altogether would lose the five routes.**
+
+**The caveats are the usual ones:**
+- The oracle was curated from the selector's pool, so it leans towards pages that already score
+  (entry 123).
+- It is 94 pages in 11 countries.
+- A route is one recorded path.
 
 ---
 

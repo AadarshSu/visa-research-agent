@@ -531,6 +531,11 @@ Every build now reports where its allowance went.
 3. **Two pieces of noise the fix exposed, for problem 2:** `email-signup` pages count as guidance on
    `gov.uk`, and hosts like `careers.homeoffice.gov.uk` spend a full share under either rule.
 
+**Zero-scoring opens were measured (entry 191).** They reach 7 of 94 answering pages: 5 routes
+through hub pages one hop from a search seed, and 2 PDFs. None of the 3,242 zero-scoring opens at
+depth 2 or 3 is on any answer's route. **Proposed, the owner's call:** open zero-scoring links only
+at depth 1 — every route kept, 47% of zero-scoring opens skipped, faster builds.
+
 **Problem 2's version A is built and measured (entry 189).** Corpus builds now score a link with
 the text around it, its page landmark, and — for a PDF — the linking page's title. Live requests
 are unchanged. Japan read 15 of 20 oracle pages against 11 without it, and nothing regressed. **What
