@@ -59,9 +59,6 @@ and employment. **Germany was not rebuilt; it did not need to be.** The runner i
 posts to `/visa-plans` in-process with `CORRIDOR_DIRECTORY`, `PLAN_DIRECTORY` and
 `RECALL_LOG_DIRECTORY` pointed at empty folders.
 
-**`var/_backup_before_rebuild_2026-09-25/` is a partial copy, not a backup.** It was interrupted: its
-page-text half is 529 MB against 704 MB live. The full rebuild it was for is paused by the owner.
-
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
 - **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
   (`var/usage/`, 2026-09-17) both failed. Every web request, corridor run and live timing waits on a

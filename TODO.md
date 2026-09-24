@@ -361,8 +361,7 @@ once, and in this order:
    store should give good answers on its own merits), then paused the full rebuild in favour of one
    corridor that works every time. `germany/IN/GB/tourism` was confirmed without a rebuild: five
    fresh runs, the same verified answer (PROJECT_HANDOFF). When the rebuild resumes it covers all
-   55 — the 53 corpora plus Brazil and Uruguay — with a full backup first; the partial copy in
-   `var/_backup_before_rebuild_2026-09-25/` is not one.
+   55 — the 53 corpora plus Brazil and Uruguay — with a full backup first.
 4. **Then items 66 and 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
