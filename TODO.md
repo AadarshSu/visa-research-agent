@@ -700,7 +700,7 @@ runs cost search only on the Personas route, about $0.05 each.
 
 ## Next up
 
-### 61. Decide what a corridor may spend answering a challenge — `soon`, **added 2026-09-16 (entry 179)**
+### 61. Decide what a corridor may spend answering a challenge — `done` for the script question (entries 201, 202); the render budget below is still open, **added 2026-09-16 (entry 179)**
 
 **Why it matters.** Half the challenges met today cannot be answered, and France's corridor stops
 reading its own portal after five pages.
@@ -710,8 +710,9 @@ reading its own portal after five pages.
 - **France's two latest corridors left 14 of 17 challenged pages unrendered**, because the run's five
   renders were spent. The challenge itself is answered in about five seconds.
 
-**Decided for one host, 2026-09-25 (entry 201):** EUR-Lex pages may reach AWS's challenge-token host,
-committed as `challenge_script_hosts`, because the EU tier needs EUR-Lex. Cloudflare's is still open.
+**Closed 2026-09-25.** EUR-Lex pages may reach AWS's challenge-token host (entry 201). Cloudflare's
+host was approved and measured, and not shipped (entry 202): with it allowed, 6 of 7 Cloudflare
+pages still refused our headless browser as a bot, and passing would mean disguising the client.
 
 **Two decisions, both the owner's.**
 1. **May a challenge render load Cloudflare's own challenge script?** Entry 13 says a render trusts

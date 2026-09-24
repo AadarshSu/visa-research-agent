@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [202](#202-cloudflares-challenge-host-approved-measured-and-not-shipped--it-cannot-be-answered-honestly) | **Cloudflare's challenge host: approved, measured, not shipped** — with it allowed, 6 of 7 Cloudflare pages still refused our headless browser as a bot (no gate at all gave the same); passing would mean disguising the client, which entries 18 and 35 forbid; item 61 closes |
 | [201](#201-the-eu-may-answer-the-visa-decision-for-a-schengen-member--one-reviewed-tier-beside-the-destinations-own-government) | **The EU may answer a Schengen member's visa decision** — the owner's decision; a reviewed supranational tier (EUR-Lex, ETIAS) beside a country's own list, for the decision only, 29 members; EUR-Lex's AWS challenge answered as a narrow ruling on item 61; a shared EU store follows EUR-Lex's own link to the newest consolidation; five corridors "visa required" 15 of 15, Croatia and Poland from refused and null |
 | [200](#200-before-the-full-rebuild-the-build-says-what-its-rules-threw-away-and-the-depth-1-rule-waits) | **Before the full rebuild** — each build now reports, per rule, what it rejected and how much of it mentions visas; newsletter and subscription pages are site furniture (not `signup`, which e-visa portals use); opening zero-scoring links only one hop from a seed is not adopted, because entry 192 could not see what it would lose |
 | [199](#199-item-70s-next-work-four-answers-that-were-reachable-and-lost-fixed-and-a-visa-on-arrival-is-a-visa) | **Item 70's next work** — a link stating who must hold a visa scored as the decision (Belgium; 94 of 94 oracle answers kept, no pool changed), after a PDF-only rule was withdrawn, the selector shown the text around the traveller's country (Slovenia 2 of 5 → 5 of 5 on a fixed packet, 3 of 3 live), the plan's input guard 80k → 160k (India answered 3 of 3 on its refused input), an uncited step link cited instead of refused (Germany); rule 8g, a visa on arrival is a visa (UAE 1 of 5 → 4 of 4), approved and shipped with no change on 5 regression inputs |
@@ -251,6 +252,39 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 202. Cloudflare's challenge host: approved, measured, and not shipped — it cannot be answered honestly
+
+**2026-09-25 · the owner approved letting a render reach `challenges.cloudflare.com` (the rest of TODO
+item 61).** It was built, measured before shipping, and reverted.
+
+**Built:** a committed list of challenge-provider hosts, reachable only while a render is answering
+a detected challenge on a trusted page.
+
+**Measured:** eight pages from the recall logs that had stayed `challenged`, rendered as a challenge
+answer with only their own host trusted, plus the provider host.
+- **Six stayed on the challenge after the full 20-second wait:** Lithuania (`uk.mfa.lt`,
+  `keliauk.urm.lt`), the Philippines (`londonpe.dfa.gov.ph`), Liechtenstein (`www.llv.li`),
+  Thailand (`www.immigration.go.th`) and Slovakia (`ezov.mzv.sk`).
+- **The gate refused nothing on those renders**, so the provider host was reached, and it did not
+  help.
+- Cyprus answered, as it already did (entry 75). France's page returned nothing.
+
+**Why.** Rendered with no gate at all, in a plain browser under our own user agent, `uk.mfa.lt` still
+showed *"Performing security verification … This page is displayed while the website verifies you
+are not a bot"* after 20 seconds, having reached `challenges.cloudflare.com`. That is not entry 41's
+capability test — run the page's script and be let in. It is Cloudflare judging the client, and
+refusing a headless browser. The only way past it is to make the browser look like a person's,
+which entries 18 and 35 forbid outright.
+
+**Decided:**
+- **Not shipped.** A trust widening with no measured benefit is not kept.
+- **Item 61's Cloudflare half is closed.** These pages stay `challenged`, reported as such, with
+  their address named so the traveller can open them.
+- **EUR-Lex's AWS exception (entry 201) is unaffected.** Its challenge is answered, and was
+  measured to be.
 
 ---
 
