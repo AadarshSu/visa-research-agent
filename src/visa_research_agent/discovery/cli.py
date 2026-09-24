@@ -1138,6 +1138,19 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
             "name but never read",
             file=stream,
         )
+    if build.rejected:
+        # What the rules threw away, and how much of it mentions visas — the line that would have
+        # shown Malta's lists being vetoed as archived (entry 200).
+        stream.write(f"      {sum(build.rejected.values())} links rejected by rule:\n")
+        for reason, count in sorted(build.rejected.items(), key=lambda item: -item[1]):
+            visas = build.rejected_about_visas.get(reason, 0)
+            stream.write(
+                f"        {count:>6}  {reason}"
+                + (f"  ({visas} with 'visa' in the address)" if visas else "")
+                + "\n"
+            )
+            for url in build.rejected_examples.get(reason, []):
+                stream.write(f"                  {url}\n")
     if build.abandoned_hosts:
         # Named rather than counted, and separately from `lost_hosts`: a host given up on may still
         # be the biggest in the corpus, and what it was still holding is what this costs.

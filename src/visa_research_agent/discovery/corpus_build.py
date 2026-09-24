@@ -29,7 +29,7 @@ import re
 from collections import Counter
 from collections.abc import Callable
 from datetime import datetime
-from typing import get_args
+from typing import Any, get_args
 
 import httpx
 from pydantic import Field
@@ -522,6 +522,19 @@ class CorpusBuild(StrictModel):
     """Distinct scored links turned away at a host's cap and never opened. Entry 185: 149 in
     Japan's build under the even split, including the oracle's visa-decision page."""
 
+    rejected: dict[str, int] = Field(default_factory=dict)
+    """Links the crawl found and threw away, counted by the rule that rejected them (entry 200).
+
+    Malta's two visa lists were rejected by `is_archived` in every build, and nothing in the report
+    said so: the rule's reason was recorded on the crawler and dropped. A rejected link leaves no
+    entry, so this is the only trace of what a veto costs."""
+
+    rejected_about_visas: dict[str, int] = Field(default_factory=dict)
+    """Of those, the ones whose address says "visa" — the count that would have flagged Malta."""
+
+    rejected_examples: dict[str, list[str]] = Field(default_factory=dict)
+    """Up to five addresses per rule, those saying "visa" first, so a person can judge the rule."""
+
     lost_host_outcomes: dict[str, FailureOutcome] = Field(default_factory=dict)
     """The same hosts keyed to the typed outcome, so a count never rests on parsing prose.
 
@@ -973,7 +986,33 @@ async def build_country_corpus(
         opened_family=ledger.family,
         opened_over_share=ledger.over_share,
         dropped_scored=len(ledger.dropped_scored - crawler.read),
+        **_rejections(crawler.rejected),
     )
+
+
+REJECTED_EXAMPLES = 5
+
+
+def _rejections(rejected: dict[str, str]) -> dict[str, Any]:
+    """What the crawl threw away, per rule: a count, the part about visas, and a few addresses."""
+
+    by_reason: dict[str, list[str]] = {}
+    for url, reason in rejected.items():
+        by_reason.setdefault(reason, []).append(url)
+    about_visas = {
+        reason: [url for url in urls if "visa" in url.lower()] for reason, urls in by_reason.items()
+    }
+    return {
+        "rejected": {reason: len(urls) for reason, urls in by_reason.items()},
+        "rejected_about_visas": {reason: len(urls) for reason, urls in about_visas.items() if urls},
+        "rejected_examples": {
+            reason: (
+                sorted(about_visas[reason])
+                + sorted(url for url in urls if url not in set(about_visas[reason]))
+            )[:REJECTED_EXAMPLES]
+            for reason, urls in by_reason.items()
+        },
+    }
 
 
 BuildReporter = Callable[[CorpusBuild], None]

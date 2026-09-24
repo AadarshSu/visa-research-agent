@@ -223,13 +223,15 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [200](#200-before-the-full-rebuild-the-build-says-what-its-rules-threw-away-and-the-depth-1-rule-waits) | **Before the full rebuild** — each build now reports, per rule, what it rejected and how much of it mentions visas; newsletter and subscription pages are site furniture (not `signup`, which e-visa portals use); opening zero-scoring links only one hop from a seed is not adopted, because entry 192 could not see what it would lose |
 | [199](#199-item-70s-next-work-four-answers-that-were-reachable-and-lost-fixed-and-a-visa-on-arrival-is-a-visa) | **Item 70's next work** — a link stating who must hold a visa scored as the decision (Belgium; 94 of 94 oracle answers kept, no pool changed), after a PDF-only rule was withdrawn, the selector shown the text around the traveller's country (Slovenia 2 of 5 → 5 of 5 on a fixed packet, 3 of 3 live), the plan's input guard 80k → 160k (India answered 3 of 3 on its refused input), an uncited step link cited instead of refused (Germany); rule 8g, a visa on arrival is a visa (UAE 1 of 5 → 4 of 4), approved and shipped with no change on 5 regression inputs |
 | [198](#198-item-70-the-fourteen-corridors-re-run--the-roles-call-was-right-and-what-broke-was-around-it) | **Item 70: fourteen corridors re-run, three times each** — the roles call was right on every packet it refused, so step 4 had nothing to test; fixed: a plan naming an unread page is `partial` (the UAE's 503), the residence-permit veto yields to the visa question (the Dutch checker), a year under `uploads/` is a date, not an archive (Malta 0 of 6 → 5 of 6); Malta rebuilt and kept; the owner's intent — an answer page we can reach, we should get — makes the depth penalty, the selector's misses and the plan's size guard the next work |
 | [197](#197-an-exemption-list-decides-visa-required-where-the-authority-states-the-general-rule-and-why-germanys-step-link-refused) | **Rule 8f: an exemption list plus a stated general rule decides "visa required"** — the owner's decision; Japan 8 of 8, Singapore "no visa" 8 of 8, Germany 12 of 12; Germany's refusals were a `source` link to the plan's own application URL, 4 in 79 calls, no retry |
 | [196](#196-rule-11-now-says-a-steps-linked-page-must-be-among-its-sources--it-did-not-stop-the-refusals-and-japans-packet-now-decides-visa-required) | **Rule 11 states the step-link rule** — Germany still refused 2 of 10 (2 of 6 before) on the same packet; Singapore "no visa" 8 of 8; Japan "visa required" 7 of 8, 3 of 4 on the old prompt, because its packet now holds MOFA's general rule — an owner's question like entry 172 |
 | [195](#195-the-selector-is-shown-the-ranked-top-120-plus-40-pages-with-no-stored-text-and-the-rule-that-no-candidate-is-dropped-goes) | **The selector sees the top 120 + 40 blind** — the owner's decision after entry 194, without the live A/B; `selection.py`'s no-drop rule goes; the notes count what was withheld and the recall log flags each row; UK `IN/GB` live: 160 of 567 shown, checklist found, selection input 57.6k against 106k |
 | [194](#194-item-66-on-replayed-pools-the-rebuilds-loss-is-small-and-in-secondary-roles-and-showing-the-model-fewer-candidates-recovers-it-at-half-the-input) | **Item 66 on replayed pools** — the pilot's 75 → 68 was half noise, a month-old baseline and one address; the real loss is −2.8 of 90, all secondary, while decision + checklist rose 23.2 → 25.0; fusion top 120 reads 82.4 at 45% less input, top 120 + 40 blind 80.0 and keeps the traveller's own posts; `selection-recall` gains a same-page column; not shipped — it reverses the no-drop rule |
-| [193](#193-the-ten-country-pilot-rebuild-the-stores-hold-every-answer-and-the-selector-picks-fewer-of-them-from-bigger-pools) | **The ten-country pilot rebuild** — all ten built; oracle roles found 75 → 68 of 92, every lost page in the pool and not picked, as pools grew (Singapore 150 → 482); unresolved decisions and checklists 13 → 14; item 66 is more pressing |
+| [193](#193-the-ten-country-pilot-rebuild-the-stores-hold-every-answer-and-the-selector-picks-fewer-of-them-from-bigger-pools) | **The ten-country pilot rebuild** — all ten built; oracle roles found 75 → 68 of 92, every lost page in the pool and not picked, as pools grew (Singapore 150 → 482); unresolved decisions and checklists 13 → 14; item 66 i
+s more pressing |
 | [192](#192-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
 | [191](#191-a-plan-is-spent-only-for-a-browser-signed-in-with-ofself-and-the-requirement-fails-closed) | **A plan needs an Ofself sign-in** — `POST /visa-plans` answers `401` without a session; `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured refuses every plan rather than serving anonymously |
 | [190](#190-the-prompt-audit-of-2026-09-24-four-dead-lines-out-of-the-model-prompts-and-claudemd-halved) | **The prompt audit** — dead `temperature=0` and three dead prompt lines removed; CLAUDE.md 105K → 48K characters, its status narrative replaced by standing decisions and its corrections table moved to CORRECTIONS.md; the owner waived entry 174's re-runs for it |
@@ -248,6 +250,55 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 200. Before the full rebuild: the build says what its rules threw away, and the depth-1 rule waits
+
+**2026-09-25 · the owner, before rebuilding the 44 stores not yet rebuilt: implement what must precede
+it.** A change to what a build records or opens, landed after the rebuild, would need the rebuild
+again.
+
+### The build report counts what each rule rejected
+
+Malta's two visa lists were rejected as archived in every build (entry 198). Nothing said so: the
+crawler records a reason for every link a rule rejects, and the build dropped it. A rejected link
+leaves no entry, so the report was the only place it could show.
+
+`CorpusBuild` now carries, per rule:
+- `rejected`, a count of links it threw away;
+- `rejected_about_visas`, how many of those have "visa" in their address;
+- `rejected_examples`, up to five addresses, the "visa" ones first.
+
+The build prints all three. The rebuild is therefore also a measurement: if another rule drops
+guidance — a year under a folder other than `uploads`, say — its report shows the count and the
+addresses. Nothing a build keeps changes.
+
+### Newsletter and subscription pages are site furniture
+
+`email-signup` has been in `is_boilerplate` since entry 186. The stores hold the same kind of page
+under other names, matched as whole path segments: Luxembourg has 31 `newsletter` pages, a German
+mission 14, and South Africa has `subscribe-mailing-lists`. Added: `newsletter`, `newsletters`,
+`subscribe`, `subscribe-via-email`, `subscribe-mailing-lists`. None of the oracle's 164 answer
+addresses matches.
+
+**`signup` and `sign-up` are deliberately left out.** Egypt's and Thailand's e-visa portals use them
+for the account a traveller applies through, which is application guidance.
+
+### Opening zero-scoring links only one hop from a seed: not adopted
+
+Entry 192 found that 5 known answer routes pass through a zero-scoring page, all one hop from a
+seed, and proposed opening zero-scoring links only there. It would skip 47% of such opens.
+
+The owner asked whether that was measured confidently, and it was not. The 94 answers were curated
+from the selector's pool, which leans towards pages that already score — the very pages the rule
+cannot touch. A page reachable only behind a deeper zero-scoring hub is what the rule would lose,
+and what the measure cannot see. An independent check on the item-70 answer pages proved nothing
+either way: this session's runs had folded most of them back into the corpus at depth 0.
+
+The rule buys build time, which is not the constraint (entry 184), and its risk falls on accuracy.
+Adopt it only after building a few countries both ways into scratch stores and comparing everything
+each reaches (TODO item 68).
 
 ---
 
@@ -781,6 +832,10 @@ its recorded discovery path pass a zero-scoring page.
 - **It would skip 47% of zero-scoring opens** and shorten builds. Entry 186 made builds longer:
   Canada took 41 minutes.
 - **Stopping them altogether would lose the five routes.**
+
+**Revisited 2026-09-25 (entry 200): not adopted for the rebuild.** The caveats below decide it —
+the measure cannot see a page reachable only behind a deep zero-scoring hub, which is exactly what
+the rule would lose, and what it buys is build time.
 
 **The caveats are the usual ones:**
 - The oracle was curated from the selector's pool, so it leans towards pages that already score

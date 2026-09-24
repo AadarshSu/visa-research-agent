@@ -609,8 +609,12 @@ Every build now reports where its allowance went.
 
 **Zero-scoring opens were measured (entry 192).** They reach 7 of 94 answering pages: 5 routes
 through hub pages one hop from a search seed, and 2 PDFs. None of the 3,242 zero-scoring opens at
-depth 2 or 3 is on any answer's route. **Proposed, the owner's call:** open zero-scoring links only
-at depth 1 — every route kept, 47% of zero-scoring opens skipped, faster builds.
+depth 2 or 3 is on any answer's route. **Proposed, then not adopted for the rebuild (entry 200):**
+opening zero-scoring links only at depth 1 would skip 47% of those opens, but "every route kept" is
+true only of the 94 answers the oracle holds, which were curated from pages that already score —
+the very pages the rule cannot touch. What it buys is build time, which is not the constraint
+(entry 184). Adopt it only after building a few countries both ways into scratch stores and
+comparing everything each reaches.
 
 **Problem 2's version A is built and measured (entry 189).** Corpus builds now score a link with
 the text around it, its page landmark, and — for a PDF — the linking page's title. Live requests
@@ -625,7 +629,8 @@ declined.**
   so no scoring change can reach them.
 - **So what follows is a later refinement,** to build if a country turns up whose answer pages score
   zero on their links.
-- **The cheap part worth doing now:** add `email-signup` and similar paths to `is_boilerplate`.
+- **The cheap part:** `email-signup` went into `is_boilerplate` with entry 186; newsletter and
+  subscription pages followed in entry 200.
 
 **Problem 2: a link is judged on too little context.** `extract_links` (`crawl.py`) keeps the anchor
 text and the most recent heading in document order, and nothing else. It has the whole page in hand

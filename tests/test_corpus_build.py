@@ -760,3 +760,32 @@ async def test_a_build_seeds_what_the_last_one_recorded_and_skipped() -> None:
 
     assert report.mission_seeds == 1
     assert report.seeds == 2
+
+
+@pytest.mark.anyio
+async def test_the_build_report_says_what_its_rules_threw_away() -> None:
+    """Entry 200. Malta's visa lists were rejected as archived in every build and the report never
+    said so; the rule's reason was recorded on the crawler and dropped. It is now counted per rule,
+    with the addresses that say "visa" first."""
+
+    import io
+
+    from visa_research_agent.discovery.cli import print_corpus_build
+
+    _, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX]),
+        fetcher([]),
+        existing=None,
+        now=NOW,
+        maximum_pages=60,
+    )
+
+    archived = "the path marks it as archived or superseded"
+    assert report.rejected[archived] >= 1
+    assert report.rejected_about_visas[archived] >= 1
+    assert ARCHIVED in report.rejected_examples[archived]
+    printed = io.StringIO()
+    print_corpus_build(report, printed)
+    assert archived in printed.getvalue() and ARCHIVED in printed.getvalue()

@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-24 — update this line when you touch the handoff |
-| **Tests** | 933: 930 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 934: 931 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -57,8 +57,10 @@ answering page exists and we can get to it, the corridor should get it.** Four s
 then fixed and measured (entry 199): a link stating the answer that the lexicon could not read (Belgium), the
 selector shown only each page's head (Slovenia), the plan's input guard (India) and an uncited step
 link (Germany). Rule 8g, a visa on arrival is a visa, shipped with the owner's approval (the
-UAE, 1 of 5 → 4 of 4 on replay, no change on five regression inputs). **Waiting on the owner:**
-whether any of the 13 other stores the uploads fix changes should be rebuilt. The recall log now keeps the adjudicator's reason for every role.
+UAE, 1 of 5 → 4 of 4 on replay, no change on five regression inputs). **Next: the full rebuild of the 44 stores
+not yet rebuilt** (entry 200 readied it: each build now reports what its rules rejected). The owner
+plans to let EU-level pages answer for Schengen countries (TODO item 2) first, since that changes
+which domains those countries crawl. The recall log now keeps the adjudicator's reason for every role.
 
 **The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
 195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more
