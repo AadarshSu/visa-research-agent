@@ -368,6 +368,11 @@ once, and in this order:
    `done.txt`. Their stores were backed up first to `var/_backup_before_pilot_2026-09-25/`,
    verified byte for byte. After it: read every build's report, grade with `selection-recall`, and
    re-run Germany's five fresh plans, since it was confirmed on the old store.
+   **First run, 2026-09-25:** GB, JP, DE and NL built cleanly. FR and SE failed at once because the
+   headless browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error),
+   and SG, AE and US because the network dropped (every search failed on DNS). CA was cut off. None
+   of the failures wrote anything. **Start any build that may render from the owner's own terminal**
+   — the owner re-ran `run.sh` there, and it resumes with the six not in `done.txt`.
 4. **Then items 66 and 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
