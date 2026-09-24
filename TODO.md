@@ -362,6 +362,12 @@ once, and in this order:
    corridor that works every time. `germany/IN/GB/tourism` was confirmed without a rebuild: five
    fresh runs, the same verified answer (PROJECT_HANDOFF). When the rebuild resumes it covers all
    55 — the 53 corpora plus Brazil and Uruguay — with a full backup first.
+   **Pilot started 2026-09-25, the owner's call: the ten oracle countries** (JP, GB, CA, DE, NL, FR,
+   SE, SG, AE, US), rebuilt with entries 186 and 189, two at a time, from
+   `var/rebuild-pilot-2026-09-25/run.sh` — resumable, one log per country, finished ones in
+   `done.txt`. Their stores were backed up first to `var/_backup_before_pilot_2026-09-25/`,
+   verified byte for byte. After it: read every build's report, grade with `selection-recall`, and
+   re-run Germany's five fresh plans, since it was confirmed on the old store.
 4. **Then items 66 and 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
