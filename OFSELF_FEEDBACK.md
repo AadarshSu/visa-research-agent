@@ -314,6 +314,15 @@ TODO item 62, and 8.14–8.16 are what the new sections raised.
   The guide names defaults (`gpt-5.5`, examples with `gpt-5.2`) and no list. *Suggest:* publish
   the models `llm_provider: "ofself"` serves (or a `GET /models`), and answer an unknown model with a
   plain "model not available on this account" rather than the provider's deployment error.
+- **8.22 Four concurrent large runs, then every run answered `504` for about ten minutes**
+  [observed, 2026-09-24]. One selection run (~73k input tokens) answered in 5.9s. The next four,
+  sent together at ~80–105k input tokens each, all answered `504` after 55s, and so did the 41
+  behind them and a one-candidate run of a few hundred tokens. About ten minutes later a trivial
+  run answered in 18.5s, and 737 more runs sent one at a time all succeeded, in about 6s each. Not
+  known: whether the burst caused it, whether the timed-out runs kept running (and were billed)
+  behind the gateway, and what the concurrency limit is. *Suggest:* document a per-app or per-user
+  concurrency limit and answer past it with `429` and a `Retry-After`, not a gateway timeout; and
+  say whether a run the gateway gave up on still completes.
 
 ## 9. Signing a user in
 
