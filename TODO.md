@@ -1957,9 +1957,18 @@ the 74 visa-exempt countries, found India absent and answered `visa_required: tr
 `verified`; the other five left it open, as every recorded direct call did (entry 177, 0 of 3).
 True, and a claim no page makes — rule 8e's third bound says a list of who does *not* need a visa
 says nothing about a country it leaves out, and entry 174 recorded the same list producing the
-opposite wrong answer. Its rate is unmeasured. **First measure it**: a dozen or more calls on the
-same packet, now all through Personas. Then decide whether rule 8e's wording, or a check in code,
-should stop an exemption list deciding a traveller it does not name — in either direction.
+opposite wrong answer. **Measured 2026-09-24 (entry 196): about 10 of 12 on today's packet**, which
+now also holds MOFA's visa-system page stating that a foreign national needs a visa "in principle".
+The model reads that rule with the exemption list; the plans that stay open say absence from the
+list is not enough. **The owner's question:** may a stated general rule plus absence from its
+exception list decide — as entry 172 allowed for a visa-required list — or should rule 8e's wording,
+or a check in code, keep it open?
+
+**A plan step sometimes links a page it does not cite, and the plan refuses.** Germany `IN/GB`: 2 of
+10 plan calls on one packet broke `ApplicationStep.validate_link_target`, and 2 of 6 before rule 11
+said so (entry 196). The traveller gets a `503`. Not decided: retry the plan call once on invalid
+output (about 25s on roughly one request in six), or repair the step by adding its linked page to
+its sources.
 
 **A per-host fair share treats unequal hosts equally.** Moved here from item 48, closed
 2026-09-15; unmeasured, and it changes what a build spends, so it needs its own rebuild. Thailand opened 1,041 pages across 63

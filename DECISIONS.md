@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [196](#196-rule-11-now-says-a-steps-linked-page-must-be-among-its-sources--it-did-not-stop-the-refusals-and-japans-packet-now-decides-visa-required) | **Rule 11 states the step-link rule** — Germany still refused 2 of 10 (2 of 6 before) on the same packet; Singapore "no visa" 8 of 8; Japan "visa required" 7 of 8, 3 of 4 on the old prompt, because its packet now holds MOFA's general rule — an owner's question like entry 172 |
 | [195](#195-the-selector-is-shown-the-ranked-top-120-plus-40-pages-with-no-stored-text-and-the-rule-that-no-candidate-is-dropped-goes) | **The selector sees the top 120 + 40 blind** — the owner's decision after entry 194, without the live A/B; `selection.py`'s no-drop rule goes; the notes count what was withheld and the recall log flags each row; UK `IN/GB` live: 160 of 567 shown, checklist found, selection input 57.6k against 106k |
 | [194](#194-item-66-on-replayed-pools-the-rebuilds-loss-is-small-and-in-secondary-roles-and-showing-the-model-fewer-candidates-recovers-it-at-half-the-input) | **Item 66 on replayed pools** — the pilot's 75 → 68 was half noise, a month-old baseline and one address; the real loss is −2.8 of 90, all secondary, while decision + checklist rose 23.2 → 25.0; fusion top 120 reads 82.4 at 45% less input, top 120 + 40 blind 80.0 and keeps the traveller's own posts; `selection-recall` gains a same-page column; not shipped — it reverses the no-drop rule |
 | [193](#193-the-ten-country-pilot-rebuild-the-stores-hold-every-answer-and-the-selector-picks-fewer-of-them-from-bigger-pools) | **The ten-country pilot rebuild** — all ten built; oracle roles found 75 → 68 of 92, every lost page in the pool and not picked, as pools grew (Singapore 150 → 482); unresolved decisions and checklists 13 → 14; item 66 is more pressing |
@@ -244,6 +245,41 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 196. Rule 11 now says a step's linked page must be among its sources — it did not stop the refusals, and Japan's packet now decides "visa required"
+
+**2026-09-24 · the owner's request, after two of six Germany plans refused on a step whose
+`link_source_id` was missing from its `source_ids`.** Rule 11 of `extract_visa_plan.txt` now says
+to list that ID in the step's `source_ids`. `ApplicationStep.validate_link_target` already required
+it; the prompt never said so.
+
+**Checked as entry 175 does, on fixed packets.** Each corridor's first run researched it and stored
+the corridor; every later run reused it with an empty plan-draft folder, so the plan call saw one
+packet throughout — confirmed in the usage log: Japan 17,445 characters for all 12 calls, Germany
+70,448 for all 16, Singapore 7,841 for all 8. 30 plan calls through Personas.
+
+| corridor | new prompt | old prompt, same packet |
+| --- | --- | --- |
+| Singapore `PH/PH` | "no visa", `verified`, **8 of 8** | — |
+| Germany `IN/GB` | "visa required", `verified`, 8 of 10; **2 refused**, the same step-link error | 2 of 6 refused (the re-run earlier that day) |
+| Japan `IN/GB` | **"visa required", `verified`, 7 of 8**; open 1 | "visa required" 3 of 4; open 1 |
+
+- **Singapore holds**, so rule 8e's bounds are untouched.
+- **The sentence did not measurably stop the refusal**: 2 of 10 against 2 of 6 on the same packet.
+  It is kept — it is the rule the validator enforces and it changed no decision — but the refusal
+  is still open. What would stop it is not decided: a retry on invalid output, or a repair.
+- **Japan's shift is the packet, not the prompt.** Every "visa required" plan quotes a page earlier
+  Japan packets did not hold, MOFA's visa-system page: *"in principle a foreign national wishing to
+  enter Japan is required to have a valid passport … with a visa"*. The rebuilt store pools it and
+  the selector picked it in every replay run (entry 194). With it, the model reads the general rule,
+  finds India absent from the 74-country exemption list, and decides. The one open plan in each arm
+  gives rule 8e's reason: *"absence from a visa-exemption list is not sufficient evidence"*.
+- **That is TODO's Smaller thing, measured: about 10 of 12 on this packet**, against 1 of 6 on the
+  old one (entry 188). The answer is true. Whether a stated general rule plus absence from its
+  exception list may decide is the question entry 172 answered for the opposite list, and it is the
+  owner's. Until then a Japan plan's decision depends on which way one call falls.
 
 ---
 

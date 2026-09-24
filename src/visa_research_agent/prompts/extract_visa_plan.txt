@@ -136,9 +136,10 @@ Follow these rules:
    processing window, how approval or documents are received, and any supported final pre-travel
    action. Each step needs a short title, a precise action, a timing window and supporting source IDs.
 11. Use link_target "application_route" when the step should open where_to_apply.application_url;
-   use "source" with link_source_id for another supplied official page; otherwise use "none". Never
-   invent a URL. Never claim that an account, appointment, document-return method or completion time
-   exists unless the supplied evidence says so. Turn an unsupported operational detail into an
+   use "source" with link_source_id for another supplied official page, and list that same ID in the
+   step's source_ids; otherwise use "none". Never invent a URL. Never claim that an account,
+   appointment, document-return method or completion time exists unless the supplied evidence says
+   so. Turn an unsupported operational detail into an
    explicit confirmation action and unresolved question. Qualify estimates and approval-dependent
    steps clearly. Never submit an application, book an appointment, create an account or fill a form.
 12. The destination must use the configured display name from the research packet.

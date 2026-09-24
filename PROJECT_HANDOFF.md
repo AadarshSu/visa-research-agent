@@ -76,8 +76,10 @@ was captured; the first went unrecorded, since the route discards the reason). T
 was within 40 characters of the confirmation runs' (70,448 against 70,411), so neither the rebuild
 nor the cut caused it: over the day, 2 of 11 Germany plan calls on that packet refused. Entry 174
 saw the same failure twice in 48, only under short ids. **The plan prompt's rule 11 never states that
-`link_source_id` must also be in `source_ids`.** Not fixed yet — a plan-prompt change needs the
-Japan and Singapore re-checks first (entry 175). Selection input on this corridor fell 102.6k →
+`link_source_id` must also be in `source_ids`.** It does now (entry 196), and that did **not** stop
+it: 2 of 10 still refused on the same packet. The fix is undecided (TODO, *Smaller things*). The
+same checks found Japan `IN/GB` answering "visa required" in about 10 of 12 on its new packet — the
+owner's question in the same section. Selection input on this corridor fell 102.6k →
 58.6k tokens.
 
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
