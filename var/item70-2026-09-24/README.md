@@ -16,8 +16,15 @@ the owner's terminal: headless Chromium cannot start from Claude Code's sandboxe
   Written for step 4 and not run: no survivor broke at the roles call.
 - `rebuild.sh CC ...` — step 5: backs a country's corpus and text index up to
   `var/_backup_before_item70_2026-09-24/`, then rebuilds it. Resumable. `rebuild/` holds the logs.
+- `measure_depth.py OUT [ARMS] [FILTER]` — entry 199: runs the resolver to the selector with search
+  stubbed out and reports which oracle answers reach the pool and the shown set, per scoring arm.
+- `replay_select.py` and `replay_plan.py` — replay the selection or plan call alone on a captured
+  packet (`select_packet.txt`, `plan_packet.json`, which `run.py` now keeps), per variant; results in
+  `select_replay.jsonl` and `plan_replay.jsonl`. `extract_visa_plan_8g.txt` is the draft rule 8g,
+  not shipped.
 - `trace.md` — the working notes, per corridor. `run.log` — every run's one-line outcome.
 
 `runs/` (the baseline, 42 runs), `fixed/` (the fixed arm, 12 runs) and `rebuilt/` (Malta after its
-rebuild, 6 runs) hold the raw outputs and are not committed: about 75 MB, and the packets are
+rebuild, 6 runs) hold the raw outputs, as do `next/`, `anchored/` and `sentinel/` (entry 199), and are not
+committed: about 90 MB, and the packets are
 government page text.

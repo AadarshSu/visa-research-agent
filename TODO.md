@@ -349,7 +349,7 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 70. Find why a corridor that read its authority's pages still has no visa decision — `in progress`, **added 2026-09-24, the owner's top accuracy priority; steps 1–4 done, Malta rebuilt and kept (entry 198)**
+### 70. Find why a corridor that read its authority's pages still has no visa decision — `in progress`, **added 2026-09-24, the owner's top accuracy priority; steps 1–4 and next-work 1–3 done (entries 198, 199); the UAE's rule waits on the owner**
 
 **The problem.** Of 86 corridor runs logged since 2026-09-01, 24 refused for want of a visa
 decision, and **14 of them had read the authority's pages**: Croatia, Malta ×2, Italy, Poland,
@@ -403,9 +403,12 @@ should get it** — lost before the pool, in the pool, or after it was credited,
    added to the step's `source_ids`, and a linked id that is not a packet source still fails the
    plan as an unknown source. The other two sentinel runs gave the confirmed answer: verified, 12
    documents, the UK missions' checklist.
-4. **Credited, then held back: the UAE.** The plan should probably say "visa required — on arrival
-   if you hold a UK residence visa, otherwise in advance". Answer-changing, so the owner approves
-   the prompt change first.
+4. **Credited, then held back: the UAE — measured, waiting on the owner (entry 199).** A draft rule
+   8g (`var/item70-2026-09-24/extract_visa_plan_8g.txt`): where every route the sources describe
+   issues a visa — in advance or on arrival — the decision is "visa required", and the condition the
+   profile does not settle becomes an unresolved question. Replayed on two UAE plan inputs: 1 of 5 →
+   4 of 4, and 2 of 2 → 5 of 5. Before shipping, re-run entry 197's regression on fixed packets
+   (Singapore "no visa", Japan, Germany).
 5. **The other 13 stores the uploads fix changes** — AE, CZ, EE, GR, ID, IE, IT, MY, PH, RO, TH, US, ZA
    — in batches, only if a corridor needs one: Malta answered from search before its rebuild. Use
    `var/item70-2026-09-24/rebuild.sh`, which backs up and resumes.
@@ -2026,13 +2029,6 @@ attempts fail (`adjudication_failed`), the refusal reads *"no page could be conf
 decision, document checklist"* — true, and it hides that a model call failed. Seen on 2026-09-24
 when Personas answered HTTP 500 for two minutes (entry 198). Say that the check could not be run and
 that trying again may answer.
-
-**A visa on arrival the plan cannot confirm leaves the decision null.** `united-arab-emirates/IN/GB`:
-GDRFA's visa on arrival for Indians holding a UK residence visa was credited, and the plan left the
-decision open because the profile does not say the traveller holds one — 4 of 4 runs where it was
-credited (entry 198). Either way a visa is needed, on arrival or in advance. Whether the plan should
-say "visa required" and name both routes is an answer-changing prompt decision for the owner, like
-entry 172.
 
 **A per-host fair share treats unequal hosts equally.** Moved here from item 48, closed
 2026-09-15; unmeasured, and it changes what a build spends, so it needs its own rebuild. Thailand opened 1,041 pages across 63

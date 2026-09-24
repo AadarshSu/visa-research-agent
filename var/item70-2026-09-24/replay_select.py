@@ -50,7 +50,10 @@ def anchored(packet: dict, code: str, extra: int) -> dict:
         if not pattern.search(text, len(head)):
             continue
         c["stored_excerpt"] = anchored_excerpt(
-            text, anchors, budget=len(head) + extra, head_characters=len(head),
+            text,
+            anchors,
+            budget=len(head) + extra,
+            head_characters=len(head),
             window_characters=extra // 2,
         )
     return out
@@ -79,8 +82,11 @@ async def main() -> None:
             row["seconds"] = round(time.monotonic() - started, 1)
             with out.open("a", encoding="utf-8") as handle:
                 handle.write(json.dumps(row, ensure_ascii=False) + "\n")
-            print(f"{variant} run {run}: hit={row.get('hit', row.get('error'))} "
-                  f"({row['chars']} chars, {row['seconds']}s)", flush=True)
+            print(
+                f"{variant} run {run}: hit={row.get('hit', row.get('error'))} "
+                f"({row['chars']} chars, {row['seconds']}s)",
+                flush=True,
+            )
 
 
 asyncio.run(main())

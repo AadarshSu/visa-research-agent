@@ -328,7 +328,8 @@ TODO item 62, and 8.14–8.16 are what the new sections raised.
   and plan calls, sent strictly one after another — answered HTTP 500 in 0.4–1.0s; the 70 calls
   before and after succeeded. Unlike 8.22 there was no burst to blame. *Suggest:* a status page or an
   error body that says whether a `500` is the platform or the provider, so a client can tell "retry
-  in a minute" from "your request is wrong".
+  in a minute" from "your request is wrong". **Again on 2026-09-25:** among 20 plan calls sent one
+  at a time, four answered `502` or `504` (0.5–30s) between successes.
 
 ## 9. Signing a user in
 

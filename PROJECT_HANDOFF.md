@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-24 — update this line when you touch the handoff |
-| **Tests** | 930: 927 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 933: 930 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -53,10 +53,12 @@ and traced. The roles call was right on every packet it refused. Six corridors n
 runs with no fix. Three defects were fixed and measured: a plan the application refused as invalid
 (the UAE), a veto that removed the Dutch visa checker, and a veto that dropped every dated upload
 before 2025 (Malta 0 of 6 → 5 of 6; Malta's store rebuilt and kept). **The owner's intent: if an
-answering page exists and we can get to it, the corridor should get it.** So next is item 70's
-list: the depth penalty that kept Belgium's list out of the pool, the selector missing Slovenia's
-page, and the plan's input guard refusing India after the answer was credited. The recall log now
-keeps the adjudicator's reason for every role.
+answering page exists and we can get to it, the corridor should get it.** Four such losses were
+then fixed and measured (entry 199): a stored PDF scored with its build depth (Belgium), the
+selector shown only each page's head (Slovenia), the plan's input guard (India) and an uncited step
+link (Germany). **Waiting on the owner:** a draft rule 8g saying a visa on arrival is a visa (the
+UAE, 1 of 5 → 4 of 4 on replay), and whether any of the 13 other stores the uploads fix changes
+should be rebuilt. The recall log now keeps the adjudicator's reason for every role.
 
 **The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
 195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more
