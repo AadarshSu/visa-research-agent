@@ -393,6 +393,17 @@ stored text, so confirm it against a fresh run):
    pages among the 2,326 the term vetoes — the Dutch checker twice, Germany's Visa-Navigator, a
    Norwegian exemption page. Three fresh runs each: `netherlands/PH/PH` named the checker as the
    decision tool 3 of 3, against refused, tool, refused.
+   **Fixed 2026-09-24: a year under an `uploads` folder is an upload date, not an archive.**
+   `is_archived` vetoed any bare year up to 2024 in a path, and WordPress files every document as
+   `wp-content/uploads/<year>/<month>/`, so Malta's current lists of who does and does not need a
+   visa (`uploads/2023/10/`) were dropped by every build and every search. Across the 53 stores
+   **not one** dated upload before 2025 was recorded. Such a year is now reported to the
+   adjudicator as `published_in_path`, as entry 15 decided for the other dated forms; `/news/2019/`
+   and an `archive` segment are still vetoed. Three fresh runs each, on a copy of the corpus:
+   `malta/BD/SA` "visa required" 3 of 3 from Malta's own list, `malta/BD/AE` 2 of 3 (the third
+   found only the exemption list, and rule 8f held), against 0 of 6. **It changes what a build
+   records for 14 countries** — AE, CZ, EE, GR, ID, IE, IT, MT, MY, PH, RO, TH, US, ZA, the stores
+   holding dated uploads — which is step 5's batch list.
 2. **Re-run the 14 fresh, three times each**, from the owner's terminal (the renderer cannot start
    from Claude Code's shell), clearing `var/corridors/` for both arms. About 42 corridors and ~$2 of
    search. The ones that now answer leave the list; what is left is the real blocker 2.

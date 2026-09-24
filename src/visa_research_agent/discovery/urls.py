@@ -111,6 +111,8 @@ def path_segments(url: str) -> list[str]:
 # Government CMSs date their paths: /201303/t20130315_3383966.htm, /202408/t20240802_11465159.htm.
 # Year, then month, optionally day, optionally prefixed "t" in the filename.
 CMS_DATE = re.compile(r"^t?((?:19|20)\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])?(?:$|[_.\-])")
+UPLOAD_YEAR = re.compile(r"^(?:19|20)\d{2}$")
+UPLOAD_MONTH = re.compile(r"^(?:0[1-9]|1[0-2])$")
 
 
 def published_date_in_path(url: str) -> str | None:
@@ -125,7 +127,16 @@ def published_date_in_path(url: str) -> str | None:
     text — not a rule that guesses from the URL alone.
     """
 
-    for segment in path_segments(url):
+    segments = path_segments(url)
+    for index, segment in enumerate(segments):
+        # `uploads/2023/10/`: the upload month, which `is_archived` no longer vetoes (TODO item 70).
+        if (
+            segment == "uploads"
+            and index + 2 < len(segments)
+            and UPLOAD_YEAR.match(segments[index + 1])
+            and UPLOAD_MONTH.match(segments[index + 2])
+        ):
+            return f"{segments[index + 1]}-{segments[index + 2]}"
         match = CMS_DATE.match(segment)
         if match is None:
             continue

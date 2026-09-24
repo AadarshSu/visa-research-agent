@@ -273,6 +273,10 @@ def names_documents(haystack: str, lexicon: Lexicon) -> list[str]:
     return [noun for noun in lexicon.document_nouns if _contains_phrase(haystack, noun)]
 
 
+UPLOADS_SEGMENT = "uploads"
+"""The folder a CMS files uploaded documents under by date — `wp-content/uploads/2023/10/`."""
+
+
 def is_archived(url: str, lexicon: Lexicon) -> bool:
     """True when a path marks a page as superseded.
 
@@ -283,10 +287,18 @@ def is_archived(url: str, lexicon: Lexicon) -> bool:
     segments = path_segments(url)
     if any(token in segments for token in lexicon.archive_tokens):
         return True
-    # A year two or more years old in the path is a strong archive signal.
+    # A year two or more years old in the path is a strong archive signal — **except under an
+    # uploads folder**, where it is the month a file was uploaded. Every WordPress site files
+    # documents as `/wp-content/uploads/<year>/<month>/`, and Malta's current list of nationalities
+    # needing a visa sits at `uploads/2023/10/`, so this vetoed it out of every build and every
+    # search (TODO item 70). There it is a publication date, which `published_date_in_path` reports
+    # to the adjudicator instead, as entry 15 already decided for the other dated forms.
     return any(
-        segment.isdigit() and len(segment) == 4 and 1990 <= int(segment) <= 2024
-        for segment in segments
+        segment.isdigit()
+        and len(segment) == 4
+        and 1990 <= int(segment) <= 2024
+        and not (index and segments[index - 1] == UPLOADS_SEGMENT)
+        for index, segment in enumerate(segments)
     )
 
 

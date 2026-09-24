@@ -307,6 +307,23 @@ def test_an_explicit_archive_section_is_still_vetoed() -> None:
     assert is_archived("https://immigration.gov.example/visa/archive/checklist.html", lexicon)
 
 
+def test_a_year_under_an_uploads_folder_is_an_upload_date_not_an_archive() -> None:
+    """TODO item 70. Malta's current list of nationalities that need a visa is filed at
+    `wp-content/uploads/2023/10/`, and the bare-year veto kept it out of every build and every
+    search. Under `uploads` the year is when the file was uploaded, so it is reported instead."""
+
+    lexicon = get_lexicon()
+    malta = (
+        "https://identita.gov.mt/wp-content/uploads/2023/10/"
+        "List-of-Third-Countries-whose-nationals-must-be-in-possession-of-a-visa.pdf"
+    )
+
+    assert not is_archived(malta, lexicon)
+    assert published_date_in_path(malta) == "2023-10"
+    assert is_archived("https://immigration.gov.example/news/2019/visa-rules.html", lexicon)
+    assert is_archived("https://immigration.gov.example/archive/uploads/2023/10/a.pdf", lexicon)
+
+
 # --- a country name must not match inside a word ---------------------------------------------
 
 
