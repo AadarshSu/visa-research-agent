@@ -1020,7 +1020,13 @@ class CorridorResolver:
             if candidate.link.url in held:
                 text_by_id[source_id] = held[candidate.link.url]
 
-        packet = build_selection_packet(corridor, by_id, text_by_id)
+        nationality, residence = resolve_corridor_countries(corridor, self.countries)
+        packet = build_selection_packet(
+            corridor,
+            by_id,
+            text_by_id,
+            anchor_terms=sorted({*nationality.text_tokens, *residence.text_tokens}),
+        )
         # Recorded once the packet exists, whatever the call then does: these pages were offered.
         trace.admitted_on_text = {candidate.link.url for candidate in admitted}
         trace.withheld_from_selection = {candidate.link.url for candidate in withheld}

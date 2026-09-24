@@ -50,10 +50,12 @@ from pydantic import Field, SecretStr, ValidationError
 from visa_research_agent.discovery.adjudication import (
     _EXHAUSTED_MARKERS,
     UsageRecorder,
+    anchored_excerpt,
     cached_instructions,
     counting_http_client,
     counting_requests,
     explicit_prompt_cache,
+    names_traveller_after,
 )
 from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corridor, RoleScores
 from visa_research_agent.domain.models import StrictModel
@@ -74,6 +76,15 @@ MINIMUM_EXCERPT_CHARACTERS = 200
 # one candidate, far below the 35 the heuristic shortlist fetches today — the saving that pays for
 # the extra call.
 DEFAULT_SELECTION_SIZE = 20
+
+SELECTION_ANCHOR_CHARACTERS = 600
+"""What a candidate's excerpt gains around the traveller's own country, past its head (item 70).
+
+Only a page naming the traveller past its head gains anything. Slovenia's New Delhi embassy page
+states "Citizens of Bangladesh … Visa is required" some 8,000 characters in, behind a head that
+says only what the page is; shown the head, the selector picked it in 2 of 5 calls on one fixed
+packet, and with this in 5 of 5, for 1,259 more characters (+0.8%). On India's packet the decision
+page was picked 5 of 5 either way, at +4.4%."""
 
 # How many candidates the link scorer rated zero for every role may still be shown to the selector,
 # per role, on the strength of their own stored text. DECISIONS entry 158.
@@ -173,6 +184,7 @@ def build_selection_packet(
     *,
     total_characters: int = DEFAULT_SELECTION_CHARACTERS,
     choose: int = DEFAULT_SELECTION_SIZE,
+    anchor_terms: Sequence[str] = (),
 ) -> str:
     """Serialize every candidate, saying plainly which ones nothing is known about.
 
@@ -194,7 +206,7 @@ def build_selection_packet(
         },
         "roles_to_fill": list(ROLE_ORDER),
         "choose_at_most": choose,
-        "candidates": _candidate_entries(candidates, stored_text, budget),
+        "candidates": _candidate_entries(candidates, stored_text, budget, anchor_terms),
     }
     # Without indentation: whitespace is billed like any other input, and was 5–14% of a packet
     # nobody reads but the model (entry 164).
@@ -202,7 +214,10 @@ def build_selection_packet(
 
 
 def _candidate_entries(
-    candidates: dict[str, CandidatePage], stored_text: dict[str, str], budget: int
+    candidates: dict[str, CandidatePage],
+    stored_text: dict[str, str],
+    budget: int,
+    anchor_terms: Sequence[str] = (),
 ) -> list[dict[str, object]]:
     """One entry per candidate, carrying only what differs from one candidate to the next.
 
@@ -228,10 +243,22 @@ def _candidate_entries(
         if not text:
             entry["no_stored_text"] = True
         else:
-            # Head of the page only. Unlike the adjudicator's excerpt this is not anchored on the
-            # traveller's country: this call decides what is worth *reading*, and a page whose head
-            # does not say what it is will not be saved by a window three thousand characters in.
-            excerpt = text[:budget]
+            # The head says what the page is. It used to be all that was shown, on the argument
+            # that a page whose head does not say what it is will not be saved by a window further
+            # in — true, and beside the point for a page whose head says exactly what it is and
+            # states the traveller's answer 8,000 characters later (Slovenia, TODO item 70). So a
+            # page naming the traveller past its head also shows the text around each mention.
+            excerpt = (
+                anchored_excerpt(
+                    text,
+                    anchor_terms,
+                    budget=budget + SELECTION_ANCHOR_CHARACTERS,
+                    head_characters=budget,
+                    window_characters=SELECTION_ANCHOR_CHARACTERS // 2,
+                )
+                if anchor_terms and names_traveller_after(text, anchor_terms, budget)
+                else text[:budget]
+            )
             earlier = first_with.setdefault(excerpt, source_id)
             if earlier == source_id:
                 entry["stored_excerpt"] = excerpt

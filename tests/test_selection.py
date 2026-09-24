@@ -338,3 +338,27 @@ def test_a_big_pool_shows_the_ranked_top_plus_the_best_linked_pages_nobody_read(
         "https://a.gov.example/read-3",
         "https://a.gov.example/unread-2",
     }
+
+
+def test_a_page_naming_the_traveller_past_its_head_shows_what_it_says_there() -> None:
+    """TODO item 70. Slovenia's New Delhi page states the answer for Bangladeshis thousands of
+    characters in, behind a head that says only what the page is; shown the head, the selector
+    picked it 2 of 5 times. A page not naming the traveller past its head is shown as before."""
+
+    head = "Visa information of the Embassy New Delhi. " + "Consular hours and fees. " * 150
+    answer = "Citizens of Bangladesh, Bhutan, Nepal and Sri Lanka: visa is required."
+    candidates = {
+        "delhi": candidate("https://mfa.example/new-delhi"),
+        "other": candidate("https://mfa.example/x"),
+    }
+    text = {"delhi": head + answer, "other": head + "Nothing about anyone in particular."}
+
+    packet = json.loads(
+        build_selection_packet(
+            corridor(), candidates, text, total_characters=4_000, anchor_terms=["Bangladesh"]
+        )
+    )
+    by_id = {entry["source_id"]: entry for entry in packet["candidates"]}
+
+    assert answer in by_id["delhi"]["stored_excerpt"]
+    assert by_id["other"]["stored_excerpt"] == text["other"][:2_000]

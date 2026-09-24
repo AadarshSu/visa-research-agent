@@ -385,9 +385,13 @@ should get it** — lost before the pool, in the pool, or after it was credited,
    **documents only** kept all 94, grew pools 0–60%, and put Belgium's PDF — reset to depth 2 in a
    scratch copy — into the pool and the shown set. Shipped as `scored_as_stored`: a corpus PDF is
    scored at depth 0.
-2. **In the pool, not picked: the selector (Slovenia 2 of 3).** Capture the pool for the runs that
-   missed and replay the selection call (`var/selection-replay-2026-09-24/`) to see why the New
-   Delhi page loses.
+2. **In the pool, not picked: the selector (Slovenia). Done 2026-09-24.** The selector saw each
+   page's first 2,000 characters, and the New Delhi page states "Citizens of Bangladesh … Visa is
+   required" some 8,000 characters in. Replayed on one captured packet, five calls each: picked 2 of
+   5 as shipped, 5 of 5 with the excerpt also showing up to 600 characters around the traveller's
+   own country words (+0.8% input). India's packet: its decision page 5 of 5 either way, at +4.4%,
+   with 16.4 pages picked on average against 13.2. Shipped (`SELECTION_ANCHOR_CHARACTERS`): three
+   live runs, all "visa required" from the New Delhi page, against 5 of 8 before.
 3. **Credited, then lost: the plan's input guard (India). Done 2026-09-24.** Five more runs: four
    plan inputs of 72–74k answered, one of 91,787 refused — 3 of 8 refused over the day. Across 131
    logged plan calls the median input is 17,918 and the largest 73,630, so the 80,000 guard sat

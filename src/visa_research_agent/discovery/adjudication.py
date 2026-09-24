@@ -454,6 +454,13 @@ def _anchor_pattern(anchor_terms: tuple[str, ...]) -> re.Pattern[str] | None:
     return re.compile(r"\b(?:" + "|".join(alternatives) + r")\b")
 
 
+def names_traveller_after(text: str, anchor_terms: Sequence[str], start: int) -> bool:
+    """Whether `text` names the traveller's own country anywhere past `start`."""
+
+    pattern = _anchor_pattern(tuple(anchor_terms))
+    return pattern is not None and pattern.search(text, start) is not None
+
+
 def anchored_excerpt(
     text: str,
     anchor_terms: Sequence[str],

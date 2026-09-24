@@ -38,8 +38,9 @@ from visa_research_agent.api.schemas import TravellerRequest
 from visa_research_agent.config.loader import get_runtime_policy
 from visa_research_agent.config.settings import settings
 from visa_research_agent.discovery.resolver import CorridorResolver
+from visa_research_agent.research import openai_extraction
 from visa_research_agent.research.openai_extraction import LangChainStructuredPlanGenerator
-from visa_research_agent.research.personas import PersonasPlanGenerator
+from visa_research_agent.research.personas import PersonasCandidateSelector, PersonasPlanGenerator
 
 HERE = Path(__file__).resolve().parent
 # A second arm writes elsewhere: `ITEM70_OUT=fixed PYTHONPATH=<worktree>/src run.py …` runs the
@@ -104,6 +105,43 @@ def _capture_drafts(cls):  # type: ignore[no-untyped-def]
 
 _capture_drafts(PersonasPlanGenerator)
 _capture_drafts(LangChainStructuredPlanGenerator)
+
+
+def _capture_selection(cls):  # type: ignore[no-untyped-def]
+    """Keep the selection call's packet and answer, so a miss can be replayed on a fixed pool."""
+
+    original = cls.select
+
+    async def select(self, system_prompt, packet, **kwargs):  # type: ignore[no-untyped-def]
+        answer = await original(self, system_prompt, packet, **kwargs)
+        run_dir = CURRENT.get("run")
+        if run_dir is not None:
+            (run_dir / "select_packet.txt").write_text(packet, encoding="utf-8")
+            (run_dir / "select_answer.json").write_text(
+                answer.model_dump_json(indent=2), encoding="utf-8"
+            )
+        return answer
+
+    cls.select = select
+
+
+_capture_selection(PersonasCandidateSelector)
+
+
+_build_research_packet = openai_extraction.build_research_packet
+
+
+def _capturing_research_packet(*args, **kwargs):  # type: ignore[no-untyped-def]
+    """Keep the plan call's input, which a refusal for size never sends and so never records."""
+
+    packet = _build_research_packet(*args, **kwargs)
+    run_dir = CURRENT.get("run")
+    if run_dir is not None:
+        (run_dir / "plan_packet.json").write_text(packet, encoding="utf-8")
+    return packet
+
+
+openai_extraction.build_research_packet = _capturing_research_packet
 
 
 async def run_once(key: str, number: int) -> None:
