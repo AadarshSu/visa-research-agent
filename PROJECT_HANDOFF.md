@@ -54,7 +54,7 @@ runs with no fix. Three defects were fixed and measured: a plan the application 
 (the UAE), a veto that removed the Dutch visa checker, and a veto that dropped every dated upload
 before 2025 (Malta 0 of 6 → 5 of 6; Malta's store rebuilt and kept). **The owner's intent: if an
 answering page exists and we can get to it, the corridor should get it.** Four such losses were
-then fixed and measured (entry 199): a stored PDF scored with its build depth (Belgium), the
+then fixed and measured (entry 199): a link stating the answer that the lexicon could not read (Belgium), the
 selector shown only each page's head (Slovenia), the plan's input guard (India) and an uncited step
 link (Germany). **Waiting on the owner:** a draft rule 8g saying a visa on arrival is a visa (the
 UAE, 1 of 5 → 4 of 4 on replay), and whether any of the 13 other stores the uploads fix changes

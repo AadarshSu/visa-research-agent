@@ -83,6 +83,12 @@ roles:
       - {phrase: visa for entry, weight: 20}
       - {phrase: countries whose nationals, weight: 22}
       - {phrase: countries whose citizens, weight: 22}
+      # Added 2026-09-25 (TODO item 70, entry 200) for the same reason as the two above: Belgium
+      # links its list as "List of third countries that are required to hold a visa", which states
+      # the answer and matched nothing but the bare word "visa" (+6). Two hops from a build seed
+      # that scored −14, so the list never reached the selector.
+      - {phrase: required to hold a visa, weight: 22}
+      - {phrase: must hold a visa, weight: 22}
 
   document_checklist:
     terms:

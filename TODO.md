@@ -377,14 +377,12 @@ it against prompt changes) had nothing to test. What broke was around it:
 should get it** — lost before the pool, in the pool, or after it was credited, it is a defect.
 
 **What is left, in order.**
-1. **Before the pool: the depth penalty on corpus entries (Belgium `BD/AE`). Done 2026-09-24.** −10 a
-   level from the build's seed kept Belgium's list PDF out of the pool. Measured offline on the 21
-   oracle corridors plus three item-70 ones, search stubbed out, no model
-   (`var/item70-2026-09-24/measure_depth.py`): dropping the penalty for every corpus entry grew
-   pools up to 3.3× and pushed 3 of 94 shown answers out of Germany `PH/PH`'s 160; dropping it for
-   **documents only** kept all 94, grew pools 0–60%, and put Belgium's PDF — reset to depth 2 in a
-   scratch copy — into the pool and the shown set. Shipped as `scored_as_stored`: a corpus PDF is
-   scored at depth 0.
+1. **Before the pool: Belgium's list never reached the selector. Done 2026-09-25 (entry 199).** Its
+   link, "List of third countries that are required to hold a visa", matched only the word "visa",
+   so at depth 2 it scored −14. `required to hold a visa` and `must hold a visa` are now decision
+   terms, as entry 56 added Sweden's phrasing. A first fix — no depth penalty for stored PDFs — was
+   withdrawn: nothing but the result justified singling out PDFs. On 24 corridors with search
+   stubbed out, all 94 shown answers kept, no pool changed but Belgium's, and its list is shown.
 2. **In the pool, not picked: the selector (Slovenia). Done 2026-09-24.** The selector saw each
    page's first 2,000 characters, and the New Delhi page states "Citizens of Bangladesh … Visa is
    required" some 8,000 characters in. Replayed on one captured packet, five calls each: picked 2 of

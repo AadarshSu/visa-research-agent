@@ -223,7 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
-| [199](#199-item-70s-next-work-four-answers-that-were-reachable-and-lost-fixed-a-visa-on-arrival-waits-on-the-owner) | **Item 70's next work** — a stored PDF scored without its build depth (Belgium; 94 of 94 oracle answers kept), the selector shown the text around the traveller's country (Slovenia 2 of 5 → 5 of 5 on a fixed packet, 3 of 3 live), the plan's input guard 80k → 160k (India answered 3 of 3 on its refused input), an uncited step link cited instead of refused (Germany); a draft rule 8g for visas on arrival (UAE 1 of 5 → 4 of 4) waits on the owner |
+| [199](#199-item-70s-next-work-four-answers-that-were-reachable-and-lost-fixed-a-visa-on-arrival-waits-on-the-owner) | **Item 70's next work** — a link stating who must hold a visa scored as the decision (Belgium; 94 of 94 oracle answers kept, no pool changed), after a PDF-only rule was withdrawn, the selector shown the text around the traveller's country (Slovenia 2 of 5 → 5 of 5 on a fixed packet, 3 of 3 live), the plan's input guard 80k → 160k (India answered 3 of 3 on its refused input), an uncited step link cited instead of refused (Germany); a draft rule 8g for visas on arrival (UAE 1 of 5 → 4 of 4) waits on the owner |
 | [198](#198-item-70-the-fourteen-corridors-re-run--the-roles-call-was-right-and-what-broke-was-around-it) | **Item 70: fourteen corridors re-run, three times each** — the roles call was right on every packet it refused, so step 4 had nothing to test; fixed: a plan naming an unread page is `partial` (the UAE's 503), the residence-permit veto yields to the visa question (the Dutch checker), a year under `uploads/` is a date, not an archive (Malta 0 of 6 → 5 of 6); Malta rebuilt and kept; the owner's intent — an answer page we can reach, we should get — makes the depth penalty, the selector's misses and the plan's size guard the next work |
 | [197](#197-an-exemption-list-decides-visa-required-where-the-authority-states-the-general-rule-and-why-germanys-step-link-refused) | **Rule 8f: an exemption list plus a stated general rule decides "visa required"** — the owner's decision; Japan 8 of 8, Singapore "no visa" 8 of 8, Germany 12 of 12; Germany's refusals were a `source` link to the plan's own application URL, 4 in 79 calls, no retry |
 | [196](#196-rule-11-now-says-a-steps-linked-page-must-be-among-its-sources--it-did-not-stop-the-refusals-and-japans-packet-now-decides-visa-required) | **Rule 11 states the step-link rule** — Germany still refused 2 of 10 (2 of 6 before) on the same packet; Singapore "no visa" 8 of 8; Japan "visa required" 7 of 8, 3 of 4 on the old prompt, because its packet now holds MOFA's general rule — an owner's question like entry 172 |
@@ -257,7 +257,7 @@ not — and stored text ranks, it never speaks).
 it, the corridor should get it.** Entry 198 had listed four such losses as "not fixed". Each was
 measured on the same kind of fixed input before anything shipped.
 
-### Lost before the pool: a stored document scored with its build depth
+### Lost before the pool: a link stating the answer that the lexicon could not read
 
 A corpus entry's depth is its distance from the build's seed, and the scorer charges −10 a level.
 Belgium's list of nationalities that need a visa was recorded two hops from a seed, scored +6 − 20,
@@ -267,11 +267,20 @@ Measured with no model and no network (`measure_depth.py`): the real resolver wa
 selector with search stubbed out, on the 21 oracle corridors and three item-70 ones.
 - **No depth penalty for any corpus entry:** pools grew up to 3.3×, and 3 of the 94 answers the
   selector had been shown fell out of Germany `PH/PH`'s 160.
-- **No depth penalty for documents only:** all 94 stayed. Pools grew 0–60%, the United States most.
-  Belgium's PDF, reset to depth 2 in a scratch copy, entered the pool and the shown set.
+- **No depth penalty for documents only:** all 94 stayed, and Belgium's PDF — reset to depth 2 in a
+  scratch copy — was shown. Pools grew 0–60%, the United States most. **This shipped first and was
+  withdrawn the next day.** The owner's objection: nothing but the result said why a PDF should
+  escape the penalty. The argument offered — a crawl never follows a PDF, so its depth only says
+  who linked it — is as true of any leaf page.
+- **The real defect was the vocabulary.** The link reads "List of third countries that are required
+  to hold a visa". That states the answer, and the lexicon matched only the bare word "visa" —
+  exactly what entry 56 fixed for Sweden's "who require visa for entry". `required to hold a visa`
+  and `must hold a visa` are now `visa_decision` terms. Belgium's link scores 6 + 22 − 20 = +8 at
+  depth 2, page or PDF alike. Same measurement: all 94 answers still shown, **not one of the 24
+  pools changed size** but Belgium's by that one page, and the list is shown.
 
-Shipped as `scored_as_stored`: a stored PDF is scored at depth 0. The oracle was curated from inside
-today's pool, so this measure can show losses and not gains. Belgium is the gain.
+The oracle was curated from inside today's pool, so this measure can show losses and not gains.
+Belgium is the gain.
 
 ### In the pool, not picked: the selector saw only each page's head
 

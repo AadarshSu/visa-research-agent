@@ -111,7 +111,6 @@ from visa_research_agent.discovery.selection import (
 from visa_research_agent.discovery.urls import (
     canonicalise_url,
     is_crawlable,
-    is_pdf_url,
     published_date_in_path,
 )
 from visa_research_agent.domain.models import (
@@ -297,23 +296,6 @@ class FetchedShortlist(StrictModel):
     the only place a refusal is observed at all — and a corridor that stops saying an authority
     refused it is the reporting discipline of DECISIONS entry 18 lost to a speed change.
     """
-
-
-def scored_as_stored(entry: PageLink) -> PageLink:
-    """A corpus entry as the link scorer should see it: a **document** at depth 0.
-
-    A corpus entry's depth is how far the build's crawl was from its seed when it met the link, and
-    `depth_penalty_weight` charges −10 a level. For a page that is a fair proxy — deeper pages are
-    further from the guidance hub. For a PDF it is not: a crawl never follows one, so its depth only
-    says which page happened to link it. Belgium's list of nationalities that need a visa was
-    recorded at depth 2 from its own list page, scored +6 − 20, and never reached the selector's
-    pool (TODO item 70). Measured on the 21 oracle corridors with search stubbed out: every one of
-    the 94 answers the selector was shown is still shown, and the pool grows by 0–60% (the United
-    States, which publishes many PDFs, most). Removing the penalty for pages too pushed three
-    answers out of Germany's shown set, so pages keep it. The entry keeps its depth for the log.
-    """
-
-    return entry.model_copy(update={"depth": 0}) if entry.depth and is_pdf_url(entry.url) else entry
 
 
 @dataclass
@@ -741,7 +723,7 @@ class CorridorResolver:
             from_corpus += 1
             stored = CandidatePage(
                 link=entry,
-                link_scores=score(scored_as_stored(entry)),
+                link_scores=score(entry),
                 # The corpus crawl recorded the page's own <title>; without this it would be
                 # re-derived from the link text, which is what a crawl has to fall back on and
                 # a store does not.
