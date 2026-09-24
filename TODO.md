@@ -349,84 +349,6 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 70. Find why a corridor that read its authority's pages still has no visa decision — `done` 2026-09-25, **added 2026-09-24, the owner's top accuracy priority (entries 198–202)**
-
-**Where it ended.** Of the 14 corridors:
-- **11 now answer "visa required" from an official page.** Belgium ×2, Egypt, Italy, India,
-  Slovenia, Malta ×2, Poland and Croatia (the last two through the EU tier, entry 201).
-- **The UAE answers under rule 8g.** The Netherlands `PH/PH` names its official checker.
-- **Mexico and Saudi Arabia still refuse.** Mexico's list is an image, which is item 69's decision.
-  Saudi Arabia's pages cannot be read, the set-aside class.
-- **What follows is the full rebuild** — PROJECT_HANDOFF's *Next session*.
-
-**The problem.** Of 86 corridor runs logged since 2026-09-01, 24 refused for want of a visa
-decision, and **14 of them had read the authority's pages**: Croatia, Malta ×2, Italy, Poland,
-Belgium ×2, Slovenia (all `BD/AE` or `BD/SA`), India `BD/SA`, Egypt `BD/SA`, Mexico `IN/GB`, Saudi
-Arabia `IN/GB`, the UAE `IN/GB` and the Netherlands `PH/PH`. The other 10 could not read the
-authority at all, which the owner has set aside.
-
-**What the re-runs found (entry 198).** Each corridor was run three times fresh, and each run traced
-to the first link that broke. **The item's lead — the evidence was read and not credited — was true
-of none of them:** the roles call was right on every packet where it refused, so step 4 (replaying
-it against prompt changes) had nothing to test. What broke was around it:
-- **Six now answer "visa required" in most runs with no fix:** Belgium `BD/SA`, Egypt and Italy 3 of
-  3; Belgium `BD/AE` and Slovenia 2 of 3; India 1 of 3, its other two refused by the plan's size guard.
-- **Three defects, fixed and measured 2026-09-24:**
-  - a plan naming a page nobody read is graded `partial`, where the application used to refuse its
-    own plan (the UAE's 503s);
-  - the residence-permit veto yields to the page asking the visa question (the Dutch checker, 3 of 3
-    named);
-  - a year under `uploads/` is a publication date, not an archive (Malta 0 of 6 → 5 of 6).
-- **Poland** credits the visa-free list and rule 8f holds, 3 of 3 — correct under the bound.
-- **Croatia** (EU-level list), **Mexico** (an image) and **Saudi Arabia** (unreadable) refuse 3 of 3,
-  for reasons no fix here reaches.
-
-**The owner's intent, 2026-09-24: if an answering page exists and we can get to it, the corridor
-should get it** — lost before the pool, in the pool, or after it was credited, it is a defect.
-
-**What is left, in order.**
-1. **Before the pool: Belgium's list never reached the selector. Done 2026-09-25 (entry 199).** Its
-   link, "List of third countries that are required to hold a visa", matched only the word "visa",
-   so at depth 2 it scored −14. `required to hold a visa` and `must hold a visa` are now decision
-   terms, as entry 56 added Sweden's phrasing. A first fix — no depth penalty for stored PDFs — was
-   withdrawn: nothing but the result justified singling out PDFs. On 24 corridors with search
-   stubbed out, all 94 shown answers kept, no pool changed but Belgium's, and its list is shown.
-2. **In the pool, not picked: the selector (Slovenia). Done 2026-09-24.** The selector saw each
-   page's first 2,000 characters, and the New Delhi page states "Citizens of Bangladesh … Visa is
-   required" some 8,000 characters in. Replayed on one captured packet, five calls each: picked 2 of
-   5 as shipped, 5 of 5 with the excerpt also showing up to 600 characters around the traveller's
-   own country words (+0.8% input). India's packet: its decision page 5 of 5 either way, at +4.4%,
-   with 16.4 pages picked on average against 13.2. Shipped (`SELECTION_ANCHOR_CHARACTERS`): three
-   live runs, all "visa required" from the New Delhi page, against 5 of 8 before.
-3. **Credited, then lost: the plan's input guard (India). Done 2026-09-24.** Five more runs: four
-   plan inputs of 72–74k answered, one of 91,787 refused — 3 of 8 refused over the day. Across 131
-   logged plan calls the median input is 17,918 and the largest 73,630, so the 80,000 guard sat
-   just above normal traffic. Replayed on the 91,787 input, the plan answered "visa required" 3 of
-   3 in 17–22s. `maximum_model_input_characters` is now 160,000: only calls that refused change.
-   **And fixed the same day: a step linking a page it did not cite no longer refuses the plan.** The
-   sentinel `germany/IN/GB` refused once in three on it after a verified answer was in hand — entry
-   197's step link, recurring. Entry 197 named the fix should it recur: the linked page is now
-   added to the step's `source_ids`, and a linked id that is not a packet source still fails the
-   plan as an unknown source. The other two sentinel runs gave the confirmed answer: verified, 12
-   documents, the UK missions' checklist.
-4. **Credited, then held back: the UAE. Done 2026-09-25 — rule 8g, the owner's approval (entry
-   199).** Where every route the sources describe issues a visa, in advance or on arrival, the plan
-   says "visa required" and asks the condition the profile does not settle. UAE plan inputs: 1 of 5
-   → 4 of 4 and 2 of 2 → 5 of 5; no change on five regression inputs, 40 calls.
-5. **The other stores the uploads fix changes — overtaken by the full rebuild.** The owner chose to
-   rebuild all 44 stores not yet rebuilt, in a fresh session. It covers the 13 (AE, CZ, EE, GR, ID,
-   IE, IT, MY, PH, RO, TH, US, ZA), starting with IT RO GR ZA TH CZ.
-6. **Croatia and Poland: done 2026-09-25 (entry 201).** The EU answers a Schengen member's visa
-   decision from EUR-Lex. Five Schengen corridors said "visa required" 15 of 15.
-
-Out of reach under the rules: Saudi Arabia (unreadable) and Mexico (an image, item 69's decision).
-Cloudflare-guarded pages stay unread (entry 202).
-
-**What not to do.** Do not build an accuracy metric or truth set without asking (entries 68, 147).
-Grade every change on several runs (entry 144). Refusing stays a correct output: a fix that makes
-these corridors answer must make them answer *from a page that says so* — every answer above cites
-the authority's own page.
-
 ### The sequence to the full rebuild
 
 **The owner, 2026-09-24.** Item 68's fixes (entries 186 and 189)
@@ -1991,6 +1913,7 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 70. Find why a corridor that read its authority's pages still has no visa decision | 09-25 | 198–202 | **The lead was wrong: the roles call was right on every packet it refused**, so nothing in the prompt needed fixing. Re-run three times each and traced, 11 of the 14 now answer "visa required" from an official page, through eight fixes, all measured before shipping: a plan refusing itself over a page it could not read (UAE), a residence-permit veto dropping the Dutch checker, a year veto dropping every pre-2025 upload (Malta, rebuilt), the lexicon missing "required to hold a visa" (Belgium — a PDF-only depth rule shipped first and was withdrawn as unjustified), the selector seeing only a page's head (Slovenia), an 80k plan-input guard (India), an uncited step link (Germany), and rule 8g — a visa on arrival is a visa (UAE). **The EU now answers a Schengen member's visa decision** from EUR-Lex (entry 201): Croatia and Poland, refused and null, answered 6 of 6. Cloudflare's challenge proved unanswerable without disguising the client (202). Mexico (an image) and Saudi Arabia (unreadable) still refuse |
 | 66. Keep the selector's picks as good as its pools grow | 09-24 | 194, 195 | **The pilot's 75 → 68 was half noise, a month-old baseline and one address**; replaying only the selection call, five runs a corridor, the real loss was −2.8 of 90, all in secondary roles, while decision + checklist rose 23.2 → 25.0. **A shorter list, not more text, fixed it**: the whole pool 76.6, an 800k text budget 73.3, the fusion top 120 82.4, top 120 + 40 pages with no stored text 80.0 at 42% less input. **The owner shipped top 120 + 40 blind without the live A/B** and dropped the rule that no candidate is dropped — the blind 40 are where the model found the traveller's own posts, which the oracle cannot credit. `selection-recall` gained a same-page column, because the oracle names one address per page |
 | 62. Pay for model calls through Ofself Personas | 09-24 | 188 | **Blocked on Ofself, then documented overnight**: Personas' live guide grew a model-only call, `capabilities: []` — one plain call, nothing added to the prompt (the `debug` request event showed only our two messages), with strict JSON schema and reasoning effort in `llm_config`. **`llm_config.model` is ignored without the app's own key**, so each call's agent holds the model and every reply's model is checked. `research/personas.py` implements the three existing interfaces; `model_route: personas` switches all of them. **Graded without an OpenAI arm**: selection 41 of 48 oracle roles against entry 170's direct 39 of 48, nine of ten corridors unresolved exactly as before; 14 plan calls with no refusal and no wrong "no visa", Germany and Singapore as baseline, Japan "visa required" once in six — a *Smaller thing*. Lost: prompt caching, Fast mode, cached and reasoning token counts. **The owner made it the route from now on** |
 | 5. Answer the challenge, honour every `robots.txt`, and get a checklist out of France | 09-16 | 75, 92, 93, 109, 179 | **Steps 1–4 were built on 08-25 (entry 75), and the item still called them undone**, as did four other files. France's checklist is behind the Visa Wizard — named, never driven (92, 93). Step 5, measured: **12 of 24 challenges answered, and the 12 that were not all needed `challenges.cloudflare.com`**, which the render gate aborts. France's corridors lose 14 of 17 challenged pages to the five-render total, not to the challenge. The `robots.txt` count: **401 of 3,471 origins serve a web page there**, holding 4,687 read pages and 171 corridor reads; one is a real policy labelled `text/html`, already obeyed, so the verdict stays. Both spending decisions are item 61 |
