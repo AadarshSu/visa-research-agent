@@ -63,6 +63,30 @@ class ConsideredCandidate(StrictModel):
     log written before the field existed, which is true of them — nothing was withheld then."""
 
 
+class RoleVerdict(StrictModel):
+    """What the role adjudicator said about one role, and why, in its own words (TODO item 70).
+
+    Rule 10 of `adjudicate_roles.txt` makes the model give a reason for every choice and say what
+    was missing for a role it leaves null, and until 2026-09-24 nothing kept a null's reason:
+    `validated_choices` skips it, and only a *kept* choice's reason reaches the notes. So a corridor
+    that read its authority's pages and credited no decision could only be diagnosed by guessing
+    what the model saw. This is the model's answer **as it gave it**, before validation — an
+    invented id is kept with `url` left empty, so "named a page we never fetched" stays visible.
+
+    A diagnostic like the rest of this record: nothing reads it back and nothing decides from it.
+    """
+
+    role: DiscoveryRole
+    kind: Literal["choice", "tool", "delegate"] = "choice"
+    """`choice` fills the role; `tool` and `delegate` name a next step that fills nothing."""
+    source_id: str | None = None
+    """The id the model named, or `None` where it named nothing — a refusal of the role."""
+    url: str | None = None
+    """The page that id stood for in this run's packet. `None` for a refusal, and for an id that
+    was not in the packet, which the kept `source_id` tells apart."""
+    reason: str = ""
+
+
 class ModelCall(StrictModel):
     """One call to a model, with the input size that is the only handle on why it took as long.
 
@@ -197,6 +221,17 @@ class RecallRecord(StrictModel):
     different statements, and deciding which one happened by matching words in `detail` would make
     rewording a message silently change what an audit reports.
     """
+
+    role_verdicts: list[RoleVerdict] = Field(default_factory=list)
+    """Every role the adjudicator answered on the call that counted, with its reason.
+
+    Empty means no role adjudication answered — the log predates the field, no adjudicator was
+    configured, the run refused before it, or both attempts failed. Only the call that answered is
+    kept: a failed first attempt produced no verdict to keep."""
+
+    adjudicated_ids: dict[str, str] = Field(default_factory=dict)
+    """Each source id in the adjudication packet and the page it stood for, because a reason names
+    pages by id ("tl_7 lists nationalities…") and the id means nothing once the run is over."""
 
     @field_validator("recorded_at")
     @classmethod

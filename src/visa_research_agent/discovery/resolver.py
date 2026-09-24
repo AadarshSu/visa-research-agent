@@ -36,6 +36,7 @@ from visa_research_agent.discovery.adjudication import (
     build_candidate_packet,
     load_adjudication_prompt,
     load_blocked_prompt,
+    role_verdicts,
     validated_blocked_choices,
     validated_choices,
     validated_delegates,
@@ -74,6 +75,7 @@ from visa_research_agent.discovery.recall_log import (
     ModelCall,
     RecallLog,
     RecallRecord,
+    RoleVerdict,
     considered,
 )
 from visa_research_agent.discovery.scoring import (
@@ -322,6 +324,11 @@ class ResolutionTrace:
     request path (entry 51) that meant none were. The shortlist fetch is the only stage that meets a
     refusal now.
     """
+
+    role_verdicts: list[RoleVerdict] = field(default_factory=list)
+    """What the role adjudicator said about each role, reasons included (TODO item 70)."""
+    adjudicated_ids: dict[str, str] = field(default_factory=dict)
+    """The adjudication packet's source ids and the pages they stood for."""
 
     selector: Literal["model", "heuristic"] = "heuristic"
     """Which selector **actually chose** the shortlist, not which one was configured.
@@ -1512,6 +1519,10 @@ class CorridorResolver:
             delegations=delegations,
         )
         adjudication, model_calls = await self._adjudicate_with_one_retry(packet, notes)
+        self.trace.role_verdicts = role_verdicts(adjudication, fetched.by_id, delegations)
+        self.trace.adjudicated_ids = {
+            source_id: candidate.link.url for source_id, candidate in fetched.by_id.items()
+        }
 
         chosen, discarded = validated_choices(adjudication, fetched.by_id)
         notes.extend(discarded)
@@ -1845,6 +1856,8 @@ class CorridorResolver:
                     unreadable=unreadable,
                     unreadable_outcomes=outcomes,
                     model_calls=list(self.model_call_timings),
+                    role_verdicts=list(trace.role_verdicts),
+                    adjudicated_ids=dict(trace.adjudicated_ids),
                     phase_seconds={
                         phase: round(seconds, 3) for phase, seconds in trace.phase_seconds.items()
                     },

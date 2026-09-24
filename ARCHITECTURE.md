@@ -559,6 +559,12 @@ told apart from a mis-ranking — Canada considered **470** candidates and the p
 fifteenth, which no other output said. It is a diagnostic: nothing reads it back *in a request*, no
 decision depends on it, and a write failure is swallowed rather than costing the corridor an answer.
 
+**Since 2026-09-24 it also keeps what the role adjudicator said** (`role_verdicts`, TODO item 70):
+every role it answered, the page it named or `null`, and its reason — including the reason for a
+role it refused, which `validated_choices` drops and nothing else keeps — beside `adjudicated_ids`,
+the packet's source ids and the pages they stood for, because a reason names pages by id. It is
+recorded as the model gave it, before validation, so an invented id stays visible with no URL.
+
 **It is also what makes a ranking change measurable after the fact, and that has now been used twice.**
 The recorded scores are exact input to `resolver.shortlist`, so the ranking can be replayed at any
 budget with no fetcher and no model client — which is how entry 86 held the budget fixed for free, and

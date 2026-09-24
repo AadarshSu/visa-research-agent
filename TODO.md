@@ -376,10 +376,10 @@ stored text, so confirm it against a fresh run):
   6,000 plus windows around the traveller's country (`DEFAULT_EXCERPT_*` in `resolver.py`).
 
 **What to do, in order.**
-1. **Record the adjudicator's reasons.** Rule 10 of `adjudicate_roles.txt` makes it give a reason for
-   every choice and say what was missing for a role it leaves null, and nothing keeps them. Add
-   them to the recall log as a diagnostic nothing renders, as the selection note is. Without this
-   every refusal below has to be re-derived by guessing.
+1. **Record the adjudicator's reasons. Done 2026-09-24.** Rule 10 of `adjudicate_roles.txt` makes
+   it give a reason for every choice and say what was missing for a role it leaves null, and
+   nothing kept a null's reason. The recall log now holds `role_verdicts` — every role answered,
+   unvalidated, with its reason — and `adjudicated_ids`, the packet's ids and their pages.
 2. **Re-run the 14 fresh, three times each**, from the owner's terminal (the renderer cannot start
    from Claude Code's shell), clearing `var/corridors/` for both arms. About 42 corridors and ~$2 of
    search. The ones that now answer leave the list; what is left is the real blocker 2.

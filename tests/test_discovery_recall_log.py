@@ -38,6 +38,7 @@ from visa_research_agent.discovery.recall_log import (
     FileRecallLog,
     ModelCall,
     RecallRecord,
+    RoleVerdict,
     compare_runs,
 )
 from visa_research_agent.discovery.resolver import CorridorResolver, ResolutionTrace
@@ -949,3 +950,29 @@ async def test_a_pool_cut_for_the_selector_says_so_and_the_log_marks_what_was_wi
         f"{len(withheld)} of the" in note and "were not shown to it" in note
         for note in resolved.notes
     )
+
+
+def test_the_adjudicators_reasons_reach_the_record_and_an_older_log_reads_empty(
+    tmp_path: Path,
+) -> None:
+    """TODO item 70. Empty means no role adjudication answered — including every log written
+    before the field existed, which is true of them."""
+
+    log = RecordingLog()
+    resolver = build_resolver(tmp_path, [], log)
+    trace = ResolutionTrace()
+    trace.role_verdicts = [
+        RoleVerdict(role="visa_decision", reason="No candidate names Bangladesh."),
+    ]
+    trace.adjudicated_ids = {"tl_1": AUTHORITY}
+
+    resolver._write_recall_log(corridor(), trace, None)
+
+    record = log.records[-1]
+    assert record.role_verdicts[0].reason == "No candidate names Bangladesh."
+    assert record.role_verdicts[0].source_id is None
+    assert record.adjudicated_ids == {"tl_1": AUTHORITY}
+    older = RecallRecord.model_validate(
+        {"corridor_key": "k", "recorded_at": RESOLVED_AT.isoformat(), "outcome": "refused"}
+    )
+    assert older.role_verdicts == [] and older.adjudicated_ids == {}

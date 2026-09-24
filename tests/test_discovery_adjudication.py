@@ -262,6 +262,45 @@ async def test_a_chosen_page_is_recorded_as_decided_by_the_model() -> None:
     assert "lists the items" in sources[0].signals[0]
 
 
+async def test_every_reason_the_model_gave_is_kept_for_the_recall_log() -> None:
+    """TODO item 70: a refusal's reason was dropped by `validated_choices`, so a corridor that read
+    its authority and credited no decision could only be diagnosed by guessing. The trace keeps what
+    was *said*, unvalidated — a null, a kept choice, an invented id and a tool alike."""
+
+    adjudicator = FakeAdjudicator(
+        RoleAdjudication(
+            choices=[
+                RoleChoice(
+                    role="visa_decision",
+                    source_id=None,
+                    reason="tl_india lists nationalities but does not say which list India is on.",
+                ),
+                RoleChoice(
+                    role="document_checklist", source_id="tl_checklist", reason="Names a passport."
+                ),
+                RoleChoice(role="fees", source_id="tl_invented", reason="Looked right."),
+            ],
+            tools=[RoleTool(role="processing_times", source_id="tl_india", reason="A checker.")],
+        )
+    )
+    resolver = resolver_with(adjudicator)
+
+    await resolver._decide_roles(destination(), corridor(), shortlist(), [])
+
+    verdicts = {(verdict.role, verdict.kind): verdict for verdict in resolver.trace.role_verdicts}
+    refusal = verdicts[("visa_decision", "choice")]
+    assert refusal.source_id is None and refusal.url is None
+    assert "which list India is on" in refusal.reason
+    assert verdicts[("document_checklist", "choice")].url == MISSION_CHECKLIST
+    invented = verdicts[("fees", "choice")]
+    assert (invented.source_id, invented.url) == ("tl_invented", None)
+    assert verdicts[("processing_times", "tool")].url == DETAIL_INDIA
+    assert resolver.trace.adjudicated_ids == {
+        "tl_india": DETAIL_INDIA,
+        "tl_checklist": MISSION_CHECKLIST,
+    }
+
+
 # --- degrading ------------------------------------------------------------------------------
 
 

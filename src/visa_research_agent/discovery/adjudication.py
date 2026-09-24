@@ -43,6 +43,7 @@ from visa_research_agent.discovery.models import (
     Delegation,
     DiscoveryRole,
 )
+from visa_research_agent.discovery.recall_log import RoleVerdict
 from visa_research_agent.discovery.urls import published_date_in_path
 from visa_research_agent.domain.models import StrictModel
 from visa_research_agent.research.errors import VisaResearchError
@@ -710,3 +711,51 @@ def validated_choices(
             continue
         kept[choice.role] = (choice.source_id, choice.reason.strip())
     return kept, discarded
+
+
+def role_verdicts(
+    adjudication: RoleAdjudication,
+    candidates: dict[str, CandidatePage],
+    delegations: dict[str, Delegation],
+) -> list[RoleVerdict]:
+    """Everything the model said about each role, reasons included, for the recall log.
+
+    Deliberately unvalidated: the validators above decide what is *used*, and this records what was
+    *said*, so an invented id or a second answer for a role is kept here with its reason. Nothing
+    reads it back (TODO item 70).
+    """
+
+    verdicts = [
+        RoleVerdict(
+            role=choice.role,
+            source_id=choice.source_id,
+            url=(candidates[choice.source_id].link.url if choice.source_id in candidates else None),
+            reason=choice.reason.strip(),
+        )
+        for choice in adjudication.choices
+    ]
+    verdicts.extend(
+        RoleVerdict(
+            role=tool.role,
+            kind="tool",
+            source_id=tool.source_id,
+            url=candidates[tool.source_id].link.url if tool.source_id in candidates else None,
+            reason=tool.reason.strip(),
+        )
+        for tool in adjudication.tools
+    )
+    verdicts.extend(
+        RoleVerdict(
+            role=delegate.role,
+            kind="delegate",
+            source_id=delegate.delegate_id,
+            url=(
+                delegations[delegate.delegate_id].url
+                if delegate.delegate_id in delegations
+                else None
+            ),
+            reason=delegate.reason.strip(),
+        )
+        for delegate in adjudication.delegates
+    )
+    return verdicts

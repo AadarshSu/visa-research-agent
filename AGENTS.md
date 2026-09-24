@@ -39,6 +39,10 @@ the CLI does not offer it.
 - **`visa-discover bootstrap --destination-name "United States"`** prints the proposed domains with
   their corroboration counts and hostname hints, and writes nothing. Four search queries. This is how
   the trusted set is checked before blaming ranking for anything.
+- **If a role went unfilled on a page the run read, read the adjudicator's own reason first.**
+  `var/recall/<corridor>.json` keeps `role_verdicts` — each role, the page named or `null`, and
+  why — and `adjudicated_ids`, which turns the ids in those reasons back into URLs (TODO item 70).
+  A log written before 2026-09-24 has neither.
 - **First, check whether the page was ever a candidate at all.** With `discovery_selector: model`
   the model sees every candidate whose link scores above zero for some role — which over 24 runs was
   **6% of the candidate set** (entry 123) — **plus up to five per role that the link scored zero and
