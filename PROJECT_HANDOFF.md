@@ -366,7 +366,10 @@ not shown.
 **Item 5 closed on 2026-09-16 (entry 179).** It was mostly built already. What was left measured
 two things, and both are now the owner's decision as **item 61**: half the challenges met today need a
 Cloudflare script the render gate refuses, and France's corridor runs out of renders before it runs
-out of pages. **Now holds items 65, 68 and 63, in the owner's rebuild sequence (2026-09-24, top of TODO's Now).**
+out of pages. **Now is led by item 66 (2026-09-25): keep the selector's picks as good as its pools grow.** The
+ten-country pilot rebuild held every answer, but the selector picked fewer of them from bigger
+pools (entry 193), and the full rebuild waits on it. Then items 65, 68 and 63, in the owner's
+rebuild sequence at the top of TODO's Now.
 Settle the model first (65), check the scanned PDFs and pilot the rebuild on the ten oracle
 countries with a baseline captured before it (68, 63), then rebuild the rest. **The real stores do
 not have entries 186 and 189's fixes yet.** Item 60 is blocked: Personas has no tier setting for
