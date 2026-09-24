@@ -319,3 +319,6 @@ read it. Add a row whenever a run contradicts what one of these files said.
 | a fixed text budget is why a big pool loses — give the model more text | doubling it to 800k characters made recall worse, 73.3 against 76.6; a shorter list helped (entry 194) |
 | stripping boilerplate changes what the selector reads for nothing (entry 170) | it changes picks both ways — UK checklist 1/5 → 5/5, Germany's three roles 3/5 → 0/5 — and nets zero (entry 194) |
 | strict role recall grades a packet that reorders the pool | fusion top 160 read 70.0 strict and 78.3 counting the same page at another address (entry 194) |
+| 14 corridors read their authority's pages and credited no decision — evidence read and not credited | re-run three times each, the roles call was right on every packet it refused; what broke was two vetoes, a depth penalty, the selector, the plan's size guard and its status check, and pages that are an image, unreadable, or EU-level (entry 198) |
+| the UAE `IN/GB` read the answer and no decision was credited | the decision was credited; the application graded the plan `verified` beside a page discovery found refused, then refused its own plan (entry 198) |
+| Italy's extracted list lost which list Bangladesh is on | the adjudicator credited it and the plan said "visa required" 3 of 3 (entry 198) |

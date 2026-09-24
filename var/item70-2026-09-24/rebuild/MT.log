@@ -1,0 +1,6 @@
+building Malta from 5 domains (existing corpus: 1722 entries)
+  MT  70 queries, 208 seeds (8 from its own mission index), 157 kept that nothing linked to, 1562 crawled  ->  290 new, 2012 held, 86 unreadable
+      depth 1: 775, depth 2: 579, depth 3: 208
+      opened 208 seeds, 56 scored links, 508 links that scored nothing, 12 family members
+      850 pages kept their text for the index, including 201 PDFs read for text only
+      168 places its own pages send travellers, on companies we may name but never read

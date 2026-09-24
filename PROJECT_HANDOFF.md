@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-24 — update this line when you touch the handoff |
-| **Tests** | 923: 922 passing and 1 skipped, run 2026-09-24 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 930: 927 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -47,10 +47,16 @@ disproved. Link instead of copying.
 
 Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which items serve it.
 
-**Next, the owner's top accuracy priority: TODO item 70.** Corridors that read their authority's
-pages and still credit no visa decision — 14 of the 24 refusals logged since 2026-09-01. In at least
-six, a page naming the traveller's nationality was read; the plan there is to record the
-adjudicator's reasons, re-run the 14, and trace each down the chain before fixing anything.
+**TODO item 70, the owner's top accuracy priority, was worked on 2026-09-24 (entry 198).** The 14
+corridors that read their authority's pages and credited no decision were re-run three times each
+and traced. The roles call was right on every packet it refused. Six corridors now answer in most
+runs with no fix. Three defects were fixed and measured: a plan the application refused as invalid
+(the UAE), a veto that removed the Dutch visa checker, and a veto that dropped every dated upload
+before 2025 (Malta 0 of 6 → 5 of 6; Malta's store rebuilt and kept). **The owner's intent: if an
+answering page exists and we can get to it, the corridor should get it.** So next is item 70's
+list: the depth penalty that kept Belgium's list out of the pool, the selector missing Slovenia's
+page, and the plan's input guard refusing India after the answer was credited. The recall log now
+keeps the adjudicator's reason for every role.
 
 **The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
 195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more

@@ -40,3 +40,7 @@ var/plans/*
 # Machine-local tool settings. The shared launch configuration is tracked.
 .claude/settings.local.json
 
+# Raw outputs of item 70's re-runs: packets of government page text, drafts and recall logs.
+var/item70-2026-09-24/runs/
+var/item70-2026-09-24/fixed/
+var/item70-2026-09-24/rebuilt/

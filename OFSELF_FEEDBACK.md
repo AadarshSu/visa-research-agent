@@ -323,6 +323,12 @@ TODO item 62, and 8.14–8.16 are what the new sections raised.
   behind the gateway, and what the concurrency limit is. *Suggest:* document a per-app or per-user
   concurrency limit and answer past it with `429` and a `Retry-After`, not a gateway timeout; and
   say whether a run the gateway gave up on still completes.
+- **8.23 Twelve calls in a row answered `500` within a second, one at a time** [observed,
+  2026-09-24]. Between 14:02:46 and 14:04:46 UTC every Personas call this app made — selection, roles
+  and plan calls, sent strictly one after another — answered HTTP 500 in 0.4–1.0s; the 70 calls
+  before and after succeeded. Unlike 8.22 there was no burst to blame. *Suggest:* a status page or an
+  error body that says whether a `500` is the platform or the provider, so a client can tell "retry
+  in a minute" from "your request is wrong".
 
 ## 9. Signing a user in
 

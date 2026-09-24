@@ -349,93 +349,57 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 70. Find why a corridor that read its authority's pages still has no visa decision — `next`, **added 2026-09-24, the owner's top accuracy priority; for a separate session**
+### 70. Find why a corridor that read its authority's pages still has no visa decision — `in progress`, **added 2026-09-24, the owner's top accuracy priority; steps 1–4 done, Malta rebuilt and kept (entry 198)**
 
-**The problem, and which one it is.** Of 86 corridor runs logged since 2026-09-01, 24 refused for
-want of a visa decision. **14 of them read the authority's pages** — 5 to 14 each, mostly scored as
-decision pages — and still credited none. That is the blocker the owner wants fixed. The other 10
-could not read the authority at all (pages nearly empty without JavaScript, Cloudflare challenges,
-`robots.txt`), which the owner has set aside, as are questionnaires and blocked decision pages
-(named by design, not blockers). The 14: Croatia, Malta ×2, Italy, Poland, Belgium ×2, Slovenia
-(all `BD/AE` or `BD/SA`), India `BD/SA`, Egypt `BD/SA`, Mexico `IN/GB`, Saudi Arabia `IN/GB`, the UAE
-`IN/GB` and the Netherlands `PH/PH`. **Most of their logs are from 2026-09-05**, before the 2026-09-15
-rebuild of all 53 stores and every change since — some may already answer.
+**The problem.** Of 86 corridor runs logged since 2026-09-01, 24 refused for want of a visa
+decision, and **14 of them had read the authority's pages**: Croatia, Malta ×2, Italy, Poland,
+Belgium ×2, Slovenia (all `BD/AE` or `BD/SA`), India `BD/SA`, Egypt `BD/SA`, Mexico `IN/GB`, Saudi
+Arabia `IN/GB`, the UAE `IN/GB` and the Netherlands `PH/PH`. The other 10 could not read the
+authority at all, which the owner has set aside.
 
-**The strongest lead, found offline on 2026-09-24: the evidence was read and not credited.** In at
-least 6 of the 14, a page the run read names the traveller's nationality (checked against today's
-stored text, so confirm it against a fresh run):
-- **The UAE `IN/GB`** read the oracle's answer page — its first line is *"Visa on arrival for citizens
-  of the Republic of India residing in (America, Britain, European Union countries)"* — on
-  2026-09-24, and no decision was credited.
-- **Italy** read its list of countries whose nationals need a Schengen visa, Bangladesh 911
-  characters into a 3,205-character page, whole in the adjudicator's excerpt. **The extracted text
-  has lost the page's structure**: the heading reads *"subject to Schengen visa requirements or
-  not:"* above one flat list, so which list Bangladesh is on cannot be told from the text.
-- Croatia, Poland, the Netherlands `PH/PH` and India `BD/SA` each read a page naming the nationality.
-- The adjudicator's excerpt is not the cause for short pages: it shows 20,000 characters, the first
-  6,000 plus windows around the traveller's country (`DEFAULT_EXCERPT_*` in `resolver.py`).
+**What the re-runs found (entry 198).** Each corridor was run three times fresh, and each run traced
+to the first link that broke. **The item's lead — the evidence was read and not credited — was true
+of none of them:** the roles call was right on every packet where it refused, so step 4 (replaying
+it against prompt changes) had nothing to test. What broke was around it:
+- **Six now answer "visa required" in most runs with no fix:** Belgium `BD/SA`, Egypt and Italy 3 of
+  3; Belgium `BD/AE` and Slovenia 2 of 3; India 1 of 3, its other two refused by the plan's size guard.
+- **Three defects, fixed and measured 2026-09-24:**
+  - a plan naming a page nobody read is graded `partial`, where the application used to refuse its
+    own plan (the UAE's 503s);
+  - the residence-permit veto yields to the page asking the visa question (the Dutch checker, 3 of 3
+    named);
+  - a year under `uploads/` is a publication date, not an archive (Malta 0 of 6 → 5 of 6).
+- **Poland** credits the visa-free list and rule 8f holds, 3 of 3 — correct under the bound.
+- **Croatia** (EU-level list), **Mexico** (an image) and **Saudi Arabia** (unreadable) refuse 3 of 3,
+  for reasons no fix here reaches.
 
-**What to do, in order.**
-1. **Record the adjudicator's reasons. Done 2026-09-24.** Rule 10 of `adjudicate_roles.txt` makes
-   it give a reason for every choice and say what was missing for a role it leaves null, and
-   nothing kept a null's reason. The recall log now holds `role_verdicts` — every role answered,
-   unvalidated, with its reason — and `adjudicated_ids`, the packet's ids and their pages.
-   **Found by step 3 and fixed, 2026-09-24: a plan naming a page nobody read is `partial`.** The
-   UAE `IN/GB` read every page it cited while discovery had met two refusals on `gdrfad.gov.ae`;
-   the status was graded from the fetch alone, so the plan came out `verified` beside a named
-   unavailable page, `VisaPlan` refused the pair, and the traveller got a 503 — 2 of 2 runs whose
-   plan stated a decision. `resolve_plan_status` now sees those pages (`names_unread_pages`).
-   **Fixed 2026-09-24: the residence-permit veto no longer removes the page that asks the visa
-   question.** The Dutch checker is linked as "Do I need a visa and/or a residence permit for the
-   Netherlands?", and `wrong_audience` dropped it from `netherlands/PH/PH` before anything scored
-   it. `residence permit` now yields to a visa-question term (`visa_question_terms` in the
-   lexicon); the `off_scope` penalty still applies. Across the 53 stores it frees a handful of
-   pages among the 2,326 the term vetoes — the Dutch checker twice, Germany's Visa-Navigator, a
-   Norwegian exemption page. Three fresh runs each: `netherlands/PH/PH` named the checker as the
-   decision tool 3 of 3, against refused, tool, refused.
-   **Fixed 2026-09-24: a year under an `uploads` folder is an upload date, not an archive.**
-   `is_archived` vetoed any bare year up to 2024 in a path, and WordPress files every document as
-   `wp-content/uploads/<year>/<month>/`, so Malta's current lists of who does and does not need a
-   visa (`uploads/2023/10/`) were dropped by every build and every search. Across the 53 stores
-   **not one** dated upload before 2025 was recorded. Such a year is now reported to the
-   adjudicator as `published_in_path`, as entry 15 decided for the other dated forms; `/news/2019/`
-   and an `archive` segment are still vetoed. Three fresh runs each, on a copy of the corpus:
-   `malta/BD/SA` "visa required" 3 of 3 from Malta's own list, `malta/BD/AE` 2 of 3 (the third
-   found only the exemption list, and rule 8f held), against 0 of 6. **It changes what a build
-   records for 14 countries** — AE, CZ, EE, GR, ID, IE, IT, MT, MY, PH, RO, TH, US, ZA, the stores
-   holding dated uploads — which is step 5's batch list.
-2. **Re-run the 14 fresh, three times each**, from the owner's terminal (the renderer cannot start
-   from Claude Code's shell), clearing `var/corridors/` for both arms. About 42 corridors and ~$2 of
-   search. The ones that now answer leave the list; what is left is the real blocker 2.
-3. **Trace each survivor down the chain** and name the first link that broke:
-   - **not in the store** — no page naming the passport in the country's page-text index (search it
-     under every name the registry gives the country; Italy's list uses Italian names);
-   - **in the store, never shown** — not pooled, or withheld by the selector's cut
-     (`withheld_from_selection`, entry 195);
-   - **shown, not picked** — the selection replay in `var/selection-replay-2026-09-24/` answers
-     this on a fixed pool;
-   - **picked, not readable** — fetch failure or a thin page;
-   - **read, not credited** — the adjudicator's recorded reason says why;
-   - **credited, then dropped by the plan** — `decision_is_unverified`, or rule 8e/8f's bounds;
-   - **stated only off the trusted domains** — the EU's list of nationalities needing a Schengen
-     visa, or a linked PDF.
-4. **Test the likeliest fixes on fixed packets before touching a corridor**, the way entry 194 did
-   for selection: capture each survivor's adjudication packet and replay the roles call alone, five
-   times, against each candidate fix. Candidates, each a hypothesis:
-   - the roles prompt does not treat a residence-conditioned answer (the UAE) or membership of a
-     published list (Italy) as stating the decision for this passport;
-   - extraction flattens lists and tables, losing which list a country is on — fix in the fetch
-     path, so **no rebuild**;
-   - Schengen states its list at EU level — a trust-rule question for the owner (item 2), not a
-     prompt fix.
-5. **Only a fix to what a build records needs a rebuild**, and then only the affected countries, in
-   batches. Steps 1–4 read the existing stores; the ten pilot countries are already rebuilt and the
-   other 43 were rebuilt on 2026-09-15.
+**The owner's intent, 2026-09-24: if an answering page exists and we can get to it, the corridor
+should get it** — lost before the pool, in the pool, or after it was credited, it is a defect.
 
-**What not to do.** Do not build an accuracy metric or truth set without asking (entries 68, 147);
-the selection oracle may gain decision rows for these corridors if a trace needs ground truth, one
-row at a time. Grade every change on several runs (entry 144). Refusing stays a correct output:
-a fix that makes these corridors answer must make them answer *from a page that says so*.
+**What is left, in order.**
+1. **Before the pool: the depth penalty on corpus entries (Belgium `BD/AE`).** −10 a level from the
+   build's seed kept Belgium's list PDF out of the pool until a run folded it back at depth 0.
+   Dropping it for corpus entries widens every pool; replay pools with entry 194's method, several
+   runs, before it ships. Also count how many answer pages sit at depth ≥ 2 with a link score ≤ 0.
+2. **In the pool, not picked: the selector (Slovenia 2 of 3).** Capture the pool for the runs that
+   missed and replay the selection call (`var/selection-replay-2026-09-24/`) to see why the New
+   Delhi page loses.
+3. **Credited, then lost: the plan's input guard (India 2 of 3 refused).** Trim the research packet
+   or raise `maximum_model_input_characters`, priced in seconds and dollars on several runs.
+4. **Credited, then held back: the UAE.** The plan should probably say "visa required — on arrival
+   if you hold a UK residence visa, otherwise in advance". Answer-changing, so the owner approves
+   the prompt change first.
+5. **The other 13 stores the uploads fix changes** — AE, CZ, EE, GR, ID, IE, IT, MY, PH, RO, TH, US, ZA
+   — in batches, only if a corridor needs one: Malta answered from search before its rebuild. Use
+   `var/item70-2026-09-24/rebuild.sh`, which backs up and resumes.
+
+Out of reach under the rules: Croatia (EU level, item 2), Saudi Arabia (unreadable), Mexico (an
+image, an item-69 decision).
+
+**What not to do.** Do not build an accuracy metric or truth set without asking (entries 68, 147).
+Grade every change on several runs (entry 144). Refusing stays a correct output: a fix that makes
+these corridors answer must make them answer *from a page that says so* — every answer above cites
+the authority's own page.
 
 ### The sequence to the full rebuild
 
@@ -2039,6 +2003,24 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**A failed model call is told to the traveller as a missing page.** When both role-adjudication
+attempts fail (`adjudication_failed`), the refusal reads *"no page could be confirmed as the visa
+decision, document checklist"* — true, and it hides that a model call failed. Seen on 2026-09-24
+when Personas answered HTTP 500 for two minutes (entry 198). Say that the check could not be run and
+that trying again may answer.
+
+**The plan refuses a corridor whose pages exceed 80,000 characters.** `india/BD/SA` read 14 pages
+and the plan call refused before it was sent, 2 of 3 runs (entry 198); the largest plan input that
+succeeded that day was 71,369. The guard is `maximum_model_input_characters`. Raising it or trimming
+the packet is a cost decision — price it in seconds and dollars on several runs (entries 144, 145).
+
+**A visa on arrival the plan cannot confirm leaves the decision null.** `united-arab-emirates/IN/GB`:
+GDRFA's visa on arrival for Indians holding a UK residence visa was credited, and the plan left the
+decision open because the profile does not say the traveller holds one — 4 of 4 runs where it was
+credited (entry 198). Either way a visa is needed, on arrival or in advance. Whether the plan should
+say "visa required" and name both routes is an answer-changing prompt decision for the owner, like
+entry 172.
 
 **A plan step sometimes links the application URL as a `source` it does not cite, and the plan
 refuses.** Germany `IN/GB`: 4 of 16 plan calls on one packet on 2026-09-24, none in the 12 after, 4
