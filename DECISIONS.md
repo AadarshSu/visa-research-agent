@@ -224,7 +224,7 @@ not — and stored text ranks, it never speaks).
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [191](#191-a-plan-is-spent-only-for-a-browser-signed-in-with-ofself-and-the-requirement-fails-closed) | **A plan needs an Ofself sign-in** — `POST /visa-plans` answers `401` without a session; `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured refuses every plan rather than serving anonymously |
-| [191](#191-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
+| [192](#192-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
 | [190](#190-the-prompt-audit-of-2026-09-24-four-dead-lines-out-of-the-model-prompts-and-claudemd-halved) | **The prompt audit** — dead `temperature=0` and three dead prompt lines removed; CLAUDE.md 105K → 48K characters, its status narrative replaced by standing decisions and its corrections table moved to CORRECTIONS.md; the owner waived entry 174's re-runs for it |
 | [189](#189-a-corpus-build-reads-a-link-with-its-surroundings-and-a-pdf-inherits-its-pages-title) | **A build reads a link with its surroundings** — text around it, its landmark, and for a PDF its page's title; offline only; Japan's oracle pages read 11 → 15 of 20, nothing regressed; reached `main` inside `1ca066e` |
 | [188](#188-model-calls-go-through-ofself-personas-as-one-plain-call-each-checked-for-the-model-that-answered) | **Model calls go through Personas** — `capabilities: []`, one plain call each, same prompts, schemas and effort; every reply's model checked. Graded: selection 41/48 against 39/48, decisions as baseline except one Japan "visa required" in six |
@@ -244,45 +244,7 @@ not — and stored text ranks, it never speaks).
 
 ---
 
-## 191. A plan is spent only for a browser signed in with Ofself, and the requirement fails closed
-
-**2026-09-24. The owner: "require the ofself sign-in", after a hosting survey found that the host
-costs less than an open `POST /visa-plans` could.**
-
-**What it does.**
-- **`POST /visa-plans` now answers `401` to a browser with no valid Ofself session.** The check is a
-  route dependency (`require_signed_in_for_plans` in `api/signin.py`), so it runs before any
-  search, fetch or model call. The session is the signed cookie sign-in already set (TODO item 55,
-  step 4); a forged or expired one is not signed in.
-- **`REQUIRE_SIGN_IN` controls it and defaults to on.** Set it false only where nobody else can reach
-  the app.
-- **Required but not configured refuses every plan with `503`.** That is when any of
-  `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` or `SESSION_SECRET` is missing, and the message names
-  them. It never falls back to serving plans anonymously.
-- **The page says so up front.** Not signed in, it shows "Sign in with Ofself to generate a plan"
-  and disables the button. A session that expires while the page is open gets the same link in
-  place of a refusal panel, because nothing was researched, so there is no evidence to report as
-  missing.
-
-**Why on by default.** The failure being prevented is a deployment that forgot a setting. With the
-default off, forgetting it opens the wallet silently; with it on, forgetting it locks plans with a
-message naming the fix. That is entry 5's asymmetry applied to money rather than to evidence.
-
-**What it does not do.**
-- **It is not a rate limit.** A signed-in user can still ask for as many plans as they like.
-- **Who may sign in is decided on Ofself, not here.** In incubator mode only the users the app is
-  shown to can authorise it (TODO item 7), so for now that list is the allowlist.
-- **Nothing about the user reaches the plan.** The user id gates the request and goes no further;
-  the traveller is still the form's (entry 180).
-- **The CLI is untouched.** Running a command already needs the keys.
-
-**To deploy with it**, besides the three sign-in secrets:
-- set `PARADIGM_REDIRECT_URI` to the host's `/oauth/callback` and register that URI on the app;
-- set `SESSION_COOKIE_SECURE=true` once the host serves HTTPS.
-
----
-
-## 191. Zero-scoring opens: they reach 7 of 94 answering pages, all through one hop from a search seed
+## 192. Zero-scoring opens: they reach 7 of 94 answering pages, all through one hop from a search seed
 
 **2026-09-25 · TODO item 68, asked by the owner ("why do we ever open zero-scoring links?").
 Offline, over the stores as they stand after the ten-country pilot rebuild. Nothing changed.**
@@ -330,6 +292,44 @@ its recorded discovery path pass a zero-scoring page.
   (entry 123).
 - It is 94 pages in 11 countries.
 - A route is one recorded path.
+
+---
+
+## 191. A plan is spent only for a browser signed in with Ofself, and the requirement fails closed
+
+**2026-09-24. The owner: "require the ofself sign-in", after a hosting survey found that the host
+costs less than an open `POST /visa-plans` could.**
+
+**What it does.**
+- **`POST /visa-plans` now answers `401` to a browser with no valid Ofself session.** The check is a
+  route dependency (`require_signed_in_for_plans` in `api/signin.py`), so it runs before any
+  search, fetch or model call. The session is the signed cookie sign-in already set (TODO item 55,
+  step 4); a forged or expired one is not signed in.
+- **`REQUIRE_SIGN_IN` controls it and defaults to on.** Set it false only where nobody else can reach
+  the app.
+- **Required but not configured refuses every plan with `503`.** That is when any of
+  `PARADIGM_CLIENT_ID`, `PARADIGM_API_KEY` or `SESSION_SECRET` is missing, and the message names
+  them. It never falls back to serving plans anonymously.
+- **The page says so up front.** Not signed in, it shows "Sign in with Ofself to generate a plan"
+  and disables the button. A session that expires while the page is open gets the same link in
+  place of a refusal panel, because nothing was researched, so there is no evidence to report as
+  missing.
+
+**Why on by default.** The failure being prevented is a deployment that forgot a setting. With the
+default off, forgetting it opens the wallet silently; with it on, forgetting it locks plans with a
+message naming the fix. That is entry 5's asymmetry applied to money rather than to evidence.
+
+**What it does not do.**
+- **It is not a rate limit.** A signed-in user can still ask for as many plans as they like.
+- **Who may sign in is decided on Ofself, not here.** In incubator mode only the users the app is
+  shown to can authorise it (TODO item 7), so for now that list is the allowlist.
+- **Nothing about the user reaches the plan.** The user id gates the request and goes no further;
+  the traveller is still the form's (entry 180).
+- **The CLI is untouched.** Running a command already needs the keys.
+
+**To deploy with it**, besides the three sign-in secrets:
+- set `PARADIGM_REDIRECT_URI` to the host's `/oauth/callback` and register that URI on the app;
+- set `SESSION_COOKIE_SECURE=true` once the host serves HTTPS.
 
 ---
 

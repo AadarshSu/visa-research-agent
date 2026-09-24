@@ -531,7 +531,7 @@ Every build now reports where its allowance went.
 3. **Two pieces of noise the fix exposed, for problem 2:** `email-signup` pages count as guidance on
    `gov.uk`, and hosts like `careers.homeoffice.gov.uk` spend a full share under either rule.
 
-**Zero-scoring opens were measured (entry 191).** They reach 7 of 94 answering pages: 5 routes
+**Zero-scoring opens were measured (entry 192).** They reach 7 of 94 answering pages: 5 routes
 through hub pages one hop from a search seed, and 2 PDFs. None of the 3,242 zero-scoring opens at
 depth 2 or 3 is on any answer's route. **Proposed, the owner's call:** open zero-scoring links only
 at depth 1 — every route kept, 47% of zero-scoring opens skipped, faster builds.
