@@ -47,6 +47,21 @@ disproved. Link instead of copying.
 
 Each has a row at the top of [TODO.md](TODO.md) saying where it stands and which items serve it.
 
+**A corridor that works every time, confirmed 2026-09-25: `germany/IN/GB/tourism`.** The owner asked for
+one corridor that gives the same verified answer on every fresh run, and chose this one. Five fresh
+runs through the real API route (Personas, current store, empty corridor and plan-draft folders each
+run) all answered **visa required, `verified`**, with the same checklist source (the UK missions'
+C-visa documents page), the same 11 documents, and the same place to apply, in 49–66s. The only
+variation: a 12th item, "translations, where needed", in 4 of 5 runs; the decision cited the Foreign
+Office's list in four runs and the UK missions' "Do I need a visa" page in one — both say the same.
+The open questions (3–5) are things only the traveller knows: their UK city, residence permission
+and employment. **Germany was not rebuilt; it did not need to be.** The runner is not committed; it
+posts to `/visa-plans` in-process with `CORRIDOR_DIRECTORY`, `PLAN_DIRECTORY` and
+`RECALL_LOG_DIRECTORY` pointed at empty folders.
+
+**`var/_backup_before_rebuild_2026-09-25/` is a partial copy, not a backup.** It was interrupted: its
+page-text half is 529 MB against 704 MB live. The full rebuild it was for is paused by the owner.
+
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
 - **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
   (`var/usage/`, 2026-09-17) both failed. Every web request, corridor run and live timing waits on a

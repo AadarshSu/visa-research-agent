@@ -357,15 +357,13 @@ once, and in this order:
 2. **Item 68 — check the scanned PDFs. Done 2026-09-25: it does not block the rebuild.** None of
    the oracle's answer pages is among the 1,001 PDFs with an empty text layer or the 215 that could
    not be parsed. 196 of them score for a role, which is item 69, for later.
-3. **Item 63 — capture the baseline, then pilot.** Back up `var/corpus` and `var/pagetext` for the
-   ten oracle countries, as entry 161 did. Run a destination-spread set of corridors on the current
-   store, at least two runs each. Then rebuild those ten with item 68's fixes.
-4. **Grade the pilot.** Re-run the same corridors, clearing `var/corridors` and `var/plans` in both
-   arms or neither (entries 136 and 178). `selection-recall` grades the store offline. **The owner
-   reviews only the plans that changed**, plus a few unchanged ones as a spot check.
-5. **Rebuild the rest** — the other 43 corpora plus Brazil and Uruguay, which have never been built.
-   About $13 of search and ten-plus hours.
-6. **Then items 66 and 67 on the new store, then item 64.**
+3. **Paused by the owner, 2026-09-25.** The owner dropped the before-and-after comparison (a rebuilt
+   store should give good answers on its own merits), then paused the full rebuild in favour of one
+   corridor that works every time. `germany/IN/GB/tourism` was confirmed without a rebuild: five
+   fresh runs, the same verified answer (PROJECT_HANDOFF). When the rebuild resumes it covers all
+   55 — the 53 corpora plus Brazil and Uruguay — with a full backup first; the partial copy in
+   `var/_backup_before_rebuild_2026-09-25/` is not one.
+4. **Then items 66 and 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
 55 (Ofself).
