@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [194](#194-item-66-on-replayed-pools-the-rebuilds-loss-is-small-and-in-secondary-roles-and-showing-the-model-fewer-candidates-recovers-it-at-half-the-input) | **Item 66 on replayed pools** — the pilot's 75 → 68 was half noise, a month-old baseline and one address; the real loss is −2.8 of 90, all secondary, while decision + checklist rose 23.2 → 25.0; fusion top 120 reads 82.4 at 45% less input, top 120 + 40 blind 80.0 and keeps the traveller's own posts; `selection-recall` gains a same-page column; not shipped — it reverses the no-drop rule |
 | [193](#193-the-ten-country-pilot-rebuild-the-stores-hold-every-answer-and-the-selector-picks-fewer-of-them-from-bigger-pools) | **The ten-country pilot rebuild** — all ten built; oracle roles found 75 → 68 of 92, every lost page in the pool and not picked, as pools grew (Singapore 150 → 482); unresolved decisions and checklists 13 → 14; item 66 is more pressing |
 | [192](#192-zero-scoring-opens-they-reach-7-of-94-answering-pages-all-through-one-hop-from-a-search-seed) | **Zero-scoring opens reach 7 of 94 answering pages** — 5 routes through depth-1 hub pages, 2 PDFs; none of the 3,242 zero-scoring opens at depth 2–3 is on any answer's route; opening them only at depth 1 would keep every route and skip 47% |
 | [191](#191-a-plan-is-spent-only-for-a-browser-signed-in-with-ofself-and-the-requirement-fails-closed) | **A plan needs an Ofself sign-in** — `POST /visa-plans` answers `401` without a session; `REQUIRE_SIGN_IN` defaults on, and required-but-unconfigured refuses every plan rather than serving anonymously |
@@ -242,6 +243,124 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 194. Item 66 on replayed pools: the rebuild's loss is small and in secondary roles, and showing the model fewer candidates recovers it at half the input
+
+**2026-09-24 · TODO item 66. Measured, nothing in the request path changed.** Entry 193 read 75 → 68
+of 92 from one run per corridor and asked how much was pool size and how much noise. (Entries
+191–193, item 66 and the pilot's folder are dated 2026-09-25; their commits and recall logs are
+2026-09-24.)
+
+### How it was measured
+
+- **Only the selection call was replayed.** Each of the 20 pilot corridors was run up to
+  `_choose_what_to_read` and its candidates saved, once over the rebuilt stores and once over the
+  backup, with search memoized so both saw identical results — 195 searches, no model call.
+- **The packet is the real one.** Pool, source ids and packet are rebuilt as the resolver builds
+  them, and `packet_characters` matched the pilot's logs byte for byte (Japan `IN/GB` 237,889; UK
+  `IN/GB` 460,910).
+- **Then the selector was called several times per corridor through Personas, one call at a time**
+  — 960 calls, 70.6M input tokens, on Ofself's account, plus 45 that answered `504` (OFSELF_FEEDBACK
+  8.22). Scripts and every result are in
+  `var/selection-replay-2026-09-24/`.
+- **Graded on the picks**, before any fetch. The pilot graded what was *fetched*, which also
+  subtracts fetch failures.
+
+### The pilot's 75 → 68 was about half noise, and half of what is left was the grader
+
+- **Four of its seven lost roles are not the rebuild.** The UK checklist is found 1 run in 5 on
+  either store; Canada `PH/PH`'s decision 5 in 5 on both; the US `PH/PH` fees 0 in 5 on both; Japan
+  `PH/PH` fees 1 in 5 on both. The `PH/PH` "before" logs were from 2026-08-29 — the direct OpenAI
+  route, the packet before entry 170 and an older prompt — so that half of the comparison was
+  never like for like.
+- **France's loss is the right page at another address.** The rebuilt store records its portal's
+  language switch, `…/c/portal/update_language?…&redirect=/en/votre-arrivee-en-france`, and the
+  model picked that address every time. France's corpus holds 1,256 such links (672 before), the
+  UAE's 123.
+- **The oracle names one address per page**, so a mirror scored a miss: `www.` against a bare host,
+  a renamed GOV.UK guidance page, a retired IRCC address. That was about five roles of 90 on
+  **both** stores. `selection-recall` now prints a second column, **same page**, crediting
+  byte-identical stored text or a same-host link whose `redirect` names the page; the strict
+  column is unchanged. On the pilot's own logs the model reads 68/92 strict and **74/92** same page.
+- **Selection is noisy**: one run of the shipped selector on the rebuilt stores lands anywhere
+  from 75 to 80 of 90. One run per corridor cannot grade a selection change, as entries 81 and 144
+  said of other measures.
+
+### What is real: −2.8 roles, all of them secondary
+
+Five runs per corridor, same page counted, of 90 roles:
+
+| | all roles | decision + checklist (of 27) | the other four (of 63) | input |
+| --- | --- | --- | --- | --- |
+| before the rebuild | 79.4 (78–82) | 23.2 | 56.2 | 78k |
+| rebuilt | 76.6 (75–80) | **25.0** | **51.6** | 91k |
+
+- **The rebuild improved the two load-bearing roles** by nearly two per run, and lost about 4.6 in
+  fees, entry conditions, processing and route.
+- **The losses that repeat:** UK `IN/GB` entry conditions (5/5 → 0/5), Japan `IN/GB` fees and entry
+  (3–4/5 → 0–1/5, though its pool did not grow and both pages are byte-identical in both stores),
+  Singapore `PH/PH` entry (5/5 → 2/5). Gains: Canada `PH/PH`'s checklist (0/5 → 5/5), Canada
+  `IN/GB`'s decision (3/5 → 5/5).
+
+### Seven packets, graded the same way
+
+| shown to the model (rebuilt stores) | runs | all roles | decision + checklist | input | picks |
+| --- | --- | --- | --- | --- | --- |
+| every pooled candidate (today) | 5 | 76.6 (75–80) | 25.0 | 91k | 12.2 |
+| today's pool, 800k characters of text | 3 | **73.3** | 24.0 | 124k | 11.2 |
+| today's pool, up to 30 picks | 3 | 76.7 | 25.3 | 91k | 12.5 |
+| today's pool, site chrome stripped | 5 | 76.6 | 25.2 | 90k | 12.0 |
+| today's pool in fusion order, top 100 get 2,000 chars | 3 | 77.0 | 25.7 | 97k | 11.8 |
+| fusion top 240 | 3 | 75.7 | 25.0 | 76k | 10.7 |
+| fusion top 160 | 5 | 77.6 | 25.2 | 63k | 10.3 |
+| **fusion top 120** | 5 | **82.4 (81–83)** | **26.8** | **50k** | 9.7 |
+| fusion top 80 | 3 | 79.7 | **27.0** | 34k | 9.2 |
+| **fusion top 120 + 40 blind** | 5 | **80.0 (76–82)** | 25.8 | 53k | 10.9 |
+| *pre-rebuild stores, fusion top 120* | 3 | *81.0* | *25.7* | 47k | 10.4 |
+
+"Fusion" is entry 183's ranking — reciprocal-rank fusion of link rank and stored-text rank per role,
+roles taken in turn. "Blind" is the 40 candidates with no stored text whose links score best, added.
+
+- **A shorter list helps; longer excerpts do not.** Doubling the text budget made every excerpt
+  longer and recall worse. Cutting to 120, each with a full 2,000 characters, beat everything,
+  with a clear peak between 80 and 160.
+- **It is not an artefact of the rebuild:** the same cut lifts the old stores 79.4 → 81.0. With it,
+  the rebuild is a gain (+1.4) rather than a loss.
+- **Top 120 loses no load-bearing role anywhere** and gains two: the UK checklist (1/5 → 5/5) and
+  the US `PH/PH` decision (0/5 → 5/5).
+- **Stripping site chrome is a wash.** It was 20.6% of all excerpt characters and 68% of the UK's —
+  GOV.UK's cookie banner — so the UK checklist went 1/5 → 5/5, but Germany `IN/GB` lost the one page
+  answering three roles (3/5 → 0/5). Entry 170 declined it as a cost measure; as a recall measure
+  it reshuffles and does not add.
+
+### Why the recommendation is top 120 + 40 blind, not top 120
+
+- **A top-120 cut withholds most pages with no stored text**: 4,021 of 10,531 pooled candidates had
+  none, and 172 of those survive it. Of the shipped selector's own picks, 43% fell outside it — 229
+  with no text, 27 of them pages the oracle lists as plausible answers nobody could read.
+- **The oracle cannot credit a page with no stored text**, so it can charge the blind 40 only their
+  cost. What it cannot see is what the model does with them: **it picked them in every run, 16% of
+  all picks**, and they are the traveller's own posts — France's page for applicants in the UK, the
+  German, Singapore and UAE missions in Manila, the Dutch checklist and appointment page for the
+  Philippines, the US embassy in London. Those are rule 5's pages, and they so often hold no text
+  because a build rarely reaches a post (entry 133).
+- **So the blind route is entry 158's rule kept, not a concession**: a page nobody read still
+  reaches the model on its link.
+
+### Not settled, and not shipped
+
+- **It reverses `selection.py`'s rule that no candidate is dropped for want of room.** That rule was
+  written so the heuristic would stop being the recall gate; a fusion cut makes a heuristic the
+  gate again, one layer up, for about 400 candidates a corridor. The owner decides.
+- **K was chosen on the corridors it was measured on**, and the oracle leans towards pages that
+  already score (entry 123), which favours a score-based cut.
+- **The measure that matters has not been taken:** full corridors, with fetch and adjudication
+  reading what was picked, graded on `unresolved_roles` and by the owner — the live A/B entry 183
+  asked for.
+- **Priced in tokens only.** Selection input falls about 42% (91k → 53k) and the call ran about a
+  second faster in replay; fewer picks also means fewer fetches. None of it is a bill.
 
 ---
 

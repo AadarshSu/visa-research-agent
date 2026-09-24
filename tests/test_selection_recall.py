@@ -27,6 +27,7 @@ from visa_research_agent.discovery.selection_recall import (
     pool_audit,
     read_recall_logs,
     role_reach,
+    same_pages,
     unattributed_logs,
 )
 
@@ -198,6 +199,53 @@ def test_one_page_answering_several_roles_is_credited_with_all_of_them() -> None
     scored = grade(oracle, {uae.corridor: [Arm("one page", (everything,))]})
 
     assert scored.arms[0].roles_hit == 6
+
+
+def test_the_same_page_at_another_address_is_credited_in_its_own_column(tmp_path: Path) -> None:
+    """The oracle names one address per page; a pick of the same page elsewhere is not a miss.
+
+    Measured in entry 194: about five roles of 90 in both stores were the right page picked under
+    a second address — `www.` against a bare host, a retired address serving the same text. The
+    strict column is left exactly as it was, so every number printed before this stays comparable.
+    """
+
+    oracle = load_oracle(write_oracle(tmp_path / "oracle.yaml", ONE_CORRIDOR))
+    key = "japan/IN/GB/tourism"
+    mirror = "https://www.a.go.jp/decision"
+    aliases = same_pages(
+        [mirror, "https://a.go.jp/decision"],
+        {mirror: "Visa decision text", "https://a.go.jp/decision": "Visa decision text"},
+    )
+
+    scored = grade(oracle, {key: [Arm("mirror", (mirror,))]}, same_page={key: aliases})
+
+    assert scored.arms[0].roles_hit == 0, "the strict column is unchanged"
+    assert scored.arms[0].roles_hit_same_page == 2, "one page answering two roles, at its mirror"
+
+
+def test_a_language_switch_naming_the_page_is_that_page_and_empty_text_proves_nothing() -> None:
+    """France's portal records its entry page behind a language switch, with different chrome.
+
+    The model picked `…/update_language?…&redirect=/en/votre-arrivee-en-france` every time on the
+    rebuilt store, and its stored text differs from the page's, so identical text alone misses it.
+    Two pages with no stored text are not thereby the same page.
+    """
+
+    switch = (
+        "https://france-visas.gouv.fr/c/portal/update_language?languageId=en_US&p_l_id=1220"
+        "&redirect=%2Fen%2Fvotre-arrivee-en-france"
+    )
+    page = "https://france-visas.gouv.fr/en/votre-arrivee-en-france"
+    blank_a, blank_b = "https://x.gouv.fr/a", "https://x.gouv.fr/b"
+
+    groups = same_pages(
+        [switch, page, blank_a, blank_b],
+        {switch: "chrome A, content", page: "chrome B, content", blank_a: "", blank_b: ""},
+    )
+
+    assert groups[switch] == {switch, page}
+    assert groups[page] == {switch, page}
+    assert groups[blank_a] == {blank_a}
 
 
 def test_naming_a_tool_is_counted_apart_from_answering_the_role(tmp_path: Path) -> None:

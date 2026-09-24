@@ -14,7 +14,7 @@ Exit codes are meaningful, so this can be used in a script:
 import argparse
 import asyncio
 import sys
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TextIO
@@ -121,6 +121,7 @@ from visa_research_agent.discovery.selection import (
 )
 from visa_research_agent.discovery.selection_recall import (
     DEFAULT_ORACLE_PATH,
+    Arm,
     Grading,
     PoolAudit,
     SelectionOracle,
@@ -129,6 +130,7 @@ from visa_research_agent.discovery.selection_recall import (
     load_oracle,
     pool_audit,
     read_recall_logs,
+    same_pages,
     unattributed_logs,
 )
 from visa_research_agent.domain.models import DestinationConfig, RuntimePolicy
@@ -727,19 +729,23 @@ def print_selection_recall(grading: Grading, stream: TextIO) -> None:
         )
         return
     print(
-        f"\n  {'arm':<26} {'roles':>9} {'':>5}   {'joint':>7} {'':>5}   {'read':>5}  {'tools':>6}",
+        f"\n  {'arm':<26} {'roles':>9} {'':>5}   {'same page':>9} {'':>5}   {'joint':>7} {'':>5}"
+        f"   {'read':>5}  {'tools':>6}",
         file=stream,
     )
     for arm in grading.arms:
         print(
             f"  {arm.name:<26} {f'{arm.roles_hit}/{arm.roles_total}':>9} "
-            f"{arm.role_recall:>5.0%}   {f'{arm.joint_hit}/{arm.joint_total}':>7} "
+            f"{arm.role_recall:>5.0%}   {f'{arm.roles_hit_same_page}/{arm.roles_total}':>9} "
+            f"{arm.same_page_recall:>5.0%}   {f'{arm.joint_hit}/{arm.joint_total}':>7} "
             f"{arm.joint_recall:>5.0%}   {arm.pages_read:>5}  "
             f"{f'{arm.tools_hit}/{arm.tools_total}':>6}",
             file=stream,
         )
     print(
         "\n  roles: pages that answer a role, in an oracle neither selector helped build.\n"
+        "  same page: the same, also crediting an answering page picked at another address —\n"
+        "  identical stored text, or a link whose `redirect` names it (entry 194).\n"
         "  joint: the pages entries 85 and 86 graded against, which both arms did help build.\n"
         "  tools: an official questionnaire holding a role's answer. Naming one never fills it.\n"
         "\n  This grades a selector against a selector: it counts agreement with the pages a\n"
@@ -856,7 +862,11 @@ def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
     arms = arms_from_logs(oracle, logs, full_size=args.shipped_size)
     contentions = contentions_for(oracle, stream)
     grading = grade(
-        oracle, arms, unattributed=unattributed_logs(oracle, logs), contentions=contentions
+        oracle,
+        arms,
+        unattributed=unattributed_logs(oracle, logs),
+        contentions=contentions,
+        same_page=same_page_for(oracle, arms),
     )
     print_selection_recall(grading, stream)
     audits = [
@@ -867,6 +877,30 @@ def run_selection_recall(args: argparse.Namespace, stream: TextIO) -> int:
     if audits:
         print_pool_audit(audits, stream)
     return 0 if grading.graded else 1
+
+
+def same_page_for(
+    oracle: SelectionOracle, arms: Mapping[str, Sequence[Arm]]
+) -> dict[str, dict[str, frozenset[str]]]:
+    """Per graded corridor, which of its picks and answers are one page at several addresses.
+
+    Read from the page-text index, offline like the rest of the command. A corridor whose country
+    has no stored text still gets the redirect test, which needs none.
+    """
+
+    countries = get_country_registry()
+    page_text = PageTextStore(settings.page_text_directory)
+    found: dict[str, dict[str, frozenset[str]]] = {}
+    for row in oracle.corridors:
+        corridor_arms = arms.get(row.corridor)
+        if not corridor_arms:
+            continue
+        urls = {url for arm in corridor_arms for url in arm.picks}
+        urls |= {url for role in row.answers for url in row.answering_urls(role)}
+        country = countries.by_slug(row.slug)
+        texts = page_text.text_for_selection(country.code, urls) if country is not None else {}
+        found[row.corridor] = same_pages(urls, texts)
+    return found
 
 
 def contentions_for(oracle: SelectionOracle, stream: TextIO) -> dict[str, Contention]:

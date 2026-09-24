@@ -110,6 +110,12 @@ the CLI does not offer it.
   keep it that way, because entry 81 is what grading this on roles filled would cost.
 - **`visa-discover selection-recall`** grades what a selector chose to read against
   `oracle/selection_oracle.yaml`, and prints entries 85–86's jointly-built oracle beside it.
+  **Read the `same page` column when comparing stores or packets**: the oracle names one address
+  per page, and a pick of the same page elsewhere — a mirror, a language switch — scores a miss in
+  the strict column. That was about five roles of 90 on either store, and a packet that reorders the
+  pool moved it by eight (entry 194). One run per corridor spans about five roles on its own, so
+  grade a selection change on several — `var/selection-replay-2026-09-24/` replays the selection
+  call alone over a fixed pool.
   **It cannot grade a change that widens the pool**, and that limit is structural rather than a
   bug: the fixture was curated "from every candidate that scored above zero" (`contention.py`), so
   no page outside the pool can appear in it — 88 of 88 oracle-named answering pages are in the pool,

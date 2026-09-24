@@ -7,8 +7,8 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-23 — update this line when you touch the handoff |
-| **Tests** | 806: 805 passing and 1 skipped, run 2026-09-16 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Last updated** | 2026-09-24 — update this line when you touch the handoff |
+| **Tests** | 918: 917 passing and 1 skipped, run 2026-09-24 in a checkout with the corpora built — the skip is the opt-in browser test, and without corpora two more skip; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -63,7 +63,10 @@ posts to `/visa-plans` in-process with `CORRIDOR_DIRECTORY`, `PLAN_DIRECTORY` an
 - **OpenAI is out of credit.** It ran out on 2026-09-16, and the only two calls logged since
   (`var/usage/`, 2026-09-17) both failed. Every web request, corridor run and live timing waits on a
   top-up.
-- **Three decisions are waiting on the owner:**
+- **Four decisions are waiting on the owner:**
+  - item 66, whether selection may be shown a ranked top 120 (+ 40 pages with no stored text)
+    instead of every pooled candidate — more roles found at 42% less input on replayed packets, but
+    it reverses the rule that no candidate is dropped (entry 194);
   - item 60, where Fast mode goes;
   - item 61, what a corridor may spend answering a challenge;
   - item 7's question of whether to store a refusal before deploying (entry 151).

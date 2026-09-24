@@ -349,81 +349,49 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 66. Keep the selector's picks as good as its pools grow — `next`, **added 2026-09-23 (entry 183); rewritten 2026-09-25 after the pilot rebuild (entry 193) as a problem for a fresh session to solve its own way**
+### 66. Keep the selector's picks as good as its pools grow — `next`, **added 2026-09-23 (entry 183); measured 2026-09-24 (entry 194) — waiting on the owner's decision about a pre-filter**
 
-**The problem.** The ten-country pilot rebuild (entries 186, 189 and 193) made the stores richer,
-and the model selector now does worse at picking the pages that answer. Graded against
-`oracle/selection_oracle.yaml`, one run per corridor, through Personas:
-- **Answer roles found: 75 of 92 before the rebuild, 68 after.** Seven corridors lost one role each
-  and none gained: Canada `PH/PH`, France `IN/GB`, Japan `IN/GB` and `PH/PH`, Singapore `PH/PH`,
-  the UK `IN/GB` and the US `PH/PH`.
-- **Every lost page is still in the store and was in the pool the model was shown — it was not
-  picked.** Mostly fees and entry-conditions pages; one checklist (the UK's "guide to supporting
-  documents").
-- **The pools grew:** Singapore `PH/PH` 150 → 482 candidates, the US `PH/PH` 293 → 553, the UK
-  `IN/GB` 431 → 567, Canada `PH/PH` 499 → 666.
-- **What the model is given did not grow with them.** The packet has a fixed text budget
-  (`DEFAULT_SELECTION_CHARACTERS`, 400,000), so each candidate's excerpt shrinks as the pool grows,
-  down to `MINIMUM_EXCERPT_CHARACTERS`. The model may pick up to `DEFAULT_SELECTION_SIZE` (20) and
-  in practice picks about 10–16.
-- **Part of the drop may be noise.** Japan `IN/GB`'s pool barely moved (174 → 176) and it lost a role
-  too. Selection varies between identical runs (entries 81, 144), and each corridor ran once.
-- **What corridors answer is almost unchanged:** unresolved visa decisions and checklists went
-  13 → 14 across the 20. The loss is in secondary roles, which `unresolved_roles` does not track.
+**What is now known (entry 194).** Only the selection call was replayed, on fixed pools, five runs
+per corridor, with a pick of the same page at another address counted:
+- **The pilot's 75 → 68 was about half noise.** Four of its seven lost roles move the same way on
+  both stores, and the `PH/PH` "before" logs were a month old, on the direct OpenAI route.
+- **The real loss is −2.8 roles of 90 (79.4 → 76.6), all in fees, entry, processing and route.**
+  The decision and the checklist *rose*, 23.2 → 25.0 of 27. The rebuild is not hurting the roles
+  that matter.
+- **Showing the model fewer candidates recovers it.** Entry 183's fusion ranking, cut to the top
+  120, reads **82.4** (26.8 of 27 load-bearing) at **45% less selection input**. With the 40 best
+  no-text candidates added back, it reads **80.0** at 42% less. Both beat the old stores.
+- **A bigger text budget, more picks and stripping site chrome do not help.** The 800k budget made
+  recall worse.
+- **`selection-recall` now prints a `same page` column.** Use it: the strict column under-counts
+  every store by about five roles.
 
-**Why it matters now.** The full rebuild of all 55 countries is waiting on this. Every rebuilt
-country will feed the selector bigger pools, so whatever the selector does with a big pool decides
-whether the rebuild helps travellers.
+**The decision, the owner's.** A fusion cut reverses `selection.py`'s rule that no candidate is
+dropped for want of room — a heuristic becomes the recall gate again, one layer up, for about 400
+candidates a corridor. The recommended shape is **top 120 + 40 blind**, not plain top 120: the model
+picked the blind pages in every run, and they are the traveller's own posts (France's page for
+applicants in the UK, the Manila missions, the US embassy in London), which the oracle cannot credit
+because they hold no stored text. That keeps entry 158's route for pages nobody read.
 
-**Establish first, before designing anything:** how much of the 75 → 68 is pool size and how much is
-run-to-run variance. Re-run the seven corridors (and a few that did not lose) two or three times on
-the rebuilt stores. If the drop is mostly noise, this item shrinks to "selection is noisy", which is
-a different problem.
+**If the owner agrees, the next step is the live A/B entry 183 asked for** — not another replay:
+1. Put the cut behind a runtime setting, off by default, with the corridor's notes saying how many
+   candidates were withheld and why (the "nothing is dropped silently" rule).
+2. Run the 20 oracle corridors three times each way, full corridors, fresh caches for both arms.
+3. Grade `unresolved_roles` and `selection-recall`'s `same page` column; the owner reviews the
+   answers (entry 68). Price seconds and dollars from `var/usage/`.
 
-**Where things are.**
-- **Rebuilt stores:** the ten oracle countries (JP, GB, CA, DE, NL, FR, SE, SG, AE, US) in
-  `var/corpus/` and `var/pagetext/`. The **pre-rebuild stores** for the same ten are in
-  `var/_backup_before_pilot_2026-09-25/`, byte for byte.
-- **Recall logs:** the pilot grading runs are the top-level files of `var/recall/`. The pre-pilot
-  logs are in `var/recall/_before_pilot_grading_2026-09-25/`. `selection-recall` reads only the
-  top level, and `selection_recall.read_recall_logs` can be pointed at either folder.
-- **Runner scripts:** `var/rebuild-pilot-2026-09-25/grade.sh` runs the 20 oracle corridors,
-  resumably. **Start any corridor or build that may render from the owner's own terminal:** headless
-  Chromium cannot start from Claude Code's sandboxed shell, and France and Sweden need it.
-- **Model route:** Personas, on Ofself's account (entry 188). Corridor runs cost about $0.05 of
-  search each; OpenAI credit is not needed. Personas offers no prompt caching and reports input and
-  output tokens only.
+**If the owner does not agree, item 66 closes** at "the rebuild costs 2.8 secondary roles and no
+load-bearing one", and the full rebuild does not wait on it.
 
-**Constraints any solution must keep:**
-- **Nothing is dropped silently** (`selection.py`'s docstring). If candidates are withheld from the
-  model, the corridor's notes say how many and why.
-- **`Selection` carries source ids and no prose** (entry 83). Stored text ranks and never speaks
-  (entry 78).
-- **A page with no stored text still has to be able to reach the model.** Entry 158 rejected a cap
-  that let text-bearing pages push link-scored pages out: it displaced 1,813 pooled pages with no
-  text, and five oracle answers.
-- **Grade on several runs, never one, and price both seconds and dollars** (entries 144, 145).
-  Selection is about 63% of a fresh corridor's model cost, and its seconds barely follow its input
-  (entry 177).
-- **Correctness is the owner's to judge** (entry 68). Grade with `selection-recall` and
-  `unresolved_roles`; do not build a correctness grader.
+**Constraints any shipped version keeps:** `Selection` carries ids only (entry 83); stored text
+ranks and never speaks (entry 78); a page with no stored text can reach the model (entry 158);
+correctness is the owner's to judge (entry 68).
 
-**What is already measured, to use or to argue against:**
-- **A ranked pre-filter (entry 183).** Reciprocal-rank fusion of link rank and stored-text rank per
-  role, keeping the top 80, kept an answering page for every role the model found (76 of 76) at
-  52–63% of the packet. That was measured on the **pre-rebuild** pools and never run live. K = 80
-  was tuned on the same corridors, and the pools are now larger.
-- **Heuristics cannot replace the model** at the same page count: 60% against 83% (entry 183).
-- **Link context is in the builds, not the request path** (entry 189). Using it to score a
-  corridor's candidates was declined for its cost to request size and recall.
-- **Embeddings of stored text** (item 67) are untested. They need OpenAI credit or a local model.
-- **The selection packet was made leaner once already** (entry 170): 31% less input, the same roles
-  found.
-
-**Directions nobody has tried — listed, not recommended:** more picks per call; one selection call
-per role, or per group of roles; a larger text budget now that model cost is Ofself's; ordering the
-pool so the likeliest candidates get the longest excerpts; a two-stage selection. Each changes what
-the model is shown, so each is a recall change graded as above.
+**Where things are.** The replay — scripts, a README and all 960 results — is
+`var/selection-replay-2026-09-24/`; its captured candidate sets (~130 MB) are not committed and
+`capture.py` recreates them for about 195 searches. Run replays **one call at a time**: four at once
+was followed by ten minutes of Personas `504`s (OFSELF_FEEDBACK 8.22). Pre-rebuild stores are still
+in `var/_backup_before_pilot_2026-09-25/`.
 
 **The sequence to the full rebuild — the owner, 2026-09-24.** Item 68's fixes (entries 186 and 189)
 are measured on scratch stores and not yet in the real ones. A rebuild only adds, so it is done
@@ -446,9 +414,9 @@ once, and in this order:
    re-run Germany's five fresh plans, since it was confirmed on the old store.
    **Pilot built and graded (entry 193).** All ten built. Oracle roles found fell 75 → 68 of 92, but
    every lost page was in the pool and not picked, as pools grew (Singapore `PH/PH` 150 → 482).
-   Unresolved decisions and checklists went 13 → 14. **Next:** re-run the seven corridors that lost
-   a role two or three times, re-run Germany's five plans, then decide on item 66 before the full
-   rebuild.
+   Unresolved decisions and checklists went 13 → 14. **Item 66 measured (entry 194):** the loss is
+   −2.8 of 90 and all secondary, so the rebuild does not wait on the selector. **Next:** re-run
+   Germany's five plans on its rebuilt store, and the owner's decision on item 66's pre-filter.
    **First run, 2026-09-25:** GB, JP, DE and NL built cleanly. FR and SE failed at once because the
    headless browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error),
    and SG, AE and US because the network dropped (every search failed on DNS). CA was cut off. None
@@ -1366,8 +1334,9 @@ log's `phase_seconds`.
 
 **Cost, biggest first — none of it decided.**
 - **Shrink what selection reads — item 66.** A heuristic cannot replace the call at the same page
-  budget, but a fused ranking keeping the top 80 of the pool kept every answer the model found at
-  52–63% of the packet (entry 183).
+  budget, but a fused ranking cut to the top 120, plus 40 candidates with no stored text, reads
+  *more* roles than the whole pool on replayed packets, at 42% less selection input (entries 183,
+  194). Waiting on the owner, because it reverses the rule that no candidate is dropped.
 - **A cheaper model for selection only.** Selection is ~63% of the model bill, and `gpt-5.6-luna` is
   listed at a tenth of `gpt-5.6-terra`'s price a token, which could take a corridor from about $0.25 to
   about $0.11. It changes what picks the pages, so it needs grading and the owner's decision. Entry

@@ -26,9 +26,10 @@ it is arithmetic, which is why it can be a test.
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 import yaml
 from pydantic import Field
@@ -279,9 +280,20 @@ class ArmScore:
     crawled says nothing about the admission gate in either direction, and the two ends of that
     bottleneck are what entry 88 spent a session separating."""
 
+    roles_hit_same_page: int = 0
+    """Roles hit counting a pick that is an answering page at another address — see `same_pages`.
+
+    Kept beside `roles_hit` rather than replacing it, so every number printed before it existed
+    stays comparable. The two come apart most for a variant that reorders the pool: which of two
+    addresses carries the excerpt decides which one the model picks (entry 194)."""
+
     @property
     def role_recall(self) -> float:
         return self.roles_hit / self.roles_total if self.roles_total else 0.0
+
+    @property
+    def same_page_recall(self) -> float:
+        return self.roles_hit_same_page / self.roles_total if self.roles_total else 0.0
 
     @property
     def pooled_recall(self) -> float:
@@ -349,17 +361,66 @@ def role_reach(corridor: CorridorOracle, role: str, contention: Contention | Non
     return "absent"
 
 
+def same_pages(urls: Iterable[str], texts: Mapping[str, str]) -> dict[str, frozenset[str]]:
+    """For each address, every address among `urls` that is the same page, itself included.
+
+    Two tests, both about the page and neither about how it reads:
+    - **byte-identical stored text** — the oracle's own `mirror` rule, and what `www.` against a
+      bare host, a renamed GOV.UK guidance page and a retired IRCC address all turned out to be;
+    - **a link on the same host whose `redirect` parameter names the page** — France's portal
+      records `…/c/portal/update_language?…&redirect=/en/votre-arrivee-en-france` for its entry
+      page, with slightly different stored text, and the model picked that address every time.
+
+    The oracle names one address per page, so without this a selector that picked the right page
+    under its second address scored a miss — measured in entry 194 as about five roles of 90, in
+    both the rebuilt and the pre-rebuild stores. A grading instrument only: nothing here decides
+    what is read or told.
+    """
+
+    listed = list(dict.fromkeys(urls))
+    by_text: dict[str, set[str]] = {}
+    for url in listed:
+        text = texts.get(url)
+        if text:
+            by_text.setdefault(text, set()).add(url)
+    groups = {url: {url} | by_text.get(texts.get(url) or "", set()) for url in listed}
+    by_address = {_address(url): url for url in listed}
+    for url in listed:
+        target = _redirect_target(url)
+        other = by_address.get(target) if target else None
+        if other is not None and other != url:
+            groups[url].add(other)
+            groups[other].add(url)
+    return {url: frozenset(group) for url, group in groups.items()}
+
+
+def _address(url: str) -> str:
+    parts = urlsplit(url)
+    return f"{parts.netloc.removeprefix('www.')}{parts.path.rstrip('/')}"
+
+
+def _redirect_target(url: str) -> str | None:
+    parts = urlsplit(url)
+    target = parse_qs(parts.query).get("redirect", [None])[0]
+    if not target or not target.startswith("/"):
+        return None
+    return f"{parts.netloc.removeprefix('www.')}{urlsplit(target).path.rstrip('/')}"
+
+
 def grade(
     oracle: SelectionOracle,
     arms_by_corridor: Mapping[str, Sequence[Arm]],
     *,
     unattributed: Sequence[str] = (),
     contentions: Mapping[str, Contention] | None = None,
+    same_page: Mapping[str, Mapping[str, frozenset[str]]] | None = None,
 ) -> Grading:
     """Score each arm on role recall, tools found, and entries 85-86's joint page set.
 
     With `contentions` the role numbers are additionally split by `role_reach`, which is the only
-    way to tell a selector that chose badly from a gate that never offered the choice.
+    way to tell a selector that chose badly from a gate that never offered the choice. With
+    `same_page` — per corridor, `same_pages` over its picks and answers — a second role count
+    credits a pick that is an answering page at another address.
     """
 
     totals: dict[str, ArmScore] = {}
@@ -382,6 +443,13 @@ def grade(
                 if corridor.answers.get(role) and picked & corridor.answering_urls(role)
             )
             score.roles_hit += hit
+            aliases = (same_page or {}).get(corridor.corridor, {})
+            widened = picked.union(*(aliases.get(url, ()) for url in picked))
+            score.roles_hit_same_page += sum(
+                1
+                for role in ROLE_ORDER
+                if corridor.answers.get(role) and widened & corridor.answering_urls(role)
+            )
             score.roles_total += len(corridor.answers)
             contention = (contentions or {}).get(corridor.corridor)
             for role in ROLE_ORDER:

@@ -315,3 +315,7 @@ read it. Add a row whenever a run contradicts what one of these files said.
 | a DLR asks for a whole schema; only the user can narrow fields | `dlr add-read --fields` asks for single fields; the app reads `citizenships` alone (entry 180) |
 | a better heuristic could replace the selection call | at the same page count the best reaches 60% to the model's 83%; it can only shrink the packet (entry 183) |
 | builds open zero-scoring pages because of frontier order or the family share | an even per-host split drops the visa host's scored links at the cap — Japan's decision page among them (entry 185) |
+| the pilot's 75 → 68 is the selector choosing worse from bigger pools | five runs each: −2.8 of 90, all in secondary roles; decision + checklist rose 23.2 → 25.0; four "lost" roles were noise or a month-old OpenAI baseline (entry 194) |
+| a fixed text budget is why a big pool loses — give the model more text | doubling it to 800k characters made recall worse, 73.3 against 76.6; a shorter list helped (entry 194) |
+| stripping boilerplate changes what the selector reads for nothing (entry 170) | it changes picks both ways — UK checklist 1/5 → 5/5, Germany's three roles 3/5 → 0/5 — and nets zero (entry 194) |
+| strict role recall grades a packet that reorders the pool | fusion top 160 read 70.0 strict and 78.3 counting the same page at another address (entry 194) |
