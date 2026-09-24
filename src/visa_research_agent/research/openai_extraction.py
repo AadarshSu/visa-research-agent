@@ -467,6 +467,7 @@ class OpenAIVisaPlanExtractor:
                     # `verified` doing so. TODO item 53.
                     decision_is_unverified=visa_required is None,
                     no_visa_required=visa_required is False,
+                    names_unread_pages=bool(refused or unread_checklists),
                 ),
                 unavailable_sources=[*report.failures, *refused, *unread_checklists],
                 # Straight from the configuration, never from the draft: the traveller is being

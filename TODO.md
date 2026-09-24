@@ -380,6 +380,11 @@ stored text, so confirm it against a fresh run):
    it give a reason for every choice and say what was missing for a role it leaves null, and
    nothing kept a null's reason. The recall log now holds `role_verdicts` — every role answered,
    unvalidated, with its reason — and `adjudicated_ids`, the packet's ids and their pages.
+   **Found by step 3 and fixed, 2026-09-24: a plan naming a page nobody read is `partial`.** The
+   UAE `IN/GB` read every page it cited while discovery had met two refusals on `gdrfad.gov.ae`;
+   the status was graded from the fetch alone, so the plan came out `verified` beside a named
+   unavailable page, `VisaPlan` refused the pair, and the traveller got a 503 — 2 of 2 runs whose
+   plan stated a decision. `resolve_plan_status` now sees those pages (`names_unread_pages`).
 2. **Re-run the 14 fresh, three times each**, from the owner's terminal (the renderer cannot start
    from Claude Code's shell), clearing `var/corridors/` for both arms. About 42 corridors and ~$2 of
    search. The ones that now answer leave the list; what is left is the real blocker 2.

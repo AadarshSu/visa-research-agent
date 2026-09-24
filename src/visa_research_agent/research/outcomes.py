@@ -92,6 +92,7 @@ def resolve_plan_status(
     has_checklist_source: bool = True,
     decision_is_unverified: bool = False,
     no_visa_required: bool = False,
+    names_unread_pages: bool = False,
 ) -> PlanStatus:
     """Grade a run: verified only when every source was retrieved and is current.
 
@@ -124,7 +125,13 @@ def resolve_plan_status(
         return "partial"
     if not has_checklist_source and not no_visa_required:
         return "partial"
-    if report.failures:
+    # Pages the plan names and nobody read — an authority page that refused discovery, or a
+    # possible checklist nobody opened — are unavailable evidence exactly as a failed fetch is, and
+    # `VisaPlan` refuses "verified" beside them. Grading only this run's fetch made the two
+    # disagree: `united-arab-emirates/IN/GB` read every page it cited, discovery had met two
+    # refusals on `gdrfad.gov.ae`, and the plan was graded verified and then refused as invalid,
+    # so the traveller got a 503 instead of a partial plan (TODO item 70).
+    if report.failures or names_unread_pages:
         return "partial"
     if any(item.source.is_stale for item in report.fetched):
         return "partial"

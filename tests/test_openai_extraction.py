@@ -580,6 +580,33 @@ def decision_unverified(destination: DestinationConfig) -> DestinationConfig:
 
 
 @pytest.mark.anyio
+async def test_a_plan_naming_a_refused_page_is_partial_rather_than_refused_as_invalid() -> None:
+    """TODO item 70. `united-arab-emirates/IN/GB` read every page it cited, discovery had met a
+    refusal on `gdrfad.gov.ae`, and the status was graded from the fetch alone — so the plan came
+    out `verified` beside a named unavailable page, `VisaPlan` refused the pair, and the traveller
+    got a 503. Every source read cleanly and a checklist designated: partial, and still a plan."""
+
+    payload = singapore_config().model_dump(mode="json")
+    payload["unreadable_authorities"] = [
+        {
+            "url": f"https://{payload['trusted_domains'][0]}/en/node/2091",
+            "authority": "Singapore authority",
+            "detail": "refused automated retrieval, so its guidance could not be read here",
+        }
+    ]
+    destination = DestinationConfig.model_validate(payload)
+    generator = FakeStructuredPlanGenerator(load_golden_draft())
+    fetched_sources = await FixtureSourceFetcher().fetch(destination)
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        destination, DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.status == "partial"
+    assert [source.outcome for source in plan.unavailable_sources] == ["blocked"]
+
+
+@pytest.mark.anyio
 async def test_a_plan_names_the_authority_it_was_not_allowed_to_read() -> None:
     """The point of producing a plan at all in this case: the traveller gets the URL and can open it
     themselves, which turns "no verified plan" into a next step."""

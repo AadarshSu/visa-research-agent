@@ -110,6 +110,13 @@ def test_complete_current_evidence_is_verified() -> None:
     assert resolve_plan_status(RetrievalReport()) == "verified"
 
 
+def test_a_page_the_plan_names_and_nobody_read_downgrades_the_run_to_partial() -> None:
+    """A refused authority page or an unopened checklist is unavailable evidence, and `VisaPlan`
+    refuses "verified" beside one — so the grade has to see it too (TODO item 70)."""
+
+    assert resolve_plan_status(RetrievalReport(), names_unread_pages=True) == "partial"
+
+
 @pytest.mark.anyio
 async def test_any_failure_downgrades_the_run_to_partial() -> None:
     report = drop_source(await singapore_report(), OPTIONAL_SOURCE)
