@@ -399,6 +399,13 @@ produces a serious defect.
   The bounds live in the prompt, not in code, and they are all that stands between a silence and a
   confident wrong "no". **Do not widen them to another kind of silence without a decision entry.**
 
+  **A second silence decides the other way — the owner's decision, entry 197.** Where an authority
+  states the general rule that a foreign national needs a visa and its own complete exemption list
+  leaves the traveller's country out, the plan says a visa **is** required (rule 8f). Japan is the
+  case: MOFA's "in principle … required to have … a visa" and its 74-country list. Its bounds mirror
+  8e's, the rule must be stated rather than inferred from the list existing, any exemption the
+  traveller might meet keeps the decision null, and **an exemption list never decides "no visa"**.
+
   **The entry-step floor is no floor, and that is a decision rather than an omission (entry 96).**
   Three visa-free corridors state **3**, **~5** and **~7** entry duties, so the honest list has no
   natural minimum and its low end is already under the application's four. A floor there would be a

@@ -76,10 +76,14 @@ was captured; the first went unrecorded, since the route discards the reason). T
 was within 40 characters of the confirmation runs' (70,448 against 70,411), so neither the rebuild
 nor the cut caused it: over the day, 2 of 11 Germany plan calls on that packet refused. Entry 174
 saw the same failure twice in 48, only under short ids. **The plan prompt's rule 11 never states that
-`link_source_id` must also be in `source_ids`.** It does now (entry 196), and that did **not** stop
-it: 2 of 10 still refused on the same packet. The fix is undecided (TODO, *Smaller things*). The
-same checks found Japan `IN/GB` answering "visa required" in about 10 of 12 on its new packet — the
-owner's question in the same section. Selection input on this corridor fell 102.6k →
+`link_source_id` must also be in `source_ids`.** It does now (entry 196), and 2 of 10 still refused
+on the same packet — then none in the 12 after (entry 197). The linked page is the plan's own
+application URL, linked as `source` where rule 11 asks for `application_route`. **No retry, by the
+owner's decision**; the code fix, if it recurs, is in TODO's *Smaller things*.
+
+**Japan `IN/GB` now answers "visa required", `verified`, 8 of 8 (entry 197).** The owner allowed
+rule 8f: the authority's stated general rule plus the traveller's absence from its complete
+exemption list decides that a visa is needed. Singapore's "no visa" held 8 of 8 under the change. Selection input on this corridor fell 102.6k →
 58.6k tokens.
 
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:

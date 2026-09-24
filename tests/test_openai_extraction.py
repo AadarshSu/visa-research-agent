@@ -948,7 +948,22 @@ def test_absence_from_a_visa_required_list_is_an_answer_only_within_its_bounds()
     assert "every footnote, exception" in prompt
     assert "It applies only to a list of who NEEDS a visa." in prompt
     assert "rule 5 governs and visa_required is" in prompt
-    assert "The one silence that is an answer" in prompt, "rule 4 must not contradict it"
+    assert "Two silences are answers" in prompt, "rule 4 must not contradict it"
+
+
+def test_absence_from_an_exemption_list_decides_only_that_a_visa_is_required() -> None:
+    """The owner's rule (entry 197): Japan states that a foreign national needs a visa "in
+    principle" and lists the 74 countries exempt from it, and India is not among them. The plan call
+    answered "visa required" or "undecided" by chance. The bounds mirror entry 172's, and an
+    exemption list never decides the other way."""
+
+    prompt = load_extraction_prompt()
+
+    assert "8f. Absence from the authority's visa-exemption list, where the same" in prompt
+    assert "The whole exemption list must be in the source text." in prompt
+    assert "never infer it" in prompt, "the general rule must be stated, not assumed"
+    assert "rule 5\n     governs and visa_required is null" in prompt
+    assert "never that it needs no visa" in prompt
 
 
 def test_one_short_quote_and_a_few_words_of_reason_where_nothing_conditions_a_document() -> None:

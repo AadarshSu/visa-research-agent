@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [197](#197-an-exemption-list-decides-visa-required-where-the-authority-states-the-general-rule-and-why-germanys-step-link-refused) | **Rule 8f: an exemption list plus a stated general rule decides "visa required"** — the owner's decision; Japan 8 of 8, Singapore "no visa" 8 of 8, Germany 12 of 12; Germany's refusals were a `source` link to the plan's own application URL, 4 in 79 calls, no retry |
 | [196](#196-rule-11-now-says-a-steps-linked-page-must-be-among-its-sources--it-did-not-stop-the-refusals-and-japans-packet-now-decides-visa-required) | **Rule 11 states the step-link rule** — Germany still refused 2 of 10 (2 of 6 before) on the same packet; Singapore "no visa" 8 of 8; Japan "visa required" 7 of 8, 3 of 4 on the old prompt, because its packet now holds MOFA's general rule — an owner's question like entry 172 |
 | [195](#195-the-selector-is-shown-the-ranked-top-120-plus-40-pages-with-no-stored-text-and-the-rule-that-no-candidate-is-dropped-goes) | **The selector sees the top 120 + 40 blind** — the owner's decision after entry 194, without the live A/B; `selection.py`'s no-drop rule goes; the notes count what was withheld and the recall log flags each row; UK `IN/GB` live: 160 of 567 shown, checklist found, selection input 57.6k against 106k |
 | [194](#194-item-66-on-replayed-pools-the-rebuilds-loss-is-small-and-in-secondary-roles-and-showing-the-model-fewer-candidates-recovers-it-at-half-the-input) | **Item 66 on replayed pools** — the pilot's 75 → 68 was half noise, a month-old baseline and one address; the real loss is −2.8 of 90, all secondary, while decision + checklist rose 23.2 → 25.0; fusion top 120 reads 82.4 at 45% less input, top 120 + 40 blind 80.0 and keeps the traveller's own posts; `selection-recall` gains a same-page column; not shipped — it reverses the no-drop rule |
@@ -245,6 +246,58 @@ not — and stored text ranks, it never speaks).
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 197. An exemption list decides "visa required" where the authority states the general rule; and why Germany's step link refused
+
+**2026-09-24 · the owner's decisions after entry 196: allow Japan's inference, and no retry for
+Germany's refusals.**
+
+### Rule 8f: a second silence, deciding the other way
+
+Japan's packet now holds MOFA's visa-system page — *"in principle a foreign national wishing to
+enter Japan is required to have … a visa"* — beside its list of the 74 exempt countries. The plan
+call read the two together and answered "visa required" about 10 times in 12, and "undecided" the
+rest, citing rule 8e's bound that a list of who does not need a visa says nothing about a country
+it leaves out. **The owner allowed the inference**, so rule 8f of `extract_visa_plan.txt` now says
+it, with bounds that mirror entry 172's:
+- the same authority must **state** the general rule for foreign nationals — never inferred from an
+  exemption list existing;
+- the whole exemption list must be in the text, checked under every name, footnote and exception;
+- any exemption the traveller might meet — residence, another country's visa, transit — or any source
+  saying no visa is needed keeps the decision null;
+- both pages are cited, and the explanation names the list so the traveller can check it.
+
+**An exemption list never decides "no visa"**; 8e's bound now says so, and rule 4 names both
+silences. The direction matters: a wrong "visa required" sends someone to apply needlessly, where a
+wrong "no visa" sends them to a border without one (entries 95, 172).
+
+**Checked on the same fixed packets as entry 196, 28 plan calls:** Japan `IN/GB` "visa required",
+`verified`, **8 of 8**, every plan citing both the rule and the list; Singapore `PH/PH` "no visa",
+**8 of 8**; Germany `IN/GB` "visa required", `verified`, **12 of 12**, 11 of them on this prompt.
+
+### Why Germany's step link refused, and why it was not seen before
+
+- **The linked page is the plan's own application URL.** `where_to_apply.application_url` is the UK
+  missions' "Where can I apply for my visa" page. Rule 11 says a step opening that URL uses
+  `link_target: "application_route"`, which needs no citation. The refused steps — each titled
+  "Book the correct …" — linked the same page as `"source"`, which requires it in `source_ids`, and
+  did not list it.
+- **So the model has two ways to link one page and moves between them.** Of twelve captured drafts,
+  seven linked it only as `application_route` and five as `source` (one both ways), and every
+  `source` link to it listed the page. The two refused drafts were not captured — the route discards the
+  reason, and the capture was built after — so what their `source_ids` held is not known; the most
+  consistent reading is that they cited the pages stating the step (the checklist and the FAQ) and
+  treated the link as where to click.
+- **It was rare, and the calls were few.** Germany's plan call ran 51 times before without it: 42 on
+  the OpenAI route on 2026-09-15, 9 through Personas. The page was in those packets too (read on
+  2026-09-07, 09-23 and in the pilot). All four refusals came in 16 calls on one packet today, then
+  **none in the next 12** — 4 in 79 Personas and OpenAI calls overall. Whether the Personas route,
+  the packet or chance explains the cluster is not established.
+- **No retry — the owner's decision.** What would remove it without one is a change in code: treat a
+  `source` link to the application URL as the `application_route` link rule 11 asks for, or accept
+  a linked page as cited. Neither is built; both are in TODO.
 
 ---
 

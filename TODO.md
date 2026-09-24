@@ -1951,24 +1951,12 @@ in the DECISIONS entry; this is the one-line index.
 
 ## Smaller things
 
-**Japan's plan call sometimes infers "visa required" from an exemption list.** Found grading the
-Personas route (entry 188): one of six calls on Japan `IN/GB`'s fixed packet read MOFA's list of
-the 74 visa-exempt countries, found India absent and answered `visa_required: true`, graded
-`verified`; the other five left it open, as every recorded direct call did (entry 177, 0 of 3).
-True, and a claim no page makes — rule 8e's third bound says a list of who does *not* need a visa
-says nothing about a country it leaves out, and entry 174 recorded the same list producing the
-opposite wrong answer. **Measured 2026-09-24 (entry 196): about 10 of 12 on today's packet**, which
-now also holds MOFA's visa-system page stating that a foreign national needs a visa "in principle".
-The model reads that rule with the exemption list; the plans that stay open say absence from the
-list is not enough. **The owner's question:** may a stated general rule plus absence from its
-exception list decide — as entry 172 allowed for a visa-required list — or should rule 8e's wording,
-or a check in code, keep it open?
-
-**A plan step sometimes links a page it does not cite, and the plan refuses.** Germany `IN/GB`: 2 of
-10 plan calls on one packet broke `ApplicationStep.validate_link_target`, and 2 of 6 before rule 11
-said so (entry 196). The traveller gets a `503`. Not decided: retry the plan call once on invalid
-output (about 25s on roughly one request in six), or repair the step by adding its linked page to
-its sources.
+**A plan step sometimes links the application URL as a `source` it does not cite, and the plan
+refuses.** Germany `IN/GB`: 4 of 16 plan calls on one packet on 2026-09-24, none in the 12 after, 4
+in 79 overall (entry 197). The page is `where_to_apply.application_url`, which rule 11 says to link
+as `application_route`. **No retry — the owner's decision.** If it recurs, the fix is in code: treat
+a `source` link whose page is the application URL as that `application_route` link, or accept a
+linked page as cited. The route discards a refused draft's reason; record it before measuring.
 
 **A per-host fair share treats unequal hosts equally.** Moved here from item 48, closed
 2026-09-15; unmeasured, and it changes what a build spends, so it needs its own rebuild. Thailand opened 1,041 pages across 63
