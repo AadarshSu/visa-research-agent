@@ -375,8 +375,9 @@ Malta and Slovenia are `partial` for their checklists, not their decisions.
 ### Limits, stated
 
 - **A live fetch keeps 50,000 characters** (`maximum_source_characters`), and the consolidated text
-  is 55,651. Annex I is complete within it; the end of Annex II may not be. ETIAS carries Annex II
-  whole for visa-exempt travellers.
+  is 55,651. Checked against the stored text: Annex I and Annex II both end before the cut (Annex II
+  at 48,196). What falls past it is back matter — Annexes III and IV and the correlation table. An
+  amendment lengthening the annexes could change that; the refresh's report is where to look.
 - **The store is as current as its last refresh.** A new consolidation needs `visa-discover
   eu-store` to be run: before every rebuild, and after the regulation is amended.
 - Every member corridor on a cold evidence cache spends one of its five renders on EUR-Lex.

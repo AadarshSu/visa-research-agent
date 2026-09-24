@@ -1,11 +1,8 @@
 #!/bin/bash
-# TODO item 70, step 5: rebuild only the stores the uploads-year fix changes, in batches.
-#
-# The fix changes what a build records wherever an authority files documents under a dated
-# `uploads/<year>/` folder. The stores holding such entries are these 14 (every one dated 2025 or
-# later, because the veto dropped the rest):
-#   batch 1: MT                      — the one item-70 corridor that needs it
-#   later:   AE CZ EE GR ID IE IT MY PH RO TH US ZA
+# Rebuild country stores, backing each up first. Written for TODO item 70's step 5 (Malta, entry 198)
+# and used for the full rebuild of the 44 not yet rebuilt — see PROJECT_HANDOFF's *Next session*.
+# Run `visa-discover eu-store` first. Brazil and Uruguay have no store to back up; the copy for them
+# fails harmlessly and the build creates one.
 #
 # usage, from the repository root in the owner's terminal: rebuild.sh MT [CC ...]
 # Resumable: a country in done.txt is skipped. Each country's corpus and text index are copied to

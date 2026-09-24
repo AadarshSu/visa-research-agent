@@ -36,6 +36,38 @@ disproved. Link instead of copying.
 
 ---
 
+## Next session: the full rebuild — start here
+
+**The owner's decision, 2026-09-25: rebuild the 44 stores not yet rebuilt, in a fresh session.**
+Everything that changes what a build records landed first (entries 198–201). What to read, in order:
+TODO's *The sequence to the full rebuild*, then DECISIONS entries 200 and 201.
+
+**Which 44.** Of the 55 destinations (53 corpora plus Brazil and Uruguay), 11 are already rebuilt:
+the ten pilot countries (JP, GB, CA, DE, NL, FR, SE, SG, AE, US, 2026-09-24) and Malta (2026-09-24,
+entry 198). The other 42 corpora date from 2026-09-15. Brazil and Uruguay have never been built.
+
+**How to run it:**
+1. **From the owner's terminal, or Bash with the sandbox off** — never the sandboxed shell, where
+   Chromium cannot start (the builds render).
+2. **Refresh the EU store first:** `.venv/bin/visa-discover eu-store`. It should report 2 pages
+   stored, the newest EUR-Lex consolidation and the ETIAS page.
+3. **Build two at a time** with `var/item70-2026-09-24/rebuild.sh`. It backs each country up to
+   `var/_backup_before_item70_2026-09-24/` before building it, and skips what is in its `done.txt`.
+   Run two copies over disjoint country lists. The owner's first six: IT RO GR ZA TH CZ, where the
+   uploads fix recovers most (entry 198).
+4. **Expect about 8 hours**, 5½ to 11 by country mix (22 minutes a country on average), and about
+   2,400 searches. A dropped network loses a country, not the batch; re-running resumes.
+
+**What to read in each build's report.** The new `links rejected by rule` block (entry 200): a rule
+throwing away many addresses that say "visa" is the next Malta. Read it before the next batch.
+
+**Then:** grade with `selection-recall`, and re-run the sentinel `germany/IN/GB` (DECISIONS entry
+197's confirmed answer). Where to go after: TODO items 67 and 64.
+
+**Not to change first.** Opening zero-scoring links only one hop from a seed was not adopted
+(entry 200). The `canonicalise_url` trailing-slash defect (TODO *Smaller things*) changes stored
+addresses, so it is measured on its own, not folded into this rebuild.
+
 ## Where it stands
 
 **The owner's five goals, 2026-09-23 (entry 182)**, are unordered:

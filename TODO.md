@@ -449,7 +449,10 @@ once, and in this order:
    and SG, AE and US because the network dropped (every search failed on DNS). CA was cut off. None
    of the failures wrote anything. **Start any build that may render from the owner's own terminal**
    — the owner re-ran `run.sh` there, and it resumes with the six not in `done.txt`.
-4. **Then item 67 on the new store, then item 64.**
+4. **Resumed 2026-09-25, for a fresh session — the runbook is PROJECT_HANDOFF's *Next session*.**
+   The 44 not yet rebuilt (42 corpora plus Brazil and Uruguay), after `visa-discover eu-store`.
+   Entries 198–201 landed everything that changes what a build records.
+5. **Then item 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
 55 (Ofself).
