@@ -18,8 +18,8 @@ points at the items that do the work. The detail lives in the items, not here.
 | **Model calls paid through Ofself Personas**, on their OpenAI key | **Done 2026-09-24 (entry 188), and the route from now on — the owner.** All three calls go through Personas on Ofself's account; graded against the direct route's baselines. One Japan inference is a *Smaller thing* | 62 (done) | — |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60, which the Personas route cannot send without an Ofself tier setting |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` needs an Ofself sign-in since 2026-09-24 (entry 191); the stores are still local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
-| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). The last broad measurement was 2026-08-24's marginal pass (entry 58). Only 3 of 53 countries have been re-run on the 2026-09-15 corpora | **63** | the owner's own checking (entry 68); model calls run through Personas now |
-| **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23) | **64**, **2** | nothing external — search credit only |
+| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **Next: the full rebuild of the 44 stores not yet rebuilt** (PROJECT_HANDOFF's *Next session*) | **63**, the rebuild | the owner's own checking (entry 68) |
+| **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23). Schengen's EU half of item 2 is done (entry 201); governments with no hostname marker remain | **64**, **2** | nothing external — search credit only |
 
 **Offline cost is not the constraint — the owner, 2026-09-23 (entry 184).** Build time and a higher
 one-time cost are acceptable for anything that makes each live request better. Prefer an offline
@@ -349,7 +349,15 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### 70. Find why a corridor that read its authority's pages still has no visa decision — `in progress`, **added 2026-09-24, the owner's top accuracy priority; steps 1–4 and next-work 1–3 done (entries 198, 199); rule 8g shipped**
+### 70. Find why a corridor that read its authority's pages still has no visa decision — `done` 2026-09-25, **added 2026-09-24, the owner's top accuracy priority (entries 198–202)**
+
+**Where it ended.** Of the 14 corridors:
+- **11 now answer "visa required" from an official page.** Belgium ×2, Egypt, Italy, India,
+  Slovenia, Malta ×2, Poland and Croatia (the last two through the EU tier, entry 201).
+- **The UAE answers under rule 8g.** The Netherlands `PH/PH` names its official checker.
+- **Mexico and Saudi Arabia still refuse.** Mexico's list is an image, which is item 69's decision.
+  Saudi Arabia's pages cannot be read, the set-aside class.
+- **What follows is the full rebuild** — PROJECT_HANDOFF's *Next session*.
 
 **The problem.** Of 86 corridor runs logged since 2026-09-01, 24 refused for want of a visa
 decision, and **14 of them had read the authority's pages**: Croatia, Malta ×2, Italy, Poland,
@@ -405,12 +413,14 @@ should get it** — lost before the pool, in the pool, or after it was credited,
    199).** Where every route the sources describe issues a visa, in advance or on arrival, the plan
    says "visa required" and asks the condition the profile does not settle. UAE plan inputs: 1 of 5
    → 4 of 4 and 2 of 2 → 5 of 5; no change on five regression inputs, 40 calls.
-5. **The other 13 stores the uploads fix changes** — AE, CZ, EE, GR, ID, IE, IT, MY, PH, RO, TH, US, ZA
-   — in batches, only if a corridor needs one: Malta answered from search before its rebuild. Use
-   `var/item70-2026-09-24/rebuild.sh`, which backs up and resumes.
+5. **The other stores the uploads fix changes — overtaken by the full rebuild.** The owner chose to
+   rebuild all 44 stores not yet rebuilt, in a fresh session. It covers the 13 (AE, CZ, EE, GR, ID,
+   IE, IT, MY, PH, RO, TH, US, ZA), starting with IT RO GR ZA TH CZ.
+6. **Croatia and Poland: done 2026-09-25 (entry 201).** The EU answers a Schengen member's visa
+   decision from EUR-Lex. Five Schengen corridors said "visa required" 15 of 15.
 
-Out of reach under the rules: Croatia (EU level, item 2), Saudi Arabia (unreadable), Mexico (an
-image, an item-69 decision).
+Out of reach under the rules: Saudi Arabia (unreadable) and Mexico (an image, item 69's decision).
+Cloudflare-guarded pages stay unread (entry 202).
 
 **What not to do.** Do not build an accuracy metric or truth set without asking (entries 68, 147).
 Grade every change on several runs (entry 144). Refusing stays a correct output: a fix that makes
@@ -728,7 +738,7 @@ pages still refused our headless browser as a bot, and passing would mean disgui
 **Before either ships**, run France `BD/AE` and a Liechtenstein corridor several times in each arm,
 with the cache warm in both (entry 136), and count roles rather than pages.
 
-### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`, **and Germany is the worked example**
+### 2. Amend the trust rule for governments with no marker, and for Schengen — `soon`; **the Schengen half done 2026-09-25 (entry 201)**, and Germany is the worked example
 
 **Schengen done 2026-09-25 (entry 201): the EU may answer a member's visa decision.** The
 consolidated regulation on EUR-Lex and the ETIAS page, read from a shared EU store; Croatia `BD/AE`
