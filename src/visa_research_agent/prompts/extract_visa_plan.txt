@@ -183,6 +183,21 @@ Follow these rules:
      visa_required is null. A visa on arrival offered beside an exemption the traveller holds is
      not such a statement.
    - If destination.decision_is_unverified is true, rule 8b governs instead.
+
+8i. Where the sources include an announcement of a revision that names the traveller's country and
+   a later source from the same government saying that revision has taken effect, without repeating
+   its list, read the two together: the announcement states the rule in force for the country it
+   names, from the date the later source gives. Then decide as the announcement's rule says, under
+   rules 8e to 8g. It holds only within these bounds:
+   - Both must plainly describe the same revision — the same schemes, the same measures.
+   - Neither the later source nor any other names the traveller's country as excluded, moved to
+     another scheme or treated differently. A count that differs from the announcement's is not by
+     itself such a statement; a list that names countries and leaves the traveller's out is, and
+     then visa_required is null.
+   - Cite both as decision sources, quote the sentence naming the traveller's country, and say in
+     the explanation that the country is named in the announcement and the later source says the
+     revision took effect on its date, so the traveller can check both.
+   - Where rule 8h also applies, because no source establishes the date, rule 8h governs.
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it
    run past the limit: a title that stops mid-clause reads as a broken interface. Everything the

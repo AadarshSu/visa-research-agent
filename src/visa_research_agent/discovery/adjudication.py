@@ -79,6 +79,14 @@ class RoleChoice(StrictModel):
     source_id: str | None = None
     """None means no candidate fills this role. A refusal, and a legitimate answer."""
     reason: str = Field(min_length=1)
+    in_force_source_id: str | None = None
+    """For `visa_decision` only: a later page saying the revision `source_id` announced has taken
+    effect, without repeating its list of countries.
+
+    Thailand's July 2026 announcement names India among the countries given 30 days visa-free; the
+    September notice says that revision took effect on 15 September and lists its countries only in
+    an image. Neither answers alone, and the owner decided the two may be read together (entry
+    209). The second page is cited beside the first, so the traveller can check both."""
 
 
 class RoleTool(StrictModel):
@@ -718,6 +726,33 @@ def validated_choices(
             continue
         kept[choice.role] = (choice.source_id, choice.reason.strip())
     return kept, discarded
+
+
+def validated_confirmations(
+    adjudication: RoleAdjudication,
+    candidates: dict[str, CandidatePage],
+    kept: dict[DiscoveryRole, tuple[str, str]],
+) -> dict[DiscoveryRole, tuple[str, str]]:
+    """The page bringing a chosen decision into force, where the model named one and it is real.
+
+    Only for `visa_decision`, only beside the page actually kept for it, and only a candidate that
+    was fetched and is not that same page. Anything else is dropped, and the decision stands or
+    falls on its one page as before.
+    """
+
+    confirmed: dict[DiscoveryRole, tuple[str, str]] = {}
+    for choice in adjudication.choices:
+        if choice.role != "visa_decision" or choice.in_force_source_id is None:
+            continue
+        chosen = kept.get(choice.role)
+        if chosen is None or chosen[0] != choice.source_id:
+            continue
+        if choice.in_force_source_id == choice.source_id:
+            continue
+        if choice.in_force_source_id not in candidates:
+            continue
+        confirmed[choice.role] = (choice.in_force_source_id, choice.reason.strip())
+    return confirmed
 
 
 def role_verdicts(

@@ -25,6 +25,7 @@ from visa_research_agent.discovery.adjudication import (
     build_candidate_packet,
     load_adjudication_prompt,
     validated_choices,
+    validated_confirmations,
     validated_tools,
 )
 from visa_research_agent.discovery.models import (
@@ -193,6 +194,35 @@ def test_a_real_choice_is_kept_with_its_reason() -> None:
 
     assert kept["document_checklist"] == ("tl_checklist", "It names a passport and a photograph.")
     assert discarded == []
+
+
+def test_a_decision_may_carry_the_page_that_put_it_in_force() -> None:
+    """Entry 209: an announcement naming the country, and a later notice that the revision took
+    effect. Only beside the kept decision, only a real candidate, never the same page."""
+
+    def adjudicate(in_force: str | None, role: DiscoveryRole = "visa_decision") -> RoleAdjudication:
+        return RoleAdjudication(
+            choices=[
+                RoleChoice(
+                    role=role,
+                    source_id="tl_india",
+                    reason="India is named; the later notice says it took effect.",
+                    in_force_source_id=in_force,
+                )
+            ]
+        )
+
+    by_id = shortlist().by_id
+    for adjudication, expected in (
+        (adjudicate("tl_checklist"), {"visa_decision": "tl_checklist"}),
+        (adjudicate("tl_invented"), {}),
+        (adjudicate("tl_india"), {}),
+        (adjudicate(None), {}),
+        (adjudicate("tl_checklist", role="fees"), {}),
+    ):
+        kept, _ = validated_choices(adjudication, by_id)
+        confirmed = validated_confirmations(adjudication, by_id, kept)
+        assert {role: pair[0] for role, pair in confirmed.items()} == expected
 
 
 def test_answering_the_same_role_twice_keeps_only_the_first() -> None:

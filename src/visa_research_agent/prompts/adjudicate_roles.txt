@@ -30,6 +30,18 @@ Follow these rules:
 7. `visa_decision` establishes whether this traveller needs a visa at all. `application_route` is
    where and how they apply. `fees` states the cost, `processing_times` how long it takes, and
    `general_entry` covers entry conditions that are not part of the visa application itself.
+7a. A visa decision may rest on two pages read together. Where one candidate announces a revision
+   of the visa rules and names the traveller's country — "India is among the countries granted
+   visa-free entry for tourism for up to 30 days" — and a later candidate from the same government
+   says that same revision has taken effect without repeating its list of countries, choose the
+   announcement for `visa_decision` and give the later page as `in_force_source_id`. Say in your
+   reason what each page contributes. Do this only when:
+   - both plainly describe the same revision — the same schemes, the same measures;
+   - the later page does not name the traveller's country anywhere as excluded, moved to another
+     scheme, or treated differently. A count of countries that differs from the announcement's is
+     not by itself such a statement; a list that names countries and leaves the traveller's out is;
+   - no other candidate says this traveller is treated otherwise.
+   Leave `in_force_source_id` empty for every other role and every other case.
 8. One page may fill several roles. A per-nationality page often establishes the decision and lists
    the documents; say so rather than splitting the answer artificially.
 9. `published_in_path` is what the URL claims about when the page was published, where it claims

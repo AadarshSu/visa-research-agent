@@ -425,6 +425,13 @@ produces a serious defect.
   - any exemption the traveller might meet keeps the decision null;
   - **an exemption list never decides "no visa"**.
 
+  **Two more readings the owner allowed (entries 208, 209).** A "no visa" stated both before and
+  after an announced change is not held back because the change's start date is unknown (rule 8h).
+  And an announcement naming the traveller's country may be read together with a later notice
+  from the same government saying that revision took effect, when the notice does not repeat its
+  list (rule 8i, roles rule 7a). Both cite every page they rest on, and a readable list that leaves
+  the country out still decides against it.
+
   **A visa on arrival is a visa — the owner's decision, entry 199.** Where every route the sources
   describe for the passport issues a visa, in advance or on arrival, the plan says a visa **is**
   required even when which route applies turns on something the profile does not say (a UK

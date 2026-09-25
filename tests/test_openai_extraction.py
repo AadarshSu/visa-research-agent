@@ -1013,6 +1013,17 @@ def test_an_announced_change_does_not_hold_back_a_no_that_holds_on_both_sides() 
     assert "does not state that this traveller held it" in prompt
 
 
+def test_an_announcement_and_the_notice_bringing_it_into_force_are_read_together() -> None:
+    """The owner's rule (entry 209): Thailand's July announcement names India; its September
+    notice says the revision took effect and lists its countries only in an image."""
+
+    prompt = load_extraction_prompt()
+
+    assert "8i. Where the sources include an announcement of a revision" in prompt
+    assert "A count that differs from the announcement's is not by" in prompt
+    assert "leaves the traveller's out is, and\n     then visa_required is null" in prompt
+
+
 def test_one_short_quote_and_a_few_words_of_reason_where_nothing_conditions_a_document() -> None:
     """Item 56, the owner's choice of trims 2 and 3 (entry 175). Writing the plan is the longest
     wait in a request and its time tracks what it writes, so a claim carries one short quote rather

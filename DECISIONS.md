@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [209](#209-an-announcement-naming-the-country-and-a-later-notice-bringing-it-into-force-may-be-read-together) | **Two pages read together for a decision** — the owner's decision: an announcement naming the country plus a later notice that the same revision took effect (roles rule 7a, `in_force_source_id`, plan rule 8i); Thailand "no visa, 30 days" 4 of 4, citing both; five regressions unchanged |
 | [208](#208-rule-8h-a-no-visa-that-holds-before-and-after-an-announced-change-is-not-held-back-by-its-start-date) | **Rule 8h** — the owner's decision: an announced change with no established start date does not hold back a "no visa" stated on both sides of it; nothing moved on 18 replayed packets; it does not fire for Thailand, where the start date is now known (15 September) and India is named only in the July announcement, not in the September notice's image list |
 | [207](#207-thailands-30-day-change-a-page-a-busy-host-refused-once-was-never-asked-for-again-and-the-change-was-on-a-domain-we-did-not-trust) | **Thailand's 30-day change** — a `429` was stored as permanent and never retried; builds now ask again for up to 100 transiently-failed entries, and a PDF read after a failure is marked readable; `thailand.prd.go.th` reviewed; Thailand now answers null with the Gazette date as the open question, never 60 days |
 | [206](#206-rule-8f-no-longer-needs-a-stated-general-rule--an-exemption-list-that-leaves-a-country-out-decides-visa-required) | **Rule 8f without the stated-rule condition** — the owner's decision: absence from the authority's complete exemption list decides "visa required"; China, South Korea and South Africa null → required (12 of 12 replays); Thailand and Singapore "no visa" held; an entry for another passport type does not count |
@@ -260,6 +261,41 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 209. An announcement naming the country and a later notice bringing it into force may be read together
+
+**2026-09-25 · the owner's decision:** "let it join the two pages". Entry 208 left Thailand
+unanswered. The PRD's July announcement names India among 59 countries given 30 days visa-free,
+pending the Royal Gazette. Its 4 September notice says that revision took effect on 15 September,
+for 60 countries, and lists them only in an image. Neither page answers alone.
+
+**What changed.**
+- **The roles call may give a decision two pages** (`adjudicate_roles.txt` rule 7a). It picks the
+  announcement for `visa_decision` and the later notice as `in_force_source_id`.
+- **The application checks the second page** (`validated_confirmations`). It is kept only beside
+  the kept decision, only if it is a fetched candidate, and never if it is the same page.
+- **`_sources_from_choices` adds it under the same role**, and the corridor's notes say the decision
+  rests on two pages.
+- **The plan reads the pair** (`extract_visa_plan.txt` rule 8i). The announcement states the rule in
+  force for the country it names, from the date the notice gives. The plan cites both, quotes the
+  sentence naming the country, and says so in the explanation.
+- **Bounds, in both prompts:**
+  - the two pages are the same revision;
+  - no page names the traveller's country as excluded or treated differently;
+  - a count that differs from the announcement's (59 against 60) is not by itself such a statement;
+  - a list that names countries and leaves the traveller's out is, and then the decision is null.
+
+**Measured: nine fresh corridor runs.**
+- **`thailand/IN/IN` answered "no visa" 4 of 4, `verified`**, citing both PRD pages ("India is named
+  in the announced revised 30-day visa-exemption measure, and the later government notice says
+  those revised measures took effect on 15 September 2026"). Its steps are the Thailand Digital
+  Arrival Card, and it states no 60-day stay.
+- **Regressions, one run each:** Singapore `PH/PH` "no visa"; Japan `IN/GB`, South Africa, Germany
+  `IN/GB` and China "visa required". All as before.
+
+**The risk accepted.** If a country were quietly dropped between an announcement and its final list,
+this would say "no visa" wrongly. The explanation names both pages and their dates so the traveller
+can check, and a readable list that leaves the country out still decides against it.
 
 ## 208. Rule 8h: a "no visa" that holds before and after an announced change is not held back by its start date
 

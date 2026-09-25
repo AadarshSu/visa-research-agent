@@ -39,6 +39,7 @@ from visa_research_agent.discovery.adjudication import (
     role_verdicts,
     validated_blocked_choices,
     validated_choices,
+    validated_confirmations,
     validated_delegates,
     validated_tools,
 )
@@ -1617,10 +1618,13 @@ class CorridorResolver:
         }
 
         chosen, discarded = validated_choices(adjudication, fetched.by_id)
+        confirming = validated_confirmations(adjudication, fetched.by_id, chosen)
         notes.extend(discarded)
         named, tool_discarded = validated_tools(adjudication, fetched.by_id)
         notes.extend(tool_discarded)
-        sources, unresolved = self._sources_from_choices(destination, fetched, chosen, notes)
+        sources, unresolved = self._sources_from_choices(
+            destination, fetched, chosen, notes, confirming=confirming
+        )
         tools: list[ResolvedTool] = []
         for role in ROLE_ORDER:
             tool = named.get(role)
@@ -1719,8 +1723,14 @@ class CorridorResolver:
         fetched: "FetchedShortlist",
         chosen: dict[DiscoveryRole, tuple[str, str]],
         notes: list[str],
+        *,
+        confirming: dict[DiscoveryRole, tuple[str, str]] | None = None,
     ) -> tuple[list[ResolvedSource], list[DiscoveryRole]]:
-        """Turn validated model choices into sources, honouring every refusal."""
+        """Turn validated model choices into sources, honouring every refusal.
+
+        A decision may carry a second page that brings the first into force (entry 209). It is added
+        under the same role, so the plan sees and cites both.
+        """
 
         by_url: dict[str, tuple[CandidatePage, list[DiscoveryRole], list[str]]] = {}
         unresolved: list[DiscoveryRole] = []
@@ -1741,6 +1751,22 @@ class CorridorResolver:
                 reasons.append(f"{role}: {reason}")
             else:
                 by_url[url] = (candidate, [role], [f"{role}: {reason}"])
+
+        for role, (source_id, reason) in (confirming or {}).items():
+            candidate = fetched.by_id[source_id]
+            url = candidate.link.url
+            said = f"{role} (brings the announced revision into force): {reason}"
+            if url in by_url:
+                _, roles, reasons = by_url[url]
+                if role not in roles:
+                    roles.append(role)
+                reasons.append(said)
+            else:
+                by_url[url] = (candidate, [role], [said])
+            notes.append(
+                f"the {role.replace('_', ' ')} rests on two pages read together: one naming the "
+                "traveller's country, and a later one saying that revision took effect"
+            )
 
         taken: set[str] = set()
         sources: list[ResolvedSource] = []
