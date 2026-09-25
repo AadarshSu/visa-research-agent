@@ -412,10 +412,11 @@ destinations.
     - The SharePoint countries' stores (entry 215).
     - Korea's store, so `visaforkorea-ce.com` can be recorded from an India mission page
       (entry 219).
-  - **Selection variance loses reachable answers.** Thailand `IN/IN` refused 1 run in 4 on
-    byte-identical selection packets, when the answer left out the 15 July announcement (entry
-    219). Japan `IN/GB` was open ×2 (entry 215), then `verified` ×2. Measure how often the
-    selection call drops a page that answered in other runs before proposing a fix.
+  - **Worked 2026-09-26: Thailand's refusal and Japan's open decisions (entries 220–222).**
+    - Both were a decision resting on two pages, judged one page at a time.
+    - Japan's roles call credited MOFA's list 6 of 10 times; roles rule 7b makes it 10 of 10.
+    - Thailand's selection kept its announcement 16 of 20 times; selection rule 11 makes it 19 of 20.
+    - Entry 220 also fixed a translation penalty that "Thailand" and "Germany" were paying.
   - **Proposed, not measured:** de-duplicating near-identical series before the selector's cap.
     Australia once read seven quarterly reports while its step-by-step page was cut.
 

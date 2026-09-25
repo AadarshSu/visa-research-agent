@@ -267,6 +267,33 @@ s more pressing |
 
 ---
 
+## 222. Selection rule 11: a page saying a revision took effect brings its announcement with it
+
+**2026-09-26 · the owner: "investigate Thailand's second run refusing".** Entry 219's second
+Thailand run refused: no decision page was read.
+- **Its selection packet was byte-identical** to the 17 other runs since entry 209 (one checksum).
+  In 17 of the 18, the selection call chose the 15 July announcement, the only page naming India.
+- **Nothing deterministic would have caught the miss.** The announcement is offered 57th of 160
+  in fusion order, and 18th for the decision by stored text alone. Entry 220's scoring fix gives
+  it +6 instead of −19 without moving it.
+- **Replayed 20 times on that packet, the committed prompt missed it 4 times, not 1 in 18.** Every
+  miss, and every hit, chose the 4 September notice that the revision took effect (40 of 40).
+- The notice does not repeat whom the revision covers, and the announcement does: entry 209's pair,
+  which the roles call already reads together (roles rule 7a). The selector judged each page alone,
+  and the notice looks as if it settles the decision.
+
+**Rule 11** (`select_candidates.txt`): where the selector chooses a page saying a revision of the
+visa rules took effect, it also chooses that revision's announcement if offered, because the two
+are read together.
+
+**Measured.**
+- **Replayed:** the announcement chosen **19 of 20** times, against 16 of 20. The model picked about
+  as many pages (8.95 against 8.65 on average), so it costs no fetches.
+- **Japan, Germany and Singapore** kept their decision pages in 9 of 9 replays.
+- **Live:** Thailand "no visa", `verified` ×2, with the announcement chosen (`item63-220b.log`).
+- **One replay in 20 still misses.** A refusal is what that costs, never a wrong answer: without the
+  announcement, nothing states India's exemption.
+
 ## 221. Roles rule 7b: where the decision turns on a list, the list is the decision page
 
 **2026-09-26 · the owner: "investigate Japan leaving its visa decision open".** Japan `IN/GB` was

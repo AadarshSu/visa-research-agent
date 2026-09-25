@@ -10,6 +10,7 @@ a URL fragment whose pick is being counted. Calls go through Personas, one at a 
 
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -65,7 +66,9 @@ async def main() -> None:
     targets = sys.argv[6].split(",")
     base = json.loads(packet_path.read_text(encoding="utf-8"))
     selector = PersonasCandidateSelector(personas_client_from_settings())
-    prompt = load_selection_prompt()
+    # SELECT_PROMPT=<file> replays a prompt variant instead of the committed one (entry 220).
+    variant_prompt = os.environ.get("SELECT_PROMPT")
+    prompt = Path(variant_prompt).read_text() if variant_prompt else load_selection_prompt()
     for variant in variants:
         packet = base if variant == "baseline" else anchored(base, code, int(variant[8:]))
         text = json.dumps(packet, ensure_ascii=False, separators=(",", ":"))

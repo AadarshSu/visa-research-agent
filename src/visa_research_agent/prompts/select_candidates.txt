@@ -47,3 +47,7 @@ Follow these rules:
    names — usually the same page at another address, or a near-copy of it. Judge it on that excerpt
    together with its own address and link text; being a copy is not a reason to reject it. A
    candidate's `link_text`, `heading` or `title` is left out when it has none.
+11. A page saying that a revision of the visa rules has taken effect often does not repeat which
+   countries the revision covers. Where you choose such a page, also choose the announcement of
+   that revision if it is offered — the page that names the countries — because the two are read
+   together to decide whether this traveller needs a visa.
