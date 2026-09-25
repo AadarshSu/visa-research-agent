@@ -36,7 +36,60 @@ disproved. Link instead of copying.
 
 ---
 
-## Next session: the full rebuild is done and graded — start here
+## Next session: the owner's verdicts on item 63's second round — start here
+
+**Updated 2026-09-25, at the end of the session that ran it.** The owner is judging 20 plans on
+[Ten Corridors, Second Round](https://claude.ai/artifact/XGJy6wjofg6tDcWc9jZu7K). The session
+starts from the verdicts the owner pastes in, produced by the page's "Copy my verdicts" button: one
+line per destination, `Right`, `Wrong` or `Unsure`, with a note. The page keeps them in the owner's
+browser only, so the paste is the one copy you get.
+
+**Where everything is**
+- **What the round did:** DECISIONS entry 214, with the table of all ten.
+- **Why the plans look as they do:** entries 205–213.
+  - 205: tables are read with their headings.
+  - 206: rule 8f widened.
+  - 207: Thailand, and retrying pages that failed only transiently.
+  - 208, 209: rules 8h and 8i.
+  - 210: the checklist a page links to is followed.
+  - 211: checklists are linked, never copied.
+  - 212: renders go to the most promising pages first.
+  - 213: an unread checklist is named only in the page's own words.
+- **The 20 runs' raw outputs:** `var/item70-2026-09-24/item63-round2/<slug>_IN_IN/<1|2>/`.
+  - `plan.json` is the plan and `recall/*.json` what the corridor considered.
+  - `roles_packet.txt` and `roles_answer.json` are the roles call's input and answer; `plan_packet.json`
+    and `plan_draft.json` the plan call's.
+  - `result.json` holds why a plan was refused.
+  - The first round, before the fixes, is in `item63/`.
+- **Tooling.**
+  - `var/item70-2026-09-24/run.py N slug/NAT/RES …` re-runs corridors, with `ITEM70_OUT=<folder>`.
+  - `replay_plan.py` replays only the plan call on a saved `plan_packet.json`.
+  - `review/build_review_data.py` and `review/template.html` rebuild the page.
+  - Run anything that fetches from the owner's Terminal panel: Chromium cannot start in the
+    sandboxed shell.
+
+**Already known, before any verdict**
+- **Turkey** left its decision open in one run: an e-Visa only with a Schengen, US, UK or Irish
+  visa, otherwise a sticker visa. That is rule 8g's case, where every route issues a visa.
+- **South Africa** run 1 has no plan: the model's reply cited `south_af_dirco_elementor_1431},{`
+  and validation refused it.
+- **Egypt `BD/SA`** varies on a byte-identical roles packet (entry 204, TODO *Smaller things*).
+- **Australia and Spain** have no checklist read: their pages mostly fail to render.
+- **Leftovers to tidy, not urgent:**
+  - Three cache backups: `var/_backup_cache_before_{tables,links,priority}_2026-09-25/`.
+  - The pre-rebuild store backups: `var/_backup_before_item70_2026-09-24/`, 633 MB.
+  - The pilot's uncommitted logs, and `nohup.out`.
+
+**How to work the verdicts.** For each `Wrong`:
+1. Find the first link that broke — search, selection, roles or plan — from the run's files.
+2. Check the claim against the official page the note names.
+3. Propose a fix, and measure it on that corridor and on the regression set (Japan `IN/GB`,
+   Singapore `PH/PH`, Germany `IN/GB`, Thailand `IN/IN`) before shipping.
+
+A fix that changes what a plan may conclude is the owner's decision (entries 206–209 are the
+pattern). Record each in DECISIONS and CORRECTIONS as this file asks.
+
+## Earlier: the full rebuild is done and graded
 
 **Every one of the 55 destinations was rebuilt by 2026-09-25 and graded the same day (DECISIONS
 entries 203 and 204).** **Item 63's ten destinations then ran (entry 205)** and found a wrong
