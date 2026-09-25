@@ -395,12 +395,16 @@ destinations.
   September notice confirms the revision took effect on 15 September, but its list of 60 countries
   is an image, and India is named only in July's list of 59. **Then the owner allowed the two to be read
   together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
-- **Checklists — fix 1 shipped (entry 210):** a corridor reads the checklist a page it read links
-  to. Switzerland 0 → 2 of 2. **Left:** Australia and Spain need pages rendered past the render
-  budget, and Korea's checklist sits behind a waiting room — both item 61's render question, which
-  is the owner's. Australia's also lost its step-by-step page to the selector's cap once, while
-  seven near-identical quarterly reports were read; a de-duplication of such series before the
-  cap is proposed, not measured.
+- **Checklists — worked (entries 210–212).**
+  - A corridor reads the checklist a page it read links to.
+  - Plans now link the authority's checklist instead of copying it, and name a likely one they
+    could not read.
+  - Renders go to the most promising pages first.
+  - **Left:** Australia and Spain still get no checklist read. Their pages mostly fail to render,
+    and they are now named with links. Korea's checklist download answers the site's front page,
+    and is named.
+  - **Proposed, not measured:** de-duplicating near-identical series before the selector's cap.
+    Australia once read seven quarterly reports while its step-by-step page was cut.
 
 ### 57. Stream the plan to the screen as it is written — `next`, **a UX improvement, added 2026-09-15; moved to Now 2026-09-25**
 
@@ -482,7 +486,9 @@ pages still refused our headless browser as a bot, and passing would mean disgui
    - **Whether it works is not measured, on purpose**: trying it is the change.
    - **An interactive check — a checkbox or a puzzle — is a CAPTCHA** and stays out of bounds whatever
      is decided here.
-2. **Should a corridor's five renders grow, or be kept for pages a challenge guards?** An answered
+2. **Should a corridor's five renders grow, or be kept for pages a challenge guards?** *Partly
+   answered 2026-09-25, the owner's choice: the same five go to the most promising pages first
+   (entry 212). Growing the number is still open.* An answered
    challenge costs 4–13s and a failing one the full 20s. Priced in seconds only: nothing yet shows the
    extra pages change an answer.
 

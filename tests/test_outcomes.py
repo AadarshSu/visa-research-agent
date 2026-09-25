@@ -157,7 +157,7 @@ async def test_missing_optional_source_still_produces_a_plan_marked_partial() ->
     assert generator.calls == 1
     assert plan.status == "partial"
     assert [failure.source_id for failure in plan.unavailable_sources] == [OPTIONAL_SOURCE]
-    assert plan.requirements, "a partial plan must still carry usable guidance"
+    assert plan.application_document_source_ids, "a partial plan still links its checklist"
 
 
 @pytest.mark.anyio

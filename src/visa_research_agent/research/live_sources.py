@@ -6,7 +6,7 @@ registry, and it prefers refusing a source to serving evidence that may no longe
 
 import asyncio
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from hashlib import sha256
 from io import BytesIO
@@ -196,28 +196,41 @@ MAXIMUM_DOCUMENT_LINKS = 80
 HEADINGS = ("h1", "h2", "h3", "h4", "h5", "h6")
 
 
+# The address inside a script link: `javascript:f_down('./down.do?brd_id=14038&seq=1')`.
+SCRIPT_LINK_ADDRESS = re.compile(r"""^javascript:\s*[\w.$]+\(\s*['"]([^'"]+)['"]""", re.IGNORECASE)
+
+
 def extract_document_links(html: str, base_url: str) -> list[DocumentLink]:
     """The documents a page links to, with the label the page gives each and the heading above it.
 
-    Only ordinary links to a PDF or Word file. A `javascript:` link is not followed: reading an
-    address out of a script is a step further than reading the page, and the one case found —
-    South Korea's consulate attachments — sits behind a waiting room anyway (entry 210). Trust is
-    not decided here; the caller checks every address against the approved domains before any
-    request.
+    Two forms. An ordinary link whose address ends in `.pdf`, `.doc` or `.docx`; and a script link
+    whose own label is a file name of that kind — South Korea's consulates attach their checklist as
+    `javascript:f_down('./down.do?…')` labelled "Korean Visa checklist (w.e.f. 24.08.2026).pdf". For
+    the second, the address is the call's quoted argument, read as text: no script is run, and the
+    owner decided such a document may be named with its link (entry 211). Trust is not decided
+    here; the caller checks every address against the approved domains before any request.
     """
 
     soup = BeautifulSoup(html, "html.parser")
     found: dict[str, DocumentLink] = {}
     for anchor in soup.find_all("a", href=True):
         href = str(anchor.get("href") or "").strip()
-        if not href or href.lower().startswith(("javascript:", "mailto:", "#")):
+        text = " ".join(anchor.get_text(separator=" ").split()) or str(anchor.get("title") or "")
+        if href.lower().startswith("javascript:"):
+            called = SCRIPT_LINK_ADDRESS.match(href)
+            if called is None or not text.lower().endswith(DOCUMENT_SUFFIXES):
+                continue
+            href = called.group(1)
+        if not href or href.lower().startswith(("mailto:", "#")):
             continue
         url = urljoin(base_url, href).split("#", 1)[0]
         if not url.lower().startswith(("http://", "https://")):
             continue
-        if not urlsplit(url).path.lower().endswith(DOCUMENT_SUFFIXES):
+        is_document = urlsplit(url).path.lower().endswith(
+            DOCUMENT_SUFFIXES
+        ) or text.lower().endswith(DOCUMENT_SUFFIXES)
+        if not is_document:
             continue
-        text = " ".join(anchor.get_text(separator=" ").split()) or str(anchor.get("title") or "")
         previous = anchor.find_previous(HEADINGS)
         heading = " ".join(previous.get_text(separator=" ").split()) if previous else ""
         found.setdefault(url, DocumentLink(url=url, text=text[:300], heading=heading[:300]))
@@ -402,6 +415,10 @@ def _robots_reason(verdict: RobotsVerdict, detail: str) -> str:
 # on `immi.homeaffairs.gov.au`, against a budget of five (entry 135).
 RENDER_FAILURES_PER_HOST = 3
 
+# Why a page was set aside in the first pass of a prioritised fetch. Never shown to anybody: every
+# page carrying it is fetched again in the second pass, which replaces its result.
+DEFERRED_RENDER = "the page needed a browser, and renders go to the most promising pages first"
+
 
 class RenderBudget:
     """How many pages one run may render, spent by that run and nobody else.
@@ -415,8 +432,16 @@ class RenderBudget:
     flight together cannot spend each other's.
     """
 
-    def __init__(self, maximum: int, *, failures_per_host: int = RENDER_FAILURES_PER_HOST) -> None:
+    def __init__(
+        self,
+        maximum: int,
+        *,
+        failures_per_host: int = RENDER_FAILURES_PER_HOST,
+        deferring: bool = False,
+    ) -> None:
         self.maximum = maximum
+        # In a prioritised fetch's first pass no page is rendered; each is set aside (entry 212).
+        self.deferring = deferring
         self.spent = 0
         self.failures_per_host = failures_per_host
         self._failed: dict[str, int] = {}
@@ -432,6 +457,8 @@ class RenderBudget:
         DECISIONS entry 135.
         """
 
+        if self.deferring:
+            return DEFERRED_RENDER
         if self._failed.get(host, 0) >= self.failures_per_host:
             return (
                 f"the page needed a browser and {host} had already failed to render "
@@ -536,8 +563,22 @@ class LiveSourceFetcher:
         # configured to run without it; the parameter is a seam for tests, not a switch.
         self.robots = robots or RobotsCache(user_agent=user_agent)
 
-    async def fetch(self, destination: DestinationConfig) -> RetrievalReport:
-        """Retrieve every configured primary source, reporting any that could not be used."""
+    async def fetch(
+        self,
+        destination: DestinationConfig,
+        *,
+        render_priority: Mapping[str, float] | None = None,
+    ) -> RetrievalReport:
+        """Retrieve every configured primary source, reporting any that could not be used.
+
+        **With `render_priority`, renders go to the most promising pages first (entry 212).** The
+        first pass reads every page as served and renders none; the pages that needed a browser are
+        then fetched again, highest priority first, and only they may spend the run's renders.
+        Without it, a render went to whichever page reached the budget first, and a host's three
+        strikes to whichever of its pages failed first — Australia's step-by-step documents page
+        was never rendered because incidental Home Affairs pages had used the host up. The second
+        pass costs one plain request per such page, for pages a browser would request anyway.
+        """
 
         configured_sources = [
             source for source in destination.sources if source.research_pass == "primary"
@@ -549,7 +590,7 @@ class LiveSourceFetcher:
 
         limit = asyncio.Semaphore(self.concurrency)
         # One allowance per call, spent only by the sources this call reads.
-        budget = RenderBudget(self.maximum_renders)
+        budget = RenderBudget(self.maximum_renders, deferring=render_priority is not None)
         async with httpx.AsyncClient(
             transport=self.transport,
             timeout=self.timeout_seconds,
@@ -569,9 +610,13 @@ class LiveSourceFetcher:
                 async with limit:
                     return await self._fetch_source(client, destination, configured_source, budget)
 
-            results = await asyncio.gather(
-                *(fetch_one(source) for source in configured_sources),
+            results = list(
+                await asyncio.gather(*(fetch_one(source) for source in configured_sources))
             )
+            if render_priority is not None:
+                results = await self._render_in_priority_order(
+                    client, destination, configured_sources, results, render_priority, limit
+                )
 
         # One unusable source no longer ends the run; it is reported as an explained gap and the
         # decision about whether the plan can still stand is made downstream.
@@ -579,6 +624,42 @@ class LiveSourceFetcher:
             fetched=[item for item in results if isinstance(item, FetchedSource)],
             failures=[item for item in results if isinstance(item, SourceFailure)],
         )
+
+    async def _render_in_priority_order(
+        self,
+        client: httpx.AsyncClient,
+        destination: DestinationConfig,
+        configured_sources: list[ConfiguredSource],
+        results: list[FetchedSource | SourceFailure],
+        render_priority: Mapping[str, float],
+        limit: asyncio.Semaphore,
+    ) -> list[FetchedSource | SourceFailure]:
+        """The second pass: fetch the pages set aside for a browser, most promising first."""
+
+        deferred = [
+            index
+            for index, result in enumerate(results)
+            if isinstance(result, SourceFailure) and result.detail == DEFERRED_RENDER
+        ]
+        if not deferred:
+            return results
+        deferred.sort(
+            key=lambda index: -render_priority.get(configured_sources[index].source_id, 0.0)
+        )
+        budget = RenderBudget(self.maximum_renders)
+
+        async def again(index: int) -> tuple[int, FetchedSource | SourceFailure]:
+            async with limit:
+                result = await self._fetch_source(
+                    client, destination, configured_sources[index], budget
+                )
+                return index, result
+
+        # Started in priority order; with a semaphore that admits in order, renders are claimed in
+        # roughly that order too, and a host's strikes land on its most promising pages first.
+        for index, result in await asyncio.gather(*(again(index) for index in deferred)):
+            results[index] = result
+        return results
 
     async def _fetch_source(
         self,
@@ -722,10 +803,12 @@ class LiveSourceFetcher:
             )
 
         document_links: list[DocumentLink] = []
+        is_document = False
         try:
             content, document = await self._read_document(client, destination, response)
             final_url = str(document.url)
-            if not looks_like_pdf(document):
+            is_document = looks_like_pdf(document)
+            if not is_document:
                 document_links = extract_document_links(document.text, final_url)
             # A page that gave up nothing readable may still be a real page whose text only
             # exists once its scripts have run. Rendering is tried here and nowhere else, so
@@ -783,6 +866,7 @@ class LiveSourceFetcher:
             etag=response.headers.get("etag"),
             last_modified=response.headers.get("last-modified"),
             document_links=document_links,
+            is_document=is_document,
         )
         self.cache.store(entry)
         return self._build(configured_source, entry, from_cache=False, is_stale=False)
@@ -1035,4 +1119,5 @@ class LiveSourceFetcher:
             content_hash=entry.content_hash,
             from_cache=from_cache,
             document_links=entry.document_links,
+            is_document=entry.is_document,
         )

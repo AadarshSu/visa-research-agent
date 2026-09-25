@@ -31,6 +31,7 @@ from visa_research_agent.domain.models import (
     TravellerProfile,
     VisaPlan,
     VisaPlanDraft,
+    VisaRequirement,
 )
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.errors import LLMExtractionError, VisaResearchError
@@ -410,30 +411,12 @@ class OpenAIVisaPlanExtractor:
         # Every quote is checked against the text this run retrieved, and one the page does not hold
         # never reaches the plan (item 21). Checked against `content`, which is what the model read.
         quotes = QuoteChecker({item.source.source_id: item.content for item in fetched_sources})
-        requirements = [
-            requirement.model_copy(
-                update={
-                    "supporting_quotes": quotes.keep(
-                        requirement.supporting_quotes, requirement.source_ids
-                    )
-                }
-            )
-            for requirement in draft.requirements
-            if application_source_ids.intersection(requirement.source_ids)
-        ]
-        # With no checklist source there is nothing a document requirement could honestly cite, so
-        # anything the model offered is dropped rather than kept on a page that is not a checklist —
-        # an eligibility rule or an application form read as though it were guidance. The plan then
-        # has to say what it could not answer, or the validator refuses it.
-        #
-        # **Unless a page stated that this traveller needs no visa.** Then an empty list is the
-        # right answer rather than a failed extraction: there is no application, so there are no
-        # application documents, and a destination that *declares* a checklist source has declared
-        # one for the travellers who apply. Singapore is the case — `sg_ica_india_visa_details` is
-        # configured for every traveller, and a Filipino needs no visa, so the model correctly
-        # returned nothing and this guard read that as a model failure. Entry 98.
-        if application_source_ids and not requirements and not entry_only:
-            raise LLMExtractionError("Model output contains no source-backed application documents")
+        # **The checklist is linked, not copied — the owner's decision, entry 211.** A designated
+        # checklist source is shown to the traveller as the authority's own document, so nothing we
+        # wrote can differ from it and the plan call writes less. Any list the model returns anyway
+        # is dropped. With no checklist source nothing may be listed either, which
+        # `VisaPlan.validate_absent_checklist` still enforces; its first clause is unchanged.
+        requirements: list[VisaRequirement] = []
         try:
             where_to_apply = (
                 ApplicationLocation.model_validate(draft.where_to_apply.model_dump())

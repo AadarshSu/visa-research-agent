@@ -83,7 +83,7 @@ async def test_openai_extractor_uses_one_bounded_structured_call() -> None:
     assert generator.system_prompt is not None
     assert "untrusted evidence" in generator.system_prompt
     assert "outside knowledge" in generator.system_prompt
-    assert "travel-readiness items" in generator.system_prompt
+    assert "Do not list the application documents" in generator.system_prompt
     assert "genuinely actionable timeline" in generator.system_prompt
     assert "Never claim that an account" in generator.system_prompt
     assert generator.research_packet is not None
@@ -100,10 +100,8 @@ async def test_openai_extractor_uses_one_bounded_structured_call() -> None:
     assert plan.where_to_apply.source_ids == ["sg_mfa_london_visa_information"]
     assert any(step.link_target == "application_route" for step in plan.application_steps)
     assert all(step.timing for step in plan.application_steps)
-    assert plan.requirements
-    assert all(
-        "sg_ica_india_visa_details" in requirement.source_ids for requirement in plan.requirements
-    )
+    # The checklist is linked, not copied (entry 211): the source is designated, nothing is listed.
+    assert plan.requirements == []
     assert plan.application_document_source_ids == ["sg_ica_india_visa_details"]
 
 
@@ -138,22 +136,30 @@ async def test_openai_extractor_omits_documents_from_general_entry_sources() -> 
 
 
 @pytest.mark.anyio
-async def test_openai_extractor_requires_a_designated_application_document_source() -> None:
+async def test_a_list_the_model_writes_anyway_is_never_shown() -> None:
+    """Entry 211. The official checklist is linked rather than copied, so a list the model returns
+    despite rule 7 is dropped whole — from the checklist page or any other — and the plan still
+    designates the checklist for the traveller to open."""
+
     golden_draft = load_golden_draft()
     draft = golden_draft.model_copy(
         update={
             "requirements": [
-                requirement.model_copy(update={"source_ids": ["sg_ica_entry_requirements"]})
-                for requirement in golden_draft.requirements
+                *golden_draft.requirements,
+                golden_draft.requirements[0].model_copy(
+                    update={"source_ids": ["sg_ica_entry_requirements"]}
+                ),
             ]
         }
     )
-    generator = FakeStructuredPlanGenerator(draft)
     fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
-    extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
-    with pytest.raises(LLMExtractionError, match="no source-backed application documents"):
-        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(draft), maximum_input_characters=80_000
+    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    assert plan.requirements == []
+    assert plan.application_document_source_ids == ["sg_ica_india_visa_details"]
 
 
 @pytest.mark.anyio
@@ -204,19 +210,20 @@ async def test_a_stated_no_visa_survives_a_destination_that_designates_a_checkli
 
 
 @pytest.mark.anyio
-async def test_a_visa_that_is_required_still_needs_its_designated_checklist() -> None:
-    """The guard above narrowed and not removed: only a stated *no* may return nothing."""
+async def test_a_required_visa_with_a_linked_checklist_is_a_whole_plan() -> None:
+    """Before entry 211 an empty list beside a designated checklist read as a failed model call.
+    Now it is the intended shape: the checklist is the authority's own document, linked."""
 
-    golden_draft = load_golden_draft()
-    draft = golden_draft.model_copy(
-        update={"requirements": [], "unresolved_questions": ["What documents are needed?"]}
-    )
-    generator = FakeStructuredPlanGenerator(draft)
+    draft = load_golden_draft().model_copy(update={"requirements": []})
     fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
-    extractor = OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000)
 
-    with pytest.raises(LLMExtractionError, match="no source-backed application documents"):
-        await extractor.extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+    plan = await OpenAIVisaPlanExtractor(
+        FakeStructuredPlanGenerator(draft), maximum_input_characters=80_000
+    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
+
+    assert plan.visa_required is True
+    assert plan.requirements == []
+    assert plan.application_document_source_ids == ["sg_ica_india_visa_details"]
 
 
 @pytest.mark.anyio
@@ -803,9 +810,8 @@ async def test_a_quote_the_page_does_not_hold_never_reaches_the_plan() -> None:
     ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
 
     assert plan.decision_quotes == golden.decision_quotes
-    assert plan.requirements[0].supporting_quotes == first.supporting_quotes
-    # The golden plan's own quotes are real, so every one of them survives the same check.
-    assert all(requirement.supporting_quotes for requirement in plan.requirements)
+    # Requirement quotes no longer reach a plan at all: the checklist is linked (entry 211).
+    assert plan.requirements == []
 
 
 @pytest.mark.anyio
@@ -1024,20 +1030,17 @@ def test_an_announcement_and_the_notice_bringing_it_into_force_are_read_together
     assert "leaves the traveller's out is, and\n     then visa_required is null" in prompt
 
 
-def test_one_short_quote_and_a_few_words_of_reason_where_nothing_conditions_a_document() -> None:
-    """Item 56, the owner's choice of trims 2 and 3 (entry 175). Writing the plan is the longest
-    wait in a request and its time tracks what it writes, so a claim carries one short quote rather
-    than up to two long ones, and an unconditional document a few words of why it applies. The
-    checker's own bounds are unchanged: a longer quote than asked for is still a real one."""
+def test_one_short_quote_for_the_decision_and_no_document_list() -> None:
+    """Item 56's trims (entry 175) kept one short quote per claim; entry 211 then dropped the
+    document list, so the only quote the plan call writes is the decision's."""
 
     prompt = load_extraction_prompt()
 
     assert "copy one passage VERBATIM" in prompt
     assert "20 to 150 characters" in prompt
     assert "one or two passages" not in prompt
-    assert "keep reason_it_applies to a few words" in prompt
-    # The shortening is only for a document nothing conditions; a condition is still explained.
-    assert "explain any\n   condition or uncertainty plainly in reason_it_applies" in prompt
+    assert "Do not list the application documents" in prompt
+    assert "return an empty requirements list" in prompt
 
 
 def test_the_extraction_prompt_separates_a_block_from_a_questionnaire() -> None:

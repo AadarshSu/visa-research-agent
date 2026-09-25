@@ -23,7 +23,7 @@ from datetime import UTC, datetime
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import Field
+from pydantic import AnyHttpUrl, Field
 
 from visa_research_agent.discovery.adjudication import (
     MAXIMUM_BLOCKED_JUDGED,
@@ -232,6 +232,10 @@ ADJUDICATION_ATTEMPTS = 2
 # whenever the refusal was settled; `untrusted` landed off the approved domains, so its address is
 # not one to send a traveller to.
 NAMEABLE_CHECKLIST_OUTCOMES = frozenset({"challenged", "unreachable", "unusable", "disallowed"})
+# How many a plan may name, most likely first. Australia named six on 2026-09-25, two of them help
+# pages about evidence of funds, and a traveller shown six links cannot tell which is the list
+# (entry 212).
+MAXIMUM_NAMED_CHECKLISTS = 3
 
 
 def unread_checklist_pages(
@@ -252,7 +256,13 @@ def unread_checklist_pages(
         return []
     named = set(already_named)
     pages: list[SourceFailure] = []
-    for failure in sorted(failures, key=lambda item: str(item.attempted_url)):
+
+    def likelihood(failure: SourceFailure) -> tuple[float, str]:
+        candidate = candidates.get(str(failure.attempted_url))
+        score = candidate.link_scores.score_for("document_checklist") if candidate else 0.0
+        return (-score, str(failure.attempted_url))
+
+    for failure in sorted(failures, key=likelihood):
         url = str(failure.attempted_url)
         candidate = candidates.get(url)
         if (
@@ -264,6 +274,8 @@ def unread_checklist_pages(
             continue
         named.add(url)
         pages.append(failure)
+        if len(pages) >= MAXIMUM_NAMED_CHECKLISTS:
+            break
     return pages
 
 
@@ -293,6 +305,10 @@ class FetchedShortlist(StrictModel):
     contents: dict[str, str] = Field(default_factory=dict)
     links: dict[str, list[DocumentLink]] = Field(default_factory=dict)
     """The documents each read page links to, by source id (entry 210)."""
+    documents: set[str] = Field(default_factory=set)
+    """Source ids whose text came from a PDF rather than a web page (entry 212)."""
+    followed: list[CandidatePage] = Field(default_factory=list)
+    """Documents followed from those links, read or not, so a failed one can still be named."""
     failures: list[SourceFailure] = Field(default_factory=list)
     """Why the rest could not be read, carried out rather than dropped.
 
@@ -925,7 +941,9 @@ class CorridorResolver:
         )
         # A followed document was never a candidate, so it is recorded here or the recall log
         # shows a page read that nothing chose.
-        for candidate in fetched.candidates:
+        # The pool and the trace are one dict, so this also lets a followed document that could not
+        # be read be named as a possible checklist (`unread_checklist_pages`, entry 211).
+        for candidate in [*fetched.candidates, *fetched.followed]:
             trace.candidates.setdefault(candidate.link.url, candidate)
             trace.shortlisted.add(candidate.link.url)
         trace.fetched = {candidate.link.url for candidate in fetched.candidates}
@@ -1554,12 +1572,24 @@ class CorridorResolver:
         payload["appointed_providers"] = []
         probe = DestinationConfig.model_validate(payload)
 
-        report = await self.live_fetcher.fetch(probe)
+        # Renders go to the pages most likely to answer, not to whichever needs one first (entry
+        # 212). The roles a plan cannot do without count double.
+        priority = {
+            source_id: max(
+                candidate.combined(role) * (2.0 if role in REPORTED_ROLES else 1.0)
+                for role in ROLE_ORDER
+            )
+            for source_id, candidate in by_id.items()
+        }
+        report = await self.live_fetcher.fetch(probe, render_priority=priority)
         contents: dict[str, str] = {}
         links: dict[str, list[DocumentLink]] = {}
+        documents: set[str] = set()
         for item in report.fetched:
             contents[item.source.source_id] = item.content
             links[item.source.source_id] = list(item.document_links)
+            if item.is_document:
+                documents.add(item.source.source_id)
             fetched_candidate = by_id.get(item.source.source_id)
             if fetched_candidate is None:
                 continue
@@ -1579,6 +1609,7 @@ class CorridorResolver:
             by_id={source_id: by_id[source_id] for source_id in readable},
             contents=contents,
             links={source_id: links[source_id] for source_id in readable if source_id in links},
+            documents={source_id for source_id in readable if source_id in documents},
             failures=list(report.failures),
         )
 
@@ -1645,6 +1676,36 @@ class CorridorResolver:
         more = await self._fetch_bodies(
             destination, chosen, corridor, nationality, taken=set(fetched.by_id)
         )
+        # A link labelled as a document must come back as one. South Korea's download address
+        # answered with the site's front page, which read cleanly and held nothing (entry 212); it
+        # is unread, so it is reported as such and may be named rather than quietly counted as read.
+        not_documents = [sid for sid in more.by_id if sid not in more.documents]
+        for source_id in not_documents:
+            candidate = more.by_id[source_id]
+            authority, _kind = derive_authority(candidate.link.url, destination)
+            more.failures.append(
+                SourceFailure(
+                    source_id=source_id,
+                    title=clean_title(candidate.title, candidate.link.url),
+                    authority=authority,
+                    outcome="unusable",
+                    detail="the link is labelled as a document and returned a web page instead",
+                    attempted_url=AnyHttpUrl(candidate.link.url),
+                )
+            )
+        more = more.model_copy(
+            update={
+                "candidates": [
+                    c
+                    for c in more.candidates
+                    if c.link.url not in {more.by_id[sid].link.url for sid in not_documents}
+                ],
+                "by_id": {sid: c for sid, c in more.by_id.items() if sid not in not_documents},
+                "contents": {
+                    sid: text for sid, text in more.contents.items() if sid not in not_documents
+                },
+            }
+        )
         notes.append(
             f"{len(more.candidates)} of {len(chosen)} checklist documents linked from pages this "
             "run read were read as well"
@@ -1655,6 +1716,7 @@ class CorridorResolver:
             contents={**fetched.contents, **more.contents},
             links={**fetched.links, **more.links},
             failures=[*fetched.failures, *more.failures],
+            followed=chosen,
         )
 
     def _is_this_trips_checklist(

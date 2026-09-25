@@ -1,0 +1,16 @@
+australia/IN/IN run 1: research resolved, plan answered, True (62.3s)
+spain/IN/IN run 1: research resolved, plan answered, True (84.4s)
+south-korea/IN/IN run 1: research resolved, plan answered, True (64.9s)
+switzerland/IN/IN run 1: research resolved, plan answered, True (46.5s)
+australia/IN/IN run 2: research resolved, plan answered, True (67.7s)
+spain/IN/IN run 2: research resolved, plan answered, True (89.9s)
+south-korea/IN/IN run 2: research resolved, plan answered, True (43.5s)
+switzerland/IN/IN run 2: research resolved, plan answered, True (45.6s)
+done
+turkey/IN/IN run 1: research resolved, plan answered, None (89.6s)
+vietnam/IN/IN run 1: research resolved, plan answered, True (42.4s)
+thailand/IN/IN run 1: research resolved, plan answered, False (43.2s)
+germany/IN/GB run 1: research resolved, plan answered, True (46.0s)
+japan/IN/GB run 1: research resolved, plan answered, True (36.0s)
+singapore/PH/PH run 1: research resolved, plan answered, False (25.7s)
+done

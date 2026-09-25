@@ -15,6 +15,7 @@ from discovery_site import (
     DETAIL_INDIA,
     EXEMPTIONS,
     INDEX,
+    MISSION,
     MISSION_CHECKLIST,
     MISSION_INDEX,
     MISSION_SPOUSE,
@@ -24,6 +25,7 @@ from discovery_site import (
     handler,
     site_pages,
 )
+from pydantic import AnyHttpUrl
 
 from visa_research_agent.discovery.adjudication import (
     AdjudicationError,
@@ -50,10 +52,11 @@ from visa_research_agent.discovery.resolver import (
     build_source_id,
     clean_title,
     derive_authority,
+    unread_checklist_pages,
 )
 from visa_research_agent.discovery.scoring import score_link, wrong_audience
 from visa_research_agent.discovery.search import SearchError, SearchQuotaExhausted
-from visa_research_agent.domain.models import DocumentLink
+from visa_research_agent.domain.models import DocumentLink, SourceFailure
 from visa_research_agent.domain.trust import host_of
 from visa_research_agent.research.live_sources import LiveSourceFetcher, extract_document_links
 from visa_research_agent.research.source_cache import FileSourceCache
@@ -1305,10 +1308,14 @@ async def test_the_checklist_a_read_page_links_to_is_read_as_well(tmp_path: Path
 
 
 def test_a_page_s_document_links_are_read_off_its_markup() -> None:
+    """An ordinary link to a document, and a script link labelled with a file name — South Korea's
+    consulate attachments (entry 211) — whose address is read from the call, never run."""
+
     html = (
         "<h2>Checklists</h2>"
         '<a href="/files/tourist.pdf">Tourist</a>'
         "<a href=\"javascript:f_down('./down.do?id=1')\">Korean Visa checklist.pdf</a>"
+        "<a href=\"javascript:showMenu('./menu.do')\">Menu</a>"
         '<a href="/visa/other.html">Other page</a>'
         '<a href="/files/tourist.pdf#page=2">Tourist again</a>'
     )
@@ -1320,5 +1327,123 @@ def test_a_page_s_document_links_are_read_off_its_markup() -> None:
             url="https://uk.embassy.gov.example/files/tourist.pdf",
             text="Tourist",
             heading="Checklists",
-        )
+        ),
+        DocumentLink(
+            url="https://uk.embassy.gov.example/visa/down.do?id=1",
+            text="Korean Visa checklist.pdf",
+            heading="Checklists",
+        ),
     ]
+
+
+@pytest.mark.anyio
+async def test_a_followed_checklist_that_cannot_be_read_is_named_with_its_link(
+    tmp_path: Path,
+) -> None:
+    """Entry 211, the owner's decision: a checklist we believe exists and could not read is named
+    so the traveller can open it — South Korea's sits behind a waiting room. Nothing is read from
+    it; the plan only carries its address, which our code read off the government page."""
+
+    requests: list[httpx.Request] = []
+    resolver, _provider = build_resolver(tmp_path, requests, [])
+    hub = CandidatePage(
+        link=PageLink(url=CHECKLIST_HUB, text="Notice", heading="", depth=0, discovered_from=""),
+        link_scores=RoleScores(),
+    )
+    missing = f"https://{MISSION}/files/visa-checklist.pdf"
+    fetched = FetchedShortlist(
+        candidates=[hub],
+        by_id={"hub": hub},
+        contents={"hub": "Notice"},
+        links={"hub": [DocumentLink(url=missing, text="Korean Visa checklist.pdf")]},
+    )
+    lexicon = get_lexicon()
+    registry = get_country_registry()
+
+    def score(link: PageLink) -> RoleScores:
+        return score_link(link, corridor(), lexicon, registry.require("IN"), registry.require("GB"))
+
+    merged = await resolver._follow_document_links(
+        destination(), corridor(), registry.require("IN"), fetched, score, lambda _: None, []
+    )
+
+    assert [candidate.link.url for candidate in merged.followed] == [missing]
+    assert missing not in {candidate.link.url for candidate in merged.candidates}
+    named = unread_checklist_pages(
+        merged.failures,
+        {candidate.link.url: candidate for candidate in merged.followed},
+        checklist_filled=False,
+        already_named=[],
+    )
+    assert [str(page.attempted_url) for page in named] == [missing]
+
+
+@pytest.mark.anyio
+async def test_a_document_link_that_returns_a_web_page_is_unread_and_named(tmp_path: Path) -> None:
+    """South Korea's checklist address answered with the site's front page, which read cleanly and
+    held nothing (entry 212). A link labelled as a document must come back as one; otherwise it
+    is unread, says why, and can be named with its link."""
+
+    requests: list[httpx.Request] = []
+    resolver, _provider = build_resolver(tmp_path, requests, [])
+    hub = CandidatePage(
+        link=PageLink(url=CHECKLIST_HUB, text="Notice", heading="", depth=0, discovered_from=""),
+        link_scores=RoleScores(),
+    )
+    fetched = FetchedShortlist(
+        candidates=[hub],
+        by_id={"hub": hub},
+        contents={"hub": "Notice"},
+        links={"hub": [DocumentLink(url=MISSION_SPOUSE, text="Tourist visa checklist.pdf")]},
+    )
+    lexicon = get_lexicon()
+    registry = get_country_registry()
+
+    def score(link: PageLink) -> RoleScores:
+        return score_link(link, corridor(), lexicon, registry.require("IN"), registry.require("GB"))
+
+    merged = await resolver._follow_document_links(
+        destination(), corridor(), registry.require("IN"), fetched, score, lambda _: None, []
+    )
+
+    assert MISSION_SPOUSE not in {candidate.link.url for candidate in merged.candidates}
+    [failure] = [f for f in merged.failures if str(f.attempted_url) == MISSION_SPOUSE]
+    assert "returned a web page" in failure.detail
+    named = unread_checklist_pages(
+        merged.failures,
+        {candidate.link.url: candidate for candidate in merged.followed},
+        checklist_filled=False,
+        already_named=[],
+    )
+    assert [str(page.attempted_url) for page in named] == [MISSION_SPOUSE]
+
+
+def test_at_most_three_likely_checklists_are_named_best_first() -> None:
+    """Australia named six on 2026-09-25, two of them help pages (entry 212). A traveller shown six
+    links cannot tell which is the list, so a plan names the three most likely."""
+
+    def unread(index: int) -> tuple[SourceFailure, CandidatePage]:
+        url = f"https://{AUTHORITY}/visa/page-{index}.html"
+        failure = SourceFailure(
+            source_id=f"page_{index}",
+            title=f"Page {index}",
+            authority="Testland",
+            outcome="unusable",
+            detail="the page returned too little readable text to trust",
+            attempted_url=AnyHttpUrl(url),
+        )
+        candidate = CandidatePage(
+            link=PageLink(url=url, text="", heading="", depth=1, discovered_from=""),
+            link_scores=RoleScores(scores={"document_checklist": float(index)}),
+        )
+        return failure, candidate
+
+    pairs = [unread(index) for index in range(1, 7)]
+    named = unread_checklist_pages(
+        [failure for failure, _ in pairs],
+        {candidate.link.url: candidate for _, candidate in pairs},
+        checklist_filled=False,
+        already_named=[],
+    )
+
+    assert [failure.source_id for failure in named] == ["page_6", "page_5", "page_4"]

@@ -29,6 +29,8 @@ class CachedSource(StrictModel):
     etag: str | None = None
     last_modified: str | None = None
     document_links: list[DocumentLink] = Field(default_factory=list)
+    is_document: bool = False
+    """Read from a PDF rather than a web page (entry 212)."""
     """The documents the page linked to when it was read (entry 210). Empty for a PDF, for a page
     read by rendering, and for anything cached before this field existed."""
 

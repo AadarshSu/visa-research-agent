@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-25 — update this line when you touch the handoff |
-| **Tests** | 954: 953 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 958: 957 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -48,8 +48,11 @@ change (entry 207)** found a `429` stored as permanent; builds now ask again for
 pages, and `thailand.prd.go.th` is reviewed. **The owner then allowed rules 8h and 8i (entries
 208, 209)**, and Thailand answers "no visa, 30 days" 4 of 4. **Item 63's checklist half then got fix 1 (entry 210)**: a corridor reads the
 checklist a page it read links to, and Switzerland went 0 → 2 of 2. `var/cache/` was emptied again
-for it (`var/_backup_cache_before_links_2026-09-25/`). What is left needs item 61's render decision.
-**Next:** item 61's render budget (the owner's call), then 57
+for it (`var/_backup_cache_before_links_2026-09-25/`). Then, on the owner's decisions,
+**plans link the checklist instead of copying it and name an unread one with its link** (entry
+211), and **renders go to the most promising pages first** (entry 212). `var/cache/` was emptied
+once more for a cold comparison (`var/_backup_cache_before_priority_2026-09-25/`). **Next:** item
+57 (progress on screen)
 (progress on screen), then 64 (expansion, which asks first). Items 65 and 67 are blocked, 65 on
 Ofself deploying GPT-6 and 67 on OpenAI credit.
 

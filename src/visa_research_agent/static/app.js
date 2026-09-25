@@ -385,9 +385,57 @@ function renderRequirements(plan, ctx) {
   // A traveller who needs no visa is owed the panel even with nothing in it, because "no documents"
   // is the answer to the question they came with rather than a gap. The other empty case stays
   // dropped: a heading over nothing states an absence the unresolved questions already carry.
-  if (!plan.requirements.length && !checklistTools.length && !needsNoVisa(plan)) return null;
+  const checklistSources = (plan.application_document_source_ids || [])
+    .map((id) => ctx.sourceMap.get(id))
+    .filter(Boolean);
+  // Likely checklists this run met and could not read: named so the traveller can open them, never
+  // described, because nobody read them (TODO item 9, entry 211).
+  const unreadChecklists = (plan.unavailable_sources || []).filter(
+    (failure) => String(failure.source_id).startsWith("checklist_unread_") && failure.attempted_url,
+  );
+  if (
+    !plan.requirements.length &&
+    !checklistSources.length &&
+    !unreadChecklists.length &&
+    !checklistTools.length &&
+    !needsNoVisa(plan)
+  ) {
+    return null;
+  }
 
   const { container } = panel("Visa application documents", "Official checklist");
+
+  // The authority's own checklist, linked rather than copied — the owner's decision, entry 211. The
+  // traveller reads the list the authority wrote, so nothing we wrote can differ from it.
+  if (checklistSources.length && !plan.requirements.length) {
+    container.append(
+      element(
+        "p",
+        "lead",
+        "The authority publishes the documents for this application in its own checklist. Open it and gather everything it lists for your application.",
+      ),
+    );
+    const group = element("div", "link-cards");
+    checklistSources.forEach((source) => {
+      ctx.seen.add(source.source_id);
+      ctx.seenUrls.add(String(source.url));
+      // Titled by what it is, not by the page's own <title>: the German missions' checklist page
+      // is called "Welcome", which tells a traveller nothing about what they are opening.
+      group.append(
+        linkCard(
+          "action",
+          "Official document checklist",
+          source.url,
+          `${source.title} \u00b7 ${sourceSubtext(source)}`,
+          source.is_stale,
+        ),
+      );
+    });
+    container.append(group);
+    appendTools(container, plan, "document_checklist");
+    appendDelegates(container, plan, "document_checklist");
+    return container;
+  }
 
   if (!plan.requirements.length) {
     // Four different reasons end up here and the sentence has to be true of the one that applies.
@@ -419,7 +467,27 @@ function renderRequirements(plan, ctx) {
     } else if (viaDelegate) {
       why += " The authority sends applicants to a company it contracts with for them.";
     }
+    if (unreadChecklists.length) {
+      why +=
+        unreadChecklists.length === 1
+          ? " The page below looks like the official checklist, but we could not read it, so open it yourself."
+          : " The pages below look like the official checklist, but we could not read them, so open them yourself.";
+    }
     container.append(element("p", "lead", why));
+    if (unreadChecklists.length) {
+      const group = element("div", "link-cards");
+      unreadChecklists.forEach((failure) => {
+        group.append(
+          linkCard(
+            "action",
+            failure.title,
+            failure.attempted_url,
+            `${failure.authority} \u00b7 not read here: ${failure.detail}`,
+          ),
+        );
+      });
+      container.append(group);
+    }
     appendTools(container, plan, "document_checklist");
     appendDelegates(container, plan, "document_checklist");
     return container;

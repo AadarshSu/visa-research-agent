@@ -694,6 +694,8 @@ class FetchedSource(StrictModel):
     from_cache: bool = False
     document_links: list[DocumentLink] = Field(default_factory=list)
     """Documents the page links to (entry 210). Addresses and labels only; never evidence."""
+    is_document: bool = False
+    """The text came from a PDF rather than a web page (entry 212)."""
 
 
 class SourceFailure(StrictModel):

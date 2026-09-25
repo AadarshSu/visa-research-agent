@@ -462,6 +462,10 @@ produces a serious defect.
   checklist designated it for the travellers who apply. `validate_absent_checklist`'s first clause
   is untouched and is the one this project exists to enforce: with no designated document source, a
   plan may not list a single requirement.
+- **A checklist is linked, never copied — the owner's decision, entry 211.** A plan lists no
+  documents: it links the authority's own checklist, and names with its link a likely checklist it
+  could not read. `validate_absent_checklist`'s first clause still holds — with no designated
+  checklist, nothing may be listed — and a named unread checklist fills nothing.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.
 - **Never show a traveller an unverified claim that would alarm them if wrong.** The rule from entry 6,

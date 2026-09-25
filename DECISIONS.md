@@ -223,6 +223,8 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [212](#212-renders-go-to-the-most-promising-pages-first-and-a-followed-document-must-be-one) | **Renders go to the most promising pages first** — a two-pass fetch spends the 5 renders and each host's 3 strikes on pages that could answer the decision or checklist; a followed "document" that returns a web page is unread and nameable; at most three likely checklists named |
+| [211](#211-a-checklist-is-linked-never-copied--and-one-we-could-not-read-is-named-with-its-link) | **A checklist is linked, never copied** — the owner's decision: the plan lists no documents and links the authority's checklist; an unread likely checklist, including a script-link download, is named with its link |
 | [210](#210-a-corridor-reads-the-checklist-a-page-it-read-links-to-one-hop-down) | **The checklist one hop down** — pages keep the documents they link to; a corridor reads up to two labelled with this trip's purpose or as a checklist, on trusted domains; Switzerland 0 → 2 of 2 checklists; Australia and Spain are the render budget, Korea a waiting room (item 61); no regressions |
 | [209](#209-an-announcement-naming-the-country-and-a-later-notice-bringing-it-into-force-may-be-read-together) | **Two pages read together for a decision** — the owner's decision: an announcement naming the country plus a later notice that the same revision took effect (roles rule 7a, `in_force_source_id`, plan rule 8i); Thailand "no visa, 30 days" 4 of 4, citing both; five regressions unchanged |
 | [208](#208-rule-8h-a-no-visa-that-holds-before-and-after-an-announced-change-is-not-held-back-by-its-start-date) | **Rule 8h** — the owner's decision: an announced change with no established start date does not hold back a "no visa" stated on both sides of it; nothing moved on 18 replayed packets; it does not fire for Thailand, where the start date is now known (15 September) and India is named only in the July announcement, not in the September notice's image list |
@@ -262,6 +264,77 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 212. Renders go to the most promising pages first, and a followed "document" must be one
+
+**2026-09-25 · the owner: "implement smarter use of the same renders".** A corridor may render 5
+pages and gives up on a host after 3 failed renders (entries 135, 37). Both were spent first come,
+first served. Australia's step-by-step documents page and Spain's consulate pages lost their chance
+to incidental pages on the same hosts.
+
+**What changed.**
+- **Two passes** (`LiveSourceFetcher.fetch(render_priority=…)`).
+  - The first pass reads every page as served and renders none. A page needing a browser is set
+    aside, with a sentinel reason (`DEFERRED_RENDER`) that no plan ever shows.
+  - The second pass fetches the set-aside pages again, highest priority first, and only they spend
+    the 5 renders. The same order puts a host's 3 strikes on its most promising pages.
+  - It costs one plain request per such page, for pages a browser would request anyway.
+  - Without priorities, as for configured destinations, fetching is unchanged.
+- **Priority** is each page's best combined score for any role, doubled for the roles a plan
+  cannot do without (`REPORTED_ROLES`: the decision and the checklist).
+- **A followed document must come back as a document.** South Korea's checklist address answered
+  with the site's front page, which read cleanly and held nothing, so the corridor counted a
+  checklist as read. `FetchedSource.is_document` now records a PDF. A followed link that returns a
+  web page becomes an `unusable` failure ("the link is labelled as a document and returned a web
+  page instead"), which makes it nameable under entry 211.
+- **At most three likely checklists are named, most likely first** (`MAXIMUM_NAMED_CHECKLISTS`).
+  Australia had named six, two of them help pages about evidence of funds.
+
+**Measured: fourteen fresh runs on a cold cache** (`item63-priority.log`), one round against
+entry 210's, so read it with entry 136's caution.
+- **Pages left unrendered or thin:** Australia 6 and 9 (14 over two runs in entry 210); Spain 4 and
+  4 (12).
+- **South Korea resolved "visa required" in both runs**, where it refused both in entry 210. Its
+  followed checklist was the front-page case above, found and fixed here.
+- **Switzerland's checklist PDFs answered `403` in run 1.** That is a refusal, so it is reported,
+  named and never worked around; run 2 linked the Tourist checklist.
+- **Regressions:** Germany, Japan and Vietnam `verified`; Thailand and Singapore "no visa".
+- **Turkey left its decision open once**: e-Visa only with a valid Schengen, US, UK or Irish visa,
+  otherwise a sticker visa. That is rule 8g's case, where every route issues a visa. It answered
+  "visa required" in every earlier run, and is noted as variance to watch.
+
+## 211. A checklist is linked, never copied — and one we could not read is named with its link
+
+**2026-09-25 · the owner's decision:** "seeing the original checklist link rather than us writing
+it in our plan is actually a big win because users trust the source and we have to do less
+writing". It was asked about as a choice between link only, link plus a short list, and today's;
+the owner chose **link only**. For a checklist we believe exists and could not read: **link it**.
+
+**What changed.**
+- **The plan lists no documents.** Prompt rules 6 to 8: where a checklist source is designated,
+  `requirements` is empty. One step may say to gather the documents on the official checklist and
+  link it.
+  - Extraction drops any list the model returns anyway, and no longer refuses a designated
+    checklist with nothing under it (entry 98's guard).
+  - `validate_absent_checklist`'s first clause is unchanged: with no designated checklist, nothing
+    may be listed.
+  - The interface leads the documents panel with "Official document checklist", linking the
+    authority's own page. The page's `<title>` goes underneath: the German missions' is "Welcome".
+- **An unread checklist is named** through item 9's `unread_checklist_pages`, which already named
+  shortlisted checklist pages that could not be read. Now it also covers:
+  - **documents followed one hop down** (entry 210) that could not be read;
+  - **a script link labelled with a file name** — South Korea's
+    `javascript:f_down('./down.do?…')` "Korean Visa checklist … .pdf". The address is read out of
+    the call as text; nothing is run.
+  - The documents panel lists them as possible checklists, with why each could not be read, and
+    lists nothing from them.
+
+**Why it is safe.** A linked checklist is the authority's own words, so a copying error can no
+longer reach a traveller. A named unread one is an address our code read off an approved page,
+checked against the trusted domains, and said to be unread.
+
+**What it costs.** A traveller must open the document to see what to gather. Plans with an
+itemised list are gone, and so are their checked requirement quotes.
 
 ## 210. A corridor reads the checklist a page it read links to, one hop down
 

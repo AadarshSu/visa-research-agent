@@ -864,3 +864,21 @@ async def test_a_page_no_browser_opened_does_not_report_the_page_as_empty(
     starved = [f for f in report.failures if "already spent its 5 renders" in f.detail]
     assert len(starved) == 1
     assert "too little readable text" not in starved[0].detail
+
+
+async def test_renders_go_to_the_most_promising_pages_first(tmp_path: Path) -> None:
+    """Entry 212. Four pages need a browser and the run may render two. Without priorities the
+    first two listed took them; with them, the two most promising do, whatever their order, and
+    the others say which bound stopped them."""
+
+    renderer = FakeRenderer(shell("<p>Loading</p>"))
+    fetcher = build_fetcher(tmp_path, shell(), renderer)
+    fetcher.maximum_renders = 2
+    priority = {f"tl_visa_documents_{index}": float(index) for index in range(4)}
+
+    report = await fetcher.fetch(destination_with_sources(4), render_priority=priority)
+
+    assert sorted(renderer.calls) == [f"{SOURCE_URL}/2", f"{SOURCE_URL}/3"]
+    stopped = {failure.source_id: failure.detail for failure in report.failures}
+    assert set(stopped) >= {"tl_visa_documents_0", "tl_visa_documents_1"}
+    assert all("spent its 2 renders" in stopped[f"tl_visa_documents_{i}"] for i in (0, 1))
