@@ -1,0 +1,17 @@
+building Croatia from 2 domains (existing corpus: 3641 entries)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 37 0 (offset 0)
+  HR  28 queries, 94 seeds (8 from its own mission index), 59 kept that nothing linked to, 3200 crawled  ->  458 new, 4099 held, 110 unreadable
+      depth 1: 933, depth 2: 2094, depth 3: 173
+      opened 94 seeds, 351 scored links, 355 links that scored nothing, 0 family members; 195 scored links turned away at a host's cap
+      1072 pages kept their text for the index, including 356 PDFs read for text only
+      73 places its own pages send travellers, on companies we may name but never read
+      11 links rejected by rule:
+            11  the path marks it as archived or superseded
+                  https://mup.gov.hr/UserDocsImages//dokumenti/2022/2022/obrasci_drzavljanstvo//Zahtjev%20za%20stjecanje%20hrvatskog%20dr%C5%BEavljanstva%20priro%C4%91enjem%20punoljetne%20osobe%20i%20djetetadjece_nadopuna_2022.pdf
+                  https://mup.gov.hr/UserDocsImages//dokumenti/2022/2022/obrasci_drzavljanstvo//Zahtjev%20za%20stjecanje%20hrvatskog%20dr%C5%BEavljanstva%20priro%C4%91enjem%20punoljetne%20osobe_nadopuna_2022.pdf
+                  https://mup.gov.hr/UserDocsImages/dokumenti/2021/Statistika/2019/Clanovi%20obitelji%20drzava%20clanica%20EGP%20na%20odobrenom%20stalnom%20boravku%20na%20dan%2031.12.2019..pdf?vel=199724
+                  https://mup.gov.hr/UserDocsImages/dokumenti/2021/Statistika/2019/Clanovi%20obitelji%20drzava%20clanica%20EGP%20s%20prijavljenim%20privremenim%20boravkom%20na%20dan%2031.12.2019..docx.pdf?vel=303893
+                  https://mup.gov.hr/UserDocsImages/dokumenti/2021/Statistika/2019/Drzavljani%20drzava%20clanica%20EGP%20na%20odobrenom%20privremenom%20boravku%20na%20dan%2031.12.2019..pdf?vel=307488

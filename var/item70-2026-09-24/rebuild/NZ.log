@@ -1,0 +1,23 @@
+building New Zealand from 5 domains (existing corpus: 4981 entries)
+  NZ  70 queries, 277 seeds (6 from its own mission index), 178 kept that nothing linked to, 5144 crawled  ->  742 new, 5723 held, 208 unreadable
+      depth 1: 1283, depth 2: 2793, depth 3: 1068
+      opened 277 seeds, 541 scored links, 382 links that scored nothing, 0 family members; 174 past a host's even share
+      1264 pages kept their text for the index, including 264 PDFs read for text only
+      30 places its own pages send travellers, on companies we may name but never read
+      85 links rejected by rule:
+            80  the path marks it as archived or superseded
+                  https://teic.mbie.govt.nz/teiccategories/resources/2018/12/10/qtr-1
+                  https://teic.mbie.govt.nz/teiccategories/resources/2019/01/15/mbie-overview-of-tourism-spend-in-new-zealand
+                  https://teic.mbie.govt.nz/teiccategories/resources/2019/02/04/mbie-how-can-i-estimate-tourism-spend-per-visitor
+                  https://teic.mbie.govt.nz/teiccategories/resources/2019/02/20/mbie-why-do-mrtes-get-revised
+                  https://teic.mbie.govt.nz/teiccategories/resources/2019/03/07/qtr-2
+             5  the path marks it as site furniture rather than guidance
+                  https://jobs.mbie.govt.nz/talentcommunity/subscribe?locale=en_GB
+                  https://vacancies.mfat.govt.nz/talentcommunity/subscribe?locale=en_GB
+                  https://www.govt.nz/about/the-govt-nz-app/terms-and-policies/privacy-policy
+                  https://www.iaa.govt.nz/about-us/newsletter
+                  https://www.mbie.govt.nz/science-and-technology/science-and-innovation/subscribe
+      1 hosts stopped answering and were not asked again:
+        immigration.gtm.mbie.govt.nz               after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        immigration.gtm.mbie.govt.nz               unreachable  the request failed (ConnectError)

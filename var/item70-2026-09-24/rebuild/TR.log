@@ -1,0 +1,27 @@
+building Turkey from 5 domains (existing corpus: 5915 entries)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+  TR  70 queries, 228 seeds (6 from its own mission index), 192 kept that nothing linked to, 5502 crawled  ->  1807 new, 7722 held, 135 unreadable
+      depth 1: 2841, depth 2: 2222, depth 3: 439
+      opened 228 seeds, 432 scored links, 540 links that scored nothing, 0 family members; 136 past a host's even share
+      1047 pages kept their text for the index, including 59 PDFs read for text only
+      1 places its own pages send travellers, on companies we may name but never read
+      2 links rejected by rule:
+             2  the path marks it as site furniture rather than guidance
+                  https://gocbil.goc.gov.tr/cookie-policy/en
+                  https://gocbil.goc.gov.tr/privacy-policy/en
+      4 hosts stopped answering and were not asked again:
+        e-ikamet.goc.gov.tr                        after 6 unanswered requests in a row
+        evisa.gov.tr                               after 6 unanswered requests in a row
+        www.evisa.gov.tr                           after 6 unanswered requests in a row
+        yenidelhi.be.mfa.gov.tr                    after 6 unanswered requests in a row
+      8 hosts gave this build nothing and are absent from the corpus:
+        agents.evisa.gov.tr                        unreachable  its TLS certificate could not be verified
+        cairo.emb.mfa.gov.tr                       unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        doha.emb.mfa.gov.tr                        unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        dosya.turkiye.gov.tr                       unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        kamu2.turkiye.gov.tr                       unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        sydney-cg.mfa.gov.tr                       unusable     the PDF could not be read
+        tehran.emb.mfa.gov.tr                      unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        test.evisa.gov.tr                          unreachable  the request failed (ConnectTimeout)

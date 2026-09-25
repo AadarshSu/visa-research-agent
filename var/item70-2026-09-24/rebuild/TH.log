@@ -1,0 +1,28 @@
+building Thailand from 3 domains (existing corpus: 4855 entries)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 16 0 (offset 0)
+Ignoring wrong pointing object 21 0 (offset 0)
+Ignoring wrong pointing object 23 0 (offset 0)
+Multiple definitions in dictionary at byte 0x16c0b9 for key /Info
+Multiple definitions in dictionary at byte 0x16c0c6 for key /Info
+  TH  42 queries, 144 seeds (1 from its own mission index), 120 kept that nothing linked to, 3967 crawled  ->  175 new, 5030 held, 297 unreadable
+      depth 1: 409, depth 2: 2005, depth 3: 1553
+      opened 144 seeds, 197 scored links, 859 links that scored nothing, 0 family members; 35 past a host's even share
+      1154 pages kept their text for the index, including 143 PDFs read for text only
+      129 links rejected by rule:
+           129  the path marks it as archived or superseded
+                  http://phetchabun.immigration.go.th/2023/02/06
+                  http://phetchabun.immigration.go.th/2023/02/08
+                  http://phitsanulok.immigration.go.th/2022/12/16
+                  http://phitsanulok.immigration.go.th/2024/05/01
+                  http://phitsanulok.immigration.go.th/2024/12/09
+      7 hosts gave this build nothing and are absent from the corpus:
+        bkk-airport.immigration.go.th              challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        edoc-pha.thaievisa.go.th                   unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        kamphaengphet.immigration.go.th            challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        khonkaen.immigration.go.th                 challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        m.mfa.go.th                                unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        mukdahan.immigration.go.th                 challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        sisaket.immigration.go.th                  challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance

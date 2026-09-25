@@ -1,0 +1,49 @@
+building Romania from 3 domains (existing corpus: 2713 entries)
+  RO  42 queries, 161 seeds (1 from its own mission index), 133 kept that nothing linked to, 3277 crawled  ->  1386 new, 4099 held, 302 unreadable
+      depth 1: 524, depth 2: 1274, depth 3: 1479
+      opened 161 seeds, 87 scored links, 344 links that scored nothing, 0 family members; 54 past a host's even share
+      663 pages kept their text for the index, including 254 PDFs read for text only
+      2 links rejected by rule:
+             1  the path marks it as site furniture rather than guidance
+                  https://www.euraxess.gov.ro/romania/privacy-policy
+             1  the path marks it as archived or superseded
+                  http://norvegian.igi.mai.gov.ro/2024/05/20/comunicat-de-presa-bucuresti-22-aprilie2024-conferinta-de-inchidere-a-proiectului-pdp1-imbunatatirea-sistemul
+      3 hosts stopped answering and were not asked again:
+        norwaygrants-en.mai.gov.ro                 after 6 unanswered requests in a row
+        norwaygrants-ro.mai.gov.ro                 after 6 unanswered requests in a row
+        www.mae.ro                                 after 6 unanswered requests in a row
+      34 hosts gave this build nothing and are absent from the corpus:
+        abudhabi.mae.ro                            disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        abuja.mae.ro                               disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        addisabeba.mae.ro                          disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        amman.mae.ro                               disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        bangkok.mae.ro                             disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        beijing.mae.ro                             disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        beirut.mae.ro                              disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        cairo.mae.ro                               disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        cglondra.mae.ro                            disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        chicago.mae.ro                             disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        colombo.mae.ro                             disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        damasc.mae.ro                              disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        doha.mae.ro                                disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        dubai.mae.ro                               disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        haifa.mae.ro                               disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        islamabad.mae.ro                           disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        istanbul.mae.ro                            disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        jakarta.mae.ro                             disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        kiev.mae.ro                                unreachable  the request failed (All connection attempts failed)
+        kualalumpur.mae.ro                         unreachable  the request failed (All connection attempts failed)
+        london.mae.ro                              unreachable  the request failed (All connection attempts failed)
+        losangeles.mae.ro                          unreachable  the request failed (All connection attempts failed)
+        manila.mae.ro                              unreachable  the request failed (All connection attempts failed)
+        minsk.mae.ro                               unreachable  the request failed (All connection attempts failed)
+        newdelhi.mae.ro                            unreachable  the request failed (All connection attempts failed)
+        newyork.mae.ro                             unreachable  the request failed (All connection attempts failed)
+        pretoria.mae.ro                            unreachable  the request failed (All connection attempts failed)
+        riyadh.mae.ro                              unreachable  the request failed (All connection attempts failed)
+        singapore.mae.ro                           disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        stockholm.mae.ro                           unreachable  the request failed (All connection attempts failed)
+        tbilisi.mae.ro                             unreachable  the request failed (All connection attempts failed)
+        telaviv.mae.ro                             unreachable  the request failed (All connection attempts failed)
+        toronto.mae.ro                             unreachable  the request failed (All connection attempts failed)
+        washington.mae.ro                          unreachable  the request failed (All connection attempts failed)

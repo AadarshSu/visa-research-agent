@@ -1,0 +1,17 @@
+building Poland from 5 domains (existing corpus: 1431 entries)
+  PL  70 queries, 249 seeds (1 from its own mission index), 220 kept that nothing linked to, 1268 crawled  ->  248 new, 1679 held, 174 unreadable
+      depth 1: 695, depth 2: 425, depth 3: 148
+      opened 249 seeds, 170 scored links, 214 links that scored nothing, 0 family members; 81 past a host's even share
+      437 pages kept their text for the index, including 1 PDFs read for text only
+      8 places its own pages send travellers, on companies we may name but never read
+      1 links rejected by rule:
+             1  the path marks it as site furniture rather than guidance
+                  https://www.gov.pl/web/qatar/personal-data
+      3 hosts stopped answering and were not asked again:
+        migrant.poznan.uw.gov.pl                   after 6 unanswered requests in a row
+        mos.cudzoziemcy.gov.pl                     after 6 unanswered requests in a row
+        www.mos.cudzoziemcy.gov.pl                 after 6 unanswered requests in a row
+      3 hosts gave this build nothing and are absent from the corpus:
+        malopolska.uw.gov.pl                       unreachable  its TLS certificate could not be verified
+        migrant.poznan.uw.gov.pl                   unreachable  its TLS certificate could not be verified
+        wsc.gdansk.uw.gov.pl                       disallowed   its robots.txt does not permit this client to fetch it

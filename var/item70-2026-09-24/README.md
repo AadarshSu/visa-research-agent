@@ -22,9 +22,12 @@ the owner's terminal: headless Chromium cannot start from Claude Code's sandboxe
   packet (`select_packet.txt`, `plan_packet.json`, which `run.py` now keeps), per variant; results in
   `select_replay.jsonl`, `plan_replay.jsonl` (the UAE under rule 8g) and `plan_regress.jsonl` (8g's
   regression, entry 199).
+- `veto/measure.py CC ...` — entry 203: what a re-run under the widened archived-year veto recorded
+  that the store lacked, against the `<CC>.before.json` copies taken just before (not committed).
+- `graded.log` — entry 204's grading runs, one line each (`ITEM70_OUT=graded run.py 3 …`).
 - `trace.md` — the working notes, per corridor. `run.log` — every run's one-line outcome.
 
-`runs/` (the baseline, 42 runs), `fixed/` (the fixed arm, 12 runs) and `rebuilt/` (Malta after its
+`runs/` (the baseline, 42 runs), `graded/` (entry 204, 38 runs), `fixed/` (the fixed arm, 12 runs) and `rebuilt/` (Malta after its
 rebuild, 6 runs) hold the raw outputs, as do `next/`, `anchored/` and `sentinel/` (entry 199), and are not
 committed: about 90 MB, and the packets are
 government page text.

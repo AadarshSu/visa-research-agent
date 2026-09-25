@@ -1,0 +1,24 @@
+building Cyprus from 3 domains (existing corpus: 1483 entries)
+  CY  42 queries, 151 seeds (5 from its own mission index), 142 kept that nothing linked to, 1389 crawled  ->  225 new, 1708 held, 213 unreadable
+      depth 1: 324, depth 2: 983, depth 3: 82
+      opened 151 seeds, 85 scored links, 290 links that scored nothing, 0 family members
+      346 pages kept their text for the index
+      7 places its own pages send travellers, on companies we may name but never read
+      23 links rejected by rule:
+            12  the path marks it as site furniture rather than guidance
+                  https://www.gov.cy/mfa-embassyathens/en/privacy-policy
+                  https://www.gov.cy/mfa-embassybeirut/en/privacy-policy
+                  https://www.gov.cy/mfa-embassycairo/en/privacy-policy
+                  https://www.gov.cy/mfa-embassydoha/en/privacy-policy
+                  https://www.gov.cy/mfa-embassyriyadh/en/privacy-policy
+            11  the path marks it as archived or superseded  (2 with 'visa' in the address)
+                  https://www.gov.cy/media/sites/19/2024/06/Visa-Information-System-VIS.pdf
+                  https://www.gov.cy/media/sites/19/2024/06/Visa-liberalization-for-Kosovo-passport-holders.pdf
+                  https://www.gov.cy/media/2024/06/Annex-II-Guidelines-for-drafting-a-Business-Plan.pdf
+                  https://www.gov.cy/media/2024/06/Annex-IV-Certificate-from-an-External-Auditor.pdf
+                  https://www.gov.cy/media/2024/06/Application-Form-for-an-Identity-Card-1.pdf
+      2 hosts stopped answering and were not asked again:
+        mip.gov.cy                                 after 6 unanswered requests in a row
+        www.mip.gov.cy                             after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        mip.gov.cy                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)

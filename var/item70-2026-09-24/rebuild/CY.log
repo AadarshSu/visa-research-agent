@@ -1,0 +1,18 @@
+building Cyprus from 3 domains (existing corpus: 1718 entries)
+  CY  42 queries, 152 seeds (5 from its own mission index), 143 kept that nothing linked to, 1387 crawled  ->  16 new, 1734 held, 231 unreadable
+      depth 1: 344, depth 2: 971, depth 3: 72
+      opened 152 seeds, 89 scored links, 288 links that scored nothing, 0 family members
+      352 pages kept their text for the index
+      7 places its own pages send travellers, on companies we may name but never read
+      12 links rejected by rule:
+            12  the path marks it as site furniture rather than guidance
+                  https://www.gov.cy/mfa-embassyathens/en/privacy-policy
+                  https://www.gov.cy/mfa-embassybeirut/en/privacy-policy
+                  https://www.gov.cy/mfa-embassycairo/en/privacy-policy
+                  https://www.gov.cy/mfa-embassydoha/en/privacy-policy
+                  https://www.gov.cy/mfa-embassyriyadh/en/privacy-policy
+      2 hosts stopped answering and were not asked again:
+        mip.gov.cy                                 after 6 unanswered requests in a row
+        www.mip.gov.cy                             after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        mip.gov.cy                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)

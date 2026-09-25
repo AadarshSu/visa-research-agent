@@ -1,0 +1,6 @@
+building Slovenia from 2 domains (existing corpus: 4215 entries)
+  SI  28 queries, 85 seeds (1 from its own mission index), 77 kept that nothing linked to, 3744 crawled  ->  201 new, 4416 held, 176 unreadable
+      depth 1: 1135, depth 2: 1321, depth 3: 1288
+      opened 85 seeds, 84 scored links, 631 links that scored nothing, 0 family members
+      762 pages kept their text for the index, including 129 PDFs read for text only
+      17 places its own pages send travellers, on companies we may name but never read

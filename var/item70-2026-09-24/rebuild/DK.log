@@ -1,0 +1,24 @@
+building Denmark from 4 domains (existing corpus: 1408 entries)
+  DK  56 queries, 213 seeds (7 from its own mission index), 170 kept that nothing linked to, 1893 crawled  ->  829 new, 2237 held, 210 unreadable
+      depth 1: 869, depth 2: 646, depth 3: 378
+      opened 213 seeds, 431 scored links, 125 links that scored nothing, 0 family members; 389 past a host's even share; 411 scored links turned away at a host's cap
+      797 pages kept their text for the index, including 269 PDFs read for text only
+      105 places its own pages send travellers, on companies we may name but never read
+      7 links rejected by rule:
+             5  the path marks it as archived or superseded  (4 with 'visa' in the address)
+                  https://nyidanmark.dk/en-GB/News-Front-Page/2022/09/Changed-visa-rules-concerning-Russian-citizens?anchor=34A797F9916F408A93FD752B2BE1640E&callbackAnchor=F34F291E4B2E4DE4A0D311F2308650B434A797F9916F408A93FD752B2BE1640E&callbackItem=4F700BA698B945A2AC1A37B0A1CD559D
+                  https://nyidanmark.dk/pl-PL/News-Front-Page/2022/09/Changed-visa-rules-concerning-Russian-citizens?anchor=34A797F9916F408A93FD752B2BE1640E&callbackAnchor=F34F291E4B2E4DE4A0D311F2308650B434A797F9916F408A93FD752B2BE1640E&callbackItem=4F700BA698B945A2AC1A37B0A1CD559D
+                  https://www.nyidanmark.dk/en-GB/News-Front-Page/2022/09/Changed-visa-rules-concerning-Russian-citizens?anchor=34A797F9916F408A93FD752B2BE1640E&callbackAnchor=F34F291E4B2E4DE4A0D311F2308650B434A797F9916F408A93FD752B2BE1640E&callbackItem=4F700BA698B945A2AC1A37B0A1CD559D
+                  https://www.nyidanmark.dk/uk-UA/News-Front-Page/2022/09/Changed-visa-rules-concerning-Russian-citizens?anchor=34A797F9916F408A93FD752B2BE1640E&callbackAnchor=F34F291E4B2E4DE4A0D311F2308650B434A797F9916F408A93FD752B2BE1640E&callbackItem=4F700BA698B945A2AC1A37B0A1CD559D
+                  https://nyidanmark.dk/en-GB/News-Front-Page/2019/06/Online-betaling-af-ambassade-gebyr
+             2  the path marks it as site furniture rather than guidance
+                  https://denmark.dk/cookie-policy
+                  https://us.dk/om-os/the-immigration-service-processing-of-personal-data/newsletters
+      1 hosts stopped answering and were not asked again:
+        prod.nyidanmark.dk                         after 6 unanswered requests in a row
+      5 hosts gave this build nothing and are absent from the corpus:
+        blogs.denmark.dk                           unreachable  the request failed (ConnectTimeout)
+        canada.um.dk                               disallowed   its robots.txt answered HTTP 520, so whether this client may fetch it is unknown
+        irland-en.editor.um.dk                     disallowed   its robots.txt answered HTTP 520, so whether this client may fetch it is unknown
+        kids.denmark.dk                            unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        www.video.denmark.dk                       disallowed   its robots.txt answered HTTP 500, so whether this client may fetch it is unknown

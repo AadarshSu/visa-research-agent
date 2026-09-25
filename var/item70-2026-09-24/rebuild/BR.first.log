@@ -1,0 +1,8 @@
+building Brazil from 1 domains (new)
+  BR  14 queries, 92 seeds, 87 kept that nothing linked to, 495 crawled  ->  582 new, 582 held, 380 unreadable
+      depth 1: 494, depth 2: 1
+      opened 92 seeds, 176 scored links, 132 links that scored nothing, 0 family members
+      58 pages kept their text for the index
+      1 hosts stopped answering and were not asked again:
+        www.gov.br                                 after 6 unanswered requests in a row
+      only 0% of what it found lies beyond depth 1 — this crawl fetched its seeds and stopped, which is the request path's behaviour, not this job's. It spent 495 of 1200 pages, so the budget was not the limit — the frontier ran dry. Read the lost hosts and the unreadable count above.

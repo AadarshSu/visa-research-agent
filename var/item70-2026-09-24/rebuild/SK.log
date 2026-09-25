@@ -1,0 +1,10 @@
+building Slovakia from 2 domains (existing corpus: 1500 entries)
+  SK  28 queries, 124 seeds (8 from its own mission index), 100 kept that nothing linked to, 1929 crawled  ->  812 new, 2312 held, 90 unreadable
+      depth 1: 956, depth 2: 583, depth 3: 390
+      opened 124 seeds, 343 scored links, 55 links that scored nothing, 0 family members; 229 past a host's even share; 71 scored links turned away at a host's cap
+      425 pages kept their text for the index, including 5 PDFs read for text only
+      41 places its own pages send travellers, on companies we may name but never read
+      3 hosts gave this build nothing and are absent from the corpus:
+        covid19.mzv.sk                             unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        eidas.minv.sk                              unreachable  the request failed (ReadError)
+        portala.minv.sk                            unreachable  its TLS certificate could not be verified

@@ -1,0 +1,22 @@
+building Luxembourg from 3 domains (existing corpus: 9333 entries)
+Multiple definitions in dictionary at byte 0x87705 for key /PageMode
+  LU  42 queries, 152 seeds (8 from its own mission index), 77 kept that nothing linked to, 7495 crawled  ->  1441 new, 10774 held, 72 unreadable
+      depth 1: 1865, depth 2: 4758, depth 3: 872
+      opened 152 seeds, 428 scored links, 620 links that scored nothing, 0 family members; 271 past a host's even share
+      1444 pages kept their text for the index, including 376 PDFs read for text only
+      8 places its own pages send travellers, on companies we may name but never read
+      632 links rejected by rule:
+           627  the path marks it as archived or superseded  (1 with 'visa' in the address)
+                  https://gouvernement.lu/fr/actualites/toutes_actualites/communiques/2024/03-mars/08-informations-exemption-obligation-visa-chine.html
+                  http://data.legilux.public.lu/eli/dir_ue/1992/106/jo
+                  http://data.legilux.public.lu/eli/dir_ue/1994/45/jo
+                  http://data.legilux.public.lu/eli/dir_ue/1995/46/jo
+                  http://data.legilux.public.lu/eli/dir_ue/1996/26/jo
+             5  the path marks it as site furniture rather than guidance
+                  http://www.renow.public.lu/fr/renow-en-bref/accessibilite/index.html
+                  https://renow.public.lu/fr/accessibilite/cadre-legal.html
+                  https://renow.public.lu/fr/accessibilite/definition.html
+                  https://renow.public.lu/fr/accessibilite/exigences.html
+                  https://renow.public.lu/fr/accessibilite/technologie-assistance.html
+      1 hosts stopped answering and were not asked again:
+        www.guichet.public.lu                      after 6 unanswered requests in a row

@@ -1,0 +1,48 @@
+building Portugal from 4 domains (existing corpus: 8249 entries)
+incorrect startxref pointer(3)
+parsing for Object Streams
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 14 0 (offset 0)
+Ignoring wrong pointing object 19 0 (offset 0)
+Ignoring wrong pointing object 21 0 (offset 0)
+Ignoring wrong pointing object 24 0 (offset 0)
+Ignoring wrong pointing object 26 0 (offset 0)
+Ignoring wrong pointing object 28 0 (offset 0)
+Ignoring wrong pointing object 30 0 (offset 0)
+Ignoring wrong pointing object 32 0 (offset 0)
+Ignoring wrong pointing object 35 0 (offset 0)
+Ignoring wrong pointing object 39 0 (offset 0)
+Multiple definitions in dictionary at byte 0x460a0 for key /Info
+Multiple definitions in dictionary at byte 0x460ac for key /Info
+Multiple definitions in dictionary at byte 0x46728 for key /Info
+Multiple definitions in dictionary at byte 0x46734 for key /Info
+Ignoring wrong pointing object 7 0 (offset 0)
+Ignoring wrong pointing object 9 0 (offset 0)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 17 0 (offset 0)
+Ignoring wrong pointing object 19 0 (offset 0)
+Ignoring wrong pointing object 21 0 (offset 0)
+Ignoring wrong pointing object 24 0 (offset 0)
+Ignoring wrong pointing object 45 0 (offset 0)
+  PT  56 queries, 220 seeds (8 from its own mission index), 180 kept that nothing linked to, 10084 crawled  ->  3897 new, 12146 held, 156 unreadable
+      depth 1: 1320, depth 2: 1082, depth 3: 7682
+      opened 220 seeds, 287 scored links, 646 links that scored nothing, 47 family members; 64 past a host's even share
+      1333 pages kept their text for the index, including 336 PDFs read for text only
+      64 places its own pages send travellers, on companies we may name but never read
+      131 links rejected by rule:
+            91  the path marks it as site furniture rather than guidance
+                  https://abidjan.embaixadaportugal.mne.gov.pt/en/legal-notice
+                  https://abidjan.embaixadaportugal.mne.gov.pt/en/privacy-policy
+                  https://abudhabi.embaixadaportugal.mne.gov.pt/en/legal-notice
+                  https://abudhabi.embaixadaportugal.mne.gov.pt/en/privacy-policy
+                  https://abuja.embaixadaportugal.mne.gov.pt/en/legal-notice
+            40  the path marks it as archived or superseded
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FAF
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FAFa
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FAV
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FBR
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FCT
+      1 hosts gave this build nothing and are absent from the corpus:
+        formularios.portugal.gov.pt                unreachable  its TLS certificate could not be verified

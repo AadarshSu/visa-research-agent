@@ -27,7 +27,7 @@ from visa_research_agent.discovery.models import (
     PageLink,
     RoleScores,
 )
-from visa_research_agent.discovery.urls import is_pdf_url, path_segments
+from visa_research_agent.discovery.urls import filed_date_in_path, is_pdf_url, path_segments
 from visa_research_agent.domain.models import SourceKind
 from visa_research_agent.domain.trust import host_is_within, host_of, registrable_domain
 
@@ -273,10 +273,6 @@ def names_documents(haystack: str, lexicon: Lexicon) -> list[str]:
     return [noun for noun in lexicon.document_nouns if _contains_phrase(haystack, noun)]
 
 
-UPLOADS_SEGMENT = "uploads"
-"""The folder a CMS files uploaded documents under by date — `wp-content/uploads/2023/10/`."""
-
-
 def is_archived(url: str, lexicon: Lexicon) -> bool:
     """True when a path marks a page as superseded.
 
@@ -287,17 +283,15 @@ def is_archived(url: str, lexicon: Lexicon) -> bool:
     segments = path_segments(url)
     if any(token in segments for token in lexicon.archive_tokens):
         return True
-    # A year two or more years old in the path is a strong archive signal — **except under an
-    # uploads folder**, where it is the month a file was uploaded. Every WordPress site files
-    # documents as `/wp-content/uploads/<year>/<month>/`, and Malta's current list of nationalities
-    # needing a visa sits at `uploads/2023/10/`, so this vetoed it out of every build and every
-    # search (TODO item 70). There it is a publication date, which `published_date_in_path` reports
-    # to the adjudicator instead, as entry 15 already decided for the other dated forms.
+    # A year two or more years old in the path is a strong archive signal — **except where it says
+    # when something was filed**: an upload folder or a post's permalink (`filed_date_in_path`).
+    # Malta's current visa list sits at `uploads/2023/10/` (entry 198), and South Africa's, Cyprus's
+    # and Croatia's current guidance in the other forms (entry 203). There it is a publication date,
+    # which `published_date_in_path` reports to the adjudicator instead, as entry 15 decided.
+    filed = filed_date_in_path(url)
+    spared = filed[0] if filed is not None else None
     return any(
-        segment.isdigit()
-        and len(segment) == 4
-        and 1990 <= int(segment) <= 2024
-        and not (index and segments[index - 1] == UPLOADS_SEGMENT)
+        segment.isdigit() and len(segment) == 4 and 1990 <= int(segment) <= 2024 and index != spared
         for index, segment in enumerate(segments)
     )
 

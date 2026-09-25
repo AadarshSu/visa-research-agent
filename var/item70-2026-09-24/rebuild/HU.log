@@ -1,0 +1,11 @@
+building Hungary from 3 domains (existing corpus: 4078 entries)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+  HU  42 queries, 140 seeds (2 from its own mission index), 82 kept that nothing linked to, 3497 crawled  ->  115 new, 4193 held, 266 unreadable
+      depth 1: 1195, depth 2: 1747, depth 3: 555
+      opened 140 seeds, 318 scored links, 742 links that scored nothing, 0 family members; 83 past a host's even share
+      1272 pages kept their text for the index, including 241 PDFs read for text only
+      43 places its own pages send travellers, on companies we may name but never read
+      1 hosts stopped answering and were not asked again:
+        oif.gov.hu                                 after 6 unanswered requests in a row

@@ -1,0 +1,13 @@
+building Croatia from 2 domains (existing corpus: 3495 entries)
+  HR  28 queries, 91 seeds (8 from its own mission index), 52 kept that nothing linked to, 2763 crawled  ->  146 new, 3641 held, 212 unreadable
+      depth 1: 829, depth 2: 1749, depth 3: 185
+      opened 91 seeds, 354 scored links, 355 links that scored nothing, 0 family members; 191 scored links turned away at a host's cap
+      908 pages kept their text for the index, including 185 PDFs read for text only
+      73 places its own pages send travellers, on companies we may name but never read
+      437 links rejected by rule:
+           437  the path marks it as archived or superseded  (4 with 'visa' in the address)
+                  https://mvep.gov.hr/UserDocsImages/2023/datoteke/2023%2006%2026%20Kenya_list%20of%20supporting%20documents%20for%20short%20stay%20visas%20EN.pdf
+                  https://mvep.gov.hr/UserDocsImages/2023/datoteke/Agreement%20between%20the%20European%20Union%20and%20Ukraine%20on%20the%20facilitation%20of%20the%20issuance%20of%20visas%20-%20Consolidated%20text.pdf
+                  https://mvep.gov.hr/UserDocsImages/files/file/2021/2108271553-regulation-on-the-visa-regime-nn-92-2021-en.pdf
+                  https://mvep.gov.hr/UserDocsImages/files/file/2021/2110281303-cro-ordinance-on-visas-en-effective-1-nov-2021.pdf
+                  https://mup.gov.hr/UserDocsImages//2020/Obrasci/Dr%C5%BEavljanstvo//OBRAZAC-4.pdf

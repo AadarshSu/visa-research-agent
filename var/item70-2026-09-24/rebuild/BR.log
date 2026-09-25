@@ -1,0 +1,9 @@
+building Brazil from 1 domains (existing corpus: 582 entries)
+  BR  14 queries, 91 seeds, 84 kept that nothing linked to, 1151 crawled  ->  702 new, 1284 held, 241 unreadable
+      depth 1: 468, depth 2: 468, depth 3: 215
+      opened 91 seeds, 309 scored links, 0 links that scored nothing, 0 family members; 62 scored links turned away at a host's cap
+      236 pages kept their text for the index, including 3 PDFs read for text only
+      2 links rejected by rule:
+             2  the path marks it as archived or superseded
+                  https://www.gov.br/en/government-of-brazil/latest-news/2021
+                  https://www.gov.br/en/government-of-brazil/latest-news/2022

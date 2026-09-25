@@ -1,0 +1,20 @@
+building Mexico from 3 domains (existing corpus: 1156 entries)
+Ignoring wrong pointing object 7 0 (offset 0)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 19 0 (offset 0)
+Ignoring wrong pointing object 21 0 (offset 0)
+Ignoring wrong pointing object 29 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 23 0 (offset 0)
+  MX  42 queries, 132 seeds, 125 kept that nothing linked to, 928 crawled  ->  122 new, 1278 held, 154 unreadable
+      depth 1: 96, depth 2: 212, depth 3: 620
+      opened 132 seeds, 26 scored links, 331 links that scored nothing, 0 family members
+      410 pages kept their text for the index, including 85 PDFs read for text only
+      10 links rejected by rule:
+            10  the path marks it as archived or superseded
+                  http://www.inm.gob.mx/static/transparencia/resoluciones/2011/Agosto/0411100037411.pdf
+                  http://www.inm.gob.mx/static/transparencia/resoluciones/2011/Junio/0411100037311.pdf
+                  https://www.inm.gob.mx/static/transparencia/pdf/2023/Acta_Comite_Primera_Ordinaria_2023.pdf
+                  https://www.inm.gob.mx/static/transparencia/pdf/2023/Acta_Cuarta_Sesion_Ordinaria_2023.pdf
+                  https://www.inm.gob.mx/static/transparencia/pdf/2023/nc-Acta_Tercera_Sesion_Ordinaria.pdf

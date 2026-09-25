@@ -1,0 +1,11 @@
+building Liechtenstein from 2 domains (existing corpus: 8730 entries)
+  LI  28 queries, 83 seeds (1 from its own mission index), 80 kept that nothing linked to, 5380 crawled  ->  823 new, 9553 held, 77 unreadable
+      depth 1: 573, depth 2: 4807
+      opened 83 seeds, 0 scored links, 351 links that scored nothing, 0 family members
+      461 pages kept their text for the index, including 97 PDFs read for text only
+      2 links rejected by rule:
+             2  the path marks it as site furniture rather than guidance
+                  https://regierung.li/text/16370/legal-notice
+                  https://www.regierung.li/text/16370/legal-notice
+      1 hosts gave this build nothing and are absent from the corpus:
+        bua.regierung.li                           disallowed   its robots.txt does not permit this client to fetch it

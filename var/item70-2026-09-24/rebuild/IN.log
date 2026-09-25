@@ -1,0 +1,85 @@
+building India from 5 domains (existing corpus: 3407 entries)
+incorrect startxref pointer(3)
+Multiple definitions in dictionary at byte 0x209511 for key /Info
+Multiple definitions in dictionary at byte 0x20951e for key /Info
+Multiple definitions in dictionary at byte 0x20952b for key /Info
+Multiple definitions in dictionary at byte 0x3286a for key /Info
+Multiple definitions in dictionary at byte 0x32877 for key /Info
+Multiple definitions in dictionary at byte 0x32884 for key /Info
+Multiple definitions in dictionary at byte 0x52cff for key /Info
+Multiple definitions in dictionary at byte 0x52d0b for key /Info
+Multiple definitions in dictionary at byte 0x52d17 for key /Info
+Multiple definitions in dictionary at byte 0x7b772 for key /Info
+Multiple definitions in dictionary at byte 0x7b77f for key /Info
+Multiple definitions in dictionary at byte 0x7b78c for key /Info
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 25 0 (offset 0)
+Ignoring wrong pointing object 29 0 (offset 0)
+Ignoring wrong pointing object 31 0 (offset 0)
+Ignoring wrong pointing object 33 0 (offset 0)
+Ignoring wrong pointing object 35 0 (offset 0)
+Ignoring wrong pointing object 37 0 (offset 0)
+Ignoring wrong pointing object 54 0 (offset 0)
+Ignoring wrong pointing object 56 0 (offset 0)
+Ignoring wrong pointing object 58 0 (offset 0)
+Ignoring wrong pointing object 64 0 (offset 0)
+Ignoring wrong pointing object 66 0 (offset 0)
+Ignoring wrong pointing object 68 0 (offset 0)
+Ignoring wrong pointing object 70 0 (offset 0)
+Ignoring wrong pointing object 72 0 (offset 0)
+Ignoring wrong pointing object 74 0 (offset 0)
+Multiple definitions in dictionary at byte 0x2e0827 for key /Info
+Multiple definitions in dictionary at byte 0x2e0834 for key /Info
+Multiple definitions in dictionary at byte 0x2e0841 for key /Info
+Multiple definitions in dictionary at byte 0x209511 for key /Info
+Multiple definitions in dictionary at byte 0x20951e for key /Info
+Multiple definitions in dictionary at byte 0x20952b for key /Info
+Multiple definitions in dictionary at byte 0x2a9872 for key /Info
+Multiple definitions in dictionary at byte 0x2a987f for key /Info
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 25 0 (offset 0)
+Ignoring wrong pointing object 29 0 (offset 0)
+Ignoring wrong pointing object 31 0 (offset 0)
+Ignoring wrong pointing object 33 0 (offset 0)
+Ignoring wrong pointing object 35 0 (offset 0)
+Ignoring wrong pointing object 37 0 (offset 0)
+Ignoring wrong pointing object 54 0 (offset 0)
+Ignoring wrong pointing object 56 0 (offset 0)
+Ignoring wrong pointing object 58 0 (offset 0)
+Ignoring wrong pointing object 64 0 (offset 0)
+Ignoring wrong pointing object 66 0 (offset 0)
+Ignoring wrong pointing object 68 0 (offset 0)
+Ignoring wrong pointing object 70 0 (offset 0)
+Ignoring wrong pointing object 72 0 (offset 0)
+Ignoring wrong pointing object 74 0 (offset 0)
+Multiple definitions in dictionary at byte 0x56349 for key /Info
+Multiple definitions in dictionary at byte 0x56355 for key /Info
+EOF marker seems truncated
+Multiple definitions in dictionary at byte 0x188258 for key /Info
+Multiple definitions in dictionary at byte 0x188265 for key /Info
+  IN  70 queries, 237 seeds, 175 kept that nothing linked to, 2010 crawled  ->  154 new, 3561 held, 171 unreadable
+      depth 1: 552, depth 2: 1403, depth 3: 55
+      opened 237 seeds, 134 scored links, 232 links that scored nothing, 0 family members; 3 past a host's even share
+      694 pages kept their text for the index, including 291 PDFs read for text only
+      22 places its own pages send travellers, on companies we may name but never read
+      57 links rejected by rule:
+            56  the path marks it as archived or superseded
+                  https://indianembassyusa.gov.in/EmbassyArchives/1997
+                  https://indianembassyusa.gov.in/EmbassyArchives/1998
+                  https://indianembassyusa.gov.in/EmbassyArchives/1999
+                  https://indianembassyusa.gov.in/EmbassyArchives/2000
+                  https://indianembassyusa.gov.in/EmbassyArchives/2001
+             1  the path marks it as site furniture rather than guidance
+                  https://www.cgichicago.gov.in/page/privacy-policy
+      3 hosts gave this build nothing and are absent from the corpus:
+        archive.india.gov.in                       unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        audit.indianembassyusa.gov.in              unreachable  its TLS certificate could not be verified
+        v2.india.gov.in                            unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)

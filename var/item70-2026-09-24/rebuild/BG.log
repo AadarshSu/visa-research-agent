@@ -1,0 +1,23 @@
+building Bulgaria from 3 domains (existing corpus: 8959 entries)
+Multiple definitions in dictionary at byte 0x1649f1 for key /Type
+Multiple definitions in dictionary at byte 0x173b15 for key /Type
+Multiple definitions in dictionary at byte 0x17b0dc for key /Type
+Multiple definitions in dictionary at byte 0x1649f1 for key /Type
+Multiple definitions in dictionary at byte 0x173b15 for key /Type
+Multiple definitions in dictionary at byte 0x17b0dc for key /Type
+  BG  42 queries, 107 seeds (8 from its own mission index), 87 kept that nothing linked to, 7876 crawled  ->  1050 new, 10009 held, 394 unreadable
+      depth 1: 2632, depth 2: 3279, depth 3: 1965
+      opened 107 seeds, 3 scored links, 509 links that scored nothing, 156 family members
+      690 pages kept their text for the index, including 292 PDFs read for text only
+      14 links rejected by rule:
+            14  the path marks it as archived or superseded
+                  https://mvr.bg/opp/opp/roadpol-safety-days/%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0/2021
+                  https://mvr.bg/opp/roadpol-safety-days/%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0/2016
+                  https://mvr.bg/opp/roadpol-safety-days/%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0/2017
+                  https://mvr.bg/opp/roadpol-safety-days/%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0/2018
+                  https://mvr.bg/opp/roadpol-safety-days/%D1%81%D1%82%D0%B0%D1%82%D0%B8%D1%81%D1%82%D0%B8%D0%BA%D0%B0/2019
+      2 hosts stopped answering and were not asked again:
+        e-uslugi.mvr.bg                            after 6 unanswered requests in a row
+        publicmvr.mvr.bg                           after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        pvis-lb.mfa.bg                             unreachable  the request failed (ConnectTimeout)

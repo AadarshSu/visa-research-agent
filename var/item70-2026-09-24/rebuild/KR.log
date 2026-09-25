@@ -1,0 +1,11 @@
+building South Korea from 5 domains (existing corpus: 5545 entries)
+  KR  70 queries, 236 seeds (2 from its own mission index), 176 kept that nothing linked to, 5144 crawled  ->  1273 new, 6818 held, 74 unreadable
+      depth 1: 1972, depth 2: 1901, depth 3: 1271
+      opened 236 seeds, 586 scored links, 378 links that scored nothing, 0 family members; 284 past a host's even share
+      1096 pages kept their text for the index, including 11 PDFs read for text only
+      2 links rejected by rule:
+             2  the path marks it as archived or superseded
+                  http://www.goesan.go.kr/archive/index.do
+                  https://www.goesan.go.kr/archive/index.do
+      1 hosts stopped answering and were not asked again:
+        mail.mofa.go.kr                            after 6 unanswered requests in a row

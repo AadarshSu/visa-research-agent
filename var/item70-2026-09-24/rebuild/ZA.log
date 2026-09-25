@@ -1,0 +1,25 @@
+building South Africa from 4 domains (existing corpus: 4497 entries)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 977 0 (offset 0)
+Ignoring wrong pointing object 978 0 (offset 0)
+  ZA  56 queries, 142 seeds (3 from its own mission index), 125 kept that nothing linked to, 2904 crawled  ->  25 new, 4522 held, 142 unreadable
+      depth 1: 442, depth 2: 737, depth 3: 1725
+      opened 142 seeds, 106 scored links, 204 links that scored nothing, 0 family members
+      413 pages kept their text for the index, including 105 PDFs read for text only
+      23 places its own pages send travellers, on companies we may name but never read
+      14 links rejected by rule:
+            12  the path marks it as site furniture rather than guidance
+                  https://travelsmart.dirco.gov.za/privacy-policy
+                  https://www.gov.za/af/subscribe-mailing-lists
+                  https://www.gov.za/nr/subscribe-mailing-lists
+                  https://www.gov.za/nso/subscribe-mailing-lists
+                  https://www.gov.za/ss/subscribe-mailing-lists
+             2  the path marks it as archived or superseded
+                  https://www.dirco.gov.za/consular/2015/rosa1028.html
+                  https://www.gov.za/blog/archive
+      2 hosts stopped answering and were not asked again:
+        www.bma.gov.za                             after 6 unanswered requests in a row
+        www.dha.gov.za                             after 6 unanswered requests in a row
+      2 hosts gave this build nothing and are absent from the corpus:
+        dha.gov.za                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        www.bma.gov.za                             unreachable  its TLS certificate could not be verified

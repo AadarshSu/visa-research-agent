@@ -1,0 +1,12 @@
+building Czechia from 3 domains (existing corpus: 4073 entries)
+  CZ  42 queries, 220 seeds (8 from its own mission index), 175 kept that nothing linked to, 3876 crawled  ->  719 new, 4792 held, 166 unreadable
+      depth 1: 1209, depth 2: 1362, depth 3: 1305
+      opened 220 seeds, 468 scored links, 512 links that scored nothing, 0 family members
+      1191 pages kept their text for the index, including 180 PDFs read for text only
+      38 places its own pages send travellers, on companies we may name but never read
+      4 links rejected by rule:
+             4  the path marks it as archived or superseded
+                  https://mzv.gov.cz/cairo/en/bilateral_relations/archive/index.html
+                  https://mzv.gov.cz/cairo/en/culture/archive/index.html
+                  https://mzv.gov.cz/cairo/en/economic_and_commercial_information/archive/index.html
+                  https://mzv.gov.cz/kualalumpur/en/news_and_events/archive/index.html

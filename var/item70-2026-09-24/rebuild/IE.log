@@ -1,0 +1,15 @@
+building Ireland from 3 domains (existing corpus: 2505 entries)
+  IE  42 queries, 135 seeds, 101 kept that nothing linked to, 2521 crawled  ->  138 new, 2643 held, 156 unreadable
+      depth 1: 787, depth 2: 620, depth 3: 1114
+      opened 135 seeds, 429 scored links, 574 links that scored nothing, 0 family members; 100 past a host's even share; 514 scored links turned away at a host's cap
+      1006 pages kept their text for the index, including 34 PDFs read for text only
+      2 links rejected by rule:
+             2  the path marks it as site furniture rather than guidance
+                  https://ipas.irishimmigration.ie/cookie-policy
+                  https://ipo.irishimmigration.ie/cookie-policy
+      1 hosts stopped answering and were not asked again:
+        inis.gov.ie                                after 6 unanswered requests in a row
+      3 hosts gave this build nothing and are absent from the corpus:
+        inis.gov.ie                                disallowed   its robots.txt answered with a web page rather than a crawl policy, so whether this client may fetch it is unknown
+        irishimmigration.ie                        unusable     it answered HTTP 404
+        www.inis.gov.ie                            disallowed   its robots.txt answered with a web page rather than a crawl policy, so whether this client may fetch it is unknown

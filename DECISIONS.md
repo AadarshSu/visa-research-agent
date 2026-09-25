@@ -223,6 +223,8 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [204](#204-the-full-rebuild-graded-the-stores-hold-every-answer-and-the-corridors-answer-as-before) | **The full rebuild, graded** — the stores hold every oracle answer (50/50, 42/42); nine of item 70's corridors, the Germany sentinel and Czechia answer visa required 3 of 3; Egypt 1 of 3 on byte-identical roles packets (model variance); Brazil refuses correctly, its visa table a PDF `robots.txt` disallows |
+| [203](#203-the-archived-year-veto-spares-every-filing-date-the-rebuilds-reports-showed-it-dropping) | **The archived-year veto spares filing dates** — a year under `uploads`, `media` or `UserDocsImages`, under `sites/<n>/`, or in a post permalink with a slug; South Africa +21 dated pages incl. its London and Paris exemption lists, Croatia +431 incl. the Kenya list, Cyprus +12 behind a challenge |
 | [202](#202-cloudflares-challenge-host-approved-measured-and-not-shipped--it-cannot-be-answered-honestly) | **Cloudflare's challenge host: approved, measured, not shipped** — with it allowed, 6 of 7 Cloudflare pages still refused our headless browser as a bot (no gate at all gave the same); passing would mean disguising the client, which entries 18 and 35 forbid; item 61 closes |
 | [201](#201-the-eu-may-answer-the-visa-decision-for-a-schengen-member--one-reviewed-tier-beside-the-destinations-own-government) | **The EU may answer a Schengen member's visa decision** — the owner's decision; a reviewed supranational tier (EUR-Lex, ETIAS) beside a country's own list, for the decision only, 29 members; EUR-Lex's AWS challenge answered as a narrow ruling on item 61; a shared EU store follows EUR-Lex's own link to the newest consolidation; five corridors "visa required" 15 of 15, Croatia and Poland from refused and null |
 | [200](#200-before-the-full-rebuild-the-build-says-what-its-rules-threw-away-and-the-depth-1-rule-waits) | **Before the full rebuild** — each build now reports, per rule, what it rejected and how much of it mentions visas; newsletter and subscription pages are site furniture (not `signup`, which e-visa portals use); opening zero-scoring links only one hop from a seed is not adopted, because entry 192 could not see what it would lose |
@@ -254,6 +256,97 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 204. The full rebuild, graded: the stores hold every answer, and the corridors answer as before
+
+**2026-09-25 · the owner: "rebuild ZA, CY, HR, Brazil, then grade the stores".** All 55
+destinations are rebuilt: the pilot ten and Malta on 2026-09-24, the other 44 on 2026-09-25
+(PROJECT_HANDOFF), then four again under entry 203. Grading used what already exists and built
+nothing new, as entries 68 and 147 require.
+
+**The store side.** `coverage` over the 55 holds every answer the oracle names: 50 of 50 for
+`IN/GB` and 42 of 42 for `PH/PH`. Verdicts: 36 `ungraded` (Brazil and Uruguay among them, having no
+family and no oracle row), 10 `bounded by the authority`, 6 `no per-traveller dimension`, 2
+`incomplete` (Bulgaria and the Netherlands, as before), 1 `covered`. The two tests that read
+`var/corpus/` had been skipped in every run since entry 201 added the EU store; they now run and
+pass, skipping the EU store, which the country registry rightly does not know.
+
+**The corridor side.** 36 runs through the path `POST /visa-plans` takes, three per corridor, one
+at a time on Personas, each with empty corridor, plan and recall folders
+(`var/item70-2026-09-24/run.py`, `ITEM70_OUT=graded`), against entry 198's baseline:
+
+| corridor | before (entry 198) | now |
+| --- | --- | --- |
+| Belgium `BD/AE`, `BD/SA`; Italy, Slovenia, Poland `BD/AE`; India `BD/SA` | 1–3 of 3, or null | visa required, 3 of 3 each |
+| Croatia `BD/AE` | refused, 3 of 3 | visa required, 3 of 3 (the EU tier, entry 201) |
+| Czechia `IN/GB` | — | visa required, 3 of 3; selection 2 of 2 oracle roles every run |
+| Germany `IN/GB`, the sentinel | verified, 5 of 5 | visa required, 3 of 3 |
+| Egypt `BD/SA` | visa required, 3 of 3 | 1 of 3, then refused twice |
+| Mexico `IN/GB` | refused, 3 of 3 | refused twice, null once |
+| Saudi Arabia `IN/GB` | refused, 3 of 3 | refused, 3 of 3 |
+
+- **Egypt's drop is the roles call, not the store.** The three roles packets are byte-identical and
+  each holds the portal disclaimer's "A visa is required prior to entry". The model credited it once
+  and refused it twice, reasoning that Bangladesh is absent from the e-Visa list and so the page
+  does not say which route applies. Against the baseline packet the only difference is that the
+  portal's home page (sign-up text) dropped out. One run each cannot say more; it is variance on a
+  borderline page.
+- **Mexico and Saudi Arabia** refuse for entry 198's reasons: an image-only list and unreadable
+  pages.
+- **Brazil refuses correctly**, two runs of `brazil/IN/GB`. The selector picks the foreign
+  ministry's visa table (`qgrv-simples-ing-06may26.pdf`) and New Delhi's tourist checklist, and
+  `gov.br/robots.txt` disallows `/mre/*.pdf$`. Entry 36: named, never read.
+
+**What it does not show.** Whether any answer is *right* (known problem 26), and anything about
+the 30 rebuilt countries no corridor here touches.
+
+## 203. The archived-year veto spares every filing date the rebuild's reports showed it dropping
+
+**2026-09-25 · found in the full rebuild's reports (entry 200's block), fixed by the owner's
+instruction.** Entry 198 stopped `is_archived` vetoing a year under `uploads/`. The 44 reports
+showed it still discarding current guidance filed under a date in other forms: 10 visa-worded
+addresses in South Africa, and more in Cyprus and Croatia.
+
+**The rule now.** `filed_date_in_path` (`discovery/urls.py`) finds a year that says when something
+was filed, and `is_archived` spares that one year and no other. `published_date_in_path` reports it
+to the adjudicator, as entry 15 decided. The forms:
+- **A year under a file store anywhere above it:** `uploads`, `media` or `userdocsimages`. This
+  covers `uploads/sites/57/2024/07/` (South Africa's Juba mission), `media/2024/06/` (Cyprus) and
+  `UserDocsImages/2023/` (Croatia).
+- **A year straight under a multisite's `sites/<n>/`:** Cyprus's `media/sites/19/2024/06/`.
+- **A post's permalink:** year, month and day, then a slug, as in
+  `/juba/2024/07/12/application-for-a-business-visa`. The slug is required: Thailand's
+  `/2023/02/06` alone is a day's listing, and stays vetoed.
+
+**What stays vetoed:**
+- an explicit archive section, which is checked first;
+- a second, older year outside the filing (`/2019/uploads/2023/10/`);
+- a year and month with no day (Denmark's `News-Front-Page/2022/09/…`);
+- `sites/default/2019/`.
+
+**Measured by re-running the three stores, and Brazil's thin first build.** Each is compared with
+its store just before, via `var/item70-2026-09-24/veto/measure.py`.
+- **South Africa:** 21 new dated pages. Among them are the Juba application pages and, from the
+  London and Paris missions, the visa-exemption lists. The PDFs have an empty text layer, which is
+  item 69's.
+- **Croatia:** 431 new dated files, among them all four the first report named: the Kenya
+  supporting-documents list and the 2021 visa ordinance.
+  - Not all of it is guidance: about 83 are job-competition notices and about 83 statistics.
+    They are recorded and mostly unopened, and nothing held before was lost.
+  - `UserDocsImages/dokumenti/2021/Statistika/2019/` stays vetoed on its second year.
+- **Cyprus:** `media` was added after the first re-run showed `gov.cy/media/2024/06/…` still
+  vetoed.
+  - The second re-run recorded 12 dated files. Every one is behind the Cloudflare challenge entry
+    202 found unanswerable, as are 162 of its unreadable pages.
+  - So they are now candidates that can be named but not read.
+- **Brazil:** the second build found 1,284 entries against 582, with 236 pages of text against 58,
+  and reached depth 3 where the first stopped at 1. `www.gov.br` had stopped answering the first
+  time.
+
+**Admitting permalinks admits dated news too.** An address cannot tell Juba's application post
+from Indonesia's press release in the same shape. That is entry 15's call: publication is not
+staleness, and a reader holding the text decides. The other 51 stores keep what their build vetoed
+until they are next rebuilt; the corridor path uses the new rule at once.
 
 ## 202. Cloudflare's challenge host: approved, measured, and not shipped — it cannot be answered honestly
 

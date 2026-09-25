@@ -324,6 +324,45 @@ def test_a_year_under_an_uploads_folder_is_an_upload_date_not_an_archive() -> No
     assert is_archived("https://immigration.gov.example/archive/uploads/2023/10/a.pdf", lexicon)
 
 
+def test_the_other_filing_forms_are_dates_not_archives() -> None:
+    """Entry 203. The 2026-09-25 rebuild's reports showed the year veto still discarding current
+    guidance filed in three forms Malta's fix did not cover."""
+
+    lexicon = get_lexicon()
+    filed = {
+        # WordPress multisite, South Africa's Juba mission
+        "https://dirco.gov.za/juba/wp-content/uploads/sites/57/2024/07/BI-84-Application.pdf": (
+            "2024-07"
+        ),
+        # a multisite media folder, Cyprus
+        "https://www.gov.cy/media/sites/19/2024/06/Visa-Information-System-VIS.pdf": "2024-06",
+        # and the same site's plain media folder
+        "https://www.gov.cy/media/2024/06/Annex-II-Guidelines.pdf": "2024-06",
+        # Croatia's CMS
+        "https://mvep.gov.hr/UserDocsImages/2023/datoteke/Kenya_supporting_documents.pdf": "2023",
+        # a post's permalink
+        "https://dirco.gov.za/juba/2024/07/12/application-for-a-business-visa": "2024-07-12",
+    }
+    for url, date in filed.items():
+        assert not is_archived(url, lexicon), url
+        assert published_date_in_path(url) == date, url
+
+
+def test_a_filing_date_spares_only_its_own_year() -> None:
+    lexicon = get_lexicon()
+
+    # a day's listing, not a post
+    assert is_archived("http://phitsanulok.immigration.go.th/2024/05/01", lexicon)
+    # year and month with no day is not a permalink
+    assert is_archived("https://nyidanmark.dk/en-GB/News-Front-Page/2022/09/Changed-rules", lexicon)
+    # an explicit archive section still wins
+    assert is_archived("https://x.gov.example/archive/2024/07/12/visa-post", lexicon)
+    # a second, older year outside the filing is still a veto
+    assert is_archived("https://x.gov.example/2019/uploads/2023/10/a.pdf", lexicon)
+    # a sites folder whose next segment is not a number is not a multisite
+    assert is_archived("https://x.gov.example/sites/default/2019/a.pdf", lexicon)
+
+
 # --- a country name must not match inside a word ---------------------------------------------
 
 

@@ -1,0 +1,49 @@
+building Greece from 3 domains (existing corpus: 6883 entries)
+Ignoring wrong pointing object 9 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 14 0 (offset 0)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 17 0 (offset 0)
+Ignoring wrong pointing object 27 0 (offset 0)
+Ignoring wrong pointing object 29 0 (offset 0)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 9 0 (offset 0)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 17 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 28 0 (offset 0)
+Ignoring wrong pointing object 43 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 19 0 (offset 0)
+Ignoring wrong pointing object 28 0 (offset 0)
+  GR  42 queries, 122 seeds (6 from its own mission index), 93 kept that nothing linked to, 5796 crawled  ->  1714 new, 8597 held, 162 unreadable
+      depth 1: 1016, depth 2: 2289, depth 3: 2491
+      opened 122 seeds, 227 scored links, 837 links that scored nothing, 14 family members; 69 past a host's even share
+      1400 pages kept their text for the index, including 324 PDFs read for text only
+      5 places its own pages send travellers, on companies we may name but never read
+      30 links rejected by rule:
+            25  the path marks it as archived or superseded  (5 with 'visa' in the address)
+                  https://www.mfa.gr/archive/1/docs/ethnikes_theoriseis/application_national_visas.pdf
+                  https://www.mfa.gr/archive/1/docs/ethnikes_theoriseis/regulation_265_2010_visa_d_en.pdf
+                  https://www.mfa.gr/archive/1/docs/ethnikes_theoriseis/regulation_265_2010_visa_d_fr.pdf
+                  https://www.mfa.gr/china/en/services/visas/images/stories/beijing/2021/SIS_aitisi_diagrafis_request_for_correction_or_deletion.pdf
+                  https://www.mfa.gr/china/en/services/visas/images/stories/beijing/2021/SIS_aitisi_prosvasis_request_to_access.pdf
+             5  the path marks it as site furniture rather than guidance
+                  https://agora.mfa.gr/en/privacy-policy
+                  https://migration.gov.gr/en/privacy-policy
+                  https://migration.gov.gr/privacy-policy
+                  https://www.agora.mfa.gr/en/privacy-policy
+                  https://www.mfa.gr/usa/en/newsletter
+      3 hosts stopped answering and were not asked again:
+        applications.migration.gov.gr              after 6 unanswered requests in a row
+        emn.immigration.gov.gr                     after 6 unanswered requests in a row
+        www.immigration.gov.gr                     after 6 unanswered requests in a row
+      2 hosts gave this build nothing and are absent from the corpus:
+        immigration.gov.gr                         unreachable  the request failed (ConnectTimeout)
+        www.immigration.gov.gr                     unreachable  the request failed (ConnectTimeout)

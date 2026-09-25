@@ -1,0 +1,17 @@
+building Switzerland from 2 domains (existing corpus: 7823 entries)
+Ignoring wrong pointing object 418 0 (offset 0)
+Ignoring wrong pointing object 2059 0 (offset 0)
+  CH  28 queries, 94 seeds (4 from its own mission index), 80 kept that nothing linked to, 6033 crawled  ->  592 new, 8415 held, 86 unreadable
+      depth 1: 770, depth 2: 1162, depth 3: 4101
+      opened 94 seeds, 517 scored links, 589 links that scored nothing, 0 family members; 223 past a host's even share
+      1442 pages kept their text for the index, including 347 PDFs read for text only
+      10 places its own pages send travellers, on companies we may name but never read
+      1924 links rejected by rule:
+          1924  the path marks it as archived or superseded
+                  https://www.admin.ch/opc/de/federal-gazette/2018/6665.pdf
+                  https://www.admin.ch/opc/de/federal-gazette/2018/6729.pdf
+                  https://www.admin.ch/opc/de/federal-gazette/2018/6731.pdf
+                  https://www.eda.admin.ch/eda/de/home/das-eda/aktuell/newsuebersicht/2023/europa.html
+                  https://www.eda.admin.ch/eda/en/fdfa/fdfa/aktuell/newsuebersicht/2023/europa.html
+      1 hosts gave this build nothing and are absent from the corpus:
+        www.schweiz-ghana.eda.admin.ch             blocked      it refused automated retrieval (HTTP 403), so its guidance could not be independently verified here

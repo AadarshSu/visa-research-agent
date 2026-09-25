@@ -1,0 +1,25 @@
+building Cyprus from 3 domains (existing corpus: 1708 entries)
+  CY  42 queries, 152 seeds (5 from its own mission index), 142 kept that nothing linked to, 1067 crawled  ->  10 new, 1718 held, 169 unreadable
+      depth 1: 341, depth 2: 653, depth 3: 73
+      opened 152 seeds, 90 scored links, 180 links that scored nothing, 0 family members
+      294 pages kept their text for the index
+      7 places its own pages send travellers, on companies we may name but never read
+      20 links rejected by rule:
+            12  the path marks it as site furniture rather than guidance
+                  https://www.gov.cy/mfa-embassyathens/en/privacy-policy
+                  https://www.gov.cy/mfa-embassybeirut/en/privacy-policy
+                  https://www.gov.cy/mfa-embassycairo/en/privacy-policy
+                  https://www.gov.cy/mfa-embassydoha/en/privacy-policy
+                  https://www.gov.cy/mfa-embassyriyadh/en/privacy-policy
+             8  the path marks it as archived or superseded
+                  https://www.gov.cy/media/2024/06/Annex-II-Guidelines-for-drafting-a-Business-Plan.pdf
+                  https://www.gov.cy/media/2024/06/Annex-IV-Certificate-from-an-External-Auditor.pdf
+                  https://www.gov.cy/media/2024/06/Application-Form-for-an-Identity-Card-1.pdf
+                  https://www.gov.cy/media/2024/06/M121-greek-1.pdf
+                  https://www.gov.cy/media/2024/06/M127-greek-1.pdf
+      2 hosts stopped answering and were not asked again:
+        mip.gov.cy                                 after 6 unanswered requests in a row
+        www.mip.gov.cy                             after 6 unanswered requests in a row
+      2 hosts gave this build nothing and are absent from the corpus:
+        digipol.police.gov.cy                      disallowed   its robots.txt answered HTTP 503, so whether this client may fetch it is unknown
+        mip.gov.cy                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)

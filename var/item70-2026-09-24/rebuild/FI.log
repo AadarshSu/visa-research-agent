@@ -1,0 +1,7 @@
+building Finland from 2 domains (existing corpus: 3782 entries)
+  FI  28 queries, 94 seeds (5 from its own mission index), 73 kept that nothing linked to, 749 crawled  ->  1 new, 3783 held, 448 unreadable
+      depth 1: 749
+      opened 94 seeds, 15 scored links, 349 links that scored nothing, 0 family members
+      10 pages kept their text for the index
+      1 places its own pages send travellers, on companies we may name but never read
+      only 0% of what it found lies beyond depth 1 — this crawl fetched its seeds and stopped, which is the request path's behaviour, not this job's. It spent 749 of 1200 pages, so the budget was not the limit — the frontier ran dry. Read the lost hosts and the unreadable count above.

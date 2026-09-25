@@ -1,0 +1,14 @@
+building Norway from 3 domains (existing corpus: 2857 entries)
+  NO  42 queries, 199 seeds (4 from its own mission index), 175 kept that nothing linked to, 1369 crawled  ->  139 new, 2996 held, 262 unreadable
+      depth 1: 582, depth 2: 723, depth 3: 64
+      opened 199 seeds, 142 scored links, 306 links that scored nothing, 0 family members
+      489 pages kept their text for the index, including 129 PDFs read for text only
+      132 places its own pages send travellers, on companies we may name but never read
+      3 links rejected by rule:
+             2  the path marks it as archived or superseded
+                  http://www.regjeringen.no/nb/dep/bld/aktuelt/nyheter/2011/surrogati.html?id=660199
+                  https://www.regjeringen.no/en/historical-archive/Stoltenbergs-2nd-Government/Ministry-of-Justice-and-the-Police/Nyheter-og-pressemeldinger/pressemeldinger/2010/new-rules-for-travellers-between-svalbar/id628539
+             1  the path marks it as site furniture rather than guidance
+                  https://www.norway.no/en/croatia/newsletter
+      1 hosts gave this build nothing and are absent from the corpus:
+        regjeringen.no                             challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance

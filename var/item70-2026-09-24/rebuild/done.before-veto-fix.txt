@@ -1,5 +1,6 @@
 MT
 RO
+ZA
 IT
 CZ
 CN
@@ -18,10 +19,12 @@ HU
 CH
 ID
 TR
+HR
 VN
 NO
 SK
 NZ
+CY
 AU
 BE
 LV
@@ -39,7 +42,4 @@ DK
 MY
 PH
 EG
-ZA
-HR
 BR
-CY

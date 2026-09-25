@@ -1,0 +1,23 @@
+building Vietnam from 4 domains (existing corpus: 3071 entries)
+  VN  56 queries, 143 seeds (8 from its own mission index), 115 kept that nothing linked to, 2405 crawled  ->  386 new, 3457 held, 127 unreadable
+      depth 1: 701, depth 2: 1614, depth 3: 90
+      opened 143 seeds, 228 scored links, 275 links that scored nothing, 0 family members; 121 past a host's even share
+      322 pages kept their text for the index
+      17 hosts gave this build nothing and are absent from the corpus:
+        vnconsulate-hongkong.mofa.gov.vn           unreachable  the request failed (All connection attempts failed)
+        vnconsulate-houstontexas.mofa.gov.vn       unreachable  the request failed (ConnectTimeout)
+        vnconsulate-perth.mofa.gov.vn              unreachable  the request failed (All connection attempts failed)
+        vnconsulate-shihanoukville.mofa.gov.vn     unusable     it answered HTTP 404
+        vnembassy-bangkok.mofa.gov.vn              unusable     it answered HTTP 404
+        vnembassy-beijing.mofa.gov.vn              unusable     it answered HTTP 404
+        vnembassy-bucharest.mofa.gov.vn            unusable     it answered HTTP 404
+        vnembassy-doha.mofa.gov.vn                 unreachable  the request failed (All connection attempts failed)
+        vnembassy-kualalumpur.mofa.gov.vn          unusable     it answered HTTP 404
+        vnembassy-london.mofa.gov.vn               unusable     it answered HTTP 404
+        vnembassy-manila.mofa.gov.vn               unusable     it answered HTTP 404
+        vnembassy-oslo.mofa.gov.vn                 unusable     it answered HTTP 404
+        vnembassy-paris.mofa.gov.vn                unusable     it answered HTTP 404
+        vnembassy-praha.mofa.gov.vn                unusable     it answered HTTP 404
+        vnembassy-roma.mofa.gov.vn                 unusable     it answered HTTP 404
+        vnembassy-wellington.mofa.gov.vn           unusable     it answered HTTP 404
+        vnmission-newyork.mofa.gov.vn              unreachable  the request failed (ConnectTimeout)

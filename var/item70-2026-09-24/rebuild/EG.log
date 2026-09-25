@@ -1,0 +1,14 @@
+building Egypt from 3 domains (existing corpus: 161 entries)
+  EG  42 queries, 77 seeds, 76 kept that nothing linked to, 44 crawled  ->  42 new, 203 held, 35 unreadable
+      depth 1: 41, depth 2: 3
+      opened 77 seeds, 33 scored links, 10 links that scored nothing, 0 family members
+      48 pages kept their text for the index
+      2 hosts stopped answering and were not asked again:
+        emigration.gov.eg                          after 6 unanswered requests in a row
+        www.emigration.gov.eg                      after 6 unanswered requests in a row
+      4 hosts gave this build nothing and are absent from the corpus:
+        academy.moi.gov.eg                         unreachable  the request failed (ConnectTimeout)
+        emigration.gov.eg                          unreachable  its TLS certificate could not be verified
+        emoves.moi.gov.eg                          unreachable  the request failed (ConnectTimeout)
+        www.emigration.gov.eg                      unreachable  its TLS certificate could not be verified
+      only 7% of what it found lies beyond depth 1 — this crawl fetched its seeds and stopped, which is the request path's behaviour, not this job's. It spent 44 of 1200 pages, so the budget was not the limit — the frontier ran dry. Read the lost hosts and the unreadable count above.

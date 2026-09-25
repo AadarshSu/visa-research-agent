@@ -1,0 +1,21 @@
+building Austria from 4 domains (existing corpus: 5348 entries)
+  AT  56 queries, 172 seeds (1 from its own mission index), 132 kept that nothing linked to, 5177 crawled  ->  1015 new, 6363 held, 337 unreadable
+      depth 1: 1581, depth 2: 1413, depth 3: 2183
+      opened 172 seeds, 166 scored links, 862 links that scored nothing, 0 family members
+      861 pages kept their text for the index, including 39 PDFs read for text only
+      19 links rejected by rule:
+            10  the path marks it as site furniture rather than guidance
+                  https://mitgestalten.wien.gv.at/de-DE/pages/cookie-policy
+                  https://mitgestalten.wien.gv.at/de-DE/pages/cookie-policy?from=cookie-modal
+                  https://mitgestalten.wien.gv.at/de-DE/pages/privacy-policy
+                  https://www.wien.gv.at/en/content/credits
+                  https://www.wien.gv.at/newsletter/bildungsversprechen
+             9  the path marks it as archived or superseded
+                  https://digitales.wien.gv.at/wp-content/uploads/sites/47/2021/07/Datennutzungsvertrag-ViennaGIS-Kunde-Muster20210701.pdf
+                  https://digitales.wien.gv.at/wp-content/uploads/sites/47/2022/12/Cloud-Strategie-Stadt-Wien.pdf
+                  https://digitales.wien.gv.at/wp-content/uploads/sites/47/2024/09/AI-Expert-Pool.pdf
+                  https://digitales.wien.gv.at/wp-content/uploads/sites/47/2024/10/20241024_KI-Strategie_final-1.pdf
+                  https://digitales.wien.gv.at/wp-content/uploads/sites/47/2024/12/20241209_Digitalisierungsstrategie_final-1.pdf
+      2 hosts gave this build nothing and are absent from the corpus:
+        bmeia.gv.at                                disallowed   its robots.txt does not permit this client to fetch it
+        cms.bmeia.gv.at                            disallowed   its robots.txt does not permit this client to fetch it

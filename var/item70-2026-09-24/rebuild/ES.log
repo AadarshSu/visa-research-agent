@@ -1,0 +1,21 @@
+building Spain from 5 domains (existing corpus: 9009 entries)
+Multiple definitions in dictionary at byte 0x3eb04 for key /Info
+Multiple definitions in dictionary at byte 0x3eb10 for key /Info
+Multiple definitions in dictionary at byte 0x3eb1c for key /Info
+  ES  70 queries, 273 seeds (4 from its own mission index), 174 kept that nothing linked to, 5622 crawled  ->  385 new, 9394 held, 462 unreadable
+      depth 1: 3637, depth 2: 1542, depth 3: 443
+      opened 273 seeds, 290 scored links, 637 links that scored nothing, 0 family members; 58 past a host's even share
+      847 pages kept their text for the index, including 365 PDFs read for text only
+      3 links rejected by rule:
+             3  the path marks it as archived or superseded
+                  https://sede.administracionespublicas.gob.es/ayuda/consulta/Archive
+                  https://www.inclusion.gob.es/en/web/migraciones/modelos-de-solicitudes-de-la-ley-14/2013
+                  https://www.inclusion.gob.es/web/migraciones/modelos-de-solicitudes-de-la-ley-14/2013
+      5 hosts stopped answering and were not asked again:
+        ciudadaniaexterior.inclusion.gob.es        after 6 unanswered requests in a row
+        proteccion-asilo.interior.gob.es           after 6 unanswered requests in a row
+        sede.inclusion.gob.es                      after 6 unanswered requests in a row
+        sede.interior.gob.es                       after 6 unanswered requests in a row
+        www.lamoncloa.gob.es                       after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        interior.gob.es                            unreachable  the request failed (ConnectTimeout)

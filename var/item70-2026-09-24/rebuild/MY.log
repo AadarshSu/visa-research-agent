@@ -1,0 +1,29 @@
+building Malaysia from 4 domains (existing corpus: 995 entries)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 17 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 17 0 (offset 0)
+  MY  56 queries, 206 seeds, 165 kept that nothing linked to, 1241 crawled  ->  563 new, 1558 held, 279 unreadable
+      depth 1: 592, depth 2: 421, depth 3: 228
+      opened 206 seeds, 215 scored links, 259 links that scored nothing, 0 family members; 232 past a host's even share
+      642 pages kept their text for the index, including 128 PDFs read for text only
+      46 links rejected by rule:
+            44  the path marks it as archived or superseded
+                  https://www.imi.gov.my/index.php/2018/01/09
+                  https://www.imi.gov.my/index.php/2018/01/09/perhimpunan-bulanan-jim-januari-bm
+                  https://www.imi.gov.my/index.php/2018/01/11
+                  https://www.imi.gov.my/index.php/2018/01/11/perhimpunan-bulanan-kdn-11-januari-2018
+                  https://www.imi.gov.my/index.php/2018/01/21
+             2  the path marks it as site furniture rather than guidance
+                  https://www.imi.gov.my/index.php/en/privacy-policy
+                  https://www.malaysia.gov.my/en/policy/privacy-policy
+      2 hosts stopped answering and were not asked again:
+        www.kln.gov.my                             after 6 unanswered requests in a row
+        www2.imi.gov.my                            after 6 unanswered requests in a row
+      6 hosts gave this build nothing and are absent from the corpus:
+        imi.gov.my                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        kln.gov.my                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        malaysia.gov.my                            unreachable  its TLS certificate could not be verified
+        malaysiavisa.imi.gov.my                    disallowed   its robots.txt answered with a web page rather than a crawl policy, so whether this client may fetch it is unknown
+        mygov.malaysia.gov.my                      unreachable  the request failed (ConnectTimeout)
+        rai.stg.malaysia.gov.my                    unreachable  its TLS certificate could not be verified

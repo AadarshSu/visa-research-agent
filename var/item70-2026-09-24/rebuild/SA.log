@@ -1,0 +1,19 @@
+building Saudi Arabia from 4 domains (existing corpus: 765 entries)
+  SA  56 queries, 220 seeds (6 from its own mission index), 200 kept that nothing linked to, 538 crawled  ->  34 new, 799 held, 190 unreadable
+      depth 1: 239, depth 2: 241, depth 3: 58
+      opened 220 seeds, 51 scored links, 179 links that scored nothing, 0 family members
+      107 pages kept their text for the index, including 4 PDFs read for text only
+      1 hosts stopped answering and were not asked again:
+        www.moi.gov.sa                             after 6 unanswered requests in a row
+      11 hosts gave this build nothing and are absent from the corpus:
+        content-acc.sta.gov.sa                     unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        cva.moi.gov.sa                             unreachable  the request failed (ConnectTimeout)
+        embassies.mofa.gov.sa                      untrusted    it redirected to saudiembassy.sa, which is not an approved domain
+        learning.sta.gov.sa                        unreachable  the request failed (ConnectError)
+        moi.gov.sa                                 unreachable  the request failed (ConnectTimeout)
+        my.gov.sa                                  blocked      it refused automated retrieval (HTTP 403), so its guidance could not be independently verified here
+        safiu.moi.gov.sa                           unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        sta.gov.sa                                 unusable     it answered HTTP 990
+        www.moi.gov.sa                             unreachable  the request failed (ConnectTimeout)
+        www.my.gov.sa                              blocked      it refused automated retrieval (HTTP 403), so its guidance could not be independently verified here
+        www.sta.gov.sa                             unusable     it answered HTTP 990

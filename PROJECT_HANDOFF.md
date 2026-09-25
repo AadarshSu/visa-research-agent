@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-25 — update this line when you touch the handoff |
-| **Tests** | 942: 939 passing and 3 skipped, run 2026-09-24 in a worktree without the corpora — one skip is the opt-in browser test, the other two need corpora; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 944: 943 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -36,63 +36,58 @@ disproved. Link instead of copying.
 
 ---
 
-## Next session: the full rebuild — start here
+## Next session: the full rebuild is done and graded — start here
 
-**The owner's decision, 2026-09-25: rebuild the 44 stores not yet rebuilt, in a fresh session.**
-Everything that changes what a build records landed first (entries 198–201). What to read, in order:
-TODO's *The sequence to the full rebuild*, then DECISIONS entries 200 and 201.
+**Every one of the 55 destinations was rebuilt by 2026-09-25 and graded the same day (DECISIONS
+entries 203 and 204).** Next: TODO items 67 and 64, and the roles-call variance below.
 
-**Which 44.** Of the 55 destinations (53 corpora plus Brazil and Uruguay), 11 are already rebuilt:
-the ten pilot countries (JP, GB, CA, DE, NL, FR, SE, SG, AE, US, 2026-09-24) and Malta (2026-09-24,
-entry 198). The other 42 corpora date from 2026-09-15. Brazil and Uruguay have never been built.
+**What was built.**
+- The ten pilot countries and Malta on 2026-09-24; the other 44 (42 corpora plus Brazil and
+  Uruguay, both built for the first time) on 2026-09-25.
+- All 44 ran from the owner's Terminal panel in two queues over about 9½ hours (19:07Z–04:23Z),
+  every one exit 0, without refreshing the EU store (the owner's call).
+- Then South Africa, Croatia, Cyprus and Brazil again, after the archived-year veto was widened
+  (entry 203).
+- **Now:** 285,261 pages across the 55, against 237,283 over 53 after 2026-09-15; `var/pagetext/`
+  is 942 MB.
+- **Backups:** the pre-rebuild copies are in `var/_backup_before_item70_2026-09-24/` (633 MB), and
+  reports and exit codes are in `var/item70-2026-09-24/rebuild/`.
+
 **Do not read a store's `built_at` as its rebuild date.** A corridor that resolves writes its pages
-back into the store and `merge` resets `built_at` to that moment (`discovery/corpus.py`), which is
-why IT, EG, IN, HR, PL, BE and SI carry 2026-09-24 without having been rebuilt. What was rebuilt is
+back into the store, and `merge` resets `built_at` to that moment (`discovery/corpus.py`). That is
+why IT, EG, IN, HR, PL, BE and SI carried 2026-09-24 before they were rebuilt. What was rebuilt is
 what the `done.txt` files under `var/rebuild-pilot-2026-09-25/` and `var/item70-2026-09-24/rebuild/`
 list.
 
-**Done 2026-09-25: all 44 built, every one exit 0, run from the owner's Terminal panel in two
-queues over about 9½ hours (19:07Z–04:23Z), without refreshing the EU store (the owner's call).**
-Every country's store is rebuilt now. The stores hold 281,595 pages, excluding Brazil and the EU
-store, against 237,283 after 2026-09-15; `var/pagetext/` is 919 MB. The pre-build copies are in
-`var/_backup_before_item70_2026-09-24/` (633 MB). Reports and exit codes are in
-`var/item70-2026-09-24/rebuild/`. **Not yet done: `selection-recall` and the `germany/IN/GB`
-sentinel.** What the reports show:
-- **Brazil's first store is thin.** 582 entries, 380 of them unreadable, and only 58 pages kept
-  text: `www.gov.br` stopped answering after six failures in a row, and the crawl never passed
-  depth 1. Egypt is the same shape: 203 held, 44 crawled, and `emigration.gov.eg`'s TLS
-  certificate could not be verified. Both reports say the frontier ran dry. Re-run Brazil at
-  another time before reading anything into it. Uruguay's first build is fine (2,707 entries).
-- **The archived-year veto (`scoring.py` `is_archived`) still discards current guidance, in three
-  more address forms than Malta's `uploads/<year>`.** South Africa's missions publish at
-  `dirco.gov.za/juba/2024/07/12/application-for-a-business-visa` (a publication date in the path)
-  and `…/wp-content/uploads/sites/57/2024/07/…Application-for-a-Visa….pdf` (WordPress multisite);
-  Cyprus at `gov.cy/media/sites/19/2024/06/…`; Croatia at `mvep.gov.hr/UserDocsImages/2023/…`,
-  including a Kenya short-stay supporting-documents list and the 2021 visa ordinance. Among the
-  reports' visa-worded rejections, Denmark's, Luxembourg's and most of Indonesia's are dated news,
-  rightly vetoed. TODO *Smaller things* has the fix; after it, re-run ZA, CY and HR only.
+**What grading found (entry 204).**
+- **Store side:** `coverage` holds every oracle answer, 50 of 50 `IN/GB` and 42 of 42 `PH/PH`.
+- **Corridor side:** 36 fresh runs through the `/visa-plans` path.
+  - Nine of item 70's corridors answered "visa required" 3 of 3, the Germany sentinel 3 of 3, and
+    Czechia `IN/GB` 3 of 3, whose selection found 2 of 2 oracle roles every time.
+  - **Egypt `BD/SA` fell from 3 of 3 to 1 of 3, and not because of the rebuild.** Its three roles
+    packets are byte-identical and all hold the portal's "A visa is required prior to entry"; the
+    model credited it once and refused it twice.
+  - Mexico and Saudi Arabia still refuse, for entry 198's reasons.
+- **Brazil refuses correctly.** Its store grew from 582 to 1,284 entries on the second build, and
+  the selector picks the foreign ministry's visa table, but `gov.br/robots.txt` disallows every PDF
+  under `/mre/`. Entry 36 applies: it is named and never read.
 
-**How to run it:**
-1. **From the owner's terminal, or Bash with the sandbox off** — never the sandboxed shell, where
-   Chromium cannot start (the builds render).
-2. **Refresh the EU store first:** `.venv/bin/visa-discover eu-store`. It should report 2 pages
-   stored, the newest EUR-Lex consolidation and the ETIAS page.
-3. **Build two at a time** with `var/item70-2026-09-24/rebuild.sh`. It backs each country up to
-   `var/_backup_before_item70_2026-09-24/` before building it, and skips what is in its `done.txt`.
-   Run two copies over disjoint country lists. The owner's first six: IT RO GR ZA TH CZ, where the
-   uploads fix recovers most (entry 198).
-4. **Expect about 8 hours**, 5½ to 11 by country mix (22 minutes a country on average), and about
-   2,400 searches. A dropped network loses a country, not the batch; re-running resumes.
+**The build reports.** Read each build's `links rejected by rule` block (entry 200) after any
+future build: a rule throwing away many addresses that say "visa" is the next Malta, which is how
+entry 203 was found.
 
-**What to read in each build's report.** The new `links rejected by rule` block (entry 200): a rule
-throwing away many addresses that say "visa" is the next Malta. Read it before the next batch.
-
-**Then:** grade with `selection-recall`, and re-run the sentinel `germany/IN/GB` (DECISIONS entry
-197's confirmed answer). Where to go after: TODO items 67 and 64.
+**To rebuild again.**
+1. **Run from the owner's terminal, or Bash with the sandbox off** — never the sandboxed shell,
+   where Chromium cannot start.
+2. Run `.venv/bin/visa-discover eu-store` first.
+3. Use `var/item70-2026-09-24/rebuild.sh CC ...`. It is resumable and backs each country up first,
+   and a country in its `done.txt` is skipped.
+4. Wait for a queue with `pgrep -f "bash var/item70"`, never `pgrep -f rebuild.sh`: every waiting
+   shell's own command line matches the second, so the waiters wait on each other forever.
 
 **Not to change first.** Opening zero-scoring links only one hop from a seed was not adopted
 (entry 200). The `canonicalise_url` trailing-slash defect (TODO *Smaller things*) changes stored
-addresses, so it is measured on its own, not folded into this rebuild.
+addresses, so it is measured on its own.
 
 ## Where it stands
 
@@ -115,12 +110,12 @@ answering page exists and we can get to it, the corridor should get it.** Four s
 then fixed and measured (entry 199): a link stating the answer that the lexicon could not read (Belgium), the
 selector shown only each page's head (Slovenia), the plan's input guard (India) and an uncited step
 link (Germany). Rule 8g, a visa on arrival is a visa, shipped with the owner's approval (the
-UAE, 1 of 5 → 4 of 4 on replay, no change on five regression inputs). **Next: the full rebuild of the 44 stores
-not yet rebuilt** (entry 200 readied it: each build now reports what its rules rejected). Before it,
+UAE, 1 of 5 → 4 of 4 on replay, no change on five regression inputs). **The full rebuild then ran and was
+graded on 2026-09-25** (entries 203 and 204; the first section of this file). Before it,
 the EU tier shipped (entry 201): the EU may answer a Schengen member's visa decision, from EUR-Lex's
 consolidated regulation and the ETIAS page, read from a shared store. Five Schengen corridors said
 "visa required" 15 of 15 (Croatia and Poland had refused and been null). **Run `visa-discover
-eu-store` before the rebuild.** The recall log now keeps the adjudicator's reason for every role.
+eu-store` before any rebuild.** The recall log now keeps the adjudicator's reason for every role.
 
 **The selector sees a ranked top 120 plus 40 pages with no stored text, since 2026-09-24 (entry
 195).** It had been shown every pooled candidate, up to 860. On replayed packets the cut found more
@@ -171,7 +166,7 @@ exemption list decides that a visa is needed. Singapore's "no visa" held 8 of 8 
   - item 7's question of whether to store a refusal before deploying (entry 151).
 - **Shipped and not measured live:**
   - entry 178's plan reuse has not been timed;
-  - the 2026-09-15 rebuild of all 53 corpora has been re-run for only Norway, Thailand and Japan;
+  - of the 2026-09-25 rebuild, only the corridors of entry 204 have been run;
   - entries 134 and 135 were never priced (entry 136).
 - **Ofself:** the wider data request is live and the owner has re-authorised, but the owner's
   account holds no travel records. So the form has only been seen filling from a fake Ofself.

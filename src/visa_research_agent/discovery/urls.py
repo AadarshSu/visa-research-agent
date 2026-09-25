@@ -113,6 +113,39 @@ def path_segments(url: str) -> list[str]:
 CMS_DATE = re.compile(r"^t?((?:19|20)\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])?(?:$|[_.\-])")
 UPLOAD_YEAR = re.compile(r"^(?:19|20)\d{2}$")
 UPLOAD_MONTH = re.compile(r"^(?:0[1-9]|1[0-2])$")
+POST_DAY = re.compile(r"^(?:0[1-9]|[12]\d|3[01])$")
+# Folders a CMS files documents into by date: WordPress's `uploads`, Cyprus's `media`
+# (`gov.cy/media/2024/06/…`), and the `UserDocsImages` of the Croatian ministries' CMS.
+FILE_STORES = frozenset({"uploads", "media", "userdocsimages"})
+
+
+def filed_date_in_path(url: str) -> tuple[int, str] | None:
+    """Where a path's year says when something was *filed*, and that date.
+
+    Returned as the year's segment index, so `is_archived` spares that one segment and no other.
+    Three forms, each found discarding current guidance in the 2026-09-25 rebuild's reports:
+    - under a file store anywhere above it — `uploads/2023/10/` (Malta, entry 198), a multisite's
+      `uploads/sites/57/2024/07/` (South Africa's Juba mission), `media/2024/06/` and
+      `media/sites/19/2024/06/` (Cyprus), `UserDocsImages/2023/` (Croatia);
+    - straight under a multisite's `sites/<n>/`, whatever the folder above it is called;
+    - a post's permalink, year, month and day then a slug — `/juba/2024/07/12/application-for-a-
+      business-visa`. The slug is required: `/2023/02/06` alone is a day's listing, not a page.
+    """
+
+    segments = path_segments(url)
+    for index, segment in enumerate(segments):
+        if not UPLOAD_YEAR.match(segment):
+            continue
+        month = segments[index + 1] if index + 1 < len(segments) else ""
+        month = month if UPLOAD_MONTH.match(month) else ""
+        stored = any(folder in FILE_STORES for folder in segments[:index]) or (
+            index >= 2 and segments[index - 2] == "sites" and segments[index - 1].isdigit()
+        )
+        if stored:
+            return index, f"{segment}-{month}" if month else segment
+        if month and index + 3 < len(segments) and POST_DAY.match(segments[index + 2]):
+            return index, f"{segment}-{month}-{segments[index + 2]}"
+    return None
 
 
 def published_date_in_path(url: str) -> str | None:
@@ -127,16 +160,11 @@ def published_date_in_path(url: str) -> str | None:
     text — not a rule that guesses from the URL alone.
     """
 
-    segments = path_segments(url)
-    for index, segment in enumerate(segments):
-        # `uploads/2023/10/`: the upload month, which `is_archived` no longer vetoes (TODO item 70).
-        if (
-            segment == "uploads"
-            and index + 2 < len(segments)
-            and UPLOAD_YEAR.match(segments[index + 1])
-            and UPLOAD_MONTH.match(segments[index + 2])
-        ):
-            return f"{segments[index + 1]}-{segments[index + 2]}"
+    # A filing date — an upload folder or a post's permalink — which `is_archived` does not veto.
+    filed = filed_date_in_path(url)
+    if filed is not None:
+        return filed[1]
+    for segment in path_segments(url):
         match = CMS_DATE.match(segment)
         if match is None:
             continue

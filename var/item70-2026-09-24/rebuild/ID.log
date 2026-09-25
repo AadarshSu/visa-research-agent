@@ -1,0 +1,60 @@
+building Indonesia from 3 domains (existing corpus: 3643 entries)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 14 0 (offset 0)
+Ignoring wrong pointing object 16 0 (offset 0)
+Ignoring wrong pointing object 18 0 (offset 0)
+Ignoring wrong pointing object 20 0 (offset 0)
+Ignoring wrong pointing object 22 0 (offset 0)
+Ignoring wrong pointing object 24 0 (offset 0)
+Ignoring wrong pointing object 26 0 (offset 0)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 22 0 (offset 0)
+Ignoring wrong pointing object 28 0 (offset 0)
+Ignoring wrong pointing object 30 0 (offset 0)
+Ignoring wrong pointing object 35 0 (offset 0)
+Ignoring wrong pointing object 37 0 (offset 0)
+  ID  42 queries, 223 seeds, 189 kept that nothing linked to, 3475 crawled  ->  1558 new, 5201 held, 209 unreadable
+      depth 1: 1851, depth 2: 1179, depth 3: 445
+      opened 223 seeds, 664 scored links, 313 links that scored nothing, 0 family members; 541 past a host's even share
+      1058 pages kept their text for the index, including 135 PDFs read for text only
+      48 links rejected by rule:
+            46  the path marks it as archived or superseded  (6 with 'visa' in the address)
+                  https://imigrasi.go.id/berita/2023/03/06/jenis-jenis-visa-online-imigrasi-yang-wajib-anda-ketahui?lang=en-US
+                  https://www.imigrasi.go.id/berita/2023/02/08/genjot-pariwisata-indonesia-visa-kunjungan-wisata-tidak-lagi-perlu-penjamin?lang=en-US
+                  https://www.imigrasi.go.id/en/2022/07/20/how-to-get-visa-on-arrival-in-indonesia
+                  https://www.imigrasi.go.id/en/2022/07/28/siaran-pers-pemerintah-tambahkan-3-negara-sebagai-subjek-visa-on-arrival
+                  https://www.imigrasi.go.id/id/2022/02/23/siaran-pers-pentingnya-penjamin-visa-perorangan-atau-korporasi-untuk-pengawasan-wna-di-indonesia
+             2  the path marks it as site furniture rather than guidance
+                  https://kemlu.go.id/etc/privacy-policy
+                  https://www.kemlu.go.id/etc/privacy-policy
+      3 hosts stopped answering and were not asked again:
+        pst.web.bps.go.id                          after 6 unanswered requests in a row
+        visa-online.imigrasi.go.id                 after 6 unanswered requests in a row
+        web-api.bps.go.id                          after 6 unanswered requests in a row
+      21 hosts gave this build nothing and are absent from the corpus:
+        bali.bps.go.id                             challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        bantulkab.bps.go.id                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        bengkuluselatankab.bps.go.id               challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        bintankab.bps.go.id                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        endekab.bps.go.id                          challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        halbarkab.bps.go.id                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        jambi.bps.go.id                            challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        jatim.bps.go.id                            challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        kendalkab.bps.go.id                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        malangkab.bps.go.id                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        ntt.bps.go.id                              challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        pontianakkota.bps.go.id                    challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        presensi.bps.go.id                         unreachable  the request failed (ConnectTimeout)
+        singkawang.imigrasi.go.id                  unreachable  the request failed (Server disconnected without sending a response.)
+        sirusa.bps.go.id                           unusable     it answered HTTP 404
+        sukoharjokab.bps.go.id                     challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        sulsel.bps.go.id                           challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        tanjungpinangkota.bps.go.id                challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        tasikmalayakota.bps.go.id                  challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        tobakab.bps.go.id                          challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        web-api.bps.go.id                          unreachable  the request failed (TLS/SSL connection has been closed (EOF) (_ssl.c:1000))

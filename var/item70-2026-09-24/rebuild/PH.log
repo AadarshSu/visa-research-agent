@@ -1,0 +1,60 @@
+building Philippines from 5 domains (existing corpus: 789 entries)
+  PH  70 queries, 309 seeds (1 from its own mission index), 249 kept that nothing linked to, 2199 crawled  ->  1801 new, 2590 held, 293 unreadable
+      depth 1: 608, depth 2: 1551, depth 3: 40
+      opened 309 seeds, 140 scored links, 51 links that scored nothing, 0 family members; 208 past a host's even share
+      510 pages kept their text for the index, including 298 PDFs read for text only
+      1 places its own pages send travellers, on companies we may name but never read
+      523 links rejected by rule:
+           512  the path marks it as archived or superseded  (3 with 'visa' in the address)
+                  https://macaupcg.dfa.gov.ph/images/2023/Visa/NO-VISA_ENTRY_FOR_30-DAY_STAY_UNDER_E0.pdf
+                  https://newdelhipe.dfa.gov.ph/images/2023/MAY2023/FA_Form_No_2_Standard_Visa_Application_Form_2021.pdf
+                  https://www.newdelhipe.dfa.gov.ph/images/2023/MAY2023/FA_Form_No_2_Standard_Visa_Application_Form_2021.pdf
+                  https://dmw.gov.ph/archives/poea/advisories/2019/Advisory-01-2019.pdf
+                  https://dmw.gov.ph/archives/poea/advisories/2019/Advisory-02-2019.pdf
+            11  the path marks it as site furniture rather than guidance  (10 with 'visa' in the address)
+                  https://evisa.gov.ph/page/privacy-policy
+                  https://evisa.gov.ph/page/privacy-policy?l1=&l2=Changes+to+the+Privacy+Policy
+                  https://evisa.gov.ph/page/privacy-policy?l1=&l2=Collection+of+Personal+Information
+                  https://evisa.gov.ph/page/privacy-policy?l1=&l2=Contact+Information
+                  https://evisa.gov.ph/page/privacy-policy?l1=&l2=Cookies+and+Tracking+Technologies
+      1 hosts stopped answering and were not asked again:
+        e-services.immigration.gov.ph              after 6 unanswered requests in a row
+      38 hosts gave this build nothing and are absent from the corpus:
+        abudhabipe.dfa.gov.ph                      challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        aganapcg.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        ankarape.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        bangkokpe.dfa.gov.ph                       challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        bernepe.dfa.gov.ph                         challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        brusselspe.dfa.gov.ph                      challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        buenosairespe.dfa.gov.ph                   challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        copenhagenpe.dfa.gov.ph                    challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        dhakape.dfa.gov.ph                         challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        dohape.dfa.gov.ph                          challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        dubaipcg.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        foi.gov.ph                                 challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        frankfurtpcg.dfa.gov.ph                    challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        hanoipe.dfa.gov.ph                         challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        honolulupcg.dfa.gov.ph                     challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        jakartape.dfa.gov.ph                       challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        kualalumpurpe.dfa.gov.ph                   challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        kuwaitpe.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        lisbonpe.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        manadopcg.dfa.gov.ph                       challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        melbournepcg.dfa.gov.ph                    challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        mexicope.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        mwoosaka.dmw.gov.ph                        blocked      it refused automated retrieval (HTTP 403), so its guidance could not be independently verified here
+        nairobipe.dfa.gov.ph                       challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        newyorkpcg.dfa.gov.ph                      challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        osakapcg.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        oslope.dfa.gov.ph                          challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        ottawape.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        parispe.dfa.gov.ph                         challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        phnompenhpe.dfa.gov.ph                     challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        pretoriape.dfa.gov.ph                      challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        romepe.dfa.gov.ph                          challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        sydneypcg.dfa.gov.ph                       challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        tehranpe.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        thehaguepe.dfa.gov.ph                      challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        tokyope.dfa.gov.ph                         challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        vientianepe.dfa.gov.ph                     challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance
+        yangonpe.dfa.gov.ph                        challenged   it asked this client to prove it is a browser (HTTP 403), and that challenge could not be answered here. It stated nothing about its guidance

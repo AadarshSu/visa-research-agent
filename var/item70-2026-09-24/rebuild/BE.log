@@ -1,0 +1,10 @@
+building Belgium from 2 domains (existing corpus: 1171 entries)
+  BE  28 queries, 81 seeds, 51 kept that nothing linked to, 1089 crawled  ->  155 new, 1326 held, 44 unreadable
+      depth 1: 342, depth 2: 420, depth 3: 327
+      opened 81 seeds, 167 scored links, 159 links that scored nothing, 0 family members; 75 past a host's even share
+      514 pages kept their text for the index, including 188 PDFs read for text only
+      1 links rejected by rule:
+             1  the path marks it as site furniture rather than guidance
+                  https://ibz.be/fr/donnees-personnelles
+      1 hosts gave this build nothing and are absent from the corpus:
+        visaonweb.uat.diplomatie.be                unreachable  the request failed (ConnectTimeout)

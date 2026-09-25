@@ -1,0 +1,28 @@
+building South Africa from 4 domains (existing corpus: 4336 entries)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 977 0 (offset 0)
+Ignoring wrong pointing object 978 0 (offset 0)
+  ZA  56 queries, 145 seeds (3 from its own mission index), 124 kept that nothing linked to, 2941 crawled  ->  161 new, 4497 held, 138 unreadable
+      depth 1: 439, depth 2: 777, depth 3: 1725
+      opened 145 seeds, 100 scored links, 208 links that scored nothing, 0 family members
+      420 pages kept their text for the index, including 110 PDFs read for text only
+      23 places its own pages send travellers, on companies we may name but never read
+      31 links rejected by rule:
+            19  the path marks it as archived or superseded  (10 with 'visa' in the address)
+                  https://dirco.gov.za/juba/2024/07/12/application-for-a-business-visa
+                  https://dirco.gov.za/juba/2024/07/12/application-for-a-relatives-visa
+                  https://dirco.gov.za/juba/2024/07/12/application-for-a-study-visa
+                  https://dirco.gov.za/juba/2024/07/12/application-for-south-african-visa
+                  https://dirco.gov.za/juba/wp-content/uploads/sites/57/2024/07/BI-84-Application-for-a-Visa-Form-4-pages.pdf
+            12  the path marks it as site furniture rather than guidance
+                  https://travelsmart.dirco.gov.za/privacy-policy
+                  https://www.gov.za/af/subscribe-mailing-lists
+                  https://www.gov.za/nr/subscribe-mailing-lists
+                  https://www.gov.za/nso/subscribe-mailing-lists
+                  https://www.gov.za/ss/subscribe-mailing-lists
+      2 hosts stopped answering and were not asked again:
+        www.bma.gov.za                             after 6 unanswered requests in a row
+        www.dha.gov.za                             after 6 unanswered requests in a row
+      2 hosts gave this build nothing and are absent from the corpus:
+        dha.gov.za                                 unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        www.bma.gov.za                             unreachable  its TLS certificate could not be verified

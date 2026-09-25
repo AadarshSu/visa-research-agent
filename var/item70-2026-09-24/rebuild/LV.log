@@ -1,0 +1,19 @@
+building Latvia from 2 domains (existing corpus: 3852 entries)
+  LV  28 queries, 118 seeds (6 from its own mission index), 65 kept that nothing linked to, 3736 crawled  ->  185 new, 4037 held, 137 unreadable
+      depth 1: 1085, depth 2: 1869, depth 3: 782
+      opened 118 seeds, 295 scored links, 787 links that scored nothing, 0 family members; 5 past a host's even share
+      1048 pages kept their text for the index, including 14 PDFs read for text only
+      27 places its own pages send travellers, on companies we may name but never read
+      27 links rejected by rule:
+            18  the path marks it as archived or superseded
+                  https://www.mfa.gov.lv/en/archive
+                  https://www.pmlp.gov.lv/lv/2021
+                  https://www.pmlp.gov.lv/lv/2022
+                  https://www.pmlp.gov.lv/lv/2023
+                  https://www2.mfa.gov.lv/en/austria/archive
+             9  the path marks it as site furniture rather than guidance
+                  https://www.ireland.mfa.gov.lv/en/privacy-policy
+                  https://www.mfa.gov.lv/en/privacy-policy
+                  https://www.pmlp.gov.lv/en/privacy-policy
+                  https://www.uk.mfa.gov.lv/en/privacy-policy
+                  https://www.usa.mfa.gov.lv/en/privacy-policy

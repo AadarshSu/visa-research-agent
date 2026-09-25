@@ -1,0 +1,39 @@
+building Iceland from 3 domains (existing corpus: 11566 entries)
+Ignoring wrong pointing object 52 0 (offset 0)
+Ignoring wrong pointing object 8 0 (offset 0)
+Ignoring wrong pointing object 10 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 14 0 (offset 0)
+Ignoring wrong pointing object 16 0 (offset 0)
+Ignoring wrong pointing object 18 0 (offset 0)
+Ignoring wrong pointing object 20 0 (offset 0)
+Ignoring wrong pointing object 32 0 (offset 0)
+Ignoring wrong pointing object 34 0 (offset 0)
+Ignoring wrong pointing object 36 0 (offset 0)
+Ignoring wrong pointing object 38 0 (offset 0)
+Ignoring wrong pointing object 40 0 (offset 0)
+Ignoring wrong pointing object 42 0 (offset 0)
+Ignoring wrong pointing object 53 0 (offset 0)
+Ignoring wrong pointing object 59 0 (offset 0)
+Ignoring wrong pointing object 69 0 (offset 0)
+Ignoring wrong pointing object 88 0 (offset 0)
+Ignoring wrong pointing object 90 0 (offset 0)
+Ignoring wrong pointing object 105 0 (offset 0)
+Ignoring wrong pointing object 107 0 (offset 0)
+Ignoring wrong pointing object 109 0 (offset 0)
+Ignoring wrong pointing object 112 0 (offset 0)
+Ignoring wrong pointing object 122 0 (offset 0)
+  IS  42 queries, 143 seeds (8 from its own mission index), 85 kept that nothing linked to, 5511 crawled  ->  765 new, 12331 held, 125 unreadable
+      depth 1: 868, depth 2: 4344, depth 3: 299
+      opened 143 seeds, 271 scored links, 505 links that scored nothing, 0 family members; 3 past a host's even share
+      789 pages kept their text for the index, including 84 PDFs read for text only
+      70 places its own pages send travellers, on companies we may name but never read
+      34 links rejected by rule:
+            33  the path marks it as archived or superseded
+                  https://www.government.is/publications/legislation/lex/2001/08/02/Act-on-Medical-Devices-No.-16-2001
+                  https://www.government.is/publications/legislation/lex/2003/01/24/Child-Protection-Act-No.-80-2002
+                  https://www.government.is/publications/legislation/lex/2008/02/26/Municipalities-Social-Services-Act-No.-40-1991
+                  https://www.government.is/publications/legislation/lex/2009/09/01/Act-on-the-Affairs-of-the-Elderly-No.-125-1999
+                  https://www.government.is/publications/legislation/lex/2009/09/22/Health-Service-Act-No.-40-2007
+             1  the path marks it as site furniture rather than guidance
+                  https://island.is/en/apply-for-health-insurance/privacy-policy

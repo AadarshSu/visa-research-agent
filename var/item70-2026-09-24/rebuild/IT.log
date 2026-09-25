@@ -1,0 +1,32 @@
+building Italy from 3 domains (existing corpus: 5628 entries)
+Ignoring wrong pointing object 6 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+Ignoring wrong pointing object 45 0 (offset 0)
+Ignoring wrong pointing object 47 0 (offset 0)
+Ignoring wrong pointing object 49 0 (offset 0)
+Ignoring wrong pointing object 97 0 (offset 0)
+Ignoring wrong pointing object 121 0 (offset 0)
+Ignoring wrong pointing object 12 0 (offset 0)
+Ignoring wrong pointing object 14 0 (offset 0)
+Ignoring wrong pointing object 49 0 (offset 0)
+Ignoring wrong pointing object 85 0 (offset 0)
+Ignoring wrong pointing object 87 0 (offset 0)
+Ignoring wrong pointing object 121 0 (offset 0)
+  IT  42 queries, 175 seeds (8 from its own mission index), 114 kept that nothing linked to, 5029 crawled  ->  2094 new, 7722 held, 112 unreadable
+      depth 1: 1249, depth 2: 1820, depth 3: 1960
+      opened 175 seeds, 749 scored links, 276 links that scored nothing, 0 family members; 278 past a host's even share
+      1404 pages kept their text for the index, including 363 PDFs read for text only
+      11 places its own pages send travellers, on companies we may name but never read
+      27 links rejected by rule:
+            25  the path marks it as archived or superseded  (2 with 'visa' in the address)
+                  https://ambmascate.esteri.it/ambasciata_mascate/resource/doc/2020/02/study_visa_postgraduate.pdf
+                  https://consboston.esteri.it/consolato_boston/resource/doc/2021/09/schengen_visa_check_list.pdf
+                  http://ambmanila.esteri.it/ambasciata_manila/resource/doc/2022/10/modulo_domanda_passaporti_per_minori.pdf
+                  http://conschicago.esteri.it/consolato_chicago/resource/doc/2018/05/32298_f_cons97declarationformailingpassports_3.pdf
+                  http://conslondra.esteri.it/consolato_londra/resource/doc/2020/01/2020_application_form.pdf
+             2  the path marks it as site furniture rather than guidance
+                  https://www.esteri.it/en/legal-notices
+                  https://www.esteri.it/en/privacy-policy
+      2 hosts gave this build nothing and are absent from the corpus:
+        consjohannesburg.esteri.it                 unusable     it answered HTTP 404
+        sso.mise.gov.it                            unreachable  the request failed (ReadError)

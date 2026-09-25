@@ -1,0 +1,12 @@
+building China from 5 domains (existing corpus: 10437 entries)
+  CN  70 queries, 287 seeds (8 from its own mission index), 247 kept that nothing linked to, 6504 crawled  ->  3830 new, 14267 held, 38 unreadable
+      depth 1: 2802, depth 2: 3289, depth 3: 413
+      opened 287 seeds, 865 scored links, 48 links that scored nothing, 0 family members; 518 past a host's even share
+      1210 pages kept their text for the index, including 55 PDFs read for text only
+      6 links rejected by rule:
+             6  the path marks it as archived or superseded
+                  http://english.www.gov.cn/archive/chinaabc
+                  http://english.www.gov.cn/archive/laws_regulations/2014/09/22/content_281474988553532.htm
+                  http://english.www.gov.cn/archive/laws_regulations/2014/09/22/content_281474988553545.htm
+                  https://english.www.gov.cn/archive
+                  https://english.www.gov.cn/archive/202303/28/content_WS64227cbfc6d0f528699dc56b.html
