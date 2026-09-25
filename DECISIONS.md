@@ -267,6 +267,34 @@ s more pressing |
 
 ---
 
+## 217. Home Affairs' visa pages are read from the response we were served, the sections they display only
+
+**2026-09-26 · the owner's decision**, on entry 216's second question: "yes". Home Affairs publishes
+each visa page as JSON in one hidden field (`…PageSchemaHiddenField_Input`), laid out by the page's
+script. Its CDN answers our browser "Access Denied", so the plain response is the only reading
+there is.
+
+**Not a workaround.** Nothing is retried, disguised or rendered. The text is what the authority
+sent our honest request, under our own user agent, and it is read the way any page's text is.
+
+**Only what the page displays** (`embedded_visa_page_text`, called from `clean_source_html`):
+- the heading, title, description and warning;
+- the applicant's view, tab by tab in `tabs.data` order, skipping a tab marked `hidden`;
+- the `sponsor` view only where the page says `multipleActors`. On the Visitor visa page it is
+  template text, including the false *"This is a permanent visa. You can stay in Australia
+  indefinitely"*.
+- Any other shape reads nothing, and the page goes the ordinary way.
+
+The overview's three unlabelled values get plain labels ("Stay", "Cost", "Processing time"), because
+the page's own labels live in its script. The price itself is filled by a separate request, so the
+text says "From" and nothing more.
+
+**Measured:** the Tourist stream page now cleans to 17,681 characters, where it gave 268 characters
+of chrome. With entries 218 and 219, Australia `IN/IN` is `verified` in both runs
+(`item63-round3-217b/`). The Tourist stream page is linked as the checklist and as where to apply,
+and the fee estimator and processing-time guide are linked. Before, both runs were `partial` with
+the visa type null and no checklist.
+
 ## 216. The owner's verdicts on item 63's second round, and what Australia and South Korea are waiting on
 
 **2026-09-25 · the owner's verdicts on entry 214's twenty plans.**

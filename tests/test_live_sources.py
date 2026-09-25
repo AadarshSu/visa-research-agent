@@ -1,3 +1,5 @@
+import html as html_module
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -253,6 +255,71 @@ def test_clean_source_html_still_drops_a_form_that_is_furniture() -> None:
 
     assert guidance in cleaned
     assert "helpful" not in cleaned
+
+
+def home_affairs_page(*, multiple_actors: bool = False, hidden_tab: int | None = None) -> str:
+    """Home Affairs' shape: the page's content as JSON in one hidden field, laid out by script."""
+
+    tabs = [
+        {"text": name, "hidden": index == hidden_tab}
+        for index, name in enumerate(
+            ["Overview", "About this visa", "Eligibility", "Step by step", "When you have it"]
+        )
+    ]
+
+    def view(stay: str, step: str) -> dict[str, object]:
+        return {
+            "tabs": {"data": tabs},
+            "overview": {"visaStay": f"<p>{stay}</p>", "withThisVisa": "<ul><li>tour</li></ul>"},
+            "aboutVisa": {"content": [{"block": "<p>This is a temporary visa.</p>"}]},
+            "eligibility": {"criteria": [{"title": "Pay your debts"}]},
+            "stepGuide": {"steps": [{"description": f"<p>{step}</p>"}], "collapsed": True},
+            "haveThisVisa": {"content": [{"block": "<h3>Before you travel</h3>"}]},
+        }
+
+    schema = {
+        "visaSubclassHeading": "Visitor visa (subclass 600)",
+        "title": "Tourist stream (apply outside Australia)",
+        "multipleActors": multiple_actors,
+        "applicant": view("Up to 12 months", "Provide the pages of your current passport."),
+        "sponsor": view("This is a permanent visa.", "Here' the description"),
+    }
+    value = html_module.escape(json.dumps(schema), quote=True)
+    return (
+        '<html><body><form id="aspnetForm"><nav>Menu Home Affairs</nav>'
+        '<input type="hidden" id="ctl00_PlaceHolderMain_PageSchemaHiddenField_Input" '
+        f'value="{value}">'
+        "</form></body></html>"
+    )
+
+
+def test_clean_source_html_reads_the_visa_page_home_affairs_embeds() -> None:
+    cleaned = clean_source_html(home_affairs_page(), maximum_characters=50_000)
+
+    for shown in (
+        "Visitor visa (subclass 600)",
+        "Tourist stream (apply outside Australia)",
+        "Stay: Up to 12 months",
+        "This is a temporary visa.",
+        "Provide the pages of your current passport.",
+    ):
+        assert shown in cleaned
+    # The sponsor view is template text this page never displays, and one line of it is false.
+    assert "permanent" not in cleaned
+    assert "Here'" not in cleaned
+
+
+def test_clean_source_html_skips_a_hidden_tab_of_an_embedded_visa_page() -> None:
+    cleaned = clean_source_html(home_affairs_page(hidden_tab=3), maximum_characters=50_000)
+
+    assert "Stay: Up to 12 months" in cleaned
+    assert "Provide the pages of your current passport." not in cleaned
+
+
+def test_clean_source_html_reads_the_sponsor_view_only_where_the_page_shows_it() -> None:
+    cleaned = clean_source_html(home_affairs_page(multiple_actors=True), maximum_characters=50_000)
+
+    assert "This is a permanent visa." in cleaned
 
 
 def test_clean_source_html_truncates_to_the_character_budget() -> None:

@@ -5,6 +5,7 @@ registry, and it prefers refusing a source to serving evidence that may no longe
 """
 
 import asyncio
+import json
 import re
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
@@ -249,9 +250,88 @@ def extract_document_links(html: str, base_url: str) -> list[DocumentLink]:
     return list(found.values())
 
 
+# Australia's Home Affairs publishes each visa page as JSON in one hidden field, which the page's
+# script lays out; the rest of the body is chrome. Its CDN refuses a browser ("Access Denied"), so
+# the plain response we were served is the only reading there is (entry 217, the owner's decision).
+EMBEDDED_VISA_PAGE_FIELD = "PageSchemaHiddenField_Input"
+# The applicant view's tabs, in the order `tabs.data` lists them. Read by position so a tab the
+# page marks `hidden` is skipped with its section; any other count and nothing is read.
+EMBEDDED_VISA_PAGE_SECTIONS = ("overview", "aboutVisa", "eligibility", "stepGuide", "haveThisVisa")
+# Plain names for the overview's fields. The page's own labels live in its script, not in the page.
+EMBEDDED_VISA_PAGE_LABELS = {
+    "visaStay": "Stay",
+    "visaCost": "Cost",
+    "visaProcessingTime": "Processing time",
+}
+
+
+def _embedded_fragments(value: object, maximum_characters: int) -> list[str]:
+    """The readable text of one section, strings in the order the schema holds them."""
+
+    if isinstance(value, str):
+        text = clean_source_html(value, maximum_characters=maximum_characters)
+        return [text] if text else []
+    if isinstance(value, list):
+        return [part for item in value for part in _embedded_fragments(item, maximum_characters)]
+    if isinstance(value, dict):
+        parts: list[str] = []
+        for key, item in value.items():
+            found = _embedded_fragments(item, maximum_characters)
+            if found and key in EMBEDDED_VISA_PAGE_LABELS:
+                found[0] = f"{EMBEDDED_VISA_PAGE_LABELS[key]}: {found[0]}"
+            parts.extend(found)
+        return parts
+    return []
+
+
+def embedded_visa_page_text(html: str, *, maximum_characters: int) -> str | None:
+    """The text a Home Affairs visa page displays, read from the JSON it was served, or None.
+
+    **Only what the page shows.** The JSON also carries a `sponsor` view of template text that this
+    page never displays — "This is a permanent visa. You can stay in Australia indefinitely" sits in
+    the Visitor visa's — so the sponsor view is read only where the page says it has more than one
+    actor, and a tab marked `hidden` is skipped. Anything unexpected in the shape reads nothing.
+    """
+
+    field = BeautifulSoup(html, "html.parser").find(
+        "input", id=lambda value: bool(value) and value.endswith(EMBEDDED_VISA_PAGE_FIELD)
+    )
+    if not isinstance(field, Tag):
+        return None
+    try:
+        schema = json.loads(str(field.get("value") or ""))
+    except ValueError:
+        return None
+    if not isinstance(schema, dict) or not isinstance(schema.get("applicant"), dict):
+        return None
+    actors = ["applicant"] + (["sponsor"] if schema.get("multipleActors") is True else [])
+    lines = [
+        str(schema[key]).strip()
+        for key in ("visaSubclassHeading", "title", "description", "warning")
+        if isinstance(schema.get(key), str) and str(schema[key]).strip()
+    ]
+    for actor in actors:
+        view = schema.get(actor)
+        tabs = view.get("tabs", {}).get("data") if isinstance(view, dict) else None
+        if not isinstance(view, dict) or not isinstance(tabs, list):
+            return None
+        if len(tabs) != len(EMBEDDED_VISA_PAGE_SECTIONS):
+            return None
+        for tab, section in zip(tabs, EMBEDDED_VISA_PAGE_SECTIONS, strict=True):
+            if not isinstance(tab, dict) or tab.get("hidden") is not False:
+                continue
+            lines.append(str(tab.get("text") or section))
+            lines.extend(_embedded_fragments(view.get(section), maximum_characters))
+    text = "\n".join(lines)
+    return text[:maximum_characters].strip() or None
+
+
 def clean_source_html(html: str, *, maximum_characters: int) -> str:
     """Reduce a page to bounded readable text, dropping chrome and blank lines."""
 
+    embedded = embedded_visa_page_text(html, maximum_characters=maximum_characters)
+    if embedded is not None:
+        return embedded
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup.find_all(STRIPPED_TAGS):
         tag.decompose()
