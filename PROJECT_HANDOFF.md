@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-25 — update this line when you touch the handoff |
-| **Tests** | 947: 946 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 949: 948 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -43,8 +43,10 @@ entries 203 and 204).** **Item 63's ten destinations then ran (entry 205)** and 
 "no visa" for South Africa: an exemption table flattened without its columns. Tables are now read
 with each value under its heading, and **`var/cache/` was emptied for it** (the old one is
 `var/_backup_cache_before_tables_2026-09-25/`), because the cache keeps extracted text. **Rule 8f was then widened by the owner (entry 206)**: an exemption list that leaves the traveller
-out decides "visa required", with no separate statement of the general rule. **Next:** what is left
-of TODO item 63 (Thailand's 2024 list, the checklist half), then 57
+out decides "visa required", with no separate statement of the general rule. **Thailand's stay
+change (entry 207)** found a `429` stored as permanent; builds now ask again for transiently-failed
+pages, and `thailand.prd.go.th` is reviewed. **Next:** what is left of TODO item 63 (the owner's
+call on Thailand's "no visa, length open", the checklist half), then 57
 (progress on screen), then 64 (expansion, which asks first). Items 65 and 67 are blocked, 65 on
 Ofself deploying GPT-6 and 67 on OpenAI credit.
 

@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [207](#207-thailands-30-day-change-a-page-a-busy-host-refused-once-was-never-asked-for-again-and-the-change-was-on-a-domain-we-did-not-trust) | **Thailand's 30-day change** — a `429` was stored as permanent and never retried; builds now ask again for up to 100 transiently-failed entries, and a PDF read after a failure is marked readable; `thailand.prd.go.th` reviewed; Thailand now answers null with the Gazette date as the open question, never 60 days |
 | [206](#206-rule-8f-no-longer-needs-a-stated-general-rule--an-exemption-list-that-leaves-a-country-out-decides-visa-required) | **Rule 8f without the stated-rule condition** — the owner's decision: absence from the authority's complete exemption list decides "visa required"; China, South Korea and South Africa null → required (12 of 12 replays); Thailand and Singapore "no visa" held; an entry for another passport type does not count |
 | [205](#205-item-63s-ten-destinations--and-a-table-read-without-its-columns-told-a-traveller-no-visa) | **Item 63's ten destinations, and a table read without its columns** — South Africa told an ordinary Indian passport "no visa" from an exemption table flattened by `get_text`; tables are now read with each value under its heading; four re-runs: null (rule 8f), never "no"; decisions 6 of 10, checklists 4 of 10, against entry 58's 15 of 20 and 10 of 20 on other destinations |
 | [204](#204-the-full-rebuild-graded-the-stores-hold-every-answer-and-the-corridors-answer-as-before) | **The full rebuild, graded** — the stores hold every oracle answer (50/50, 42/42); nine of item 70's corridors, the Germany sentinel and Czechia answer visa required 3 of 3; Egypt 1 of 3 on byte-identical roles packets (model variance); Brazil refuses correctly, its visa table a PDF `robots.txt` disallows |
@@ -258,6 +259,60 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 207. Thailand's 30-day change: a page a busy host refused once was never asked for again, and the change was on a domain we did not trust
+
+**2026-09-25 · the owner reported that Thailand cut Indian passport holders' visa-free stay from 60
+days to 30, effective 15 September 2026.** Entry 205's Thailand plans said "no visa, up to 60
+days", `verified`, from a July 2024 announcement. The decision was right and the stay was stale.
+
+**What the trusted domains said.**
+- `mfa.go.th` still publishes the July 2024 list as "latest", at 60 days.
+- Its own May 2026 revision summary puts India under visa on arrival. The cabinet replaced that
+  plan on 14 July with a 30-day exemption.
+- The change is stated on the Thai embassy in New Delhi's site (27 July), which is not under `.th`
+  and is rightly refused, and in the Royal Gazette, which answers Cloudflare's challenge.
+- It is also stated by the Government Public Relations Department (`thailand.prd.go.th`, 15 July):
+  India among 59 countries granted visa-free tourism for up to 30 days, taking effect 15 days after
+  Royal Gazette publication.
+
+**Two defects, both fixed on the owner's approval.**
+
+1. **A transient failure was permanent.** The May revision PDF answered `429` in the 14 September
+   build and was recorded `unreadable` with no text. No later build's search returned it, so
+   nothing asked again. Without text it ranked on its link alone (7.4) and was withheld from the
+   selector (entry 195) in all four of entry 205's runs.
+   - About 4,200 entries in the 55 stores had failed only transiently, 609 of them on a `429`.
+   - **Now each build asks again for up to 100 of them, best-scoring first**
+     (`retry_candidates`, `is_transient_failure`, `corpus_build.py`). A transient failure is a
+     `429`, a `5xx`, a failed or dropped connection, a host the crawler gave up on mid-build, or a
+     robots file that answered `5xx`.
+   - **Final failures stay final:** a `401` or `403`, a `Disallow`, a challenge, a `404`, a bad
+     certificate, a name that does not resolve.
+   - A retried entry keeps its depth and origin. This is not the retry CLAUDE.md forbids: that
+     rule is about getting past a limit within a run, and this is one request days later under the
+     same pacing.
+   - **Also fixed:** a PDF the PDF pass read was recorded `unknown`. That ranks below
+     `unreadable`, so a PDF read after an earlier failure kept the old failure sentence. The PDF
+     pass now reports what it read, and those entries are `readable`.
+
+2. **The page stating the change was on a domain Thailand's row did not list.**
+   `thailand.prd.go.th` passes the rule on its own (`go.th`, under `.th`). It is added under
+   `reviewed` so a registry regeneration keeps it.
+   - The Royal Gazette was not added: it answers a challenge (entry 202).
+   - `thailand.go.th` was not added: it gives no text without running its scripts.
+
+**Measured.** Thailand rebuilt in 40 minutes: 512 new entries and 19 retried after a transient
+failure, the May PDF among them, now `readable`. Two fresh `thailand/IN/IN` runs:
+- the decision is null in both, citing the PRD article ("This entitlement includes six countries –
+  India …") and its "take effect 15 days after their publication in the Royal Gazette";
+- each asks, as an open question, whether the Gazette publication happened and when the measure
+  took effect.
+No run says 60 days, and none claims a visa is needed.
+
+**Left for the owner.** Under the old measure and the new one alike, India needs no visa; only the
+stay length turns on the date. A plan could say "no visa" and leave "30 or 60 days" open. That is a
+new prompt rule, not taken here.
 
 ## 206. Rule 8f no longer needs a stated general rule — an exemption list that leaves a country out decides "visa required"
 

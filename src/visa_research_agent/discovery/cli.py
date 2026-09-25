@@ -1113,6 +1113,11 @@ def print_corpus_build(build: CorpusBuild, stream: TextIO) -> None:
     print(
         f"  {build.country_code}  {build.queries} queries, {build.seeds} seeds"
         + (f" ({build.mission_seeds} from its own mission index)" if build.mission_seeds else "")
+        + (
+            f", {build.retry_seeds} asked again after a transient failure"
+            if build.retry_seeds
+            else ""
+        )
         + (f", {build.seeds_kept} kept that nothing linked to" if build.seeds_kept else "")
         + f", {build.crawled} crawled  ->  {build.added} new, {build.total} held"
         + (f", {build.unreadable} unreadable" if build.unreadable else ""),

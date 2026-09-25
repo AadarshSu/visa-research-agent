@@ -536,7 +536,12 @@ countries:
   - mfa.go.th
   - immigration.go.th
   - thaievisa.go.th
-  reviewed: {}
+  reviewed:
+    thailand.prd.go.th: the Government Public Relations Department's English site — passes the rule on
+      its own (`go.th`, under `.th`) and signs its articles "Foreign Affairs Office, The Government
+      Public Relations Department". Reviewed rather than left to search because it is the one readable
+      Thai government page stating the 2026 revision (India, 30 days); `mfa.go.th` still published
+      the 60-day list. The owner's decision, DECISIONS entry 207, 2026-09-25
   unconfirmable: []
 - code: TR
   name: Turkey

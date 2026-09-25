@@ -388,7 +388,10 @@ destinations.
   condition: absence from the authority's complete exemption list decides "visa required". On
   replay China, South Korea and South Africa moved from null to required, 12 of 12, with nothing
   moving toward "no". Not yet re-run live.
-- **Thailand says "no visa", verified, from a July 2024 announcement.** Is it still current?
+- **Thailand — answered by the owner and worked (entry 207).** The stay fell to 30 days on 15
+  September 2026. The plan now leaves the decision null, with the Gazette date as the open question.
+  **Owner's call:** where every version of the rule says "no visa" and only the stay length differs,
+  should the plan say "no visa" and leave the length open? That is a new prompt rule.
 - **Checklists are the weaker half.** Australia names no documents on any page. Spain was judged to
   have only its form's boxes. Switzerland's India visitor checklist is a dead address (502, then
   403). South Korea's Mumbai page only links its file. Read the recall logs before proposing a fix.

@@ -297,6 +297,81 @@ MISSION_INDEX_PATTERN = re.compile(
 DEFAULT_CORPUS_MISSION_SEEDS = 8
 
 
+# Addresses a previous build could not read for a reason that said nothing about the page — a
+# `429`, a `5xx`, a connection that failed — asked again by the next build, best-scoring first.
+# Bounded because nearly 4,200 such entries sat in the 55 stores on 2026-09-25, and a build's page
+# budget is for finding what it lacks, not re-asking everything. Entry 207.
+DEFAULT_CORPUS_RETRY_SEEDS = 100
+
+# The failure sentences that are **not** a statement by the authority. A `401`, a bare `403`, a
+# `Disallow`, an unanswerable challenge, a `404`, an unverifiable certificate and a name that does
+# not resolve are facts about the page or the host, and asking again next week is not how any of
+# them changes. Matched on the sentences `crawl.py` writes, which are the only record a corpus
+# entry keeps of why it failed.
+TRANSIENT_FAILURE = re.compile(
+    r"\(HTTP 429\)"
+    r"|^it answered HTTP 5\d\d"
+    r"|had already failed to answer \d+ times in a row"
+    r"|^its robots\.txt answered HTTP 5\d\d"
+    r"|^the request failed(?!.*nodename nor servname)"
+    r"|Server disconnected|peer closed connection|All connection attempts failed|Timeout"
+)
+
+
+def is_transient_failure(detail: str) -> bool:
+    """True when a recorded failure says only that the host could not answer *then*.
+
+    **Asking again in a later build is not the retry CLAUDE.md forbids.** That rule is about
+    working around an authority that has stated something — re-requesting to get past a rate limit
+    in the same run. A `429` on 14 September is a host that was busy on 14 September; a build ten
+    days later asking once more, under the same user agent and the same per-host pacing, is an
+    ordinary client. Thailand's 2026 revision of its visa exemptions was a `429` in one build and
+    was never asked for again (entry 207).
+    """
+
+    return bool(TRANSIENT_FAILURE.search(detail))
+
+
+def retry_candidates(
+    corpus: CountryCorpus,
+    destination: DestinationConfig,
+    score: Callable[[PageLink], RoleScores],
+    lexicon: Lexicon,
+    *,
+    limit: int = DEFAULT_CORPUS_RETRY_SEEDS,
+) -> list[CandidatePage]:
+    """Entries a previous build could not read for a transient reason, best-scoring first.
+
+    Each keeps the depth and origin it was recorded with, because this build asking again says
+    nothing new about how the page is reached; a retried page becomes a seed only so that it is
+    fetched. Rejected on the same grounds as any link, in case the rules moved since.
+    """
+
+    matched: list[CandidatePage] = []
+    for entry in corpus.entries:
+        if entry.status != "unreadable" or not is_transient_failure(entry.detail):
+            continue
+        url = canonicalise_url(entry.url)
+        if not is_crawlable(url, destination):
+            continue
+        link = PageLink(
+            url=url,
+            text=entry.link_text[:300],
+            heading=entry.heading,
+            depth=entry.depth,
+            discovered_from=entry.discovered_from[:2000],
+        )
+        if _reject(link, lexicon) is not None:
+            continue
+        matched.append(
+            CandidatePage(
+                link=link, link_scores=score(link), title=entry.title or None, found_by="corpus"
+            )
+        )
+    matched.sort(key=lambda page: (-page.link_scores.best()[1], page.link.depth, page.link.url))
+    return matched[:limit]
+
+
 def mission_index_seeds(
     corpus: CountryCorpus,
     destination: DestinationConfig,
@@ -434,6 +509,12 @@ class CorpusBuild(StrictModel):
     Reported rather than inferred, because a build whose corpus is empty gets none of them and a
     build whose country publishes no recognisable index gets none either — two very different
     reasons for the post being missing, and the count is what tells them apart."""
+
+    retry_seeds: int = 0
+    """How many seeds were addresses a previous build failed on for a transient reason (entry 207).
+
+    Counted apart from `mission_seeds` because the two answer different gaps: a post nobody opened,
+    and a page that was asked for once while its host was busy."""
 
     failed_queries: dict[str, str] = Field(default_factory=dict)
     """Search queries that failed, with the reason, which this build went on without (entry 162).
@@ -746,8 +827,8 @@ async def _read_pdfs(
     keep: Callable[[str, str, str], None],
     *,
     maximum_pdfs: int,
-) -> int:
-    """Read the PDFs a crawl found, for their text alone, best-scoring first.
+) -> set[str]:
+    """Read the PDFs a crawl found, for their text alone, best-scoring first; return those read.
 
     A second pass rather than part of the crawl, because a PDF is a destination and the crawl walks
     signposts — queuing one on the frontier would mean fetching it to look for links it cannot have.
@@ -759,14 +840,12 @@ async def _read_pdfs(
     where `score_body` reads a page's own claim about itself.
     """
 
-    ordered = sorted(
-        (page for page in crawled if is_pdf_url(page.link.url)),
-        key=lambda page: -page.link_scores.best()[1],
-    )[:maximum_pdfs]
+    unique = {page.link.url: page for page in crawled if is_pdf_url(page.link.url)}
+    ordered = sorted(unique.values(), key=lambda page: -page.link_scores.best()[1])[:maximum_pdfs]
     if not ordered:
-        return 0
+        return set()
 
-    read = 0
+    read: set[str] = set()
     async with httpx.AsyncClient(
         transport=crawl_fetcher.transport,
         timeout=crawl_fetcher.timeout_seconds,
@@ -786,7 +865,7 @@ async def _read_pdfs(
             )
             if text:
                 keep(page.link.url, "", text)
-                read += 1
+                read.add(page.link.url)
     return read
 
 
@@ -810,6 +889,7 @@ async def build_country_corpus(
     maximum_pdfs: int = DEFAULT_CORPUS_PDFS,
     family_share: float = DEFAULT_CORPUS_FAMILY_SHARE,
     maximum_mission_seeds: int = DEFAULT_CORPUS_MISSION_SEEDS,
+    maximum_retry_seeds: int = DEFAULT_CORPUS_RETRY_SEEDS,
 ) -> tuple[CountryCorpus, CorpusBuild]:
     """Search, crawl and fold the result into the country's corpus, adding but never removing.
 
@@ -875,6 +955,17 @@ async def build_country_corpus(
         # With the link's surroundings, which only a build reads (entry 189).
         return score_link_in_context(link, words)
 
+    # Addresses a previous build could not read because the host was busy or down at the time.
+    # A web page is fetched as a seed; a PDF goes to the PDF pass, which is where any PDF is read.
+    retried = (
+        retry_candidates(existing, destination, score, words, limit=maximum_retry_seeds)
+        if existing is not None
+        else []
+    )
+    for candidate in retried:
+        if not is_pdf_url(candidate.link.url) and candidate.link.url not in seeds:
+            seeds.append(candidate.link.url)
+
     # Buffered rather than written page by page: one transaction at the end of a crawl, against
     # thousands mid-crawl. The cost is that a build killed halfway keeps no text, which is the
     # corpus file's own behaviour and the same remedy — run it again.
@@ -917,22 +1008,32 @@ async def build_country_corpus(
     crawled = await crawler.crawl(destination, seeds)
     ledger = crawler.ledger
     seeded = _search_seed_candidates(searched, crawled, score, words)
-    pdfs_read = 0
+    recorded = {candidate.link.url for candidate in [*crawled, *seeded]}
+    retried = [candidate for candidate in retried if candidate.link.url not in recorded]
+    pdfs_read: set[str] = set()
     if page_text is not None:
         # The seeds go in too: a PDF seed is never fetched by the crawl, which refuses PDFs, so this
-        # pass is the only place its text can be read.
+        # pass is the only place its text can be read. So do PDFs a previous build failed on.
         pdfs_read = await _read_pdfs(
-            [*crawled, *seeded], destination, crawl_fetcher, keep, maximum_pdfs=maximum_pdfs
+            [*crawled, *seeded, *retried],
+            destination,
+            crawl_fetcher,
+            keep,
+            maximum_pdfs=maximum_pdfs,
         )
+    # A page is read if the crawl read it or the PDF pass did. Without the second, a PDF that failed
+    # in one build and was read in the next kept its old failure sentence, since `merge` never moves
+    # a status down and `unknown` ranks below `unreadable` — entry 92's defect, for PDFs.
+    read = crawler.read | pdfs_read
     indexed_text = page_text.write(country.code, kept) if page_text is not None else 0
 
     crawl_entries = [
-        _entry(candidate, crawler.titles, crawl_fetcher.failures, now, crawler.read)
+        _entry(candidate, crawler.titles, crawl_fetcher.failures, now, read)
         for candidate in crawled
     ]
     seed_entries = [
-        _entry(candidate, crawler.titles, crawl_fetcher.failures, now, crawler.read)
-        for candidate in seeded
+        _entry(candidate, crawler.titles, crawl_fetcher.failures, now, read)
+        for candidate in [*seeded, *retried]
     ]
     entries = [*crawl_entries, *seed_entries]
     before = existing or CountryCorpus(
@@ -963,6 +1064,7 @@ async def build_country_corpus(
         queries=len(queries),
         seeds=len(seeds),
         mission_seeds=mission_seeds,
+        retry_seeds=len(retried),
         failed_queries=failed_queries,
         seeds_kept=len(seed_entries),
         crawled=len(crawled),
@@ -979,7 +1081,7 @@ async def build_country_corpus(
         lost_hosts=lost_reasons,
         lost_host_outcomes=lost_outcomes,
         indexed_text=indexed_text,
-        pdfs_read=pdfs_read,
+        pdfs_read=len(pdfs_read),
         opened_seeds=ledger.seeds,
         opened_scored=ledger.scored,
         opened_unscored=ledger.unscored,

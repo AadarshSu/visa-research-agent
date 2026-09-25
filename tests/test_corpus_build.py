@@ -31,6 +31,7 @@ from visa_research_agent.discovery.corpus_build import (
     DEFAULT_CORPUS_MISSION_SEEDS,
     all_corpus_queries,
     build_country_corpus,
+    is_transient_failure,
     mission_index_seeds,
 )
 from visa_research_agent.discovery.crawl import CrawlFetcher, LinkCrawler
@@ -478,6 +479,103 @@ async def test_a_pdf_seed_is_kept_and_read_for_its_text(tmp_path: Path) -> None:
         lexicon=get_lexicon(),
     )
     assert TOURISM_CHECKLIST_PDF in [match.url for match in matches]
+
+
+def test_only_a_failure_that_said_nothing_about_the_page_is_asked_again() -> None:
+    """Entry 207. A busy or unreachable host said nothing; a refusal, a `Disallow`, a challenge, a
+    missing page, a bad certificate and a name that does not resolve each did."""
+
+    transient = [
+        "it refused automated retrieval (HTTP 429), so its guidance could not be independently "
+        "verified here",
+        "it answered HTTP 502",
+        "www.mfa.gov.cn had already failed to answer 6 times in a row in this run, so it was not "
+        "asked again",
+        "its robots.txt answered HTTP 503, so whether this client may fetch it is unknown",
+        "the request failed (ReadTimeout)",
+    ]
+    final = [
+        "it refused automated retrieval (HTTP 403), so its guidance could not be independently "
+        "verified here",
+        "it refused automated retrieval (HTTP 401), so its guidance could not be independently "
+        "verified here",
+        "its robots.txt does not permit this client to fetch it",
+        "it asked this client to prove it is a browser (HTTP 403), and that challenge could not "
+        "be answered here",
+        "it answered HTTP 404",
+        "its TLS certificate could not be verified",
+        "the request failed ([Errno 8] nodename nor servname provided, or not known)",
+        "its text layer is empty",
+    ]
+
+    assert all(is_transient_failure(detail) for detail in transient)
+    assert not any(is_transient_failure(detail) for detail in final)
+
+
+@pytest.mark.anyio
+async def test_a_page_a_busy_host_refused_is_asked_again_and_a_refusal_is_not(
+    tmp_path: Path,
+) -> None:
+    """Thailand's 2026 revision of its visa exemptions answered `429` in one build and stayed
+    unreadable, with no text, because no later build's search happened to return it (entry 207).
+
+    The PDF is linked only from a page this build does not reach, so only the retry can read it,
+    and once read it must say so: `merge` never moves a status down, and a PDF the PDF pass read
+    used to be recorded `unknown`, which ranks below the old failure."""
+
+    refused = f"https://{AUTHORITY}/visa/refused.html"
+    existing = CountryCorpus(
+        country_code="XX",
+        country_name="Example",
+        trusted_domains=TRUSTED,
+        built_at=NOW,
+        entries=[
+            CorpusEntry(
+                url=TOURISM_CHECKLIST_PDF,
+                title="Tourism visa checklist",
+                link_text="Tourism visa checklist",
+                depth=2,
+                discovered_from=FULL_CHECKLIST,
+                first_seen=NOW,
+                last_seen=NOW,
+                status="unreadable",
+                detail="it refused automated retrieval (HTTP 429), so its guidance could not be "
+                "independently verified here",
+            ),
+            CorpusEntry(
+                url=refused,
+                title="Visa checklist",
+                link_text="Visa checklist",
+                depth=1,
+                discovered_from=INDEX,
+                first_seen=NOW,
+                last_seen=NOW,
+                status="unreadable",
+                detail="it refused automated retrieval (HTTP 403), so its guidance could not be "
+                "independently verified here",
+            ),
+        ],
+    )
+    requests: list[httpx.Request] = []
+
+    corpus, report = await build_country_corpus(
+        country(),
+        TRUSTED,
+        FakeSearch([INDEX]),
+        fetcher(requests),
+        existing=existing,
+        now=NOW,
+        maximum_pages=60,
+        page_text=PageTextStore(tmp_path),
+    )
+
+    [pdf] = corpus.find("tourism-checklist.pdf")
+    assert pdf.status == "readable" and pdf.detail == ""
+    assert pdf.depth == 2, "asking again says nothing new about how the page is reached"
+    assert report.retry_seeds == 1
+    assert refused not in {str(request.url) for request in requests}
+    [still_refused] = corpus.find("refused.html")
+    assert still_refused.status == "unreadable"
 
 
 @pytest.mark.anyio

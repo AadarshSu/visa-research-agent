@@ -7,7 +7,6 @@ LU
 GR
 LI
 PT
-TH
 KR
 IS
 AT
@@ -43,3 +42,4 @@ ZA
 HR
 BR
 CY
+TH
