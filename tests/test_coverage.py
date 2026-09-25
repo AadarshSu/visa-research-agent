@@ -383,6 +383,18 @@ def test_a_country_outside_the_oracle_reports_nothing_rather_than_zero() -> None
     assert known_answers(oracle, corpus_of([], code="XX"), "atlantis") == []
 
 
+def _country_stores(store: object) -> list[str]:
+    """The stored countries, without a union's store — the EU's sits beside them (entry 201) and
+    is no destination, so the country registry rightly does not know it."""
+
+    from visa_research_agent.discovery.corpus import FileCorpusStore
+    from visa_research_agent.discovery.supranational import get_supranational_registry
+
+    assert isinstance(store, FileCorpusStore)
+    unions = get_supranational_registry()
+    return [code for code in store.countries() if unions.by_code(code) is None]
+
+
 def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     """The regression half, run for real, and **per traveller** — one number per curated profile
     rather than one for the fixture. It is the only test here that touches `var/corpus/`, and it is
@@ -398,7 +410,7 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
     registry = get_country_registry()
     totals: dict[str, list[int]] = {}
-    for code in store.countries():
+    for code in _country_stores(store):
         corpus = store.load(code)
         country = registry.get(code)
         assert corpus is not None and country is not None
@@ -438,7 +450,7 @@ def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> No
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
     registry = get_country_registry()
     answerable: dict[str, int] = {}
-    for code in store.countries():
+    for code in _country_stores(store):
         country = registry.get(code)
         corpus = store.load(code)
         assert corpus is not None and country is not None
