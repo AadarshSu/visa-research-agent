@@ -267,6 +267,37 @@ s more pressing |
 
 ---
 
+## 221. Roles rule 7b: where the decision turns on a list, the list is the decision page
+
+**2026-09-26 · the owner: "investigate Japan leaving its visa decision open".** Japan `IN/GB` was
+open in both of entry 215's runs, after three `verified`, and `verified` again in both of entry
+219's. Across all seven saved runs:
+- **The selection call chose MOFA's exemption list (`novisa.html`) every time.** It is not a
+  recall loss.
+- **The roles call is where it breaks.** Where the embassy's general visa page (`index_000025`) was
+  also read, the roles call credited it twice and the list twice, and both times it credited the
+  embassy page the plan left the decision open.
+- The embassy page states only the general rule, that non-British nationals from non-exemption
+  countries need a visa. Rule 8f decides from the list. So a plan handed the general page alone
+  has nothing to decide with. The roles call's own reason said "India is not listed on the
+  Ministry's visa-exemption list": it used both pages and could hand on one.
+- **Replayed on entry 215's two packets, the committed prompt credited the list 6 of 10 times.**
+  So Japan's `verified` runs were a coin weighted 60–40.
+
+**Rule 7b** (`adjudicate_roles.txt`): where the decision turns on a list — who is exempt, or who
+needs a visa — choose the list for `visa_decision`, not a page stating only the general rule, and
+name the general-rule page in the reason if it helped.
+- It changes which page reaches the plan, never what a plan may conclude. Rules 8e and 8f, the
+  owner's, still decide from the list.
+
+**Measured.**
+- **Replayed:** the list **10 of 10** on the same two packets.
+- **On 14 other packets,** replayed once each (the regression set, Australia, and round 2's China,
+  New Zealand, South Africa, Switzerland, Turkey, Vietnam and Spain): the decision page matched what
+  those runs chose on 13. Australia's second packet moved between two general "you need a visa"
+  pages, neither a list. New Zealand still credits none and names its checker.
+- **Live:** Japan credited the list and was `verified` in both runs (`item63-220.log`).
+
 ## 220. The translated-copy penalty matches a language as a word, so a destination's own name stops paying it
 
 **2026-09-26, found while working Thailand's refusal (entry 222).** The 15 July announcement naming

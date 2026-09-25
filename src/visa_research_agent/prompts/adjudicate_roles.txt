@@ -42,6 +42,11 @@ Follow these rules:
      not by itself such a statement; a list that names countries and leaves the traveller's out is;
    - no other candidate says this traveller is treated otherwise.
    Leave `in_force_source_id` empty for every other role and every other case.
+7b. Where the decision turns on a list — the authority's list of the countries whose citizens are
+   exempt from a visa, or of those who need one — choose that list for `visa_decision`, not a page
+   stating only the general rule ("nationals of countries not on the exemption list require a
+   visa"). The plan decides from the list itself, so a general-rule page handed on without it
+   decides nothing. Name the general-rule page in your reason if it helped.
 8. One page may fill several roles. A per-nationality page often establishes the decision and lists
    the documents; say so rather than splitting the answer artificially.
 9. `published_in_path` is what the URL claims about when the page was published, where it claims
