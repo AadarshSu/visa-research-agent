@@ -16,10 +16,10 @@ points at the items that do the work. The detail lives in the items, not here.
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
 | **Model calls paid through Ofself Personas**, on their OpenAI key | **Done 2026-09-24 (entry 188), and the route from now on — the owner.** All three calls go through Personas on Ofself's account; graded against the direct route's baselines. One Japan inference is a *Smaller thing* | 62 (done) | — |
-| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60, which the Personas route cannot send without an Ofself tier setting |
+| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen, Now), **58** (research); **65** and **60** blocked | Ofself: a Fast tier setting (60) and a GPT-6 deployment (65) |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` needs an Ofself sign-in since 2026-09-24 (entry 191); the stores are still local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
-| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **The full rebuild is done and graded (2026-09-25, entries 203 and 204); next are items 67 and 64** | **63**, the rebuild | the owner's own checking (entry 68) |
-| **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23). Schengen's EU half of item 2 is done (entry 201); governments with no hostname marker remain | **64**, **2** | nothing external — search credit only |
+| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **The full rebuild is done and graded (2026-09-25, entries 203 and 204); next is item 63's broad answer rate, sized by the owner** | **63** | the owner's own checking (entry 68) |
+| **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have no row. The page offers all 198 (known problem 23). Schengen's EU half of item 2 is done (entry 201); governments with no hostname marker remain | **64**, **2** | nothing external — search credit only |
 
 **Offline cost is not the constraint — the owner, 2026-09-23 (entry 184).** Build time and a higher
 one-time cost are acceptable for anything that makes each live request better. Prefer an offline
@@ -290,7 +290,7 @@ and item 25 got the answering page into the shortlist it was falling five-deep o
 and 173).
 
 Status: `next` · `soon` · `blocked` · `later` — the label on each heading matches the section it sits in, so the two
-can never disagree. **Blocked** holds an item with a dependency it cannot clear itself; today there is none.
+can never disagree. **Blocked** holds an item with a dependency it cannot clear itself; each says what it waits on.
 
 **Every open item has a number, and numbering is append-only** so that the cross-references in
 [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) stay valid. The numbers are names, not an order: **the section
@@ -300,22 +300,20 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 70. Find why a corridor that read its authority's pages still has no visa decision | `next` |
-|  | 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost | `next` |
-|  | 68. Read more of what a build records, and choose what to open with more context | `next` |
-|  | 63. Make most corridors return accurate and useful information | `next` |
+| **Now** | 63. Make most corridors return accurate and useful information | `next` |
+|  | 57. Stream the plan to the screen as it is written | `next` |
+|  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
 |  | 55. Take the traveller from Ofself's shared identity, through one adapter | `soon` |
-|  | 57. Stream the plan to the screen as it is written | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
-|  | 67. Test ranking by embeddings of stored page text | `soon` |
-|  | 64. Expand from 53 countries to 100+ | `soon` |
-| **Blocked** | 60. Decide where Fast mode goes | `blocked` |
+| **Blocked** | 60. Decide where Fast mode goes — on Ofself adding a tier setting | `blocked` |
+|  | 65. Test GPT-6 Sol against GPT-5.6 Terra — on Ofself deploying GPT-6, or OpenAI credit | `blocked` |
+|  | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
 | **Later** | 69. Read scanned PDFs — for ranking first, and as evidence only after a decision | `later` |
 |  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
@@ -349,254 +347,11 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-### The sequence to the full rebuild
-
-**The owner, 2026-09-24.** Item 68's fixes (entries 186 and 189)
-are measured on scratch stores and not yet in the real ones. A rebuild only adds, so it is done
-once, and in this order:
-1. **Item 65 — settle the model.** Model choice changes answers, and the owner's review in step 5
-   should happen once, on the model that will serve. On Personas this costs search only.
-2. **Item 68 — check the scanned PDFs. Done 2026-09-25: it does not block the rebuild.** None of
-   the oracle's answer pages is among the 1,001 PDFs with an empty text layer or the 215 that could
-   not be parsed. 196 of them score for a role, which is item 69, for later.
-3. **The pilot: done (entry 193).** The owner first dropped the before-and-after comparison (a
-   rebuilt store should give good answers on its own merits) and paused the rebuild for one corridor
-   that works every time — `germany/IN/GB/tourism`, confirmed without a rebuild (PROJECT_HANDOFF).
-   Then, the owner's call, the ten oracle countries (JP, GB, CA, DE, NL, FR, SE, SG, AE, US) were
-   rebuilt with entries 186 and 189 on 2026-09-24 (UTC; the folder says 09-25), two at a time, from
-   `var/rebuild-pilot-2026-09-25/run.sh`. Their stores were backed up first to
-   `var/_backup_before_pilot_2026-09-25/`, verified byte for byte.
-   - **The first attempt** built GB, JP, DE and NL. FR and SE failed at once because the headless
-     browser could not start from Claude Code's sandboxed shell (a Chromium mach-port error), SG, AE
-     and US because the network dropped, and CA was cut off; none of the failures wrote anything.
-     **Start any build that may render from the owner's own terminal.** The owner re-ran `run.sh`
-     there and it finished the other six.
-   - **Graded:** oracle roles found fell 75 → 68 of 92, but every lost page was in the pool and not
-     picked, as pools grew (Singapore `PH/PH` 150 → 482). Unresolved decisions and checklists went
-     13 → 14. **Item 66 (entries 194, 195)** answered it: the loss was −2.8 of 90 and all secondary,
-     and the selector now sees a ranked top 120 plus 40 pages with no stored text, which beats the
-     old stores on replay. Germany's plans were re-run on its rebuilt store (PROJECT_HANDOFF).
-4. **The full rebuild of the other 44 (42 corpora plus Brazil and Uruguay) — done 2026-09-25**,
-   all exit 0; then South Africa, Croatia, Cyprus and Brazil again under the widened archived-year
-   veto (entry 203). **Graded the same day (entry 204):** the stores hold every oracle answer, and
-   item 70's corridors answer as before or better, except Egypt's roles-call variance (*Smaller
-   things*).
-5. **Then item 67 on the new store, then item 64.**
-
-Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
-55 (Ofself).
-
-### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `next`, **added 2026-09-23**
-
-**On the Personas route (entry 188) this tests what Ofself's account offers, and needs no OpenAI
-credit.** The model is set on each call's agent (`llm_model`), and every reply's model is checked
-against `OPENAI_MODEL`, so a model the account lacks fails loudly rather than being swapped. **Step 0
-is one probe: does Personas serve `gpt-6-sol` at all?** Its price there is Ofself's, not the list
-price below, and Ofself reports no cached tokens, so the cost column compares token counts only.
-
-**Step 0 result, 2026-09-25: Personas does not serve it.** A one-call probe on a separate agent
-(`visa-probe-<model>`, so the production agents' stored model was untouched) answered on
-`gpt-5.6-terra` in 2.5s and failed for `gpt-6-sol` and `gpt-6-luna` with Azure's
-`DeploymentNotFound` — Ofself serves models through Azure deployments, and has none for GPT-6
-(OFSELF_FEEDBACK 8.21). **So this item waits on Ofself deploying GPT-6 Sol, or on OpenAI credit for
-the direct route.** Ask Ofself which models the account serves. Until then, the rebuild sequence
-goes on with Terra, and item 65 is re-run before step 3's baseline only if Sol arrives first.
-
-**It must also settle entry 188's open Japan question.** One of six Personas runs answered Japan
-`IN/GB` "visa required" from MOFA's list of who does *not* need a visa, the inference rule 8e and
-entry 174 rule out. Run a dozen Japan calls on the same packet for each model and count it.
-
-**Why it matters.** OpenAI released GPT-6 Sol on 2026-09-22 at Terra's input price and a lower
-output price: $2.00 input, $0.20 cached, $2.50 cache write and **$10.00 output** per million tokens,
-against Terra's $12.00. It is the tier above Terra, and the first published scores put it ahead:
-- **Artificial Analysis:** 48 against Terra's 34.
-- **BenchLM overall:** 82.2 against 72.8.
-- **Individual tests are mixed**, and none of them resembles this project's task. It is ahead on
-  OSWorld 2.0 (60.5% against 50.2%) and behind on DeepSWE (68.8% against 69.6%) and HealthBench
-  Hard (30.1% against 32.7%).
-
-Those figures do not answer the question for this project, for three reasons:
-- **Sol's 48 was scored at `max` reasoning effort, and every call here runs at `low`.** At `max`,
-  Artificial Analysis measured about 107s to the first token.
-- **Nothing is published yet for Sol on the qualities this project depends on:** instruction
-  following, long-document reading and hallucination.
-- **A model change has broken a decision before.** In entry 177, `gpt-5.6-luna` wrote Japan a
-  "no visa required" plan.
-
-**What it could buy.** If it is at least as good, it would be a quality upgrade at slightly lower
-cost. Repricing 2026-09-15's logged calls puts the saving at about **2–3% a fresh corridor**
-(~$0.251 → ~$0.245). The plan call gets about 11% cheaper, and selection and roles barely move
-because they are almost all input. How Sol's speed compares to Terra's is unknown. With Fast mode out
-of reach on Personas (item 60), this is the only model-side lever left for speed as well as quality.
-
-**How to run it — all three calls are one setting.** `OPENAI_MODEL` in `.env` drives selection,
-roles, blocked-page judgement and the plan call alike (`config/settings.py`), and
-`openai_reasoning_effort` stays `low` in both arms.
-1. **First, record the model name in each usage record.** `ModelCallRecord`
-   (`research/model_usage.py`) holds no model today, so a Sol call and a Terra call in
-   `var/usage/` cannot be told apart or priced separately. This is a small code change with a
-   test.
-2. **Clear `var/cache/`, `var/corridors/` and `var/plans/` before each arm, or before neither.**
-   Otherwise one arm runs on reused corridors and drafts (entries 136 and 178).
-3. **Run several times per arm.** Model seconds swing about 40% between identical runs (entry 144),
-   and one run per arm cannot separate the models. Three per corridor per arm is the least.
-4. **Corridors:**
-   - **Japan `IN/GB` and Singapore `PH/PH`.** Any change to the plan call must pass these (entry 174),
-     and rule 8e's "no visa" bounds live only in the prompt.
-   - **Entry 170's ten graded corridors**, for selection, whose method is the selection A/B.
-5. **Record, per arm:**
-   - **Answers:** each corridor's visa decision (required / not required / open), whether it
-     resolved or refused, and roles filled. Put any decision that differs from Terra's in front of
-     the owner.
-   - **Time:** `phase_seconds` and each call's seconds from the recall log, plus the whole request.
-   - **Cost:** tokens per call priced at each model's rates, including cache writes (entry 167). Sol
-     may reason more or less than Terra at `low`, so its output tokens must be measured, not assumed.
-
-**The bound on grading it.** Correctness is the owner's to judge (entry 68). This item compares what
-the two models *answer* and flags every disagreement; it does not build a grader. **Any
-disagreement on a visa decision blocks the switch** until the owner has read both plans. Where
-Terra was open and Sol commits, that counts as a disagreement, and it is the worst direction.
-
-**Cost of the test itself:** search only on the Personas route, about $0.05 a corridor.
-
-**If Sol wins:** changing `OPENAI_MODEL` is one line of `.env`, and the Personas agents are
-re-created with it. Record the result as a decision
-entry and update the headline cost and time figures in CLAUDE.md, the handoff and TODO, which all
-quote Terra's.
-
-### 68. Read more of what a build records, and choose what to open with more context — `next`, **added 2026-09-23 (entries 183, 184, 185); moved to Now the same day — it needs no OpenAI credit**
-
-**Why it matters.** A candidate with no stored text is judged on its link alone, a median of ~29
-characters (entry 78). That is true for the model selector, for every heuristic and for item 67's
-embeddings. Where coverage stands:
-- **The whole store is 23% covered.** Measured 2026-09-23: **54,629 bodies against 237,303 recorded
-  addresses**, the same 23% as before the 2026-09-15 rebuild.
-- **The selector's pool is 49% covered.** On the 21 oracle corridors, 3,554 of 7,267 candidates the
-  selector was shown had text (entry 183).
-- **A build opens only 3–15% of what it records** (entry 88). The rest are addresses no one has read.
-
-Entry 184 makes a slower, larger build acceptable, and reading more is traveller-neutral, so it sits
-inside entry 148's rule.
-
-**Rules it must keep.**
-- **Order the extra reading on what the store lacks, never on a traveller** (entries 44 and 139). A
-  traveller-neutral signal is fine — a link that scores for any role on the role vocabulary alone
-  (`score_role_vocabulary`), a PDF, an address never opened. The traveller's passport or residence
-  is not.
-- **Every retrieval rule holds.** Obey `robots.txt`, never render past a refusal, give up on a host
-  that stops answering (entries 35, 36 and 139). A build that reads more meets more of each.
-- **The text is ranking input, never evidence** (entry 78).
-
-**Measure before building.**
-1. **Which unopened addresses matter.** Over the oracle corridors and the 81 other model runs, count
-   the pool candidates with no stored text, and how many of them the model picked anyway on the
-   link alone. Those are the pages this would inform.
-2. **What reading them buys, offline.** For a few countries, open the pool's text-less candidates
-   into a scratch copy of the index. Then re-run entry 183's harness and item 67's embeddings arm on
-   it. If recall and the pre-filter's K do not move, stop here.
-3. **What it costs.** Opening recorded addresses spends no search, only fetch time and renders. Time
-   one country's extra pass, and extrapolate to 53 before running them all. Entry 184 accepts the
-   hours; say how many first.
-
-**Then build.** Either a second pass in `visa-discover corpus` that opens the recorded addresses in
-the order above, until a budget is spent, or a separate `pagetext --fill` command, so an existing
-corpus is extended rather than rebuilt. The second avoids re-running every search a rebuild costs.
-
-**How a build chooses what to open today, and two problems with it — found 2026-09-23.** The
-frontier is best-first on `score_role_vocabulary`: keyword matches in the link's text, the nearest
-preceding heading and the address, with no traveller involved. On top of that, 40% of the budget is
-reserved for per-country families (`DEFAULT_CORPUS_FAMILY_SHARE`), and the mission index is seeded.
-
-**Problem 1: the cause is found (entry 185), and the fix is next.** An instrumented fresh build of
-Japan showed:
-- **The split.** It divides the budget evenly between the hosts search surfaced: 47 hosts, 25 pages
-  each.
-- **The visa host is cut off.** `mofa.go.jp` hit its 25, and **149 scored links were dropped at the
-  cap**. They include the oracle's `visa_decision`, `fees`, `processing_times` and
-  `application_route` pages for both Japan corridors.
-- **The rest goes on noise.** Unrelated hosts — the legal affairs bureau, the commercial registry,
-  e-Gov's developer portal — spent their full share: **74% of pages opened by link scored zero.**
-- **Budget goes unspent.** Only **912 of 1,200 pages were opened**, because a capped host's links
-  are dropped, not deferred.
-- **Not causes:** frontier ordering and the family share.
-
-**Fixed and measured (entry 186).** A scored link may now read past its host's even share, up to
-the 400-page cap, and a link scoring nothing may not; corpus builds only. Over four countries, each
-built both ways:
-- **Japan** read 12 of its 20 oracle answer pages, against none under the old rule.
-- **The UK** read 17 of 17, against 13, and `gov.uk` stopped at 392 pages, mostly visa guidance.
-- **Australia's** immigration host went from not among the top eight to 267 pages.
-- **The Netherlands** is unchanged, as expected.
-
-Every build now reports where its allowance went.
-
-**Left of problem 1:**
-1. **Rebuild the real stores with the fix — the owner's call.** About $13 of search and ten-plus
-   hours for all 53 (entry 161). Australia alone took 43 minutes. Nothing in `var/corpus` or
-   `var/pagetext` has the fix yet.
-2. **Separately, open the scored links today's stores hold unopened** — 14,356, no search. A rebuild
-   under the fix would reach most of them, so do this only if the rebuild waits.
-3. **Two pieces of noise the fix exposed, for problem 2:** `email-signup` pages count as guidance on
-   `gov.uk`, and hosts like `careers.homeoffice.gov.uk` spend a full share under either rule.
-
-**Zero-scoring opens were measured (entry 192).** They reach 7 of 94 answering pages: 5 routes
-through hub pages one hop from a search seed, and 2 PDFs. None of the 3,242 zero-scoring opens at
-depth 2 or 3 is on any answer's route. **Proposed, then not adopted for the rebuild (entry 200):**
-opening zero-scoring links only at depth 1 would skip 47% of those opens, but "every route kept" is
-true only of the 94 answers the oracle holds, which were curated from pages that already score —
-the very pages the rule cannot touch. What it buys is build time, which is not the constraint
-(entry 184). Adopt it only after building a few countries both ways into scratch stores and
-comparing everything each reaches.
-
-**Problem 2's version A is built and measured (entry 189).** Corpus builds now score a link with
-the text around it, its page landmark, and — for a PDF — the linking page's title. Live requests
-are unchanged. Japan read 15 of 20 oracle pages against 11 without it, and nothing regressed. **What
-is left of item 68 is rebuilding the real stores (the owner's call) and version B, which stays
-declined.**
-
-**Problem 2 was measured before building, and it is small (entry 187).**
-- **On the oracle, 2 of 83 answer pages have a link scoring zero**: the Dutch EES leaflet and
-  Czechia's UK supporting-documents list. 48 score and 32 are search seeds.
-- **Japan's 7 remaining misses are a refusal.** The Edinburgh consulate answers `403` to everything,
-  so no scoring change can reach them.
-- **So what follows is a later refinement,** to build if a country turns up whose answer pages score
-  zero on their links.
-- **The cheap part:** `email-signup` went into `is_boilerplate` with entry 186; newsletter and
-  subscription pages followed in entry 200.
-
-**Problem 2: a link is judged on too little context.** `extract_links` (`crawl.py`) keeps the anchor
-text and the most recent heading in document order, and nothing else. It has the whole page in hand
-when it does so, and throws away:
-- **The text around the link.** "The list of required documents for a tourist visa is available
-  here (PDF)" is a checklist link whose anchor, "here" or "PDF", scores zero.
-- **Where the link sits.** `nav`, `header`, `footer`, `aside`, breadcrumbs and the main content score
-  alike today; only address patterns such as `/privacy` are filtered (`is_boilerplate`).
-- **What the page holding the link is about.** A link on a visa checklist page and one on a press
-  release score the same, though the parent's text is being indexed at that moment.
-- **`title` and `aria-label` attributes,** which often say more than the visible anchor.
-- **The heading's scope.** "Most recent heading" can be a menu's heading, not the section's.
-
-**Two ways to use it, measured one after the other.**
-- **Deterministic.** Add the fields to `PageLink` and the stored entry, and score them in
-  `score_role_vocabulary`:
-  - surrounding text at a lower weight than the anchor, as the heading already is;
-  - a penalty for navigation and footer regions;
-  - a bonus that carries over from the parent page's own text score.
-
-  It is cheap, traveller-neutral and testable offline, but it is the keyword method entry 183 found
-  short on judgement.
-- **A model or item 67's embeddings, offline, reading each link with its context** to order the
-  frontier. Entry 184 makes the cost acceptable. Its output only decides what a build opens, never
-  a word a traveller reads. It is still a model judgement shaping the store, so write a short
-  decision entry first, arguing it against entries 44 and 83.
-
-**Grade either by what it opens, not by corridors.** On a few countries, rebuild into a scratch
-store. Count how many oracle answering pages and how many previously scored-but-unopened pages it
-now reads, and how many zero-score pages it spends budget on. Only then re-run entry 183's harness.
-Entries 81 and 136 say why a corridor run cannot grade a crawl change.
-
-**Related:** item 67 needs this to help pages that have no text today. Item 35's family reservation
-is the same idea aimed at per-traveller pages, which entry 148 parked.
+**Surveyed 2026-09-25, after the full rebuild.** The rebuild sequence that stood here is finished
+(Done), and so is item 68. Items 65 and 67 were listed next and cannot run — 65 waits on Ofself
+deploying GPT-6, 67 on OpenAI credit — so both moved to **Blocked**. What is left follows entry 148's
+order: correctness (63), then the owner's on-screen goal (57), then expansion (64, which asks the
+owner first). Hosting and Ofself (7, 20, 55) are independent and fine to run alongside.
 
 ### 63. Make most corridors return accurate and useful information — `next`, **added 2026-09-23 (entry 182); moved to Now 2026-09-24 as step 3 of the rebuild sequence**
 
@@ -611,21 +366,80 @@ caveat.
 - **The last broad measurement is 2026-08-24's twenty corridors** (entry 58). 75% confirmed the
   decision and 50% yielded a checklist, a marginal pass. That sample was five destinations, each
   replicated four times.
-- **All 53 corpora were rebuilt on 2026-09-15, and only Norway, Thailand and Japan have been re-run
-  on the new ones** (entry 161). What the rebuild did to the other fifty is expected, not shown.
+- **All 55 stores were rebuilt by 2026-09-25 (entries 193, 203, 204).** Graded on the oracle
+  corridors' stores and item 70's corridors: every oracle answer held, and item 70's corridors
+  answer as before or better, except Egypt's roles-call variance. About 30 of the rebuilt countries
+  have had no corridor run.
 - **Since then, the plan has changed in ways that show up in its answers.** The decision and every
   requirement now carry a checked quote (entry 156), a missing checklist is worded as what was found
   (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
   Singapore only).
 
-**First step — the baseline half of the rebuild pilot (the sequence at the top of Now).** Corridor
-runs cost search only on the Personas route, about $0.05 each.
-- **Choose the corridors by destination, as entry 58 advised,** across the ten oracle countries.
-  Agree the number with the owner first, because the owner is the one checking them.
-- **Run each at least twice on the current store,** before the pilot rebuild changes it, then again
-  after it.
-- **Report decision and checklist rates beside entry 58's.** Put the plans that changed between
-  arms in front of the owner, with a few unchanged ones as a spot check.
+**Next step — a broad answer rate on the rebuilt stores, sized by the owner.** The owner dropped the
+pilot's before-and-after comparison (a rebuilt store should answer on its own merits), so this is
+one arm. Corridor runs cost search only on Personas, about $0.05 each.
+- **Choose the corridors by destination, as entry 58 advised,** among the rebuilt countries no
+  corridor has touched. Agree the number with the owner first, because the owner checks them.
+- **Run each at least twice** (entry 144), through `var/item70-2026-09-24/run.py`, which keeps the
+  packets a refusal needs traced.
+- **Report decision and checklist rates beside entry 58's**, and put the plans in front of the owner.
+
+### 57. Stream the plan to the screen as it is written — `next`, **a UX improvement, added 2026-09-15; moved to Now 2026-09-25**
+
+**Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171) — a repeat within
+24 hours now reuses its plan instead (entry 178) — and the
+traveller sees nothing until the whole plan arrives. More than half of a fresh request, and nearly
+all of a repeat, is the model writing the plan. Streaming would not shorten any of that, but text
+could appear seconds after the plan call starts rather than when it ends. **Item 56 took about 1.5s off the plan call (entry 175); this makes the rest feel shorter.**
+
+**What stands in the way — to be designed, not assumed.**
+- **The plan is validated as a whole before anyone sees it:** `VisaPlan`'s validators,
+  `QuoteChecker`, the rule that a null decision is never `verified`, and the entry-plan shape
+  (entries 95, 150 and 156). A half-written plan has passed none of them. Nothing streamed may show
+  a claim the finished plan could still drop or refuse — the visa decision above all.
+- **One safe shape streams progress rather than content**: which stage the request has reached —
+  searching, choosing pages, reading them, writing the plan. Another streams only the parts that are
+  already final. Which parts qualify is the design question.
+- **The call uses strict structured output** (`with_structured_output`, `json_schema`). Streaming
+  partial JSON through LangChain and FastAPI to `static/app.js` is a real change at both ends.
+- **A refusal can arrive after text has started to appear**, and the interface would need an honest
+  way to take it back.
+
+**Measured, 2026-09-16 (entry 177).** The plan call's first visible token arrives 7–15s in today and
+4–7s on Fast mode, so streaming would put text on the screen that early.
+
+**The owner's goal settles half of this (entry 182):** about 30 seconds, *with information on
+screen while it runs*. So at least the progress shape is wanted, whatever else is decided.
+
+**Open for whoever picks it up:** whether streaming progress alone is enough, and whether any plan
+content can be shown before validation without breaking entry 6's rule against unverified claims that
+would alarm a traveller if wrong.
+
+### 64. Expand from 55 countries to 100+ — `next`, **added 2026-09-23 (entry 182); moved to Now 2026-09-25 — ask the owner before a batch**
+
+**Why it matters.** It is the owner's goal. The page offers 198 destinations and refuses 143 of them
+(known problem 23).
+
+**What adding a country takes — the three stages of entry 68.**
+0. **Ask the owner first**: which countries, and how many (*Order*, below).
+1. **Reachable:** a row in `config/authority_domains.yaml`, from `visa-discover registry`. Where the
+   rule cannot confirm a domain, ask Wikidata about the domain and review it by hand (entries 67,
+   110 and 111). Item 2 covers the governments with no marker, and the rule itself never bends.
+2. **Resolves:** a corpus and page-text index from `visa-discover corpus --country XX`. Then run
+   corridors and read every refusal's reason, as stage 2 of batch 1 did (entry 70).
+3. **Fast:** the corridor answers from the store without crawling.
+
+**What it costs, as arithmetic, not measured.**
+- **The registry sweep:** about 4 searches a country, so the remaining 143 countries come to about
+  $3 of search.
+- **Corpus builds:** 42–56 queries a country in the 2026-09-25 rebuild, about 22 minutes a country
+  two at a time (PROJECT_HANDOFF). Fifty more countries is about **$12** and roughly ten hours.
+- **No model cost to build.** Corridor runs for stage 2 go through Personas and cost search only,
+  about $0.05 each.
+
+**Order.** Entry 148 puts expansion after correctness and optimisation. The owner listed the five
+goals unordered, so ask before starting a large batch. Pick countries by traveller volume, as batch
+1 did (entry 67).
 
 ## Next up
 
@@ -1240,37 +1054,6 @@ Ofself's developers; the traps below are the ones that shape this item's work.
 **Plan it with item 7.** Ofself's login now answers item 7's fifth step: `POST /visa-plans` needs a
 signed-in session (entry 191).
 
-### 57. Stream the plan to the screen as it is written — `soon`, **a UX improvement, added 2026-09-15**
-
-**Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171) — a repeat within
-24 hours now reuses its plan instead (entry 178) — and the
-traveller sees nothing until the whole plan arrives. More than half of a fresh request, and nearly
-all of a repeat, is the model writing the plan. Streaming would not shorten any of that, but text
-could appear seconds after the plan call starts rather than when it ends. **Item 56 took about 1.5s off the plan call (entry 175); this makes the rest feel shorter.**
-
-**What stands in the way — to be designed, not assumed.**
-- **The plan is validated as a whole before anyone sees it:** `VisaPlan`'s validators,
-  `QuoteChecker`, the rule that a null decision is never `verified`, and the entry-plan shape
-  (entries 95, 150 and 156). A half-written plan has passed none of them. Nothing streamed may show
-  a claim the finished plan could still drop or refuse — the visa decision above all.
-- **One safe shape streams progress rather than content**: which stage the request has reached —
-  searching, choosing pages, reading them, writing the plan. Another streams only the parts that are
-  already final. Which parts qualify is the design question.
-- **The call uses strict structured output** (`with_structured_output`, `json_schema`). Streaming
-  partial JSON through LangChain and FastAPI to `static/app.js` is a real change at both ends.
-- **A refusal can arrive after text has started to appear**, and the interface would need an honest
-  way to take it back.
-
-**Measured, 2026-09-16 (entry 177).** The plan call's first visible token arrives 7–15s in today and
-4–7s on Fast mode, so streaming would put text on the screen that early.
-
-**The owner's goal settles half of this (entry 182):** about 30 seconds, *with information on
-screen while it runs*. So at least the progress shape is wanted, whatever else is decided.
-
-**Open for whoever picks it up:** whether streaming progress alone is enough, and whether any plan
-content can be shown before validation without breaking entry 6's rule against unverified claims that
-would alarm a traveller if wrong.
-
 ### 59. Guard the 272K-token price threshold — `soon`, **split from item 19 on 2026-09-15 (entry 173)**
 
 **Why it matters.** OpenAI bills a request with more than 272K input tokens at 2× input and 1.5×
@@ -1344,7 +1127,93 @@ cache, and Canada still took 12s.
 
 **Do not re-propose** conditional search (entries 159 and 160) or refusing on a miss (entry 173).
 
-### 67. Test ranking by embeddings of stored page text — `soon`, **added 2026-09-23 (entries 183, 184); waits on OpenAI credit**
+---
+
+## Blocked
+
+### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `blocked` on Ofself deploying GPT-6, or on OpenAI credit, **added 2026-09-23; blocked 2026-09-25**
+
+**On the Personas route (entry 188) this tests what Ofself's account offers, and needs no OpenAI
+credit.** The model is set on each call's agent (`llm_model`), and every reply's model is checked
+against `OPENAI_MODEL`, so a model the account lacks fails loudly rather than being swapped. **Step 0
+is one probe: does Personas serve `gpt-6-sol` at all?** Its price there is Ofself's, not the list
+price below, and Ofself reports no cached tokens, so the cost column compares token counts only.
+
+**Step 0 result, 2026-09-25: Personas does not serve it.** A one-call probe on a separate agent
+(`visa-probe-<model>`, so the production agents' stored model was untouched) answered on
+`gpt-5.6-terra` in 2.5s and failed for `gpt-6-sol` and `gpt-6-luna` with Azure's
+`DeploymentNotFound` — Ofself serves models through Azure deployments, and has none for GPT-6
+(OFSELF_FEEDBACK 8.21). **So this item waits on Ofself deploying GPT-6 Sol, or on OpenAI credit for
+the direct route.** Ask Ofself which models the account serves. Until then, the rebuild sequence
+goes on with Terra, and item 65 is re-run before step 3's baseline only if Sol arrives first.
+
+**It must also settle entry 188's open Japan question.** One of six Personas runs answered Japan
+`IN/GB` "visa required" from MOFA's list of who does *not* need a visa, the inference rule 8e and
+entry 174 rule out. Run a dozen Japan calls on the same packet for each model and count it.
+
+**Why it matters.** OpenAI released GPT-6 Sol on 2026-09-22 at Terra's input price and a lower
+output price: $2.00 input, $0.20 cached, $2.50 cache write and **$10.00 output** per million tokens,
+against Terra's $12.00. It is the tier above Terra, and the first published scores put it ahead:
+- **Artificial Analysis:** 48 against Terra's 34.
+- **BenchLM overall:** 82.2 against 72.8.
+- **Individual tests are mixed**, and none of them resembles this project's task. It is ahead on
+  OSWorld 2.0 (60.5% against 50.2%) and behind on DeepSWE (68.8% against 69.6%) and HealthBench
+  Hard (30.1% against 32.7%).
+
+Those figures do not answer the question for this project, for three reasons:
+- **Sol's 48 was scored at `max` reasoning effort, and every call here runs at `low`.** At `max`,
+  Artificial Analysis measured about 107s to the first token.
+- **Nothing is published yet for Sol on the qualities this project depends on:** instruction
+  following, long-document reading and hallucination.
+- **A model change has broken a decision before.** In entry 177, `gpt-5.6-luna` wrote Japan a
+  "no visa required" plan.
+
+**What it could buy.** If it is at least as good, it would be a quality upgrade at slightly lower
+cost. Repricing 2026-09-15's logged calls puts the saving at about **2–3% a fresh corridor**
+(~$0.251 → ~$0.245). The plan call gets about 11% cheaper, and selection and roles barely move
+because they are almost all input. How Sol's speed compares to Terra's is unknown. With Fast mode out
+of reach on Personas (item 60), this is the only model-side lever left for speed as well as quality.
+
+**How to run it — all three calls are one setting.** `OPENAI_MODEL` in `.env` drives selection,
+roles, blocked-page judgement and the plan call alike (`config/settings.py`), and
+`openai_reasoning_effort` stays `low` in both arms.
+1. **First, record the model name in each usage record.** `ModelCallRecord`
+   (`research/model_usage.py`) holds no model today, so a Sol call and a Terra call in
+   `var/usage/` cannot be told apart or priced separately. This is a small code change with a
+   test.
+2. **Clear `var/cache/`, `var/corridors/` and `var/plans/` before each arm, or before neither.**
+   Otherwise one arm runs on reused corridors and drafts (entries 136 and 178).
+3. **Run several times per arm.** Model seconds swing about 40% between identical runs (entry 144),
+   and one run per arm cannot separate the models. Three per corridor per arm is the least.
+4. **Corridors:**
+   - **Japan `IN/GB` and Singapore `PH/PH`.** Any change to the plan call must pass these (entry 174),
+     and rule 8e's "no visa" bounds live only in the prompt.
+   - **Entry 170's ten graded corridors**, for selection, whose method is the selection A/B.
+5. **Record, per arm:**
+   - **Answers:** each corridor's visa decision (required / not required / open), whether it
+     resolved or refused, and roles filled. Put any decision that differs from Terra's in front of
+     the owner.
+   - **Time:** `phase_seconds` and each call's seconds from the recall log, plus the whole request.
+   - **Cost:** tokens per call priced at each model's rates, including cache writes (entry 167). Sol
+     may reason more or less than Terra at `low`, so its output tokens must be measured, not assumed.
+
+**The bound on grading it.** Correctness is the owner's to judge (entry 68). This item compares what
+the two models *answer* and flags every disagreement; it does not build a grader. **Any
+disagreement on a visa decision blocks the switch** until the owner has read both plans. Where
+Terra was open and Sol commits, that counts as a disagreement, and it is the worst direction.
+
+**Cost of the test itself:** search only on the Personas route, about $0.05 a corridor.
+
+**If Sol wins:** changing `OPENAI_MODEL` is one line of `.env`, and the Personas agents are
+re-created with it. Record the result as a decision
+entry and update the headline cost and time figures in CLAUDE.md, the handoff and TODO, which all
+quote Terra's.
+
+### 67. Test ranking by embeddings of stored page text — `blocked` on OpenAI credit, **added 2026-09-23 (entries 183, 184)**
+
+**Blocked, checked 2026-09-25.** It needs an embeddings model, and the Personas route (entry 188)
+offers chat calls only, so it waits on an OpenAI top-up or another embeddings source the owner
+approves.
 
 **Why it matters.** Entry 183 found that what separates the model selector from the heuristics is
 **judgement, not information**:
@@ -1389,34 +1258,6 @@ The keyword scorer matches listed phrases. Embeddings match meaning, so they may
 - **As a filter,** it replaces `fusion_order` in `shown_to_selector` if it beats 80.0 of 90 there.
 - **As a selector,** it would have to reach the model's recall before a live test is worth running.
 - **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
-
-### 64. Expand from 53 countries to 100+ — `soon`, **added 2026-09-23 (entry 182)**
-
-**Why it matters.** It is the owner's goal. The page offers 198 destinations and refuses 143 of them
-(known problem 23).
-
-**What adding a country takes — the three stages of entry 68.**
-1. **Reachable:** a row in `config/authority_domains.yaml`, from `visa-discover registry`. Where the
-   rule cannot confirm a domain, ask Wikidata about the domain and review it by hand (entries 67,
-   110 and 111). Item 2 covers the governments with no marker, and the rule itself never bends.
-2. **Resolves:** a corpus and page-text index from `visa-discover corpus --country XX`. Then run
-   corridors and read every refusal's reason, as stage 2 of batch 1 did (entry 70).
-3. **Fast:** the corridor answers from the store without crawling.
-
-**What it costs, as arithmetic, not measured.**
-- **The registry sweep:** about 4 searches a country, so the remaining 143 countries come to about
-  $3 of search.
-- **Corpus builds:** about 49 queries a country in the 2026-09-15 rebuild (~2,590 for 53). Fifty more
-  countries is about **$12**, and roughly ten hours at two builds at a time.
-- **No model cost to build.** Corridor runs for stage 2 need OpenAI credit.
-
-**Order.** Entry 148 puts expansion after correctness and optimisation. The owner listed the five
-goals unordered, so ask before starting a large batch. Pick countries by traveller volume, as batch
-1 did (entry 67).
-
----
-
-## Blocked
 
 ### 60. Decide where Fast mode goes — `blocked`, **added 2026-09-16 (entry 177); blocked 2026-09-24 on Ofself adding a tier setting**
 
@@ -1910,6 +1751,8 @@ in the DECISIONS entry; this is the one-line index.
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| — The full rebuild: the pilot, then every other store | 09-25 | 193, 203, 204 | **All 55 rebuilt and graded.** The pilot's loss was the selector's, not the store's (item 66). The 44's reports showed the archived-year veto still dropping filed guidance in three forms, then a fourth; widened, and ZA, CY, HR and Brazil rebuilt. The stores hold every oracle answer; item 70's corridors answer as before or better; Brazil's refusal is its `robots.txt` |
+| 68. Read more of what a build records, and choose what to open with more context | 09-25 | 185–187, 189, 192, 200 | **The cause was the host split, not the ordering**: Japan's visa host was cut at 25 pages with 149 scored links dropped. A scored link may now read past its share (Japan 0 → 12 of 20 oracle pages), and a link is scored with the text around it (11 → 15). In the real stores since the full rebuild. Version B (a model ordering the frontier) stays declined; opening zero-scoring links only near a seed was not adopted (entry 200) |
 | 70. Find why a corridor that read its authority's pages still has no visa decision | 09-25 | 198–202 | **The lead was wrong: the roles call was right on every packet it refused**, so nothing in the prompt needed fixing. Re-run three times each and traced, 11 of the 14 now answer "visa required" from an official page, through eight fixes, all measured before shipping: a plan refusing itself over a page it could not read (UAE), a residence-permit veto dropping the Dutch checker, a year veto dropping every pre-2025 upload (Malta, rebuilt), the lexicon missing "required to hold a visa" (Belgium — a PDF-only depth rule shipped first and was withdrawn as unjustified), the selector seeing only a page's head (Slovenia), an 80k plan-input guard (India), an uncited step link (Germany), and rule 8g — a visa on arrival is a visa (UAE). **The EU now answers a Schengen member's visa decision** from EUR-Lex (entry 201): Croatia and Poland, refused and null, answered 6 of 6. Cloudflare's challenge proved unanswerable without disguising the client (202). Mexico (an image) and Saudi Arabia (unreadable) still refuse |
 | 66. Keep the selector's picks as good as its pools grow | 09-24 | 194, 195 | **The pilot's 75 → 68 was half noise, a month-old baseline and one address**; replaying only the selection call, five runs a corridor, the real loss was −2.8 of 90, all in secondary roles, while decision + checklist rose 23.2 → 25.0. **A shorter list, not more text, fixed it**: the whole pool 76.6, an 800k text budget 73.3, the fusion top 120 82.4, top 120 + 40 pages with no stored text 80.0 at 42% less input. **The owner shipped top 120 + 40 blind without the live A/B** and dropped the rule that no candidate is dropped — the blind 40 are where the model found the traveller's own posts, which the oracle cannot credit. `selection-recall` gained a same-page column, because the oracle names one address per page |
 | 62. Pay for model calls through Ofself Personas | 09-24 | 188 | **Blocked on Ofself, then documented overnight**: Personas' live guide grew a model-only call, `capabilities: []` — one plain call, nothing added to the prompt (the `debug` request event showed only our two messages), with strict JSON schema and reasoning effort in `llm_config`. **`llm_config.model` is ignored without the app's own key**, so each call's agent holds the model and every reply's model is checked. `research/personas.py` implements the three existing interfaces; `model_route: personas` switches all of them. **Graded without an OpenAI arm**: selection 41 of 48 oracle roles against entry 170's direct 39 of 48, nine of ten corridors unresolved exactly as before; 14 plan calls with no refusal and no wrong "no visa", Germany and Singapore as baseline, Japan "visa required" once in six — a *Smaller thing*. Lost: prompt caching, Fast mode, cached and reasoning token counts. **The owner made it the route from now on** |

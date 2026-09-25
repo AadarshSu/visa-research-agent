@@ -39,7 +39,10 @@ disproved. Link instead of copying.
 ## Next session: the full rebuild is done and graded — start here
 
 **Every one of the 55 destinations was rebuilt by 2026-09-25 and graded the same day (DECISIONS
-entries 203 and 204).** Next: TODO items 67 and 64, and the roles-call variance below.
+entries 203 and 204).** **Next is TODO's *Now*, surveyed the same day:** item 63's broad answer
+rate on the rebuilt stores (you size it, since you check the plans), then 57 (progress on screen),
+then 64 (expansion, which asks you first). Items 65 and 67 are blocked, 65 on Ofself deploying
+GPT-6 and 67 on OpenAI credit.
 
 **What was built.**
 - The ten pilot countries and Malta on 2026-09-24; the other 44 (42 corpora plus Brazil and
