@@ -408,10 +408,9 @@ destinations.
   - **Spain — fixed (entry 215).** Its pages never needed a browser; the cleaner deleted the form
     ASP.NET wraps round the page. `verified` ×2 with the consulate's checklist linked. The stores
     still hold SharePoint pages empty until a rebuild, which is asked for first.
-  - **Left: rebuilds, asked for first.**
-    - The SharePoint countries' stores (entry 215).
-    - Korea's store, so `visaforkorea-ce.com` can be recorded from an India mission page
-      (entry 219).
+  - **Rebuilt 2026-09-26 (entry 223):** the SharePoint countries' stores got their text back,
+    most in Spain and Saudi Arabia. Korea's recorded no visa centre, because the ministry queues
+    automated requests.
   - **Worked 2026-09-26: Thailand's refusal and Japan's open decisions (entries 220–222).**
     - Both were a decision resting on two pages, judged one page at a time.
     - Japan's roles call credited MOFA's list 6 of 10 times; roles rule 7b makes it 10 of 10.
@@ -1856,6 +1855,12 @@ now do (entry 204).
 portal's disclaimer says a visa is required before entry; the model refuses when it notices
 Bangladesh is off the e-Visa list. Whether rule 8g or the roles prompt should settle that is a
 prompt question — measure it with `replay_roles.py` on the captured packet before changing anything.
+
+**The roles call can credit a generic sentence as the checklist (entry 223).** South Korea `IN/IN`
+once credited the Chennai consulate's exemption and fee page, on "passport, application forms, a
+recent passport-size color photograph, and other relevant documents", and the plan was graded
+`verified` over a page with no checklist. Replayed, the committed prompt credited nothing 5 of 5;
+a stricter rule 4 did no better. Worth a fix only with a measurement that shows the rate.
 
 **A PDF served as `application/octet-stream` from a path without `.pdf` is read as HTML (entry
 216).** `looks_like_pdf` trusts only the content type and the path. South Korea's checklist is

@@ -11,6 +11,7 @@ fixed input with nothing upstream moving. Run from the repository root so `.env`
 
 import asyncio
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -39,10 +40,12 @@ async def main() -> None:
             }
             try:
                 answer = await adjudicator.adjudicate(prompt, packet)
-                decision = [c for c in answer.choices if c.role == "visa_decision"]
+                # ROLE=<role> records another role's choice (entry 223); the decision by default.
+                role = os.environ.get("ROLE", "visa_decision")
+                decision = [c for c in answer.choices if c.role == role]
                 row["decision"] = decision[0].source_id if decision else None
                 row["reason"] = decision[0].reason if decision else ""
-                row["tools"] = [t.source_id for t in answer.tools if t.role == "visa_decision"]
+                row["tools"] = [t.source_id for t in answer.tools if t.role == role]
             except Exception as exc:
                 row["error"] = f"{type(exc).__name__}: {exc}"[:300]
             row["seconds"] = round(time.monotonic() - started, 1)

@@ -1,0 +1,24 @@
+building Spain from 5 domains (existing corpus: 9409 entries)
+Multiple definitions in dictionary at byte 0x3eb04 for key /Info
+Multiple definitions in dictionary at byte 0x3eb10 for key /Info
+Multiple definitions in dictionary at byte 0x3eb1c for key /Info
+  ES  70 queries, 326 seeds (4 from its own mission index), 36 asked again after a transient failure, 232 kept that nothing linked to, 5114 crawled  ->  160 new, 9569 held, 386 unreadable
+      depth 1: 3749, depth 2: 910, depth 3: 455
+      opened 326 seeds, 283 scored links, 295 links that scored nothing, 0 family members; 138 past a host's even share
+      868 pages kept their text for the index, including 368 PDFs read for text only
+      4 links rejected by rule:
+             4  the path marks it as archived or superseded
+                  https://ciudadaniaexterior.inclusion.gob.es/en/web/migraciones/modelos-de-solicitudes-de-la-ley-14/2013
+                  https://sede.administracionespublicas.gob.es/ayuda/consulta/Archive
+                  https://www.inclusion.gob.es/en/web/migraciones/modelos-de-solicitudes-de-la-ley-14/2013
+                  https://www.inclusion.gob.es/web/migraciones/modelos-de-solicitudes-de-la-ley-14/2013
+      5 hosts stopped answering and were not asked again:
+        ciudadaniaexterior.inclusion.gob.es        after 6 unanswered requests in a row
+        proteccion-asilo.interior.gob.es           after 6 unanswered requests in a row
+        sede.inclusion.gob.es                      after 6 unanswered requests in a row
+        sede.interior.gob.es                       after 6 unanswered requests in a row
+        www.lamoncloa.gob.es                       after 6 unanswered requests in a row
+      3 hosts gave this build nothing and are absent from the corpus:
+        cnpic.interior.gob.es                      unreachable  the request failed (ConnectTimeout)
+        desdeelinterior.interior.gob.es            unreachable  the request failed (ConnectTimeout)
+        interior.gob.es                            unreachable  the request failed (ConnectTimeout)

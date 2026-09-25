@@ -1,0 +1,37 @@
+building Portugal from 4 domains (existing corpus: 12146 entries)
+incorrect startxref pointer(3)
+parsing for Object Streams
+Multiple definitions in dictionary at byte 0x460a0 for key /Info
+Multiple definitions in dictionary at byte 0x460ac for key /Info
+Multiple definitions in dictionary at byte 0x46728 for key /Info
+Multiple definitions in dictionary at byte 0x46734 for key /Info
+Ignoring wrong pointing object 7 0 (offset 0)
+Ignoring wrong pointing object 9 0 (offset 0)
+Ignoring wrong pointing object 11 0 (offset 0)
+Ignoring wrong pointing object 13 0 (offset 0)
+Ignoring wrong pointing object 15 0 (offset 0)
+Ignoring wrong pointing object 17 0 (offset 0)
+Ignoring wrong pointing object 19 0 (offset 0)
+Ignoring wrong pointing object 21 0 (offset 0)
+Ignoring wrong pointing object 24 0 (offset 0)
+Ignoring wrong pointing object 45 0 (offset 0)
+  PT  56 queries, 225 seeds (8 from its own mission index), 4 asked again after a transient failure, 186 kept that nothing linked to, 8809 crawled  ->  458 new, 12604 held, 157 unreadable
+      depth 1: 1418, depth 2: 1001, depth 3: 6390
+      opened 225 seeds, 295 scored links, 637 links that scored nothing, 43 family members; 78 past a host's even share
+      1395 pages kept their text for the index, including 337 PDFs read for text only
+      65 places its own pages send travellers, on companies we may name but never read
+      121 links rejected by rule:
+            85  the path marks it as site furniture rather than guidance
+                  https://abidjan.embaixadaportugal.mne.gov.pt/en/legal-notice
+                  https://abidjan.embaixadaportugal.mne.gov.pt/en/privacy-policy
+                  https://abudhabi.embaixadaportugal.mne.gov.pt/en/legal-notice
+                  https://abudhabi.embaixadaportugal.mne.gov.pt/en/privacy-policy
+                  https://abuja.embaixadaportugal.mne.gov.pt/en/legal-notice
+            36  the path marks it as archived or superseded
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FAF
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FAFa
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FAV
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FBR
+                  https://ahd.mne.gov.pt/Nyron/Archive/Catalog/winlibsrch.aspx?cap=&pag=1&pesq=3&sort=8&tpp=10&var3=PT%2FAHD%2F4%2FCT
+      1 hosts gave this build nothing and are absent from the corpus:
+        formularios.portugal.gov.pt                unreachable  its TLS certificate could not be verified

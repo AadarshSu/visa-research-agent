@@ -1,0 +1,16 @@
+building Canada from 5 domains (existing corpus: 13067 entries)
+  CA  70 queries, 407 seeds (8 from its own mission index), 80 asked again after a transient failure, 348 kept that nothing linked to, 5069 crawled  ->  501 new, 13568 held, 362 unreadable
+      depth 1: 1083, depth 2: 2338, depth 3: 1648
+      opened 407 seeds, 671 scored links, 122 links that scored nothing, 0 family members; 473 past a host's even share
+      1167 pages kept their text for the index, including 259 PDFs read for text only
+      63 places its own pages send travellers, on companies we may name but never read
+      2 links rejected by rule:
+             2  the path marks it as archived or superseded
+                  https://inspection.canada.ca/sites/default/files/legacy/DAM/DAM-plants-vegetaux/STAGING/text-texte/ship_notification_template_1699570089009_eng.pdf
+                  https://www.cbsa-asfc.gc.ca/trade-commerce/tariff-tarif/2024/html/tblmod-1-eng.html
+      3 hosts stopped answering and were not asked again:
+        eservices.cic.gc.ca                        after 6 unanswered requests in a row
+        travel.gc.ca                               after 6 unanswered requests in a row
+        www.international.gc.ca                    after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        www.travel.gc.ca                           unreachable  the request failed (ConnectTimeout)

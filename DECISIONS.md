@@ -267,6 +267,44 @@ s more pressing |
 
 ---
 
+## 223. The SharePoint countries and Korea rebuilt: Spain's and Saudi Arabia's stored text returns, and Korea records no visa centre
+
+**2026-09-26 · the owner: "yes"** to rebuilding the stores entry 215 left holding empty SharePoint
+pages, and Korea's for entry 219's visa centre. Built with `var/rebuild-2026-09-26/run.sh`, two at a
+time after `eu-store`, each store backed up to `var/_backup_before_2026-09-26/`. All seven exited 0.
+
+| country | pages in the text index | of them `.aspx` |
+| --- | --- | --- |
+| Spain | 1,382 → 1,641 | 97 → 304 |
+| Saudi Arabia | 119 → 253 | 30 → 153 |
+| Austria | 1,182 → 1,233 | 1 → 17 |
+| Portugal | 2,198 → 2,304 | 0 → 7 |
+| Croatia | 1,303 → 1,337 | 56 → 58 |
+| Canada | 2,154 → 2,334 | 145 → 145; its `.aspx` pages were not the wrapped kind. The build took 80 minutes, against 41 on 2026-09-24 |
+| South Korea | 1,720 → 2,023 | 0 → 0 |
+
+`.aspx` is a proxy for a page-wrapping form, not a count of one. A build keeps text for the pages it
+opens this time, so pages it did not reopen keep what they had.
+
+**Korea records no visa centre.** The build recorded no link to any company on
+`service_providers.yaml`, `vfsglobal.com` included. Its 18 addresses under the India missions are
+16 `unknown` and 2 opened, and neither opened page reached the text index. The ministry answers
+automated requests with its queue often enough that what those pages link to is unknown.
+`visaforkorea-ce.com` stays listed, and names nothing until a build reads a page linking it.
+
+**Checked on the rebuilt stores** (`item63-rebuilt.log`), two runs each:
+- **Spain `IN/IN`:** `verified` ×2, the consulate's checklist linked.
+- **South Korea `IN/IN`:** run 1 names the PDF, labelled. **Run 2 credited the wrong checklist**, and
+  it came from the roles call, not the rebuild:
+  - It credited the Chennai consulate's exemption and fee page, whose one sentence on documents is
+    "passport, application forms, a recent passport-size color photograph, and other relevant
+    documents as determined by their status of stay". So a plan graded `verified` told the
+    traveller to open a checklist that page does not hold, and the real PDF went unnamed.
+  - **Replayed 5 times on the same packet, the committed prompt credited no checklist 5 of 5**, so
+    it is a rare miss.
+  - A variant of rule 4 excluding such a sentence did no better: 4 of 5 credited nothing, and 1
+    credited a different page. Not shipped; recorded in TODO.
+
 ## 222. Selection rule 11: a page saying a revision took effect brings its announcement with it
 
 **2026-09-26 · the owner: "investigate Thailand's second run refusing".** Entry 219's second

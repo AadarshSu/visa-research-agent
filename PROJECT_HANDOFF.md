@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-26 — update this line when you touch the handoff |
-| **Tests** | 991: 990 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 992: 991 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -36,28 +36,33 @@ disproved. Link instead of copying.
 
 ---
 
-## Next session: item 63's second round is worked — start here
+## Next session: item 63's second round is worked, and the regression set is steady — start here
 
 **Updated 2026-09-26.** The owner judged the round (entry 216): 7 right, Australia wrong, South
 Korea and Spain unsure. All three are worked:
-- **Spain** is `verified` ×2 with its checklist linked (entry 215): a form wrapping the whole page
-  had been deleted.
-- **Australia** is `verified` ×2, with its Tourist stream page linked and the visa type named, on
-  the owner's decisions:
-  - Home Affairs' pages are read from the JSON they are served in (entry 217).
-  - Rule 8j names a visa type from a list (entry 218).
-  - An unread visa page is named with its link (entry 219).
+- **Spain** is `verified` with its checklist linked (entry 215): a form wrapping the whole page had
+  been deleted.
+- **Australia** is `verified`, with its Tourist stream page linked and the visa type named, on the
+  owner's decisions (entries 217–219).
 - **South Korea** names its checklist PDF, labelled as a download we could not open (entry 219).
   Its C-3-9 type is printed only in that file.
 
+**Then Thailand's refusal and Japan's open decisions (entries 220–222).** Both were a decision
+resting on two pages, judged one at a time:
+- **Japan:** roles rule 7b makes the roles call credit MOFA's list 10 of 10 times, from 6 of 10.
+- **Thailand:** selection rule 11 keeps its announcement 19 of 20 times, from 16 of 20.
+- Also fixed on the way: a translation penalty "Thailand" and "Germany" were paying.
+- The regression set was `verified` in all ten runs after those changes.
+
+**The stores were rebuilt (entry 223).** The SharePoint countries' text came back, most in Spain
+and Saudi Arabia. Korea recorded no visa centre, because the ministry queues automated requests.
+
 **What is next.**
-- **Ask the owner** whether to rebuild the stores:
-  - the SharePoint countries' stores (Spain, Portugal, Canada, Saudi Arabia, Croatia, Austria),
-    whose text was stored empty (entry 215);
-  - Korea's store, so `visaforkorea-ce.com` can be recorded (entry 219).
-- **Selection variance** (TODO item 63): Thailand refused 1 run in 4 on byte-identical packets.
-- **Put the round in front of the owner again** if they want to re-judge Australia, South Korea
-  and Spain. The review page is built by `review/build_review_data.py`.
+- **Put Australia, South Korea and Spain back in front of the owner.** The review page is built by
+  `review/build_review_data.py`.
+- **A rare wrong checklist:** South Korea once credited a generic sentence (entry 223, TODO
+  *Smaller things*).
+- Otherwise TODO's **Now** list: item 57 (the plan on screen as it is written) follows 63.
 
 **Where everything is.**
 - **The round:** entry 214, and the review page
@@ -66,6 +71,8 @@ Korea and Spain unsure. All three are worked:
   - `var/item70-2026-09-24/item63-round2/<slug>_IN_IN/<1|2>/`
   - `item63-round3-forms/`: Spain and the regression set after entry 215's fix.
   - `item63-round3-217/`, `item63-round3-217b/`: entries 217–219, and the regression set.
+  - `item63-round3-220/`, `item63-round3-220b/`: entries 220–222; `item63-rebuilt-2026-09-26/`: entry 223.
+  - Replays: `japan-roles/`, `thailand-select/`, `korea-checklist/`. `replay_roles.py` takes `ROLE=`, and `replay_select.py` takes `SELECT_PROMPT=`.
 - **Tooling.**
   - `var/item70-2026-09-24/run.py N slug/NAT/RES …` re-runs corridors, with `ITEM70_OUT=<folder>`
     and optionally `ITEM70_CORPUS=<copy>`.
@@ -75,7 +82,7 @@ Korea and Spain unsure. All three are worked:
     in the sandboxed shell.
 - **Leftovers to tidy, not urgent:**
   - Three cache backups: `var/_backup_cache_before_{tables,links,priority}_2026-09-25/`.
-  - The pre-rebuild store backups: `var/_backup_before_item70_2026-09-24/`, 633 MB.
+  - The pre-rebuild store backups: `var/_backup_before_item70_2026-09-24/`, 633 MB, and `var/_backup_before_2026-09-26/`.
   - The pilot's uncommitted logs, and `nohup.out`.
 
 A fix that changes what a plan may conclude is the owner's decision (entries 206–209 are the

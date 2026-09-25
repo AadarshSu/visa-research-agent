@@ -1,0 +1,21 @@
+building Saudi Arabia from 4 domains (existing corpus: 799 entries)
+  SA  56 queries, 228 seeds (5 from its own mission index), 6 asked again after a transient failure, 209 kept that nothing linked to, 535 crawled  ->  11 new, 810 held, 197 unreadable
+      depth 1: 238, depth 2: 240, depth 3: 57
+      opened 228 seeds, 51 scored links, 156 links that scored nothing, 0 family members
+      240 pages kept their text for the index, including 4 PDFs read for text only
+      1 hosts stopped answering and were not asked again:
+        www.moi.gov.sa                             after 6 unanswered requests in a row
+      13 hosts gave this build nothing and are absent from the corpus:
+        content-acc.sta.gov.sa                     unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        cva.moi.gov.sa                             unreachable  the request failed (ConnectTimeout)
+        embassies.mofa.gov.sa                      untrusted    it redirected to saudiembassy.sa, which is not an approved domain
+        learning.sta.gov.sa                        unreachable  the request failed (ConnectError)
+        marasim.mofa.gov.sa                        unreachable  the request failed (ConnectTimeout)
+        moi.gov.sa                                 unreachable  the request failed (ConnectTimeout)
+        my.gov.sa                                  blocked      it refused automated retrieval (HTTP 403), so its guidance could not be independently verified here
+        safiu.moi.gov.sa                           unreachable  the request failed ([Errno 8] nodename nor servname provided, or not known)
+        sta.gov.sa                                 unusable     it answered HTTP 990
+        www.moi.gov.sa                             unreachable  the request failed (ConnectTimeout)
+        www.my.gov.sa                              blocked      it refused automated retrieval (HTTP 403), so its guidance could not be independently verified here
+        www.nic.moi.gov.sa                         unreachable  the request failed (ConnectTimeout)
+        www.sta.gov.sa                             unusable     it answered HTTP 990

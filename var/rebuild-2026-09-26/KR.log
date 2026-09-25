@@ -1,0 +1,13 @@
+building South Korea from 5 domains (existing corpus: 6831 entries)
+  KR  70 queries, 259 seeds (2 from its own mission index), 23 asked again after a transient failure, 197 kept that nothing linked to, 5874 crawled  ->  1599 new, 8430 held, 77 unreadable
+      depth 1: 2388, depth 2: 2912, depth 3: 574
+      opened 259 seeds, 574 scored links, 367 links that scored nothing, 0 family members; 422 past a host's even share
+      1086 pages kept their text for the index, including 7 PDFs read for text only
+      2 links rejected by rule:
+             2  the path marks it as archived or superseded
+                  http://www.goesan.go.kr/archive/index.do
+                  https://www.goesan.go.kr/archive/index.do
+      1 hosts stopped answering and were not asked again:
+        mail.mofa.go.kr                            after 6 unanswered requests in a row
+      1 hosts gave this build nothing and are absent from the corpus:
+        rtms.goesan.go.kr                          unreachable  the request failed (ReadTimeout)

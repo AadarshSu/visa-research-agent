@@ -1,0 +1,15 @@
+building Austria from 4 domains (existing corpus: 6363 entries)
+  AT  56 queries, 184 seeds (1 from its own mission index), 16 asked again after a transient failure, 148 kept that nothing linked to, 4621 crawled  ->  420 new, 6783 held, 337 unreadable
+      depth 1: 1590, depth 2: 1625, depth 3: 1406
+      opened 184 seeds, 135 scored links, 881 links that scored nothing, 0 family members; 5 past a host's even share
+      882 pages kept their text for the index, including 36 PDFs read for text only
+      10 links rejected by rule:
+            10  the path marks it as site furniture rather than guidance
+                  https://mitgestalten.wien.gv.at/de-DE/pages/cookie-policy
+                  https://mitgestalten.wien.gv.at/de-DE/pages/cookie-policy?from=cookie-modal
+                  https://mitgestalten.wien.gv.at/de-DE/pages/privacy-policy
+                  https://www.wien.gv.at/en/content/credits
+                  https://www.wien.gv.at/newsletter/bildungsversprechen
+      2 hosts gave this build nothing and are absent from the corpus:
+        bmeia.gv.at                                disallowed   its robots.txt does not permit this client to fetch it
+        cms.bmeia.gv.at                            disallowed   its robots.txt does not permit this client to fetch it
