@@ -395,6 +395,8 @@ destinations.
   September notice confirms the revision took effect on 15 September, but its list of 60 countries
   is an image, and India is named only in July's list of 59. **Then the owner allowed the two to be read
   together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
+- **Second round run 2026-09-25 (entry 214):** decisions 5 → 7 of 10, checklists 3 → 5 of 10.
+  **Waiting on the owner's verdicts** from the review page before this round can close.
 - **Checklists — worked (entries 210–212).**
   - A corridor reads the checklist a page it read links to.
   - Plans now link the authority's checklist instead of copying it, and name a likely one they

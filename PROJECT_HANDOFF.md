@@ -51,8 +51,10 @@ checklist a page it read links to, and Switzerland went 0 → 2 of 2. `var/cache
 for it (`var/_backup_cache_before_links_2026-09-25/`). Then, on the owner's decisions,
 **plans link the checklist instead of copying it and name an unread one with its link** (entry
 211), and **renders go to the most promising pages first** (entry 212). `var/cache/` was emptied
-once more for a cold comparison (`var/_backup_cache_before_priority_2026-09-25/`). **Next:** item
-57 (progress on screen)
+once more for a cold comparison (`var/_backup_cache_before_priority_2026-09-25/`). **The
+second round of item 63 then ran (entry 214)**: decisions 5 → 7 of 10, checklists 3 → 5 of 10, and
+the plans were published for the owner to judge. **Next:** the owner's verdicts, then item 57
+(progress on screen)
 (progress on screen), then 64 (expansion, which asks first). Items 65 and 67 are blocked, 65 on
 Ofself deploying GPT-6 and 67 on OpenAI credit.
 

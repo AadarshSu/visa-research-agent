@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [214](#214-item-63s-second-round-the-same-ten-twice-each-on-todays-code) | **Item 63's second round** — the same ten `IN/IN` destinations twice: decisions 5 → 7 of 10, checklists 3 → 5 of 10; South Africa refused one plan for a garbled source id; Turkey open once; published for the owner's verdicts |
 | [213](#213-an-unread-checklist-is-named-only-where-the-pages-own-words-say-it-is-this-trips) | **Naming an unread checklist needs the page's own words** — its label or title says checklist, or its heading does and its label names this trip's purpose; a refused (`403`) checklist is named too; Switzerland's PDFs confirmed as checklists; Australia now names none |
 | [212](#212-renders-go-to-the-most-promising-pages-first-and-a-followed-document-must-be-one) | **Renders go to the most promising pages first** — a two-pass fetch spends the 5 renders and each host's 3 strikes on pages that could answer the decision or checklist; a followed "document" that returns a web page is unread and nameable; at most three likely checklists named |
 | [211](#211-a-checklist-is-linked-never-copied--and-one-we-could-not-read-is-named-with-its-link) | **A checklist is linked, never copied** — the owner's decision: the plan lists no documents and links the authority's checklist; an unread likely checklist, including a script-link download, is named with its link |
@@ -265,6 +266,33 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 214. Item 63's second round: the same ten, twice each, on today's code
+
+**2026-09-25 · the owner: "re-run the same 10 destinations twice each, put the plans in front of
+me in a way that it's easy for me to inspect and compare to online sources".** Twenty fresh runs,
+`IN/IN` tourism (`item63-round2.log`), against entry 205's first round, which predates entries
+205–213's fixes.
+- **Decision given in both runs: 5 → 7 of 10.**
+- **Checklist found in both runs: 3 → 5 of 10**, now as a linked official checklist (entry 211).
+
+| destination | first round | this round |
+| --- | --- | --- |
+| China | null ×2 | visa required ×2, checklist linked ×2 |
+| South Korea | null ×2 | visa required ×2; Mumbai checklist named, unread ×2 |
+| Switzerland | required, then no plan | visa required ×2, Tourist checklist linked ×2 |
+| South Africa | null, then a wrong "no visa" | **no plan** (a garbled source id in the model's reply, refused by validation), then visa required with checklist |
+| Turkey | required ×2 | **null**, then required — rule 8g's case, open again in one run |
+| Australia, Spain | required ×2, no checklist | unchanged; nothing named, since no unread page says it is a checklist (entry 213) |
+| New Zealand | null ×2, its checker | unchanged |
+| Thailand | no visa ×2 (60 days, stale) | no visa ×2, 30 days, both PRD pages cited (entry 209) |
+| Vietnam | required ×2, checklist | unchanged |
+
+**Put in front of the owner** as a private artifact: every claim is linked to its official page,
+the first round is beside each destination, and there are Right / Wrong / Unsure buttons with
+notes and a copy-out. It is built by `var/item70-2026-09-24/review/build_review_data.py` and
+`template.html`. **Correctness is the owner's verdict (entry 68); these rates say only what the
+corridors answered.**
 
 ## 213. An unread checklist is named only where the page's own words say it is this trip's
 
