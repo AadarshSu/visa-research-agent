@@ -542,8 +542,11 @@ def score_link(
         shared += lexicon.form_penalty
         shared_reasons.append(f"form:{form_hit}{lexicon.form_penalty:g}")
 
+    # Whole words only (entry 220): as a substring, "thai" sat in every "Thailand" and "german" in
+    # every "Germany", so a destination's own name cost its pages 25 points — Thailand's 15 July
+    # announcement naming India scored -19 for the decision and was offered 57th of 160.
     language_hit = next(
-        (term for term in lexicon.language_terms if anchor and _contains_phrase(anchor, term)),
+        (term for term in lexicon.language_terms if anchor and _contains_word(anchor, term)),
         None,
     )
     if language_hit is not None:

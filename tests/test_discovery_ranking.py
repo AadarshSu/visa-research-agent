@@ -904,3 +904,27 @@ def test_a_label_two_countries_could_claim_is_held_by_neither() -> None:
     shared = {label: codes for label, codes in owners.items() if len(codes) > 1}
     # Hong Kong's two forms predate this and are China's; they are the documented exception.
     assert set(shared) <= {"hong-kong", "hongkong"}, shared
+
+
+def test_a_destinations_own_name_is_not_read_as_a_translation() -> None:
+    """Entry 220. As a substring, "thai" sat in every "Thailand" and "german" in every "Germany", so
+    a destination's own name cost its pages the translated-copy penalty: Thailand's announcement
+    naming India scored -19 for the decision. A language named as a word still pays it."""
+
+    registry = get_country_registry()
+    corridor = Corridor(destination_slug="thailand", passport_nationality="IN", applying_from="IN")
+    url = "https://thailand.prd.go.th/en/content/category/detail/id/2078/iid/522327"
+
+    def reasons(text: str) -> list[str]:
+        scores = score_link(
+            PageLink(url=url, text=text, depth=0),
+            corridor,
+            get_lexicon(),
+            registry.require("IN"),
+            registry.require("IN"),
+        )
+        return [reason for signals in scores.signals.values() for reason in signals]
+
+    own_name = reasons("Thailand Revises Visa Policy for 65 Countries & Territories")
+    assert not any(reason.startswith("translation:") for reason in own_name)
+    assert any(reason.startswith("translation:thai") for reason in reasons("Visa policy (Thai)"))

@@ -267,6 +267,32 @@ s more pressing |
 
 ---
 
+## 220. The translated-copy penalty matches a language as a word, so a destination's own name stops paying it
+
+**2026-09-26, found while working Thailand's refusal (entry 222).** The 15 July announcement naming
+India, "Thailand Revises Visa Policy for 65 Countries & Territories", scored **−19** for the
+decision. The breakdown was `mentions-visa+6` and `translation:thai-25`.
+- `language_terms` penalises a translated copy of a page, and was matched as a **substring** of
+  the link's label and heading. So "thai" sat in every "Thailand", "german" in every "Germany",
+  and "italian" in every "italiano".
+- **Across the 53 stores: 1,729 links paid it for a substring alone.** Thailand had 478, Germany
+  384 and Italy 276.
+
+**Now whole words** (`_contains_word`, the test entry 21 gave country names). The announcement
+scores +6 and is pooled on its link. "Visa policy (Thai)" still pays it.
+
+**What this did not fix.** The announcement is still offered 57th of 160: dozens of pages outrank a
++6 link, and by stored text alone it ranks 18th for the decision. So it is not why Thailand
+refused. That was the selection call (entry 222).
+
+**What is left, deliberately.** 4,086 whole-word hits remain, many of them no translation either:
+"Chinese Consulate General in Cebu", "the official Indonesian e-visa website". Telling a language
+switcher from a destination's own adjective is a judgement, and nothing measured here says it
+costs an answer. Left for a corridor that shows it does.
+
+**Measured live with entries 221 and 222**, two runs each (`item63-220.log`, `item63-220b.log`):
+Thailand, Japan, Germany and Singapore were `verified` in all eight.
+
 ## 219. What a plan names that it could not read: this trip's visa page, a download said to be one, and Korea's visa centre
 
 **2026-09-26 · the owner's decisions** on entry 216's first, fourth and fifth questions.
