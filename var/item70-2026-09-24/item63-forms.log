@@ -1,0 +1,11 @@
+spain/IN/IN run 1: research resolved, plan answered, True (116.9s)
+japan/IN/GB run 1: research resolved, plan answered, None (61.0s)
+singapore/PH/PH run 1: research resolved, plan answered, False (45.7s)
+germany/IN/GB run 1: research resolved, plan answered, True (57.3s)
+thailand/IN/IN run 1: research resolved, plan answered, False (56.5s)
+spain/IN/IN run 2: research resolved, plan answered, True (112.5s)
+japan/IN/GB run 2: research resolved, plan answered, None (52.5s)
+singapore/PH/PH run 2: research resolved, plan answered, False (45.6s)
+germany/IN/GB run 2: research resolved, plan answered, True (76.7s)
+thailand/IN/IN run 2: research resolved, plan answered, False (34.3s)
+done

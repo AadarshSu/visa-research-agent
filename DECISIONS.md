@@ -267,6 +267,45 @@ s more pressing |
 
 ---
 
+## 215. A form that is the whole page is read, not deleted — and Spain's checklist was never behind a browser
+
+**2026-09-25 · the owner's verdict on Spain (entry 214's round): "Unsure"**, pointing at the New
+Delhi embassy's Schengen visa page, which lists the documents. Entry 212 and the handoff said
+Spain's pages "mostly fail to render". **They never needed rendering.**
+- `www.exteriores.gob.es` is SharePoint. A plain request under our own user agent answers `200`
+  with 13,870 characters of text, the full checklist among them.
+- `clean_source_html` deleted every `<form>` as furniture, and ASP.NET wraps the entire body in one
+  `<form id="aspnetForm">`. The page cleaned to **14 characters**. It was then thin, set aside for
+  the browser, and lost to the render budget or the host's three strikes.
+- Nothing recorded why `form` was stripped; it was in the first retrieval commit.
+
+**What changed.** A form holding at least half the page's text (`PAGE_WRAPPING_FORM_SHARE`) is
+unwrapped; any other form is still deleted. `select` and `textarea` join `STRIPPED_TAGS`, so a kept
+form's controls still go. Spain's page now cleans to 11,925 characters. Australia's Home Affairs
+page cleans to 268 characters of site chrome, under the 400 floor, so it is still not read (entry
+216).
+
+**Measured live**, two runs each (`item63-forms.log`, `item63-round3-forms/`), against a copy of the
+corpus:
+- **Spain `IN/IN`: `verified` ×2**, where both runs of entry 214 were `partial` with no checklist.
+  The Mumbai consulate's Schengen page is the linked checklist in both, with the fee notice and BLS
+  as the route. Its fee page is still thin in both, and truly so: 348 characters linking the fee
+  PDFs, one of which the plan cites.
+- **Germany `IN/GB`** `verified` ×2, **Singapore `PH/PH`** and **Thailand `IN/IN`** "no visa"
+  `verified` ×2: unchanged.
+- **Japan `IN/GB` left its decision open ×2**, where it was `verified` in its last three runs.
+  **Not this change:** every page in both runs' roles packets has byte-identical text to the last
+  `verified` run's, and none of the pages that differ holds a form. The selection call picked 14
+  and 15 pages instead of 10, one of them the embassy's general visa page, and the roles call chose
+  that page for the decision instead of the ministry's exemption list. With the list out of the
+  plan packet, rule 8f had nothing to read. Recorded in TODO as a regression to work.
+
+**Not done: the stores.** The build stores page text through the same function, so every
+SharePoint page in `var/pagetext/` was stored empty or not at all. Spain's corpus has 2,757 `.aspx`
+entries and 92 of them in its text index; Portugal 395 and 0; Canada, Saudi Arabia, Croatia and
+Austria follow. `.aspx` is a proxy, not a count of wrapped pages. Re-indexing needs a rebuild, and
+rebuilds are asked for first.
+
 ## 214. Item 63's second round: the same ten, twice each, on today's code
 
 **2026-09-25 · the owner: "re-run the same 10 destinations twice each, put the plans in front of

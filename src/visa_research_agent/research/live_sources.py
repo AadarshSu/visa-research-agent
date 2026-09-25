@@ -50,10 +50,20 @@ STRIPPED_TAGS = (
     "header",
     "footer",
     "aside",
-    "form",
     "iframe",
     "button",
+    "select",
+    "textarea",
 )
+
+# A form is furniture — a search box, a sign-in, "was this page helpful" — **unless it is the
+# page.** ASP.NET and SharePoint wrap the whole body in one `<form id="aspnetForm">`, and while
+# `form` sat in `STRIPPED_TAGS` every such page cleaned to nothing: Spain's Schengen visa page holds
+# 13,870 characters, its full document checklist among them, and kept 14, so the corridor queued it
+# for a browser that never reached it (entry 215). A form holding at least this share of the page's
+# text is unwrapped rather than dropped; its controls go either way, as `select`, `textarea` and
+# `button`.
+PAGE_WRAPPING_FORM_SHARE = 0.5
 
 
 # A table is read as data only when every cell is short. A layout table — a page built out of one —
@@ -245,6 +255,12 @@ def clean_source_html(html: str, *, maximum_characters: int) -> str:
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup.find_all(STRIPPED_TAGS):
         tag.decompose()
+    page_characters = len(soup.get_text(strip=True))
+    for form in soup.find_all("form"):
+        if len(form.get_text(strip=True)) >= PAGE_WRAPPING_FORM_SHARE * page_characters:
+            form.unwrap()
+        else:
+            form.decompose()
     # Innermost first, so an outer table meets its inner ones already reduced to text.
     for table in reversed(soup.find_all("table")):
         rows = table_as_lines(table)

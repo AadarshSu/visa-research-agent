@@ -220,6 +220,41 @@ def test_a_layout_table_is_left_as_text() -> None:
     assert paragraph.split(".")[0] in cleaned
 
 
+def test_clean_source_html_keeps_a_form_that_wraps_the_whole_page() -> None:
+    # ASP.NET's shape: one form around the body. Spain's checklist page cleaned to 14 characters.
+    checklist = "Required documents: application form, photograph, passport, travel insurance."
+    html = (
+        '<html><body><form id="aspnetForm" method="post">'
+        '<input type="hidden" name="__VIEWSTATE" value="abc">'
+        "<nav>Home About Contact</nav>"
+        f"<main><h1>Schengen visas</h1><p>{checklist}</p></main>"
+        "<select><option>English</option><option>Español</option></select>"
+        "<button>Search</button>"
+        "</form></body></html>"
+    )
+
+    cleaned = clean_source_html(html, maximum_characters=50_000)
+
+    assert "Schengen visas" in cleaned
+    assert checklist in cleaned
+    for control in ("Home About Contact", "Español", "Search"):
+        assert control not in cleaned
+
+
+def test_clean_source_html_still_drops_a_form_that_is_furniture() -> None:
+    guidance = "A visa is required for a stay of up to ninety days in any period of one hundred."
+    html = (
+        f"<html><body><main><p>{guidance}</p></main>"
+        "<form><label>Was this page helpful?</label><input type='radio'> Yes No</form>"
+        "</body></html>"
+    )
+
+    cleaned = clean_source_html(html, maximum_characters=50_000)
+
+    assert guidance in cleaned
+    assert "helpful" not in cleaned
+
+
 def test_clean_source_html_truncates_to_the_character_budget() -> None:
     cleaned = clean_source_html(page(PAGE_BODY), maximum_characters=120)
 

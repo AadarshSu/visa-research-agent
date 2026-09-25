@@ -402,9 +402,14 @@ destinations.
   - Plans now link the authority's checklist instead of copying it, and name a likely one they
     could not read.
   - Renders go to the most promising pages first.
-  - **Left:** Australia and Spain still get no checklist read. Their pages mostly fail to render,
-    and they are now named with links. Korea's checklist download answers the site's front page,
-    and is named.
+  - **Spain — fixed (entry 215).** Its pages never needed a browser; the cleaner deleted the form
+    ASP.NET wraps round the page. `verified` ×2 with the consulate's checklist linked. The stores
+    still hold SharePoint pages empty until a rebuild, which is asked for first.
+  - **Left:** Australia and South Korea — see entry 216 and the owner's decisions it waits on.
+  - **Japan `IN/GB` left its decision open ×2 on 2026-09-25 (entry 215)**, after three `verified`
+    runs. Selection picked more pages, and the roles call chose the embassy's general visa page
+    over the ministry's exemption list, so rule 8f had no list to read. Not caused by entry 215;
+    a reachable answer lost at the roles call, to work.
   - **Proposed, not measured:** de-duplicating near-identical series before the selector's cap.
     Australia once read seven quarterly reports while its step-by-step page was cut.
 
