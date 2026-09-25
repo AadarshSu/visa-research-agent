@@ -299,6 +299,9 @@ entry 210's, so read it with entry 136's caution.
 - **Switzerland's checklist PDFs answered `403` in run 1.** That is a refusal, so it is reported,
   named and never worked around; run 2 linked the Tourist checklist.
 - **Regressions:** Germany, Japan and Vietnam `verified`; Thailand and Singapore "no visa".
+- **South Korea checked live after the fix** (`item63-korea.log`): "visa required", and the plan
+  names "Possible document checklist: Korean Visa checklist (w.e.f. 24.08.2026).pdf" with its link,
+  as unread because it "returned a web page instead".
 - **Turkey left its decision open once**: e-Visa only with a valid Schengen, US, UK or Irish visa,
   otherwise a sticker visa. That is rule 8g's case, where every route issues a visa. It answered
   "visa required" in every earlier run, and is noted as variance to watch.
