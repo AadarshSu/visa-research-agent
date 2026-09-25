@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [206](#206-rule-8f-no-longer-needs-a-stated-general-rule--an-exemption-list-that-leaves-a-country-out-decides-visa-required) | **Rule 8f without the stated-rule condition** — the owner's decision: absence from the authority's complete exemption list decides "visa required"; China, South Korea and South Africa null → required (12 of 12 replays); Thailand and Singapore "no visa" held; an entry for another passport type does not count |
 | [205](#205-item-63s-ten-destinations--and-a-table-read-without-its-columns-told-a-traveller-no-visa) | **Item 63's ten destinations, and a table read without its columns** — South Africa told an ordinary Indian passport "no visa" from an exemption table flattened by `get_text`; tables are now read with each value under its heading; four re-runs: null (rule 8f), never "no"; decisions 6 of 10, checklists 4 of 10, against entry 58's 15 of 20 and 10 of 20 on other destinations |
 | [204](#204-the-full-rebuild-graded-the-stores-hold-every-answer-and-the-corridors-answer-as-before) | **The full rebuild, graded** — the stores hold every oracle answer (50/50, 42/42); nine of item 70's corridors, the Germany sentinel and Czechia answer visa required 3 of 3; Egypt 1 of 3 on byte-identical roles packets (model variance); Brazil refuses correctly, its visa table a PDF `robots.txt` disallows |
 | [203](#203-the-archived-year-veto-spares-every-filing-date-the-rebuilds-reports-showed-it-dropping) | **The archived-year veto spares filing dates** — a year under `uploads`, `media` or `UserDocsImages`, under `sites/<n>/`, or in a post permalink with a slug; South Africa +21 dated pages incl. its London and Paris exemption lists, Croatia +431 incl. the Kenya list, Cyprus +12 behind a challenge |
@@ -257,6 +258,44 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 206. Rule 8f no longer needs a stated general rule — an exemption list that leaves a country out decides "visa required"
+
+**2026-09-25 · the owner's decision, on entry 205's question.** "If a country isn't on a country's
+exemption list then it isn't exempt and you need a visa; this is how people read these pages in real
+life." Entry 197 had allowed that inference only where another source *stated* the general rule
+that foreign nationals need a visa. China, South Korea and South Africa each list India only for
+diplomatic, official or service passports, and each was held at null for want of that sentence.
+
+**The rule now** (`prompts/extract_visa_plan.txt`, rule 8f, and rule 4's summary): the authority's
+own complete exemption list for this trip's visa, leaving out the traveller's passport country,
+sets `visa_required` to true. The stated-rule condition is gone. Every other bound stays, and two
+were written down:
+- the whole list is read;
+- **new:** a list that says it gives only examples decides nothing;
+- every name, footnote and condition is checked;
+- **new:** an entry for a passport type the traveller does not hold — diplomatic, official, service
+  — does not put their country on the list;
+- it must be the list for this purpose and passport type, not a transit or e-visa list;
+- any exemption the traveller might meet keeps the decision null (rule 5);
+- an exemption list still never decides "no visa" (8e's bound is untouched).
+
+**Measured on the plan call alone**, replayed twice per captured packet through Personas
+(`replay_plan.py`, `var/item70-2026-09-24/plan_8f_widened.jsonl`):
+
+| packet | before (live, old rule) | after |
+| --- | --- | --- |
+| China `IN/IN`, 2 packets | null ×2 | visa required 4 of 4 |
+| South Korea `IN/IN` | null | visa required 2 of 2 |
+| South Africa `IN/IN`, 3 packets | null ×4 (on the table fix) | visa required 6 of 6 |
+| Thailand `IN/IN`, 2 packets | no visa ×2 | no visa 4 of 4 |
+| Singapore `PH/PH` | no visa | no visa 2 of 2 |
+| New Zealand `IN/IN` | null (its checker) | null 2 of 2 |
+| Japan `IN/GB`, Poland `BD/AE`, Germany `IN/GB` | required | required, 2 of 2 each |
+| Malta `BD/SA` | required 8 of 8 on replay; 2 of 3 live | required 5 of 6; the null cites its Schengen-permit exemption, as live |
+
+**Each new "visa required" cites the list and says why.** For example, South Africa: "its India
+entry covers diplomatic, official and service passports only." No answer moved toward "no visa".
 
 ## 205. Item 63's ten destinations — and a table read without its columns told a traveller "no visa"
 

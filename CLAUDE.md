@@ -413,12 +413,17 @@ produces a serious defect.
   The bounds live in the prompt, not in code, and they are all that stands between a silence and a
   confident wrong "no". **Do not widen them to another kind of silence without a decision entry.**
 
-  **A second silence decides the other way — the owner's decision, entry 197.** Where an authority
-  states the general rule that a foreign national needs a visa and its own complete exemption list
-  leaves the traveller's country out, the plan says a visa **is** required (rule 8f). Japan is the
-  case: MOFA's "in principle … required to have … a visa" and its 74-country list. Its bounds mirror
-  8e's, the rule must be stated rather than inferred from the list existing, any exemption the
-  traveller might meet keeps the decision null, and **an exemption list never decides "no visa"**.
+  **A second silence decides the other way — the owner's decisions, entries 197 and 206.** Where
+  the authority's own complete exemption list leaves the traveller's country out, the plan says a
+  visa **is** required (rule 8f), because that is how a traveller reads such a list. Entry 197 also
+  demanded a source *stating* the general rule; the owner removed that on 2026-09-25 (entry 206).
+  The bounds that remain:
+  - the whole list is read, and it is not a list of examples;
+  - every name and footnote is checked;
+  - an entry for a passport type the traveller does not hold (diplomatic, official) does not count;
+  - it must be the list for this trip's visa, not a transit or e-visa list;
+  - any exemption the traveller might meet keeps the decision null;
+  - **an exemption list never decides "no visa"**.
 
   **A visa on arrival is a visa — the owner's decision, entry 199.** Where every route the sources
   describe for the passport issues a visa, in advance or on arrival, the plan says a visa **is**

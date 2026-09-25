@@ -42,8 +42,9 @@ disproved. Link instead of copying.
 entries 203 and 204).** **Item 63's ten destinations then ran (entry 205)** and found a wrong
 "no visa" for South Africa: an exemption table flattened without its columns. Tables are now read
 with each value under its heading, and **`var/cache/` was emptied for it** (the old one is
-`var/_backup_cache_before_tables_2026-09-25/`), because the cache keeps extracted text. **Next:** the
-owner's questions in TODO item 63 (rule 8f and exemption tables, Thailand's 2024 list), then 57
+`var/_backup_cache_before_tables_2026-09-25/`), because the cache keeps extracted text. **Rule 8f was then widened by the owner (entry 206)**: an exemption list that leaves the traveller
+out decides "visa required", with no separate statement of the general rule. **Next:** what is left
+of TODO item 63 (Thailand's 2024 list, the checklist half), then 57
 (progress on screen), then 64 (expansion, which asks first). Items 65 and 67 are blocked, 65 on
 Ofself deploying GPT-6 and 67 on OpenAI credit.
 

@@ -10,8 +10,7 @@ Follow these rules:
 4. If the evidence does not support an answer, use null where allowed and record a specific
    unresolved question. Do not fill gaps with assumptions. Two silences are answers: an
    authority's visa-required list that leaves the traveller's country out (rule 8e), and an
-   authority's visa-exemption list that leaves it out where the same authority states that a visa
-   is otherwise required (rule 8f). Those rules say when.
+   authority's visa-exemption list that leaves it out (rule 8f). Those rules say when.
 5. If official sources disagree, record the disagreement as an unresolved question, naming what each
    says. Do not silently select a preferred version, and do not assert one is correct.
 6. Use only source_id values present in the research packet. Cite the visa decision, application
@@ -125,25 +124,31 @@ Follow these rules:
      - Cite the list as the decision source, quote its sentence saying the listed countries need a
        visa, and say in the explanation that the traveller's country is not on the authority's
        visa-required list, so they can check that list themselves.
-8f. Absence from the authority's visa-exemption list, where the same authority states the general
-   rule that a foreign national needs a visa, states that this traveller needs a visa. Where one
-   source states that rule — "in principle a foreign national wishing to enter … is required to have
-   … a visa" — and a source is the same authority's own list of the countries, places or travel
-   documents whose holders are exempt, and the traveller's passport country is not on it, set
-   visa_required to true. It holds only within these bounds:
+8f. Absence from the authority's visa-exemption list states that this traveller needs a visa. An
+   exemption list names who may enter without one, so a passport it leaves out is not exempt —
+   that is how a traveller reads such a page. Where a source is the authority's own list of the
+   countries, places or travel documents whose holders are exempt from the visa this trip needs,
+   and the traveller's passport country is not on it, set visa_required to true. It holds only
+   within these bounds:
    - The whole exemption list must be in the source text. If the text ends inside the list, or the
-     list is otherwise cut off, it has not been read and decides nothing.
+     list is otherwise cut off, it has not been read and decides nothing. A list that says it gives
+     only examples, or some of the exempt countries, decides nothing either.
    - Look for the passport country under every name it goes by, and in every footnote, exception
-     and condition attached to the list. A country exempt for any passport type, stay length or
-     purpose that could fit this traveller is on it.
-   - The general rule must be stated by a source, as a rule for foreign nationals; never infer it
-     from the existence of an exemption list, and never from a page about another country.
+     and condition attached to the list. A country exempt for any stay length or purpose that could
+     fit this traveller is on it. An entry for a passport type the traveller does not hold — a
+     diplomatic, official or service passport, where the traveller holds an ordinary one — does not
+     fit them and does not put their country on the list.
+   - The list must be the authority's list for travellers like this one: entering the destination
+     for this purpose, on this passport type. A list of who is exempt from a transit visa, an
+     electronic visa or a different kind of visa says nothing about the visa this trip needs, and a
+     page about one other nationality is not a list.
    - If any source states that this traveller needs no visa, or describes an exemption they might
      meet — by residence, a visa held for another country, transit, or anything else — rule 5
      governs and visa_required is null.
-   - Cite both the rule and the list as decision sources, quote the sentence stating the rule, and
-     say in the explanation that the traveller's country is not on the authority's exemption list,
-     so they can check that list themselves.
+   - Cite the list as the decision source and quote its sentence saying who is exempt, or the line
+     that shows the traveller's passport type is not covered. Say in the explanation that the
+     traveller's country is not on the authority's exemption list for their passport, so they can
+     check that list themselves.
 
 8g. A visa issued on arrival is still a visa. Where the sources describe, for this traveller's
    passport, only ways in that each end in the traveller holding a visa — one applied for in
