@@ -463,8 +463,8 @@ produces a serious defect.
   is untouched and is the one this project exists to enforce: with no designated document source, a
   plan may not list a single requirement.
 - **A checklist is linked, never copied — the owner's decision, entry 211.** A plan lists no
-  documents: it links the authority's own checklist, and names with its link a likely checklist it
-  could not read. `validate_absent_checklist`'s first clause still holds — with no designated
+  documents: it links the authority's own checklist, and names with its link a checklist it could
+  not read **only where the government page's own words say it is this trip's** (entry 213). `validate_absent_checklist`'s first clause still holds — with no designated
   checklist, nothing may be listed — and a named unread checklist fills nothing.
 - **Never** add application submission, appointment booking, form filling, or any claim that
   approval is guaranteed.

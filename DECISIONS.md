@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [213](#213-an-unread-checklist-is-named-only-where-the-pages-own-words-say-it-is-this-trips) | **Naming an unread checklist needs the page's own words** — its label or title says checklist, or its heading does and its label names this trip's purpose; a refused (`403`) checklist is named too; Switzerland's PDFs confirmed as checklists; Australia now names none |
 | [212](#212-renders-go-to-the-most-promising-pages-first-and-a-followed-document-must-be-one) | **Renders go to the most promising pages first** — a two-pass fetch spends the 5 renders and each host's 3 strikes on pages that could answer the decision or checklist; a followed "document" that returns a web page is unread and nameable; at most three likely checklists named |
 | [211](#211-a-checklist-is-linked-never-copied--and-one-we-could-not-read-is-named-with-its-link) | **A checklist is linked, never copied** — the owner's decision: the plan lists no documents and links the authority's checklist; an unread likely checklist, including a script-link download, is named with its link |
 | [210](#210-a-corridor-reads-the-checklist-a-page-it-read-links-to-one-hop-down) | **The checklist one hop down** — pages keep the documents they link to; a corridor reads up to two labelled with this trip's purpose or as a checklist, on trusted domains; Switzerland 0 → 2 of 2 checklists; Australia and Spain are the render budget, Korea a waiting room (item 61); no regressions |
@@ -264,6 +265,44 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 213. An unread checklist is named only where the page's own words say it is this trip's
+
+**2026-09-25 · the owner:** "check if Switzerland's checklist PDFs are actually the checklists and
+just add them in as links too", then "only link it if the surrounding context makes us confident
+that it leads to the relevant checklist/document".
+
+**Switzerland's are the checklists.** A run that read `Checklist_Tourist-EN.pdf` saw "Embassy of
+Switzerland to India and Bhutan — Checklist for Schengen Visa: Tourist", listing documents in
+order. `Checklist_Visitor-EN.pdf` is the same embassy's "Visitor (Visiting Family, …)" checklist.
+
+**A refused checklist is now named as one** (`NAMEABLE_CHECKLIST_OUTCOMES` gains `blocked`).
+- Until now a `403` page was named only in the evidence banner, as a refusal, and the documents
+  panel said no checklist was found.
+- It is now named in both places. The banner reports what the authority did; the documents panel
+  is where the traveller looks.
+- Named, never read — entry 27's line is unchanged.
+
+**The bar for naming any unread page** (`says_it_is_this_trips_checklist`). Before, it was a link
+score above zero for the checklist role, which is how Australia named "Evidence of the financial
+status and funding for visit". Now one of these must hold, in the government page's own words:
+- **Label or title:** the link's label or the page's recorded title contains a checklist phrase
+  from the lexicon ("checklist", "documents required", "supporting documents", …).
+- **Heading plus purpose:** the heading it sits under contains one, **and** the label names this
+  trip's purpose, as with "Tourist" under a checklists heading. A heading alone is not enough:
+  under "Visa application documents" every form would qualify.
+
+And neither label nor title may name another purpose: "Checklist for Schengen business visa" is not
+a tourist's.
+
+**Measured live.**
+- **Switzerland** (`item63-swiss.log`): the embassy served the Tourist PDF this time, and the plan
+  links it as the official checklist. The refused Visitor PDF is reported, not named, because a
+  checklist was found.
+- **South Korea** (`item63-named.log`) still names "Korean Visa checklist(w.e.f.
+  24.08.2026).pdf".
+- **Australia** names nothing. None of its unread pages says it is a checklist, where it had named
+  six, then three.
 
 ## 212. Renders go to the most promising pages first, and a followed "document" must be one
 

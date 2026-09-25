@@ -228,14 +228,57 @@ DEFAULT_EXCERPT_WINDOW_CHARACTERS = 3_000
 # is not what DECISIONS entry 18 forbids; that is about an authority refusing to be read.
 ADJUDICATION_ATTEMPTS = 2
 
-# Why a likely checklist page may be named. `blocked` is named already, as an unreadable authority,
-# whenever the refusal was settled; `untrusted` landed off the approved domains, so its address is
-# not one to send a traveller to.
-NAMEABLE_CHECKLIST_OUTCOMES = frozenset({"challenged", "unreachable", "unusable", "disallowed"})
+# Why a likely checklist page may be named. `untrusted` landed off the approved domains, so its
+# address is not one to send a traveller to. `blocked` is named here too, although the refusal is
+# also reported: in the evidence banner it reads as a refusal, and the traveller looking for the
+# documents looks in the documents panel. Switzerland's India embassy answered `403` for its
+# "Checklist for Schengen Visa: Tourist" and the plan said no checklist was found (entry 213).
+# Named, never read — entry 27's line.
+NAMEABLE_CHECKLIST_OUTCOMES = frozenset(
+    {"blocked", "challenged", "unreachable", "unusable", "disallowed"}
+)
 # How many a plan may name, most likely first. Australia named six on 2026-09-25, two of them help
 # pages about evidence of funds, and a traveller shown six links cannot tell which is the list
 # (entry 212).
 MAXIMUM_NAMED_CHECKLISTS = 3
+
+
+def says_it_is_this_trips_checklist(
+    candidate: CandidatePage, corridor: Corridor, lexicon: Lexicon
+) -> bool:
+    """Whether the government page's own words around a link say it is this traveller's checklist.
+
+    The bar for naming a page nobody read (entry 213, the owner): "only link it if the surrounding
+    context makes us confident that it leads to the relevant checklist". A link score is not that —
+    Australia named "Evidence of the financial status and funding for visit" on one. So:
+    - the link's label or the page's recorded title contains a checklist phrase from the lexicon
+      ("checklist", "documents required", "supporting documents", …); or
+    - the heading it sits under does, **and** the label names this trip's purpose — Switzerland's
+      "Tourist" under a checklists heading. A heading alone is not enough: under "Visa Application
+      Documents" every form would qualify.
+    - And neither label nor title names another purpose: "Checklist for Schengen business visa" is
+      not a tourist's.
+    """
+
+    label = candidate.link.text.lower()
+    title = (candidate.title or "").lower()
+    heading = candidate.link.heading.lower()
+    checklist_terms = lexicon.roles.get("document_checklist")
+    phrases = [term.phrase.lower() for term in checklist_terms.terms] if checklist_terms else []
+    own = lexicon.purposes.get(corridor.purpose)
+    own_terms = [term.lower() for term in own.terms] if own else []
+    other_terms = [
+        term.lower()
+        for purpose, terms in lexicon.purposes.items()
+        if purpose != corridor.purpose
+        for term in terms.terms
+        if term.lower() not in own_terms
+    ]
+    if any(term in label or term in title for term in other_terms):
+        return False
+    if any(phrase in label or phrase in title for phrase in phrases):
+        return True
+    return any(phrase in heading for phrase in phrases) and any(term in label for term in own_terms)
 
 
 def unread_checklist_pages(
@@ -244,6 +287,8 @@ def unread_checklist_pages(
     *,
     checklist_filled: bool,
     already_named: list[str],
+    corridor: Corridor,
+    lexicon: Lexicon,
 ) -> list[SourceFailure]:
     """Likely document-checklist pages this run tried and could not read, for a plan to name.
 
@@ -270,6 +315,7 @@ def unread_checklist_pages(
             or failure.outcome not in NAMEABLE_CHECKLIST_OUTCOMES
             or candidate is None
             or candidate.link_scores.score_for("document_checklist") <= 0
+            or not says_it_is_this_trips_checklist(candidate, corridor, lexicon)
         ):
             continue
         named.add(url)
@@ -1021,7 +1067,10 @@ class CorridorResolver:
                 fetched.failures,
                 candidates,
                 checklist_filled="document_checklist" in filled,
-                already_named=refused,
+                # Not `refused`: a refused checklist is named in both places (entry 213).
+                already_named=[],
+                corridor=corridor,
+                lexicon=self.lexicon,
             ),
             interactive_tools=tools,
             delegated_services=delegates,

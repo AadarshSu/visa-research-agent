@@ -1374,6 +1374,8 @@ async def test_a_followed_checklist_that_cannot_be_read_is_named_with_its_link(
         {candidate.link.url: candidate for candidate in merged.followed},
         checklist_filled=False,
         already_named=[],
+        corridor=corridor(),
+        lexicon=get_lexicon(),
     )
     assert [str(page.attempted_url) for page in named] == [missing]
 
@@ -1414,6 +1416,8 @@ async def test_a_document_link_that_returns_a_web_page_is_unread_and_named(tmp_p
         {candidate.link.url: candidate for candidate in merged.followed},
         checklist_filled=False,
         already_named=[],
+        corridor=corridor(),
+        lexicon=get_lexicon(),
     )
     assert [str(page.attempted_url) for page in named] == [MISSION_SPOUSE]
 
@@ -1433,7 +1437,7 @@ def test_at_most_three_likely_checklists_are_named_best_first() -> None:
             attempted_url=AnyHttpUrl(url),
         )
         candidate = CandidatePage(
-            link=PageLink(url=url, text="", heading="", depth=1, discovered_from=""),
+            link=PageLink(url=url, text="Visa checklist", heading="", depth=1, discovered_from=""),
             link_scores=RoleScores(scores={"document_checklist": float(index)}),
         )
         return failure, candidate
@@ -1444,6 +1448,8 @@ def test_at_most_three_likely_checklists_are_named_best_first() -> None:
         {candidate.link.url: candidate for _, candidate in pairs},
         checklist_filled=False,
         already_named=[],
+        corridor=corridor(),
+        lexicon=get_lexicon(),
     )
 
     assert [failure.source_id for failure in named] == ["page_6", "page_5", "page_4"]

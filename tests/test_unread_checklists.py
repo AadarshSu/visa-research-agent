@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from visa_research_agent.config.loader import load_destination_registry
+from visa_research_agent.discovery.lexicon import get_lexicon
 from visa_research_agent.discovery.models import (
     CandidatePage,
     Corridor,
@@ -17,7 +18,10 @@ from visa_research_agent.discovery.models import (
     ResolvedCorridor,
     RoleScores,
 )
-from visa_research_agent.discovery.resolver import unread_checklist_pages
+from visa_research_agent.discovery.resolver import (
+    says_it_is_this_trips_checklist,
+    unread_checklist_pages,
+)
 from visa_research_agent.domain.models import DestinationConfig, FailureOutcome, SourceFailure
 
 CHECKLIST = "https://www.ica.gov.sg/visa/documents-required"
@@ -44,6 +48,10 @@ def candidate(url: str, checklist_score: float) -> CandidatePage:
     )
 
 
+CORRIDOR = Corridor(
+    destination_slug="singapore", passport_nationality="IN", applying_from="GB", purpose="tourism"
+)
+
 CANDIDATES = {
     CHECKLIST: candidate(CHECKLIST, 46.0),
     PRESS: candidate(PRESS, 0.0),
@@ -53,11 +61,34 @@ CANDIDATES = {
 
 def test_a_likely_checklist_page_the_run_could_not_read_is_named() -> None:
     named = unread_checklist_pages(
-        [failure(CHECKLIST)], CANDIDATES, checklist_filled=False, already_named=[]
+        [failure(CHECKLIST)],
+        CANDIDATES,
+        checklist_filled=False,
+        already_named=[],
+        corridor=CORRIDOR,
+        lexicon=get_lexicon(),
     )
 
     assert [str(page.attempted_url) for page in named] == [CHECKLIST]
     assert named[0].outcome == "challenged", "the reason is what this run saw, carried whole"
+
+
+def test_a_refused_checklist_is_named_as_a_checklist_too() -> None:
+    """Entry 213. Switzerland's India embassy answered `403` for its "Checklist for Schengen Visa:
+    Tourist". The refusal is reported in the evidence banner; the traveller looking for documents
+    looks in the documents panel, so the page is named there as well — never read."""
+
+    named = unread_checklist_pages(
+        [failure(CHECKLIST, "blocked")],
+        CANDIDATES,
+        checklist_filled=False,
+        already_named=[],
+        corridor=CORRIDOR,
+        lexicon=get_lexicon(),
+    )
+
+    assert [str(page.attempted_url) for page in named] == [CHECKLIST]
+    assert named[0].outcome == "blocked"
 
 
 def test_nothing_is_named_once_a_page_filled_the_checklist() -> None:
@@ -65,7 +96,12 @@ def test_nothing_is_named_once_a_page_filled_the_checklist() -> None:
 
     assert (
         unread_checklist_pages(
-            [failure(CHECKLIST)], CANDIDATES, checklist_filled=True, already_named=[]
+            [failure(CHECKLIST)],
+            CANDIDATES,
+            checklist_filled=True,
+            already_named=[],
+            corridor=CORRIDOR,
+            lexicon=get_lexicon(),
         )
         == []
     )
@@ -74,8 +110,6 @@ def test_nothing_is_named_once_a_page_filled_the_checklist() -> None:
 @pytest.mark.parametrize(
     ("failures", "already_named"),
     [
-        # A settled refusal is named already, as an unreadable authority.
-        ([failure(CHECKLIST, "blocked")], []),
         # Landed off the approved domains: not an address to send a traveller to.
         ([failure(CHECKLIST, "untrusted")], []),
         # Unreadable, but nothing about its link made it a likely checklist.
@@ -91,7 +125,12 @@ def test_a_page_is_named_only_once_and_only_for_a_reason_that_licenses_it(
 ) -> None:
     assert (
         unread_checklist_pages(
-            failures, CANDIDATES, checklist_filled=False, already_named=already_named
+            failures,
+            CANDIDATES,
+            checklist_filled=False,
+            already_named=already_named,
+            corridor=CORRIDOR,
+            lexicon=get_lexicon(),
         )
         == []
     )
@@ -103,6 +142,8 @@ def test_a_page_is_named_once_however_many_times_it_failed() -> None:
         CANDIDATES,
         checklist_filled=False,
         already_named=[],
+        corridor=CORRIDOR,
+        lexicon=get_lexicon(),
     )
 
     assert len(named) == 1
@@ -146,3 +187,34 @@ def test_a_destination_refuses_an_unread_checklist_page_off_its_approved_domains
 
     with pytest.raises(ValidationError, match="not on an approved domain"):
         DestinationConfig.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    ("text", "heading", "named"),
+    [
+        # Switzerland's and South Korea's, which say so.
+        ("Checklist for Schengen Visa: Tourist", "", True),
+        ("Korean Visa checklist(w.e.f. 24.08.2026).pdf", "", True),
+        # A purpose label under a checklists heading.
+        ("Tourist", "Checklists", True),
+        # Australia's, named on a link score alone before entry 213.
+        ("Evidence of the financial status and funding for visit", "", False),
+        ("Visitor visa (subclass 600) Tourist stream", "", False),
+        # A heading alone: every form under it would qualify.
+        ("Visa application form", "Visa application documents", False),
+        # Another purpose's checklist.
+        ("Checklist for Schengen business visa", "", False),
+    ],
+)
+def test_only_a_page_whose_own_words_say_it_is_this_trips_checklist_is_named(
+    text: str, heading: str, named: bool
+) -> None:
+    """Entry 213, the owner: name an unread page only where the surrounding context makes us
+    confident it leads to the relevant checklist."""
+
+    page = CandidatePage(
+        link=PageLink(url=CHECKLIST, text=text, heading=heading, depth=1),
+        link_scores=RoleScores(scores={"document_checklist": 20.0}),
+    )
+
+    assert says_it_is_this_trips_checklist(page, CORRIDOR, get_lexicon()) is named

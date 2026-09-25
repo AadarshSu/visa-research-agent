@@ -58,5 +58,7 @@ var/item70-2026-09-24/item63-joined/
 var/item70-2026-09-24/item63-links/
 var/item70-2026-09-24/item63-priority/
 var/item70-2026-09-24/item63-korea/
+var/item70-2026-09-24/item63-swiss/
+var/item70-2026-09-24/item63-named/
 var/item70-2026-09-24/thailand/pagetext/
 var/item70-2026-09-24/veto/*.json

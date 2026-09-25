@@ -389,7 +389,9 @@ class OpenAIVisaPlanExtractor:
         # where this plan has no checklist and there is an application to have one for, and never a
         # second time for a page something above already names. Titled "possible" because a link
         # score is all that makes one likely: nobody read it.
-        already_named = {str(failure.attempted_url) for failure in [*report.failures, *refused]}
+        # Not `refused`: a refused page that looks like the checklist is named as one as well, so it
+        # appears where the traveller looks for documents and not only as a refusal (entry 213).
+        already_named = {str(failure.attempted_url) for failure in report.failures}
         unread_checklists = (
             []
             if entry_only or application_source_ids
