@@ -1216,4 +1216,5 @@ class LiveSourceFetcher:
             from_cache=from_cache,
             document_links=entry.document_links,
             is_document=entry.is_document,
+            final_url=entry.final_url,
         )

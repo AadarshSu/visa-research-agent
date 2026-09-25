@@ -18,6 +18,7 @@ from discovery_site import (
     MISSION,
     MISSION_CHECKLIST,
     MISSION_INDEX,
+    MISSION_QUEUED_DOWNLOAD,
     MISSION_SPOUSE,
     OFF_DOMAIN,
     TOURIST_PDF,
@@ -1378,6 +1379,48 @@ async def test_a_followed_checklist_that_cannot_be_read_is_named_with_its_link(
         lexicon=get_lexicon(),
     )
     assert [str(page.attempted_url) for page in named] == [missing]
+
+
+@pytest.mark.anyio
+async def test_a_document_link_sent_to_a_waiting_room_says_the_site_was_busy(
+    tmp_path: Path,
+) -> None:
+    """Entry 219. South Korea's checklist download sends our client to the ministry's waiting room,
+    and "returned a web page instead" hid that the site was only busy. Said as what it is, and
+    never waited out or retried past."""
+
+    requests: list[httpx.Request] = []
+    resolver, _provider = build_resolver(tmp_path, requests, [])
+    hub = CandidatePage(
+        link=PageLink(url=CHECKLIST_HUB, text="Notice", heading="", depth=0, discovered_from=""),
+        link_scores=RoleScores(),
+    )
+    fetched = FetchedShortlist(
+        candidates=[hub],
+        by_id={"hub": hub},
+        contents={"hub": "Notice"},
+        links={
+            "hub": [
+                DocumentLink(
+                    url=MISSION_QUEUED_DOWNLOAD,
+                    text="Korean Visa checklist(w.e.f. 24.08.2026).pdf",
+                )
+            ]
+        },
+    )
+    lexicon = get_lexicon()
+    registry = get_country_registry()
+
+    def score(link: PageLink) -> RoleScores:
+        return score_link(link, corridor(), lexicon, registry.require("IN"), registry.require("GB"))
+
+    merged = await resolver._follow_document_links(
+        destination(), corridor(), registry.require("IN"), fetched, score, lambda _: None, []
+    )
+
+    [failure] = [f for f in merged.failures if str(f.attempted_url) == MISSION_QUEUED_DOWNLOAD]
+    assert "waiting room" in failure.detail
+    assert [str(r.url) for r in requests].count(MISSION_QUEUED_DOWNLOAD) == 1, "never retried"
 
 
 @pytest.mark.anyio

@@ -267,6 +267,62 @@ s more pressing |
 
 ---
 
+## 219. What a plan names that it could not read: this trip's visa page, a download said to be one, and Korea's visa centre
+
+**2026-09-26 · the owner's decisions** on entry 216's first, fourth and fifth questions.
+
+**1. An unread page for this trip's visa is named with its link** ("yes").
+- It is entry 213's bar applied to the visa (`says_it_is_this_trips_visa_page`). The government's
+  own label or title must name a visa and this trip's purpose, and no other purpose or `off_scope`
+  audience: "Business visitor stream", "Work and Holiday visa" and "Student visa" fail.
+- At most two, most likely first, and only pages this run tried and could not read.
+- **None once a page this run read passes the same test.** Australia's first run with entry 217
+  read its Tourist stream page and still named two listing pages beside it, which marked the plan
+  `partial`. Its two runs after this fix name nothing and are `verified`.
+- Named in "Where to apply" and the evidence banner, never read, filling nothing. Not on a
+  visa-free plan. The address is re-checked against the approved domains, as for checklists.
+
+**2. A named file says it is a download we could not open** (asked twice). The owner leaned to
+dropping it, "although if it IS from a government domain maybe it's okay". Told that every named
+page must already be on the destination's approved government domain, the owner chose to name it,
+labelled. `download_label` adds ", a PDF download we could not open" where the address or the
+government's own label ends `.pdf` (`.doc`/`.docx`: "a document download"). South Korea ×2 now
+reads "Possible document checklist, a PDF download we could not open: Korean Visa
+checklist(w.e.f. 24.08.2026).pdf".
+
+**And the reason says "waiting room" where the request landed in one.** A fetched page now records
+where it landed (`FetchedSource.final_url`). A followed document that lands on a `waitingroom` path
+is reported as a busy site's queue, never waited out or retried. **Entry 216 overstated the queue**:
+the corridor's own request of 2026-09-25 landed on `/returnInfoPage.do`, the ministry's directory of
+missions, and only a probe on 2026-09-25 met the waiting room. For that landing, "returned a web
+page instead" stays, and it is true.
+
+**3. `visaforkorea-ce.com` is on `service_providers.yaml`** ("yes"), below that file's usual bar of
+several destinations. The owner noted each country may have its own, and the stored pages confirm
+it:
+- `visaforkorea-bd.com`, named by the embassy in Bangladesh and run by VFS;
+- `visaforkorea.eu`, for Germany, run by the IOM.
+
+Neither is added: each is reviewed on its own. **It changes no plan yet.** A delegate is named only
+from a link the offline build recorded on a Korean government page, and Korea's store holds none of
+the India missions' pages. That needs a rebuild of Korea's store, which is asked for first.
+
+**Measured, two runs each** (`item63-217.log`, `item63-217b.log`):
+
+| corridor | before | now |
+| --- | --- | --- |
+| Australia `IN/IN` | `partial` ×2, no checklist, type null | **`verified` ×2** (entries 217, 218) |
+| South Korea `IN/IN` | "visa required" ×2, PDF named | the same, labelled as a download |
+| Germany `IN/GB` | `verified` | `verified` ×2 |
+| Japan `IN/GB` | open ×2 (entry 215) | `verified` ×2 |
+| Singapore `PH/PH` | no visa | no visa ×2 |
+| Thailand `IN/IN` | no visa | no visa, then **refused** |
+
+**Thailand's refusal is not these changes.** All four of its selection packets since entry 215 are
+byte-identical (one checksum). In one run the selection answer left out the 15 July announcement,
+the only page naming India, so no decision page was read. Japan's open decisions in entry 215 were
+the same kind of loss at a later call. Both are in TODO.
+
 ## 218. Rule 8j: a plan names the visa type a source prints, and chooses it from a list by its conditions
 
 **2026-09-26 · the owner's decision**, on entry 216's third question: "yes". The prompt had no rule

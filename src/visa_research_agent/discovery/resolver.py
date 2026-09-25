@@ -241,6 +241,10 @@ NAMEABLE_CHECKLIST_OUTCOMES = frozenset(
 # pages about evidence of funds, and a traveller shown six links cannot tell which is the list
 # (entry 212).
 MAXIMUM_NAMED_CHECKLISTS = 3
+# A path segment a busy site redirects to instead of the page asked for. South Korea's ministry
+# answers its checklist download with `/waitingroom/main.html` (entry 219). A queue is load, not a
+# refusal: it is reported as such and never waited out or retried past.
+WAITING_ROOM_MARKER = "waitingroom"
 
 
 def says_it_is_this_trips_checklist(
@@ -325,6 +329,88 @@ def unread_checklist_pages(
     return pages
 
 
+# At most this many pages for the traveller's own visa are named, most likely first (entry 219).
+MAXIMUM_NAMED_VISA_PAGES = 2
+VISA_WORD = "visa"
+VISA_PAGE_ROLES: tuple[DiscoveryRole, ...] = ("application_route", "visa_decision")
+
+
+def says_it_is_this_trips_visa_page(
+    candidate: CandidatePage, corridor: Corridor, lexicon: Lexicon
+) -> bool:
+    """Whether the government's own words say a page is about the visa for this trip.
+
+    Entry 213's bar for naming an unread checklist, applied to the traveller's visa (entry 219, the
+    owner): Home Affairs' "Visitor visa (subclass 600) Tourist stream (apply outside Australia)" is
+    chosen every run and its CDN refuses our browser. The label or recorded title must name a visa
+    **and** this trip's purpose, and must name no other purpose and no audience a tourist is not
+    ("working holiday", "student", "permanent" — the lexicon's `off_scope`). "Business visitor
+    stream" and "Work and Holiday visa" fail it.
+    """
+
+    words = f"{candidate.link.text} {candidate.title or ''}".lower()
+    own = lexicon.purposes.get(corridor.purpose)
+    own_terms = [term.lower() for term in own.terms] if own else []
+    excluded = [
+        term.lower()
+        for purpose, terms in lexicon.purposes.items()
+        if purpose != corridor.purpose
+        for term in terms.terms
+    ] + [term.lower() for term in lexicon.off_scope.terms]
+    excluded = [term for term in excluded if term not in own_terms]
+    if VISA_WORD not in words or not any(term in words for term in own_terms):
+        return False
+    return not any(re.search(rf"\b{re.escape(term)}", words) for term in excluded)
+
+
+def unread_visa_pages(
+    failures: list[SourceFailure],
+    candidates: dict[str, CandidatePage],
+    *,
+    read: list[str],
+    already_named: list[str],
+    corridor: Corridor,
+    lexicon: Lexicon,
+) -> list[SourceFailure]:
+    """Pages about this traveller's visa that this run tried and could not read, for a plan to name.
+
+    Named with their link and never read, exactly as an unread checklist is (entry 213): the
+    traveller can open what this run could not. They fill no role, so a plan naming one still says
+    whatever it would have said without it. **None is named once a page this run read passes the
+    same test** (`read`, the addresses of the plan's sources): Australia's first run with Home
+    Affairs readable read its Tourist stream page and still named two listing pages beside it.
+    """
+
+    if any(
+        url in candidates and says_it_is_this_trips_visa_page(candidates[url], corridor, lexicon)
+        for url in read
+    ):
+        return []
+    named = set(already_named)
+    pages: list[SourceFailure] = []
+
+    def likelihood(failure: SourceFailure) -> tuple[float, str]:
+        candidate = candidates.get(str(failure.attempted_url))
+        score = max(candidate.combined(role) for role in VISA_PAGE_ROLES) if candidate else 0.0
+        return (-score, str(failure.attempted_url))
+
+    for failure in sorted(failures, key=likelihood):
+        url = str(failure.attempted_url)
+        candidate = candidates.get(url)
+        if (
+            url in named
+            or failure.outcome not in NAMEABLE_CHECKLIST_OUTCOMES
+            or candidate is None
+            or not says_it_is_this_trips_visa_page(candidate, corridor, lexicon)
+        ):
+            continue
+        named.add(url)
+        pages.append(failure)
+        if len(pages) >= MAXIMUM_NAMED_VISA_PAGES:
+            break
+    return pages
+
+
 class AdjudicationRefusal(AdjudicationError):
     """Every adjudication attempt failed, so the corridor is refused rather than guessed at.
 
@@ -353,6 +439,8 @@ class FetchedShortlist(StrictModel):
     """The documents each read page links to, by source id (entry 210)."""
     documents: set[str] = Field(default_factory=set)
     """Source ids whose text came from a PDF rather than a web page (entry 212)."""
+    landed: dict[str, str] = Field(default_factory=dict)
+    """Where each read page's request landed after redirects, by source id (entry 219)."""
     followed: list[CandidatePage] = Field(default_factory=list)
     """Documents followed from those links, read or not, so a failed one can still be named."""
     failures: list[SourceFailure] = Field(default_factory=list)
@@ -1053,6 +1141,15 @@ class CorridorResolver:
             )
             model_calls += blocked_calls
         model_calls += self.selection_calls
+        checklists = unread_checklist_pages(
+            fetched.failures,
+            candidates,
+            checklist_filled="document_checklist" in filled,
+            # Not `refused`: a refused checklist is named in both places (entry 213).
+            already_named=[],
+            corridor=corridor,
+            lexicon=self.lexicon,
+        )
 
         return ResolvedCorridor(
             corridor=corridor,
@@ -1063,12 +1160,12 @@ class CorridorResolver:
             inaccessible_domains=inaccessible,
             inaccessible_urls=refused,
             decision_blocking_urls=blocking,
-            unread_checklist_pages=unread_checklist_pages(
+            unread_checklist_pages=checklists,
+            unread_visa_pages=unread_visa_pages(
                 fetched.failures,
                 candidates,
-                checklist_filled="document_checklist" in filled,
-                # Not `refused`: a refused checklist is named in both places (entry 213).
-                already_named=[],
+                read=[str(source.url) for source in sources],
+                already_named=[str(page.attempted_url) for page in checklists],
                 corridor=corridor,
                 lexicon=self.lexicon,
             ),
@@ -1634,11 +1731,14 @@ class CorridorResolver:
         contents: dict[str, str] = {}
         links: dict[str, list[DocumentLink]] = {}
         documents: set[str] = set()
+        landed: dict[str, str] = {}
         for item in report.fetched:
             contents[item.source.source_id] = item.content
             links[item.source.source_id] = list(item.document_links)
             if item.is_document:
                 documents.add(item.source.source_id)
+            if item.final_url:
+                landed[item.source.source_id] = item.final_url
             fetched_candidate = by_id.get(item.source.source_id)
             if fetched_candidate is None:
                 continue
@@ -1659,6 +1759,7 @@ class CorridorResolver:
             contents=contents,
             links={source_id: links[source_id] for source_id in readable if source_id in links},
             documents={source_id for source_id in readable if source_id in documents},
+            landed={source_id: landed[source_id] for source_id in readable if source_id in landed},
             failures=list(report.failures),
         )
 
@@ -1726,19 +1827,27 @@ class CorridorResolver:
             destination, chosen, corridor, nationality, taken=set(fetched.by_id)
         )
         # A link labelled as a document must come back as one. South Korea's download address
-        # answered with the site's front page, which read cleanly and held nothing (entry 212); it
-        # is unread, so it is reported as such and may be named rather than quietly counted as read.
+        # answered with a page that read cleanly and held nothing (entry 212); it is unread, so it
+        # is reported as such and may be named rather than quietly counted as read. That page was
+        # the ministry's waiting room, and the reason says so where the landing address does
+        # (entry 219): "returned a web page" was true and hid that the site was only busy.
         not_documents = [sid for sid in more.by_id if sid not in more.documents]
         for source_id in not_documents:
             candidate = more.by_id[source_id]
             authority, _kind = derive_authority(candidate.link.url, destination)
+            queued = WAITING_ROOM_MARKER in urlsplit(more.landed.get(source_id, "")).path.lower()
             more.failures.append(
                 SourceFailure(
                     source_id=source_id,
                     title=clean_title(candidate.title, candidate.link.url),
                     authority=authority,
                     outcome="unusable",
-                    detail="the link is labelled as a document and returned a web page instead",
+                    detail=(
+                        "the site sent the request to its waiting room, a queue it uses when "
+                        "busy, so the document was not opened here"
+                        if queued
+                        else "the link is labelled as a document and returned a web page instead"
+                    ),
                     attempted_url=AnyHttpUrl(candidate.link.url),
                 )
             )

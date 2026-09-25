@@ -369,6 +369,10 @@ class DestinationConfig(StrictModel):
     """Likely document-checklist pages discovery tried and could not read, for the plan to name.
     Never evidence of what they say — see `ResolvedCorridor.unread_checklist_pages`."""
 
+    unread_visa_pages: list["SourceFailure"] = Field(default_factory=list)
+    """Pages about this trip's visa discovery tried and could not read, for the plan to name. Never
+    evidence of what they say — see `ResolvedCorridor.unread_visa_pages`."""
+
     official_tools: list[InteractiveTool] = Field(default_factory=list)
     """Official questionnaires that answer a question this destination publishes no page for."""
 
@@ -477,6 +481,11 @@ class DestinationConfig(StrictModel):
             if not self.trusts_host(host_of(str(page.attempted_url))):
                 raise ValueError(
                     f"unread checklist page {page.attempted_url} is not on an approved domain"
+                )
+        for page in self.unread_visa_pages:
+            if not self.trusts_host(host_of(str(page.attempted_url))):
+                raise ValueError(
+                    f"unread visa page {page.attempted_url} is not on an approved domain"
                 )
 
         for tool in self.official_tools:
@@ -696,6 +705,9 @@ class FetchedSource(StrictModel):
     """Documents the page links to (entry 210). Addresses and labels only; never evidence."""
     is_document: bool = False
     """The text came from a PDF rather than a web page (entry 212)."""
+    final_url: str | None = None
+    """Where the request landed after redirects, when it was recorded. A followed document that
+    lands in a site's waiting room says so from this (entry 219)."""
 
 
 class SourceFailure(StrictModel):

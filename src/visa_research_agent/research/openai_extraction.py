@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager, suppress
 from datetime import UTC, datetime
 from importlib.resources import files
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx2
 from langchain_core.messages import HumanMessage
@@ -145,6 +146,22 @@ def build_research_packet(
         ],
     }
     return json.dumps(packet, indent=2, ensure_ascii=False)
+
+
+def download_label(page: SourceFailure) -> str:
+    """How a named page says it is a file we could not open, or nothing for a web page.
+
+    The owner's decision, entry 219: a checklist we could not open may be named, and a traveller
+    clicking it should know it downloads a file nobody here opened — South Korea's checklist link
+    downloads a 15-page PDF straight away. Known from the address or the government's own label.
+    """
+
+    names = (urlsplit(str(page.attempted_url)).path.lower(), page.title.lower())
+    if any(name.endswith(".pdf") for name in names):
+        return ", a PDF download we could not open"
+    if any(name.endswith(suffix) for name in names for suffix in (".doc", ".docx")):
+        return ", a document download we could not open"
+    return ""
 
 
 class LangChainStructuredPlanGenerator:
@@ -399,12 +416,33 @@ class OpenAIVisaPlanExtractor:
                 page.model_copy(
                     update={
                         "source_id": f"checklist_unread_{index + 1}",
-                        "title": f"Possible document checklist: {page.title}",
+                        "title": f"Possible document checklist{download_label(page)}: {page.title}",
                     }
                 )
                 for index, page in enumerate(
                     page
                     for page in destination.unread_checklist_pages
+                    if str(page.attempted_url) not in already_named
+                )
+            ]
+        )
+        # Pages whose own words say they are about this trip's visa, which this run could not read
+        # (entry 219, the owner). Named with their link, never described; not on an entry plan,
+        # which has no visa to apply for.
+        already_named |= {str(page.attempted_url) for page in unread_checklists}
+        unread_visa_pages = (
+            []
+            if entry_only
+            else [
+                page.model_copy(
+                    update={
+                        "source_id": f"visa_page_unread_{index + 1}",
+                        "title": f"Possible page for your visa{download_label(page)}: {page.title}",
+                    }
+                )
+                for index, page in enumerate(
+                    page
+                    for page in destination.unread_visa_pages
                     if str(page.attempted_url) not in already_named
                 )
             ]
@@ -452,9 +490,14 @@ class OpenAIVisaPlanExtractor:
                     # `verified` doing so. TODO item 53.
                     decision_is_unverified=visa_required is None,
                     no_visa_required=visa_required is False,
-                    names_unread_pages=bool(refused or unread_checklists),
+                    names_unread_pages=bool(refused or unread_checklists or unread_visa_pages),
                 ),
-                unavailable_sources=[*report.failures, *refused, *unread_checklists],
+                unavailable_sources=[
+                    *report.failures,
+                    *refused,
+                    *unread_checklists,
+                    *unread_visa_pages,
+                ],
                 # Straight from the configuration, never from the draft: the traveller is being
                 # sent to this URL, so it has to be one an authority published.
                 official_tools=destination.official_tools,

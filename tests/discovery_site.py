@@ -27,6 +27,9 @@ MISSION_INDEX = f"https://{MISSION}/visa/index.html"
 MISSION_OPAQUE = f"https://{MISSION}/visa/index_000070.html"
 MISSION_CHECKLIST = f"https://{MISSION}/visa/sightseeing.html"
 MISSION_CHECKLIST_PDF = f"https://{MISSION}/files/checklist.pdf"
+# South Korea's shape (entry 219): a checklist download a busy site answers with its waiting room.
+MISSION_QUEUED_DOWNLOAD = f"https://{MISSION}/brd/m_1978/down.do?seq=717617"
+MISSION_WAITING_ROOM = f"https://{MISSION}/waitingroom/main.html"
 MISSION_SPOUSE = f"https://{MISSION}/visa/spouse.html"
 OFF_DOMAIN = "https://cheap-visas.example/apply-now"
 
@@ -247,6 +250,15 @@ def handler(requests: list[httpx.Request], *, robots: dict[str, str] | None = No
                 200,
                 content=minimal_pdf(CHECKLIST_PDF_LINES),
                 headers={"Content-Type": "application/pdf"},
+            )
+        if url == MISSION_QUEUED_DOWNLOAD:
+            return httpx.Response(307, headers={"Location": MISSION_WAITING_ROOM})
+        if url == MISSION_WAITING_ROOM:
+            return httpx.Response(
+                200,
+                text="<html><body><p>You are in the queue. Please wait; this page will refresh "
+                "when it is your turn.</p></body></html>",
+                headers={"Content-Type": "text/html; charset=utf-8"},
             )
         if url in pages:
             return httpx.Response(

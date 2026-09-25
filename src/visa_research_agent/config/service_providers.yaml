@@ -51,3 +51,14 @@ providers:
     note: >-
       Named on Spanish and Portuguese mission pages. Included because it is the third company of
       this kind that appears on government domains; no corridor has needed it yet.
+
+  - domain: visaforkorea-ce.com
+    name: Korea Visa Application Centre (India)
+    note: >-
+      Added on the owner's decision, 2026-09-26 (DECISIONS entry 219), below this file's usual bar
+      of several destinations. It calls itself "the official partner of the Embassy of the Republic
+      of Korea to the Republic of India", and the New Delhi embassy's visa page names the
+      "VFS Global Korean Visa Application Centre". Each country's centre has its own domain —
+      Korean government pages name visaforkorea-bd.com for Bangladesh and visaforkorea.eu for
+      Germany — so each is added only when reviewed. Named only where a Korean government page
+      links it, which only a rebuild of Korea's store can record.

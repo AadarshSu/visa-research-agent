@@ -388,6 +388,14 @@ class ResolvedCorridor(StrictModel):
     prevent. See DECISIONS entry 32.
     """
 
+    unread_visa_pages: list[SourceFailure] = Field(default_factory=list)
+    """Pages whose own words say they are about this trip's visa, tried and not readable here.
+
+    Named with their link and never read or cited, as an unread checklist is (entry 219, the owner:
+    Home Affairs' Tourist stream page is chosen every run and its CDN refuses our browser). They
+    fill no role and change nothing a plan concludes.
+    """
+
     unread_checklist_pages: list[SourceFailure] = Field(default_factory=list)
     """Pages that looked like this traveller's document checklist and could not be read here.
 
@@ -576,6 +584,9 @@ class ResolvedCorridor(StrictModel):
         # validator re-checks every address against the approved domains like the refusals above.
         payload["unread_checklist_pages"] = [
             page.model_dump(mode="json") for page in self.unread_checklist_pages
+        ]
+        payload["unread_visa_pages"] = [
+            page.model_dump(mode="json") for page in self.unread_visa_pages
         ]
         # Read, not refused, so it is neither a source nor an unreadable authority. It is a page
         # the traveller can finish themselves, and the detail says exactly that — never a guess at

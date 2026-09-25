@@ -7,8 +7,8 @@ truth; these files are.
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-25 — update this line when you touch the handoff |
-| **Tests** | 967: 966 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Last updated** | 2026-09-26 — update this line when you touch the handoff |
+| **Tests** | 991: 990 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -36,31 +36,28 @@ disproved. Link instead of copying.
 
 ---
 
-## Next session: five decisions from the owner on Australia and South Korea — start here
+## Next session: item 63's second round is worked — start here
 
-**Updated 2026-09-25.** The owner judged item 63's second round (entry 216): **7 right, Australia
-wrong, South Korea and Spain unsure.** Spain is fixed and measured (entry 215). Australia and South
-Korea are diagnosed and wait on the owner. **Ask these before building anything for them:**
+**Updated 2026-09-26.** The owner judged the round (entry 216): 7 right, Australia wrong, South
+Korea and Spain unsure. All three are worked:
+- **Spain** is `verified` ×2 with its checklist linked (entry 215): a form wrapping the whole page
+  had been deleted.
+- **Australia** is `verified` ×2, with its Tourist stream page linked and the visa type named, on
+  the owner's decisions:
+  - Home Affairs' pages are read from the JSON they are served in (entry 217).
+  - Rule 8j names a visa type from a list (entry 218).
+  - An unread visa page is named with its link (entry 219).
+- **South Korea** names its checklist PDF, labelled as a download we could not open (entry 219).
+  Its C-3-9 type is printed only in that file.
 
-- **Australia:**
-  1. May a plan name, with its link and unread, a page whose own title says it is this trip's visa?
-     This would widen entry 213's rule for unread checklists.
-  2. May Home Affairs' content be read from the hidden field the plain response carries, and only
-     the sections the page displays?
-  3. May a plan state the visa type from a page listing the options, as with "Visitor visa (Tourist
-     stream) (subclass 600)" beside passport conditions? The owner asked the same for South
-     Korea's C-3-9.
-- **South Korea:**
-  4. Should a PDF download we could not open be named, labelled as such, or dropped?
-  5. Should `visaforkorea-ce.com` go on `service_providers.yaml`? Entry 89's bar is a company
-     several governments name.
-
-**Also open from this session.**
-- **Japan `IN/GB` left its decision open in both regression runs** (entry 215; TODO item 63). The
-  roles call chose the embassy's general page over the ministry's exemption list. That is a
-  reachable answer lost, and not caused by the fix.
-- **The stores hold SharePoint pages empty** until a rebuild (entry 215). Spain, Portugal, Canada,
-  Saudi Arabia, Croatia and Austria have the most `.aspx` entries. Ask before rebuilding.
+**What is next.**
+- **Ask the owner** whether to rebuild the stores:
+  - the SharePoint countries' stores (Spain, Portugal, Canada, Saudi Arabia, Croatia, Austria),
+    whose text was stored empty (entry 215);
+  - Korea's store, so `visaforkorea-ce.com` can be recorded (entry 219).
+- **Selection variance** (TODO item 63): Thailand refused 1 run in 4 on byte-identical packets.
+- **Put the round in front of the owner again** if they want to re-judge Australia, South Korea
+  and Spain. The review page is built by `review/build_review_data.py`.
 
 **Where everything is.**
 - **The round:** entry 214, and the review page
@@ -68,6 +65,7 @@ Korea are diagnosed and wait on the owner. **Ask these before building anything 
 - **Raw outputs:**
   - `var/item70-2026-09-24/item63-round2/<slug>_IN_IN/<1|2>/`
   - `item63-round3-forms/`: Spain and the regression set after entry 215's fix.
+  - `item63-round3-217/`, `item63-round3-217b/`: entries 217–219, and the regression set.
 - **Tooling.**
   - `var/item70-2026-09-24/run.py N slug/NAT/RES …` re-runs corridors, with `ITEM70_OUT=<folder>`
     and optionally `ITEM70_CORPUS=<copy>`.

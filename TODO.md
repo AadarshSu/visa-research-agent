@@ -397,7 +397,9 @@ destinations.
   together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
 - **Second round run 2026-09-25 (entry 214):** decisions 5 → 7 of 10, checklists 3 → 5 of 10.
   **The owner's verdicts (entry 216):** 7 right, Australia wrong, South Korea and Spain unsure.
-  Spain is fixed (entry 215). Australia and South Korea wait on five decisions listed in entry 216.
+  Spain is fixed (entry 215). **Australia is `verified` ×2 after the owner's five decisions
+  (entries 217–219)**. South Korea's checklist PDF is named and labelled as a download; its
+  C-3-9 type is printed only inside that file.
 - **Checklists — worked (entries 210–212).**
   - A corridor reads the checklist a page it read links to.
   - Plans now link the authority's checklist instead of copying it, and name a likely one they
@@ -406,13 +408,14 @@ destinations.
   - **Spain — fixed (entry 215).** Its pages never needed a browser; the cleaner deleted the form
     ASP.NET wraps round the page. `verified` ×2 with the consulate's checklist linked. The stores
     still hold SharePoint pages empty until a rebuild, which is asked for first.
-  - **Left:** Australia and South Korea. Australia's answer page is chosen, but its CDN refuses
-    our browser. South Korea's checklist PDF sends our client to a waiting room. Both wait on the
-    owner (entry 216).
-  - **Japan `IN/GB` left its decision open ×2 on 2026-09-25 (entry 215)**, after three `verified`
-    runs. Selection picked more pages, and the roles call chose the embassy's general visa page
-    over the ministry's exemption list, so rule 8f had no list to read. Not caused by entry 215;
-    a reachable answer lost at the roles call, to work.
+  - **Left: rebuilds, asked for first.**
+    - The SharePoint countries' stores (entry 215).
+    - Korea's store, so `visaforkorea-ce.com` can be recorded from an India mission page
+      (entry 219).
+  - **Selection variance loses reachable answers.** Thailand `IN/IN` refused 1 run in 4 on
+    byte-identical selection packets, when the answer left out the 15 July announcement (entry
+    219). Japan `IN/GB` was open ×2 (entry 215), then `verified` ×2. Measure how often the
+    selection call drops a page that answered in other runs before proposing a fix.
   - **Proposed, not measured:** de-duplicating near-identical series before the selector's cap.
     Australia once read seven quarterly reports while its step-by-step page was cut.
 

@@ -1,0 +1,13 @@
+australia/IN/IN run 1: research resolved, plan answered, True (59.9s)
+south-korea/IN/IN run 1: research resolved, plan answered, True (58.1s)
+japan/IN/GB run 1: research resolved, plan answered, True (51.6s)
+singapore/PH/PH run 1: research resolved, plan answered, False (42.9s)
+germany/IN/GB run 1: research resolved, plan answered, True (57.4s)
+thailand/IN/IN run 1: research resolved, plan answered, False (54.5s)
+australia/IN/IN run 2: research resolved, plan answered, True (71.0s)
+south-korea/IN/IN run 2: research resolved, plan answered, True (55.5s)
+japan/IN/GB run 2: research resolved, plan answered, True (48.5s)
+singapore/PH/PH run 2: research resolved, plan answered, False (40.2s)
+germany/IN/GB run 2: research resolved, plan answered, True (70.2s)
+thailand/IN/IN run 2: research refused, plan -, {'message': "Thailand's official sources were searched, but no page could be confirmed as the visa decision. Nothing was (37.0s)
+done

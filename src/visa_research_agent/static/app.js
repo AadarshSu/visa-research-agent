@@ -330,6 +330,37 @@ function renderDecision(plan, ctx) {
   return container;
 }
 
+// Pages about this trip's visa that this run met and could not read, named so the traveller can
+// open them, never described, because nobody read them (entry 219). Australia's Tourist stream page
+// is where its Apply button is, and its site refuses our browser.
+function appendUnreadVisaPages(container, plan) {
+  const pages = (plan.unavailable_sources || []).filter(
+    (failure) => String(failure.source_id).startsWith("visa_page_unread_") && failure.attempted_url,
+  );
+  if (!pages.length) return;
+  container.append(
+    element(
+      "p",
+      "lead",
+      pages.length === 1
+        ? "The official page below looks like the one for your visa, but we could not read it, so open it yourself."
+        : "The official pages below look like the ones for your visa, but we could not read them, so open them yourself.",
+    ),
+  );
+  const group = element("div", "link-cards");
+  pages.forEach((failure) => {
+    group.append(
+      linkCard(
+        "action",
+        failure.title,
+        failure.attempted_url,
+        `${failure.authority} \u00b7 not read here: ${failure.detail}`,
+      ),
+    );
+  });
+  container.append(group);
+}
+
 function renderApplicationLocation(plan, ctx) {
   const { container } = panel("Where to apply", "Application route");
   const location = plan.where_to_apply;
@@ -345,10 +376,12 @@ function renderApplicationLocation(plan, ctx) {
           : "The application location remains unresolved.",
       ),
     );
+    appendUnreadVisaPages(container, plan);
     appendTools(container, plan, "application_route");
     appendDelegates(container, plan, "application_route");
     return container;
   }
+  appendUnreadVisaPages(container, plan);
   appendTools(container, plan, "application_route");
   appendDelegates(container, plan, "application_route");
 
