@@ -18,7 +18,7 @@ points at the items that do the work. The detail lives in the items, not here.
 | **Model calls paid through Ofself Personas**, on their OpenAI key | **Done 2026-09-24 (entry 188), and the route from now on — the owner.** All three calls go through Personas on Ofself's account; graded against the direct route's baselines. One Japan inference is a *Smaller thing* | 62 (done) | — |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171). Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen), **65** (GPT-6 Sol), **60** (Fast mode), **58** (research) | the owner's call on 60, which the Personas route cannot send without an Ofself tier setting |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` needs an Ofself sign-in since 2026-09-24 (entry 191); the stores are still local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
-| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **Next: the full rebuild of the 44 stores not yet rebuilt** (PROJECT_HANDOFF's *Next session*) | **63**, the rebuild | the owner's own checking (entry 68) |
+| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **The full rebuild is done (2026-09-25); next is grading it** (PROJECT_HANDOFF's *Next session*) | **63**, the rebuild | the owner's own checking (entry 68) |
 | **53 → 100+ countries** | 55 have a registry row and 53 a corpus; 143 have no row. The page offers all 198 (known problem 23). Schengen's EU half of item 2 is done (entry 201); governments with no hostname marker remain | **64**, **2** | nothing external — search credit only |
 
 **Offline cost is not the constraint — the owner, 2026-09-23 (entry 184).** Build time and a higher
@@ -376,10 +376,9 @@ once, and in this order:
      13 → 14. **Item 66 (entries 194, 195)** answered it: the loss was −2.8 of 90 and all secondary,
      and the selector now sees a ranked top 120 plus 40 pages with no stored text, which beats the
      old stores on replay. Germany's plans were re-run on its rebuilt store (PROJECT_HANDOFF).
-4. **The full rebuild of the other 44 (42 corpora plus Brazil and Uruguay) — started 2026-09-25.**
-   The runbook is PROJECT_HANDOFF's *Next session*. Entries 198–201 landed everything that changes
-   what a build records; Malta was rebuilt with them first (entry 198). The owner's first six (IT
-   RO GR ZA TH CZ) run first and their reports are read before the other 38.
+4. **The full rebuild of the other 44 (42 corpora plus Brazil and Uruguay) — done 2026-09-25**,
+   all exit 0. What the reports showed, and what is left to do (grading, Brazil, the archived-year
+   veto), is in PROJECT_HANDOFF's *Next session*.
 5. **Then item 67 on the new store, then item 64.**
 
 Independent of the store, and fine to run alongside: 57 (progress on screen), 7 and 20 (hosting),
@@ -1964,6 +1963,17 @@ in the DECISIONS entry; this is the one-line index.
 | — Find out why a corridor refuses on a domain it can now read | 08-18 | 39 | The rule was not the only thing wrong |
 
 ## Smaller things
+
+**The archived-year veto discards current guidance filed under a date — found in the 2026-09-25
+rebuild's reports.** `is_archived` (`discovery/scoring.py`) rejects any path holding a year from
+1990 to 2024 unless the segment before it is `uploads`. That misses a WordPress multisite
+(`wp-content/uploads/sites/57/2024/07/…`, South Africa's Juba mission; `media/sites/19/2024/06/…`,
+Cyprus), a publication-date permalink (`/juba/2024/07/12/application-for-a-business-visa`), and
+Croatia's `UserDocsImages/2023/…`, whose rejects include a Kenya supporting-documents list. The
+same exception entry 198 made for `uploads` applies: there the year is when a file was filed, and
+`published_date_in_path` hands it to the adjudicator. Dated *news* is still rightly vetoed
+(Denmark's, Indonesia's, Luxembourg's rejects), so widen by address form, not by dropping the
+year test. Measure it on the reports' rejects, then re-run ZA, CY and HR only.
 
 **`canonicalise_url` drops a trailing slash before a query string, and some servers care.** Found on
 EUR-Lex (entry 201): `…/TXT/HTML/?uri=…` is the regulation, `…/TXT/HTML?uri=…` is "Page Not Found".

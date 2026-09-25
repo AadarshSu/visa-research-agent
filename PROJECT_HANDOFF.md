@@ -51,9 +51,26 @@ why IT, EG, IN, HR, PL, BE and SI carry 2026-09-24 without having been rebuilt. 
 what the `done.txt` files under `var/rebuild-pilot-2026-09-25/` and `var/item70-2026-09-24/rebuild/`
 list.
 
-**Started 2026-09-25, from the owner's Terminal panel, without refreshing the EU store (the
-owner's call):** the owner's first six, as two queues (IT GR TH and RO ZA CZ). Their reports are
-read before the other 38 start. Progress is `var/item70-2026-09-24/rebuild/results.txt`.
+**Done 2026-09-25: all 44 built, every one exit 0, run from the owner's Terminal panel in two
+queues over about 9½ hours (19:07Z–04:23Z), without refreshing the EU store (the owner's call).**
+Every country's store is rebuilt now. The stores hold 281,595 pages, excluding Brazil and the EU
+store, against 237,283 after 2026-09-15; `var/pagetext/` is 919 MB. The pre-build copies are in
+`var/_backup_before_item70_2026-09-24/` (633 MB). Reports and exit codes are in
+`var/item70-2026-09-24/rebuild/`. **Not yet done: `selection-recall` and the `germany/IN/GB`
+sentinel.** What the reports show:
+- **Brazil's first store is thin.** 582 entries, 380 of them unreadable, and only 58 pages kept
+  text: `www.gov.br` stopped answering after six failures in a row, and the crawl never passed
+  depth 1. Egypt is the same shape: 203 held, 44 crawled, and `emigration.gov.eg`'s TLS
+  certificate could not be verified. Both reports say the frontier ran dry. Re-run Brazil at
+  another time before reading anything into it. Uruguay's first build is fine (2,707 entries).
+- **The archived-year veto (`scoring.py` `is_archived`) still discards current guidance, in three
+  more address forms than Malta's `uploads/<year>`.** South Africa's missions publish at
+  `dirco.gov.za/juba/2024/07/12/application-for-a-business-visa` (a publication date in the path)
+  and `…/wp-content/uploads/sites/57/2024/07/…Application-for-a-Visa….pdf` (WordPress multisite);
+  Cyprus at `gov.cy/media/sites/19/2024/06/…`; Croatia at `mvep.gov.hr/UserDocsImages/2023/…`,
+  including a Kenya short-stay supporting-documents list and the 2021 visa ordinance. Among the
+  reports' visa-worded rejections, Denmark's, Luxembourg's and most of Indonesia's are dated news,
+  rightly vetoed. TODO *Smaller things* has the fix; after it, re-run ZA, CY and HR only.
 
 **How to run it:**
 1. **From the owner's terminal, or Bash with the sandbox off** — never the sandboxed shell, where

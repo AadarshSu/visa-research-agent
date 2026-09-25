@@ -40,7 +40,7 @@ rule below still holds.
 **Offline build time and a higher one-time cost are acceptable** for anything that makes each live
 request better (entry 184). The live ~30s target and every storage rule are unchanged.
 
-**Next: the full rebuild of the 44 stores not yet rebuilt — its runbook is the first section of
+**The full rebuild finished 2026-09-25; next is grading it — the first section of
 [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md).**
 
 Where each stands is the table at the top of [TODO.md](TODO.md). What is left half-done is listed in
