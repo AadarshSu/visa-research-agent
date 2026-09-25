@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [208](#208-rule-8h-a-no-visa-that-holds-before-and-after-an-announced-change-is-not-held-back-by-its-start-date) | **Rule 8h** — the owner's decision: an announced change with no established start date does not hold back a "no visa" stated on both sides of it; nothing moved on 18 replayed packets; it does not fire for Thailand, where the start date is now known (15 September) and India is named only in the July announcement, not in the September notice's image list |
 | [207](#207-thailands-30-day-change-a-page-a-busy-host-refused-once-was-never-asked-for-again-and-the-change-was-on-a-domain-we-did-not-trust) | **Thailand's 30-day change** — a `429` was stored as permanent and never retried; builds now ask again for up to 100 transiently-failed entries, and a PDF read after a failure is marked readable; `thailand.prd.go.th` reviewed; Thailand now answers null with the Gazette date as the open question, never 60 days |
 | [206](#206-rule-8f-no-longer-needs-a-stated-general-rule--an-exemption-list-that-leaves-a-country-out-decides-visa-required) | **Rule 8f without the stated-rule condition** — the owner's decision: absence from the authority's complete exemption list decides "visa required"; China, South Korea and South Africa null → required (12 of 12 replays); Thailand and Singapore "no visa" held; an entry for another passport type does not count |
 | [205](#205-item-63s-ten-destinations--and-a-table-read-without-its-columns-told-a-traveller-no-visa) | **Item 63's ten destinations, and a table read without its columns** — South Africa told an ordinary Indian passport "no visa" from an exemption table flattened by `get_text`; tables are now read with each value under its heading; four re-runs: null (rule 8f), never "no"; decisions 6 of 10, checklists 4 of 10, against entry 58's 15 of 20 and 10 of 20 on other destinations |
@@ -259,6 +260,43 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 208. Rule 8h: a "no visa" that holds before and after an announced change is not held back by its start date
+
+**2026-09-25 · the owner's decision, on entry 207's question:** "say no visa and leave the stay
+length open".
+
+**The rule** (`prompts/extract_visa_plan.txt`, 8h). One source may state a change for this
+traveller's passport whose start date the sources do not establish. Where the sources state that
+the traveller needs no visa **both** under the rule before and under the change, the plan says no
+visa (8e's shape). Where the versions differ, it states both, cites both, and records as an open
+question which one applies on arrival. The bounds:
+- both versions must be stated by a source for this passport. An announcement that "withdraws the
+  current exemption" without naming who held it does not state that this traveller held it;
+- the plan never chooses a version, and never states the longer stay as the traveller's;
+- any source saying a visa is needed keeps the decision null. A visa on arrival offered beside an
+  exemption is not such a statement;
+- `decision_is_unverified` still governs.
+
+**Measured.** Replayed on 18 captured packets, 2 calls each, nothing moved:
+- Singapore "no visa"; Japan, China, South Africa and Germany "visa required"; New Zealand null;
+  Thailand's older packet "no visa".
+- Thailand's two entry-207 packets stayed null, correctly: each held the July announcement and no
+  source for the rule before.
+
+**Four fresh `thailand/IN/IN` runs, and why 8h does not fire there.**
+- **The rule before never reaches the plan call.** The July 2024 lists are pooled and not picked.
+- **The start date is now established.** A 4 September PRD notice says the revision was published
+  in the Royal Gazette on 31 August and **took effect on 15 September 2026**. It revokes the 60-day
+  scheme, expands the 30-day scheme to 60 countries and cuts visa on arrival to three. Its list of
+  the 60 is an image.
+- **With both pages, the roles call refused** in 2 of 4 runs. The July announcement names India
+  among 59; the September notice names none, of 60.
+- **With the July page alone, the plan held null** for want of the date (2 of 4).
+
+What would answer it is reading the two PRD pages together: the same revision, India named in the
+first, in force by the second. That is an inference toward "no visa", so it is put to the owner
+rather than taken (TODO item 63).
 
 ## 207. Thailand's 30-day change: a page a busy host refused once was never asked for again, and the change was on a domain we did not trust
 

@@ -1000,6 +1000,19 @@ def test_absence_from_an_exemption_list_decides_only_that_a_visa_is_required() -
     )
 
 
+def test_an_announced_change_does_not_hold_back_a_no_that_holds_on_both_sides() -> None:
+    """The owner's rule (entry 208): Thailand cut India's visa-free stay from 60 days to 30, and the
+    readable announcement gives no start date. Both versions say no visa, so the plan says so and
+    leaves the stay open. Both must be stated, and the longer stay is never the traveller's."""
+
+    prompt = load_extraction_prompt()
+
+    assert "8h. An announced change whose start date is not established" in prompt
+    assert "Both versions must be stated by a source for this passport" in prompt
+    assert "Never choose one, and never state the longer" in prompt
+    assert "does not state that this traveller held it" in prompt
+
+
 def test_one_short_quote_and_a_few_words_of_reason_where_nothing_conditions_a_document() -> None:
     """Item 56, the owner's choice of trims 2 and 3 (entry 175). Writing the plan is the longest
     wait in a request and its time tracks what it writes, so a claim carries one short quote rather

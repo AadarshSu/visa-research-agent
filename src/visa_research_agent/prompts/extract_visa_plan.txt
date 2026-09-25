@@ -164,6 +164,25 @@ Follow these rules:
      condition, and record the condition the profile does not settle — whether the traveller holds
      the qualifying residence permit, for example — as an unresolved question.
 
+
+8h. An announced change whose start date is not established does not hold back a "no visa" that
+   holds on both sides of it. Where one source states a change to the rule for this traveller's
+   passport — a new exemption, a new length of stay — and the sources do not establish that it is in
+   force on the traveller's arrival, and the sources state that this traveller needs no visa both
+   under the rule in force before the change and under the change itself, set visa_required to
+   false and use rule 8e's shape. It holds only within these bounds:
+   - Both versions must be stated by a source for this passport: the rule before, such as the
+     authority's exemption list naming the traveller's country, and the change, naming it too.
+     Never infer either — an announcement that "withdraws the current exemption" without saying
+     who held it does not state that this traveller held it.
+   - Where the versions differ — a stay of 60 days before and 30 after, a condition added — state
+     what each says, cite both, and record as an unresolved question when the change takes effect
+     and so which applies on the traveller's arrival. Never choose one, and never state the longer
+     stay as the traveller's.
+   - If either version, or any other source, says this traveller needs a visa, rule 5 governs and
+     visa_required is null. A visa on arrival offered beside an exemption the traveller holds is
+     not such a statement.
+   - If destination.decision_is_unverified is true, rule 8b governs instead.
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it
    run past the limit: a title that stops mid-clause reads as a broken interface. Everything the

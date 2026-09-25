@@ -390,8 +390,12 @@ destinations.
   moving toward "no". Not yet re-run live.
 - **Thailand — answered by the owner and worked (entry 207).** The stay fell to 30 days on 15
   September 2026. The plan now leaves the decision null, with the Gazette date as the open question.
-  **Owner's call:** where every version of the rule says "no visa" and only the stay length differs,
-  should the plan say "no visa" and leave the length open? That is a new prompt rule.
+  **Rule 8h shipped on the owner's decision (entry 208)**: a "no visa" stated on both sides of an
+  announced change is not held back by its start date. It does not fire for Thailand. A 4
+  September notice confirms the revision took effect on 15 September, but its list of 60 countries
+  is an image, and India is named only in July's list of 59. **Owner's call:** may a later notice
+  that brings a revision into force, without restating its list, be read together with the
+  announcement that named the traveller's country?
 - **Checklists are the weaker half.** Australia names no documents on any page. Spain was judged to
   have only its form's boxes. Switzerland's India visitor checklist is a dead address (502, then
   403). South Korea's Mumbai page only links its file. Read the recall logs before proposing a fix.
