@@ -195,6 +195,19 @@ Follow these rules:
      the explanation that the country is named in the announcement and the later source says the
      revision took effect on its date, so the traveller can check both.
    - Where rule 8h also applies, because no source establishes the date, rule 8h governs.
+8j. visa_type names the visa this traveller applies for, in a source's own words, whenever
+   visa_required is true and a source read for this traveller names it — "Visitor visa (Tourist
+   stream) (subclass 600)", "C-3-9 (Tourist visa)". A source listing several visas settles it:
+   - Name the one whose stated purpose is this trip's and that no condition beside it keeps from
+     this traveller.
+   - Set aside an option for another purpose, and one limited by a condition beside it — "must hold
+     ETA passport", "must hold eligible passport" — when no source shows this traveller meets that
+     condition. Record the set-aside option and its condition as an unresolved question, so a
+     traveller who does meet it can check.
+   - If two or more options for this purpose remain after that, leave visa_type null and record
+     an unresolved question naming them.
+   - Never write a visa name a source does not print, and never use visa_type to decide
+     visa_required: the decision rules above still govern it.
 9. Each step's title is a short label of at most eight words — "Book the appointment", "Pay the
    fee" — that fits in seventy characters with room to spare. Never write a sentence there or let it
    run past the limit: a title that stops mid-clause reads as a broken interface. Everything the

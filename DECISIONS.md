@@ -267,6 +267,34 @@ s more pressing |
 
 ---
 
+## 218. Rule 8j: a plan names the visa type a source prints, and chooses it from a list by its conditions
+
+**2026-09-26 · the owner's decision**, on entry 216's third question: "yes". The prompt had no rule
+for `visa_type`, so the model filled it only when a page said it outright. Australia's High
+Commission lists "Visitor visa (Tourist stream)(subclass 600)" beside options marked "must hold ETA
+passport" and "must hold eligible passport", and both plans left the type null. The owner asked the
+same of South Korea's C-3-9.
+
+**Rule 8j** (`extract_visa_plan.txt`), when a visa is required:
+- Name the visa in a source's own words.
+- From a list, take the option whose purpose is this trip's and that no condition beside it keeps
+  from the traveller.
+- Set aside an option limited by a condition no source shows the traveller meets, and record it
+  as an unresolved question, so a traveller who does meet it can check.
+- Two or more still fitting leaves it null, with a question naming them.
+- Never a name no source prints, and never used to decide `visa_required`.
+
+**Measured** (`item63-round3-217/`, `item63-round3-217b/`), two runs each:
+
+| corridor | visa type |
+| --- | --- |
+| Australia `IN/IN` | "Visitor visa (subclass 600) Tourist stream (apply outside Australia)" ×2 |
+| Germany `IN/GB` | "C visa", then "Schengen visa (C visa)", the Federal Foreign Office's words |
+| Japan `IN/GB` | "Temporary Visitor Visa" ×2, the embassy's fee table's words |
+| South Korea `IN/IN` | null ×2: C-3-9 is printed only in the checklist PDF we cannot fetch |
+
+Decisions and statuses were otherwise unchanged. Thailand's second run is entry 219's aside.
+
 ## 217. Home Affairs' visa pages are read from the response we were served, the sections they display only
 
 **2026-09-26 · the owner's decision**, on entry 216's second question: "yes". Home Affairs publishes
