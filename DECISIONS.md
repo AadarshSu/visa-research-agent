@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [205](#205-item-63s-ten-destinations--and-a-table-read-without-its-columns-told-a-traveller-no-visa) | **Item 63's ten destinations, and a table read without its columns** — South Africa told an ordinary Indian passport "no visa" from an exemption table flattened by `get_text`; tables are now read with each value under its heading; four re-runs: null (rule 8f), never "no"; decisions 6 of 10, checklists 4 of 10, against entry 58's 15 of 20 and 10 of 20 on other destinations |
 | [204](#204-the-full-rebuild-graded-the-stores-hold-every-answer-and-the-corridors-answer-as-before) | **The full rebuild, graded** — the stores hold every oracle answer (50/50, 42/42); nine of item 70's corridors, the Germany sentinel and Czechia answer visa required 3 of 3; Egypt 1 of 3 on byte-identical roles packets (model variance); Brazil refuses correctly, its visa table a PDF `robots.txt` disallows |
 | [203](#203-the-archived-year-veto-spares-every-filing-date-the-rebuilds-reports-showed-it-dropping) | **The archived-year veto spares filing dates** — a year under `uploads`, `media` or `UserDocsImages`, under `sites/<n>/`, or in a post permalink with a slug; South Africa +21 dated pages incl. its London and Paris exemption lists, Croatia +431 incl. the Kenya list, Cyprus +12 behind a challenge |
 | [202](#202-cloudflares-challenge-host-approved-measured-and-not-shipped--it-cannot-be-answered-honestly) | **Cloudflare's challenge host: approved, measured, not shipped** — with it allowed, 6 of 7 Cloudflare pages still refused our headless browser as a bot (no gate at all gave the same); passing would mean disguising the client, which entries 18 and 35 forbid; item 61 closes |
@@ -256,6 +257,101 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 205. Item 63's ten destinations — and a table read without its columns told a traveller "no visa"
+
+**2026-09-25 · TODO item 63, the owner: "10 destinations, go ahead".** The owner chose ten; they
+were picked among the rebuilt countries no corridor had touched since, across five regions:
+Australia, New Zealand, China, South Korea, Thailand, Vietnam, Turkey, South Africa, Spain and
+Switzerland. The traveller is the same in all of them: an Indian passport holder applying from
+India, for tourism, which is entry 58's "applying from home". Each destination ran twice through
+the `/visa-plans` path (`var/item70-2026-09-24/run.py`, one call at a time on Personas), summarised
+by `var/item70-2026-09-24/item63.py`.
+
+### The first round found a wrong "no visa required"
+
+**South Africa's second run answered visa *not* required, graded `verified`.**
+- The page it relied on is Home Affairs' exemption schedule. Its columns are Diplomatic, Official,
+  Service, **Ordinary**, Special and Visa Fees.
+- India's row fills the first three and leaves **Ordinary empty**. So an ordinary Indian passport
+  is not exempt, and a visa is needed.
+- `clean_source_html` took the page's text with BeautifulSoup's `get_text`. That puts each cell on
+  its own line and drops empty cells, so the row reached the model as "India / 90 Days / 90 Days /
+  90 Days / No".
+- The roles call read that as exempt in both runs. The plan call committed to it once, quoting the
+  flattened row, and held back once.
+
+This is CLAUDE.md's worst class of error: a wrong "no" suppresses every step that follows.
+
+**The fix: a data table is read as a table** (`table_as_lines`, `research/live_sources.py`).
+- Row and column spans are expanded into a grid.
+- The heading rows are written once. A heading row is `<th>`, or cells whose whole text is bold,
+  because this schedule marks its headings with `<strong>` in plain `<td>`s.
+- Each value carries its column's most specific heading, and an empty cell is left out. India now
+  reads `India | Diplomatic: 90 Days | Official: 90 Days | Service: 90 Days | Visa Fees: No`.
+- A table with a cell over 300 characters is a layout table and is left to `get_text` as before.
+  Korea's exemption table, whose cells are long country lists, is one.
+- Where a table has no headings, an empty cell is written as "—" to hold its position.
+- The cost is length: South Africa's page went from 12,491 to 20,726 characters. The roles
+  excerpt's windows around the traveller's country (entry 199) keep a long table's own row in
+  view.
+
+**The evidence cache stores extracted text**, and a validator match keeps it (entry 4). So the fix
+reaches a page only once it is fetched fresh. `var/cache/` was moved to
+`var/_backup_cache_before_tables_2026-09-25/` and starts empty.
+
+### Measured: the same ten, twice again, on the new text and a cold cache
+
+**South Africa, four runs on the new text:**
+- The roles call credited the schedule each time, with the reason "exempt only for diplomatic,
+  official and service passports, not ordinary passports … so a visa is required".
+- The plan held the decision at null all four times. Rule 8f needs a *stated* general rule, and the
+  sources did not state one.
+- **No run said "no visa".** Every run found a checklist, 7 to 10 documents.
+
+| destination | round 1 (old text, warm cache) | round 2 (tables, cold cache) |
+| --- | --- | --- |
+| Australia | required ×2, no checklist | same |
+| Spain | required ×2, no checklist | same |
+| Switzerland | required, then the plan refused | required ×2, no checklist |
+| Turkey | required ×2, checklist ×2, `verified` | same |
+| Vietnam | required ×2, checklist ×2, `verified` | same |
+| Thailand | **no visa** ×2, `verified` (July 2024 exemption list) | same |
+| New Zealand | null ×2 — decided by its official checker, named; checklist ×2 | same |
+| China | null ×2 (rule 8f); checklist 1 of 2 | same |
+| South Korea | null ×2 (rule 8f) | refused once (the deciding page returned too little text), null once |
+| South Africa | null, then **"no visa" — wrong** | null ×4 (rule 8f); checklist ×4 |
+
+**Rates, in entry 58's terms**, with a decision or a checklist found in every run of the corridor:
+
+| | round 1 | round 2 | entry 58 (other destinations) |
+| --- | --- | --- | --- |
+| decision confirmed | 5 of 10 | 6 of 10 | 15 of 20 |
+| checklist found | 3 of 10 | 4 of 10 | 10 of 20 |
+
+- **Thailand's checklist does not arise**, since it is visa-free (entry 94). Excluding it,
+  checklists were found in 4 of 9.
+- **These are what the corridors answered, not whether they were right** (known problem 26). The
+  owner checks the plans.
+
+### What the nulls and misses are
+
+- **Rule 8f is the binding bound on three of the four nulls.** China, South Korea and South Africa
+  each had the roles call credit a page listing who is exempt, and the traveller absent from it.
+  The plan declined, because no source *stated* the general rule that everyone else needs a visa.
+  - That is the bound as the owner set it in entry 197.
+  - Whether a page's exemption table *by passport type* should count as stating it is the owner's
+    call, not a defect.
+- **New Zealand's null is by design.** Immigration NZ decides through its questionnaire, which the
+  plan names (entry 60).
+- **Missing checklists:**
+  - Australia: no page names the documents.
+  - Spain: its application form's supporting-document boxes were judged not to be a checklist.
+  - Switzerland: its India visitor checklist PDF answered 502 when the store was built and 403 now.
+  - South Korea: its Mumbai page only links a checklist file.
+  - Each reason is recorded in the recall log.
+- **Thailand's "no visa" rests on a July 2024 announcement** (60 days for India). It is quoted and
+  `verified`; whether it is still current is for the owner to check.
 
 ## 204. The full rebuild, graded: the stores hold every answer, and the corridors answer as before
 

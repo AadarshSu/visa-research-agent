@@ -152,6 +152,74 @@ def test_clean_source_html_drops_chrome_and_blank_lines() -> None:
     assert "\n\n" not in cleaned
 
 
+# South Africa's exemption schedule, trimmed: a title row, bold `<td>` headings across two rows with
+# row and column spans, and empty cells that carry the answer (DECISIONS entry 205).
+EXEMPTION_TABLE = """
+<table border="1"><tbody>
+<tr><td colspan="7"><h3><strong>Visa Exemption List</strong></h3></td></tr>
+<tr><td rowspan="2"><strong>COUNTRY NAME</strong></td>
+    <td colspan="5"><strong>Passport Type</strong></td>
+    <td rowspan="2"><strong>Visa Fees</strong></td></tr>
+<tr><td><strong>Diplomatic</strong></td><td><strong>Official</strong></td>
+    <td><strong>Service</strong></td><td><strong>Ordinary</strong></td>
+    <td><strong>Special</strong></td></tr>
+<tr><td>India</td><td>90 Days</td><td>90 Days</td><td>90 Days</td><td></td><td></td><td>No</td></tr>
+<tr><td>United Kingdom</td><td></td><td></td><td></td><td>90 Days</td><td></td><td>No</td></tr>
+<tr><td>African Union Laissez Passer</td><td colspan="5">90 Days</td><td>No</td></tr>
+</tbody></table>
+"""
+
+
+def test_a_data_table_keeps_each_value_under_its_column() -> None:
+    """Flattened, India's row read "India 90 Days 90 Days 90 Days No" and a plan told an ordinary
+    Indian passport holder no visa was needed. Its Ordinary cell is empty."""
+
+    cleaned = clean_source_html(page(EXEMPTION_TABLE), maximum_characters=50_000)
+    lines = cleaned.splitlines()
+
+    assert "Visa Exemption List" in lines
+    assert (
+        "COUNTRY NAME | Diplomatic | Official | Service | Ordinary | Special | Visa Fees" in lines
+    )
+    assert (
+        "India | Diplomatic: 90 Days | Official: 90 Days | Service: 90 Days | Visa Fees: No"
+        in lines
+    )
+    assert "United Kingdom | Ordinary: 90 Days | Visa Fees: No" in lines
+    # a column span fills every column it covers
+    assert any(
+        line.startswith("African Union Laissez Passer | Diplomatic: 90 Days")
+        and "Ordinary: 90 Days" in line
+        for line in lines
+    )
+
+
+def test_a_table_without_headings_keeps_empty_cells_in_place() -> None:
+    table = (
+        "<table><tr><td>A</td><td></td><td>x</td></tr>"
+        "<tr><td>B</td><td>y</td><td></td></tr></table>"
+    )
+
+    lines = clean_source_html(page(table), maximum_characters=50_000).splitlines()
+
+    assert "A | — | x" in lines
+    assert "B | y | —" in lines
+
+
+def test_a_layout_table_is_left_as_text() -> None:
+    """A page built out of a table holds paragraphs in its cells; labelling them would bury them."""
+
+    paragraph = "Applicants must submit the following documents in person. " * 8
+    table = (
+        f"<table><tr><td>Menu</td><td>{paragraph}</td></tr><tr><td>x</td><td>y</td></tr></table>"
+    )
+
+    cleaned = clean_source_html(page(table), maximum_characters=50_000)
+
+    assert " | " not in cleaned
+    assert paragraph.split(".")[0] in cleaned
+
+
 def test_clean_source_html_truncates_to_the_character_budget() -> None:
     cleaned = clean_source_html(page(PAGE_BODY), maximum_characters=120)
 

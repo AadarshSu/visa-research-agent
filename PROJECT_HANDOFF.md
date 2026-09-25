@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-25 — update this line when you touch the handoff |
-| **Tests** | 944: 943 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 947: 946 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -39,10 +39,13 @@ disproved. Link instead of copying.
 ## Next session: the full rebuild is done and graded — start here
 
 **Every one of the 55 destinations was rebuilt by 2026-09-25 and graded the same day (DECISIONS
-entries 203 and 204).** **Next is TODO's *Now*, surveyed the same day:** item 63's broad answer
-rate on the rebuilt stores (you size it, since you check the plans), then 57 (progress on screen),
-then 64 (expansion, which asks you first). Items 65 and 67 are blocked, 65 on Ofself deploying
-GPT-6 and 67 on OpenAI credit.
+entries 203 and 204).** **Item 63's ten destinations then ran (entry 205)** and found a wrong
+"no visa" for South Africa: an exemption table flattened without its columns. Tables are now read
+with each value under its heading, and **`var/cache/` was emptied for it** (the old one is
+`var/_backup_cache_before_tables_2026-09-25/`), because the cache keeps extracted text. **Next:** the
+owner's questions in TODO item 63 (rule 8f and exemption tables, Thailand's 2024 list), then 57
+(progress on screen), then 64 (expansion, which asks first). Items 65 and 67 are blocked, 65 on
+Ofself deploying GPT-6 and 67 on OpenAI credit.
 
 **What was built.**
 - The ten pilot countries and Malta on 2026-09-24; the other 44 (42 corpora plus Brazil and

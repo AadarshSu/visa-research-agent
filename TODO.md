@@ -18,7 +18,7 @@ points at the items that do the work. The detail lives in the items, not here.
 | **Model calls paid through Ofself Personas**, on their OpenAI key | **Done 2026-09-24 (entry 188), and the route from now on — the owner.** All three calls go through Personas on Ofself's account; graded against the direct route's baselines. One Japan inference is a *Smaller thing* | 62 (done) | — |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen, Now), **58** (research); **65** and **60** blocked | Ofself: a Fast tier setting (60) and a GPT-6 deployment (65) |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` needs an Ofself sign-in since 2026-09-24 (entry 191); the stores are still local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
-| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **The full rebuild is done and graded (2026-09-25, entries 203 and 204); next is item 63's broad answer rate, sized by the owner** | **63** | the owner's own checking (entry 68) |
+| **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **The full rebuild is done and graded (entries 203, 204). Item 63's ten destinations ran 2026-09-25 (entry 205)**: decisions 6 of 10, checklists 4 of 10, and a wrong "no visa" from a flattened table, fixed. Next is the owner's questions on rule 8f and Thailand (item 63) | **63** | the owner's own checking (entry 68) |
 | **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have no row. The page offers all 198 (known problem 23). Schengen's EU half of item 2 is done (entry 201); governments with no hostname marker remain | **64**, **2** | nothing external — search credit only |
 
 **Offline cost is not the constraint — the owner, 2026-09-23 (entry 184).** Build time and a higher
@@ -375,14 +375,23 @@ caveat.
   (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
   Singapore only).
 
-**Next step — a broad answer rate on the rebuilt stores, sized by the owner.** The owner dropped the
-pilot's before-and-after comparison (a rebuilt store should answer on its own merits), so this is
-one arm. Corridor runs cost search only on Personas, about $0.05 each.
-- **Choose the corridors by destination, as entry 58 advised,** among the rebuilt countries no
-  corridor has touched. Agree the number with the owner first, because the owner checks them.
-- **Run each at least twice** (entry 144), through `var/item70-2026-09-24/run.py`, which keeps the
-  packets a refusal needs traced.
-- **Report decision and checklist rates beside entry 58's**, and put the plans in front of the owner.
+**Done 2026-09-25 (entry 205): ten destinations, the owner's number.** Australia, New Zealand,
+China, South Korea, Thailand, Vietnam, Turkey, South Africa, Spain and Switzerland ran for `IN/IN`,
+twice each. **It found a wrong "no visa"**: South Africa's exemption table reached the model without
+its columns, and India's empty *Ordinary* cell vanished. Tables are now read with each value under
+its heading, and four re-runs never said "no". The rates were 6 of 10 decisions and 4 of 10
+checklists (4 of 9 where a checklist arises), against entry 58's 15 of 20 and 10 of 20 on other
+destinations.
+
+**Next, the owner's questions from it:**
+- **Rule 8f bounds three of the four nulls.** China, South Korea and South Africa each list the
+  traveller as not exempt, but none *states* that everyone else needs a visa. Should an exemption
+  table *by passport type* (India under Diplomatic, Official and Service only) count as stating it?
+  That widens entry 197, so it is a decision entry first.
+- **Thailand says "no visa", verified, from a July 2024 announcement.** Is it still current?
+- **Checklists are the weaker half.** Australia names no documents on any page. Spain was judged to
+  have only its form's boxes. Switzerland's India visitor checklist is a dead address (502, then
+  403). South Korea's Mumbai page only links its file. Read the recall logs before proposing a fix.
 
 ### 57. Stream the plan to the screen as it is written — `next`, **a UX improvement, added 2026-09-15; moved to Now 2026-09-25**
 

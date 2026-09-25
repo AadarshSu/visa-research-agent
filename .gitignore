@@ -50,4 +50,6 @@ var/item70-2026-09-24/sentinel/
 var/item70-2026-09-24/regress/
 var/item70-2026-09-24/eu/
 var/item70-2026-09-24/graded/
+var/item70-2026-09-24/item63/
+var/item70-2026-09-24/item63-tables/
 var/item70-2026-09-24/veto/*.json

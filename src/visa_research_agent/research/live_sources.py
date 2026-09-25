@@ -55,12 +55,152 @@ STRIPPED_TAGS = (
 )
 
 
+# A table is read as data only when every cell is short. A layout table — a page built out of one —
+# holds paragraphs in its cells, and labelling those would bury the guidance in column headings.
+MAXIMUM_DATA_CELL_CHARACTERS = 300
+MAXIMUM_HEADER_ROWS = 3
+EMPTY_CELL = "—"
+
+
+def _cell_text(cell: Tag) -> str:
+    return " ".join(cell.get_text(separator=" ").split())
+
+
+def _is_header_row(cells: list[Tag]) -> bool:
+    """A row of `<th>`, or of cells whose whole text is bold — South Africa's exemption schedule
+    marks its headings with `<strong>` inside plain `<td>`s (DECISIONS entry 205)."""
+
+    filled = [cell for cell in cells if _cell_text(cell)]
+    if not filled:
+        return False
+
+    def is_heading(cell: Tag) -> bool:
+        if cell.name == "th":
+            return True
+        bold = " ".join(
+            " ".join(tag.get_text(separator=" ").split()) for tag in cell.find_all(["strong", "b"])
+        )
+        return bool(bold) and bold == _cell_text(cell)
+
+    return all(is_heading(cell) for cell in filled)
+
+
+def _span(cell: Tag, attribute: str) -> int:
+    value = str(cell.get(attribute) or "1").strip()
+    return max(1, min(int(value), 100)) if value.isdigit() else 1
+
+
+def table_as_lines(table: Tag) -> list[str] | None:
+    """A data table as one line per row, every cell labelled with its column's heading.
+
+    `get_text` puts each cell on its own line and drops the empty ones, which loses which column a
+    value sat in. South Africa's schedule lists India as `90 Days` under Diplomatic, Official and
+    Service and **nothing** under Ordinary; flattened, the row read "India 90 Days 90 Days 90 Days
+    No", and a plan told an ordinary Indian passport holder no visa was needed (entry 205). So
+    merged cells are expanded into a grid, the heading rows are written once, and each value
+    carries its column's most specific heading: `India | Diplomatic: 90 Days | Official: 90 Days |
+    Service: 90 Days | Visa Fees: No` — Ordinary is absent because the page left it empty.
+
+    Returns None for a table that is not data — one row or one column, or a long cell — and the
+    caller leaves it to `get_text` as before.
+    """
+
+    rows = [
+        row.find_all(["td", "th"], recursive=False)
+        for row in table.find_all("tr")
+        if row.find_parent("table") is table
+    ]
+    rows = [cells for cells in rows if cells]
+    if len(rows) < 2 or any(
+        len(_cell_text(cell)) > MAXIMUM_DATA_CELL_CHARACTERS for cells in rows for cell in cells
+    ):
+        return None
+
+    # Expand row and column spans into a grid, so every value keeps its column.
+    grid: list[list[str]] = []
+    header_flags: list[bool] = []
+    carried: dict[int, tuple[str, int]] = {}  # column -> (text, rows still to fill)
+    for cells in rows:
+        line: list[str] = []
+        queue = list(cells)
+        column = 0
+        while queue or any(col >= column for col in carried):
+            if column in carried:
+                text, remaining = carried[column]
+                line.append(text)
+                if remaining > 1:
+                    carried[column] = (text, remaining - 1)
+                else:
+                    del carried[column]
+                column += 1
+                continue
+            if not queue:
+                break
+            cell = queue.pop(0)
+            text = _cell_text(cell)
+            for _ in range(_span(cell, "colspan")):
+                if _span(cell, "rowspan") > 1:
+                    carried[column] = (text, _span(cell, "rowspan") - 1)
+                line.append(text)
+                column += 1
+        grid.append(line)
+        header_flags.append(_is_header_row(cells))
+    width = max(len(line) for line in grid)
+    if width < 2:
+        return None
+    grid = [line + [""] * (width - len(line)) for line in grid]
+
+    def spans_whole_row(line: list[str]) -> bool:
+        return len(set(line)) == 1
+
+    lines: list[str] = []
+    headers: list[list[str]] = []
+    index = 0
+    # A title row across the whole table, then up to three heading rows.
+    while index < len(grid) and spans_whole_row(grid[index]) and header_flags[index]:
+        lines.append(grid[index][0])
+        index += 1
+    while index < len(grid) and header_flags[index] and len(headers) < MAXIMUM_HEADER_ROWS:
+        headers.append(grid[index])
+        index += 1
+    # The headings once, as they stand, then each value under its most specific one.
+    for header in headers:
+        lines.append(" | ".join(dict.fromkeys(cell for cell in header if cell)))
+    labels = [
+        next((header[column] for header in reversed(headers) if header[column]), "")
+        for column in range(width)
+    ]
+
+    for line in grid[index:]:
+        if spans_whole_row(line):
+            lines.append(line[0])
+            continue
+        # An empty cell is left out rather than written: every value that remains names its
+        # column, so "India | Diplomatic: 90 Days" cannot be read as covering Ordinary. Without
+        # headings there is nothing to name, so the empty cell is kept to hold the position.
+        cells_out = [line[0] or EMPTY_CELL]
+        for column in range(1, width):
+            value = line[column]
+            if labels[column]:
+                if value:
+                    cells_out.append(f"{labels[column]}: {value}")
+            else:
+                cells_out.append(value or EMPTY_CELL)
+        lines.append(" | ".join(cells_out))
+    return lines
+
+
 def clean_source_html(html: str, *, maximum_characters: int) -> str:
     """Reduce a page to bounded readable text, dropping chrome and blank lines."""
 
     soup = BeautifulSoup(html, "html.parser")
     for tag in soup.find_all(STRIPPED_TAGS):
         tag.decompose()
+    # Innermost first, so an outer table meets its inner ones already reduced to text.
+    for table in reversed(soup.find_all("table")):
+        rows = table_as_lines(table)
+        if rows is not None:
+            table.replace_with("\n" + "\n".join(rows) + "\n")
 
     text = soup.get_text(separator="\n")
     lines = (line.strip() for line in text.splitlines())
