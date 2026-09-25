@@ -8,7 +8,7 @@ truth; these files are.
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-25 — update this line when you touch the handoff |
-| **Tests** | 965: 964 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
+| **Tests** | 967: 966 passing and 1 skipped (the opt-in browser test), run 2026-09-25 with the corpora in place — the two corpus tests now run, and skip the EU store; `ruff` and `mypy --strict` clean. The suite is blocked from the network — `tests/conftest.py`, entry 45 |
 
 ---
 
@@ -36,58 +36,52 @@ disproved. Link instead of copying.
 
 ---
 
-## Next session: the owner's verdicts on item 63's second round — start here
+## Next session: five decisions from the owner on Australia and South Korea — start here
 
-**Updated 2026-09-25, at the end of the session that ran it.** The owner is judging 20 plans on
-[Ten Corridors, Second Round](https://claude.ai/artifact/XGJy6wjofg6tDcWc9jZu7K). The session
-starts from the verdicts the owner pastes in, produced by the page's "Copy my verdicts" button: one
-line per destination, `Right`, `Wrong` or `Unsure`, with a note. The page keeps them in the owner's
-browser only, so the paste is the one copy you get.
+**Updated 2026-09-25.** The owner judged item 63's second round (entry 216): **7 right, Australia
+wrong, South Korea and Spain unsure.** Spain is fixed and measured (entry 215). Australia and South
+Korea are diagnosed and wait on the owner. **Ask these before building anything for them:**
 
-**Where everything is**
-- **What the round did:** DECISIONS entry 214, with the table of all ten.
-- **Why the plans look as they do:** entries 205–213.
-  - 205: tables are read with their headings.
-  - 206: rule 8f widened.
-  - 207: Thailand, and retrying pages that failed only transiently.
-  - 208, 209: rules 8h and 8i.
-  - 210: the checklist a page links to is followed.
-  - 211: checklists are linked, never copied.
-  - 212: renders go to the most promising pages first.
-  - 213: an unread checklist is named only in the page's own words.
-- **The 20 runs' raw outputs:** `var/item70-2026-09-24/item63-round2/<slug>_IN_IN/<1|2>/`.
-  - `plan.json` is the plan and `recall/*.json` what the corridor considered.
-  - `roles_packet.txt` and `roles_answer.json` are the roles call's input and answer; `plan_packet.json`
-    and `plan_draft.json` the plan call's.
-  - `result.json` holds why a plan was refused.
-  - The first round, before the fixes, is in `item63/`.
+- **Australia:**
+  1. May a plan name, with its link and unread, a page whose own title says it is this trip's visa?
+     This would widen entry 213's rule for unread checklists.
+  2. May Home Affairs' content be read from the hidden field the plain response carries, and only
+     the sections the page displays?
+  3. May a plan state the visa type from a page listing the options, as with "Visitor visa (Tourist
+     stream) (subclass 600)" beside passport conditions? The owner asked the same for South
+     Korea's C-3-9.
+- **South Korea:**
+  4. Should a PDF download we could not open be named, labelled as such, or dropped?
+  5. Should `visaforkorea-ce.com` go on `service_providers.yaml`? Entry 89's bar is a company
+     several governments name.
+
+**Also open from this session.**
+- **Japan `IN/GB` left its decision open in both regression runs** (entry 215; TODO item 63). The
+  roles call chose the embassy's general page over the ministry's exemption list. That is a
+  reachable answer lost, and not caused by the fix.
+- **The stores hold SharePoint pages empty** until a rebuild (entry 215). Spain, Portugal, Canada,
+  Saudi Arabia, Croatia and Austria have the most `.aspx` entries. Ask before rebuilding.
+
+**Where everything is.**
+- **The round:** entry 214, and the review page
+  [Ten Corridors, Second Round](https://claude.ai/artifact/XGJy6wjofg6tDcWc9jZu7K).
+- **Raw outputs:**
+  - `var/item70-2026-09-24/item63-round2/<slug>_IN_IN/<1|2>/`
+  - `item63-round3-forms/`: Spain and the regression set after entry 215's fix.
 - **Tooling.**
-  - `var/item70-2026-09-24/run.py N slug/NAT/RES …` re-runs corridors, with `ITEM70_OUT=<folder>`.
-  - `replay_plan.py` replays only the plan call on a saved `plan_packet.json`.
-  - `review/build_review_data.py` and `review/template.html` rebuild the page.
-  - Run anything that fetches from the owner's Terminal panel: Chromium cannot start in the
-    sandboxed shell.
-
-**Already known, before any verdict**
-- **Turkey** left its decision open in one run: an e-Visa only with a Schengen, US, UK or Irish
-  visa, otherwise a sticker visa. That is rule 8g's case, where every route issues a visa.
-- **South Africa** run 1 has no plan: the model's reply cited `south_af_dirco_elementor_1431},{`
-  and validation refused it.
-- **Egypt `BD/SA`** varies on a byte-identical roles packet (entry 204, TODO *Smaller things*).
-- **Australia and Spain** have no checklist read: their pages mostly fail to render.
+  - `var/item70-2026-09-24/run.py N slug/NAT/RES …` re-runs corridors, with `ITEM70_OUT=<folder>`
+    and optionally `ITEM70_CORPUS=<copy>`.
+  - `replay_plan.py` replays the plan call.
+  - `probe_render.py` renders pages with the project's renderer and prints what came back.
+  - Run anything that fetches or renders from the owner's Terminal panel: Chromium cannot start
+    in the sandboxed shell.
 - **Leftovers to tidy, not urgent:**
   - Three cache backups: `var/_backup_cache_before_{tables,links,priority}_2026-09-25/`.
   - The pre-rebuild store backups: `var/_backup_before_item70_2026-09-24/`, 633 MB.
   - The pilot's uncommitted logs, and `nohup.out`.
 
-**How to work the verdicts.** For each `Wrong`:
-1. Find the first link that broke — search, selection, roles or plan — from the run's files.
-2. Check the claim against the official page the note names.
-3. Propose a fix, and measure it on that corridor and on the regression set (Japan `IN/GB`,
-   Singapore `PH/PH`, Germany `IN/GB`, Thailand `IN/IN`) before shipping.
-
 A fix that changes what a plan may conclude is the owner's decision (entries 206–209 are the
-pattern). Record each in DECISIONS and CORRECTIONS as this file asks.
+pattern). Record each in DECISIONS and CORRECTIONS.
 
 ## Earlier: the full rebuild is done and graded
 

@@ -396,7 +396,8 @@ destinations.
   is an image, and India is named only in July's list of 59. **Then the owner allowed the two to be read
   together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
 - **Second round run 2026-09-25 (entry 214):** decisions 5 → 7 of 10, checklists 3 → 5 of 10.
-  **Waiting on the owner's verdicts** from the review page before this round can close.
+  **The owner's verdicts (entry 216):** 7 right, Australia wrong, South Korea and Spain unsure.
+  Spain is fixed (entry 215). Australia and South Korea wait on five decisions listed in entry 216.
 - **Checklists — worked (entries 210–212).**
   - A corridor reads the checklist a page it read links to.
   - Plans now link the authority's checklist instead of copying it, and name a likely one they
@@ -405,7 +406,9 @@ destinations.
   - **Spain — fixed (entry 215).** Its pages never needed a browser; the cleaner deleted the form
     ASP.NET wraps round the page. `verified` ×2 with the consulate's checklist linked. The stores
     still hold SharePoint pages empty until a rebuild, which is asked for first.
-  - **Left:** Australia and South Korea — see entry 216 and the owner's decisions it waits on.
+  - **Left:** Australia and South Korea. Australia's answer page is chosen, but its CDN refuses
+    our browser. South Korea's checklist PDF sends our client to a waiting room. Both wait on the
+    owner (entry 216).
   - **Japan `IN/GB` left its decision open ×2 on 2026-09-25 (entry 215)**, after three `verified`
     runs. Selection picked more pages, and the roles call chose the embassy's general visa page
     over the ministry's exemption list, so rule 8f had no list to read. Not caused by entry 215;
@@ -1849,6 +1852,12 @@ now do (entry 204).
 portal's disclaimer says a visa is required before entry; the model refuses when it notices
 Bangladesh is off the e-Visa list. Whether rule 8g or the roles prompt should settle that is a
 prompt question — measure it with `replay_roles.py` on the captured packet before changing anything.
+
+**A PDF served as `application/octet-stream` from a path without `.pdf` is read as HTML (entry
+216).** `looks_like_pdf` trusts only the content type and the path. South Korea's checklist is
+`down.do`, served as `octet-stream`; checking the `%PDF-` signature would catch it. It changes
+nothing for Korea while the ministry's waiting room stands, so it waits for a corridor it would
+help.
 
 **`canonicalise_url` drops a trailing slash before a query string, and some servers care.** Found on
 EUR-Lex (entry 201): `…/TXT/HTML/?uri=…` is the regulation, `…/TXT/HTML?uri=…` is "Page Not Found".

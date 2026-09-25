@@ -267,6 +267,85 @@ s more pressing |
 
 ---
 
+## 216. The owner's verdicts on item 63's second round, and what Australia and South Korea are waiting on
+
+**2026-09-25 · the owner's verdicts on entry 214's twenty plans.**
+- **Right, 7:** New Zealand, China, Thailand, Vietnam, Turkey, South Africa, Switzerland.
+- **Wrong, 1:** Australia.
+- **Unsure, 2:** South Korea, and Spain, which entry 215 fixed.
+
+**What the owner said beside the Right ones.**
+- **New Zealand:** the decision can be deduced without the checker, from the visa-waiver list and
+  the page on who needs no NZeTA. Showing the checker is acceptable.
+- **Turkey:** "visa required, route conditional" is right for now. Once Ofself supplies where a
+  traveller holds residence permits, the e-Visa condition could be settled (item 55).
+- **South Africa:** right this round, but it has differed every round: open, then "no visa", then
+  no plan, then "visa required".
+
+### Australia: the answer page was chosen every time and could never be read
+
+The owner traced it: the High Commission's Australian visas page → its Visitor visas page → Home
+Affairs' *Visitor visa (subclass 600) Tourist stream (apply outside Australia)*. That page gives
+the stay, the cost, what the visa allows and the steps, and it has the Apply button.
+- **Found, shortlisted and chosen in both runs**, from search. It is not a corpus or selection
+  miss.
+- **A plain request gets it** (`200`, 1.3 MB), but the content is a JSON object in a hidden field
+  (`PageSchemaHiddenField`) that the page's script lays out. The rest of the body cleans to 268
+  characters of chrome, so the page is set aside for the browser.
+- **Home Affairs' CDN refuses the browser.** Measured with the project's renderer
+  (`var/item70-2026-09-24/probe_render.py`): Akamai's *"Access Denied. You don't have permission
+  to access …"*, on both pages tried. The run then records a failed render and gives up on the host
+  after three. **So entry 212's diagnosis is wrong**: incidental pages did not use the host up.
+  Every render on it is refused, and no ordering would have helped.
+- **The hidden JSON is not safe to read wholesale.** Beside the tabs the page shows, it holds a
+  `sponsor` section of template text the page never displays. One line reads *"This is a permanent
+  visa. You can stay in Australia indefinitely"*; another, *"Here' the description health
+  requirements"*.
+- **The visa type was deducible and left null.** The corridor read the High Commission's Visitor
+  visas page. It lists "Visitor visa (Tourist stream)(subclass 600)" with no passport condition.
+  The ETA says "must hold ETA passport", and eVisitor and both working-holiday visas say "must
+  hold eligible passport".
+
+**Waiting on the owner.**
+1. **Naming the page.** Entry 213 names an unread *checklist* when the government's own words say
+   it is this trip's. The same bar could name an unread page for this trip's *visa*: its title
+   says "Tourist stream (apply outside Australia)", and it would be named with its link, never
+   read. That widens entry 213, so it is the owner's call.
+2. **Reading Home Affairs' embedded content.** Reading only the sections the page displays, from
+   the response our honest request received, would be a reader for one site's layout. It would not
+   be a workaround, since nothing is retried or disguised, but the undisplayed template text above
+   is the risk it must exclude.
+3. **Stating the visa type from a page that lists the options.** That changes what a plan may
+   conclude, as entries 206–209 did. The owner asked the same of South Korea (C-3-9).
+
+### South Korea: the checklist exists, is the right one, and our client is queued
+
+- **The named link is a download** (`…/brd/m_1978/down.do?…`), served as `application/octet-stream`.
+- **Our client is sent to the ministry's waiting room.** The first answer is a `307` back to the
+  same address with a cookie, then `/waitingroom/main.html`. The run reported *"labelled as a
+  document and returned a web page instead"*: literally true, but it hides the queue.
+  - `curl` with a cookie jar gets the PDF in one redirect, on each of two tries. No request header
+    explains the difference.
+  - It was not pursued further: making our client look like another one is exactly what the
+    project forbids.
+- **The PDF is the right checklist.** It was read by hand for this diagnosis, never by the program:
+  the Mumbai consulate's checklist dated 24.08.2026, 15 pages covering every visa type. Its tourist
+  section is headed *"C-3-9 (Tourist visa) Visa checklist"*. So the type the owner asked for is
+  stated only inside the file we cannot fetch.
+- **Even if served, it would not be recognised.** `looks_like_pdf` trusts a PDF content type or a
+  `.pdf` path, and this is neither. A check of the `%PDF-` signature would catch it. Listed under
+  *Smaller things*, because it changes nothing while the queue stands.
+- **The Visa Application Centre.** The New Delhi embassy page the corridor read names the "VFS
+  Global Korean Visa Application Centre" in New Delhi and Kolkata, with no link our crawl recorded.
+  `visaforkorea-ce.com`, which the owner found, is not on `service_providers.yaml`. Entry 89's bar
+  for that list is a company several destinations' governments name, so adding a one-destination
+  domain is the owner's call.
+
+**Waiting on the owner.**
+1. **Is a direct PDF download we could not open acceptable to name?** The owner is uneasy. It can be
+   labelled as a download we could not open, dropped, or kept as it is.
+2. **`visaforkorea-ce.com`**: whether it goes on the delegates list.
+
 ## 215. A form that is the whole page is read, not deleted — and Spain's checklist was never behind a browser
 
 **2026-09-25 · the owner's verdict on Spain (entry 214's round): "Unsure"**, pointing at the New
