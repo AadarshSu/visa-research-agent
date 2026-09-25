@@ -41,6 +41,13 @@ FULL_CHECKLIST = f"https://{MISSION}/visa/tourism-checklist.html"
 # `FULL_CHECKLIST`, so only a test that seeds that page ever reaches it.
 TOURISM_CHECKLIST_PDF = f"https://{MISSION}/files/tourism-checklist.pdf"
 
+# Switzerland's India page, in shape: the procedure is described on the page and each purpose's
+# checklist is a PDF labelled only with the purpose (entry 210). Linked from nothing, so only a test
+# that seeds it ever reaches it; the business PDF is served too, so reading it would be visible.
+CHECKLIST_HUB = f"https://{MISSION}/visa/procedure.html"
+TOURIST_PDF = f"https://{MISSION}/files/checklist-tourist.pdf"
+BUSINESS_PDF = f"https://{MISSION}/files/checklist-business.pdf"
+
 # A single-page application, as Vietnam's e-visa portal is: the served HTML is an empty mount
 # point, and every link only exists once the scripts have run. It is deliberately not linked from
 # any other page, so it is only ever reached by a test that seeds it.
@@ -156,6 +163,13 @@ def site_pages() -> dict[str, str]:
             "Visa: Spouse Visa Documents Required",
             "<h1>Spouse visa</h1><p>Documents required for a spouse visa application.</p>",
         ),
+        CHECKLIST_HUB: page(
+            "Application for a Schengen visa: procedure",
+            "<h1>Application procedure</h1><p>Personal appearance is mandatory when applying for a "
+            "visa. Processing time for a visa application is 7 to 10 calendar days after "
+            "submission at any application centre.</p>"
+            "<h2>Checklists</h2>" + link(BUSINESS_PDF, "Business") + link(TOURIST_PDF, "Tourist"),
+        ),
     }
 
 
@@ -220,6 +234,12 @@ def handler(requests: list[httpx.Request], *, robots: dict[str, str] | None = No
             return httpx.Response(200, text=published, headers={"Content-Type": "text/plain"})
         requests.append(request)
         url = str(request.url).rstrip("/")
+        if url in (TOURIST_PDF, BUSINESS_PDF):
+            return httpx.Response(
+                200,
+                content=minimal_pdf(CHECKLIST_PDF_LINES),
+                headers={"Content-Type": "application/pdf"},
+            )
         if url == TOURISM_CHECKLIST_PDF:
             # Served as real bytes, because the point of reading a PDF at all is that its text is
             # the only thing identifying it: nothing links to it with words a scorer can use.

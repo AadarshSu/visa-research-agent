@@ -395,9 +395,12 @@ destinations.
   September notice confirms the revision took effect on 15 September, but its list of 60 countries
   is an image, and India is named only in July's list of 59. **Then the owner allowed the two to be read
   together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
-- **Checklists are the weaker half.** Australia names no documents on any page. Spain was judged to
-  have only its form's boxes. Switzerland's India visitor checklist is a dead address (502, then
-  403). South Korea's Mumbai page only links its file. Read the recall logs before proposing a fix.
+- **Checklists — fix 1 shipped (entry 210):** a corridor reads the checklist a page it read links
+  to. Switzerland 0 → 2 of 2. **Left:** Australia and Spain need pages rendered past the render
+  budget, and Korea's checklist sits behind a waiting room — both item 61's render question, which
+  is the owner's. Australia's also lost its step-by-step page to the selector's cap once, while
+  seven near-identical quarterly reports were read; a de-duplication of such series before the
+  cap is proposed, not measured.
 
 ### 57. Stream the plan to the screen as it is written — `next`, **a UX improvement, added 2026-09-15; moved to Now 2026-09-25**
 

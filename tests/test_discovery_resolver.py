@@ -9,6 +9,8 @@ import pytest
 from discovery_site import (
     ARCHIVED,
     AUTHORITY,
+    BUSINESS_PDF,
+    CHECKLIST_HUB,
     DETAIL_CHINA,
     DETAIL_INDIA,
     EXEMPTIONS,
@@ -17,6 +19,7 @@ from discovery_site import (
     MISSION_INDEX,
     MISSION_SPOUSE,
     OFF_DOMAIN,
+    TOURIST_PDF,
     destination,
     handler,
     site_pages,
@@ -31,6 +34,7 @@ from visa_research_agent.discovery.adjudication import (
 )
 from visa_research_agent.discovery.corpus import CorpusEntry, CountryCorpus
 from visa_research_agent.discovery.crawl import DEFAULT_CRAWL_PAGES, CrawlFetcher
+from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import (
     CandidatePage,
     Corridor,
@@ -42,13 +46,16 @@ from visa_research_agent.discovery.models import (
 from visa_research_agent.discovery.resolver import (
     DEFAULT_SHORTLIST_SIZE,
     CorridorResolver,
+    FetchedShortlist,
     build_source_id,
     clean_title,
     derive_authority,
 )
+from visa_research_agent.discovery.scoring import score_link, wrong_audience
 from visa_research_agent.discovery.search import SearchError, SearchQuotaExhausted
+from visa_research_agent.domain.models import DocumentLink
 from visa_research_agent.domain.trust import host_of
-from visa_research_agent.research.live_sources import LiveSourceFetcher
+from visa_research_agent.research.live_sources import LiveSourceFetcher, extract_document_links
 from visa_research_agent.research.source_cache import FileSourceCache
 
 RESOLVED_AT = datetime(2026, 8, 15, 9, 0, tzinfo=UTC)
@@ -1243,3 +1250,75 @@ def test_a_link_stating_who_must_hold_a_visa_scores_for_the_decision_two_hops_de
     scores = score_link(link, corridor, get_lexicon(), nationality, residence)
 
     assert scores.score_for("visa_decision") > 0
+
+
+@pytest.mark.anyio
+async def test_the_checklist_a_read_page_links_to_is_read_as_well(tmp_path: Path) -> None:
+    """Switzerland's India page lists its checklists as PDFs labelled "Business" and "Tourist",
+    and a corridor answering from the store read the page and never the PDF (entry 210). The one
+    for this traveller's purpose is now read; another purpose's, an off-domain one and one for a
+    diplomatic passport are not."""
+
+    requests: list[httpx.Request] = []
+    resolver, _provider = build_resolver(tmp_path, requests, [])
+    hub = CandidatePage(
+        link=PageLink(url=CHECKLIST_HUB, text="Procedure", heading="", depth=0, discovered_from=""),
+        link_scores=RoleScores(),
+    )
+    heading = "Checklists"
+    fetched = FetchedShortlist(
+        candidates=[hub],
+        by_id={"hub": hub},
+        contents={"hub": "Application procedure"},
+        links={
+            "hub": [
+                DocumentLink(url=BUSINESS_PDF, text="Business", heading=heading),
+                DocumentLink(url=TOURIST_PDF, text="Tourist", heading=heading),
+                DocumentLink(url=f"{OFF_DOMAIN}/tourist.pdf", text="Tourist", heading=heading),
+                DocumentLink(
+                    url=f"https://{AUTHORITY}/files/official.pdf",
+                    text="Official passports checklist",
+                    heading=heading,
+                ),
+            ]
+        },
+    )
+    lexicon = get_lexicon()
+    registry = get_country_registry()
+
+    def score(link: PageLink) -> RoleScores:
+        return score_link(link, corridor(), lexicon, registry.require("IN"), registry.require("GB"))
+
+    def reject(link: PageLink) -> str | None:
+        return wrong_audience(link, corridor(), lexicon)
+
+    notes: list[str] = []
+    merged = await resolver._follow_document_links(
+        destination(), corridor(), registry.require("IN"), fetched, score, reject, notes
+    )
+
+    asked = {str(request.url) for request in requests}
+    assert asked == {TOURIST_PDF}
+    assert {candidate.link.url for candidate in merged.candidates} == {CHECKLIST_HUB, TOURIST_PDF}
+    assert "hub" in merged.by_id and len(merged.by_id) == 2, "ids from the two reads never collide"
+    assert any("checklist documents linked from pages" in note for note in notes)
+
+
+def test_a_page_s_document_links_are_read_off_its_markup() -> None:
+    html = (
+        "<h2>Checklists</h2>"
+        '<a href="/files/tourist.pdf">Tourist</a>'
+        "<a href=\"javascript:f_down('./down.do?id=1')\">Korean Visa checklist.pdf</a>"
+        '<a href="/visa/other.html">Other page</a>'
+        '<a href="/files/tourist.pdf#page=2">Tourist again</a>'
+    )
+
+    links = extract_document_links(html, "https://uk.embassy.gov.example/visa/procedure.html")
+
+    assert links == [
+        DocumentLink(
+            url="https://uk.embassy.gov.example/files/tourist.pdf",
+            text="Tourist",
+            heading="Checklists",
+        )
+    ]

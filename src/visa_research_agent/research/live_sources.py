@@ -10,7 +10,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from hashlib import sha256
 from io import BytesIO
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
@@ -23,6 +23,7 @@ from visa_research_agent.domain.models import (
     BLOCKING_STATUS_CODES,
     ConfiguredSource,
     DestinationConfig,
+    DocumentLink,
     FailureOutcome,
     FetchedSource,
     RetrievalReport,
@@ -188,6 +189,41 @@ def table_as_lines(table: Tag) -> list[str] | None:
                 cells_out.append(value or EMPTY_CELL)
         lines.append(" | ".join(cells_out))
     return lines
+
+
+DOCUMENT_SUFFIXES = (".pdf", ".doc", ".docx")
+MAXIMUM_DOCUMENT_LINKS = 80
+HEADINGS = ("h1", "h2", "h3", "h4", "h5", "h6")
+
+
+def extract_document_links(html: str, base_url: str) -> list[DocumentLink]:
+    """The documents a page links to, with the label the page gives each and the heading above it.
+
+    Only ordinary links to a PDF or Word file. A `javascript:` link is not followed: reading an
+    address out of a script is a step further than reading the page, and the one case found —
+    South Korea's consulate attachments — sits behind a waiting room anyway (entry 210). Trust is
+    not decided here; the caller checks every address against the approved domains before any
+    request.
+    """
+
+    soup = BeautifulSoup(html, "html.parser")
+    found: dict[str, DocumentLink] = {}
+    for anchor in soup.find_all("a", href=True):
+        href = str(anchor.get("href") or "").strip()
+        if not href or href.lower().startswith(("javascript:", "mailto:", "#")):
+            continue
+        url = urljoin(base_url, href).split("#", 1)[0]
+        if not url.lower().startswith(("http://", "https://")):
+            continue
+        if not urlsplit(url).path.lower().endswith(DOCUMENT_SUFFIXES):
+            continue
+        text = " ".join(anchor.get_text(separator=" ").split()) or str(anchor.get("title") or "")
+        previous = anchor.find_previous(HEADINGS)
+        heading = " ".join(previous.get_text(separator=" ").split()) if previous else ""
+        found.setdefault(url, DocumentLink(url=url, text=text[:300], heading=heading[:300]))
+        if len(found) >= MAXIMUM_DOCUMENT_LINKS:
+            break
+    return list(found.values())
 
 
 def clean_source_html(html: str, *, maximum_characters: int) -> str:
@@ -685,9 +721,12 @@ class LiveSourceFetcher:
                 status=response.status_code,
             )
 
+        document_links: list[DocumentLink] = []
         try:
             content, document = await self._read_document(client, destination, response)
             final_url = str(document.url)
+            if not looks_like_pdf(document):
+                document_links = extract_document_links(document.text, final_url)
             # A page that gave up nothing readable may still be a real page whose text only
             # exists once its scripts have run. Rendering is tried here and nowhere else, so
             # the pages that already work never meet a browser.
@@ -743,6 +782,7 @@ class LiveSourceFetcher:
             http_status=response.status_code,
             etag=response.headers.get("etag"),
             last_modified=response.headers.get("last-modified"),
+            document_links=document_links,
         )
         self.cache.store(entry)
         return self._build(configured_source, entry, from_cache=False, is_stale=False)
@@ -994,4 +1034,5 @@ class LiveSourceFetcher:
             content=entry.content,
             content_hash=entry.content_hash,
             from_cache=from_cache,
+            document_links=entry.document_links,
         )

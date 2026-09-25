@@ -10,6 +10,7 @@ from pydantic import Field, ValidationError, field_validator
 from visa_research_agent.domain.models import (
     MAXIMUM_HTTP_STATUS,
     MINIMUM_HTTP_STATUS,
+    DocumentLink,
     StrictModel,
 )
 from visa_research_agent.research.errors import LiveSourceError
@@ -27,6 +28,9 @@ class CachedSource(StrictModel):
     http_status: int = Field(ge=MINIMUM_HTTP_STATUS, le=MAXIMUM_HTTP_STATUS)
     etag: str | None = None
     last_modified: str | None = None
+    document_links: list[DocumentLink] = Field(default_factory=list)
+    """The documents the page linked to when it was read (entry 210). Empty for a PDF, for a page
+    read by rendering, and for anything cached before this field existed."""
 
     @field_validator("fetched_at")
     @classmethod

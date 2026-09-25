@@ -672,6 +672,19 @@ class SourceReference(StrictModel):
     _validate_retrieved_at = field_validator("retrieved_at")(_require_aware_datetime)
 
 
+class DocumentLink(StrictModel):
+    """A document a fetched page links to: where, and what the page calls it.
+
+    Read off the page's own markup by our code — never written by a model — so that a corridor can
+    open the checklist a page it read points at (entry 210). It carries no content: until it is
+    fetched through the ordinary path, nobody has read it.
+    """
+
+    url: str = Field(min_length=1)
+    text: str = ""
+    heading: str = ""
+
+
 class FetchedSource(StrictModel):
     """Cleaned source material and retrieval metadata passed to extraction."""
 
@@ -679,6 +692,8 @@ class FetchedSource(StrictModel):
     content: str = Field(min_length=1)
     content_hash: str = Field(min_length=1)
     from_cache: bool = False
+    document_links: list[DocumentLink] = Field(default_factory=list)
+    """Documents the page links to (entry 210). Addresses and labels only; never evidence."""
 
 
 class SourceFailure(StrictModel):

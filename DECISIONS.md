@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [210](#210-a-corridor-reads-the-checklist-a-page-it-read-links-to-one-hop-down) | **The checklist one hop down** — pages keep the documents they link to; a corridor reads up to two labelled with this trip's purpose or as a checklist, on trusted domains; Switzerland 0 → 2 of 2 checklists; Australia and Spain are the render budget, Korea a waiting room (item 61); no regressions |
 | [209](#209-an-announcement-naming-the-country-and-a-later-notice-bringing-it-into-force-may-be-read-together) | **Two pages read together for a decision** — the owner's decision: an announcement naming the country plus a later notice that the same revision took effect (roles rule 7a, `in_force_source_id`, plan rule 8i); Thailand "no visa, 30 days" 4 of 4, citing both; five regressions unchanged |
 | [208](#208-rule-8h-a-no-visa-that-holds-before-and-after-an-announced-change-is-not-held-back-by-its-start-date) | **Rule 8h** — the owner's decision: an announced change with no established start date does not hold back a "no visa" stated on both sides of it; nothing moved on 18 replayed packets; it does not fire for Thailand, where the start date is now known (15 September) and India is named only in the July announcement, not in the September notice's image list |
 | [207](#207-thailands-30-day-change-a-page-a-busy-host-refused-once-was-never-asked-for-again-and-the-change-was-on-a-domain-we-did-not-trust) | **Thailand's 30-day change** — a `429` was stored as permanent and never retried; builds now ask again for up to 100 transiently-failed entries, and a PDF read after a failure is marked readable; `thailand.prd.go.th` reviewed; Thailand now answers null with the Gazette date as the open question, never 60 days |
@@ -261,6 +262,56 @@ s more pressing |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
 
 ---
+
+## 210. A corridor reads the checklist a page it read links to, one hop down
+
+**2026-09-25 · TODO item 63's checklist half, the owner's choice of fix.** Of the four `IN/IN`
+destinations with no checklist (entry 205), none lacked one:
+- **Switzerland:** its India page lists each purpose's checklist as a PDF labelled "Business",
+  "Tourist", "Personal visit". The corridor read the page and never the PDF, so the model saw the
+  label and nothing behind it.
+- **South Korea:** the Mumbai consulate's page attaches "Korean Visa checklist (w.e.f.
+  24.08.2026).pdf".
+- **Australia:** Home Affairs' step-by-step page is in the store. It was cut by the selector's cap
+  while seven near-identical quarterly processing reports were read.
+- **Spain:** the only tourist checklist read was the Dublin embassy's, rightly refused.
+
+**The fix: one hop, for documents only.**
+- **What the fetcher records.** Reading a web page, it keeps the documents the page links to:
+  `extract_document_links` takes plain `<a href>` links to a PDF or Word file, with each link's
+  label and the heading above it. They are carried in `FetchedSource.document_links` and cached in
+  `CachedSource`.
+- **What the resolver reads.** After the ordinary read, `_follow_document_links` reads at most two
+  of them (`MAXIMUM_FOLLOWED_DOCUMENTS`). Each must be:
+  - on the destination's trusted domains;
+  - clear of every veto a corridor applies to a link (archived, site furniture, another passport
+    type, another country);
+  - scoring for `document_checklist` for this traveller;
+  - labelled either with this trip's purpose, or as a checklist that names no other purpose. Under
+    "Checklists", "Business" scores on the heading alone and is not a tourist's.
+- They are fetched through the ordinary path, so trust, `robots.txt` and every refusal rule apply,
+  and they join the pages the roles call chooses from. Followed documents are recorded in the
+  recall trace.
+
+**Not followed: a `javascript:` link.** Reading an address out of a script is a step past reading
+the page. And Korea's attachment, the one case found, answers a waiting room (a queue page that
+releases the file only to a browser running its script), so no plain fetch could get it.
+
+**The evidence cache was moved again** (`var/_backup_cache_before_links_2026-09-25/`). Links are
+captured only when a page is read, and pages cached earlier carry none.
+
+**Measured: twelve fresh runs on a cold cache.**
+- **Switzerland: checklist 0 of 2 → 2 of 2**, from `Checklist_Tourist-EN.pdf`, 10 documents. Run 1
+  read it by following ("2 of 2 checklist documents linked from pages this run read were read as
+  well"), and the corridor wrote it back to the store, so run 2 found it there.
+- **Australia and Spain: unchanged, and not by this.** Their Home Affairs and consulate pages need a
+  browser, and the render budget gives up on a host after three failures. The thin-page counts
+  match this morning's first round (Australia 16, 14; Spain 11, 12), before any of today's
+  changes. That is item 61's render-budget question.
+- **South Korea refused in both runs.** The Chennai decision page came back thin in one; no
+  document was followed. Korea's checklist needs the waiting room answered, which is also item 61.
+- **Regressions:** Turkey (16 documents), Vietnam (2), Germany `IN/GB` (12) kept their checklists,
+  and Thailand still says "no visa".
 
 ## 209. An announcement naming the country and a later notice bringing it into force may be read together
 

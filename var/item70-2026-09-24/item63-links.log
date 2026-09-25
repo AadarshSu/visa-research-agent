@@ -1,0 +1,14 @@
+switzerland/IN/IN run 1: research resolved, plan answered, True (77.0s)
+spain/IN/IN run 1: research resolved, plan answered, True (56.8s)
+south-korea/IN/IN run 1: research refused, plan -, {'message': "South Korea's official sources were searched, but no page could be confirmed as the visa decision, document (48.5s)
+australia/IN/IN run 1: research resolved, plan answered, True (37.8s)
+switzerland/IN/IN run 2: research resolved, plan answered, True (50.1s)
+spain/IN/IN run 2: research resolved, plan answered, True (65.4s)
+south-korea/IN/IN run 2: research refused, plan -, {'message': "South Korea's official sources were searched, but no page could be confirmed as the visa decision, document (46.1s)
+australia/IN/IN run 2: research resolved, plan answered, True (38.2s)
+done
+turkey/IN/IN run 1: research resolved, plan answered, True (80.0s)
+vietnam/IN/IN run 1: research resolved, plan answered, True (50.0s)
+thailand/IN/IN run 1: research resolved, plan answered, False (41.1s)
+germany/IN/GB run 1: research resolved, plan answered, True (56.1s)
+done

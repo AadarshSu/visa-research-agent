@@ -25,7 +25,7 @@ the owner's terminal: headless Chromium cannot start from Claude Code's sandboxe
 - `veto/measure.py CC ...` — entry 203: what a re-run under the widened archived-year veto recorded
   that the store lacked, against the `<CC>.before.json` copies taken just before (not committed).
 - `graded.log` — entry 204's grading runs, one line each (`ITEM70_OUT=graded run.py 3 …`).
-- `item63.py [OUT]` and `item63.log`, `item63-tables.log`, `item63-thailand.log` (entry 207), `item63-thailand-8h.log` and `plan_8h.jsonl` (entry 208), `item63-joined.log` (entry 209) — entry 205: the ten-destination round
+- `item63.py [OUT]` and `item63.log`, `item63-tables.log`, `item63-thailand.log` (entry 207), `item63-thailand-8h.log` and `plan_8h.jsonl` (entry 208), `item63-joined.log` (entry 209), `item63-links.log` (entry 210) — entry 205: the ten-destination round
   and its re-run on the table fix; the raw outputs in `item63/` and `item63-tables/` are not committed.
 - `trace.md` — the working notes, per corridor. `run.log` — every run's one-line outcome.
 

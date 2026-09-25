@@ -118,6 +118,7 @@ from visa_research_agent.domain.models import (
     PERSISTENT_REFUSAL_STATUS_CODES,
     ConfiguredSource,
     DestinationConfig,
+    DocumentLink,
     FailureOutcome,
     SourceFailure,
     SourceKind,
@@ -210,6 +211,9 @@ DEFAULT_SHORTLIST_DOMAIN_FLOOR = 1
 # PDF a US traveller's windows land at 19,452 and 24,449, and the second is text a flat 20,000
 # cuts.
 DEFAULT_EXCERPT_CHARACTERS = 20_000
+# How many documents a corridor may open one hop below the pages it read (entry 210). Two, because
+# a page usually lists one checklist per purpose and the label alone may not settle which applies.
+MAXIMUM_FOLLOWED_DOCUMENTS = 2
 # The head is kept whole because it carries the title, the "on this page" list and what the page is
 # for. It is the old flat budget, so no page is now shown less of its head than before.
 DEFAULT_EXCERPT_HEAD_CHARACTERS = 6_000
@@ -287,6 +291,8 @@ class FetchedShortlist(StrictModel):
     candidates: list[CandidatePage] = Field(default_factory=list)
     by_id: dict[str, CandidatePage] = Field(default_factory=dict)
     contents: dict[str, str] = Field(default_factory=dict)
+    links: dict[str, list[DocumentLink]] = Field(default_factory=dict)
+    """The documents each read page links to, by source id (entry 210)."""
     failures: list[SourceFailure] = Field(default_factory=list)
     """Why the rest could not be read, carried out rather than dropped.
 
@@ -913,6 +919,15 @@ class CorridorResolver:
         trace.shortlisted = {candidate.link.url for candidate in shortlist}
         trace.begin("fetch")
         fetched = await self._fetch_bodies(destination, shortlist, corridor, nationality)
+        # One hop further for the checklist: a document a page just read links to (entry 210).
+        fetched = await self._follow_document_links(
+            destination, corridor, nationality, fetched, score, reject, notes
+        )
+        # A followed document was never a candidate, so it is recorded here or the recall log
+        # shows a page read that nothing chose.
+        for candidate in fetched.candidates:
+            trace.candidates.setdefault(candidate.link.url, candidate)
+            trace.shortlisted.add(candidate.link.url)
         trace.fetched = {candidate.link.url for candidate in fetched.candidates}
         # Refusals met while reading the shortlist, folded in beside the crawl's. Both are
         # observations from this run; neither is complete on its own, and with no crawl the fetch
@@ -1488,6 +1503,8 @@ class CorridorResolver:
         shortlist: list[CandidatePage],
         corridor: Corridor,
         nationality: object,
+        *,
+        taken: set[str] | None = None,
     ) -> "FetchedShortlist":
         """Read each shortlisted page and score its own text.
 
@@ -1506,7 +1523,8 @@ class CorridorResolver:
         if not shortlist:
             return FetchedShortlist()
 
-        taken: set[str] = set()
+        # Shared with an earlier read in the same run, so a later one cannot reuse an id.
+        taken = taken if taken is not None else set()
         probe_sources: list[ConfiguredSource] = []
         by_id: dict[str, CandidatePage] = {}
         for candidate in shortlist:
@@ -1538,8 +1556,10 @@ class CorridorResolver:
 
         report = await self.live_fetcher.fetch(probe)
         contents: dict[str, str] = {}
+        links: dict[str, list[DocumentLink]] = {}
         for item in report.fetched:
             contents[item.source.source_id] = item.content
+            links[item.source.source_id] = list(item.document_links)
             fetched_candidate = by_id.get(item.source.source_id)
             if fetched_candidate is None:
                 continue
@@ -1558,8 +1578,107 @@ class CorridorResolver:
             candidates=[by_id[source_id] for source_id in readable],
             by_id={source_id: by_id[source_id] for source_id in readable},
             contents=contents,
+            links={source_id: links[source_id] for source_id in readable if source_id in links},
             failures=list(report.failures),
         )
+
+    async def _follow_document_links(
+        self,
+        destination: DestinationConfig,
+        corridor: Corridor,
+        nationality: object,
+        fetched: "FetchedShortlist",
+        score: Callable[[PageLink], RoleScores],
+        reject: Callable[[PageLink], str | None],
+        notes: list[str],
+    ) -> "FetchedShortlist":
+        """Read the checklist a page this run read links to, when nothing chose it beforehand.
+
+        Switzerland's India page lists its checklists as PDFs labelled "Business", "Tourist",
+        "Personal visit"; the corridor read the page and never the PDF behind "Tourist", so the
+        model saw the label and nothing under it (entry 210). The same gap a build closes one hop
+        below a page it records (entry 88), closed here for the pages a corridor actually reads.
+
+        Bounded three ways: only documents on the destination's own trusted domains, only ones
+        whose label scores for `document_checklist` *for this traveller* after every veto a
+        corridor applies to a link — another purpose, another passport type, an archived path —
+        and at most `MAXIMUM_FOLLOWED_DOCUMENTS`. A followed document is fetched through the
+        ordinary path, so trust, `robots.txt` and every refusal rule apply to it as to any page.
+        """
+
+        read = {candidate.link.url for candidate in fetched.candidates}
+        offered: dict[str, CandidatePage] = {}
+        for source_id, links in fetched.links.items():
+            parent = fetched.by_id.get(source_id)
+            if parent is None:
+                continue
+            for document in links:
+                url = canonicalise_url(document.url)
+                if url in read or url in offered:
+                    continue
+                if not host_is_within(host_of(url), destination.trusted_domains):
+                    continue
+                link = PageLink(
+                    url=url,
+                    text=document.text[:300],
+                    heading=document.heading[:300],
+                    depth=parent.link.depth + 1,
+                    discovered_from=parent.link.url,
+                )
+                if reject(link) is not None:
+                    continue
+                scores = score(link)
+                if scores.score_for("document_checklist") <= 0:
+                    continue
+                if not self._is_this_trips_checklist(link, corridor, scores):
+                    continue
+                offered[url] = CandidatePage(
+                    link=link, link_scores=scores, title=document.text or None, found_by="crawl"
+                )
+        if not offered:
+            return fetched
+
+        chosen = sorted(
+            offered.values(),
+            key=lambda page: (-page.link_scores.score_for("document_checklist"), page.link.url),
+        )[:MAXIMUM_FOLLOWED_DOCUMENTS]
+        more = await self._fetch_bodies(
+            destination, chosen, corridor, nationality, taken=set(fetched.by_id)
+        )
+        notes.append(
+            f"{len(more.candidates)} of {len(chosen)} checklist documents linked from pages this "
+            "run read were read as well"
+        )
+        return FetchedShortlist(
+            candidates=[*fetched.candidates, *more.candidates],
+            by_id={**fetched.by_id, **more.by_id},
+            contents={**fetched.contents, **more.contents},
+            links={**fetched.links, **more.links},
+            failures=[*fetched.failures, *more.failures],
+        )
+
+    def _is_this_trips_checklist(
+        self, link: PageLink, corridor: Corridor, scores: RoleScores
+    ) -> bool:
+        """A document's own label names this trip's purpose, or calls itself a checklist and names
+        no other purpose.
+
+        The heading alone is not enough: under "Checklists" a PDF labelled "Business" scores for
+        the checklist role on the heading, and is not this tourist's (entry 210)."""
+
+        signals = scores.signals.get("document_checklist", [])
+        if any(signal.startswith(("purpose:", "purpose-label:")) for signal in signals):
+            return True
+        label = link.text.lower()
+        other_purposes = [
+            term.lower()
+            for purpose, terms in self.lexicon.purposes.items()
+            if purpose != corridor.purpose
+            for term in terms.terms
+        ]
+        if any(term in label for term in other_purposes):
+            return False
+        return "checklist" in label or "documents required" in label
 
     async def _decide_roles(
         self,
