@@ -267,6 +267,26 @@ s more pressing |
 
 ---
 
+## 224. The owner's verdicts on the third round: Australia and Spain right, South Korea wrong
+
+**2026-09-26 · the owner, on [Three Corridors, Third
+Round](https://claude.ai/artifact/M9we8hEeRYWsSHCG9iiWdU)**, two runs each on the code and stores
+of entries 215–223 (`item63-rebuilt-2026-09-26/`):
+- **Australia: right.** It was wrong in the second round. Both runs are `verified`, with the Tourist
+  stream page linked and the visa type named.
+- **Spain: right.** It was unsure in the second round. Both runs are `verified`, with the
+  consulate's Schengen checklist linked.
+- **South Korea: wrong.** "Mostly correct, but … the second run links a link that isn't a document
+  checklist." That is entry 223's case: the roles call credited the Chennai consulate's exemption
+  and fee page on one generic sentence.
+
+**How often.** 1 of South Korea's 13 saved live runs credited a checklist, and it was this page. On
+that run's packet, 0 of 5 replays did. So it is about 1 in 18, but a wrong one is graded `verified`
+and hides the real PDF, so the owner marks the corridor wrong. The stricter rule 4 tried in entry
+223 did not help. What is left to try is in TODO *Smaller things*.
+
+---
+
 ## 223. The SharePoint countries and Korea rebuilt: Spain's and Saudi Arabia's stored text returns, and Korea records no visa centre
 
 **2026-09-26 · the owner: "yes"** to rebuilding the stores entry 215 left holding empty SharePoint

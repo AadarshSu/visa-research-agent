@@ -1856,11 +1856,17 @@ portal's disclaimer says a visa is required before entry; the model refuses when
 Bangladesh is off the e-Visa list. Whether rule 8g or the roles prompt should settle that is a
 prompt question — measure it with `replay_roles.py` on the captured packet before changing anything.
 
-**The roles call can credit a generic sentence as the checklist (entry 223).** South Korea `IN/IN`
+**The roles call can credit a generic sentence as the checklist (entries 223, 224) — the owner
+marked South Korea wrong for it.** South Korea `IN/IN`
 once credited the Chennai consulate's exemption and fee page, on "passport, application forms, a
 recent passport-size color photograph, and other relevant documents", and the plan was graded
 `verified` over a page with no checklist. Replayed, the committed prompt credited nothing 5 of 5;
-a stricter rule 4 did no better. Worth a fix only with a measurement that shows the rate.
+a stricter rule 4 did no better. About 1 run in 18. Untried:
+- a deterministic floor on how many distinct documents a credited checklist page names
+  (`names_documents` exists in `scoring.py`);
+- refusing a checklist credited from the page the same call credited as an exemption list.
+
+Measure either on the saved packets before shipping it.
 
 **A PDF served as `application/octet-stream` from a path without `.pdf` is read as HTML (entry
 216).** `looks_like_pdf` trusts only the content type and the path. South Korea's checklist is

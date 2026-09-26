@@ -58,10 +58,8 @@ resting on two pages, judged one at a time:
 and Saudi Arabia. Korea recorded no visa centre, because the ministry queues automated requests.
 
 **What is next.**
-- **Put Australia, South Korea and Spain back in front of the owner.** The review page is built by
-  `review/build_review_data.py`.
-- **A rare wrong checklist:** South Korea once credited a generic sentence (entry 223, TODO
-  *Smaller things*).
+- **The owner re-judged them (entry 224): Australia and Spain right, South Korea wrong** for its
+  rare wrong checklist, about 1 run in 18 (TODO *Smaller things*, with two untried fixes).
 - Otherwise TODO's **Now** list: item 57 (the plan on screen as it is written) follows 63.
 
 **Where everything is.**
