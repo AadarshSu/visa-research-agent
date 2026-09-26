@@ -1100,4 +1100,38 @@ function formSentence(payload) {
   return "Fields filled from your Ofself account say so. Check them, and fill in the rest.";
 }
 
-prefillFromOfself();
+const routeFrom = document.querySelector("#route-from");
+const routeTo = document.querySelector("#route-to");
+const routePassport = document.querySelector("#route-passport");
+const routePurpose = document.querySelector("#route-purpose");
+const coverageChips = document.querySelectorAll(".coverage-chip");
+
+function chosenLabel(select) {
+  const option = select.selectedOptions[0];
+  return option && option.value ? option.textContent.trim() : "—";
+}
+
+// The ticket restates the form. Prefill and the choice buttons set values without a change event,
+// so it is refreshed on any change or click in the form, and once the Ofself prefill settles.
+function updateRoute() {
+  routeFrom.textContent = chosenLabel(residenceSelect);
+  routeTo.textContent = chosenLabel(destinationSelect);
+  routePassport.textContent = chosenLabel(nationalitySelect);
+  routePurpose.textContent = chosenLabel(purposeSelect);
+  coverageChips.forEach((chip) => {
+    chip.setAttribute("aria-pressed", String(chip.dataset.destination === destinationSelect.value));
+  });
+}
+
+form.addEventListener("change", updateRoute);
+form.addEventListener("click", () => requestAnimationFrame(updateRoute));
+coverageChips.forEach((chip) => {
+  chip.addEventListener("click", () => {
+    destinationSelect.value = chip.dataset.destination;
+    destinationSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+});
+
+updateRoute();
+prefillFromOfself().finally(updateRoute);

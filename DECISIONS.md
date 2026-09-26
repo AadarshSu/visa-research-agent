@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and every destination as a button; every sentence on it checked against the code |
 | [229](#229-the-form-and-landing-page-are-polished-and-say-only-what-is-true) | **The form and landing page are polished** — the owner chose polish over a redesign; the header chip stops naming an internal mode, and the intro keeps "an official government page" because a Schengen decision may be the EU's |
 | [228](#228-the-destination-list-offers-only-countries-with-a-registry-row) | **The destination list offers only countries with a registry row** — the owner's decision: 55 offered, not 198; the refusal for an unbuilt country is unchanged for a direct request |
 | [227](#227-quotes-are-removed-from-the-plan--a-checked-quote-can-still-be-a-useless-fragment) | **Quotes are removed from the plan** — the owner's decision: a quote checked word for word could still be a fragment like "India yes Indonesia yes"; the plan call writes none, the page shows none, and a claim stands on its citations; Japan and Singapore decisions unchanged on one replay each |
@@ -268,6 +269,36 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 230. The landing page is redesigned, bolder
+
+**2026-09-26 · the owner, after entry 229:** "be more bold, it's quite a boring page." Supersedes
+229's layout; 229's copy rules stand.
+
+**What changed** (`templates/index.html`, `static/styles.css`, the end of `static/app.js`):
+- **A dark green hero band** with a dotted grid and a dashed flight path, the headline "Visa answers,
+  straight from *official sources*" with the accent in gold, and three figures: destinations offered
+  (entry 228's count), passports in the country list, and ~1 minute for a fresh plan.
+- **The form is a plan-request ticket.** Its top restates the form as a route — *From* residence
+  ✈ *To* destination, passport and purpose — updated on any change or click in the form and after the
+  Ofself prefill, because prefill and the choice buttons set values without a change event. A long
+  name wraps rather than being cut. The button is gold. Progress and errors sit inside the ticket.
+- **The empty state is three "how a plan is made" cards**, replaced by the plan as before.
+- **Every offered destination is a button** that fills the form and fires the destination's
+  `change`, so it clears Ofself's notes exactly as choosing from the list does.
+
+**Every sentence checked against the code, because the page is a claim:** "confirmed as the
+destination government's own" (a `trusted` domain is rule-confirmed, not always person-reviewed, so
+not "reviewed"), "plus the EU's for a Schengen visa decision" (entry 201), "a page that refuses
+automated reading is named with its link, never guessed at" (entry 27), "what could not be confirmed
+stays open; with too little evidence, no plan is given" (entries 5, 27).
+
+**Seen** in Chromium at 1280px and 390px, signed out: no horizontal scroll, no script error;
+clicking Japan then choosing India as residence set the select, pressed the chip and read *India ✈
+Japan*; a rendered refusal panel and the progress list fit the new page. The plan view itself is
+unchanged and unseen with a real plan.
 
 ---
 

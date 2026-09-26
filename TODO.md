@@ -327,9 +327,9 @@ corridor rather than silently degrade.
 **Why — the owner, 2026-09-26.** Asked for as a goal. **Ask the owner what to change next** before
 building; the owner chose to polish the current design, not redesign it.
 
-**Done 2026-09-26 (entry 229): the form and landing page** — accurate header chip and intro, a
-destination count, bordered 2×2 fields with a full-width button, a shorter hero, a lighter empty
-state. Seen at 1280px and 390px wide.
+**Done 2026-09-26 (entries 229, 230): the form and landing page**, redesigned after the owner asked
+for bolder — a dark hero, the form as a plan-request ticket with a live route line, a how-it-works
+strip, and every destination as a button. Seen at 1280px and 390px wide.
 
 **Left, each the owner's call:** the plan view (only checkable with a real plan, in the owner's
 browser), the progress list while a plan runs, and the refusal screen, which belongs to item 73.

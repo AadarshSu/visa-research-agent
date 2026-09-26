@@ -9,128 +9,184 @@
     <script src="{{ url_for('static', path='/app.js') }}?v={{ static_asset_version }}" defer></script>
   </head>
   <body data-signed-in="{{ 'true' if signed_in else 'false' }}">
-    <div class="page-shell">
-      <header class="masthead">
-        <a class="wordmark" href="/" aria-label="Visa Research Desk home">
-          <span class="wordmark-mark">VR</span>
-          <span>Visa Research Desk</span>
-        </a>
-        <div class="masthead-actions">
-          <span class="mode-chip{% if source_mode != 'live' or extraction_mode == 'fixture' %} mode-chip--offline{% endif %}">
-            <span class="status-dot"></span>{% if source_mode == 'live' %}Live official sources{% else %}Saved snapshots, not live{% endif %}{% if extraction_mode == 'fixture' %} · fixture plans{% endif %}
-          </span>
-          {% if signed_in %}
-            <form class="account" method="post" action="/oauth/logout">
-              <span class="account-state">Signed in with Ofself</span>
-              <button class="account-action" type="submit">Sign out</button>
-            </form>
-          {% elif sign_in_configured %}
-            <a class="account-action" href="/oauth/login">Sign in with Ofself</a>
-          {% endif %}
-        </div>
-      </header>
-
-      <main>
-        <section class="hero" aria-labelledby="page-title">
-          <p class="eyebrow">Source-backed visa research</p>
-          <h1 id="page-title">Turn official guidance into a practical visa plan.</h1>
-          <p class="hero-copy">
-            Every claim is grounded in an official government page, and anything that could not be
-            verified is said plainly.
-          </p>
-          <ul class="hero-facts">
-            <li>{{ destinations | length }} destinations so far</li>
-            <li>Ordinary passports only</li>
-            <li>{% if source_mode == 'live' %}Official sources, read live{% else %}Saved official-source snapshots{% endif %}</li>
-          </ul>
-
-          {% if signed_in %}<p id="ofself-note" class="form-note" role="status" hidden></p>{% endif %}
-          {% set plans_locked = sign_in_required and not signed_in %}
-          {% if plans_locked %}
-            <p id="sign-in-note" class="form-note form-note--warn" role="status">
-              {% if sign_in_configured %}
-                <a href="/oauth/login">Sign in with Ofself</a> to generate a plan.
-              {% else %}
-                Plans need sign-in with Ofself, which is not configured on this server.
-              {% endif %}
-            </p>
-          {% endif %}
-          <form id="plan-form" class="research-form">
-            <div class="field-group">
-              <label for="destination">Destination</label>
-              <select id="destination" name="destination" {% if signed_in %}required{% endif %}>
-                {% if signed_in %}<option value="" selected>Choose a destination</option>{% endif %}
-                {% for destination in destinations %}
-                  <option
-                    value="{{ destination.slug }}"
-                    {% if destination.status != 'available' %}disabled{% endif %}
-                  >
-                    {{ destination.name }}{% if destination.status != 'available' %} — future phase{% endif %}
-                  </option>
-                {% endfor %}
-              </select>
-              <p id="destination-note" class="field-note" role="status" hidden></p>
-              <div id="destination-choices" class="field-choices" hidden></div>
-            </div>
-            <div class="field-group">
-              <label for="nationality">Passport</label>
-              <select id="nationality" name="nationality" {% if signed_in %}required{% endif %}>
-                {% if signed_in %}<option value="" selected>Choose a passport</option>{% endif %}
-                {% for country in countries %}
-                  <option value="{{ country.code }}" {% if traveller and country.code == traveller.passport_nationality %}selected{% endif %}>
-                    {{ country.name }}
-                  </option>
-                {% endfor %}
-              </select>
-              <p id="passport-note" class="field-note" role="status" hidden></p>
-              <div id="passport-choices" class="field-choices" hidden></div>
-            </div>
-            <div class="field-group">
-              <label for="residence">Applying from</label>
-              <select id="residence" name="residence" {% if signed_in %}required{% endif %}>
-                {% if signed_in %}<option value="" selected>Choose a country</option>{% endif %}
-                {% for country in countries %}
-                  <option value="{{ country.code }}" {% if traveller and country.code == traveller.country_of_residence %}selected{% endif %}>
-                    {{ country.name }}
-                  </option>
-                {% endfor %}
-              </select>
-              <p id="residence-note" class="field-note" role="status" hidden></p>
-              <div id="residence-choices" class="field-choices" hidden></div>
-            </div>
-            <div class="field-group">
-              <label for="purpose">Purpose</label>
-              <select id="purpose" name="purpose" {% if signed_in %}required{% endif %}>
-                {% if signed_in %}<option value="" selected>Choose a purpose</option>{% endif %}
-                {% for value in purposes %}
-                  <option value="{{ value }}" {% if traveller and value == traveller.travel_purpose %}selected{% endif %}>
-                    {{ value | capitalize }}
-                  </option>
-                {% endfor %}
-              </select>
-              <p id="purpose-note" class="field-note" role="status" hidden></p>
-            </div>
-            <button id="generate-button" type="submit" {% if plans_locked %}disabled{% endif %}>
-              Generate Plan
-            </button>
-          </form>
-
-          <div id="progress" class="progress" role="status" aria-live="polite" hidden>
-            <span class="progress-track"><span class="progress-bar"></span></span>
-            <ol id="progress-steps" class="progress-steps"></ol>
-            <span id="progress-elapsed" class="progress-elapsed" aria-hidden="true"></span>
+    <div class="hero-band">
+      <svg class="hero-arc" viewBox="0 0 1200 520" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M600 540 C 640 300, 820 70, 1240 40" />
+      </svg>
+      <div class="page-shell">
+        <header class="masthead">
+          <a class="wordmark" href="/" aria-label="Visa Research Desk home">
+            <span class="wordmark-mark">VR</span>
+            <span>Visa Research Desk</span>
+          </a>
+          <div class="masthead-actions">
+            <span class="mode-chip{% if source_mode != 'live' or extraction_mode == 'fixture' %} mode-chip--offline{% endif %}">
+              <span class="status-dot"></span>{% if source_mode == 'live' %}Live official sources{% else %}Saved snapshots, not live{% endif %}{% if extraction_mode == 'fixture' %} · fixture plans{% endif %}
+            </span>
+            {% if signed_in %}
+              <form class="account" method="post" action="/oauth/logout">
+                <span class="account-state">Signed in with Ofself</span>
+                <button class="account-action" type="submit">Sign out</button>
+              </form>
+            {% elif sign_in_configured %}
+              <a class="account-action" href="/oauth/login">Sign in with Ofself</a>
+            {% endif %}
           </div>
-          <p id="error-message" class="error-message" role="alert" hidden></p>
-        </section>
+        </header>
 
+        <section class="hero" aria-labelledby="page-title">
+          <div class="hero-text">
+            <p class="eyebrow">Source-backed visa research</p>
+            <h1 id="page-title">Visa answers, straight from <em>official sources.</em></h1>
+            <p class="hero-copy">
+              Tell it where you are going and on which passport. It reads the government's own
+              pages and writes a plan in which every claim is cited, and anything it could not
+              verify is said plainly. Ordinary passports only.
+            </p>
+            <dl class="hero-stats">
+              <div><dt>{{ destinations | length }}</dt><dd>destinations</dd></div>
+              <div><dt>{{ countries | length }}</dt><dd>passports</dd></div>
+              <div><dt>~1 min</dt><dd>for a fresh plan</dd></div>
+            </dl>
+          </div>
+
+          <div class="ticket">
+            <div class="ticket-head">
+              <p class="ticket-label">Plan request</p>
+              <div class="route" aria-hidden="true">
+                <div class="route-end">
+                  <span class="route-caption">From</span>
+                  <strong id="route-from">—</strong>
+                </div>
+                <div class="route-line"><span class="route-plane">✈</span></div>
+                <div class="route-end route-end--to">
+                  <span class="route-caption">To</span>
+                  <strong id="route-to">—</strong>
+                </div>
+              </div>
+              <p class="route-passport" aria-hidden="true">Passport <strong id="route-passport">—</strong> · <span id="route-purpose">—</span></p>
+            </div>
+
+            <div class="ticket-body">
+              {% if signed_in %}<p id="ofself-note" class="form-note" role="status" hidden></p>{% endif %}
+              {% set plans_locked = sign_in_required and not signed_in %}
+              {% if plans_locked %}
+                <p id="sign-in-note" class="form-note form-note--warn" role="status">
+                  {% if sign_in_configured %}
+                    <a href="/oauth/login">Sign in with Ofself</a> to generate a plan.
+                  {% else %}
+                    Plans need sign-in with Ofself, which is not configured on this server.
+                  {% endif %}
+                </p>
+              {% endif %}
+              <form id="plan-form" class="research-form">
+                <div class="field-group">
+                  <label for="destination">Destination</label>
+                  <select id="destination" name="destination" {% if signed_in %}required{% endif %}>
+                    {% if signed_in %}<option value="" selected>Choose a destination</option>{% endif %}
+                    {% for destination in destinations %}
+                      <option
+                        value="{{ destination.slug }}"
+                        {% if destination.status != 'available' %}disabled{% endif %}
+                      >
+                        {{ destination.name }}{% if destination.status != 'available' %} — future phase{% endif %}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <p id="destination-note" class="field-note" role="status" hidden></p>
+                  <div id="destination-choices" class="field-choices" hidden></div>
+                </div>
+                <div class="field-group">
+                  <label for="nationality">Passport</label>
+                  <select id="nationality" name="nationality" {% if signed_in %}required{% endif %}>
+                    {% if signed_in %}<option value="" selected>Choose a passport</option>{% endif %}
+                    {% for country in countries %}
+                      <option value="{{ country.code }}" {% if traveller and country.code == traveller.passport_nationality %}selected{% endif %}>
+                        {{ country.name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <p id="passport-note" class="field-note" role="status" hidden></p>
+                  <div id="passport-choices" class="field-choices" hidden></div>
+                </div>
+                <div class="field-group">
+                  <label for="residence">Applying from</label>
+                  <select id="residence" name="residence" {% if signed_in %}required{% endif %}>
+                    {% if signed_in %}<option value="" selected>Choose a country</option>{% endif %}
+                    {% for country in countries %}
+                      <option value="{{ country.code }}" {% if traveller and country.code == traveller.country_of_residence %}selected{% endif %}>
+                        {{ country.name }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <p id="residence-note" class="field-note" role="status" hidden></p>
+                  <div id="residence-choices" class="field-choices" hidden></div>
+                </div>
+                <div class="field-group">
+                  <label for="purpose">Purpose</label>
+                  <select id="purpose" name="purpose" {% if signed_in %}required{% endif %}>
+                    {% if signed_in %}<option value="" selected>Choose a purpose</option>{% endif %}
+                    {% for value in purposes %}
+                      <option value="{{ value }}" {% if traveller and value == traveller.travel_purpose %}selected{% endif %}>
+                        {{ value | capitalize }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <p id="purpose-note" class="field-note" role="status" hidden></p>
+                </div>
+                <button id="generate-button" type="submit" {% if plans_locked %}disabled{% endif %}>
+                  Generate plan <span aria-hidden="true">→</span>
+                </button>
+              </form>
+
+              <div id="progress" class="progress" role="status" aria-live="polite" hidden>
+                <span class="progress-track"><span class="progress-bar"></span></span>
+                <ol id="progress-steps" class="progress-steps"></ol>
+                <span id="progress-elapsed" class="progress-elapsed" aria-hidden="true"></span>
+              </div>
+              <p id="error-message" class="error-message" role="alert" hidden></p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <div class="page-shell">
+      <main>
         <section id="results" class="results" aria-live="polite" aria-busy="false">
           <div class="empty-state">
-            <p class="eyebrow">Your plan appears here</p>
-            <p>
-              Whether you need a visa, where to apply, the steps, and the official page each one
-              rests on. A fresh plan takes about a minute.
-            </p>
+            <p class="eyebrow">How a plan is made</p>
+            <ol class="how-steps">
+              <li>
+                <span class="how-number">01</span>
+                <h2>Finds the official sites</h2>
+                <p>Only pages on domains confirmed as the destination government's own are read, plus the EU's for a Schengen visa decision.</p>
+              </li>
+              <li>
+                <span class="how-number">02</span>
+                <h2>Reads the pages live</h2>
+                <p>The pages that answer your trip are fetched and read. A page that refuses automated reading is named with its link, never guessed at.</p>
+              </li>
+              <li>
+                <span class="how-number">03</span>
+                <h2>Writes a cited plan</h2>
+                <p>Whether you need a visa, where to apply and the steps, each linked to its page. What could not be confirmed stays open; with too little evidence, no plan is given.</p>
+              </li>
+            </ol>
           </div>
+        </section>
+
+        <section class="coverage" aria-labelledby="coverage-title">
+          <div class="coverage-head">
+            <p class="eyebrow">Coverage</p>
+            <h2 id="coverage-title">{{ destinations | length }} destinations, and growing.</h2>
+            <p>Pick one to start.</p>
+          </div>
+          <ul class="coverage-list">
+            {% for destination in destinations if destination.status == 'available' %}
+              <li><button type="button" class="coverage-chip" data-destination="{{ destination.slug }}">{{ destination.name }}</button></li>
+            {% endfor %}
+          </ul>
         </section>
       </main>
 

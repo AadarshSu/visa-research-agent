@@ -97,7 +97,7 @@ async def test_research_interface_is_available(client: httpx.AsyncClient) -> Non
     assert 'id="plan-form"' in response.text
     assert "/static/styles.css?v=" in response.text
     assert "/static/app.js?v=" in response.text
-    assert "Generate Plan" in response.text
+    assert "Generate plan" in response.text
     assert "Singapore" in response.text
 
 
