@@ -32,7 +32,7 @@ rule below still holds.
 
 **The owner's five goals, 2026-09-23 (entry 182)**, are unordered:
 - model calls paid through Ofself Personas — **done 2026-09-24, and the route from now on** (entry 188);
-- about 30s a corridor with information on screen (items 57, 58, 60);
+- about 30s a corridor with information on screen (items 57, 58);
 - a URL (items 7, 20);
 - accurate and useful answers for most corridors (item 63, with entry 68's bound unchanged);
 - 100+ countries (item 64).

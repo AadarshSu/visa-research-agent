@@ -60,7 +60,8 @@ and Saudi Arabia. Korea recorded no visa centre, because the ministry queues aut
 **What is next.**
 - **The owner re-judged them (entry 224): Australia and Spain right, South Korea wrong** for its
   rare wrong checklist, about 1 run in 18 (TODO *Smaller things*, with two untried fixes).
-- Otherwise TODO's **Now** list: item 57 (the plan on screen as it is written) follows 63.
+- **TODO item 57 is first** (the plan on screen as it is written), the owner's order of
+  2026-09-26. Item 63 is ongoing under **Next up**; items 60 and 65 were removed.
 
 **Where everything is.**
 - **The round:** entry 214, and the review page
@@ -105,8 +106,7 @@ once more for a cold comparison (`var/_backup_cache_before_priority_2026-09-25/`
 second round of item 63 then ran (entry 214)**: decisions 5 → 7 of 10, checklists 3 → 5 of 10, and
 the plans were published for the owner to judge. **Next:** the owner's verdicts, then item 57
 (progress on screen)
-(progress on screen), then 64 (expansion, which asks first). Items 65 and 67 are blocked, 65 on
-Ofself deploying GPT-6 and 67 on OpenAI credit.
+(progress on screen), then 64 (expansion, which asks first). Item 67 is blocked on OpenAI credit.
 
 **What was built.**
 - The ten pilot countries and Malta on 2026-09-24; the other 44 (42 corpora plus Brazil and
@@ -225,10 +225,8 @@ exemption list decides that a visa is needed. Singapore's "no visa" held 8 of 8 
 
 **What is left half-done, as of 2026-09-23.** These are the loose ends a cold session trips on:
 - **OpenAI is out of credit** since 2026-09-16, and nothing waits on it any more: model calls go
-  through Personas (below). Only `model_route: openai`, and item 65's GPT-6 test while Personas does
-  not serve that model, need a top-up.
-- **Three decisions are waiting on the owner:**
-  - item 60, where Fast mode goes;
+  through Personas (below). Only `model_route: openai` needs a top-up.
+- **Two decisions are waiting on the owner:**
   - item 61, what a corridor may spend answering a challenge;
   - item 7's question of whether to store a refusal before deploying (entry 151).
 - **Shipped and not measured live:**
@@ -242,8 +240,7 @@ exemption list decides that a visa is needed. Singapore's "no visa" held 8 of 8 
     `model_route: personas` routes selection, role adjudication and the plan call through one plain
     Personas call each, on Ofself's account, as the owner's user. Graded against the direct route's
     baselines: selection 41 of 48 roles against 39 of 48, decisions as baseline except one Japan
-    "visa required" in six, now a *Smaller thing* in TODO. Fast mode (item 60) is out of reach on
-    this route.
+    "visa required" in six, now a *Smaller thing* in TODO. Fast mode is out of reach on this route.
   - The one redirect URI is `localhost`, and has to change when item 7 picks a host.
 
 **The goal:** produce visa application plans where every claim is grounded in an official government
@@ -355,8 +352,8 @@ draft instead; that is not yet timed live.
 
 **What would make a real difference to latency was measured on 2026-09-16 (entry 177).**
 - **Fast mode** takes the plan call 39–48% faster with no decision changed, at twice its price.
-  Projected, a fresh request goes from ~55s to ~42s and a repeat from ~24s to ~14s. Where it goes is
-  **TODO item 60, the owner's decision.**
+  Projected, a fresh request goes from ~55s to ~42s and a repeat from ~24s to ~14s. **Not pursued:
+  the owner removed the item deciding where it goes on 2026-09-26.**
 - **The cheaper shortcuts broke Japan's decision.** Reasoning `none` answered "visa required" where no
   page states it, and `gpt-5.6-luna` answered "no visa required".
 - **Fast mode helps research less** — selection −23%, roles −13% — because selection's seconds are

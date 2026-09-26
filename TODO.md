@@ -15,8 +15,7 @@ points at the items that do the work. The detail lives in the items, not here.
 
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
-| **Model calls paid through Ofself Personas**, on their OpenAI key | **Done 2026-09-24 (entry 188), and the route from now on — the owner.** All three calls go through Personas on Ofself's account; graded against the direct route's baselines. One Japan inference is a *Smaller thing* | 62 (done) | — |
-| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen, Now), **58** (research); **65** and **60** blocked | Ofself: a Fast tier setting (60) and a GPT-6 deployment (65) |
+| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Fast mode everywhere projects ~39s. A repeat within 24h skips the plan call, not timed live | **57** (on screen, first in Now), **58** (research) | nothing external |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in but does not host. `POST /visa-plans` needs an Ofself sign-in since 2026-09-24 (entry 191); the stores are still local files | **7**, **20** (and 55's sign-in) | choosing a host; the refusal-storing decision in item 7 |
 | **Most corridors accurate and useful** | Nothing in the repo measures *right*, only *answered* (known problem 26). **Item 70 done 2026-09-25 (entries 198–202):** of 14 corridors that read their authority and refused, 11 now answer from an official page. That took eight fixes, rule 8g, and the EU tier for Schengen members (entry 201). **The full rebuild is done and graded (entries 203, 204). Item 63's ten destinations ran 2026-09-25 (entry 205)**: decisions 6 of 10, checklists 4 of 10, and a wrong "no visa" from a flattened table, fixed. Rule 8f widened by the owner (entry 206). Next is Thailand's 2024 list and the checklist half (item 63) | **63** | the owner's own checking (entry 68) |
 | **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have no row. The page offers all 198 (known problem 23). Schengen's EU half of item 2 is done (entry 201); governments with no hostname marker remain | **64**, **2** | nothing external — search credit only |
@@ -300,8 +299,7 @@ one-paragraph defects rather than items.
 
 | | | |
 | --- | --- | --- |
-| **Now** | 63. Make most corridors return accurate and useful information | `next` |
-|  | 57. Stream the plan to the screen as it is written | `next` |
+| **Now** | 57. Stream the plan to the screen as it is written | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 61. Decide what a corridor may spend answering a challenge | `soon` |
 |  | 2. Amend the trust rule for governments with no marker, and for Schengen | `soon` |
@@ -312,9 +310,8 @@ one-paragraph defects rather than items.
 |  | 71. Take where in a country the traveller lives, and name the one post that serves them | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
-| **Blocked** | 60. Decide where Fast mode goes — on Ofself adding a tier setting | `blocked` |
-|  | 65. Test GPT-6 Sol against GPT-5.6 Terra — on Ofself deploying GPT-6, or OpenAI credit | `blocked` |
-|  | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
+|  | 63. Make most corridors return accurate and useful information — can always be better | `ongoing` |
+| **Blocked** | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
 | **Later** | 69. Read scanned PDFs — for ranking first, and as evidence only after a decision | `later` |
 |  | 49. The family is walked at 25 members a build and has 169 — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands, then roll the family reservation across the other nine | `later` |
@@ -348,79 +345,13 @@ careful reading and were wrong.
 
 ## Now — pick these up in this order
 
-**Surveyed 2026-09-25, after the full rebuild.** The rebuild sequence that stood here is finished
-(Done), and so is item 68. Items 65 and 67 were listed next and cannot run — 65 waits on Ofself
-deploying GPT-6, 67 on OpenAI credit — so both moved to **Blocked**. What is left follows entry 148's
-order: correctness (63), then the owner's on-screen goal (57), then expansion (64, which asks the
-owner first). Hosting and Ofself (7, 20, 55) are independent and fine to run alongside.
+**Reordered by the owner, 2026-09-26.** Item 57 is first. Item 63 moved to **Next up** as
+ongoing work: answers can always be better, but they no longer need immediate attention, since the
+second round's three wrong or unsure destinations were worked (entries 215–224). Items 60 (Fast
+mode) and 65 (GPT-6 Sol) were removed. Expansion (64) follows 57 and asks the owner before a batch.
+Hosting and Ofself (7, 20, 55) are independent and fine to run alongside.
 
-### 63. Make most corridors return accurate and useful information — `next`, **added 2026-09-23 (entry 182); moved to Now 2026-09-24 as step 3 of the rebuild sequence**
-
-**Why it matters.** It is the owner's goal and the objective entry 147 set: right information first.
-
-**The bound on it.** Correctness is checked by the owner, outside this repository (entry 68). **Do
-not build a truth set, a correctness grader or an accuracy metric here without asking.** What this
-item may do on its own is measure what corridors *answer*, and report it with known problem 26's
-caveat.
-
-**Where it stands.**
-- **The last broad measurement is 2026-08-24's twenty corridors** (entry 58). 75% confirmed the
-  decision and 50% yielded a checklist, a marginal pass. That sample was five destinations, each
-  replicated four times.
-- **All 55 stores were rebuilt by 2026-09-25 (entries 193, 203, 204).** Graded on the oracle
-  corridors' stores and item 70's corridors: every oracle answer held, and item 70's corridors
-  answer as before or better, except Egypt's roles-call variance. About 30 of the rebuilt countries
-  have had no corridor run.
-- **Since then, the plan has changed in ways that show up in its answers.** The decision and every
-  requirement now carry a checked quote (entry 156), a missing checklist is worded as what was found
-  (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
-  Singapore only).
-
-**Done 2026-09-25 (entry 205): ten destinations, the owner's number.** Australia, New Zealand,
-China, South Korea, Thailand, Vietnam, Turkey, South Africa, Spain and Switzerland ran for `IN/IN`,
-twice each. **It found a wrong "no visa"**: South Africa's exemption table reached the model without
-its columns, and India's empty *Ordinary* cell vanished. Tables are now read with each value under
-its heading, and four re-runs never said "no". The rates were 6 of 10 decisions and 4 of 10
-checklists (4 of 9 where a checklist arises), against entry 58's 15 of 20 and 10 of 20 on other
-destinations.
-
-**Next, the owner's questions from it:**
-- **Rule 8f — decided and shipped 2026-09-25 (entry 206).** The owner removed the stated-rule
-  condition: absence from the authority's complete exemption list decides "visa required". On
-  replay China, South Korea and South Africa moved from null to required, 12 of 12, with nothing
-  moving toward "no". Not yet re-run live.
-- **Thailand — answered by the owner and worked (entry 207).** The stay fell to 30 days on 15
-  September 2026. The plan now leaves the decision null, with the Gazette date as the open question.
-  **Rule 8h shipped on the owner's decision (entry 208)**: a "no visa" stated on both sides of an
-  announced change is not held back by its start date. It does not fire for Thailand. A 4
-  September notice confirms the revision took effect on 15 September, but its list of 60 countries
-  is an image, and India is named only in July's list of 59. **Then the owner allowed the two to be read
-  together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
-- **Second round run 2026-09-25 (entry 214):** decisions 5 → 7 of 10, checklists 3 → 5 of 10.
-  **The owner's verdicts (entry 216):** 7 right, Australia wrong, South Korea and Spain unsure.
-  Spain is fixed (entry 215). **Australia is `verified` ×2 after the owner's five decisions
-  (entries 217–219)**. South Korea's checklist PDF is named and labelled as a download; its
-  C-3-9 type is printed only inside that file.
-- **Checklists — worked (entries 210–212).**
-  - A corridor reads the checklist a page it read links to.
-  - Plans now link the authority's checklist instead of copying it, and name a likely one they
-    could not read.
-  - Renders go to the most promising pages first.
-  - **Spain — fixed (entry 215).** Its pages never needed a browser; the cleaner deleted the form
-    ASP.NET wraps round the page. `verified` ×2 with the consulate's checklist linked. The stores
-    still hold SharePoint pages empty until a rebuild, which is asked for first.
-  - **Rebuilt 2026-09-26 (entry 223):** the SharePoint countries' stores got their text back,
-    most in Spain and Saudi Arabia. Korea's recorded no visa centre, because the ministry queues
-    automated requests.
-  - **Worked 2026-09-26: Thailand's refusal and Japan's open decisions (entries 220–222).**
-    - Both were a decision resting on two pages, judged one page at a time.
-    - Japan's roles call credited MOFA's list 6 of 10 times; roles rule 7b makes it 10 of 10.
-    - Thailand's selection kept its announcement 16 of 20 times; selection rule 11 makes it 19 of 20.
-    - Entry 220 also fixed a translation penalty that "Thailand" and "Germany" were paying.
-  - **Proposed, not measured:** de-duplicating near-identical series before the selector's cap.
-    Australia once read seven quarterly reports while its step-by-step page was cut.
-
-### 57. Stream the plan to the screen as it is written — `next`, **a UX improvement, added 2026-09-15; moved to Now 2026-09-25**
+### 57. Stream the plan to the screen as it is written — `next`, **a UX improvement, added 2026-09-15; moved to Now 2026-09-25; first since 2026-09-26, the owner**
 
 **Why it matters.** A fresh request takes about 55s and a repeat about 24s (entry 171) — a repeat within
 24 hours now reuses its plan instead (entry 178) — and the
@@ -1189,7 +1120,8 @@ log's `phase_seconds`.
   a write costs 1.25×, and pools overlap 79–99% across travellers (entry 164).
 
 **Fast mode was measured on every call (entry 177)** — plan −43%, selection −23%, roles −13%, at
-twice the price. Where it goes is item 60.
+twice the price. It is not being pursued: the owner removed the item deciding where it goes on
+2026-09-26.
 
 **Research latency, ~25s — none of it decided.** Means over five fresh corridors (entry 171): roles
 8.2s, selection 6.6s, search 3.5s, the crawl stage 3.2s, fetch 2.7s. Fetch was measured on a warm page
@@ -1211,87 +1143,75 @@ cache, and Canada still took 12s.
 
 **Do not re-propose** conditional search (entries 159 and 160) or refusing on a miss (entry 173).
 
+### 63. Make most corridors return accurate and useful information — `ongoing`, **added 2026-09-23 (entry 182); out of Now 2026-09-26, the owner: it can always be better, and it no longer needs immediate attention**
+
+**Why it matters.** It is the owner's goal and the objective entry 147 set: right information first.
+
+**The bound on it.** Correctness is checked by the owner, outside this repository (entry 68). **Do
+not build a truth set, a correctness grader or an accuracy metric here without asking.** What this
+item may do on its own is measure what corridors *answer*, and report it with known problem 26's
+caveat.
+
+**Where it stands.**
+- **The last broad measurement is 2026-08-24's twenty corridors** (entry 58). 75% confirmed the
+  decision and 50% yielded a checklist, a marginal pass. That sample was five destinations, each
+  replicated four times.
+- **All 55 stores were rebuilt by 2026-09-25 (entries 193, 203, 204).** Graded on the oracle
+  corridors' stores and item 70's corridors: every oracle answer held, and item 70's corridors
+  answer as before or better, except Egypt's roles-call variance. About 30 of the rebuilt countries
+  have had no corridor run.
+- **Since then, the plan has changed in ways that show up in its answers.** The decision and every
+  requirement now carry a checked quote (entry 156), a missing checklist is worded as what was found
+  (entry 153), and absence from a visa-required list counts as "no visa" (entry 172, checked on
+  Singapore only).
+
+**Done 2026-09-25 (entry 205): ten destinations, the owner's number.** Australia, New Zealand,
+China, South Korea, Thailand, Vietnam, Turkey, South Africa, Spain and Switzerland ran for `IN/IN`,
+twice each. **It found a wrong "no visa"**: South Africa's exemption table reached the model without
+its columns, and India's empty *Ordinary* cell vanished. Tables are now read with each value under
+its heading, and four re-runs never said "no". The rates were 6 of 10 decisions and 4 of 10
+checklists (4 of 9 where a checklist arises), against entry 58's 15 of 20 and 10 of 20 on other
+destinations.
+
+**Next, the owner's questions from it:**
+- **Rule 8f — decided and shipped 2026-09-25 (entry 206).** The owner removed the stated-rule
+  condition: absence from the authority's complete exemption list decides "visa required". On
+  replay China, South Korea and South Africa moved from null to required, 12 of 12, with nothing
+  moving toward "no". Not yet re-run live.
+- **Thailand — answered by the owner and worked (entry 207).** The stay fell to 30 days on 15
+  September 2026. The plan now leaves the decision null, with the Gazette date as the open question.
+  **Rule 8h shipped on the owner's decision (entry 208)**: a "no visa" stated on both sides of an
+  announced change is not held back by its start date. It does not fire for Thailand. A 4
+  September notice confirms the revision took effect on 15 September, but its list of 60 countries
+  is an image, and India is named only in July's list of 59. **Then the owner allowed the two to be read
+  together (entry 209): Thailand now answers "no visa, 30 days" 4 of 4, citing both.**
+- **Second round run 2026-09-25 (entry 214):** decisions 5 → 7 of 10, checklists 3 → 5 of 10.
+  **The owner's verdicts (entry 216):** 7 right, Australia wrong, South Korea and Spain unsure.
+  Spain is fixed (entry 215). **Australia is `verified` ×2 after the owner's five decisions
+  (entries 217–219)**. South Korea's checklist PDF is named and labelled as a download; its
+  C-3-9 type is printed only inside that file.
+- **Checklists — worked (entries 210–212).**
+  - A corridor reads the checklist a page it read links to.
+  - Plans now link the authority's checklist instead of copying it, and name a likely one they
+    could not read.
+  - Renders go to the most promising pages first.
+  - **Spain — fixed (entry 215).** Its pages never needed a browser; the cleaner deleted the form
+    ASP.NET wraps round the page. `verified` ×2 with the consulate's checklist linked. The stores
+    still hold SharePoint pages empty until a rebuild, which is asked for first.
+  - **Rebuilt 2026-09-26 (entry 223):** the SharePoint countries' stores got their text back,
+    most in Spain and Saudi Arabia. Korea's recorded no visa centre, because the ministry queues
+    automated requests.
+  - **Worked 2026-09-26: Thailand's refusal and Japan's open decisions (entries 220–222).**
+    - Both were a decision resting on two pages, judged one page at a time.
+    - Japan's roles call credited MOFA's list 6 of 10 times; roles rule 7b makes it 10 of 10.
+    - Thailand's selection kept its announcement 16 of 20 times; selection rule 11 makes it 19 of 20.
+    - Entry 220 also fixed a translation penalty that "Thailand" and "Germany" were paying.
+  - **Proposed, not measured:** de-duplicating near-identical series before the selector's cap.
+    Australia once read seven quarterly reports while its step-by-step page was cut.
+
 ---
 
 ## Blocked
-
-### 65. Test GPT-6 Sol against GPT-5.6 Terra on answers, time and cost — `blocked` on Ofself deploying GPT-6, or on OpenAI credit, **added 2026-09-23; blocked 2026-09-25**
-
-**On the Personas route (entry 188) this tests what Ofself's account offers, and needs no OpenAI
-credit.** The model is set on each call's agent (`llm_model`), and every reply's model is checked
-against `OPENAI_MODEL`, so a model the account lacks fails loudly rather than being swapped. **Step 0
-is one probe: does Personas serve `gpt-6-sol` at all?** Its price there is Ofself's, not the list
-price below, and Ofself reports no cached tokens, so the cost column compares token counts only.
-
-**Step 0 result, 2026-09-25: Personas does not serve it.** A one-call probe on a separate agent
-(`visa-probe-<model>`, so the production agents' stored model was untouched) answered on
-`gpt-5.6-terra` in 2.5s and failed for `gpt-6-sol` and `gpt-6-luna` with Azure's
-`DeploymentNotFound` — Ofself serves models through Azure deployments, and has none for GPT-6
-(OFSELF_FEEDBACK 8.21). **So this item waits on Ofself deploying GPT-6 Sol, or on OpenAI credit for
-the direct route.** Ask Ofself which models the account serves. Until then, the rebuild sequence
-goes on with Terra, and item 65 is re-run before step 3's baseline only if Sol arrives first.
-
-**It must also settle entry 188's open Japan question.** One of six Personas runs answered Japan
-`IN/GB` "visa required" from MOFA's list of who does *not* need a visa, the inference rule 8e and
-entry 174 rule out. Run a dozen Japan calls on the same packet for each model and count it.
-
-**Why it matters.** OpenAI released GPT-6 Sol on 2026-09-22 at Terra's input price and a lower
-output price: $2.00 input, $0.20 cached, $2.50 cache write and **$10.00 output** per million tokens,
-against Terra's $12.00. It is the tier above Terra, and the first published scores put it ahead:
-- **Artificial Analysis:** 48 against Terra's 34.
-- **BenchLM overall:** 82.2 against 72.8.
-- **Individual tests are mixed**, and none of them resembles this project's task. It is ahead on
-  OSWorld 2.0 (60.5% against 50.2%) and behind on DeepSWE (68.8% against 69.6%) and HealthBench
-  Hard (30.1% against 32.7%).
-
-Those figures do not answer the question for this project, for three reasons:
-- **Sol's 48 was scored at `max` reasoning effort, and every call here runs at `low`.** At `max`,
-  Artificial Analysis measured about 107s to the first token.
-- **Nothing is published yet for Sol on the qualities this project depends on:** instruction
-  following, long-document reading and hallucination.
-- **A model change has broken a decision before.** In entry 177, `gpt-5.6-luna` wrote Japan a
-  "no visa required" plan.
-
-**What it could buy.** If it is at least as good, it would be a quality upgrade at slightly lower
-cost. Repricing 2026-09-15's logged calls puts the saving at about **2–3% a fresh corridor**
-(~$0.251 → ~$0.245). The plan call gets about 11% cheaper, and selection and roles barely move
-because they are almost all input. How Sol's speed compares to Terra's is unknown. With Fast mode out
-of reach on Personas (item 60), this is the only model-side lever left for speed as well as quality.
-
-**How to run it — all three calls are one setting.** `OPENAI_MODEL` in `.env` drives selection,
-roles, blocked-page judgement and the plan call alike (`config/settings.py`), and
-`openai_reasoning_effort` stays `low` in both arms.
-1. **First, record the model name in each usage record.** `ModelCallRecord`
-   (`research/model_usage.py`) holds no model today, so a Sol call and a Terra call in
-   `var/usage/` cannot be told apart or priced separately. This is a small code change with a
-   test.
-2. **Clear `var/cache/`, `var/corridors/` and `var/plans/` before each arm, or before neither.**
-   Otherwise one arm runs on reused corridors and drafts (entries 136 and 178).
-3. **Run several times per arm.** Model seconds swing about 40% between identical runs (entry 144),
-   and one run per arm cannot separate the models. Three per corridor per arm is the least.
-4. **Corridors:**
-   - **Japan `IN/GB` and Singapore `PH/PH`.** Any change to the plan call must pass these (entry 174),
-     and rule 8e's "no visa" bounds live only in the prompt.
-   - **Entry 170's ten graded corridors**, for selection, whose method is the selection A/B.
-5. **Record, per arm:**
-   - **Answers:** each corridor's visa decision (required / not required / open), whether it
-     resolved or refused, and roles filled. Put any decision that differs from Terra's in front of
-     the owner.
-   - **Time:** `phase_seconds` and each call's seconds from the recall log, plus the whole request.
-   - **Cost:** tokens per call priced at each model's rates, including cache writes (entry 167). Sol
-     may reason more or less than Terra at `low`, so its output tokens must be measured, not assumed.
-
-**The bound on grading it.** Correctness is the owner's to judge (entry 68). This item compares what
-the two models *answer* and flags every disagreement; it does not build a grader. **Any
-disagreement on a visa decision blocks the switch** until the owner has read both plans. Where
-Terra was open and Sol commits, that counts as a disagreement, and it is the worst direction.
-
-**Cost of the test itself:** search only on the Personas route, about $0.05 a corridor.
-
-**If Sol wins:** changing `OPENAI_MODEL` is one line of `.env`, and the Personas agents are
-re-created with it. Record the result as a decision
-entry and update the headline cost and time figures in CLAUDE.md, the handoff and TODO, which all
-quote Terra's.
 
 ### 67. Test ranking by embeddings of stored page text — `blocked` on OpenAI credit, **added 2026-09-23 (entries 183, 184)**
 
@@ -1342,46 +1262,6 @@ The keyword scorer matches listed phrases. Embeddings match meaning, so they may
 - **As a filter,** it replaces `fusion_order` in `shown_to_selector` if it beats 80.0 of 90 there.
 - **As a selector,** it would have to reach the model's recall before a live test is worth running.
 - **Either way it is recall change**, graded live over several runs (entry 144) before shipping.
-
-### 60. Decide where Fast mode goes — `blocked`, **added 2026-09-16 (entry 177); blocked 2026-09-24 on Ofself adding a tier setting**
-
-**Decide it after item 65.** Fast mode was measured on Terra, and its price and gain depend on
-the model it runs on.
-
-**And it is out of reach on the Personas route, the route from 2026-09-24 (entry 188).** Fast mode
-is OpenAI's `service_tier`, and Personas' `llm_config` has no such field and refuses unknown ones.
-Turning it on needs Ofself to add a tier setting, or this project back on the OpenAI route with its
-own credit.
-
-**Why it matters.** It is the one latency lever measured that is both large and safe.
-- **The plan call is 39–48% faster** on Fast mode, with no decision changed: Japan open, Germany
-  "visa required" and Singapore "no visa" in every call.
-- **Selection is 23% faster and roles 13%**, because selection's seconds are mostly fixed.
-- **It costs twice the standard price** of whatever it is turned on for.
-
-**The choice — the owner's.**
-
-| option | fresh request | repeat | model cost, fresh | model cost, repeat |
-| --- | --- | --- | --- | --- |
-| today | ~55s | ~24s | $0.251 | ~$0.035 |
-| Fast mode on the plan call | ~42s | ~14s | ~$0.30 | ~$0.07 |
-| Fast mode on every call | ~39s | ~14s | ~$0.50 | ~$0.07 |
-
-Projected from entry 171's split, not timed end to end. Since entry 178 a repeat inside the
-24-hour reuse window makes no plan call at all, so Fast mode's gain is for fresh requests and for
-repeats after the window.
-
-**If it ships.**
-- **Make the tier reviewable policy, per call** — a setting beside `openai_reasoning_effort`, never a
-  hidden default, so each call's tier can be chosen on its own.
-- **Record the tier each call was served** in `var/usage/`. OpenAI downgrades to the standard tier
-  when traffic grows past its ramp limit and says so only in `service_tier`.
-- **Time real requests afterwards, several each**, on fresh and repeated corridors, before quoting the
-  new seconds. The table above is arithmetic.
-
-**Do not take the cheaper shortcuts instead.** Reasoning `none` answered Japan "visa required" where
-no page states it, 3 of 3, and `gpt-5.6-luna` wrote Japan a "no visa required" plan (entry 177).
-
 
 ---
 
