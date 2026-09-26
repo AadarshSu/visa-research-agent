@@ -22,8 +22,8 @@ CLI is in [OFSELF_FEEDBACK.md](../../OFSELF_FEEDBACK.md). Read it before trustin
 **This project's own Ofself facts live elsewhere:**
 - [CRUX.md](../../CRUX.md): the app's design as an Ofself app, including its DLR.
 - [DECISIONS.md](../../DECISIONS.md) entry 180: why it reads one field and writes nothing.
-- [TODO.md](../../TODO.md) item 55: the build steps and what's done. It also has the registered
-  app's id and client id, the sandbox user, what the live runs showed, and how to run sign-in.
+- [TODO.md](../../TODO.md) item 55: what is built, what is left, the sandbox user and how to run
+  sign-in. The registered app's id and client id are in [PROJECT_HANDOFF.md](../../PROJECT_HANDOFF.md).
 - The code: `api/ofself.py` (the Paradigm adapter), `api/signin.py` (sign-in and the session),
   `api/countries.py` (the shared country check).
 
