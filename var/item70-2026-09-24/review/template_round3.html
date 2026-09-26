@@ -1,0 +1,429 @@
+<title>Three Corridors, Third Round</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --sunk: #eef1f4;
+    --ink: #17202b;
+    --muted: #586575;
+    --line: #d9dfe6;
+    --accent: #1f5f8b;
+    --accent-soft: #e3eef6;
+    --req: #a4540b;
+    --req-soft: #fbf0e3;
+    --free: #2b7a4b;
+    --free-soft: #e5f3ea;
+    --open: #5f6b78;
+    --open-soft: #eceff2;
+    --bad: #9f1d3a;
+    --bad-soft: #f8e6ea;
+    --focus: #1f5f8b;
+    --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f151c;
+      --surface: #161f29;
+      --sunk: #1c2632;
+      --ink: #e5eaf0;
+      --muted: #9aa7b6;
+      --line: #2a3644;
+      --accent: #74b0dc;
+      --accent-soft: #1b2d3d;
+      --req: #eba55c;
+      --req-soft: #33261a;
+      --free: #6fc592;
+      --free-soft: #1a2e22;
+      --open: #a8b3bf;
+      --open-soft: #232d38;
+      --bad: #f08aa0;
+      --bad-soft: #3a1d25;
+      --focus: #74b0dc;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f151c;
+    --surface: #161f29;
+    --sunk: #1c2632;
+    --ink: #e5eaf0;
+    --muted: #9aa7b6;
+    --line: #2a3644;
+    --accent: #74b0dc;
+    --accent-soft: #1b2d3d;
+    --req: #eba55c;
+    --req-soft: #33261a;
+    --free: #6fc592;
+    --free-soft: #1a2e22;
+    --open: #a8b3bf;
+    --open-soft: #232d38;
+    --bad: #f08aa0;
+    --bad-soft: #3a1d25;
+    --focus: #74b0dc;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 15px/1.55 var(--sans);
+    padding-inline: 16px;
+    padding-block: 28px 64px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+  h1, h2, h3 { text-wrap: balance; margin: 0; line-height: 1.2; }
+  h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  h2 { font-size: 22px; font-weight: 600; }
+  h3 { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+  p { margin: 0; }
+  a { color: var(--accent); text-underline-offset: 2px; overflow-wrap: anywhere; }
+  a:focus-visible, button:focus-visible, textarea:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px;
+  }
+  .lede { color: var(--muted); max-width: 70ch; }
+  header { display: flex; flex-direction: column; gap: 10px; }
+  .traveller {
+    display: flex; flex-wrap: wrap; gap: 8px; font-family: var(--mono); font-size: 12.5px;
+  }
+  .traveller span {
+    border: 1px solid var(--line); background: var(--surface); padding: 3px 9px; border-radius: 3px;
+  }
+  .how { display: grid; gap: 6px; max-width: 78ch; color: var(--muted); font-size: 14px; }
+  .how b { color: var(--ink); font-weight: 600; }
+
+  /* stamp-like decision labels */
+  .stamp {
+    display: inline-flex; align-items: center; gap: 6px;
+    font: 500 11.5px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 5px 8px; border: 1.5px solid currentColor; border-radius: 3px; white-space: nowrap;
+  }
+  .stamp.req { color: var(--req); background: var(--req-soft); }
+  .stamp.free { color: var(--free); background: var(--free-soft); }
+  .stamp.open { color: var(--open); background: var(--open-soft); }
+  .stamp.bad { color: var(--bad); background: var(--bad-soft); }
+  .stamp.small { font-size: 10.5px; padding: 3px 6px; }
+
+  /* summary */
+  .table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+  th { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); font-weight: 600; background: var(--sunk); }
+  tr:last-child td { border-bottom: 0; }
+  td .pair { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tick { font-family: var(--mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  .yes { color: var(--free); } .no { color: var(--muted); }
+  td a.dest { font-weight: 600; text-decoration: none; }
+  td a.dest:hover { text-decoration: underline; }
+  .rates { display: flex; flex-wrap: wrap; gap: 10px; }
+  .rate {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px;
+    display: flex; flex-direction: column; gap: 2px; min-width: 180px;
+  }
+  .rate .n { font: 600 20px/1.2 var(--sans); font-variant-numeric: tabular-nums; }
+  .rate .l { font-size: 12.5px; color: var(--muted); }
+
+  /* destination sections */
+  section.dest-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    display: flex; flex-direction: column; scroll-margin-top: 16px;
+  }
+  .dest-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 16px 18px; border-bottom: 1px solid var(--line);
+  }
+  .dest-head .left { display: flex; flex-direction: column; gap: 4px; }
+  .earlier { font-size: 13px; color: var(--muted); margin: 6px 0 0; max-width: 60ch; }
+  .before-line { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .verdict { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .verdict button {
+    font: 500 13px var(--sans); color: var(--ink); background: var(--sunk);
+    border: 1px solid var(--line); border-radius: 6px; padding: 6px 11px; cursor: pointer;
+  }
+  .verdict button[aria-pressed="true"][data-v="right"] { background: var(--free-soft); border-color: var(--free); color: var(--free); }
+  .verdict button[aria-pressed="true"][data-v="wrong"] { background: var(--bad-soft); border-color: var(--bad); color: var(--bad); }
+  .verdict button[aria-pressed="true"][data-v="unsure"] { background: var(--open-soft); border-color: var(--open); color: var(--ink); }
+  .runs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); }
+  .run { padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .run + .run { border-left: 1px solid var(--line); }
+  @media (max-width: 880px) { .run + .run { border-left: 0; border-top: 1px solid var(--line); } }
+  .run-top { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .run-top .label { font: 500 12px var(--mono); color: var(--muted); }
+  .run-top .meta { font-size: 12.5px; color: var(--muted); }
+  .block { display: flex; flex-direction: column; gap: 6px; }
+  blockquote {
+    margin: 0; padding: 10px 12px; background: var(--sunk); border-radius: 6px;
+    font: 13px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .cite { font-size: 12.5px; color: var(--muted); }
+  ul.links, ol.steps, ul.qs { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+  ul.links li .src { display: block; font-size: 12px; color: var(--muted); }
+  .checklist-link {
+    display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 6px;
+    border: 1px solid var(--accent); background: var(--accent-soft); text-decoration: none; color: var(--ink);
+  }
+  .checklist-link b { color: var(--accent); }
+  .checklist-link .src { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+  .unread-link { border-style: dashed; border-color: var(--open); background: var(--open-soft); }
+  .unread-link b { color: var(--ink); }
+  .none { font-size: 13.5px; color: var(--muted); }
+  details { border-top: 1px dashed var(--line); padding-top: 10px; }
+  summary { cursor: pointer; font-size: 13px; font-weight: 500; color: var(--accent); }
+  details[open] summary { margin-bottom: 8px; }
+  ol.steps li b { font-weight: 600; }
+  ol.steps li .when { display: block; font-size: 12px; color: var(--muted); }
+  textarea {
+    width: 100%; min-height: 60px; resize: vertical; font: 14px/1.45 var(--sans); color: var(--ink);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px;
+  }
+  .notes { padding: 0 18px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .notes label { font-size: 12.5px; color: var(--muted); }
+  .export {
+    position: sticky; bottom: 12px; align-self: flex-end;
+    display: flex; gap: 10px; align-items: center; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; box-shadow: 0 6px 18px rgba(0,0,0,.08);
+  }
+  .export button {
+    font: 600 13.5px var(--sans); background: var(--accent); color: var(--surface); border: 0;
+    border-radius: 6px; padding: 8px 14px; cursor: pointer;
+  }
+  .export .count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .export textarea { display: none; }
+  .export textarea.show { display: block; width: min(80vw, 520px); }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Three corridors, third round</h1>
+    <div class="traveller"><span>Indian passport</span><span>applying from India</span><span>tourism</span><span>run 2026-09-26</span></div>
+    <p class="lede">The three destinations you marked Wrong or Unsure last round, each researched twice on today's code and today's rebuilt stores. Every claim below links to the official page it came from. Your verdict on the last round is on each card.</p>
+    <div class="how">
+      <p><b>What changed since the last round:</b> a form wrapping a whole page is read rather than deleted (Spain); Home Affairs' pages are read from the content they are served in (Australia); a plan names the visa type a source prints, choosing from a list by the conditions beside each option; an unread page for this trip's visa is named with its link; an unread download is labelled as one; and the roles and selection calls read a decision resting on two pages together.</p>
+      <p><b>How to use this:</b> read the decision and the quote it rests on, open the linked page, and mark each destination Right, Wrong or Unsure. Add a note where something is off. "Copy my verdicts" gives you text to paste back to me.</p>
+    </div>
+  </header>
+
+  <div class="rates" id="rates"></div>
+  <div class="table-wrap"><table id="summary"></table></div>
+  <div id="cards" style="display:flex;flex-direction:column;gap:22px"></div>
+
+  <div class="export">
+    <span class="count" id="count">0 of 3 marked</span>
+    <button type="button" id="copy">Copy my verdicts</button>
+    <textarea id="copy-fallback" readonly aria-label="Your verdicts, to copy"></textarea>
+  </div>
+</div>
+
+<script>
+const DATA = __DATA__;
+const store = {
+  get(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } },
+  set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
+};
+const verdicts = store.get("item63-round3-verdicts") || {};
+
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(attrs)) {
+    if (value === undefined || value === null || value === false) continue;
+    if (key === "class") node.className = value;
+    else if (key === "text") node.textContent = value;
+    else node.setAttribute(key, value);
+  }
+  for (const child of children.flat()) if (child) node.append(child);
+  return node;
+}
+function stamp(run, small) {
+  const cls = small ? " small" : "";
+  if (!run || !run.answered) return el("span", { class: "stamp bad" + cls, text: "no plan" });
+  if (run.decision === true) return el("span", { class: "stamp req" + cls, text: "visa required" });
+  if (run.decision === false) return el("span", { class: "stamp free" + cls, text: "no visa" });
+  return el("span", { class: "stamp open" + cls, text: "left open" });
+}
+function hasChecklist(run) {
+  return run && run.answered && (run.checklist ?? (run.checklists && run.checklists.length > 0));
+}
+function tick(value) {
+  return el("span", { class: "tick " + (value ? "yes" : "no"), text: value ? "✓" : "—" });
+}
+function extLink(url, text) {
+  return el("a", { href: url, target: "_blank", rel: "noopener noreferrer", text: text || url });
+}
+
+// rates, in the first round's terms: every run decided / every run had a checklist
+function rate(rows, side, test) {
+  return rows.filter((row) => row[side].every(test)).length;
+}
+const decided = (run) => run.answered && run.decision !== null && run.decision !== undefined;
+const listed = (run) => hasChecklist(run);
+const rates = document.getElementById("rates");
+[
+  ["Decision given in both runs", rate(DATA, "before", decided), rate(DATA, "after", decided)],
+  ["Checklist found in both runs", rate(DATA, "before", listed), rate(DATA, "after", listed)],
+].forEach(([label, before, after]) => {
+  rates.append(el("div", { class: "rate" },
+    el("span", { class: "n", text: `${before} → ${after} of ${DATA.length}` }),
+    el("span", { class: "l", text: `${label} (last round → this round)` })));
+});
+
+// summary table
+const summary = document.getElementById("summary");
+summary.append(el("thead", {}, el("tr", {},
+  el("th", { text: "Destination" }),
+  el("th", { text: "Last round" }),
+  el("th", { text: "This round" }),
+  el("th", { text: "Checklist before" }),
+  el("th", { text: "Checklist now" }),
+  el("th", { text: "Your verdict" }))));
+const tbody = el("tbody");
+const verdictCells = {};
+DATA.forEach((row) => {
+  const cell = el("td", { class: "tick", text: "—" });
+  verdictCells[row.slug] = cell;
+  tbody.append(el("tr", {},
+    el("td", {}, el("a", { class: "dest", href: "#" + row.slug, text: row.name })),
+    el("td", {}, el("div", { class: "pair" }, row.before.map((run) => stamp(run, true)))),
+    el("td", {}, el("div", { class: "pair" }, row.after.map((run) => stamp(run, true)))),
+    el("td", {}, el("div", { class: "pair" }, row.before.map((run) => tick(hasChecklist(run))))),
+    el("td", {}, el("div", { class: "pair" }, row.after.map((run) => tick(hasChecklist(run))))),
+    cell));
+});
+summary.append(tbody);
+
+function renderRun(run, index) {
+  const box = el("div", { class: "run" });
+  const top = el("div", { class: "run-top" }, el("span", { class: "label", text: `RUN ${index + 1}` }), stamp(run));
+  if (run.answered && run.status) top.append(el("span", { class: "meta", text: `${run.status}${run.seconds ? ` · ${Math.round(run.seconds)}s` : ""}` }));
+  box.append(top);
+  if (!run.answered) {
+    box.append(el("p", { class: "none", text: run.reason }));
+    return box;
+  }
+  if (run.visa_type) box.append(el("p", {}, el("b", { text: run.visa_type })));
+  box.append(el("p", { text: run.explanation }));
+
+  const decision = el("div", { class: "block" }, el("h3", { text: "What the decision rests on" }));
+  if (run.decision_quotes.length) {
+    run.decision_quotes.forEach((quote) => {
+      decision.append(el("blockquote", { text: quote.text }));
+      if (quote.page) decision.append(el("p", { class: "cite" }, "Quoted from ", extLink(quote.page.url, quote.page.title), ` · ${quote.page.authority}`));
+    });
+  } else {
+    decision.append(el("p", { class: "none", text: "No quote was kept for the decision." }));
+  }
+  if (run.decision_pages.length) {
+    decision.append(el("ul", { class: "links" }, run.decision_pages.map((page) =>
+      el("li", {}, extLink(page.url, page.title), el("span", { class: "src", text: `${page.authority} · read ${page.retrieved}` })))));
+  }
+  box.append(decision);
+
+  const docs = el("div", { class: "block" }, el("h3", { text: "Documents" }));
+  if (run.checklists.length) {
+    run.checklists.forEach((page) => docs.append(el("a", { class: "checklist-link", href: page.url, target: "_blank", rel: "noopener noreferrer" },
+      el("b", { text: "Official document checklist ↗" }), el("span", { text: page.title }), el("span", { class: "src", text: page.url }))));
+  } else if (run.unread_checklists.length) {
+    docs.append(el("p", { class: "none", text: "No checklist could be read. These pages say they are the checklist:" }));
+    run.unread_checklists.forEach((page) => docs.append(el("a", { class: "checklist-link unread-link", href: page.url, target: "_blank", rel: "noopener noreferrer" },
+      el("b", { text: page.title + " ↗" }), el("span", { class: "src", text: "Not read here: " + page.why }), el("span", { class: "src", text: page.url }))));
+  } else if (run.decision === false) {
+    docs.append(el("p", { class: "none", text: "No visa, so no application documents." }));
+  } else {
+    docs.append(el("p", { class: "none", text: "No official checklist was found." }));
+  }
+  box.append(docs);
+
+  if (run.where_to_apply || (run.unread_visa_pages || []).length) {
+    const where = run.where_to_apply;
+    const block = el("div", { class: "block" }, el("h3", { text: "Where to apply" }));
+    if (where) block.append(el("p", { text: `${where.authority}: ${where.method}` }), where.url ? el("p", {}, extLink(where.url)) : null);
+    (run.unread_visa_pages || []).forEach((page) => block.append(el("a", { class: "checklist-link unread-link", href: page.url, target: "_blank", rel: "noopener noreferrer" },
+      el("b", { text: page.title + " ↗" }), el("span", { class: "src", text: "Not read here: " + page.why }), el("span", { class: "src", text: page.url }))));
+    box.append(block);
+  }
+
+  if (run.steps.length) {
+    box.append(el("details", {}, el("summary", { text: `Steps (${run.steps.length})` }),
+      el("ol", { class: "steps" }, run.steps.map((step) => el("li", {},
+        el("b", { text: step.title }), " ", step.action,
+        step.timing ? el("span", { class: "when", text: step.timing }) : null,
+        step.url ? el("span", { class: "when" }, extLink(step.url, "Linked page ↗")) : null)))));
+  }
+  if (run.questions.length) {
+    box.append(el("details", {}, el("summary", { text: `Open questions (${run.questions.length})` }),
+      el("ul", { class: "qs" }, run.questions.map((q) => el("li", { text: q })))));
+  }
+  if (run.refused.length) {
+    box.append(el("details", {}, el("summary", { text: `Pages that refused us (${run.refused.length})` }),
+      el("ul", { class: "links" }, run.refused.map((page) => el("li", {}, extLink(page.url, page.title), el("span", { class: "src", text: page.why }))))));
+  }
+  box.append(el("details", {}, el("summary", { text: `Every official page this plan read (${run.all_pages.length})` }),
+    el("ul", { class: "links" }, run.all_pages.map((page) =>
+      el("li", {}, extLink(page.url, page.title), el("span", { class: "src", text: `${page.authority} · read ${page.retrieved}${page.stale ? " · not re-checked" : ""}` }))))));
+  return box;
+}
+
+const cards = document.getElementById("cards");
+function refreshCount() {
+  const marked = DATA.filter((row) => verdicts[row.slug]?.v).length;
+  document.getElementById("count").textContent = `${marked} of ${DATA.length} marked`;
+  DATA.forEach((row) => {
+    const v = verdicts[row.slug]?.v;
+    verdictCells[row.slug].textContent = v ? v[0].toUpperCase() + v.slice(1) : "—";
+  });
+}
+DATA.forEach((row) => {
+  const card = el("section", { class: "dest-card", id: row.slug });
+  const buttons = ["right", "wrong", "unsure"].map((v) => {
+    const button = el("button", { type: "button", "data-v": v, "aria-pressed": String(verdicts[row.slug]?.v === v), text: v[0].toUpperCase() + v.slice(1) });
+    button.addEventListener("click", () => {
+      const current = verdicts[row.slug] || {};
+      current.v = current.v === v ? null : v;
+      verdicts[row.slug] = current;
+      store.set("item63-round3-verdicts", verdicts);
+      card.querySelectorAll(".verdict button").forEach((b) => b.setAttribute("aria-pressed", String(current.v === b.dataset.v)));
+      refreshCount();
+    });
+    return button;
+  });
+  card.append(el("div", { class: "dest-head" },
+    el("div", { class: "left" }, el("h2", { text: row.name }),
+      el("div", { class: "before-line" }, "Last round:", row.before.map((run) => stamp(run, true))),
+      el("p", { class: "earlier", text: "Your verdict then: " + row.earlier_verdict })),
+    el("div", { class: "verdict", role: "group", "aria-label": `Your verdict on ${row.name}` }, buttons)));
+  card.append(el("div", { class: "runs" }, row.after.map(renderRun)));
+  const noteId = "note-" + row.slug;
+  const note = el("textarea", { id: noteId, placeholder: "What is off, and what the official page actually says" });
+  note.value = verdicts[row.slug]?.note || "";
+  note.addEventListener("input", () => {
+    const current = verdicts[row.slug] || {};
+    current.note = note.value;
+    verdicts[row.slug] = current;
+    store.set("item63-round3-verdicts", verdicts);
+  });
+  card.append(el("div", { class: "notes" }, el("label", { for: noteId, text: "Your note" }), note));
+  cards.append(card);
+});
+refreshCount();
+
+document.getElementById("copy").addEventListener("click", async () => {
+  const text = DATA.map((row) => {
+    const v = verdicts[row.slug] || {};
+    return `${row.name}: ${v.v ? v.v.toUpperCase() : "not marked"}${v.note ? " — " + v.note.trim() : ""}`;
+  }).join("\n");
+  const fallback = document.getElementById("copy-fallback");
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById("copy").textContent = "Copied";
+    setTimeout(() => (document.getElementById("copy").textContent = "Copy my verdicts"), 1800);
+  } catch {
+    fallback.value = text;
+    fallback.classList.add("show");
+    fallback.select();
+  }
+});
+</script>
