@@ -309,6 +309,7 @@ one-paragraph defects rather than items.
 |  | 7. Put it somewhere others can open it aka deployment | `soon` |
 |  | 20. Make the stores substrate-swappable and durable | `soon` |
 |  | 55. Take the traveller from Ofself's shared identity, through one adapter | `soon` |
+|  | 71. Take where in a country the traveller lives, and name the one post that serves them | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
 | **Blocked** | 60. Decide where Fast mode goes — on Ofself adding a tier setting | `blocked` |
@@ -1090,6 +1091,45 @@ Ofself's developers; the traps below are the ones that shape this item's work.
 
 **Plan it with item 7.** Ofself's login now answers item 7's fifth step: `POST /visa-plans` needs a
 signed-in session (entry 191).
+
+### 71. Take where in a country the traveller lives, and name the one post that serves them — `soon`, **added 2026-09-26 by the owner**
+
+**Why — the owner, 2026-09-26.** Residence is a country today, but where a traveller applies often
+turns on where in that country they live.
+- **In India** it varies by destination. South Korea splits India between New Delhi, Mumbai and
+  Chennai. Spain's Mumbai consulate and New Delhi embassy each serve their own states.
+- **In the United Kingdom** most destinations take applications only in London. A traveller in
+  Edinburgh with no post there must be told London, not left to work it out.
+
+**What it is not.** Listing every post a country has was considered and set aside by the owner. For
+the United States there are too many embassies, consulates and visa centres for such a list to help
+anyone. The aim is **the one post, or the one centre, that serves this traveller**.
+
+**What exists to build on.**
+- **The plan already notices.** South Korea's plans ask "which Korean mission has jurisdiction over
+  the traveller's city of residence in India? The profile does not provide a city."
+- **Mission pages usually publish the answer.** A jurisdiction list — Chennai's names the states it
+  serves — is ordinary page text, so a corridor can read it rather than keep a table of its own.
+- **Missions are recognised by city already.** `mission_labels` holds 723 labels, cities included
+  (entry 134), and `foreign_post_labels` uses them to tell one post from another.
+- **Ofself may hold the city or state.** Item 55 takes the traveller from Ofself's shared identity.
+  Where it carries a region, this item is what uses it.
+
+**Bounds to keep.**
+- The city or state is **traveller input, like nationality**. It may select which post's page is
+  read and cited. It may never be inferred from anything and presented as the traveller's.
+- **A post's jurisdiction must come from a page that states it**, under the usual trust rules.
+  Where no page states it, the plan says which posts exist on the pages read and asks, as today.
+- **Entry 44 still holds:** nothing per city is stored as an answer. The corpus stays a store of
+  pages, and which one serves a traveller stays live.
+
+**Open questions for the design.**
+- Region granularity: a state, a city, or a postcode. India's lists name states, and the UK needs
+  only "London or not".
+- Whether the corridor key gains a region. It would split the corridor store and the plan reuse
+  key (entry 178).
+- How the form asks for it without making every traveller answer a question most destinations do
+  not need.
 
 ### 59. Guard the 272K-token price threshold — `soon`, **split from item 19 on 2026-09-15 (entry 173)**
 
