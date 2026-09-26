@@ -87,9 +87,8 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 - **A reference corridor:** `germany/IN/GB/tourism` answered visa required, `verified`, five fresh
   runs of five through the real API route on 2026-09-25, with the same checklist source and place to
   apply. Japan `IN/GB` answers "visa required", `verified`, 8 of 8 (entry 197).
-- **Leftovers to tidy, not urgent:** cache backups `var/_backup_cache_before_{tables,links,priority}_2026-09-25/`;
-  store backups `var/_backup_before_item70_2026-09-24/` (633 MB) and `var/_backup_before_2026-09-26/`;
-  the pilot's uncommitted logs under `var/rebuild-pilot-2026-09-25/`; `nohup.out`.
+- **Leftovers to tidy, not urgent:** the pilot's uncommitted logs under `var/rebuild-pilot-2026-09-25/`;
+  `nohup.out`. The store and cache backups were moved to the Trash on 2026-09-26.
 
 ## Rebuilding a store
 
