@@ -27,10 +27,10 @@ function externalLink(label, url, className = "") {
   return link;
 }
 
-function panel(title, eyebrow) {
-  const container = element("section", "panel");
+function panel(title, eyebrow, variant = "") {
+  const container = element("section", variant ? `panel panel--${variant}` : "panel");
   const header = element("div", "panel-header");
-  const headingGroup = element("div");
+  const headingGroup = element("div", "panel-heading");
   headingGroup.append(element("p", "eyebrow", eyebrow), element("h2", "", title));
   header.append(headingGroup);
   container.append(header);
@@ -636,7 +636,7 @@ function renderReliability(plan) {
 // Refusing is a legitimate outcome for high-stakes guidance, so it gets a real explanation
 // rather than a generic failure message.
 function renderRefusal(detail) {
-  const { container } = panel("No verified plan", "Evidence unavailable");
+  const { container } = panel("No verified plan", "Evidence unavailable", "refusal");
   container.append(
     element(
       "p",
@@ -1109,7 +1109,6 @@ const routeFrom = document.querySelector("#route-from");
 const routeTo = document.querySelector("#route-to");
 const routePassport = document.querySelector("#route-passport");
 const routePurpose = document.querySelector("#route-purpose");
-const coverageChips = document.querySelectorAll(".coverage-chip");
 
 function chosenLabel(select) {
   const option = select.selectedOptions[0];
@@ -1123,20 +1122,10 @@ function updateRoute() {
   routeTo.textContent = chosenLabel(destinationSelect);
   routePassport.textContent = chosenLabel(nationalitySelect);
   routePurpose.textContent = chosenLabel(purposeSelect);
-  coverageChips.forEach((chip) => {
-    chip.setAttribute("aria-pressed", String(chip.dataset.destination === destinationSelect.value));
-  });
 }
 
 form.addEventListener("change", updateRoute);
 form.addEventListener("click", () => requestAnimationFrame(updateRoute));
-coverageChips.forEach((chip) => {
-  chip.addEventListener("click", () => {
-    destinationSelect.value = chip.dataset.destination;
-    destinationSelect.dispatchEvent(new Event("change", { bubbles: true }));
-    form.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
-});
 
 updateRoute();
 prefillFromOfself().finally(updateRoute);

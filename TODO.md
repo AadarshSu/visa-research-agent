@@ -329,10 +329,11 @@ building; the owner chose to polish the current design, not redesign it.
 
 **Done 2026-09-26 (entries 229, 230): the form and landing page**, redesigned after the owner asked
 for bolder — a dark hero, the form as a plan-request ticket with a live route line, a how-it-works
-strip, and every destination as a button. Seen at 1280px and 390px wide.
+strip, coloured pills, and a dark numbered header on each plan panel. Seen at 1280px and 390px
+wide, with the fixture Singapore plan; not yet with a live plan.
 
-**Left, each the owner's call:** the plan view (only checkable with a real plan, in the owner's
-browser), the progress list while a plan runs, and the refusal screen, which belongs to item 73.
+**Left, each the owner's call:** the inside of the plan panels (only fully checkable with a real
+plan, in the owner's browser), the progress list while a plan runs, and the refusal screen, which belongs to item 73.
 What may stream before the plan is whole is item 57. The page is
 `templates/index.html`, `static/app.js`, `static/styles.css`; test changes in a browser, not only with
 `pytest`.

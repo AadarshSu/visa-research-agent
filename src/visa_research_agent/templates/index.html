@@ -175,19 +175,6 @@
             </ol>
           </div>
         </section>
-
-        <section class="coverage" aria-labelledby="coverage-title">
-          <div class="coverage-head">
-            <p class="eyebrow">Coverage</p>
-            <h2 id="coverage-title">{{ destinations | length }} destinations, and growing.</h2>
-            <p>Pick one to start.</p>
-          </div>
-          <ul class="coverage-list">
-            {% for destination in destinations if destination.status == 'available' %}
-              <li><button type="button" class="coverage-chip" data-destination="{{ destination.slug }}">{{ destination.name }}</button></li>
-            {% endfor %}
-          </ul>
-        </section>
       </main>
 
       <footer>

@@ -223,7 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
-| [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and every destination as a button; every sentence on it checked against the code |
+| [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and each plan panel under a dark numbered header; every sentence on it checked against the code |
 | [229](#229-the-form-and-landing-page-are-polished-and-say-only-what-is-true) | **The form and landing page are polished** — the owner chose polish over a redesign; the header chip stops naming an internal mode, and the intro keeps "an official government page" because a Schengen decision may be the EU's |
 | [228](#228-the-destination-list-offers-only-countries-with-a-registry-row) | **The destination list offers only countries with a registry row** — the owner's decision: 55 offered, not 198; the refusal for an unbuilt country is unchanged for a direct request |
 | [227](#227-quotes-are-removed-from-the-plan--a-checked-quote-can-still-be-a-useless-fragment) | **Quotes are removed from the plan** — the owner's decision: a quote checked word for word could still be a fragment like "India yes Indonesia yes"; the plan call writes none, the page shows none, and a claim stands on its citations; Japan and Singapore decisions unchanged on one replay each |
@@ -286,8 +286,11 @@ s more pressing |
   Ofself prefill, because prefill and the choice buttons set values without a change event. A long
   name wraps rather than being cut. The button is gold. Progress and errors sit inside the ticket.
 - **The empty state is three "how a plan is made" cards**, replaced by the plan as before.
-- **Every offered destination is a button** that fills the form and fires the destination's
-  `change`, so it clears Ofself's notes exactly as choosing from the list does.
+- **A wall of every offered destination** was added and then removed by the owner as unnecessary.
+- **Each plan panel opens with a dark header band** in the hero's colours: a gold numbered badge,
+  gold eyebrow and white title, inside a firmer outline. The number is a CSS counter, so a visa-free
+  plan with fewer panels still counts 01, 02, …; the refusal panel shows "!" instead. The panels'
+  contents are unchanged.
 
 **Every sentence checked against the code, because the page is a claim:** "confirmed as the
 destination government's own" (a `trusted` domain is rule-confirmed, not always person-reviewed, so
@@ -301,10 +304,9 @@ deliberately not red: it is a stated answer, not a fault, and entry 6 keeps the 
 traveller. Yellow is the one colour for "not confirmed", shared with the stale badge.
 
 **Seen** in Chromium at 1280px and 390px, signed out: no horizontal scroll, no script error;
-the fixture Singapore plan rendered under the new page with each pill variant;
-clicking Japan then choosing India as residence set the select, pressed the chip and read *India ✈
-Japan*; a rendered refusal panel and the progress list fit the new page. The plan view itself is
-unchanged and unseen with a real plan.
+the fixture Singapore plan rendered under the new page with each pill variant and the numbered
+headers; a refusal panel and the progress list fit. Choosing Japan and then India as residence read
+*India ✈ Japan*. Not yet seen with a live plan.
 
 ---
 
