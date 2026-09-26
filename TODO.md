@@ -48,8 +48,8 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 |  | 71. Take the city the traveller lives in, and name the one post that serves them | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
-|  | 73. Tell the traveller exactly why their corridor was refused | `soon` |
 |  | 72. Improve the interface | `soon` |
+|  | 73. Tell the traveller exactly why their corridor was refused | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `ongoing` |
 | **Blocked** | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
 | **Later** | 69. Read scanned PDFs — for ranking first, as evidence only after a decision | `later` |
@@ -322,6 +322,15 @@ search 3.5s, crawl stage 3.2s, fetch 2.7s.
 `--runs` comparisons)? Corpus eviction is designed and unbuilt. A dead pinned page must refuse the
 corridor rather than silently degrade.
 
+### 72. Improve the interface — `soon`
+
+**Why — the owner, 2026-09-26.** Asked for as a goal; the specifics are not yet set. **Ask the owner
+what to change first** — layout, reading order of the plan, mobile, the country picker — before
+building. Related work already on the list: what may stream before the plan is whole (item 57), the
+refusal screen (item 73), marking the 143 unbuilt destinations (known problem 23). The page is
+`templates/index.html`, `static/app.js`, `static/styles.css`; test changes in a browser, not only with
+`pytest`.
+
 ### 73. Tell the traveller exactly why their corridor was refused — `soon`
 
 **Why — the owner, 2026-09-26.** Every refusal lands under the same "No verified plan / Evidence
@@ -352,15 +361,6 @@ response. Refused pages are already named once per authority (item 54, entry 155
 **Absorbs** the *Smaller things* entry "a failed model call reads to the traveller as a missing
 page". **Does not change** what a plan may conclude, only how a refusal is explained — anything that
 would turn a refusal into an answer is the owner's decision (entries 206–209).
-
-### 72. Improve the interface — `soon`
-
-**Why — the owner, 2026-09-26.** Asked for as a goal; the specifics are not yet set. **Ask the owner
-what to change first** — layout, reading order of the plan, mobile, the country picker — before
-building. Related work already on the list: what may stream before the plan is whole (item 57), the
-refusal screen (item 73), marking the 143 unbuilt destinations (known problem 23). The page is
-`templates/index.html`, `static/app.js`, `static/styles.css`; test changes in a browser, not only with
-`pytest`.
 
 ### 63. Make most corridors return accurate and useful information — `ongoing`
 
