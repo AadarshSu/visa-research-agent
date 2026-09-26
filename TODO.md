@@ -1123,13 +1123,20 @@ anyone. The aim is **the one post, or the one centre, that serves this traveller
 - **Entry 44 still holds:** nothing per city is stored as an answer. The corpus stays a store of
   pages, and which one serves a traveller stays live.
 
+**Decided by the owner, 2026-09-26 (entry 225).**
+- **A city.** Not a state, not a postcode.
+- **The traveller gives a city instead of a country of residence.** The country is derived from
+  the city, so the form asks one question, not two.
+
 **Open questions for the design.**
-- Region granularity: a state, a city, or a postcode. India's lists name states, and the UK needs
-  only "London or not".
-- Whether the corridor key gains a region. It would split the corridor store and the plan reuse
-  key (entry 178).
-- How the form asks for it without making every traveller answer a question most destinations do
-  not need.
+- **Where the city-to-country mapping comes from**, and what happens when a city name is ambiguous
+  (London, Ontario; Hyderabad, India and Pakistan). It needs committed reference data, as countries
+  have (entry 20). A city with no reference data is refused, never guessed.
+- **Matching a city to a post's stated jurisdiction.** India's jurisdiction lists name states, so a
+  city must also carry its state or region.
+- **Whether the corridor key gains the city.** It would split the corridor store and the plan reuse
+  key (entry 178). Keying on the post it resolves to, not the city, may keep them shared.
+- **What Ofself supplies** (item 55): a city, or an address the city is taken from.
 
 ### 59. Guard the 272K-token price threshold — `soon`, **split from item 19 on 2026-09-15 (entry 173)**
 

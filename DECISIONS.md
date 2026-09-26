@@ -267,6 +267,20 @@ s more pressing |
 
 ---
 
+## 225. Residence becomes a city, asked for instead of a country
+
+**2026-09-26 · the owner, on TODO item 71:** "city, probably, and we will just ask for city rather
+than country of residence."
+- **A city**, because the post that serves a traveller is chosen by city or by the state a city is
+  in. India's missions split the country by state; the United Kingdom's are mostly in London.
+- **The city replaces the country of residence.** The country is derived from it, so the traveller
+  answers one question, not two.
+
+Not built. The open design questions are in item 71: reference data for cities, ambiguous names,
+states for India's jurisdiction lists, and the corridor key.
+
+---
+
 ## 224. The owner's verdicts on the third round: Australia and Spain right, South Korea wrong
 
 **2026-09-26 · the owner, on [Three Corridors, Third
