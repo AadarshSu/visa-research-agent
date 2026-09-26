@@ -48,7 +48,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 |  | 71. Take the city the traveller lives in, and name the one post that serves them | `soon` |
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
-|  | 72. Improve the interface | `soon` |
+|  | 72. Improve the interface — form and landing page done | `soon` |
 |  | 73. Tell the traveller exactly why their corridor was refused | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `ongoing` |
 | **Blocked** | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
@@ -324,10 +324,16 @@ corridor rather than silently degrade.
 
 ### 72. Improve the interface — `soon`
 
-**Why — the owner, 2026-09-26.** Asked for as a goal; the specifics are not yet set. **Ask the owner
-what to change first** — layout, reading order of the plan, mobile, the country picker — before
-building. Related work already on the list: what may stream before the plan is whole (item 57), the
-refusal screen (item 73). The page is
+**Why — the owner, 2026-09-26.** Asked for as a goal. **Ask the owner what to change next** before
+building; the owner chose to polish the current design, not redesign it.
+
+**Done 2026-09-26 (entry 229): the form and landing page** — accurate header chip and intro, a
+destination count, bordered 2×2 fields with a full-width button, a shorter hero, a lighter empty
+state. Seen at 1280px and 390px wide.
+
+**Left, each the owner's call:** the plan view (only checkable with a real plan, in the owner's
+browser), the progress list while a plan runs, and the refusal screen, which belongs to item 73.
+What may stream before the plan is whole is item 57. The page is
 `templates/index.html`, `static/app.js`, `static/styles.css`; test changes in a browser, not only with
 `pytest`.
 

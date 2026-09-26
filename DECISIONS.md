@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [229](#229-the-form-and-landing-page-are-polished-and-say-only-what-is-true) | **The form and landing page are polished** — the owner chose polish over a redesign; the header chip stops naming an internal mode, and the intro keeps "an official government page" because a Schengen decision may be the EU's |
 | [228](#228-the-destination-list-offers-only-countries-with-a-registry-row) | **The destination list offers only countries with a registry row** — the owner's decision: 55 offered, not 198; the refusal for an unbuilt country is unchanged for a direct request |
 | [227](#227-quotes-are-removed-from-the-plan--a-checked-quote-can-still-be-a-useless-fragment) | **Quotes are removed from the plan** — the owner's decision: a quote checked word for word could still be a fragment like "India yes Indonesia yes"; the plan call writes none, the page shows none, and a claim stands on its citations; Japan and Singapore decisions unchanged on one replay each |
 | [226](#226-the-page-shows-each-step-as-it-starts-and-the-plan-only-once-it-is-whole) | **The page shows each step as it starts, and the plan only once it is whole** — `POST /visa-plans/stream` sends a stage name per step, then the validated plan or refusal; no plan content before validation; seen live on Italy `IN/IN`, 8 steps in ~60s |
@@ -267,6 +268,31 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 229. The form and landing page are polished, and say only what is true
+
+**2026-09-26 · TODO item 72, the owner's choice:** the form and landing page first, polishing the
+current design rather than replacing it.
+
+**What changed** (`templates/index.html`, `static/styles.css`):
+- **The header chip** read "live sources · openai extraction", which names an internal setting and
+  was wrong once model calls moved to Personas (entry 188). It now reads "Live official sources", and
+  turns amber, as "Saved snapshots, not live" and/or "fixture plans", when the page is not what a
+  traveller would get.
+- **The intro** dropped "the configured official pages", from before discovery (entry 149). It
+  keeps "an official government page" rather than "the destination's own government": for a
+  Schengen member the decision may be the EU's (entry 201). Three short facts follow: how many
+  destinations are offered (entry 228's count, from the template), ordinary passports only, and live
+  sources.
+- **The form** is a 2×2 grid of bordered fields with the button across the full width; the selects
+  had no visible edge, and the button sat under the first column alone. The hero is shorter so the
+  form sits higher, and the empty state is a light dashed box saying what a plan holds and that a
+  fresh one takes about a minute (PROJECT_HANDOFF's timing).
+
+**Seen** in Chromium at 1280px and 390px wide, signed out. The plan view, the progress list and the
+refusal screen are untouched.
 
 ---
 

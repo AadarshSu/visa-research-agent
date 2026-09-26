@@ -16,8 +16,8 @@
           <span>Visa Research Desk</span>
         </a>
         <div class="masthead-actions">
-          <span class="mode-chip">
-            <span class="status-dot"></span>{{ source_mode }} sources · {{ extraction_mode }} extraction
+          <span class="mode-chip{% if source_mode != 'live' or extraction_mode == 'fixture' %} mode-chip--offline{% endif %}">
+            <span class="status-dot"></span>{% if source_mode == 'live' %}Live official sources{% else %}Saved snapshots, not live{% endif %}{% if extraction_mode == 'fixture' %} · fixture plans{% endif %}
           </span>
           {% if signed_in %}
             <form class="account" method="post" action="/oauth/logout">
@@ -36,9 +36,13 @@
           <h1 id="page-title">Turn official guidance into a practical visa plan.</h1>
           <p class="hero-copy">
             Every claim is grounded in an official government page, and anything that could not be
-            verified is said plainly. Ordinary passports only. Evidence comes from
-            {% if source_mode == 'live' %}the configured official pages, retrieved live{% else %}saved official-source snapshots{% endif %}.
+            verified is said plainly.
           </p>
+          <ul class="hero-facts">
+            <li>{{ destinations | length }} destinations so far</li>
+            <li>Ordinary passports only</li>
+            <li>{% if source_mode == 'live' %}Official sources, read live{% else %}Saved official-source snapshots{% endif %}</li>
+          </ul>
 
           {% if signed_in %}<p id="ofself-note" class="form-note" role="status" hidden></p>{% endif %}
           {% set plans_locked = sign_in_required and not signed_in %}
@@ -121,9 +125,11 @@
 
         <section id="results" class="results" aria-live="polite" aria-busy="false">
           <div class="empty-state">
-            <p class="eyebrow">Ready</p>
-            <h2>Choose a destination to research.</h2>
-            <p>Generate a plan to inspect its decision, evidence, application route and caveats.</p>
+            <p class="eyebrow">Your plan appears here</p>
+            <p>
+              Whether you need a visa, where to apply, the steps, and the official page each one
+              rests on. A fresh plan takes about a minute.
+            </p>
           </div>
         </section>
       </main>
