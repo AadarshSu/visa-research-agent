@@ -100,6 +100,12 @@ VisaPlanExtractor.extract(destination, traveller, report) ──▶ VisaPlan
                                      openai  → one structured model call
 ```
 
+**Two routes return the same plan.** `POST /visa-plans` answers with it; `POST /visa-plans/stream`
+sends newline-delimited JSON — a `stage` event as each step starts (the resolver's phases through
+`ResolutionTrace.on_phase`, then `retrieve` and `write` from the service), then one `plan`, `refusal`
+or `error` event. Both call `research_plan`. **Only progress streams**: a stage carries its name and
+nothing it found, and the plan is sent whole after every validator has passed (entry 226).
+
 `research/service.py` is the whole orchestration. `api/dependencies.py` chooses implementations from
 `runtime.yaml`, and the traveller comes from an injected `TravellerSource` (`api/traveller.py`).
 Every model call — selection, role adjudication, the refused-page judgement, the plan — reaches the

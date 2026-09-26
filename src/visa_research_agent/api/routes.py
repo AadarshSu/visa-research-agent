@@ -1,9 +1,12 @@
 """HTTP routing kept deliberately thin around the research workflow."""
 
-from typing import Annotated, get_args
+import asyncio
+import json
+from collections.abc import AsyncIterator, Callable, Coroutine
+from typing import Annotated, Any, get_args
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 
 from visa_research_agent.api.dependencies import (
     get_automatic_destinations,
@@ -180,8 +183,13 @@ async def resolve_destination(
     requested: str,
     traveller: TravellerProfile,
     automatic: AutomaticDestinationService | None,
+    *,
+    on_phase: Callable[[str], None] | None = None,
 ) -> DestinationConfig:
-    """Research the destination, or use its hand-written entry when research is switched off."""
+    """Research the destination, or use its hand-written entry when research is switched off.
+
+    `on_phase` hears each research phase as it starts; a hand-written entry has none.
+    """
 
     registry = get_destination_registry()
     destination = registry.get(requested)
@@ -229,7 +237,7 @@ async def resolve_destination(
     # the `united-states` one the interface asks for. DECISIONS entry 168.
     corridor = corridor_for(country.slug, traveller)
     try:
-        discovered = await automatic.destination_for(name, corridor)
+        discovered = await automatic.destination_for(name, corridor, on_phase=on_phase)
     except AutomaticDiscoveryError as exc:
         # A refusal, not a fault. It names what could not be established rather than offering a
         # plan assembled from whatever happened to be readable.
@@ -260,10 +268,78 @@ async def create_visa_plan(
 ) -> VisaPlan:
     traveller = await travellers.traveller_for(request)
     refuse_impossible_corridors(request.destination, traveller)
-    destination = await resolve_destination(request.destination, traveller, automatic)
+    return await research_plan(request.destination, traveller, service, automatic)
 
+
+@router.post(
+    "/visa-plans/stream",
+    response_class=StreamingResponse,
+    responses={
+        status.HTTP_200_OK: {
+            "description": (
+                "Newline-delimited JSON: a `stage` event as each step starts, then exactly one "
+                "`plan`, `refusal` or `error` event."
+            ),
+            "content": {"application/x-ndjson": {}},
+        },
+        status.HTTP_401_UNAUTHORIZED: {"description": "Not signed in with Ofself"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "Unsupported destination"},
+    },
+    tags=["visa research"],
+    dependencies=[Depends(require_signed_in_for_plans)],
+)
+async def stream_visa_plan(
+    request: VisaPlanRequest,
+    service: Annotated[VisaPlanService, Depends(get_visa_plan_service)],
+    automatic: Annotated[AutomaticDestinationService | None, Depends(get_automatic_destinations)],
+    travellers: Annotated[TravellerSource, Depends(get_traveller_source)],
+) -> StreamingResponse:
+    """The same plan as `POST /visa-plans`, with each step announced as it starts (TODO item 57).
+
+    **Only progress streams, never content.** A stage event names which step has started — search,
+    choosing pages, reading them, writing the plan — and carries nothing a step found. The plan
+    arrives whole, after every validator has passed, exactly as the other route returns it: a
+    half-written plan has passed none of them, and a claim it could still drop is the unverified,
+    alarming answer entry 6 forbids.
+
+    The checks that cost nothing run first, so a request that cannot be answered still gets its
+    ordinary status code. From the first stage on the status is 200, and a refusal arrives as an
+    event carrying the same `detail` the other route would have answered with.
+    """
+
+    traveller = await travellers.traveller_for(request)
+    refuse_impossible_corridors(request.destination, traveller)
+
+    async def work(report: Callable[[str], None]) -> VisaPlan:
+        return await research_plan(
+            request.destination, traveller, service, automatic, report=report
+        )
+
+    return StreamingResponse(
+        plan_events(work),
+        media_type="application/x-ndjson",
+        # Without these a proxy may hold the stream back until it ends, which is the wait this
+        # route exists to break up.
+        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
+
+
+async def research_plan(
+    requested: str,
+    traveller: TravellerProfile,
+    service: VisaPlanService,
+    automatic: AutomaticDestinationService | None,
+    *,
+    report: Callable[[str], None] | None = None,
+) -> VisaPlan:
+    """Resolve the destination and write its plan, turning a refusal into an HTTP answer.
+
+    Shared by both plan routes so they cannot disagree about what is refused or how.
+    """
+
+    destination = await resolve_destination(requested, traveller, automatic, on_phase=report)
     try:
-        return await service.generate(destination, traveller)
+        return await service.generate(destination, traveller, on_stage=report)
     except InsufficientEvidenceError as exc:
         # A refusal explains which official evidence was missing, rather than failing opaquely.
         raise HTTPException(
@@ -285,3 +361,43 @@ async def create_visa_plan(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={"message": "The visa plan could not be generated safely."},
         ) from exc
+
+
+async def plan_events(
+    work: Callable[[Callable[[str], None]], Coroutine[Any, Any, VisaPlan]],
+) -> AsyncIterator[str]:
+    """Run `work`, yielding one JSON line per stage it reports and then one for its outcome.
+
+    The work runs as its own task so a stage can be sent while it is still going. If the browser
+    goes away the task is cancelled rather than left to spend searches and model calls on a plan
+    nobody will read.
+    """
+
+    stages: asyncio.Queue[str | None] = asyncio.Queue()
+    task = asyncio.create_task(work(stages.put_nowait))
+    # The end of the work is one more item in the same queue, so every stage it reported is sent
+    # before its outcome.
+    task.add_done_callback(lambda _: stages.put_nowait(None))
+    try:
+        while (stage := await stages.get()) is not None:
+            yield event_line({"event": "stage", "stage": stage})
+        try:
+            plan = task.result()
+        except HTTPException as exc:
+            yield event_line(
+                {"event": "refusal", "status_code": exc.status_code, "detail": exc.detail}
+            )
+        except Exception:
+            # Past the first line the status is already 200, so a fault has to be said in the
+            # stream. It is still raised, so the server logs it as it would any other.
+            yield event_line({"event": "error", "message": "The plan could not be generated."})
+            raise
+        else:
+            yield event_line({"event": "plan", "plan": plan.model_dump(mode="json")})
+    finally:
+        if not task.done():
+            task.cancel()
+
+
+def event_line(event: dict[str, Any]) -> str:
+    return json.dumps(event, separators=(",", ":")) + "\n"

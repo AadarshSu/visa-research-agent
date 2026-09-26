@@ -1,4 +1,5 @@
-from collections.abc import AsyncIterator
+import json
+from collections.abc import AsyncIterator, Callable
 from types import SimpleNamespace
 from typing import cast
 
@@ -195,8 +196,12 @@ class RecordingAutomatic:
         # The real lookup, so a request written as a name or a synonym is found the way it is live.
         return find_country(name, get_country_registry())
 
-    async def destination_for(self, name: str, corridor: Corridor) -> SimpleNamespace:
+    async def destination_for(
+        self, name: str, corridor: Corridor, *, on_phase: Callable[[str], None] | None = None
+    ) -> SimpleNamespace:
         self.asked.append((name, corridor))
+        if on_phase is not None:
+            on_phase("search")
         return SimpleNamespace(config=self.config)
 
 
@@ -383,7 +388,11 @@ class StoppingPlanService:
     """Stops once a destination is resolved: these tests are about the route, not the plan."""
 
     async def generate(
-        self, destination: DestinationConfig, traveller: TravellerProfile
+        self,
+        destination: DestinationConfig,
+        traveller: TravellerProfile,
+        *,
+        on_stage: Callable[[str], None] | None = None,
     ) -> VisaPlan:
         raise VisaResearchError("the route is under test, not the plan")
 
@@ -528,3 +537,77 @@ def test_every_country_slug_can_key_a_corridor() -> None:
 
     for country in get_country_registry().countries:
         Corridor(destination_slug=country.slug, passport_nationality="IN", applying_from="GB")
+
+
+# --- the streamed plan (TODO item 57) --------------------------------------------------------
+
+
+def stream_events(body: str) -> list[dict[str, object]]:
+    return [json.loads(line) for line in body.splitlines() if line]
+
+
+@pytest.mark.anyio
+async def test_the_streamed_plan_is_the_same_plan_after_its_stages(
+    client: httpx.AsyncClient,
+) -> None:
+    """Only progress streams: the plan arrives whole, exactly as the other route returns it."""
+
+    request = {"destination": "singapore"}
+
+    streamed = await client.post("/visa-plans/stream", json=request)
+    whole = await client.post("/visa-plans", json=request)
+
+    assert streamed.status_code == 200
+    assert streamed.headers["content-type"].startswith("application/x-ndjson")
+    events = stream_events(streamed.text)
+    assert [event["stage"] for event in events[:-1]] == ["retrieve", "write"]
+    assert events[-1] == {"event": "plan", "plan": whole.json()}
+
+
+@pytest.mark.anyio
+async def test_a_stage_carries_its_name_and_nothing_it_found(client: httpx.AsyncClient) -> None:
+    streamed = await client.post("/visa-plans/stream", json={"destination": "singapore"})
+
+    for event in stream_events(streamed.text)[:-1]:
+        assert set(event) == {"event", "stage"}
+
+
+@pytest.mark.anyio
+async def test_a_streamed_refusal_carries_the_same_detail_as_the_other_route(
+    researching: tuple[httpx.AsyncClient, RecordingAutomatic],
+) -> None:
+    client, _ = researching
+    request = {
+        "destination": "united-states",
+        "traveller": {"passport_nationality": "IN", "country_of_residence": "GB"},
+    }
+
+    streamed = await client.post("/visa-plans/stream", json=request)
+    whole = await client.post("/visa-plans", json=request)
+
+    events = stream_events(streamed.text)
+    # Forwarded from discovery itself; the stand-in plan service reports no stages of its own.
+    assert [event["stage"] for event in events[:-1]] == ["search"]
+    assert events[-1] == {
+        "event": "refusal",
+        "status_code": whole.status_code,
+        "detail": whole.json()["detail"],
+    }
+
+
+@pytest.mark.anyio
+async def test_a_request_that_cannot_be_answered_is_refused_before_the_stream_starts(
+    client: httpx.AsyncClient,
+) -> None:
+    """The free checks keep their ordinary status code; nothing is streamed or spent."""
+
+    response = await client.post(
+        "/visa-plans/stream",
+        json={
+            "destination": "singapore",
+            "traveller": {"passport_nationality": "SG", "country_of_residence": "SG"},
+        },
+    )
+
+    assert response.status_code == 422
+    assert response.json()["detail"]["status"] == "not_applicable"

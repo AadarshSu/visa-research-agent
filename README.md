@@ -89,6 +89,8 @@ pytest
 - `POST /visa-plans` — a plan for `{"destination": "japan", "traveller": {"passport_nationality":
   "IN", "country_of_residence": "GB", "travel_purpose": "tourism"}}`. Needs an Ofself session unless
   `REQUIRE_SIGN_IN=false`; answers `503` naming what could not be verified.
+- `POST /visa-plans/stream` — the same plan, as newline-delimited JSON: a `stage` event as each step
+  starts, then one `plan`, `refusal` or `error` event. The page uses this one.
 - `/oauth/login`, `/oauth/callback`, `/oauth/session`, `/oauth/traveller`, `/oauth/logout` — sign-in
   with Ofself.
 

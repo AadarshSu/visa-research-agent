@@ -325,6 +325,34 @@ button:disabled {
   animation: travel 1.1s ease-in-out infinite alternate;
 }
 
+.progress-steps {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.progress-steps li::before {
+  display: inline-block;
+  width: 1.4em;
+  content: "·";
+}
+
+.progress-steps li.done::before {
+  content: "✓";
+  color: var(--green);
+}
+
+.progress-steps li.current {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.progress-elapsed {
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes travel {
   from { transform: translateX(-20%); }
   to { transform: translateX(160%); }

@@ -26,6 +26,21 @@
         "8000"
       ],
       "port": 8000
+    },
+    {
+      "name": "visa-research-agent-open",
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "REQUIRE_SIGN_IN=false",
+        ".venv/bin/python",
+        "-m",
+        "uvicorn",
+        "visa_research_agent.api.app:create_app",
+        "--factory",
+        "--port",
+        "8098"
+      ],
+      "port": 8098
     }
   ]
 }

@@ -532,11 +532,17 @@ class ResolutionTrace:
     open_phase: tuple[str, float] | None = None
     """The phase running now. Not a timing itself — `begin` and `end` are the only readers."""
 
+    on_phase: Callable[[str], None] | None = None
+    """Told the name of each phase as it starts, so a waiting traveller can see how far the run has
+    got (TODO item 57). It hears a phase's name and nothing the phase found."""
+
     def begin(self, phase: str) -> None:
         """Close whichever phase was running and start this one."""
 
         self.end()
         self.open_phase = (phase, self.clock())
+        if self.on_phase is not None:
+            self.on_phase(phase)
 
     def end(self) -> None:
         """Close the running phase, if any.
@@ -795,14 +801,21 @@ class CorridorResolver:
         # per-run state on an object that might outlive the run.
         self.model_call_timings: list[ModelCall] = []
 
-    async def resolve(self, destination: DestinationConfig, corridor: Corridor) -> ResolvedCorridor:
+    async def resolve(
+        self,
+        destination: DestinationConfig,
+        corridor: Corridor,
+        *,
+        on_phase: Callable[[str], None] | None = None,
+    ) -> ResolvedCorridor:
         """Resolve the corridor, and write down what it considered on the way.
 
         The trace is filled as the run proceeds rather than rebuilt at the end, so a corridor that
         refuses early still records how far it got — which is the run most worth reading.
+        `on_phase` hears each phase's name as it starts.
         """
 
-        trace = ResolutionTrace(clock=self.monotonic)
+        trace = ResolutionTrace(clock=self.monotonic, on_phase=on_phase)
         self.model_call_timings = []
         self.corridor_key = corridor.key
         # Kept on the resolver so a caller can read what this run considered without re-reading the

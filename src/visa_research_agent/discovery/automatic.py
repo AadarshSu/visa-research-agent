@@ -391,8 +391,17 @@ class AutomaticDestinationService:
             name, corridor, countries=self.countries, authorities=self.authorities
         )
 
-    async def destination_for(self, name: str, corridor: Corridor) -> DiscoveredDestination:
-        """Resolve a destination from nothing, or refuse with a reason a traveller can read."""
+    async def destination_for(
+        self,
+        name: str,
+        corridor: Corridor,
+        *,
+        on_phase: Callable[[str], None] | None = None,
+    ) -> DiscoveredDestination:
+        """Resolve a destination from nothing, or refuse with a reason a traveller can read.
+
+        `on_phase` hears each research phase as it starts. A stored corridor has none to report.
+        """
 
         country = self.country_named(name)
         if country is None:
@@ -422,7 +431,7 @@ class AutomaticDestinationService:
             pinned=self._pinned(corridor),
             always_read=union_pages(union_of(base), self.corpus),
         )
-        resolved = await resolver.resolve(base, corridor)
+        resolved = await resolver.resolve(base, corridor, on_phase=on_phase)
         if not resolved.is_usable:
             missing = ", ".join(role.replace("_", " ") for role in resolved.unresolved_roles)
             raise AutomaticDiscoveryError(

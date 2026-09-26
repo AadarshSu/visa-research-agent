@@ -532,6 +532,19 @@ def test_closing_twice_is_safe_and_records_once() -> None:
     assert trace.phase_seconds == {"adjudicate": 3.0}
 
 
+def test_each_phase_is_announced_as_it_starts() -> None:
+    """What a waiting traveller is shown (TODO item 57): the phase's name, in order."""
+
+    heard: list[str] = []
+    trace = ResolutionTrace(clock=lambda: 0.0, on_phase=heard.append)
+
+    trace.begin("search")
+    trace.begin("select")
+    trace.end()
+
+    assert heard == ["search", "select"]
+
+
 def test_a_run_that_never_started_a_phase_records_none() -> None:
     """An empty map means unrecorded, never a run that spent nothing — the field is graded that
     way because every log written before 2026-09-07 has one."""

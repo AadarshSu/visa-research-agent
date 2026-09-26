@@ -9,6 +9,7 @@ used only when it is the destination country's **own** government. France's real
 surfaced a commercial travel insurer, and Vietnam's ranked the US embassy first.
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -102,8 +103,16 @@ class StubResolver:
         self.outcome = outcome
         self.trusted_seen: list[list[str]] = []
 
-    async def resolve(self, destination: object, traveller: Corridor) -> ResolvedCorridor:
+    async def resolve(
+        self,
+        destination: object,
+        traveller: Corridor,
+        *,
+        on_phase: Callable[[str], None] | None = None,
+    ) -> ResolvedCorridor:
         self.trusted_seen.append(list(getattr(destination, "trusted_domains", [])))
+        if on_phase is not None:
+            on_phase("search")
         return self.outcome
 
 
@@ -859,3 +868,36 @@ def test_a_tool_for_a_role_no_source_fills_reaches_the_destination() -> None:
 
     assert [tool.topic for tool in config.official_tools] == ["visa_decision", "fees"]
     assert config.decision_is_unverified
+
+
+# --- progress (TODO item 57) -----------------------------------------------------------------
+
+
+async def test_the_resolvers_phases_reach_the_caller(tmp_path: Path) -> None:
+    service = build_service(
+        tmp_path,
+        StubProvider(["https://france-visas.gouv.fr/en/applying"]),
+        StubResolver(resolved()),
+    )
+    heard: list[str] = []
+
+    await service.destination_for("France", corridor(), on_phase=heard.append)
+
+    assert heard == ["search"]
+
+
+async def test_a_stored_corridor_reports_no_phases(tmp_path: Path) -> None:
+    """Nothing was researched, so nothing may be announced as running."""
+
+    service = build_service(
+        tmp_path,
+        StubProvider(["https://france-visas.gouv.fr/en/applying"]),
+        StubResolver(resolved()),
+    )
+    await service.destination_for("France", corridor())
+    heard: list[str] = []
+
+    again = await service.destination_for("France", corridor(), on_phase=heard.append)
+
+    assert again.from_cache
+    assert heard == []

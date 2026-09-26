@@ -473,7 +473,9 @@ class SpendingNothing:
     def __init__(self) -> None:
         SpendingNothing.reached = True
 
-    async def generate(self, destination: object, traveller: object) -> VisaPlan:
+    async def generate(
+        self, destination: object, traveller: object, *, on_stage: object = None
+    ) -> VisaPlan:
         raise VisaResearchError("reached the plan")
 
 

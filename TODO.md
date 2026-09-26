@@ -17,7 +17,7 @@ Personas, is done and is the route from now on (entry 188).
 
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
-| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. A repeat within 24h reuses the plan draft, not timed live | **57**, **58** | nothing external |
+| **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Each step now shows on screen as it starts (entry 226). A repeat within 24h reuses the plan draft, not timed live | **57**, **58** | nothing external |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in (required since entry 191) but does not host; the stores are local files | **7**, **20** | choosing a host; item 7's refusal-storing decision |
 | **Most corridors accurate and useful** | Item 63's second round: decisions 7 of 10, checklists 5 of 10 (entry 214); the owner's verdicts in entries 216 and 224. Nothing in the repo measures *right*, only *answered* (known problem 26) | **63** | the owner's own checking (entry 68) |
 | **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have none, and the page offers all 198 (known problem 23) | **64**, **2** | search credit only |
@@ -37,7 +37,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 
 | | | |
 | --- | --- | --- |
-| **Now** | 57. Stream the plan to the screen as it is written | `next` |
+| **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
@@ -70,26 +70,24 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 before a batch. Item 63 moved to *Next up* as ongoing work. Items 60 (Fast mode) and 65 (GPT-6 Sol)
 were removed.
 
-### 57. Stream the plan to the screen as it is written — `next`
+### 57. Stream the plan to the screen as it is written — `next`, **progress shipped (entry 226); the rest is the owner's decision**
 
-**Why.** A fresh request takes ~55s and the traveller sees nothing until the whole plan arrives; more
-than half of that is the model writing the plan. Streaming would not shorten it, but something could
-appear seconds after the plan call starts. The owner's goal (entry 182) asks for *information on
-screen while it runs*, so at least a progress shape is wanted.
+**Done 2026-09-26 (entry 226):** `POST /visa-plans/stream` sends each step's name as it starts —
+search, gather, choose, read, check, collect, write — and then the whole validated plan, and the page
+shows the steps ticking off with elapsed seconds. Seen live: eight steps over about a minute.
 
-**What stands in the way — to be designed, not assumed.**
-- **The plan is validated as a whole before anyone sees it:** `VisaPlan`'s validators,
-  `QuoteChecker`, the rule that a null decision is never `verified`, the entry-plan shape (entries 95,
-  150, 156). Nothing streamed may show a claim the finished plan could still drop or refuse — the
-  visa decision above all (entry 6).
-- **One safe shape streams progress**: searching, choosing pages, reading them, writing the plan.
-  Another streams only parts already final. Which parts qualify is the design question.
-- **The call uses strict structured output** (`with_structured_output`, `json_schema`). Streaming
-  partial JSON through LangChain and FastAPI to `static/app.js` is a real change at both ends.
-- **A refusal can arrive after text has appeared**, and the interface needs an honest way to take it
-  back.
-
-**Measured (entry 177):** the plan call's first token arrives 7–15s in.
+**Open, for the owner — whether anything more than progress may appear before the plan is whole.**
+Nothing streamed may show a claim the finished plan could still drop or refuse, the visa decision
+above all (entry 6). Candidates, safest first:
+- **What research found, as facts about the run:** the official sites searched, or the pages chosen
+  to read, with their links. True whatever the plan later says, but a traveller may read a listed page
+  as the answer.
+- **The plan's sections as each is final.** Needs the validators split so a section can be checked
+  alone; the decision, which the whole plan's grade depends on, would still come last.
+- **The model's text as it is written.** The plan call uses strict structured output
+  (`with_structured_output`, `json_schema`), so this is partial JSON through LangChain or Personas,
+  and a refusal can arrive after text has appeared. The first token comes 7–15s into the call (entry
+  177).
 
 ### 64. Expand from 55 countries to 100+ — `next`, **ask the owner before a batch**
 

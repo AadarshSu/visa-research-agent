@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [226](#226-the-page-shows-each-step-as-it-starts-and-the-plan-only-once-it-is-whole) | **The page shows each step as it starts, and the plan only once it is whole** — `POST /visa-plans/stream` sends a stage name per step, then the validated plan or refusal; no plan content before validation; seen live on Italy `IN/IN`, 8 steps in ~60s |
 | [214](#214-item-63s-second-round-the-same-ten-twice-each-on-todays-code) | **Item 63's second round** — the same ten `IN/IN` destinations twice: decisions 5 → 7 of 10, checklists 3 → 5 of 10; South Africa refused one plan for a garbled source id; Turkey open once; published for the owner's verdicts |
 | [213](#213-an-unread-checklist-is-named-only-where-the-pages-own-words-say-it-is-this-trips) | **Naming an unread checklist needs the page's own words** — its label or title says checklist, or its heading does and its label names this trip's purpose; a refused (`403`) checklist is named too; Switzerland's PDFs confirmed as checklists; Australia now names none |
 | [212](#212-renders-go-to-the-most-promising-pages-first-and-a-followed-document-must-be-one) | **Renders go to the most promising pages first** — a two-pass fetch spends the 5 renders and each host's 3 strikes on pages that could answer the decision or checklist; a followed "document" that returns a web page is unread and nameable; at most three likely checklists named |
@@ -264,6 +265,43 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 226. The page shows each step as it starts, and the plan only once it is whole
+
+**2026-09-26 · TODO item 57, the owner's first item.** A fresh request is about a minute, and the
+traveller saw one static line — "Analysing saved official-source snapshots…", which was not even
+true — until the whole plan arrived. The owner's goal asks for information on screen while it runs
+(entry 182).
+
+**What was built.**
+- **`POST /visa-plans/stream`** answers newline-delimited JSON: a `stage` event as each step starts,
+  then exactly one `plan`, `refusal` or `error` event. `POST /visa-plans` is unchanged, and both call
+  one shared `research_plan`, so they cannot disagree about what is refused.
+- **The steps are the ones already timed.** `ResolutionTrace.begin` announces each research phase
+  (`search`, `corpus`, `crawl`, `select`, `fetch`, `adjudicate`) through an `on_phase` hook, and
+  `VisaPlanService.generate` announces `retrieve` and `write`. A stored corridor has no research
+  phases to announce and does not invent any.
+- **The free checks run before the stream starts** — sign-in, the traveller, a corridor with no
+  answer — so they keep their ordinary status codes. After that the status is 200, and a refusal is
+  an event carrying the same `detail` the other route answers with.
+- **The research runs as its own task**, cancelled if the browser goes away, so a closed tab stops
+  spending searches and model calls.
+- **The page** shows the steps as a list, each ticked as the next starts, with elapsed seconds.
+
+**What is deliberately not streamed: any part of the plan.** A stage event carries a step's name and
+nothing the step found; a test asserts it. A half-written plan has passed none of `VisaPlan`'s
+validators, the quote check or the rule that a null decision is never `verified`, and a claim the
+finished plan could still drop is the alarming unverified answer entry 6 forbids. Streaming the
+model's partial output, or showing research findings such as which pages were chosen before the plan
+is written, is left to the owner.
+
+**Seen live, 2026-09-26, Italy `IN/IN`**, through the page on a local server with
+`REQUIRE_SIGN_IN=false`: eight steps appeared in order over about 60 seconds — research ~38s (search
+3.1, corpus 1.0, crawl 6.0, select 7.2, fetch 10.4, adjudicate 10.6), then the plan — and the plan
+rendered as before. A repeat, served from the stored corridor, showed only the last two steps. The
+run overwrote Italy `IN/IN`'s recall log; the previous one was restored.
 
 ---
 

@@ -5,6 +5,8 @@ const residenceSelect = document.querySelector("#residence");
 const purposeSelect = document.querySelector("#purpose");
 const generateButton = document.querySelector("#generate-button");
 const progress = document.querySelector("#progress");
+const progressSteps = document.querySelector("#progress-steps");
+const progressElapsed = document.querySelector("#progress-elapsed");
 const errorMessage = document.querySelector("#error-message");
 const results = document.querySelector("#results");
 const passportNote = document.querySelector("#passport-note");
@@ -691,15 +693,95 @@ function renderPlan(plan) {
   );
 }
 
+// What each step of a plan request is called on screen (TODO item 57). The server names a step and
+// nothing it found: no part of a plan is shown before the whole plan has been validated, so a claim
+// the finished plan might still drop never reaches the traveller (DECISIONS entry 6). The corpus
+// and crawl steps share a line because to a traveller they are one thing.
+const STAGE_LABELS = {
+  search: "Searching the destination's official government sites",
+  corpus: "Gathering the official pages already known",
+  crawl: "Gathering the official pages already known",
+  select: "Choosing which pages to read",
+  fetch: "Reading the chosen pages",
+  adjudicate: "Checking which page answers each question",
+  retrieve: "Collecting the pages the plan will cite",
+  write: "Writing the plan from those pages — usually the longest step",
+};
+
+let progressTimer;
+
+function startProgress() {
+  // A placeholder until the server names its first step, which then takes its place.
+  const starting = element("li", "current", "Starting");
+  starting.dataset.placeholder = "true";
+  progressSteps.replaceChildren(starting);
+  const started = performance.now();
+  const tick = () => {
+    progressElapsed.textContent = `${Math.round((performance.now() - started) / 1000)}s`;
+  };
+  tick();
+  progressTimer = setInterval(tick, 1000);
+  progress.hidden = false;
+}
+
+function showStage(stage) {
+  const label = STAGE_LABELS[stage];
+  if (!label) return;
+  const current = progressSteps.lastElementChild;
+  if (current && current.textContent === label) return;
+  if (current && current.dataset.placeholder) current.remove();
+  else if (current) current.className = "done";
+  progressSteps.append(element("li", "current", label));
+}
+
+function stopProgress() {
+  clearInterval(progressTimer);
+  progress.hidden = true;
+}
+
+// The stream is one JSON object per line: `stage` events as each step starts, then one outcome.
+async function* streamedEvents(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffered = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffered += decoder.decode(value, { stream: true });
+    let newline;
+    while ((newline = buffered.indexOf("\n")) >= 0) {
+      const line = buffered.slice(0, newline);
+      buffered = buffered.slice(newline + 1);
+      if (line.trim()) yield JSON.parse(line);
+    }
+  }
+  if (buffered.trim()) yield JSON.parse(buffered);
+}
+
+function showRefusal(detail) {
+  if (detail.sign_in) {
+    // Not a refusal about evidence: nothing was researched, because nobody is signed in — or the
+    // session expired since the page loaded.
+    const link = element("a", "", "Sign in with Ofself");
+    link.href = "/oauth/login";
+    errorMessage.replaceChildren(link, " to generate a plan.");
+    errorMessage.hidden = false;
+    return;
+  }
+  // A refusal names the evidence it could not verify, rather than failing opaquely.
+  renderRefusal(detail);
+  results.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 async function generatePlan(event) {
   event.preventDefault();
   errorMessage.hidden = true;
-  progress.hidden = false;
+  startProgress();
   results.setAttribute("aria-busy", "true");
   generateButton.disabled = true;
 
   try {
-    const response = await fetch("/visa-plans", {
+    const response = await fetch("/visa-plans/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -711,30 +793,32 @@ async function generatePlan(event) {
         },
       }),
     });
-    const payload = await response.json();
     if (!response.ok) {
-      // A refusal names the evidence it could not verify, rather than failing opaquely.
-      const detail = payload.detail || {};
-      if (detail.sign_in) {
-        // Not a refusal about evidence: nothing was researched, because nobody is signed in — or
-        // the session expired since the page loaded.
-        const link = element("a", "", "Sign in with Ofself");
-        link.href = "/oauth/login";
-        errorMessage.replaceChildren(link, " to generate a plan.");
-        errorMessage.hidden = false;
-        return;
-      }
-      renderRefusal(detail);
-      results.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Turned away before anything was researched: signed out, or a corridor with no answer.
+      const payload = await response.json();
+      showRefusal(payload.detail || {});
       return;
     }
-    renderPlan(payload);
-    results.scrollIntoView({ behavior: "smooth", block: "start" });
+    for await (const streamed of streamedEvents(response)) {
+      if (streamed.event === "stage") {
+        showStage(streamed.stage);
+      } else if (streamed.event === "plan") {
+        renderPlan(streamed.plan);
+        results.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      } else if (streamed.event === "refusal") {
+        showRefusal(streamed.detail || {});
+        return;
+      } else if (streamed.event === "error") {
+        throw new Error(streamed.message);
+      }
+    }
+    throw new Error("The connection closed before the plan arrived. Try again.");
   } catch (error) {
     errorMessage.textContent = error instanceof Error ? error.message : "The plan could not be generated.";
     errorMessage.hidden = false;
   } finally {
-    progress.hidden = true;
+    stopProgress();
     results.setAttribute("aria-busy", "false");
     generateButton.disabled = false;
   }

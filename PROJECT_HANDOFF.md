@@ -8,7 +8,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-26 — update this line when you touch the handoff |
-| **Tests** | 992: 991 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
+| **Tests** | 999: 998 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
 | --- | --- |
@@ -26,8 +26,11 @@ stands, what to do next, and what is known to be broken. The history of how it g
 
 ## Next session — start here
 
-**The owner's order, 2026-09-26:** TODO **item 57** first (the plan on screen as it is written),
-then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
+**Item 57's progress half shipped on 2026-09-26 (entry 226):** the page now streams each step as it
+starts from `POST /visa-plans/stream`, and the plan arrives whole. **Whether any plan content may
+appear before validation is the owner's decision** — the candidates are in TODO item 57.
+
+**The owner's order, 2026-09-26:** item 57, then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
 under *Next up*. Items 60 (Fast mode) and 65 (GPT-6 Sol) were removed. Hosting and Ofself (items 7,
 20, 55) can run alongside.
 
@@ -52,7 +55,8 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 
 ## Waiting, or shipped and not measured
 
-- **Decisions waiting on the owner:** item 61, whether a corridor's five renders should grow; item
+- **Decisions waiting on the owner:** item 57, whether plan content may stream before validation;
+  item 61, whether a corridor's five renders should grow; item
   7, whether to store a refusal before deploying (entry 151).
 - **Questions for Ofself:** does it host apps, and does any of its apps record a trip before it
   happens (TODO item 55).
