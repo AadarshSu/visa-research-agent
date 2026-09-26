@@ -8,7 +8,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-26 — update this line when you touch the handoff |
-| **Tests** | 999: 998 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
+| **Tests** | 990: 989 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
 | --- | --- |
@@ -209,8 +209,6 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 19. **The candidate set can vary between runs.** Largely answered by the corpus (entries 44–53, 58);
     open for runs days apart. Every run writes `var/recall/<corridor>.json` so it is diagnosable.
 
-20. **Application steps and `where_to_apply` cite a URL with no supporting quote.** The decision and
-    every requirement carry checked quotes (entry 156); the route and steps do not.
 
 23. **The interface offers 198 destinations and can reach 55.** The other 143 have no registry row
     and answer `503`. The refusal is honest; the offer is not. Fix by building rows (item 64) or
@@ -263,7 +261,7 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 **25** (entries 56, 57), **28** (entry 87), **34** (recall logs predating `RecallRecord.selector` are
 refused rather than graded, by design — entries 91, 97), **37** (merged into 30), **38** (stale
 failure reasons clear on rebuild, and every store was rebuilt 2026-09-25 — entry 92), **39** (entry
-149), **40** (entry 150).
+149), **40** (entry 150), **20** (no claim carries a quote since entry 227).
 
 ---
 

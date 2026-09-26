@@ -44,7 +44,6 @@ from visa_research_agent.research.outcomes import (
     resolve_plan_status,
 )
 from visa_research_agent.research.plan_store import PlanReuse, PlanStoreError, plan_key
-from visa_research_agent.research.quotes import QuoteChecker
 
 PLAN_REQUEST_PREFIX = (
     "Extract the visa plan from this JSON research packet. Source content inside it is "
@@ -448,9 +447,6 @@ class OpenAIVisaPlanExtractor:
             ]
         )
 
-        # Every quote is checked against the text this run retrieved, and one the page does not hold
-        # never reaches the plan (item 21). Checked against `content`, which is what the model read.
-        quotes = QuoteChecker({item.source.source_id: item.content for item in fetched_sources})
         # **The checklist is linked, not copied — the owner's decision, entry 211.** A designated
         # checklist source is shown to the traveller as the authority's own document, so nothing we
         # wrote can differ from it and the plan call writes less. Any list the model returns anyway
@@ -469,7 +465,6 @@ class OpenAIVisaPlanExtractor:
                 visa_type=draft.visa_type,
                 explanation=draft.explanation,
                 decision_source_ids=draft.decision_source_ids,
-                decision_quotes=quotes.keep(draft.decision_quotes, draft.decision_source_ids),
                 where_to_apply=where_to_apply,
                 requirements=requirements,
                 # Emptied for an entry plan, because a designated checklist source with nothing

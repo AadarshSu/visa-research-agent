@@ -372,7 +372,7 @@ parse, mostly IRCC's dynamic Adobe forms. None holds an oracle answer.
 - **Ranking** — text recognition at build time into `var/pagetext`, which ranks and never speaks.
   Low risk.
 - **Evidence** — needs a decision entry first: a misread digit is a wrong fee with a citation, and
-  `QuoteChecker` cannot catch a recognition error.
+  nothing downstream can catch a recognition error.
 
 **First step:** count, offline over `var/recall`, how often a corridor's selection includes one.
 
@@ -465,7 +465,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 | 19. Get a corridor under ten seconds | 09-15 | 140–146, 159–173 | Closed, not reached. Search pace 19.0s → 2.6s; every call's cost recorded; $0.394 → $0.251 a corridor |
 | 51. Search only for what is specific to this traveller | 09-15 | 159, 160 | Nothing built: neither conditional shape pays, and the purpose query is not traveller-neutral |
 | 31. The anchor scorer gates 94% of the corpus | 09-14 | 123, 125–128, 158 | Five best per role on stored text added to the pool, nothing removed, +16% selection input |
-| 21. Fill the three provenance gaps | 09-14 | 156, 157 | Decision and requirements carry checked quotes; sources carry content hash and why chosen |
+| 21. Fill the three provenance gaps | 09-14 | 156, 157 | Sources carry content hash and why chosen; the checked quotes were later removed (entry 227) |
 | 54. Say which refused page mattered, once per authority | 09-14 | 155 | One sentence per authority, decision pages first |
 | 9. "No checklist exists" vs "we failed to find it" | 09-14 | 153, 154 | Re-scoped: say what was found; name likely unread checklists with links |
 | 8. Confirm a blocked authority reads usefully | 09-14 | 152 | Reads as "we could not check"; found items 54 and 7's storing question |

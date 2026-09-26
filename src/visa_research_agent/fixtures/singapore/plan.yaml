@@ -6,11 +6,6 @@ explanation: >-
   official and service-passport exemptions do not apply to this profile. A visa permits travel to
   seek entry; it does not guarantee admission or determine the length of stay.
 decision_source_ids: [sg_ica_visa_requirement_overview, sg_ica_india_visa_details]
-decision_quotes:
-  - source_id: sg_ica_india_visa_details
-    text: "An ordinary Indian travel document requires an entry visa."
-  - source_id: sg_ica_visa_requirement_overview
-    text: "ICA lists India among the countries and places whose issued travel documents require a valid Singapore entry visa."
 where_to_apply:
   authority: VFS Global, appointed by the Singapore High Commission in London
   application_method: Book an appointment and submit through the authorised UK visa application centre
@@ -22,39 +17,22 @@ requirements:
     description: Complete and sign Singapore's application form for an entry visa.
     reason_it_applies: The traveller is applying for an entry visa for a tourism social visit.
     source_ids: [sg_ica_india_visa_details]
-    supporting_quotes:
-      - source_id: sg_ica_india_visa_details
-        text: "For a business or social visit, ICA identifies a signed Form 14A"
   - name: Recent passport-sized colour photograph
     description: Provide a photograph taken within the previous three months that meets ICA guidance.
     reason_it_applies: ICA lists a recent photograph for Indian travel-document applications.
     source_ids: [sg_ica_india_visa_details]
-    supporting_quotes:
-      - source_id: sg_ica_india_visa_details
-        text: "a recent passport-sized colour photograph taken within three months"
   - name: Passport biodata-page copy
     description: Provide a copy of the biodata page from a passport valid for at least six months.
     reason_it_applies: The fixed profile uses an ordinary Indian passport.
     source_ids: [sg_ica_india_visa_details, sg_mfa_check_visa, sg_ica_entry_requirements]
-    supporting_quotes:
-      - source_id: sg_ica_india_visa_details
-        text: "a copy of the passport biodata page"
-      - source_id: sg_mfa_check_visa
-        text: "a travel document with at least six months' validity at departure"
   - name: Official English translations
     description: Supply originals, copies and accepted official translations for documents not in English.
     reason_it_applies: This only applies if a supporting document is not already in English.
     source_ids: [sg_ica_india_visa_details]
-    supporting_quotes:
-      - source_id: sg_ica_india_visa_details
-        text: "Original documents and official English translations are needed where relevant."
   - name: Form V39A or case-specific supporting documents
     description: A Letter of Introduction or other evidence may be requested case by case.
     reason_it_applies: ICA does not state that this is required for every Indian applicant.
     source_ids: [sg_ica_india_visa_details]
-    supporting_quotes:
-      - source_id: sg_ica_india_visa_details
-        text: "Form V39A, a Letter of Introduction, and other supporting documents may be requested case by case."
 application_steps:
   - title: Confirm passport validity
     action: >-

@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [227](#227-quotes-are-removed-from-the-plan--a-checked-quote-can-still-be-a-useless-fragment) | **Quotes are removed from the plan** — the owner's decision: a quote checked word for word could still be a fragment like "India yes Indonesia yes"; the plan call writes none, the page shows none, and a claim stands on its citations; Japan and Singapore decisions unchanged on one replay each |
 | [226](#226-the-page-shows-each-step-as-it-starts-and-the-plan-only-once-it-is-whole) | **The page shows each step as it starts, and the plan only once it is whole** — `POST /visa-plans/stream` sends a stage name per step, then the validated plan or refusal; no plan content before validation; seen live on Italy `IN/IN`, 8 steps in ~60s |
 | [214](#214-item-63s-second-round-the-same-ten-twice-each-on-todays-code) | **Item 63's second round** — the same ten `IN/IN` destinations twice: decisions 5 → 7 of 10, checklists 3 → 5 of 10; South Africa refused one plan for a garbled source id; Turkey open once; published for the owner's verdicts |
 | [213](#213-an-unread-checklist-is-named-only-where-the-pages-own-words-say-it-is-this-trips) | **Naming an unread checklist needs the page's own words** — its label or title says checklist, or its heading does and its label names this trip's purpose; a refused (`403`) checklist is named too; Switzerland's PDFs confirmed as checklists; Australia now names none |
@@ -265,6 +266,32 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 227. Quotes are removed from the plan — a checked quote can still be a useless fragment
+
+**2026-09-26 · the owner, after running the Germany sentinel corridor (`IN/IN`, tourism):** the
+decision panel showed the quote *"India yes Indonesia yes"* from the Federal Foreign Office's
+country table. "This quote is very useless, let's remove quotes entirely as we can't verify how it
+looks for every corridor."
+
+**Why the check did not catch it.** `QuoteChecker` (entry 156) proved only that the words exist on
+the page, and the Foreign Office's table flattens to exactly that string. A quote can be true and
+still say nothing to a traveller, and nothing can check that across every corridor.
+
+**What changed.**
+- The plan prompt no longer asks for a quote (rule 6a and the three "quote its sentence" clauses in
+  rules 8e, 8f and 8i are gone). Every rule still makes the model **cite** the pages it rests on.
+- `SupportingQuote`, `decision_quotes`, `supporting_quotes`, `research/quotes.py` and its tests are
+  deleted; the page no longer renders quotes.
+- Provenance that stays: every claim cites its sources, and each cited source carries its content
+  hash and why discovery chose it (entry 157). Plan drafts saved before this no longer match the
+  reuse key, because the schema and prompt changed.
+
+**Checked once, by the owner's instruction** rather than the several runs entry 175 asks for: the
+plan call replayed on the latest captured packets. Japan `IN/GB` still answered "visa required" from
+MOFA's exemption list (13.0s); Singapore `PH/PH` still "no visa" from ICA's list (6.9s).
 
 ---
 

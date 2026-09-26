@@ -14,7 +14,6 @@ from visa_research_agent.discovery.adjudication import UsageRecorder
 from visa_research_agent.discovery.recall_log import ModelCall
 from visa_research_agent.domain.models import (
     DestinationConfig,
-    SupportingQuote,
     VisaPlan,
     VisaPlanDraft,
 )
@@ -775,66 +774,6 @@ async def test_the_refused_page_that_may_hold_the_decision_is_marked_for_the_tra
 
 
 @pytest.mark.anyio
-async def test_a_quote_the_page_does_not_hold_never_reaches_the_plan() -> None:
-    """Item 21. The model writes quotes; only the ones found in the retrieved text are shown.
-
-    An invented or drifted quote attributed to a government page is worse than no quote, so it is
-    dropped and the claim stands on its citation alone, as it did before quotes existed.
-    """
-
-    golden = load_golden_draft()
-    first = golden.requirements[0]
-    invented = SupportingQuote(
-        source_id="sg_ica_india_visa_details",
-        text="Applicants must show six months of bank statements.",
-    )
-    wrong_decision = SupportingQuote(
-        source_id="sg_ica_india_visa_details",
-        text="Indian nationals may enter Singapore without a visa.",
-    )
-    draft = golden.model_copy(
-        update={
-            "decision_quotes": [wrong_decision, *golden.decision_quotes],
-            "requirements": [
-                first.model_copy(
-                    update={"supporting_quotes": [invented, *first.supporting_quotes]}
-                ),
-                *golden.requirements[1:],
-            ],
-        }
-    )
-    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
-
-    plan = await OpenAIVisaPlanExtractor(
-        FakeStructuredPlanGenerator(draft), maximum_input_characters=80_000
-    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
-
-    assert plan.decision_quotes == golden.decision_quotes
-    # Requirement quotes no longer reach a plan at all: the checklist is linked (entry 211).
-    assert plan.requirements == []
-
-
-@pytest.mark.anyio
-async def test_a_plan_refuses_a_quote_from_a_page_its_claim_does_not_cite() -> None:
-    """A true sentence from another page is still a misattribution."""
-
-    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
-    plan = await OpenAIVisaPlanExtractor(
-        FakeStructuredPlanGenerator(load_golden_draft()), maximum_input_characters=80_000
-    ).extract(singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources)
-    payload = plan.model_dump(mode="json")
-    payload["decision_quotes"] = [
-        {
-            "source_id": "sg_mfa_check_visa",
-            "text": "MFA identifies ICA as the authority for visa matters.",
-        }
-    ]
-
-    with pytest.raises(ValidationError, match="decision quote must come from a source"):
-        VisaPlan.model_validate(payload)
-
-
-@pytest.mark.anyio
 async def test_a_plan_ties_each_source_to_the_text_it_was_read_from_and_why_it_was_chosen() -> None:
     """Item 21, parts 2 and 3. A plan could name a page and not the version of it, and why the page
     was picked for a role stopped at the resolved corridor.
@@ -1030,15 +969,14 @@ def test_an_announcement_and_the_notice_bringing_it_into_force_are_read_together
     assert "leaves the traveller's out is, and\n     then visa_required is null" in prompt
 
 
-def test_one_short_quote_for_the_decision_and_no_document_list() -> None:
-    """Item 56's trims (entry 175) kept one short quote per claim; entry 211 then dropped the
-    document list, so the only quote the plan call writes is the decision's."""
+def test_the_plan_call_writes_no_quote_and_no_document_list() -> None:
+    """Entry 211 dropped the document list and entry 227 the decision's quote, so the plan call
+    copies no passage from any page."""
 
     prompt = load_extraction_prompt()
 
-    assert "copy one passage VERBATIM" in prompt
-    assert "20 to 150 characters" in prompt
-    assert "one or two passages" not in prompt
+    assert "VERBATIM" not in prompt
+    assert "quote" not in prompt.lower()
     assert "Do not list the application documents" in prompt
     assert "return an empty requirements list" in prompt
 

@@ -3,7 +3,7 @@
 DECISIONS entry 178, the owner's decision, amending entry 44. Writing the plan is the longest wait
 in a request, and a repeat is nearly all of it (entry 171): about 24 seconds spent asking the model
 the same question over the same evidence. So the model's *draft* is kept, never the plan. A reused
-draft goes back through the whole construction on every request — the quote check, every validator,
+draft goes back through the whole construction on every request — every validator,
 and a status graded on that request's own retrieval — so what is reused is the inference, and only
 for inputs that are byte-identical.
 

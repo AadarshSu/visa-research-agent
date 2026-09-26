@@ -180,9 +180,9 @@ its question — the decision panel, the documents panel, or the caveats (entrie
   `requirements` is empty.
 - Any failure or stale source → `partial`, said in one line above the guidance. Everything current
   and a stated decision → `verified`. A null decision is never `verified` (entry 150).
-- The decision and every requirement carry quotes the model wrote, kept only where the retrieved text
-  holds them word for word (`research/quotes.py`); each cited source carries its content hash and why
-  discovery chose it (entries 156, 157). Steps and `where_to_apply` carry no quote yet.
+- A claim carries citations, never a quote: quoting was removed because a checked quote could still
+  be a useless fragment (entry 227). Each cited source carries its content hash and why discovery
+  chose it (entry 157).
 
 ### The trust boundary at the model
 

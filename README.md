@@ -27,7 +27,7 @@ approval, and it never submits, books or fills anything on anyone's behalf.
   client-rendered pages through a headless browser that widens no trust.
 - **Asks a model to choose, never to invent.** One call picks which stored pages to read, one decides
   which fetched page answers each question, and one writes the plan. The model can only cite pages
-  the application fetched, every quote is checked word for word against the page, and a visa
+  the application fetched, and a visa
   decision no page stated is forced to *unknown*.
 - **Hands over an official questionnaire** when that is how the authority publishes the answer
   (the UK's visa checker, France's Visa Wizard), rather than refusing or driving it.

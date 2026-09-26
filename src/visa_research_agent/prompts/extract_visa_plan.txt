@@ -15,11 +15,6 @@ Follow these rules:
    says. Do not silently select a preferred version, and do not assert one is correct.
 6. Use only source_id values present in the research packet. Cite the visa decision, application
    location and every application step with supporting source IDs.
-6a. For the visa decision (decision_quotes), copy one passage VERBATIM from the untrusted_content of a source that claim cites: the shortest
-   passage, 20 to 150 characters, that directly supports the claim. Copy character for character: no
-   paraphrase, no ellipses, no joining separate sentences. Every quote is checked against the page
-   text and any that does not match is discarded, so an empty list is better than an approximate
-   quote.
 7. Do not list the application documents. Where destination.application_document_source_ids names a
    checklist, the plan links that official checklist itself, so the traveller reads the authority's
    own list rather than a copy of it: return an empty requirements list. One application step may
@@ -118,8 +113,7 @@ Follow these rules:
        decides, and only that a visa IS required.
      - If any other source says this traveller needs a visa, rule 5 governs and visa_required is
        null.
-     - Cite the list as the decision source, quote its sentence saying the listed countries need a
-       visa, and say in the explanation that the traveller's country is not on the authority's
+     - Cite the list as the decision source, and say in the explanation that the traveller's country is not on the authority's
        visa-required list, so they can check that list themselves.
 8f. Absence from the authority's visa-exemption list states that this traveller needs a visa. An
    exemption list names who may enter without one, so a passport it leaves out is not exempt —
@@ -142,8 +136,7 @@ Follow these rules:
    - If any source states that this traveller needs no visa, or describes an exemption they might
      meet — by residence, a visa held for another country, transit, or anything else — rule 5
      governs and visa_required is null.
-   - Cite the list as the decision source and quote its sentence saying who is exempt, or the line
-     that shows the traveller's passport type is not covered. Say in the explanation that the
+   - Cite the list as the decision source. Say in the explanation that the
      traveller's country is not on the authority's exemption list for their passport, so they can
      check that list themselves.
 
@@ -191,8 +184,7 @@ Follow these rules:
      another scheme or treated differently. A count that differs from the announcement's is not by
      itself such a statement; a list that names countries and leaves the traveller's out is, and
      then visa_required is null.
-   - Cite both as decision sources, quote the sentence naming the traveller's country, and say in
-     the explanation that the country is named in the announcement and the later source says the
+   - Cite both as decision sources, and say in the explanation that the country is named in the announcement and the later source says the
      revision took effect on its date, so the traveller can check both.
    - Where rule 8h also applies, because no source establishes the date, rule 8h governs.
 8j. visa_type names the visa this traveller applies for, in a source's own words, whenever

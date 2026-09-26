@@ -75,7 +75,6 @@ def test_visa_plan_rejects_unknown_requirement_source_ids() -> None:
                     description="A passport is requested.",
                     reason_it_applies="The traveller uses an ordinary passport.",
                     source_ids=["missing-source"],
-                    supporting_quotes=[],
                 )
             ],
             application_document_source_ids=["official-source"],
@@ -220,7 +219,6 @@ def test_a_plan_with_no_document_source_cannot_list_requirements() -> None:
                         "description": "A passport is requested.",
                         "reason_it_applies": "Inferred from the eligibility page.",
                         "source_ids": ["official-source"],
-                        "supporting_quotes": [],
                     }
                 ]
             )
@@ -500,7 +498,6 @@ def test_an_entry_plan_still_cannot_list_a_single_document() -> None:
                 "description": "A passport is requested.",
                 "reason_it_applies": "Stated on the entry page.",
                 "source_ids": ["official-source"],
-                "supporting_quotes": [],
             }
         ]
     )
@@ -532,7 +529,6 @@ def test_the_draft_holds_the_same_line_before_the_app_sees_it() -> None:
         "visa_type": None,
         "explanation": "No visa is required for this passport.",
         "decision_source_ids": ["official-source"],
-        "decision_quotes": [],
         "where_to_apply": None,
         "requirements": [],
         "application_steps": entry_payload()["application_steps"],

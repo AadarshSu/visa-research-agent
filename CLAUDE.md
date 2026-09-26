@@ -185,7 +185,7 @@ defect.
 
 - **What may be stored is a *page*, never an *answer* (entry 44).** A country's page corpus is stored;
   which page answers a traveller stays live. A plan is a rendering; only the model's *draft* may be
-  reused, for byte-identical inputs inside the page TTL, and every request still checks quotes,
+  reused, for byte-identical inputs inside the page TTL, and every request still
   validates and grades (entry 178). A `visa_rule` decision table is deliberately not built.
 - **Stored page text ranks; it never speaks (entries 78, 83).** `PageTextStore.rank` returns URLs and
   scores; `TextMatch` has no body field. The one accessor returning bodies, `text_for_selection`,
