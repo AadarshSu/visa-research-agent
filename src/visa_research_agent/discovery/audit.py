@@ -128,11 +128,11 @@ class RecallAudit:
 
 
 def reachability(registry: AuthorityRegistry, countries: CountryRegistry) -> Reachability:
-    """Split every country the interface offers into what can be researched and what cannot.
+    """Split every known country into what can be researched and what cannot.
 
     The denominator is the country registry rather than the authority file, because the gap between
-    them is the finding: known problem 23 is that the interface offers every country and can
-    research the ones with a usable row.
+    them is the finding: only a country with a usable row can be researched, and only those are
+    offered on the page (entry 228).
     """
 
     researchable: list[str] = []

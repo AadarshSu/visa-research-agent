@@ -8,7 +8,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-26 — update this line when you touch the handoff |
-| **Tests** | 990: 989 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
+| **Tests** | 990: 989 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; a checkout without `var/` skips two more (987 and 3); `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
 | --- | --- |
@@ -115,7 +115,7 @@ are the table at the top of [TODO.md](TODO.md).
 
 | | |
 | --- | --- |
-| **Reachable destinations** | **55 of 198** — the rows in `config/authority_domains.yaml`; every row carries a confirmable domain. A country with no row is refused, never bootstrapped live (entry 38). `visa-discover audit` prints the split |
+| **Reachable destinations** | **55 of 198** — the rows in `config/authority_domains.yaml`; every row carries a confirmable domain. A country with no row is refused, never bootstrapped live (entry 38), and is not offered on the page (entry 228). `visa-discover audit` prints the split |
 | **Stores** | **All 55 have a page corpus and a page-text index**, rebuilt 2026-09-24/25 (entries 193, 203, 204) and partly again 2026-09-26 (entry 223): 285,261 pages; `var/pagetext/` is 942 MB. Plus a shared EU store for Schengen visa decisions (entry 201) |
 | **Runtime** | `source_mode: live`, `extraction_mode: openai`, `render_mode: on_demand`, `discovery_decider: model`, `discovery_selector: model`, `destination_mode: automatic`, `model_route: personas` — see `config/runtime.yaml` |
 | **Model calls** | Through Ofself Personas since 2026-09-24, on Ofself's account (entry 188). Graded against the direct route: selection 41 of 48 roles against 39 of 48 |
@@ -208,10 +208,6 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 19. **The candidate set can vary between runs.** Largely answered by the corpus (entries 44–53, 58);
     open for runs days apart. Every run writes `var/recall/<corridor>.json` so it is diagnosable.
 
-
-23. **The interface offers 198 destinations and can reach 55.** The other 143 have no registry row
-    and answer `503`. The refusal is honest; the offer is not. Fix by building rows (item 64) or
-    marking unbuilt countries, never by loosening the refusal.
 
 24. **A corpus build that loses a host to a transient failure may not notice.** Entry 207 made each
     build ask again for up to 100 transiently-failed *entries*; whether a host lost whole during a

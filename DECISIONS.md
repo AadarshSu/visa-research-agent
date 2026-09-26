@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [228](#228-the-destination-list-offers-only-countries-with-a-registry-row) | **The destination list offers only countries with a registry row** — the owner's decision: 55 offered, not 198; the refusal for an unbuilt country is unchanged for a direct request |
 | [227](#227-quotes-are-removed-from-the-plan--a-checked-quote-can-still-be-a-useless-fragment) | **Quotes are removed from the plan** — the owner's decision: a quote checked word for word could still be a fragment like "India yes Indonesia yes"; the plan call writes none, the page shows none, and a claim stands on its citations; Japan and Singapore decisions unchanged on one replay each |
 | [226](#226-the-page-shows-each-step-as-it-starts-and-the-plan-only-once-it-is-whole) | **The page shows each step as it starts, and the plan only once it is whole** — `POST /visa-plans/stream` sends a stage name per step, then the validated plan or refusal; no plan content before validation; seen live on Italy `IN/IN`, 8 steps in ~60s |
 | [214](#214-item-63s-second-round-the-same-ten-twice-each-on-todays-code) | **Item 63's second round** — the same ten `IN/IN` destinations twice: decisions 5 → 7 of 10, checklists 3 → 5 of 10; South Africa refused one plan for a garbled source id; Turkey open once; published for the owner's verdicts |
@@ -266,6 +267,25 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 228. The destination list offers only countries with a registry row
+
+**2026-09-26 · the owner:** instead of showing an error for a country outside the 55, limit the
+dropdown to the 55.
+
+**What changed.** `researchable_destinations` (`api/routes.py`), under `destination_mode:
+automatic`, lists a country only when `config/authority_domains.yaml` has a row for it with at least
+one usable domain — the same test `trusted_domains_for` refuses on, so the list and the refusal
+cannot disagree. The page's dropdown and `GET /destinations` both read it. Checked on the served
+page: 55 options, all 55 rows usable.
+
+**What did not change.** A request naming an unbuilt country directly is still refused before
+anything is fetched, with the same message; the rule that a country missing from the registry is
+refused, never bootstrapped live (entry 38), stands. An Ofself plan naming an unbuilt destination is
+not prefilled, because the prefill already skips a destination the list lacks. A country added by
+`visa-discover registry` (TODO item 64) appears in the list on the next start, with no other change.
 
 ---
 

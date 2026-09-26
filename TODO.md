@@ -20,7 +20,7 @@ Personas, is done and is the route from now on (entry 188).
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Each step now shows on screen as it starts (entry 226). A repeat within 24h reuses the plan draft, not timed live | **57**, **58** | nothing external |
 | **Hosted at a URL** | Runs on one laptop. Ofself signs users in (required since entry 191) but does not host; the stores are local files | **7**, **20** | choosing a host; item 7's refusal-storing decision |
 | **Most corridors accurate and useful** | Item 63's second round: decisions 7 of 10, checklists 5 of 10 (entry 214); the owner's verdicts in entries 216 and 224. Nothing in the repo measures *right*, only *answered* (known problem 26) | **63** | the owner's own checking (entry 68) |
-| **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have none, and the page offers all 198 (known problem 23) | **64**, **2** | search credit only |
+| **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have none, and the page offers only the 55 (entry 228) | **64**, **2** | search credit only |
 
 **Offline cost is not the constraint — the owner, 2026-09-23 (entry 184).** Build time and a higher
 one-time cost are acceptable for anything that makes each live request better. Prefer an offline fix
@@ -93,7 +93,7 @@ above all (entry 6). Candidates, safest first:
 
 ### 64. Expand from 55 countries to 100+ — `next`, **ask the owner before a batch**
 
-**Why.** It is the owner's goal. The page offers 198 destinations and refuses 143 (known problem 23).
+**Why.** It is the owner's goal. 143 of 198 countries have no registry row, so the page does not offer them (entry 228).
 
 **What adding a country takes — the three stages of entry 68.**
 0. **Ask the owner first**: which countries, and how many. Pick by traveller volume, as batch 1 did
@@ -327,7 +327,7 @@ corridor rather than silently degrade.
 **Why — the owner, 2026-09-26.** Asked for as a goal; the specifics are not yet set. **Ask the owner
 what to change first** — layout, reading order of the plan, mobile, the country picker — before
 building. Related work already on the list: what may stream before the plan is whole (item 57), the
-refusal screen (item 73), marking the 143 unbuilt destinations (known problem 23). The page is
+refusal screen (item 73). The page is
 `templates/index.html`, `static/app.js`, `static/styles.css`; test changes in a browser, not only with
 `pytest`.
 
@@ -349,8 +349,8 @@ response. Refused pages are already named once per authority (item 54, entry 155
 1. **Read what each cause says today** — collect the refusal `message` for one corridor of each cause
    before writing new text; some may already be specific.
 2. **Send the cause with the refusal** (`detail.cause`), and give each its own heading and next step
-   on the page. At least: *not built yet* (no registry row or corpus — known problem 23, which also
-   wants unbuilt countries marked before they are chosen); *the government's pages refused us*
+   on the page. At least: *not built yet* (no registry row or corpus — the page no longer offers
+   these, entry 228, but a direct request or `GET /destinations` caller can still ask); *the government's pages refused us*
    (blocked/challenged, with the links); *no official page answered the question*; *the check could
    not run* (`adjudication_failed`, a provider out of credit — say retrying may answer); *an internal
    fault*.

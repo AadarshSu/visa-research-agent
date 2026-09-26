@@ -31,6 +31,7 @@ from visa_research_agent.discovery.automatic import (
 )
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import Corridor
+from visa_research_agent.discovery.registry import get_authority_registry
 from visa_research_agent.domain.models import (
     DestinationConfig,
     TravellerProfile,
@@ -73,10 +74,11 @@ async def index(
 def researchable_destinations() -> list[DestinationSummary]:
     """Every destination a plan can be asked for.
 
-    Under `destination_mode: automatic` that is every country the agent holds reference data for,
-    not only the handful written into `destinations.yaml` — an unconfigured one is researched when
-    it is asked for. A configured entry keeps its own route type, because Schengen membership is a
-    fact about the destination rather than about how its sources were found.
+    Under `destination_mode: automatic` that is every country with a usable row in
+    `authority_domains.yaml`, not only the handful written into `destinations.yaml`. A country
+    without one is refused before anything is fetched (`trusted_domains_for`), so offering it would
+    only offer a refusal. A configured entry keeps its own route type, because Schengen membership
+    is a fact about the destination rather than about how its sources were found.
     """
 
     registry = get_destination_registry()
@@ -92,8 +94,12 @@ def researchable_destinations() -> list[DestinationSummary]:
             for destination in registry.destinations
         ]
 
+    authorities = get_authority_registry()
     summaries: list[DestinationSummary] = []
     for country in sorted(get_country_registry().countries, key=lambda item: item.name):
+        row = authorities.get(country.code)
+        if row is None or not row.domains:
+            continue
         entry = configured.get(country.slug)
         summaries.append(
             DestinationSummary(
