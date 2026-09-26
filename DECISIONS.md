@@ -295,7 +295,13 @@ not "reviewed"), "plus the EU's for a Schengen visa decision" (entry 201), "a pa
 automated reading is named with its link, never guessed at" (entry 27), "what could not be confirmed
 stays open; with too little evidence, no plan is given" (entries 5, 27).
 
+**The plan's pills take a colour each (the owner):** *No visa required* blue, *Visa required*
+violet, *Uncertain* yellow, *Evidence verified* green, *Evidence partial* yellow. "Visa required" is
+deliberately not red: it is a stated answer, not a fault, and entry 6 keeps the page from alarming a
+traveller. Yellow is the one colour for "not confirmed", shared with the stale badge.
+
 **Seen** in Chromium at 1280px and 390px, signed out: no horizontal scroll, no script error;
+the fixture Singapore plan rendered under the new page with each pill variant;
 clicking Japan then choosing India as residence set the select, pressed the chip and read *India ✈
 Japan*; a rendered refusal panel and the progress list fit the new page. The plan view itself is
 unchanged and unseen with a real plan.

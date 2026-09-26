@@ -288,10 +288,15 @@ function needsNoVisa(plan) {
 
 function renderDecision(plan, ctx) {
   const { container, header } = panel(plan.destination, "Visa decision");
-  const decision = plan.visa_required === null ? "Uncertain" : plan.visa_required ? "Visa required" : "No visa required";
+  const [decision, tone] =
+    plan.visa_required === null
+      ? ["Uncertain", "uncertain"]
+      : plan.visa_required
+        ? ["Visa required", "visa"]
+        : ["No visa required", "no-visa"];
   const chips = element("div", "chip-group");
   chips.append(
-    element("span", "decision-chip", decision),
+    element("span", `decision-chip decision-chip--${tone}`, decision),
     element("span", `status-chip status-chip--${plan.status}`, plan.status === "verified" ? "Evidence verified" : "Evidence partial"),
   );
   header.append(chips);
