@@ -1,0 +1,13 @@
+#!/bin/sh
+# One line, conventional-commit form: `type: lowercase description` (CLAUDE.md, "Commits").
+subject=$(head -n 1 "$1")
+if ! printf '%s\n' "$subject" | grep -Eq '^(feat|fix|docs|refactor|test|perf|build|ci|chore): [a-z0-9`"(]'; then
+  echo "commit rejected: the subject must be 'type: lowercase description'," >&2
+  echo "with type one of feat, fix, docs, refactor, test, perf, build, ci, chore." >&2
+  echo "got: $subject" >&2
+  exit 1
+fi
+if [ "$(grep -cv '^\(#.*\)\{0,1\}$' "$1")" -gt 1 ]; then
+  echo "commit rejected: one subject line only, no body or trailers (CLAUDE.md, \"Commits\")." >&2
+  exit 1
+fi
