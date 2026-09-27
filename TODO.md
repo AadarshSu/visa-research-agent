@@ -391,30 +391,27 @@ only way to see a failure is to re-run it here, and the model calls vary between
 problem 10), so a re-run may not reproduce what the traveller saw.
 
 **What a report carries.**
-- **The corridor:** destination, passport, residence, purpose — the `Corridor` codes.
+- **The corridor:** destination, passport, residence, purpose — the `Corridor` codes, and nothing
+  from the traveller's Ofself account.
 - **What the page showed:** the plan as returned, or the refusal's `detail`, plus the steps streamed
   while it ran (entry 226).
 - **The run's log:** `var/recall/<corridor>.json` — the typed cause, `role_verdicts` with each
   adjudicator's reason, `adjudicated_ids`, `phase_seconds` (AGENTS.md, *debug a corridor*). **Copy it
   when the report is made**: the next run of the same corridor overwrites it (entry 118).
-- **The traveller's own words**, optional: what they expected, or what looked wrong.
 - **The build:** commit and `static_asset_version`, so a report can be told apart from one fixed since.
 
-**Decide first — the owner's calls.**
-1. **Where a report goes.** Running on one laptop, `var/feedback/` is enough; once hosted (item 7) it
-   needs a destination the owner reads — an inbox, a GitHub issue, a store. Item 20's durability
-   applies.
-2. **What personal data leaves the page.** Passport, residence city and any Ofself-filled field are
-   the traveller's. Show them exactly what will be sent before it is, and send the corridor's codes,
-   not their Ofself identity, unless they choose to add contact details. Never the session cookie or
-   anything from `.env`.
-3. **A report is kept for diagnosis only (entry 44).** It holds an answer, so it must live outside the
-   corridor and plan stores and never be served to another traveller or reused as a plan.
+**Decided — the owner, 2026-09-27.**
+- **Where a report goes:** on the EC2 host, under `var/` beside the other stores (entry 231), which
+  keeps them across restarts and loses them only if the instance is terminated (item 20).
+- **No personal data beyond the corridor.** The traveller is shown the corridor that will be sent;
+  nothing from Ofself is attached. Never the session cookie or anything from `.env`.
+- **A report is kept for diagnosis only (entry 44).** It holds an answer, so it lives outside the
+  corridor and plan stores and is never served to another traveller or reused as a plan.
 
-**Then build:** a "Report a problem" button on both the plan and the refusal screen, a `POST` route
-that assembles the report server-side (the page supplies only the corridor, what it showed and the
-comment; the server attaches the log, so a traveller cannot send an arbitrary file), a size limit, and
-sign-in as for plans. Add a `visa-discover` command that lists reports and prints each with the
+**Then build:** a "Report a problem" button on both the plan and the refusal screen, and a `POST`
+route that assembles the report server-side — the page supplies only the corridor and what it
+showed; the server attaches the log, so a traveller cannot send an arbitrary file — with a size limit
+and sign-in as for plans. Add a `visa-discover` command that lists reports and prints each with the
 `visa-discover corridor` line that re-runs it. **Pairs with item 73**: with the refusal's typed cause
 in the report, most reports sort themselves.
 
