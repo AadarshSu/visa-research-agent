@@ -7,8 +7,8 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-26 — update this line when you touch the handoff |
-| **Tests** | 990: 989 passing and 1 skipped (the opt-in browser test), run 2026-09-26 with the corpora in place; a checkout without `var/` skips two more (987 and 3); `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
+| **Last updated** | 2026-09-27 — update this line when you touch the handoff |
+| **Tests** | 1,018 in a checkout without `var/`: 1,015 passing and 3 skipped (the opt-in browser test, and two that need the corpora), run 2026-09-27; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
 | --- | --- |
@@ -74,7 +74,8 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   service `visa` behind Caddy. Update: `cd ~/visa-research-agent && git pull && sudo systemctl restart
   visa`. Its `.env`, `var/corpus` and `var/pagetext` were copied by hand, so they drift from this
   machine's. Its stores are on the instance's disk, lost only on terminate. Not yet run there: a plan,
-  a corridor's timing, and the block/challenge rate from an AWS address.
+  a corridor's timing, and the block/challenge rate from an AWS address. Travellers' problem reports land
+  in its `var/reports/`; read them there with `visa-discover reports` (entry 233).
 - **Raw outputs of item 63's rounds:** `var/item70-2026-09-24/`
   - `item63-round2/<slug>_IN_IN/<1|2>/`
   - `item63-round3-forms/` (entry 215), `item63-round3-217/` and `-217b/` (entries 217–219),

@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [233](#233-a-traveller-can-report-a-result-with-its-run-attached) | **A traveller can report a result, with its run attached** — the owner's item 74: one tap on a refusal, a message on a plan; the server keeps the corridor's four codes, copies the run's log and the build; `var/reports/`, `visa-discover reports` |
 | [232](#232-every-refusal-says-which-kind-it-is) | **Every refusal says which kind it is** — the owner's item 73: seven causes in `detail.cause`, each with its own heading and next step; a failed model call no longer reads as a missing page, and a search outage is no longer a bare 500 |
 | [231](#231-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
 | [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and each plan panel under a dark numbered header; every sentence on it checked against the code |
@@ -271,6 +272,51 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 233. A traveller can report a result, with its run attached
+
+**2026-09-27 · TODO item 74, the owner's decisions:** reports are kept on the EC2 host, carry only
+the corridor, and nothing from Ofself. **Two shapes, the owner's call after seeing the first:** a
+refused run is sent with **one tap** — "Help us fix this result", never naming the destination
+since the fault may lie with any part of the corridor — no message, no confirmation step,
+because the run is the whole report and the button should be one a traveller wants to press; a
+**plan** asks what is wrong (up to 2,000 characters, Send disabled until something is typed),
+because a working run alone does not say. **No button appears where there is nothing to fix**
+(the owner, on France's plan handing the decision to its Visa Assistant): a destination not
+covered, the traveller's own country, a plan whose decision is the authority's own questionnaire
+(entry 59), and a plan whose decision page refused us — a `may_hold_decision` failure with the
+decision left null — which may never be worked around (entry 27). Each already hands the traveller
+the official link. **A refusal where some official pages refused us keeps its button** (the owner): none of the
+pages we could read answered, and a readable one that does may have been missed.
+
+**What is kept** (`api/reports.py`, `POST /reports`, `var/reports/`): the corridor's four codes and
+its key, what the page showed (the plan or the refusal's `detail`), the stage names it saw, a
+plan report's message, a
+**copy** of `var/recall/<corridor>.json` taken when the report arrives — the next run overwrites the
+file (entry 118) — and the build (commit read from `.git`, and `static_asset_version`). The page
+sends only the request, the outcome, the stages and a plan's message; the model forbids anything
+else, so a page cannot supply the log. City, residence status and anything from Ofself are dropped
+server-side; the message box asks the traveller to leave personal details out, and both shapes say
+what is sent beside the button.
+
+**Bounds.** Sign-in as for plans; 512 KB, fifty plans' worth, refused from `Content-Length` before
+the body is read; `var/reports/` is gitignored. A report holds an answer, so it lives apart from
+the corridor and plan stores and nothing on the request path reads it back (entry 44).
+
+**What a report cannot show.** A corridor answered from the corridor store writes no log, so the
+copied log is the corridor's last recorded *run* and can predate what the traveller saw; its own
+`recorded_at` says when. A destination that is not a known country has no corridor key, no log and
+no re-run line.
+
+**Reading them:** `visa-discover reports` lists them newest first, each with its cause and the
+`visa-discover corridor` line that re-runs it; `--show <id>` prints one in full. Nothing notifies
+the owner when one arrives, and there is no per-user rate limit beyond sign-in.
+
+**Seen** in Chromium at 1280px and 390px with the stream route stubbed and `/reports` real: one tap
+on a refusal and a typed message on a plan each landed on disk with the stages and the commit,
+without the city the request carried, and the command listed both, the message quoted.
 
 ---
 

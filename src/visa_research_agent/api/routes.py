@@ -3,15 +3,25 @@
 import asyncio
 import json
 from collections.abc import AsyncIterator, Callable, Coroutine
+from datetime import UTC, datetime
 from typing import Annotated, Any, Literal, get_args
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, StreamingResponse
+from pydantic import ValidationError
 
 from visa_research_agent.api.dependencies import (
     get_automatic_destinations,
     get_traveller_source,
     get_visa_plan_service,
+)
+from visa_research_agent.api.reports import (
+    MAXIMUM_REPORT_BYTES,
+    FileReportStore,
+    ReportRequest,
+    ReportStoreError,
+    build_report,
+    current_commit,
 )
 from visa_research_agent.api.schemas import (
     DestinationsResponse,
@@ -389,6 +399,60 @@ async def stream_visa_plan(
         # Without these a proxy may hold the stream back until it ends, which is the wait this
         # route exists to break up.
         headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"},
+    )
+
+
+@router.post(
+    "/reports",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"description": "Not signed in with Ofself"},
+        status.HTTP_413_CONTENT_TOO_LARGE: {"description": "Larger than any page's output"},
+    },
+    tags=["visa research"],
+    dependencies=[Depends(require_signed_in_for_plans)],
+)
+async def report_problem(http_request: Request) -> dict[str, str]:
+    """Keep a traveller's report of a corridor that did not work, with its run (TODO item 74).
+
+    The page sends the request it made, what it showed and the steps it saw; the server keeps only
+    the corridor's codes from the request and attaches the run's log itself.
+    """
+
+    declared = http_request.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > MAXIMUM_REPORT_BYTES:
+        raise report_too_large()
+    body = await http_request.body()
+    if len(body) > MAXIMUM_REPORT_BYTES:
+        raise report_too_large()
+    try:
+        received = ReportRequest.model_validate_json(body)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail={"message": "The report is not in the expected form."},
+        ) from exc
+    report = build_report(
+        received,
+        recall_directory=settings.recall_log_directory,
+        static_asset_version=static_asset_version(),
+        now=datetime.now(UTC),
+        commit=current_commit(),
+    )
+    try:
+        FileReportStore(settings.report_directory).store(report)
+    except ReportStoreError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"message": "The report could not be saved. Try again later."},
+        ) from exc
+    return {"report_id": report.report_id}
+
+
+def report_too_large() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+        detail={"message": "The report is larger than any result this page produces."},
     )
 
 

@@ -671,7 +671,7 @@ const REFUSAL_COPY = {
   internal_error: {
     eyebrow: "Something went wrong",
     title: "Something went wrong on our side",
-    next: "Try again later.",
+    next: "Try again later, or send it to us below so we can fix it.",
   },
 };
 
@@ -755,6 +755,9 @@ const STAGE_LABELS = {
 
 let progressTimer;
 
+// The request, the steps seen and what was shown, kept only so a problem report can send them.
+let lastRun = null;
+
 function startProgress() {
   // A placeholder until the server names its first step, which then takes its place.
   const starting = element("li", "current", "Starting");
@@ -770,6 +773,7 @@ function startProgress() {
 }
 
 function showStage(stage) {
+  if (lastRun) lastRun.stages.push(stage);
   const label = STAGE_LABELS[stage];
   if (!label) return;
   const current = progressSteps.lastElementChild;
@@ -815,7 +819,145 @@ function showRefusal(detail) {
   }
   // A refusal names the evidence it could not verify, rather than failing opaquely.
   renderRefusal(detail);
+  attachReport("refusal", detail);
   results.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function optionLabel(select, value) {
+  const option = [...select.options].find((candidate) => candidate.value === value);
+  return option ? option.textContent.trim() : value;
+}
+
+// TODO item 74. A refused run is sent with one tap: the run is the whole report. A plan asks what
+// is wrong, because a working run alone does not say. Either way the traveller is told what is sent:
+// the trip, what this page showed and our log of the run. The server attaches the log; the page
+// cannot. Nothing is offered where no run could be fixed.
+const NOTHING_TO_FIX = new Set(["not_applicable", "not_supported"]);
+
+// A plan that hands the decision to the authority itself is working as intended: its official
+// questionnaire decides (entry 59), or its page refused us and may never be worked around (entry 27).
+function handsDecisionToAuthority(plan) {
+  if ((plan.official_tools || []).some((tool) => tool.topic === "visa_decision")) return true;
+  return plan.visa_required === null
+    && (plan.unavailable_sources || []).some((failure) => failure.may_hold_decision);
+}
+
+function tripLine(request) {
+  const traveller = request.traveller;
+  return [
+    optionLabel(destinationSelect, request.destination),
+    `${optionLabel(nationalitySelect, traveller.passport_nationality)} passport`,
+    `from ${optionLabel(residenceSelect, traveller.country_of_residence)}`,
+    traveller.travel_purpose,
+  ].join(" · ");
+}
+
+async function sendReport(run) {
+  const response = await fetch("/reports", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(run),
+  });
+  const payload = await response.json();
+  if (!response.ok) throw new Error((payload.detail && payload.detail.message) || "It could not be sent. Try again.");
+  return payload.report_id;
+}
+
+function attachReport(outcome, shown) {
+  if (!lastRun) return;
+  if (outcome === "refusal" && NOTHING_TO_FIX.has(shown.cause)) return;
+  if (outcome === "plan" && handsDecisionToAuthority(shown)) return;
+  const run = { request: lastRun.request, stages: [...lastRun.stages], outcome, shown };
+  const box = element("section", outcome === "plan" ? "report" : "report report--fix");
+  if (outcome === "plan") planReport(run, box);
+  else fixRequest(run, box);
+  results.append(box);
+}
+
+function fixRequest(run, box) {
+  const text = element("div", "report-text");
+  text.append(
+    element("h3", "", "Help us fix this result"),
+    element("p", "", "One tap sends us this result and how it was researched, so we can fix it for trips like yours."),
+    element("p", "report-note", `Sends: ${tripLine(run.request)}. Nothing from your Ofself account.`),
+  );
+  const status = element("p", "report-status");
+  status.hidden = true;
+  text.append(status);
+  const send = element("button", "report-fix", "Send it to us");
+  send.type = "button";
+  send.addEventListener("click", async () => {
+    send.disabled = true;
+    send.textContent = "Sending…";
+    status.hidden = true;
+    try {
+      await sendReport(run);
+      box.replaceChildren(element("p", "report-sent", "Thank you — it's with us, and we'll work on fixing it."));
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "It could not be sent. Try again.";
+      status.hidden = false;
+      send.disabled = false;
+      send.textContent = "Send it to us";
+    }
+  });
+  box.append(text, send);
+}
+
+function planReport(run, box) {
+  const open = element("button", "report-open", "Tell us what's wrong");
+  open.type = "button";
+  open.addEventListener("click", () => box.replaceChildren(planReportForm(run, box)));
+  box.replaceChildren(element("p", "report-intro", "Something wrong or missing in this plan?"), open);
+}
+
+function planReportForm(run, box) {
+  const card = element("div", "report-card");
+  const label = element("label", "report-label", "What's wrong?");
+  label.htmlFor = "report-message";
+  const message = element("textarea", "report-message");
+  message.id = "report-message";
+  message.rows = 3;
+  message.maxLength = 2000;
+  message.placeholder = "For example: the visa decision is wrong, a link is broken, a step is missing";
+  const status = element("p", "report-status");
+  status.hidden = true;
+  const send = element("button", "report-send", "Send");
+  send.type = "button";
+  send.disabled = true;
+  message.addEventListener("input", () => {
+    send.disabled = !message.value.trim();
+  });
+  const back = element("button", "report-cancel", "Cancel");
+  back.type = "button";
+  back.addEventListener("click", () => planReport(run, box));
+  send.addEventListener("click", async () => {
+    send.disabled = true;
+    back.disabled = true;
+    try {
+      await sendReport({ ...run, message: message.value.trim() });
+      box.replaceChildren(element("p", "report-sent", "Thank you — it's with us, and we'll look into it."));
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : "It could not be sent. Try again.";
+      status.hidden = false;
+      send.disabled = false;
+      back.disabled = false;
+    }
+  });
+  const actions = element("div", "report-actions");
+  actions.append(send, back);
+  card.append(
+    label,
+    message,
+    element(
+      "p",
+      "report-note",
+      `We also get your trip (${tripLine(run.request)}), this plan and how it was researched. `
+        + "Nothing from your Ofself account; please leave personal details out of your message.",
+    ),
+    status,
+    actions,
+  );
+  return card;
 }
 
 async function generatePlan(event) {
@@ -834,6 +976,7 @@ async function generatePlan(event) {
         travel_purpose: purposeSelect.value,
       },
     };
+    lastRun = { request, stages: [] };
     const response = await fetch("/visa-plans/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -850,6 +993,7 @@ async function generatePlan(event) {
         showStage(streamed.stage);
       } else if (streamed.event === "plan") {
         renderPlan(streamed.plan);
+        attachReport("plan", streamed.plan);
         results.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       } else if (streamed.event === "refusal") {

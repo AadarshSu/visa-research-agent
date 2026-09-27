@@ -1114,6 +1114,141 @@ button:disabled {
   line-height: 1.6;
 }
 
+.report {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 26px;
+  border: 1.5px dashed rgb(12 43 37 / 28%);
+  border-radius: 20px;
+}
+
+.report--fix {
+  border: 0;
+  color: #fff;
+  background:
+    radial-gradient(circle at 92% 0%, rgb(240 180 91 / 22%), transparent 16rem),
+    linear-gradient(160deg, var(--night-2) 0%, var(--night) 80%);
+  box-shadow: var(--shadow);
+}
+
+.report-text {
+  flex: 1 1 320px;
+}
+
+.report-text h3 {
+  margin: 0 0 6px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 26px;
+  font-weight: 500;
+}
+
+.report-text p {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.report--fix .report-note {
+  margin-top: 8px;
+  color: rgb(255 255 255 / 65%);
+}
+
+button.report-fix {
+  min-height: 52px;
+  color: var(--night);
+  background: var(--gold);
+  font-size: 17px;
+}
+
+button.report-fix:hover {
+  background: var(--gold-deep);
+}
+
+.report-intro {
+  margin: 0;
+  color: var(--muted);
+}
+
+button.report-open,
+button.report-cancel {
+  min-height: 44px;
+  border: 1.5px solid var(--night);
+  color: var(--night);
+  background: transparent;
+}
+
+button.report-open:hover,
+button.report-cancel:hover {
+  color: #fff;
+  background: var(--night);
+}
+
+button.report-send {
+  min-height: 44px;
+}
+
+.report-card {
+  display: grid;
+  flex: 1;
+  gap: 10px;
+}
+
+.report-label {
+  font-size: 12px;
+}
+
+textarea.report-message {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  background: var(--surface);
+  font: inherit;
+  resize: vertical;
+}
+
+textarea.report-message:focus-visible {
+  border-color: var(--green);
+  outline: 3px solid #e3a95a;
+  outline-offset: 2px;
+}
+
+.report-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.report-status {
+  margin: 0;
+  color: var(--red);
+  font-weight: 700;
+}
+
+.report--fix .report-status {
+  margin-top: 8px;
+  color: var(--gold);
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.report-sent {
+  margin: 0;
+  color: #11613a;
+  font-weight: 700;
+}
+
+.report--fix .report-sent {
+  color: #fff;
+}
+
 .refused-pages a {
   overflow-wrap: anywhere;
 }

@@ -714,6 +714,41 @@ def run_audit(args: argparse.Namespace, stream: TextIO) -> int:
     return 1 if refused or report.unrecorded else 0
 
 
+def run_reports(args: argparse.Namespace, stream: TextIO) -> int:
+    """List travellers' reports newest first, each with the line that re-runs it (TODO item 74)."""
+
+    # Imported here: the API depends on this module, never the other way round.
+    from visa_research_agent.api.reports import FileReportStore
+
+    reports = FileReportStore(Path(args.directory)).load_all()
+    if args.show:
+        chosen = [report for report in reports if report.report_id == args.show]
+        if not chosen:
+            print(f"No report {args.show} in {args.directory}.", file=stream)
+            return 1
+        print(chosen[0].model_dump_json(indent=2), file=stream)
+        return 0
+    if not reports:
+        print(f"No reports in {args.directory}.", file=stream)
+        return 0
+    for report in reports:
+        corridor = report.corridor
+        what = report.cause or report.outcome
+        print(
+            f"{report.received_at:%Y-%m-%d %H:%M}Z  {report.report_id}  {corridor.destination} "
+            f"{corridor.passport_nationality}/{corridor.applying_from} {corridor.purpose}  {what}"
+            f"{'' if report.recall_log else '  (no run log)'}",
+            file=stream,
+        )
+        if report.message:
+            first_line = report.message.splitlines()[0]
+            print(f'    "{first_line[:100]}"', file=stream)
+        rerun = report.rerun_command()
+        if rerun:
+            print(f"    {rerun}", file=stream)
+    return 0
+
+
 def print_selection_recall(grading: Grading, stream: TextIO) -> None:
     """Both numbers, always, and the independent one first.
 
@@ -1857,6 +1892,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     page_text.add_argument("--limit", type=int, default=10)
 
+    reports = commands.add_parser(
+        "reports", help="list travellers' problem reports, each with the line that re-runs it"
+    )
+    reports.add_argument("directory", nargs="?", default="var/reports")
+    reports.add_argument("--show", default="", help="print one report in full, by its id")
+
     audit = commands.add_parser(
         "audit",
         help="count why travellers go unanswered: reachability from data, causes from runs",
@@ -1967,6 +2008,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             return run_page_text(args, sys.stderr)
         if args.command == "audit":
             return run_audit(args, sys.stderr)
+        if args.command == "reports":
+            return run_reports(args, sys.stdout)
         if args.command == "selection-recall":
             return run_selection_recall(args, sys.stderr)
         if args.command == "coverage":

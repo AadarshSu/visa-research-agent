@@ -36,6 +36,8 @@ var/_backup*/
 # hold a city or a residence status: never commit one.
 var/plans/*
 !var/plans/.gitkeep
+# Travellers' problem reports (TODO item 74): they hold what a traveller was shown.
+var/reports/
 
 # Machine-local tool settings. The shared launch configuration is tracked.
 .claude/settings.local.json

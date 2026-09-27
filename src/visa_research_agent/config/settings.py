@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     # runtime policy (DECISIONS entry 178). A draft is kept, never a plan, so deleting the directory
     # costs a model call, never an answer.
     plan_directory: Path = Path("var/plans")
+    # Travellers' reports (TODO item 74): never read on the request path, and not a cache to clear.
+    report_directory: Path = Path("var/reports")
     maximum_fixture_characters: int = 50_000
 
     # Live retrieval tuning only. Which sources are contacted, which extractor runs, and when
