@@ -223,7 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
-| [228](#228-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
+| [231](#231-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
 | [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and each plan panel under a dark numbered header; every sentence on it checked against the code |
 | [229](#229-the-form-and-landing-page-are-polished-and-say-only-what-is-true) | **The form and landing page are polished** — the owner chose polish over a redesign; the header chip stops naming an internal mode, and the intro keeps "an official government page" because a Schengen decision may be the EU's |
 | [228](#228-the-destination-list-offers-only-countries-with-a-registry-row) | **The destination list offers only countries with a registry row** — the owner's decision: 55 offered, not 198; the refusal for an unbuilt country is unchanged for a direct request |
@@ -273,7 +273,7 @@ s more pressing |
 
 ---
 
-## 228. The app is hosted on one AWS EC2 instance, and its stores live on that instance's disk
+## 231. The app is hosted on one AWS EC2 instance, and its stores live on that instance's disk
 
 **2026-09-27 · the owner, after a hosting survey.** Goal 3, a URL, is met by a single EC2 server.
 

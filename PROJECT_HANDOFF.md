@@ -70,7 +70,7 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 
 ## Where things are
 
-- **The deployed app (entry 228):** one AWS EC2 instance at `https://<dashed-ip>.sslip.io`, a systemd
+- **The deployed app (entry 231):** one AWS EC2 instance at `https://<dashed-ip>.sslip.io`, a systemd
   service `visa` behind Caddy. Update: `cd ~/visa-research-agent && git pull && sudo systemctl restart
   visa`. Its `.env`, `var/corpus` and `var/pagetext` were copied by hand, so they drift from this
   machine's. Its stores are on the instance's disk, lost only on terminate. Not yet run there: a plan,

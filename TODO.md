@@ -18,7 +18,7 @@ Personas, is done and is the route from now on (entry 188).
 | goal | where it stands | items | waits on |
 | --- | --- | --- | --- |
 | **~30s a corridor, with information on screen while it runs** | A fresh request is ~55s: ~25s research, ~29s plan (entry 171); the graded runs of 2026-09-25 took 35–70s. Each step now shows on screen as it starts (entry 226). A repeat within 24h reuses the plan draft, not timed live | **57**, **58** | nothing external |
-| **Hosted at a URL** | **Live since 2026-09-27 on one AWS EC2 instance (entry 228)**: `/health` answers over HTTPS and Ofself sign-in works, both seen by the owner. The disk survives restarts; the free credit ends in about six months, no plan has been timed there, and government sites' view of an AWS address is unmeasured | **7**, **20** | item 7's refusal-storing decision; a corridor run from the server |
+| **Hosted at a URL** | **Live since 2026-09-27 on one AWS EC2 instance (entry 231)**: `/health` answers over HTTPS and Ofself sign-in works, both seen by the owner. The disk survives restarts; the free credit ends in about six months, no plan has been timed there, and government sites' view of an AWS address is unmeasured | **7**, **20** | item 7's refusal-storing decision; a corridor run from the server |
 | **Most corridors accurate and useful** | Item 63's second round: decisions 7 of 10, checklists 5 of 10 (entry 214); the owner's verdicts in entries 216 and 224. Nothing in the repo measures *right*, only *answered* (known problem 26) | **63** | the owner's own checking (entry 68) |
 | **55 → 100+ countries** | 55 have a registry row and a rebuilt store; 143 have none, and the page offers only the 55 (entry 228) | **64**, **2** | search credit only |
 
@@ -170,7 +170,7 @@ hold. Nothing here licenses spoofing or retrying.
 
 ### 7. Put it somewhere others can open it — `soon`
 
-**Where it is (entry 228):** hosted on one AWS EC2 instance (`c7i-flex.large` or `m7i-flex.large`,
+**Where it is (entry 231):** hosted on one AWS EC2 instance (`c7i-flex.large` or `m7i-flex.large`,
 Ubuntu 24.04, 30 GB gp3), with an Elastic IP, a systemd service `visa` and Caddy for HTTPS at
 `https://<dashed-ip>.sslip.io`. Update it with `cd ~/visa-research-agent && git pull && sudo systemctl
 restart visa`, adding `.venv/bin/pip install -e ".[render]"` when `pyproject.toml` changed. Left to do:
@@ -204,7 +204,7 @@ that never named the London embassy a fresh run names (entry 152).
 
 ### 20. Make the stores substrate-swappable and durable — `soon`
 
-**Where it stands on the EC2 host (entry 228):** durable for now. Every store is under `var/` on the
+**Where it stands on the EC2 host (entry 231):** durable for now. Every store is under `var/` on the
 instance's EBS root volume, which survives a service restart, a reboot and a stop and start, and `git
 pull` never touches it (`var/*` is gitignored). It is lost only if the instance is **terminated**
 (delete-on-termination is the default). The corpus and page text were copied up by hand from the
