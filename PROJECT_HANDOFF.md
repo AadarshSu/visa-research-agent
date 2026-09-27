@@ -30,7 +30,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 starts from `POST /visa-plans/stream`, and the plan arrives whole. **Whether any plan content may
 appear before validation is the owner's decision** — the candidates are in TODO item 57.
 
-**The owner's order, 2026-09-26:** item 57, then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
+**The owner's order, 2026-09-27:** item **67** (embeddings, on Voyage's free tokens), then 57, then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
 under *Next up*. Items 60 (Fast mode) and 65 (GPT-6 Sol) were removed. Hosting and Ofself (items 7,
 20, 55) can run alongside.
 
@@ -67,7 +67,7 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   has only been seen filling from the sandbox user and a fake Ofself. The grant expires 2026-10-17.
 - **OpenAI has been out of credit since 2026-09-16.** Nothing waits on it — model calls go through
   Personas (entry 188) — except `model_route: openai`. Item 67 (embeddings) moved to Voyage's free
-  tokens (entry 235) and waits on a `VOYAGE_API_KEY` in `.env`.
+  tokens (entry 235); the owner has a key, and the embed-and-replay scripts are not yet written.
 
 ## Where things are
 
