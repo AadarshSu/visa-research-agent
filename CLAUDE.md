@@ -222,9 +222,11 @@ or a printed result over a careful reading.
 
 **Commits:** one subject line in conventional-commit form — **`type: lowercase description`**, where
 `type` is `feat`, `fix`, `docs`, `refactor`, `test`, `perf`, `build`, `ci` or `chore` — no body, no
-attribution trailers, straight to `main`. **Every commit takes a type, not only docs-only ones**: a
+attribution trailers, on `main`. **Every commit takes a type, not only docs-only ones**: a
 code change with its docs is `feat:` or `fix:`. One concern per commit, **with the documentation for
 that concern in the same commit** — `docs:` is for when documentation is the only thing changing.
+**Ask the owner whether a commit is done before pushing it, and wait for the answer.** Feedback
+after a push costs a second commit for one concern; before it, the change folds into the first.
 `.githooks/commit-msg` rejects a subject that does not fit; enable it once per clone with
 `git config core.hooksPath .githooks`.
 
