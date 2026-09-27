@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [234](#234-the-page-stops-showing-unresolved-questions-and-a-visa-type-starts-with-a-capital) | **The page stops showing unresolved questions, and a visa type starts with a capital** — the owner's call: the questions stay in the plan and in reports; Canada's "visitor visa." opened the decision |
 | [233](#233-a-traveller-can-report-a-result-with-its-run-attached) | **A traveller can report a result, with its run attached** — the owner's item 74: one tap on a refusal, a message on a plan; the server keeps the corridor's four codes, copies the run's log and the build; `var/reports/`, `visa-discover reports` |
 | [232](#232-every-refusal-says-which-kind-it-is) | **Every refusal says which kind it is** — the owner's item 73: seven causes in `detail.cause`, each with its own heading and next step; a failed model call no longer reads as a missing page, and a search outage is no longer a bare 500 |
 | [231](#231-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
@@ -272,6 +273,26 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 234. The page stops showing unresolved questions, and a visa type starts with a capital
+
+**2026-09-27 · the owner:** remove the "Unresolved questions" block from Evidence and caveats; and
+Canada `IN/…` opened its decision with "visitor visa." in lowercase.
+
+**Unresolved questions** are no longer rendered (`renderReliability`, `static/app.js`). The plan
+still carries `unresolved_questions` — the model still writes them, the validators still see them,
+and a problem report (entry 233) still sends them — so nothing about what a plan may conclude
+changed. What changed is that a disagreement between official pages, which entry 30 routed into
+this list in place of the deleted `conflicts` field, no longer reaches the traveller on the page.
+
+**The visa type** is written in the source's own words (rule 8j), so Canada's page gives
+"visitor visa"; the page put it at the start of the decision sentence. It is now capitalised for
+display only (`sentenceCase`); the plan keeps the source's wording.
+
+**Seen** in Chromium on the fixture plan with Canada's wording: "Visitor visa. India is on…", and
+the reliability panel shows the check date and the standing caveat only.
 
 ---
 

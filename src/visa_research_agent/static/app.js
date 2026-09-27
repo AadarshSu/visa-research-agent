@@ -282,6 +282,11 @@ function appendTools(container, plan, topic, seen) {
 // below would otherwise describe an application that does not exist — see DECISIONS entry 95.
 // Keyed on false rather than "not true" on purpose: an unverified decision is null, and null keeps
 // the application shape so the four questions stay visible for the traveller to notice.
+// The visa type is the source's own words (rule 8j), often lowercase mid-sentence on the page.
+function sentenceCase(text) {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+}
+
 function needsNoVisa(plan) {
   return plan.visa_required === false;
 }
@@ -316,7 +321,7 @@ function renderDecision(plan, ctx) {
   // to resolve, there is simply no visa to have a type.
   const lead = needsNoVisa(plan)
     ? plan.explanation
-    : `${plan.visa_type || "Visa type unresolved"}. ${plan.explanation}`;
+    : `${sentenceCase(plan.visa_type) || "Visa type unresolved"}. ${plan.explanation}`;
   container.append(element("p", "lead", lead));
   appendTools(container, plan, "visa_decision");
   appendDelegates(container, plan, "visa_decision");
@@ -580,16 +585,6 @@ function renderSteps(plan, ctx) {
   return container;
 }
 
-function issueBlock(title, items) {
-  const block = element("div", "reliability-block");
-  block.append(element("h3", "", title));
-  const list = element("ul");
-  const displayItems = items.length ? items : ["None reported for this run."];
-  displayItems.forEach((item) => list.append(element("li", "", item)));
-  block.append(list);
-  return block;
-}
-
 // Name the authorities this plan actually rests on, so the caveat is never wrong for a country.
 function authoritiesSentence(plan) {
   const names = [...new Set(plan.sources.map((source) => source.authority))];
@@ -606,10 +601,6 @@ function renderReliability(plan) {
     element("p", "checked-at", `Evidence last checked ${new Date(plan.last_checked).toLocaleString()}.`),
   );
 
-  // One block now, so no grid: "Source conflicts" was unverified model prose under a heading that
-  // made it read as a finding, and nothing checked it — see DECISIONS entry 30. A disagreement
-  // between official pages is stated as something unresolved instead, which is what it honestly is.
-  // The two-column grid went with it rather than being left to render one block in half the width.
   // Fees, processing times and entry conditions have no panel of their own — they live inside the
   // steps — so a questionnaire holding one is offered here rather than dropped.
   const shown = new Set();
@@ -617,7 +608,6 @@ function renderReliability(plan) {
     appendTools(container, plan, topic, shown);
     appendDelegates(container, plan, topic, shown);
   });
-  container.append(issueBlock("Unresolved questions", plan.unresolved_questions));
   // The standing caveat is about an application, and half of it is false where there is none: there
   // is nothing to apply for and no visa to be approved. What still holds is the part that matters
   // most to a visa-free traveller — the rules change, and the border decides.
