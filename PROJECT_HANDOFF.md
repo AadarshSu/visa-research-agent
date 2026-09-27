@@ -66,7 +66,8 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 - **Ofself sign-in** works for real, but the owner's account holds no travel records, so the form
   has only been seen filling from the sandbox user and a fake Ofself. The grant expires 2026-10-17.
 - **OpenAI has been out of credit since 2026-09-16.** Nothing waits on it — model calls go through
-  Personas (entry 188) — except `model_route: openai` and item 67 (embeddings).
+  Personas (entry 188) — except `model_route: openai`. Item 67 (embeddings) moved to Voyage's free
+  tokens (entry 235) and waits on a `VOYAGE_API_KEY` in `.env`.
 
 ## Where things are
 

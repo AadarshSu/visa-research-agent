@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [235](#235-item-67-becomes-a-hybrid-test-run-on-voyages-free-tokens) | **Item 67 becomes a hybrid test, on Voyage's free tokens** — embeddings as a third input to `fusion_order`'s rank fusion, graded in four arms against the pre-filter bar; Voyage 4 chosen for the test, not adopted; nothing measured |
 | [187](#187-scoring-links-with-their-context-would-recover-2-of-83-answer-pages-japans-remaining-gap-is-a-refusal) | **Link context would recover 2 of 83 answer pages** — 48 already score, 32 are search seeds; Japan's 7 remaining misses are Edinburgh's consulate answering `403` to everything; problem 2 is a later refinement, rebuild with entry 186 first |
 | [186](#186-a-scored-link-may-read-past-its-hosts-even-share-and-one-that-scored-nothing-may-not--measured-on-four-countries) | **A scored link may read past its host's even share; one scoring nothing may not** — `scored_host_ceiling`, corpus builds only; Japan's oracle pages read 0/20 → 12/20, the UK's 13/17 → 17/17, Australia's immigration host absent → 267 pages; `gov.uk` stops at 392 and mostly visa guidance; the Netherlands unchanged |
 | [185](#185-why-builds-open-mostly-zero-scoring-pages-the-even-per-host-split-drops-the-visa-sites-links-and-spends-the-rest-on-unrelated-sites) | **Why builds open mostly zero-scoring pages** — an even split gave Japan's 47 hosts 25 pages each; `mofa.go.jp`'s scored links were dropped at the cap, including the oracle's decision, fee, time and route pages for both Japan corridors, while unrelated hosts spent 74% of opens on zero-score pages and 288 of 1,200 went unspent; ordering and the family share are not causes |
@@ -273,6 +274,29 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 235. Item 67 becomes a hybrid test, run on Voyage's free tokens
+
+**2026-09-27. The owner asked whether embeddings combined with the keyword and link heuristics would
+beat either alone, and chose Voyage 4 as the embeddings source for the test. Changes TODO item 67 and
+the handoff; no code, nothing measured.**
+
+- **The ranking is already a hybrid.** `fusion_order` fuses link rank and stored-text keyword rank
+  (entry 183: link 74/92, text 62/92, fused 77/92 at 35 a corridor). So item 67 now asks whether
+  embedding rank earns a place as a third reciprocal-rank-fusion input, and grades four arms — link +
+  text, embeddings alone, link + embeddings, all three — at the pre-filter cut.
+- **Why a hybrid is the expectation.** About half the selector's candidates have no stored text and
+  rank on their link alone; embeddings and keywords miss different things (paraphrase and language
+  against nationalities, codes and near-identical pages); RRF needs no weights fitted on 21 corridors.
+  This is a prediction, and item 67 is how it gets checked.
+- **Voyage is a test source, not an adoption.** Its free starting tokens make the offline embed cost
+  nothing; Personas has no embeddings (entry 188) and OpenAI is out of credit. Stored text sent to it
+  is public government pages. Adopting it past the free tokens, or at request time, is the owner's
+  call.
+- **Unchanged:** embeddings are ranking input and never evidence (entries 78, 83); nothing traveller-
+  specific enters the offline job (entry 148).
 
 ---
 

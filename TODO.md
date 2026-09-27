@@ -50,7 +50,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 72. Improve the interface — form and landing page done | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `ongoing` |
-| **Blocked** | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
+|  | 67. Test hybrid ranking with embeddings of stored page text — on Voyage's free tokens | `soon` |
 | **Later** | 69. Read scanned PDFs — for ranking first, as evidence only after a decision | `later` |
 |  | 49. Walk the mission family to the traveller's post — stopped by entry 148 | `later` |
 |  | 35. Finish the Netherlands' family reservation — parked by entry 148 | `later` |
@@ -371,24 +371,49 @@ session*. What changed in the plan along the way, all on the owner's decisions: 
 
 ---
 
-## Blocked
+### 67. Test hybrid ranking with embeddings of stored page text — `soon`, on Voyage's free tokens
 
-### 67. Test ranking by embeddings of stored page text — `blocked` on OpenAI credit
-
-Personas offers chat calls only (entry 188), so this waits on an OpenAI top-up or another embeddings
-source the owner approves.
+**Source (entry 235):** Voyage 4, on the free tokens a new account starts with — a test source the
+owner chose, not an adoption. Needs `VOYAGE_API_KEY` in `.env`. Personas offers chat only (entry 188)
+and OpenAI is out of credit. A local multilingual model (bge-m3, multilingual-e5) stays the fallback
+if embeddings are adopted and Voyage's price or dependency is not.
 
 **Why.** What separates the model selector from the heuristics is judgement, not information: same
 inputs, 83% of answers against 53–60% (entry 183). Embeddings match meaning, so they may rank "what
-to bring" or another language where keywords cannot. They cannot help a page with no stored text, and
-may not separate near-identical pages for different travellers.
+to bring" or another language (known problem 13) where keywords cannot.
 
-**Build offline:** embed every stored body in `var/pagetext/` (~$1 with `text-embedding-3-small`),
-chunked, stored beside the text index — **ranking input, never evidence** (entries 78, 83).
+**The question is hybrid, not replacement.** `fusion_order` is already a hybrid — reciprocal-rank
+fusion of link rank and stored-text keyword rank — and entry 183 measured it beating both parts at 35
+a corridor: link 74/92, text 62/92, fused 77/92. So the test is whether embedding rank earns a place
+as a **third RRF input**, and whether it adds to the keyword scorer or replaces it. Expected, not
+measured:
+- **Embeddings alone cannot cover the pool.** Only ~49% of candidates shown to the selector have
+  stored text; the rest rank on their link alone, which an embedding cannot see (entry 158's failure).
+- **They fail in different places.** Embeddings are good at paraphrase and language; keywords at a
+  nationality, a country code, and near-identical per-nationality pages. RRF gains most when its
+  inputs err differently.
+- **RRF has no fitted weights**, which matters with 21 oracle corridors — entry 183's learned ranker
+  learned one feature.
 
-**Measure offline** against `oracle/selection_oracle.yaml`: as a selector (bar: the model's 83%) and
-as the selector's cut (bar: `fusion_order`'s 80.0 of 90, via `var/selection-replay-2026-09-24/`).
-Record per-request time. Any adoption is a recall change, graded live over several runs.
+**Build offline:** embed every stored body in `var/pagetext/`, chunked (a page scores by its best
+chunk), as Voyage `document` inputs, stored beside the text index — **ranking input, never evidence**
+(entries 78, 83). Role queries are traveller-neutral, so embed them offline too (`query` inputs); a
+nationality-specific query would need a live call and is a later question.
+
+**Measure offline** against `oracle/selection_oracle.yaml`, via `var/selection-replay-2026-09-24/`,
+at the pre-filter cut (bar: `fusion_order`'s 80.0 of 90), four arms:
+1. link + text — today's baseline;
+2. embeddings alone, plus the 40 blind pages;
+3. link + embeddings;
+4. link + text + embeddings.
+
+3 against 4 says whether embeddings add to the keyword scorer or replace it. Report the roles each arm
+gains, split by pages with and without English text — a gain that is all multilingual is narrower and
+more convincing than a small overall lift. **Treat under ~3 roles as no result:** 90 roles over 21
+corridors, with K tuned on those same corridors. As a *selector* (bar: the model's 83%) try it once,
+expecting a loss — the gap is judgement (entry 183). Record per-request time. Any adoption is a recall
+change, graded live over several runs; using Voyage past its free tokens is the owner's call.
+
 
 ---
 
