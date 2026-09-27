@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [228](#228-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
 | [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and each plan panel under a dark numbered header; every sentence on it checked against the code |
 | [229](#229-the-form-and-landing-page-are-polished-and-say-only-what-is-true) | **The form and landing page are polished** — the owner chose polish over a redesign; the header chip stops naming an internal mode, and the intro keeps "an official government page" because a Schengen decision may be the EU's |
 | [228](#228-the-destination-list-offers-only-countries-with-a-registry-row) | **The destination list offers only countries with a registry row** — the owner's decision: 55 offered, not 198; the refusal for an unbuilt country is unchanged for a direct request |
@@ -272,6 +273,34 @@ s more pressing |
 
 ---
 
+## 228. The app is hosted on one AWS EC2 instance, and its stores live on that instance's disk
+
+**2026-09-27 · the owner, after a hosting survey.** Goal 3, a URL, is met by a single EC2 server.
+
+**What runs.** A `c7i-flex.large` (4 GB) or `m7i-flex.large` (8 GB) on the AWS free plan's credit,
+Ubuntu 24.04 amd64, a 30 GB gp3 root volume and an Elastic IP. The app is a systemd service
+(`visa`, uvicorn on port 8000) behind Caddy, which gets its certificate for
+`<dashed-ip>.sslip.io`. `PARADIGM_REDIRECT_URI` and `SESSION_COOKIE_SECURE=true` are set on the
+server and the redirect is registered on the Ofself app. **Seen by the owner:** `/health` over HTTPS
+returned ok and Ofself sign-in worked. **Not run:** a plan on the server, a corridor's timing there.
+
+**Why this and not a platform.**
+- **Memory:** `render_mode: on_demand` runs Chromium, so 512 MB free tiers are out.
+- **A disk that survives:** the stores are about 1 GB of local files. Render, Koyeb and Hugging Face
+  wipe the disk; Cloud Run would need them baked into the image. That is item 20's problem on a
+  substrate that has it.
+- **A request runs about a minute,** which suits a long-running process over short serverless limits.
+- **Free was preferred, not required.** Oracle's Always Free ARM server fits and stays free but has
+  capacity and reclaim risks; Hetzner's CX23 at about €6 a month is the cheapest steady fallback.
+
+**What survives.** Restarting the service, rebooting and stopping the instance keep `var/`. A
+`git pull` leaves it alone. **Terminating the instance deletes it**, so the owner keeps local copies
+of `var/corpus`, `var/pagetext` and `.env`, which are copied to the server by hand.
+
+**What it costs and risks.** The credit runs out (check Billing for the date), an idle Elastic IP
+is billed, and there is no per-user rate limit beyond the sign-in of entry 191. **Whether government
+sites challenge or block an AWS address more than a home connection is unmeasured**; compare a few
+corridors run from the server with local runs, clearing both or neither (entry 136).
 ## 230. The landing page is redesigned, bolder
 
 **2026-09-26 · the owner, after entry 229:** "be more bold, it's quite a boring page." Supersedes

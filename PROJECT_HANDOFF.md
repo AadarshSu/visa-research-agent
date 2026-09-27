@@ -70,6 +70,11 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 
 ## Where things are
 
+- **The deployed app (entry 228):** one AWS EC2 instance at `https://<dashed-ip>.sslip.io`, a systemd
+  service `visa` behind Caddy. Update: `cd ~/visa-research-agent && git pull && sudo systemctl restart
+  visa`. Its `.env`, `var/corpus` and `var/pagetext` were copied by hand, so they drift from this
+  machine's. Its stores are on the instance's disk, lost only on terminate. Not yet run there: a plan,
+  a corridor's timing, and the block/challenge rate from an AWS address.
 - **Raw outputs of item 63's rounds:** `var/item70-2026-09-24/`
   - `item63-round2/<slug>_IN_IN/<1|2>/`
   - `item63-round3-forms/` (entry 215), `item63-round3-217/` and `-217b/` (entries 217–219),
