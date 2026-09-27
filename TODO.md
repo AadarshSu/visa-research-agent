@@ -50,6 +50,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 72. Improve the interface — form and landing page done | `soon` |
 |  | 73. Tell the traveller exactly why their corridor was refused | `soon` |
+|  | 74. Let a traveller report a corridor that did not work, with its run attached | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `ongoing` |
 | **Blocked** | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
 | **Later** | 69. Read scanned PDFs — for ranking first, as evidence only after a decision | `later` |
@@ -368,6 +369,41 @@ response. Refused pages are already named once per authority (item 54, entry 155
 **Absorbs** the *Smaller things* entry "a failed model call reads to the traveller as a missing
 page". **Does not change** what a plan may conclude, only how a refusal is explained — anything that
 would turn a refusal into an answer is the owner's decision (entries 206–209).
+
+### 74. Let a traveller report a corridor that did not work, with its run attached — `soon`
+
+**Why — the owner, 2026-09-27.** When a corridor refuses or a plan looks wrong, the traveller should
+be able to send it to us with one button, so it can be diagnosed and fixed where it can be. Today the
+only way to see a failure is to re-run it here, and the model calls vary between runs (known
+problem 10), so a re-run may not reproduce what the traveller saw.
+
+**What a report carries.**
+- **The corridor:** destination, passport, residence, purpose — the `Corridor` codes.
+- **What the page showed:** the plan as returned, or the refusal's `detail`, plus the steps streamed
+  while it ran (entry 226).
+- **The run's log:** `var/recall/<corridor>.json` — the typed cause, `role_verdicts` with each
+  adjudicator's reason, `adjudicated_ids`, `phase_seconds` (AGENTS.md, *debug a corridor*). **Copy it
+  when the report is made**: the next run of the same corridor overwrites it (entry 118).
+- **The traveller's own words**, optional: what they expected, or what looked wrong.
+- **The build:** commit and `static_asset_version`, so a report can be told apart from one fixed since.
+
+**Decide first — the owner's calls.**
+1. **Where a report goes.** Running on one laptop, `var/feedback/` is enough; once hosted (item 7) it
+   needs a destination the owner reads — an inbox, a GitHub issue, a store. Item 20's durability
+   applies.
+2. **What personal data leaves the page.** Passport, residence city and any Ofself-filled field are
+   the traveller's. Show them exactly what will be sent before it is, and send the corridor's codes,
+   not their Ofself identity, unless they choose to add contact details. Never the session cookie or
+   anything from `.env`.
+3. **A report is kept for diagnosis only (entry 44).** It holds an answer, so it must live outside the
+   corridor and plan stores and never be served to another traveller or reused as a plan.
+
+**Then build:** a "Report a problem" button on both the plan and the refusal screen, a `POST` route
+that assembles the report server-side (the page supplies only the corridor, what it showed and the
+comment; the server attaches the log, so a traveller cannot send an arbitrary file), a size limit, and
+sign-in as for plans. Add a `visa-discover` command that lists reports and prints each with the
+`visa-discover corridor` line that re-runs it. **Pairs with item 73**: with the refusal's typed cause
+in the report, most reports sort themselves.
 
 ### 63. Make most corridors return accurate and useful information — `ongoing`
 
