@@ -3,7 +3,7 @@
 import asyncio
 import json
 from collections.abc import AsyncIterator, Callable, Coroutine
-from typing import Annotated, Any, get_args
+from typing import Annotated, Any, Literal, get_args
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import HTMLResponse, StreamingResponse
@@ -25,6 +25,7 @@ from visa_research_agent.api.traveller import TravellerSource
 from visa_research_agent.config.loader import get_destination_registry, get_runtime_policy
 from visa_research_agent.config.settings import settings
 from visa_research_agent.config.traveller import DEFAULT_TRAVELLER_PROFILE
+from visa_research_agent.discovery.adjudication import AdjudicationError
 from visa_research_agent.discovery.automatic import (
     AutomaticDestinationService,
     AutomaticDiscoveryError,
@@ -32,13 +33,20 @@ from visa_research_agent.discovery.automatic import (
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import Corridor
 from visa_research_agent.discovery.registry import get_authority_registry
+from visa_research_agent.discovery.search import SearchError
+from visa_research_agent.discovery.selection import SelectionError
 from visa_research_agent.domain.models import (
     DestinationConfig,
     TravellerProfile,
     TravelPurpose,
     VisaPlan,
 )
-from visa_research_agent.research.errors import InsufficientEvidenceError, VisaResearchError
+from visa_research_agent.research.errors import (
+    InsufficientEvidenceError,
+    LLMExtractionError,
+    VisaResearchError,
+)
+from visa_research_agent.research.personas import PersonasError
 from visa_research_agent.research.service import VisaPlanService
 
 router = APIRouter()
@@ -181,6 +189,7 @@ def refuse_impossible_corridors(requested: str, traveller: TravellerProfile) -> 
                     "different destination, or a different passport."
                 ),
                 "status": "not_applicable",
+                "cause": "not_applicable",
             },
         )
 
@@ -213,13 +222,15 @@ async def resolve_destination(
                 detail={
                     "message": (
                         f"Visa-plan generation for {destination.display_name} is not available yet."
-                    )
+                    ),
+                    "cause": "not_supported",
                 },
             )
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "message": f"Unsupported destination: {requested}",
+                "cause": "not_supported",
                 "supported_destinations": [item.slug for item in registry.destinations],
             },
         )
@@ -235,6 +246,7 @@ async def resolve_destination(
                     "own government's domains cannot be told apart from other countries' pages "
                     "about it."
                 ),
+                "cause": "not_supported",
                 "supported_destinations": [item.slug for item in researchable_destinations()],
             },
         )
@@ -247,11 +259,61 @@ async def resolve_destination(
     except AutomaticDiscoveryError as exc:
         # A refusal, not a fault. It names what could not be established rather than offering a
         # plan assembled from whatever happened to be readable.
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": str(exc), "status": "unable_to_verify"},
+        raise refusal(exc.cause, str(exc), unreadable_pages=exc.unreadable_urls) from exc
+    except SearchError as exc:
+        # Raised only where there is no stored corpus to answer from: "we could not look" must
+        # never read as "there is nothing to find" (entry 74).
+        raise refusal(
+            "search_unavailable",
+            f"{country.name}'s official sources could not be searched just now, and there are no "
+            "stored pages to answer from. Nothing was concluded about this trip.",
         ) from exc
+    except VisaResearchError as exc:
+        raise research_fault(exc) from exc
     return discovered.config
+
+
+RefusalReason = Literal[
+    "not_supported",
+    "not_applicable",
+    "no_official_answer",
+    "pages_unreadable",
+    "check_failed",
+    "search_unavailable",
+    "internal_error",
+]
+"""What `detail.cause` may say, one per next step a traveller can take (TODO item 73)."""
+
+# A model call that failed says nothing about the trip; anything else here is our own fault.
+MODEL_CALL_ERRORS = (LLMExtractionError, PersonasError, AdjudicationError, SelectionError)
+
+
+def refusal(
+    cause: RefusalReason, message: str, *, unreadable_pages: list[str] | None = None, **extra: Any
+) -> HTTPException:
+    """A refusal both plan routes send, with the cause the page words its heading from."""
+
+    detail: dict[str, Any] = {"message": message, "status": "unable_to_verify", "cause": cause}
+    if unreadable_pages:
+        detail["unreadable_pages"] = unreadable_pages
+    detail.update(extra)
+    return HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=detail)
+
+
+def research_fault(exc: VisaResearchError) -> HTTPException:
+    """A research step that failed rather than refused. True of the cause, never of the trip."""
+
+    if isinstance(exc, MODEL_CALL_ERRORS):
+        return refusal(
+            "check_failed",
+            "A model call this research depends on did not complete, so nothing was concluded "
+            "about this trip. This is a fault on our side, not a finding about the trip.",
+        )
+    return refusal(
+        "internal_error",
+        "The research could not be completed because of a fault on our side. Nothing was "
+        "concluded about this trip.",
+    )
 
 
 @router.post(
@@ -348,25 +410,23 @@ async def research_plan(
         return await service.generate(destination, traveller, on_stage=report)
     except InsufficientEvidenceError as exc:
         # A refusal explains which official evidence was missing, rather than failing opaquely.
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={
-                "message": (
-                    f"A verified plan for {destination.display_name} could not be produced "
-                    "because required official evidence was unavailable."
-                ),
-                "status": "unable_to_verify",
-                "reasons": exc.reasons,
-                "unavailable_sources": [
-                    failure.model_dump(mode="json") for failure in exc.failures
-                ],
-            },
+        # With no failures on record the gap is the configuration's, which is ours to fix.
+        raise refusal(
+            "pages_unreadable" if exc.failures else "internal_error",
+            f"A verified plan for {destination.display_name} could not be produced "
+            "because required official evidence was unavailable.",
+            # Only a stated refusal is handed over as a page to open (entries 27, 32); a timeout
+            # or a stale page is explained in `reasons`, not named as one we were refused.
+            unreadable_pages=[
+                str(failure.attempted_url)
+                for failure in exc.failures
+                if failure.outcome == "blocked" and failure.http_status in (401, 403)
+            ],
+            reasons=exc.reasons,
+            unavailable_sources=[failure.model_dump(mode="json") for failure in exc.failures],
         ) from exc
     except VisaResearchError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"message": "The visa plan could not be generated safely."},
-        ) from exc
+        raise research_fault(exc) from exc
 
 
 async def plan_events(

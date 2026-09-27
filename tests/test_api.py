@@ -15,17 +15,28 @@ from visa_research_agent.api.dependencies import (
 from visa_research_agent.api.routes import resolve_destination
 from visa_research_agent.api.schemas import VisaPlanRequest
 from visa_research_agent.api.signin import require_signed_in_for_plans
-from visa_research_agent.discovery.automatic import AutomaticDestinationService, find_country
+from visa_research_agent.discovery.automatic import (
+    AutomaticDestinationService,
+    AutomaticDiscoveryError,
+    find_country,
+)
+from visa_research_agent.discovery.corpus import CorpusError
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import Corridor
 from visa_research_agent.discovery.registry import get_authority_registry
+from visa_research_agent.discovery.search import SearchQuotaExhausted
 from visa_research_agent.domain.models import (
     DestinationConfig,
     RuntimePolicy,
+    SourceFailure,
     TravellerProfile,
     VisaPlan,
 )
-from visa_research_agent.research.errors import VisaResearchError
+from visa_research_agent.research.errors import (
+    InsufficientEvidenceError,
+    LLMExtractionError,
+    VisaResearchError,
+)
 
 OFFLINE_POLICY = RuntimePolicy(
     schema_version=1,
@@ -108,6 +119,7 @@ async def test_unsupported_destination_returns_helpful_error(client: httpx.Async
     assert response.status_code == 422
     assert response.json()["detail"] == {
         "message": "Unsupported destination: canada",
+        "cause": "not_supported",
         "supported_destinations": [
             "singapore",
             "japan",
@@ -258,7 +270,8 @@ async def test_a_request_may_name_a_different_traveller(client: httpx.AsyncClien
     )
 
     assert response.status_code == 503
-    assert "could not be generated safely" in response.json()["detail"]["message"]
+    assert response.json()["detail"]["cause"] == "internal_error"
+    assert "Nothing was concluded" in response.json()["detail"]["message"]
 
 
 @pytest.mark.anyio
@@ -613,3 +626,143 @@ async def test_a_request_that_cannot_be_answered_is_refused_before_the_stream_st
 
     assert response.status_code == 422
     assert response.json()["detail"]["status"] == "not_applicable"
+
+
+# --- every refusal says which kind it is (TODO item 73) ---------------------------------------
+
+
+class RaisingAutomatic(RecordingAutomatic):
+    """Discovery that fails the way a live run can."""
+
+    def __init__(self, error: Exception) -> None:
+        super().__init__(UNITED_STATES)
+        self.error = error
+
+    async def destination_for(
+        self, name: str, corridor: Corridor, *, on_phase: Callable[[str], None] | None = None
+    ) -> SimpleNamespace:
+        raise self.error
+
+
+class FailingPlanService:
+    def __init__(self, error: Exception) -> None:
+        self.error = error
+
+    async def generate(
+        self,
+        destination: DestinationConfig,
+        traveller: TravellerProfile,
+        *,
+        on_stage: Callable[[str], None] | None = None,
+    ) -> VisaPlan:
+        raise self.error
+
+
+REFUSED_PAGE = "https://travel.state.gov/content/travel/en/us-visas.html"
+US_REQUEST = {
+    "destination": "united-states",
+    "traveller": {"passport_nationality": "IN", "country_of_residence": "GB"},
+}
+
+
+def app_failing_with(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    discovery: Exception | None = None,
+    plan: Exception | None = None,
+) -> httpx.AsyncClient:
+    policy = OFFLINE_POLICY.model_copy(update={"destination_mode": "automatic"})
+    monkeypatch.setattr("visa_research_agent.api.routes.get_runtime_policy", lambda: policy)
+    app = create_app()
+    automatic = RaisingAutomatic(discovery) if discovery else RecordingAutomatic(UNITED_STATES)
+    app.dependency_overrides[get_automatic_destinations] = lambda: automatic
+    app.dependency_overrides[get_visa_plan_service] = lambda: FailingPlanService(
+        plan or VisaResearchError("unused")
+    )
+    app.dependency_overrides[require_signed_in_for_plans] = lambda: None
+    return httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test")
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize(
+    ("discovery", "plan", "cause"),
+    [
+        (
+            AutomaticDiscoveryError(
+                "refused", cause="pages_unreadable", unreadable_urls=[REFUSED_PAGE]
+            ),
+            None,
+            "pages_unreadable",
+        ),
+        (AutomaticDiscoveryError("none", cause="no_official_answer"), None, "no_official_answer"),
+        (AutomaticDiscoveryError("model", cause="check_failed"), None, "check_failed"),
+        (SearchQuotaExhausted("out of credit"), None, "search_unavailable"),
+        (CorpusError("unreadable store"), None, "internal_error"),
+        (None, LLMExtractionError("The OpenAI extraction request failed"), "check_failed"),
+        (None, VisaResearchError("anything else"), "internal_error"),
+    ],
+)
+async def test_every_refusal_names_its_cause_on_both_routes(
+    monkeypatch: pytest.MonkeyPatch,
+    discovery: Exception | None,
+    plan: Exception | None,
+    cause: str,
+) -> None:
+    async with app_failing_with(monkeypatch, discovery=discovery, plan=plan) as client:
+        plain = await client.post("/visa-plans", json=US_REQUEST)
+        streamed = await client.post("/visa-plans/stream", json=US_REQUEST)
+
+    assert plain.status_code == 503
+    assert plain.json()["detail"]["cause"] == cause
+    outcome = json.loads(streamed.text.strip().splitlines()[-1])
+    assert outcome["event"] == "refusal"
+    assert outcome["detail"] == plain.json()["detail"], "the two routes must say the same thing"
+    if cause == "pages_unreadable":
+        assert plain.json()["detail"]["unreadable_pages"] == [REFUSED_PAGE]
+    else:
+        assert "unreadable_pages" not in plain.json()["detail"]
+
+
+@pytest.mark.anyio
+async def test_a_model_fault_is_never_worded_as_a_missing_page(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    error = LLMExtractionError("The OpenAI extraction request failed")
+    async with app_failing_with(monkeypatch, plan=error) as client:
+        detail = (await client.post("/visa-plans", json=US_REQUEST)).json()["detail"]
+
+    assert "not a finding about the trip" in detail["message"]
+    assert "evidence" not in detail["message"]
+
+
+@pytest.mark.anyio
+async def test_only_a_stated_refusal_is_handed_over_as_a_page_to_open(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Entries 27 and 32: a 403 may be named; a timeout is explained, never named as a refusal."""
+
+    def failure(url: str, outcome: str, http_status: int | None) -> SourceFailure:
+        return SourceFailure(
+            source_id="page",
+            title="Visa page",
+            authority="U.S. Department of State",
+            outcome=outcome,  # type: ignore[arg-type]
+            detail="could not be read",
+            attempted_url=url,  # type: ignore[arg-type]
+            http_status=http_status,
+        )
+
+    error = InsufficientEvidenceError(
+        "missing",
+        reasons=["Visa page could not be used"],
+        failures=[
+            failure(REFUSED_PAGE, "blocked", 403),
+            failure("https://travel.state.gov/slow.html", "unreachable", None),
+        ],
+    )
+    async with app_failing_with(monkeypatch, plan=error) as client:
+        detail = (await client.post("/visa-plans", json=US_REQUEST)).json()["detail"]
+
+    assert detail["cause"] == "pages_unreadable"
+    assert detail["unreadable_pages"] == [REFUSED_PAGE]
+    assert detail["reasons"] == ["Visa page could not be used"]

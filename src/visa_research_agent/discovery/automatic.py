@@ -34,6 +34,7 @@ cannot fill a load-bearing role is still refused rather than filled in.
 
 from collections.abc import Callable
 from datetime import UTC, datetime
+from typing import Literal
 
 from visa_research_agent.discovery.bootstrap import BootstrapReport, DomainProposal
 from visa_research_agent.discovery.corpus import (
@@ -52,7 +53,7 @@ from visa_research_agent.discovery.lexicon import (
     get_country_registry,
     get_denylist,
 )
-from visa_research_agent.discovery.models import Corridor, ResolvedCorridor
+from visa_research_agent.discovery.models import Corridor, RefusalCause, ResolvedCorridor
 from visa_research_agent.discovery.registry import (
     MAXIMUM_AUTO_TRUSTED_DOMAINS,
     AuthorityRegistry,
@@ -64,9 +65,29 @@ from visa_research_agent.discovery.supranational import union_of, union_pages, w
 from visa_research_agent.domain.models import DestinationConfig, StrictModel
 from visa_research_agent.research.errors import VisaResearchError
 
+DiscoveryRefusal = Literal[
+    "not_supported", "no_official_answer", "pages_unreadable", "check_failed"
+]
+"""Why discovery refused, in the terms a traveller acts on (TODO item 73).
+
+Coarser than `RefusalCause`, which counts runs: `decision_not_found` splits here by whether an
+official page refused us, and a country nobody has built is a refusal no run ever records."""
+
 
 class AutomaticDiscoveryError(VisaResearchError):
     """Raised when a destination cannot be resolved automatically, with a reason to show."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        cause: DiscoveryRefusal,
+        unreadable_urls: list[str] | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.cause: DiscoveryRefusal = cause
+        # Named so the traveller can open them, never read (entry 27): 401/403 refusals only.
+        self.unreadable_urls = unreadable_urls or []
 
 
 # Re-exported: the cap now belongs to a registry row rather than to a live bootstrap, so it is
@@ -236,6 +257,46 @@ def find_country(name: str, countries: CountryRegistry) -> Country | None:
     )
 
 
+def unusable_corridor(
+    country_name: str, resolved: ResolvedCorridor, recorded_cause: RefusalCause | None
+) -> AutomaticDiscoveryError:
+    """The refusal for a corridor that ran and could not be answered, true to why.
+
+    `recorded_cause` is what the run wrote down where the result cannot show it (a failed model
+    call, no candidates); the recall log prefers it for the same reason.
+    """
+
+    missing = ", ".join(role.replace("_", " ") for role in resolved.unresolved_roles)
+    cause = recorded_cause or resolved.outcome_cause
+    if cause == "adjudication_failed":
+        # A failed model call is not a missing page, and must never read as one.
+        return AutomaticDiscoveryError(
+            f"The check that decides which of {country_name}'s official pages answer this trip "
+            "could not run, so nothing was concluded about it. This is a fault on our side, not a "
+            "finding about the trip.",
+            cause="check_failed",
+        )
+    if cause == "no_candidates":
+        return AutomaticDiscoveryError(
+            f"No page on {country_name}'s official sites came up for this trip, so there was "
+            "nothing to confirm the visa decision with. Nothing was substituted in its place.",
+            cause="no_official_answer",
+        )
+    if resolved.inaccessible_urls:
+        return AutomaticDiscoveryError(
+            f"Some of {country_name}'s official pages refused automated reading, and none of the "
+            f"pages that could be read confirmed the {missing}. Nothing was substituted in its "
+            "place, and nothing is said about what the refused pages contain.",
+            cause="pages_unreadable",
+            unreadable_urls=list(resolved.inaccessible_urls),
+        )
+    return AutomaticDiscoveryError(
+        f"{country_name}'s official sources were searched, but no page could be confirmed "
+        f"as the {missing}. Nothing was substituted in its place.",
+        cause="no_official_answer",
+    )
+
+
 def unknown_country(name: str) -> AutomaticDiscoveryError:
     """The refusal for a destination no country in the registry answers to.
 
@@ -245,7 +306,8 @@ def unknown_country(name: str) -> AutomaticDiscoveryError:
 
     return AutomaticDiscoveryError(
         f"{name} is not a country this agent knows how to research. Its own government "
-        "domains cannot be told apart from other countries' pages about it."
+        "domains cannot be told apart from other countries' pages about it.",
+        cause="not_supported",
     )
 
 
@@ -262,7 +324,8 @@ def trusted_domains_for(
         raise AutomaticDiscoveryError(
             f"{country.name} is not in the reviewed authority registry, so there is no "
             "confirmed government domain to research it from. Nothing was fetched. Regenerate "
-            "the registry with `visa-discover registry` and review the entry."
+            "the registry with `visa-discover registry` and review the entry.",
+            cause="not_supported",
         )
 
     trusted = entry.domains
@@ -290,7 +353,8 @@ def trusted_domains_for(
             )
         raise AutomaticDiscoveryError(
             f"No domain belonging to {country.name}'s own government could be confirmed, so "
-            f"there was nothing safe to read. Nothing was fetched.{detail}"
+            f"there was nothing safe to read. Nothing was fetched.{detail}",
+            cause="not_supported",
         )
     return trusted, withheld
 
@@ -433,11 +497,8 @@ class AutomaticDestinationService:
         )
         resolved = await resolver.resolve(base, corridor, on_phase=on_phase)
         if not resolved.is_usable:
-            missing = ", ".join(role.replace("_", " ") for role in resolved.unresolved_roles)
-            raise AutomaticDiscoveryError(
-                f"{country.name}'s official sources were searched, but no page could be confirmed "
-                f"as the {missing}. Nothing was substituted in its place."
-            )
+            trace = getattr(resolver, "trace", None)
+            raise unusable_corridor(country.name, resolved, getattr(trace, "refusal_cause", None))
 
         self._write_back(country, trusted, resolver, resolved)
         if not resolved.ran_without_search:

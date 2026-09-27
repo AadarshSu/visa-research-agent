@@ -12,6 +12,7 @@ surfaced a commercial travel insurer, and Vietnam's ranked the US embassy first.
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -901,3 +902,86 @@ async def test_a_stored_corridor_reports_no_phases(tmp_path: Path) -> None:
 
     assert again.from_cache
     assert heard == []
+
+
+# --- why a refusal happened, in the traveller's terms (TODO item 73) --------------------------
+
+
+class TracedStubResolver(StubResolver):
+    """A resolver whose run recorded its own refusal cause, as the real one does on its trace."""
+
+    def __init__(self, outcome: ResolvedCorridor, refusal_cause: str) -> None:
+        super().__init__(outcome)
+        self.trace = SimpleNamespace(refusal_cause=refusal_cause)
+
+
+def unanswered(**fields: object) -> ResolvedCorridor:
+    return ResolvedCorridor(
+        corridor=corridor(),
+        resolved_at=NOW,
+        sources=[],
+        unresolved_roles=["visa_decision"],
+        **fields,  # type: ignore[arg-type]
+    )
+
+
+async def test_a_failed_model_call_is_refused_as_a_check_that_could_not_run(
+    tmp_path: Path,
+) -> None:
+    """The Smaller-things defect item 73 absorbs: this read as "no page could be confirmed"."""
+
+    resolver = TracedStubResolver(unanswered(), "adjudication_failed")
+
+    with pytest.raises(AutomaticDiscoveryError) as raised:
+        await build_service(tmp_path, StubProvider([]), resolver).destination_for(
+            "France", corridor()
+        )
+
+    assert raised.value.cause == "check_failed"
+    assert "could not run" in str(raised.value)
+    assert "no page could be confirmed" not in str(raised.value)
+
+
+async def test_a_corridor_with_no_candidates_says_nothing_came_up(tmp_path: Path) -> None:
+    resolver = TracedStubResolver(unanswered(), "no_candidates")
+
+    with pytest.raises(AutomaticDiscoveryError) as raised:
+        await build_service(tmp_path, StubProvider([]), resolver).destination_for(
+            "France", corridor()
+        )
+
+    assert raised.value.cause == "no_official_answer"
+    assert "No page" in str(raised.value)
+
+
+async def test_pages_an_authority_refused_are_named_never_described(tmp_path: Path) -> None:
+    refused = "https://france-visas.gouv.fr/en/web/france-visas/visa-wizard"
+    resolver = StubResolver(unanswered(inaccessible_urls=[refused]))
+
+    with pytest.raises(AutomaticDiscoveryError) as raised:
+        await build_service(tmp_path, StubProvider([]), resolver).destination_for(
+            "France", corridor()
+        )
+
+    assert raised.value.cause == "pages_unreadable"
+    assert raised.value.unreadable_urls == [refused]
+    assert "nothing is said about what the refused pages contain" in str(raised.value)
+
+
+async def test_a_corridor_that_read_pages_and_found_no_decision_says_so(tmp_path: Path) -> None:
+    with pytest.raises(AutomaticDiscoveryError) as raised:
+        await build_service(tmp_path, StubProvider([]), StubResolver(unanswered())).destination_for(
+            "France", corridor()
+        )
+
+    assert raised.value.cause == "no_official_answer"
+    assert raised.value.unreadable_urls == []
+
+
+async def test_a_country_nobody_has_built_is_refused_as_not_supported(tmp_path: Path) -> None:
+    with pytest.raises(AutomaticDiscoveryError) as raised:
+        await build_service(
+            tmp_path, StubProvider([]), StubResolver(unanswered()), authorities=registry()
+        ).destination_for("France", corridor())
+
+    assert raised.value.cause == "not_supported"

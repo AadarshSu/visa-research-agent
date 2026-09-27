@@ -223,6 +223,7 @@ not — and stored text ranks, it never speaks).
 | [7](#7-discovery-is-an-offline-command-not-part-of-a-request) | Discovery is an offline command, not part of a request |
 | [13](#13-render-client-side-pages-on-demand-only-trusting-nothing-new) | Render client-side pages, on demand only |
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
+| [232](#232-every-refusal-says-which-kind-it-is) | **Every refusal says which kind it is** — the owner's item 73: seven causes in `detail.cause`, each with its own heading and next step; a failed model call no longer reads as a missing page, and a search outage is no longer a bare 500 |
 | [231](#231-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
 | [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and each plan panel under a dark numbered header; every sentence on it checked against the code |
 | [229](#229-the-form-and-landing-page-are-polished-and-say-only-what-is-true) | **The form and landing page are polished** — the owner chose polish over a redesign; the header chip stops naming an internal mode, and the intro keeps "an official government page" because a Schengen decision may be the EU's |
@@ -270,6 +271,38 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 232. Every refusal says which kind it is
+
+**2026-09-26/27 · TODO item 73, the owner:** tell the traveller the specific reason a corridor
+failed rather than "we couldn't find enough information".
+
+**What each refusal said, read from the code** (no live run of each was made here): discovery's
+three raise sites, one sentence for every unusable corridor — "no page could be confirmed as the
+visa decision" — also when the roles call had failed; a search outage with no corpus escaped as a
+bare `500`; every plan-stage fault other than missing evidence said "could not be generated safely".
+
+**Now `detail.cause` is one of seven**, each with its own heading and next step on the page:
+
+| cause | when | next step |
+| --- | --- | --- |
+| `not_supported` | not a known country, no registry row, no confirmable domain | pick another destination |
+| `not_applicable` | the passport is the destination's own | pick another |
+| `no_official_answer` | no candidates, or pages read and none stated the decision | ask the authority |
+| `pages_unreadable` | a 401/403 met while nothing readable answered, or a needed page unreadable at plan time | open the linked pages |
+| `check_failed` | a model call failed: roles (`adjudication_failed`), plan writing, Personas | retry later |
+| `search_unavailable` | search failed and no stored corpus (entry 74) | retry later |
+| `internal_error` | any other research fault | retry, or report it |
+
+**True of the cause, never of the trip.** `unusable_corridor` (`discovery/automatic.py`) reads the
+run's recorded `refusal_cause` first, as the recall log does, so a failed model call is worded as a
+check that could not run. `unreadable_pages` holds only 401/403 refusals (entries 27, 32): a
+timeout or a stale page is explained in `reasons`, never named as a page we were refused, and
+nothing is said about what a refused page contains. A streamed `error` event is shown as
+`internal_error`. Both plan routes send the identical `detail`, asserted per cause. **Does not
+change** what a plan may conclude.
 
 ---
 

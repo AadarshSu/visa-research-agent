@@ -49,7 +49,6 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 |  | 59. Guard the 272K-token price threshold | `soon` |
 |  | 58. What is left of model-call cost and research latency | `soon` |
 |  | 72. Improve the interface — form and landing page done | `soon` |
-|  | 73. Tell the traveller exactly why their corridor was refused | `soon` |
 |  | 74. Let a traveller report a corridor that did not work, with its run attached | `soon` |
 |  | 63. Make most corridors return accurate and useful information | `ongoing` |
 | **Blocked** | 67. Test ranking by embeddings of stored page text — on OpenAI credit | `blocked` |
@@ -347,41 +346,10 @@ strip, coloured pills, and a dark numbered header on each plan panel. Seen at 12
 wide, with the fixture Singapore plan; not yet with a live plan.
 
 **Left, each the owner's call:** the inside of the plan panels (only fully checkable with a real
-plan, in the owner's browser), the progress list while a plan runs, and the refusal screen, which belongs to item 73.
-What may stream before the plan is whole is item 57. The page is
+plan, in the owner's browser) and the progress list while a plan runs. The refusal screen now has
+a heading per cause (item 73, entry 232). What may stream before the plan is whole is item 57. The page is
 `templates/index.html`, `static/app.js`, `static/styles.css`; test changes in a browser, not only with
 `pytest`.
-
-### 73. Tell the traveller exactly why their corridor was refused — `soon`
-
-**Why — the owner, 2026-09-26.** Every refusal lands under the same "No verified plan / Evidence
-unavailable" heading (`renderRefusal` in `static/app.js`), and the sentence under it is whatever the
-exception said (`str(exc)` in `resolve_destination`, `api/routes.py`). A traveller cannot tell "we
-have not built this country yet" from "its government refused our reader" from "our model call
-failed — try again". They call for different actions: pick another destination, open the named page
-themselves, or retry.
-
-**What already exists.** The cause is typed — `RefusalCause` in `discovery/models.py`
-(`decision_not_found`, `no_candidates`, `adjudication_failed`, `run_raised`, and the resolved kinds),
-from `outcome_cause()` — but it reaches only the recall log and `visa-discover audit`, never the
-response. Refused pages are already named once per authority (item 54, entry 155).
-
-**Do.**
-1. **Read what each cause says today** — collect the refusal `message` for one corridor of each cause
-   before writing new text; some may already be specific.
-2. **Send the cause with the refusal** (`detail.cause`), and give each its own heading and next step
-   on the page. At least: *not built yet* (no registry row or corpus — the page no longer offers
-   these, entry 228, but a direct request or `GET /destinations` caller can still ask); *the government's pages refused us*
-   (blocked/challenged, with the links); *no official page answered the question*; *the check could
-   not run* (`adjudication_failed`, a provider out of credit — say retrying may answer); *an internal
-   fault*.
-3. **Every sentence must be true of the cause that applies** — the same bar as `withheld_domains`
-   (entry 33). "Could not be confirmed" never becomes "does not exist", and a failed model call never
-   reads as a missing page.
-
-**Absorbs** the *Smaller things* entry "a failed model call reads to the traveller as a missing
-page". **Does not change** what a plan may conclude, only how a refusal is explained — anything that
-would turn a refusal into an answer is the owner's decision (entries 206–209).
 
 ### 74. Let a traveller report a corridor that did not work, with its run attached — `soon`
 
@@ -548,6 +516,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 73. Tell the traveller exactly why their corridor was refused | 09-27 | 232 | A search outage with no corpus was a bare 500, and every plan-stage fault one sentence; messages read from the code, not collected from live runs |
 | — The full rebuild of every store | 09-25 | 193, 203, 204 | All 55 rebuilt and graded; stores hold every oracle answer. The archived-year veto was dropping filed guidance, widened |
 | 68. Read more of what a build records | 09-25 | 185–187, 189, 192, 200 | The cause was the per-host split: a scored link may now read past its share, and is scored with its surrounding text |
 | 70. Why a corridor that read its authority has no decision | 09-25 | 198–202 | The roles call was right every time it refused. Eight measured fixes took 11 of 14 to an answer; the EU tier answers Schengen decisions |

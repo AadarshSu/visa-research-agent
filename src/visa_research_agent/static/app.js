@@ -634,9 +634,56 @@ function renderReliability(plan) {
 }
 
 // Refusing is a legitimate outcome for high-stakes guidance, so it gets a real explanation
-// rather than a generic failure message.
+// rather than a generic failure message. Each cause calls for a different next step (TODO item 73),
+// and each sentence here must be true of the cause it is shown for: a failed model call is never
+// worded as a missing page, and a page we could not read is never described.
+const REFUSAL_COPY = {
+  not_supported: {
+    eyebrow: "Not covered yet",
+    title: "This destination isn't covered yet",
+    next: "Choose one of the destinations in the list. A country is added once its government's own sites have been confirmed.",
+  },
+  not_applicable: {
+    eyebrow: "Nothing to research",
+    title: "No visa to research",
+    next: "Choose a different destination, or a different passport.",
+  },
+  no_official_answer: {
+    eyebrow: "No official answer found",
+    title: "No official page answered this",
+    next: "Check with the destination's embassy or immigration authority directly.",
+  },
+  pages_unreadable: {
+    eyebrow: "Official pages unreadable",
+    title: "Official pages could not be read",
+    next: "Everything linked above is on the government's own site. We could not read it, so we say nothing about what it contains. Open it yourself.",
+  },
+  check_failed: {
+    eyebrow: "Check could not run",
+    title: "The check could not run",
+    next: "Trying again in a few minutes may answer it.",
+  },
+  search_unavailable: {
+    eyebrow: "Search unavailable",
+    title: "Official sources could not be searched",
+    next: "Try again later.",
+  },
+  internal_error: {
+    eyebrow: "Something went wrong",
+    title: "Something went wrong on our side",
+    next: "Try again later.",
+  },
+};
+
+const REFUSAL_FALLBACK = {
+  eyebrow: "Evidence unavailable",
+  title: "No verified plan",
+  next: "Rather than show guidance that may be wrong or out of date, no plan is produced. Try again later, or check the responsible authority directly.",
+};
+
 function renderRefusal(detail) {
-  const { container } = panel("No verified plan", "Evidence unavailable", "refusal");
+  const copy = REFUSAL_COPY[detail.cause] || REFUSAL_FALLBACK;
+  const { container } = panel(copy.title, copy.eyebrow, "refusal");
   container.append(
     element(
       "p",
@@ -644,6 +691,20 @@ function renderRefusal(detail) {
       detail.message || "A verified plan could not be produced from official sources.",
     ),
   );
+
+  const pages = detail.unreadable_pages || [];
+  if (pages.length) {
+    const block = element("div", "reliability-block");
+    block.append(element("h3", "", pages.length === 1 ? "The page to open yourself" : "Pages to open yourself"));
+    const list = element("ul", "refused-pages");
+    pages.forEach((url) => {
+      const item = element("li");
+      item.append(externalLink(new URL(url).hostname + new URL(url).pathname, url));
+      list.append(item);
+    });
+    block.append(list);
+    container.append(block);
+  }
 
   const reasons = detail.reasons || [];
   if (reasons.length) {
@@ -655,14 +716,7 @@ function renderRefusal(detail) {
     container.append(block);
   }
 
-  container.append(
-    element(
-      "p",
-      "disclaimer",
-      "Rather than show guidance that may be wrong or out of date, no plan is produced. "
-        + "Try again later, or check the responsible authority directly.",
-    ),
-  );
+  container.append(element("p", "disclaimer", copy.next));
   results.replaceChildren(container);
 }
 
@@ -772,17 +826,18 @@ async function generatePlan(event) {
   generateButton.disabled = true;
 
   try {
+    const request = {
+      destination: destinationSelect.value,
+      traveller: {
+        passport_nationality: nationalitySelect.value,
+        country_of_residence: residenceSelect.value,
+        travel_purpose: purposeSelect.value,
+      },
+    };
     const response = await fetch("/visa-plans/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        destination: destinationSelect.value,
-        traveller: {
-          passport_nationality: nationalitySelect.value,
-          country_of_residence: residenceSelect.value,
-          travel_purpose: purposeSelect.value,
-        },
-      }),
+      body: JSON.stringify(request),
     });
     if (!response.ok) {
       // Turned away before anything was researched: signed out, or a corridor with no answer.
@@ -801,7 +856,11 @@ async function generatePlan(event) {
         showRefusal(streamed.detail || {});
         return;
       } else if (streamed.event === "error") {
-        throw new Error(streamed.message);
+        showRefusal({
+          cause: "internal_error",
+          message: "The plan could not be generated because of a fault on our side. Nothing was concluded about this trip.",
+        });
+        return;
       }
     }
     throw new Error("The connection closed before the plan arrived. Try again.");
