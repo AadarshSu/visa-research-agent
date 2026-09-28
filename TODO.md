@@ -95,10 +95,12 @@ measured:
 - **RRF has no fitted weights**, which matters with 21 oracle corridors — entry 183's learned ranker
   learned one feature.
 
-**Build offline:** embed every stored body in `var/pagetext/`, chunked (a page scores by its best
-chunk), as Voyage `document` inputs, stored beside the text index — **ranking input, never evidence**
-(entries 78, 83). Role queries are traveller-neutral, so embed them offline too (`query` inputs); a
-nationality-specific query would need a live call and is a later question.
+**Build offline:** for the test, embed only the oracle corridors' pools, not all of `var/pagetext/`
+— `var/embed-replay-2026-09-28/`, written and checked on fake data, not yet run (its README has the
+steps). `voyage-4-large` at 1024 dimensions, 4,000-character chunks, a page scoring by its best chunk
+— **ranking input, never evidence** (entries 78, 83). Role queries are tried two ways: traveller-
+neutral, which can be embedded offline, and naming passport and residence, which would need a live
+call if it wins. Embedding the whole store waits for a result.
 
 **Measure offline** against `oracle/selection_oracle.yaml`, via `var/selection-replay-2026-09-24/`,
 at the pre-filter cut (bar: `fusion_order`'s 80.0 of 90), four arms:

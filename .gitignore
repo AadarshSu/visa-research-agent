@@ -65,3 +65,4 @@ var/item70-2026-09-24/item63-named/
 var/item70-2026-09-24/item63-round2/
 var/item70-2026-09-24/thailand/pagetext/
 var/item70-2026-09-24/veto/*.json
+var/embed-replay-2026-09-28/vectors.sqlite
