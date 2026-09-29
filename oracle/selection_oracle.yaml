@@ -36,6 +36,16 @@
 # Ten corridors, one nationality and one residence: an Indian passport, applying from Britain, for
 # tourism. Built 2026-08-27, DECISIONS entry 87.
 
+# Hosts that publish one site under the same paths, so a pick at one is the page the row names at
+# another. A grading fact only; checked, never inferred (entry 236).
+mirrors:
+  - hosts: [travel.state.gov, adoption.state.gov, adoptions.state.gov]
+    path_prefix: /content/travel/
+    why: >-
+      travel.state.gov stores no text; at all 23 /content/travel/ paths where adoption.state.gov
+      and adoptions.state.gov both hold stored text on 2026-09-29, the two are identical, and the
+      rows below already read travel.state.gov through adoption.state.gov (`seen: mirror`)
+
 corridors:
   - corridor: united-arab-emirates/IN/GB/tourism
     contention: 417

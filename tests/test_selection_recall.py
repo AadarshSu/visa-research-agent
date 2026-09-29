@@ -18,6 +18,7 @@ from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corr
 from visa_research_agent.discovery.selection_recall import (
     DEFAULT_ORACLE_PATH,
     Arm,
+    MirrorHosts,
     OracleError,
     arms_from_logs,
     candidates_of,
@@ -246,6 +247,38 @@ def test_a_language_switch_naming_the_page_is_that_page_and_empty_text_proves_no
     assert groups[switch] == {switch, page}
     assert groups[page] == {switch, page}
     assert groups[blank_a] == {blank_a}
+
+
+def test_a_declared_mirror_host_is_the_same_page_even_with_no_stored_text() -> None:
+    """Entry 236: the oracle names the US Visa Waiver page at `adoption.state.gov`, because
+    `travel.state.gov` stores nothing; both arms picked the `travel.state.gov` original every time
+    and were credited two runs of five and one. Only the declared hosts, under the declared path.
+    """
+
+    mirrors = [
+        MirrorHosts(
+            hosts=["travel.state.gov", "adoption.state.gov"],
+            path_prefix="/content/travel/",
+            why="byte-identical where both are stored",
+        )
+    ]
+    original = "https://travel.state.gov/content/travel/en/us-visas/tourism-visit/vwp.html"
+    copy = "https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/vwp.html"
+    outside = "https://adoption.state.gov/adoption-process.html"
+    undeclared = "https://j1visa.state.gov/content/travel/en/us-visas/tourism-visit/vwp.html"
+
+    groups = same_pages([original, copy, outside, undeclared], {copy: "VWP text"}, mirrors)
+
+    assert groups[original] == {original, copy}
+    assert groups[outside] == {outside}, "outside the declared path"
+    assert groups[undeclared] == {undeclared}, "sharing a path does not make a host a mirror"
+    assert same_pages([original, copy], {copy: "VWP text"})[original] == {original}
+
+
+def test_the_committed_oracle_declares_the_state_department_mirrors() -> None:
+    oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
+
+    assert any("travel.state.gov" in group.hosts for group in oracle.mirrors)
 
 
 def test_naming_a_tool_is_counted_apart_from_answering_the_role(tmp_path: Path) -> None:

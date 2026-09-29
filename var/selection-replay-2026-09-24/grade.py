@@ -8,15 +8,16 @@ import statistics
 import sys
 from collections import defaultdict
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
 
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import ROLE_ORDER
 from visa_research_agent.discovery.page_text import PageTextStore
-from visa_research_agent.discovery.selection_recall import load_oracle
+from visa_research_agent.discovery.selection_recall import load_oracle, same_pages
 
 ROOT = Path("/Users/aadarsh/Documents/Visa Research Agent")
-oracle = {row.corridor: row for row in load_oracle(ROOT / "oracle/selection_oracle.yaml").corridors}
+ORACLE = load_oracle(ROOT / "oracle/selection_oracle.yaml")
+oracle = {row.corridor: row for row in ORACLE.corridors}
+MIRRORS = ORACLE.mirrors
 
 
 def key_of(name):
@@ -45,31 +46,17 @@ def text_of(arm, name, urls):
     return {u: cache[u] for u in urls}
 
 
-def redirect_target(url):
-    parts = urlsplit(url)
-    if "update_language" not in parts.path:
-        return None
-    target = parse_qs(parts.query).get("redirect", [None])[0]
-    return f"{parts.scheme}://{parts.netloc}{target}" if target else None
-
-
 def credited(arm, name, picked, answers):
-    """Picks that are an answering page: the address itself, or (with --alias) the same stored
-    text at another address, or a language switch redirecting to it."""
+    """Picks that are an answering page: the address itself, or (with --alias) the page at another
+    address as `selection-recall` decides it — identical stored text, a language switch naming it,
+    or a host the oracle declares a mirror (entry 236)."""
     if picked & answers:
         return True
     if not ALIAS:
         return False
-    for u in picked:
-        t = redirect_target(u)
-        if t and (
-            t in answers
-            or t.replace("://www.", "://") in {a.replace("://www.", "://") for a in answers}
-        ):
-            return True
-    texts = text_of(arm, name, list(picked | answers))
-    answer_texts = {texts[a] for a in answers if texts.get(a)}
-    return any(texts.get(u) in answer_texts for u in picked if texts.get(u))
+    texts = {u: t for u, t in text_of(arm, name, list(picked | answers)).items() if t}
+    groups = same_pages(picked | answers, texts, MIRRORS)
+    return any(groups[u] & answers for u in picked)
 
 
 rows = [json.loads(line) for f in sys.argv[1:] if f.endswith(".jsonl") for line in open(f)]

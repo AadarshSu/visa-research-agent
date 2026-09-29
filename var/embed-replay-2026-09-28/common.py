@@ -13,12 +13,12 @@ import re
 import sqlite3
 from array import array
 from pathlib import Path
-from urllib.parse import parse_qs, urlsplit
 
 from visa_research_agent.discovery.lexicon import get_country_registry
 from visa_research_agent.discovery.models import ROLE_ORDER, CandidatePage, Corridor, RoleScores
 from visa_research_agent.discovery.page_text import PageTextStore
 from visa_research_agent.discovery.selection import FUSION_RANK_CONSTANT, admitted_on_text
+from visa_research_agent.discovery.selection_recall import load_oracle, same_pages
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -26,6 +26,7 @@ CAPTURES = ROOT / "var/selection-replay-2026-09-24/cap/new"
 PAGETEXT = ROOT / "var/pagetext"
 ORACLE = ROOT / "oracle/selection_oracle.yaml"
 VECTORS = HERE / "vectors.sqlite"
+MIRRORS = load_oracle(ORACLE).mirrors
 
 MODEL = "voyage-4-large"
 DIMENSION = 1024
@@ -233,27 +234,18 @@ def shown(cap, order, top: int | None = None) -> list[CandidatePage]:
     return chosen + [c for c in order[top:] if c.link.url in blind_urls]
 
 
-# --- crediting an answer, as grade.py --alias does ----------------------------------------------
-
-
-def redirect_target(url):
-    parts = urlsplit(url)
-    if "update_language" not in parts.path:
-        return None
-    target = parse_qs(parts.query).get("redirect", [None])[0]
-    return f"{parts.scheme}://{parts.netloc}{target}" if target else None
+# --- crediting an answer, as `selection-recall` does ---------------------------------------------
 
 
 def credited(texts: dict[str, str | None], picked: set[str], answers: set[str]) -> bool:
+    """A pick is an answering page at its own address or another: identical stored text, a
+    language switch naming it, or a host the oracle declares a mirror (`same_pages`)."""
+
     if picked & answers:
         return True
-    bare = {a.replace("://www.", "://") for a in answers}
-    for url in picked:
-        target = redirect_target(url)
-        if target and (target in answers or target.replace("://www.", "://") in bare):
-            return True
-    answer_texts = {texts[a] for a in answers if texts.get(a)}
-    return any(texts.get(u) in answer_texts for u in picked if texts.get(u))
+    stored = {u: t for u, t in texts.items() if t}
+    groups = same_pages(picked | answers, stored, MIRRORS)
+    return any(groups[u] & answers for u in picked)
 
 
 _ENGLISH = re.compile(r"\b(the|and|of|to|for|you|your|is|are|visa|must|with)\b", re.IGNORECASE)

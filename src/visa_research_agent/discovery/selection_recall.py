@@ -138,8 +138,24 @@ class CorridorOracle(StrictModel):
         return {page.url for page in self.answers.get(role, [])}
 
 
+class MirrorHosts(StrictModel):
+    """Hosts that publish one site under the same paths — a grading fact, never a trust one.
+
+    The United States serves its whole `/content/travel/` tree at `travel.state.gov`, which stores
+    nothing, and byte-identically at `adoption.state.gov` and `adoptions.state.gov`, so the oracle
+    names the copy it could read and a selector that picked the original scored a miss (entry 236).
+    Declared, with its evidence, rather than inferred: two hosts sharing paths are not thereby one
+    site. Nothing here decides what is read, trusted or told.
+    """
+
+    hosts: list[str] = Field(min_length=2)
+    path_prefix: str = "/"
+    why: str = Field(min_length=1)
+
+
 class SelectionOracle(StrictModel):
     corridors: list[CorridorOracle] = Field(min_length=1)
+    mirrors: list[MirrorHosts] = Field(default_factory=list)
 
     def for_corridor(self, key: str) -> CorridorOracle | None:
         return next((c for c in self.corridors if c.corridor == key), None)
@@ -361,15 +377,19 @@ def role_reach(corridor: CorridorOracle, role: str, contention: Contention | Non
     return "absent"
 
 
-def same_pages(urls: Iterable[str], texts: Mapping[str, str]) -> dict[str, frozenset[str]]:
+def same_pages(
+    urls: Iterable[str], texts: Mapping[str, str], mirrors: Sequence[MirrorHosts] = ()
+) -> dict[str, frozenset[str]]:
     """For each address, every address among `urls` that is the same page, itself included.
 
-    Two tests, both about the page and neither about how it reads:
+    Three tests, all about the page and none about how it reads:
     - **byte-identical stored text** — the oracle's own `mirror` rule, and what `www.` against a
       bare host, a renamed GOV.UK guidance page and a retired IRCC address all turned out to be;
     - **a link on the same host whose `redirect` parameter names the page** — France's portal
       records `…/c/portal/update_language?…&redirect=/en/votre-arrivee-en-france` for its entry
-      page, with slightly different stored text, and the model picked that address every time.
+      page, with slightly different stored text, and the model picked that address every time;
+    - **the same path on hosts the oracle declares mirrors** (`MirrorHosts`) — the one test that
+      needs no stored text, which is why it has to be declared: `travel.state.gov` stores none.
 
     The oracle names one address per page, so without this a selector that picked the right page
     under its second address scored a miss — measured in entry 194 as about five roles of 90, in
@@ -391,12 +411,31 @@ def same_pages(urls: Iterable[str], texts: Mapping[str, str]) -> dict[str, froze
         if other is not None and other != url:
             groups[url].add(other)
             groups[other].add(url)
+    by_mirror: dict[str, set[str]] = {}
+    for url in listed:
+        key = _mirror_address(url, mirrors)
+        if key is not None:
+            by_mirror.setdefault(key, set()).add(url)
+    for same in by_mirror.values():
+        for url in same:
+            groups[url] |= same
     return {url: frozenset(group) for url, group in groups.items()}
 
 
 def _address(url: str) -> str:
     parts = urlsplit(url)
     return f"{parts.netloc.removeprefix('www.')}{parts.path.rstrip('/')}"
+
+
+def _mirror_address(url: str, mirrors: Sequence[MirrorHosts]) -> str | None:
+    """One address for every mirror of `url`, or `None` where no declared group covers it."""
+
+    parts = urlsplit(url)
+    host = parts.netloc.lower().removeprefix("www.")
+    for index, group in enumerate(mirrors):
+        if host in group.hosts and parts.path.startswith(group.path_prefix):
+            return f"mirror{index}{parts.path.rstrip('/')}"
+    return None
 
 
 def _redirect_target(url: str) -> str | None:

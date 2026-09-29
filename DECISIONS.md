@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [237](#237-the-oracle-declares-the-state-departments-mirror-hosts-and-grading-credits-them) | **The oracle declares mirror hosts, and grading credits them** — `travel.state.gov` picks now count for the `adoption.state.gov` pages the oracle names; item 67's stage 2 re-grades to 85.0 against 77.6, and today's arm to 28 of 28 core roles |
 | [236](#236-embeddings-earn-no-place-in-ranking-and-item-67-closes) | **Measured: embeddings earn no place in ranking; item 67 closes** — at 120 + 40 blind today's order keeps 91 of 92 oracle roles and every embedding arm 88–90; the selector on link + embeddings at 40 + 40 graded 7.6 roles a run lower, half of it pages the oracle does not list, to save 0.6s. Found: the oracle predates the rebuild, and a mirror address is not credited |
 | [235](#235-item-67-becomes-a-hybrid-test-run-on-voyages-free-tokens) | **Item 67 becomes a hybrid test, on Voyage's free tokens** — embeddings as a third input to `fusion_order`'s rank fusion, graded in four arms against the pre-filter bar; Voyage 4 chosen for the test, not adopted; nothing measured |
 | [187](#187-scoring-links-with-their-context-would-recover-2-of-83-answer-pages-japans-remaining-gap-is-a-refusal) | **Link context would recover 2 of 83 answer pages** — 48 already score, 32 are search seeds; Japan's 7 remaining misses are Edinburgh's consulate answering `403` to everything; problem 2 is a later refinement, rebuild with entry 186 first |
@@ -275,6 +276,33 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 237. The oracle declares the State Department's mirror hosts, and grading credits them
+
+**2026-09-29 · the owner, after entry 236 found it: "fix the mirror addresses issue".** Grading only;
+nothing about what is read, trusted or told changes.
+
+**The defect.** `travel.state.gov` stores no text, so the oracle names the United States' pages at
+`adoption.state.gov`, which serves the same `/content/travel/` tree. The `IN/GB` rows listed both
+addresses by hand; the `PH/PH` rows only the copy. `same_pages` credits identical stored text and a
+language switch naming the page — both need text on the picked address — so a selector that picked
+the original scored a miss: in item 67's stage 2, the Visa Waiver page was picked in all ten runs and
+credited in three.
+
+**The fix is declared, not inferred.** `selection_oracle.yaml` gains a top-level `mirrors:` list —
+hosts, a path prefix and the evidence — and `same_pages` treats the same path on hosts in one group
+as one page. The only group is `travel.`, `adoption.` and `adoptions.state.gov` under
+`/content/travel/`: at all 23 such paths where two hosts hold stored text (2026-09-29), the texts are
+byte-identical. Inferring mirrors from shared paths was rejected: `j1visa.state.gov` shares paths and
+is a different site. `visa-discover selection-recall` passes the oracle's mirrors, and the two
+replay graders (`selection-replay-2026-09-24/grade.py`, `embed-replay-2026-09-28/common.py`) now call
+`same_pages` instead of keeping their own copies of the rule, so the three cannot drift.
+
+**What it moves.** Stage 2 of item 67 re-grades from 84.4 and 76.8 to **85.0 and 77.6** roles a run;
+today's 120 + 40 now finds every decision and checklist, 28 of 28. Stage 1's cut counts do not move.
+Known problem 41's other half — the oracle predates the rebuild — is untouched.
 
 ---
 

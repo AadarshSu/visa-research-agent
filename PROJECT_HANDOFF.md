@@ -260,12 +260,11 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 36. **A correct "no visa required" can read as a thin corridor** in any metric that counts unanswered
     roles. The oracle records `not_applicable` only where a page answers `visa_decision` (entry 94).
 
-41. **The selection oracle predates the rebuild and misses mirror addresses (entry 236).** Curated
-    2026-08-27 to 09-04, it credits only pages it names, so a selector picking a page the 09-25
-    rebuild added scores a miss even when the page states the answer — half of item 67's measured
-    loss. And `--alias` does not credit a page picked at an address with no stored text, such as
-    `travel.state.gov` for the `adoption.state.gov` mirror the oracle names. Every selection grade
-    reads low by an unknown amount; compare arms run side by side, never a number on file.
+41. **The selection oracle predates the rebuild (entry 236).** Curated 2026-08-27 to 09-04, it
+    credits only pages it names, so a selector picking a page the 09-25 rebuild added scores a miss
+    even when the page states the answer — half of item 67's measured loss. Every selection grade
+    reads low by an unknown amount; compare arms run side by side, never a number on file. Its other
+    half, mirror addresses, is fixed: the oracle declares mirror hosts (entry 237).
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (entry 58), **3** (entries 34,
 38), **4** (entries 56, 57), **7** (entry 152), **18** (entry 42), **21** and **22** (entry 157),

@@ -947,7 +947,7 @@ def same_page_for(
         urls |= {url for role in row.answers for url in row.answering_urls(role)}
         country = countries.by_slug(row.slug)
         texts = page_text.text_for_selection(country.code, urls) if country is not None else {}
-        found[row.corridor] = same_pages(urls, texts)
+        found[row.corridor] = same_pages(urls, texts, oracle.mirrors)
     return found
 
 
