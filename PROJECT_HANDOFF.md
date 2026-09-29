@@ -68,7 +68,9 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 - **OpenAI has been out of credit since 2026-09-16.** Nothing waits on it — model calls go through
   Personas (entry 188) — except `model_route: openai`. Item 67 (embeddings) moved to Voyage's free
   tokens (entry 235) and **closed on 2026-09-29 without adopting anything** (entry 236): no gain at
-  the shipped cut, and a smaller embedding-ranked packet is roughly level for 0.6s saved. The
+  the shipped cut, a smaller embedding-ranked packet is roughly level for 0.6s saved, and
+  embedding-chosen excerpts tie (entry 238) — in both, mostly correct pages the oracle does not
+  list (known problem 41). The
   Voyage account has a card on it now, for the rate limit; the free tokens still cover it.
 
 ## Where things are
@@ -260,7 +262,7 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 36. **A correct "no visa required" can read as a thin corridor** in any metric that counts unanswered
     roles. The oracle records `not_applicable` only where a page answers `visa_decision` (entry 94).
 
-41. **The selection oracle predates the rebuild (entry 236).** Curated 2026-08-27 to 09-04, it
+41. **The selection oracle predates the rebuild (entries 236, 238).** Curated 2026-08-27 to 09-04, it
     credits only pages it names, so a selector picking a page the 09-25 rebuild added scores a miss
     even when the page states the answer — half of item 67's measured loss. Every selection grade
     reads low by an unknown amount; compare arms run side by side, never a number on file. Its other

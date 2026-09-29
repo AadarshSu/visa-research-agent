@@ -1,0 +1,156 @@
+
+=== canada_PH_PH fees: embeddings 4/5, today 5/5
+  oracle https://ircc.canada.ca/english/information/fees/fees.asp
+     why: the immigration application fee schedule, which carries the visitor visa fee
+  emb 5/5 https://ircc.canada.ca/english/information/applications/visa.asp
+     «le for security, health or financial reasons. Find out more about inadmissibility . Individual applicant: CAD $85 Families applying at the same time : maximum total fee of CAD $170 Groups of 3 or more performing artists and their staff who ap»
+  emb 5/5 https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+     «Total fees Type of fee | Amount | Who needs to pay this fee Visitor visa processing fee | Amount: Individual: $100 Family (5 or more people): $500 | Who needs to pay this fee: All applicants Biometrics fee | Amount: Individual: $85 Family: up»
+  emb 5/5 https://www.cbsa-asfc.gc.ca/travel-voyage/ivc-rnc-eng.html
+     «Declaration to submit your customs and immigration declaration before flying into Canada. Travelling with CAN$10,000 or more? Declare it Border officers can seize currency, cheques, or other monetary instruments at the border if you do not d»
+
+=== germany_IN_GB application_route: embeddings 4/5, today 5/5
+  oracle https://www.auswaertiges-amt.de/en/visa-service/-/215870
+     why: "responsibility ... lies with the mission responsible for the area in which you have your ordinary residence", plus the Consular Services Portal and the appointment step
+  oracle https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+     why: the same page at a second address — byte-identical stored text, 17,678 characters
+  emb 5/5 https://uk.diplo.de/uk-en/02/2442868-2442868
+     «ebit voucher. Digital wallet or mobile payments including Apple Pay or Google Pay are not available. The Visa Application Centres (VAC) operated by our external service provider TLScontact charge additional service fees . For details and payment facilities p»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa/where-can-i-apply-for-my-visa-2448180
+     «Edinburgh with two distinct jurisdictions and your place of residence determines which German Mission or Visa Application Centre you will need to contact to apply for a visa. The German Embassy in London and the visa application centres in London and Manches»
+  emb 5/5 https://uk.diplo.de/uk-en/02/appointment-waiting-ists-2771686
+     «appointment booking agencies, the Embassy will establish a waiting list through its external service provider TLS Contact in London and Manchester from 01.06.2026 onwards so as to ensure fair and equal access to appointments for everyone. Appo»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164?openAccordionId=item-2655292-6-panel
+     «rom the waiting list/ Book an appointment to apply for your visa. All C visas must be applied for with a Visa Application Centre run by our external service provider TLScontact . Important Notice: In order to avoid actions of fraudulent booking agencies and»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa/do-i-need-a-visa-2442126
+     «ithin a 180-day period. Schengen visas (type C) can only be applied for through our external service provider TLScontact. Article Long-stay national visas (D visas)/ residence permits for more than 90 days A national visa (D visa) can be used»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa-faq-2442852
+     «rmit/ valid Share Code/ UKVI account (BRP) or a UK short-term study visa. If you are not a UK resident please apply through the German Mission in your country of residence or its Visa Application Centres. Likewise, non-resident British citizens need to»
+
+=== germany_IN_GB fees: embeddings 4/5, today 5/5
+  oracle https://www.auswaertiges-amt.de/en/visa-service/-/215870
+     why: "The processing fee for a Schengen visa is normally EUR 90"
+  oracle https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+     why: the same page at a second address
+  emb 5/5 https://uk.diplo.de/uk-en/02/2442868-2442868
+     «What are the visa fees? How can I pay my fee? Can you reimburse my fee if my visa is not issued? - Federal Foreign Office Welcome What are the visa fee»
+  emb 5/5 https://uk.diplo.de/uk-en/02/appointment-waiting-ists-2771686
+     «gal processing timeframe only starts after filing the application, once biometrics have been provided and the visa fee has been paid. The Embassy additionally might have queries regarding your application and ask you directly for further informatio»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164?openAccordionId=item-2655292-6-panel
+     «such as the list of persons taking part in the tour. A travel health insurance policy with cover of at least €30,000 and valid for all Schengen member states. Proof of address in UK (i.e. latest council tax bill, utility bill, bank statement»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa-faq-2442852
+     «s available both at the Embassy and at the TLScontact Visa Application Centre (VAC) (set of four pictures for £10). As a rule, passports and travel documents issued by countries outside the EU , the EEA and EFTA are only recognised as valid f»
+
+=== germany_IN_GB processing_times: embeddings 4/5, today 5/5
+  oracle https://www.auswaertiges-amt.de/en/visa-service/-/215870
+     why: "missions require up to 15 calendar days to reach a decision on a correct application"
+  oracle https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+     why: the same page at a second address
+  emb 5/5 https://uk.diplo.de/uk-en/02/appointment-waiting-ists-2771686
+     «service provider, TLS Contact. Once an appointment has been allocated, you have to pay the service fee within 24 hours. If you do not pay the fee within 24 hours, your appointment will be cancelled and you will have to re-join the waiting list. The»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164?openAccordionId=item-2655292-6-panel
+     «employed freelancers including artists: Contract concluded with German client or employer. Additional note on processing time: In case we require approval by the Federal Employment Agency and/or the local immigration office in Germany processing will exce»
+  emb 5/5 https://uk.diplo.de/uk-en/02/visa-faq-2442852
+     «icipate will be required for processing your application. A and C visa applications will usually be processed within 15 working days from the date the application is received by the Embassy or the Consulate General. A further 2-3 working days should be allowed f»
+
+=== germany_PH_PH application_route: embeddings 3/5, today 5/5
+  oracle https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+     why: "The Embassies and Consulates General (missions abroad) of the Federal Republic of Germany are responsible for issuing visas. Ratione loci competence... lies with the mission responsible for the area in which you have yo
+  emb 5/5 https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+     «l take approx. 15 calendar days from the day of application. Your application must be submitted personally at VFS Global in Manila or Cebu . Once you have obtained all necessary documents, please register for an appointment here . Incomplete a»
+  emb 5/5 https://manila.diplo.de/ph-en/service/visa/2735728-2735728
+     «nal documents. Visa appointments for short-term stays in Germany are offered by our external service provider VFS. Visa appointments for long-term stays in Germany (for example for family reunification, study and language course) are offered b»
+
+=== germany_PH_PH fees: embeddings 3/5, today 5/5
+  oracle https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+     why: "The processing fee for a Schengen visa is normally EUR 90 and for a national visa (for longer stays) EUR 75", with the waiver categories listed under it
+  emb 5/5 https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+     «iometrical passport photos, with one glued to the application form. The second photo will be returned to you. Visa fee EUR 90.00, payable in PHP (EUR 45.00 for applicants from 6-11 years; no fees for applicants under 6 years and for spouses or mino»
+
+=== germany_PH_PH processing_times: embeddings 3/5, today 5/5
+  oracle https://www.auswaertiges-amt.de/en/visa-service/215870-215870
+     why: "As a rule, missions require up to 15 calendar days to reach a decision on a correct application for a Schengen visa"
+  emb 5/5 https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+     «ns will be decided by the Embassy on the basis of the documents that were submitted, and may be rejected. The processing time of your visa application will be shorter if your documents are complete upon submission of the application. Please include one se»
+
+=== japan_IN_GB fees: both 0/5
+
+=== japan_IN_GB processing_times: embeddings 0/5, today 5/5
+  oracle https://www.mofa.go.jp/j_info/visit/visa/procedure/day.html
+     why: "5 working days from the day following the date of receipt of the application"
+  oracle https://www.edinburgh.uk.emb-japan.go.jp/files/100603564.pdf
+     why: "Visa processing normally takes at least 5 working days"
+  emb 5/5 https://www.evisa.mofa.go.jp/index
+     «issuance notice" (for a proxy) (PDF) [Applications by Minors] [Facial photo] [Period for visa Issuance] ▶Visa Processing Time (Website of Ministry of Foreign Affairs of Japan) Check your necessary documents Frequently asked questions ▲Back to top of page»
+  emb 5/5 https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+     «tted (aside from your passport), even once the application has been processed. Note 5: In principle, the visa processing time is 5 working days from the day that the Embassy accepted documents as a valid visa application. Note 6: Personal information on c»
+  emb 5/5 https://www.evisa.mofa.go.jp/faq
+     «f residence. ▲Back to top of page Q8 : How long does it take to process my eVISA application? A8: It normally takes 5 working days for Japanese overseas establishment to examine and issue a visa after receipt of a complete application. Meanwhile, it may take l»
+
+=== japan_IN_GB general_entry: both 0/5
+
+=== japan_PH_PH document_checklist: both 4/5
+
+=== netherlands_IN_GB general_entry: embeddings 1/5, today 3/5
+  oracle https://www.government.nl/site/binaries/site-content/collections/documents/2025/09/15/leaflets-entry-exit-system/ees-leaflet-a5-en-digital.pdf
+     why: the Dutch government's Entry/Exit System leaflet, which states what happens at the border for "non-EU nationals travelling to the European countries using the EES for a short stay (up to 90 days within a 180-day period),
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/visa-required
+     «ravel plans. Disclaimer The result you get is not legally binding. You cannot refer to it as a legal basis at border control or in order to be granted access to your flight. The result only applies to travel to the Netherlands. If you will travel to or t»
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/entering-without-visa
+     «nçais Are you visiting the Netherlands for 90 days or less? Answer up to 10 questions to check the travel and entry requirements for your trip. If you live in the Netherlands and are returning from abroad, check which documents you need to re-enter. Error: J»
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-united-kingdom
+     «nt when you can collect it. You can also have someone else collect your passport for you. If you collect your passport yourself, bring the following with you: a valid form of ID the proof of payment provided by VFS Global If someone else collects your passport for you, they must bring the following»
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom
+     «ow that you are legally residing in the country where you submit your visa application using, for instance: a passport or other travel document a British residence permit, valid for at least 1 months after you leave the Schengen area a printout of your eVisa showing your immigration status, issued by UKVI. Also bring the letter»
+
+=== netherlands_PH_PH general_entry: both 0/5
+
+=== united-kingdom_IN_GB general_entry: embeddings 1/5, today 0/5
+  oracle https://www.gov.uk/apply-to-come-to-the-uk/travelling-to-the-uk
+     why: "You must not travel to the UK before your visa application is approved", and the eVisa and vignette checks before travelling
+  oracle https://www.gov.uk/evisa/travel-with-evisa
+     why: what to carry and show at the border with an eVisa
+  today 5/5 https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+     «eatedly living in the UK for extended periods. Documents and information you’ll need to apply You must have a passport or travel document that is valid for the whole of your stay in the UK. You’ll need to provide the following information in your online application: the dates you’re p»
+  today 5/5 https://www.gov.uk/uk-border-control/at-border-control
+     «Entering the UK: At border control - GOV.UK Cookies on GOV.UK We use some essential cookies to make this website work. We’d like to set additional cookies to unders»
+  today 5/5 https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+     «application because you’re waiting for a decision on your EU Settlement Scheme application You may be delayed at the border if your passport or national identity card is not linked to your UK Visas and Immigration account . If you’re unable to link your»
+  today 5/5 https://www.gov.uk/government/publications/uk-visa-requirements-list-for-carriers/uk-visa-requirements-for-international-carriers
+     «d US Immigrant visa endorsed with a US arrival stamp (a wet-ink/ADIT stamp version will not be accepted by UK border control); or an expired I-551 Permanent Residence card provided it is accompanied by a valid I-797 letter authorising extension; or a sta»
+  today 5/5 https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents/guide-to-supporting-documents-visiting-the-uk
+     «esenting any of the documents listed below does not guarantee that your application for a visit visa or entry at the border will be successful. You should bear this in mind when making any bookings, particularly if you need to apply for a visitor visa b»
+
+=== united-kingdom_PH_PH fees: embeddings 0/5, today 1/5
+  oracle https://www.gov.uk/visa-fees
+     why: the published fee schedule for every visa type, which is keyed on the visa rather than on the passport and so answers this traveller as it does any other
+  emb 5/5 https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+     «the UK for up to 6 months without needing a visa or an ETA You can check if you need a visa before you apply. Visa fees You can apply for a Standard Visitor visa, or if you visit the UK regularly you can choose to apply for a long-term Standard Vis»
+  emb 5/5 https://www.gov.uk/standard-visitor-visa
+     «You must apply for a Standard Visitor visa online before you travel to the UK. A Standard Visitor visa costs £135 for up to 6 months. The earliest you can apply is 3 months before you travel. If you visit the UK regularly, you can choose to»
+  emb 4/5 https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+     «P or BRC . If you cannot update your UKVI account, you can ask UKVI to update your account for you – it costs £154. You may need to submit your fingerprints and photo (biometric information) at a visa application centre. If you’ve been out of»
+  emb 4/5 https://www.gov.uk/uk-border-control
+     «hing over your duty-free allowance banned or restricted goods in the UK goods that you plan to sell more than €10,000 (or its equivalent) in cash, if you’re coming from outside the EU You and your baggage may be checked for anything you must»
+
+=== united-kingdom_PH_PH general_entry: both 0/5
+
+=== united-states_IN_GB general_entry: both 0/5
+
+=== united-states_PH_PH visa_decision: embeddings 4/5, today 5/5
+  oracle https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html
+     why: "You must be a citizen or national of the following countries to be eligible to travel to the United States under the VWP" over the designated list, which does not include the Philippines — so a Filipino needs a visitor 
+  emb 5/5 https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+     «r Visa Share this page: A B C D E F G H I J K L M N O P Q R S T U V W X Y Z All Filter Countries Visitor Visa Visa Waiver Program Travel Without a Visa Citizens of Canada and Bermuda Visitor Visa Overview Generally, a citizen of a foreign country who»
+  emb 5/5 https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html
+     «An applicant travelling to provide charitable services as determined by Visa Services: No Fee Other - When a Visa is Not Required - Visa Waiver Program Citizens of Visa Waiver Program participating countries, and meeting requirements pay a small fee. Select U»
+  emb 5/5 https://i94.cbp.dhs.gov/
+     «but is not an official record for legal purposes. This tool is only able to be utilized by certain classes of Visa Waiver Program admissions and is not applicable to crew members with an I-95 landing permit. HELPFUL SITES: CBP Info Center's FAQ about»
+  emb 4/5 https://usa.gov/enter-us
+     «need a visitor visa, also known as a tourist visa. Learn how to get and renew this type of nonimmigrant visa. Visa Waiver Program and ESTA application The Visa Waiver Program allows citizens of participating countries to travel to the U.S. for tourism»
+  emb 4/5 https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-reciprocity-tables.html
+     «d when the visa is issued. More Information A-Z Index Latest News What is a U.S. Visa? Diversity Visa Program Visa Waiver Program Fraud Warning Find a U.S. Embassy or Consulate In the United States: Visit the USA FAQs: About Visas - The Basics IV Sche»
+  emb 4/5 https://www.dhs.gov/visa-waiver-program
+     «Visa Waiver Program | Homeland Security Skip to main content Official websites use .gov A .gov website belongs to an official government orga»
+  emb 3/5 https://www.usa.gov/tourist-visa
+     «isa, also known as a tourist visa. Learn how to get and renew this type of nonimmigrant visa. Find out if you need a visa to visit the U.S. Check if your country participates in the U.S. Visa Waiver Program (VWP). If you qualify for a waiver, you will»

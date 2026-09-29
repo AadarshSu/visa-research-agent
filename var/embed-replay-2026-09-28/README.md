@@ -29,3 +29,7 @@ Under ~3 roles of difference is no result (item 67).
 top N instead of 120, plus the 40 blind.
 Voyage needs a payment method on the account for a usable rate limit; the free tokens still apply,
 but not to its Batch API.
+
+**Excerpt experiment (entry 238):** `excerpt_replay.py embed`, then `excerpt_replay.py excerpt.jsonl
+--variants excerpt_today,excerpt_embed --runs 5 --concurrency 1`; graded in `excerpt_grade.log`, read in
+`excerpt_substitutes.log` (`substitutes.py excerpt.jsonl excerpt_embed excerpt_today`).

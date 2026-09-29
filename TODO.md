@@ -461,7 +461,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
-| 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235, 236 | No place in ranking: at today's cut the order already keeps 91 of 92 answers; a 40 + 40 embedding cut is roughly level once pages the oracle does not list are credited, for 0.6s. The oracle predates the rebuild (known problem 41); its mirror-address gap is fixed (entry 237). Other-language pages stay untested |
+| 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235, 236, 238 | No place in ranking: at today's cut the order already keeps 91 of 92 answers; a 40 + 40 embedding cut is roughly level once pages the oracle does not list are credited, for 0.6s. The oracle predates the rebuild (known problem 41); its mirror-address gap is fixed (entry 237). Embedding-chosen excerpts tie (entry 238). Both tests were limited by the oracle more than by the ceiling |
 | 74. Let a traveller report a corridor that did not work | 09-27 | 233 | A copied log can predate what the traveller saw: a stored corridor writes none. Nothing notifies the owner of a new report |
 | 73. Tell the traveller exactly why their corridor was refused | 09-27 | 232 | A search outage with no corpus was a bare 500, and every plan-stage fault one sentence; messages read from the code, not collected from live runs |
 | — The full rebuild of every store | 09-25 | 193, 203, 204 | All 55 rebuilt and graded; stores hold every oracle answer. The archived-year veto was dropping filed guidance, widened |

@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [238](#238-embedding-chosen-excerpts-tie-with-todays-and-the-oracle-cannot-see-the-difference) | **Measured: embedding-chosen excerpts tie with today's; the oracle cannot see the difference** — graded 81.0 against 84.6, but 16 of the 19 lost role-runs picked a page stating the answer the oracle does not list, often the traveller's own embassy; corrected, 0.4 a run. Both item 67 tests were limited more by the oracle than by the ceiling |
 | [237](#237-the-oracle-declares-the-state-departments-mirror-hosts-and-grading-credits-them) | **The oracle declares mirror hosts, and grading credits them** — `travel.state.gov` picks now count for the `adoption.state.gov` pages the oracle names; item 67's stage 2 re-grades to 85.0 against 77.6, and today's arm to 28 of 28 core roles |
 | [236](#236-embeddings-earn-no-place-in-ranking-and-item-67-closes) | **Measured: embeddings earn no place in ranking; item 67 closes** — at 120 + 40 blind today's order keeps 91 of 92 oracle roles and every embedding arm 88–90; the selector on link + embeddings at 40 + 40 graded 7.6 roles a run lower, half of it pages the oracle does not list, to save 0.6s. Found: the oracle predates the rebuild, and a mirror address is not credited |
 | [235](#235-item-67-becomes-a-hybrid-test-run-on-voyages-free-tokens) | **Item 67 becomes a hybrid test, on Voyage's free tokens** — embeddings as a third input to `fusion_order`'s rank fusion, graded in four arms against the pre-filter bar; Voyage 4 chosen for the test, not adopted; nothing measured |
@@ -276,6 +277,59 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 238. Embedding-chosen excerpts tie with today's, and the oracle cannot see the difference
+
+**2026-09-29 · the owner:** run the excerpt experiment from entry 236's follow-ups, and "are we
+judging the improvement on the wrong set because this set is already accurate?" Nothing in `src/`
+changed; `var/embed-replay-2026-09-28/excerpt_replay.py`, its logs and `excerpt.jsonl`.
+
+**The test.** Both arms show the selector the shipped 120 + 40 candidates, built as production
+builds them, including item 70's windows around the traveller's own country (which the 2026-09-24
+replay predates). They differ only for a page longer than its 2,000-character excerpt that does not
+name the traveller past its head — 46 to 101 pages a corridor, none in UK `IN/GB`, where every GOV.UK
+page names the residence, so that corridor is a control. `excerpt_today` shows such a page's first
+2,000 characters; `excerpt_embed` its first 1,000 and the 1,000-character window (500 stride) closest
+to any of the six traveller-neutral role queries. Same packet size (54.6K against 54.7K tokens). The
+windows cost 2.3M Voyage tokens, still free.
+
+| excerpt | roles a run, of 92 | per run | decision + checklist | seconds |
+| --- | --- | --- | --- | --- |
+| today: head, or head + traveller windows | **84.6** | 84, 83, 85, 86, 85 | 27.8 | 6.8 |
+| embeddings: 1,000 head + best window | 81.0 | 78, 81, 82, 81, 83 | 27.6 | 6.6 |
+
+**Read by hand (`substitutes.py excerpt.jsonl excerpt_embed excerpt_today`), it is a tie.** Of the
+19 role-runs the embedding arm lost (it gained 1, in the control):
+- **16 picked a page that states the answer and the oracle does not list.** Japan `IN/GB`
+  processing, 0 of 5 against 5 of 5: the UK embassy's "the visa processing time is 5 working days"
+  and the eVISA FAQ's "normally takes 5 working days", every run. Germany, both travellers, 9: the
+  traveller's own post — Manila's "Visa fee EUR 90 … approx. 15 calendar days … at VFS Global in
+  Manila or Cebu", London's "usually processed within 15 working days" — where the oracle names the
+  ministry's general page. Canada `PH/PH` and UK `PH/PH` fees: "$100", "£135".
+- **3 are genuine or noise:** Netherlands `IN/GB` entry (1 of 5 against 3 of 5), US `PH/PH`
+  decision (4 against 5).
+
+Net of the first group the gap is 2 role-runs, **0.4 a run** — no result. What moved is *which* true
+page is chosen, and the embedding excerpts lean to the traveller's own embassy, which the oracle's
+rule 5 prefers in principle and its rows, written before the rebuild stored those pages, rarely name.
+
+**The owner's question, answered from both tests.**
+- **The ceiling is real for ranking.** Where today's order places the answer 41st or lower (18 of
+  92), link + embeddings places it higher in 15, often in the top five (Germany's decision 57th → 1st,
+  Singapore's entry 107th → 1st); where today's is already top ten (42), embeddings add nothing. A
+  set whose answers sit past the 120 cut more often would show a gain these 21 corridors cannot.
+- **But the instrument limited both tests more than the ceiling did.** In stage 2 and here, most of
+  the measured loss was a correct page the oracle does not list (entries 236, 237; known problem 41):
+  it predates the rebuild and usually names one page per role. That biases against *any* change to
+  what the selector sees, since any change moves which true page is chosen.
+- **A harder set is not simply "corridors that fail".** Item 63's weakest corridors mostly failed
+  after selection — Australia's page chosen and unreadable (entry 216), a garbled model reply, rule
+  8g — with Thailand the clear selection miss (entries 221, 222).
+
+**Nothing is adopted.** A tie buys nothing, and adoption would need window vectors for every stored
+page. What would make either test decisive is the oracle, which is the owner's call (entry 68).
 
 ---
 

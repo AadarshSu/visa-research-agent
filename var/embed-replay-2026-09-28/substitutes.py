@@ -7,7 +7,8 @@ the oracle's answers with the sentence that decided each, then every page the lo
 Then the same for roles both arms missed equally, restricted to pages only one arm picked.
 The patterns only find passages to read; the reading is a person's. No network, no model.
 
-usage: substitutes.py    (run from the repository root, after stage 2)
+usage: substitutes.py [FILE.jsonl EMBED_VARIANT TODAY_VARIANT]    (from the repository root;
+       defaults to stage 2's file and arms)
 """
 
 import json
@@ -61,13 +62,14 @@ def show(arm, other, picks, texts, answers, role):
             print(f"  {arm} {n}/5 {u}\n     «{' '.join(body[s : m.end() + 130].split())}»")
 
 
+ARGS = sys.argv[1:4] or ["stage2.jsonl", "emb_link_embed_neutral_c40", "fusion120_blind40"]
 raw = {c["corridor"]: c for c in yaml.safe_load(common.ORACLE.read_text())["corridors"]}
 oracle = {r.corridor: r for r in load_oracle(common.ORACLE).corridors}
-rows = [json.loads(line) for line in (common.HERE / "stage2.jsonl").open()]
+rows = [json.loads(line) for line in (common.HERE / Path(ARGS[0]).name).open()]
 runs = defaultdict(lambda: defaultdict(list))
 for r in rows:
     runs[r["corridor"]][r["variant"]].append(set(r["picks"]))
-V = {"emb": "emb_link_embed_neutral_c40", "today": "fusion120_blind40"}
+V = {"emb": ARGS[1], "today": ARGS[2]}
 for name in common.names():
     slug, nat, res = name.rsplit("_", 2)
     row = oracle[f"{slug}/{nat}/{res}/tourism"]
