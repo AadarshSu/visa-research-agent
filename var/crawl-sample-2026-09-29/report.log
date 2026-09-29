@@ -1,0 +1,7 @@
+country  arm                G        H        T        R        N        Eread, no text   failednot opened
+AT       embedding          3        0        0       20       15       10        3       49        0
+AT       random             0        0        0        3       60       16        3       18        0
+JP       embedding          2        1        0        3       88        0        5        1        0
+JP       random             0        0        0        7       84        0        2        7        0
+TR       embedding         47       13       14        7       16        0        1        2        0
+TR       random             1        0        0        3       95        0        0        1        0

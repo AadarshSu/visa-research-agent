@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [240](#240-a-growing-pool-does-not-hurt-todays-ranking-and-embeddings-find-guidance-among-unopened-links--mostly-copies) | **Measured: a growing pool does not hurt today's ranking; embeddings find guidance among unopened links, mostly copies** — every stored page outside the pool added, today's order still keeps 91 at a 40 cut and 111 at 120, so item 75's scaling argument fails; among zero-scoring unopened links, 47 of 100 embedding picks in Turkey were visitor guidance against 1 of 100 at random, but nearly all are translations or twin-host copies of stored pages |
 | [239](#239-the-selection-oracle-is-refreshed-and-the-embedding-results-change-with-it) | **The selection oracle is refreshed, and the embedding results change with it** — 235 answers added from the rebuilt stores, 20 unanswered roles answered, 92 → 111 gradeable roles; re-graded, the embedding-ordered 40 + 40 packet is 1.6 roles a run behind today's (under the bar) at 60% less input, embedding excerpts tie, and link + embeddings keeps 109 of 111 answers at a 40 cut against today's 91 |
 | [238](#238-embedding-chosen-excerpts-tie-with-todays-and-the-oracle-cannot-see-the-difference) | **Measured: embedding-chosen excerpts tie with today's; the oracle cannot see the difference** — graded 81.0 against 84.6, but 16 of the 19 lost role-runs picked a page stating the answer the oracle does not list, often the traveller's own embassy; corrected, 0.4 a run. Both item 67 tests were limited more by the oracle than by the ceiling |
 | [237](#237-the-oracle-declares-the-state-departments-mirror-hosts-and-grading-credits-them) | **The oracle declares mirror hosts, and grading credits them** — `travel.state.gov` picks now count for the `adoption.state.gov` pages the oracle names; item 67's stage 2 re-grades to 85.0 against 77.6, and today's arm to 28 of 28 core roles |
@@ -278,6 +279,119 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 240. A growing pool does not hurt today's ranking, and embeddings find guidance among unopened links — mostly copies
+
+**2026-09-29 · the owner: "run test 2 first, then the crawl sample"** — item 75's second test, and
+the question whether embeddings can choose which of a crawl's recorded addresses to open. Nothing in
+`src/` changed. Tools: `var/embed-replay-2026-09-28/grow.py` and `var/crawl-sample-2026-09-29/`.
+
+### Test 2: does today's ranking degrade as a pool grows?
+
+**Why it could be tested at all.** A captured candidate set already holds the country's whole corpus
+(1,900–11,300 addresses); the pool is the 5–25% that scores on its link or is admitted on stored
+text. So the pool was grown with **the stored pages the pool rule turned away** — 18,649 across the
+21 corridors, 8,784 of them scoring on stored text — at +0.5×, +1× and +2× the pool (three random
+seeds each) and all of them. They keep their real zero link score, so they compete on the second
+signal only: keywords in today's order, embeddings in the new one. Embedding them cost 17.4M Voyage
+tokens, free.
+
+| roles kept, of 111 | pool as captured (median 532) | +0.5× | +1× | +2× | all (median 1,150) |
+| --- | --- | --- | --- | --- | --- |
+| today's order, top 40 + 40 blind | 91 | 91.7 | 91 | 91 | 91 |
+| link + embeddings, top 40 + 40 | 109 | 109 | 109.3 | 109 | 109 |
+| today's order, top 80 + 40 | 107 | 107 | 106.7 | 105.7 | 106 |
+| today's order, top 120 + 40 | **111** | 111 | 111 | 111 | **111** |
+| link + embeddings, top 120 + 40 | 111 | 111 | 111 | 111 | 111 |
+
+The best answer's median position stays at 13–19 for today's order and 3–4 for link + embeddings;
+no answer falls past 120 in today's order at any size. The traveller query drifts down slightly
+(109 → 107 at 40); link + text + embeddings is flat at 106.
+
+**So the one argument for adopting — that today's ranking degrades as pools grow — does not hold
+for growth these stores can supply.** Item 75's pool-size table (median position 2 → 24 → 26) was a
+cross-section: large pools belong to countries with many link-scoring pages, and that is what pushed
+the answers down, not the size. That other kind of growth cannot be simulated here, because every
+link-scoring page a corpus holds is already in its pool; it arrives only with bigger corpora.
+
+### The crawl sample: can embeddings choose which unopened links to open?
+
+**Where the budget goes.** The corpora record 289,303 addresses and 217,455 were never opened. Since
+entry 186 every scored link opens before any unscored one, so what goes unopened is mostly links
+that scored zero, and the budget left after the scored links (Austria 881 of 1,200 pages, Portugal
+637, Japan 559) goes to zero-scoring links **shallowest first, then in address order**
+(`LinkCrawler`'s frontier), which knows no more about a page than a random draw.
+
+**The test.** In Austria, Japan and Turkey, every unopened, zero-scoring, non-PDF address still on a
+trusted domain (4,879, 3,862 and 5,925) had its link text, heading and address embedded (0.34M
+tokens) and ranked against the six traveller-neutral role queries. The top 100 and 100 at random
+were opened through the build's own `LinkCrawler` and `CrawlFetcher` at depth 0 into a scratch
+store — trust after every redirect, `robots.txt`, the renderer and the host delay unchanged — from
+the owner's Terminal panel. Each page read was then labelled **blind**, shuffled with its sample
+hidden, from its title, address, head and densest run of visa words in several languages. Pages with
+no such word anywhere in the body were labelled unrelated mechanically (215 of 508; a spot check of
+40 found none that was visitor guidance); `migration.gv.at` pages titled "Sorry!" are error pages served as
+`200`.
+
+| | visitor guidance | index leading to it | visa form | residence, work | unrelated | unreadable |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Turkey**, embeddings | **47** | 13 | 14 | 7 | 16 | 3 |
+| Turkey, random | 1 | 0 | 0 | 3 | 95 | 1 |
+| **Austria**, embeddings | 3 | 0 | 0 | 20 | 15 | 62 |
+| Austria, random | 0 | 0 | 0 | 3 | 60 | 37 |
+| **Japan**, embeddings | 2 | 1 | 0 | 3 | 88 | 6 |
+| Japan, random | 0 | 0 | 0 | 7 | 84 | 9 |
+
+*Unreadable* counts fetch failures, pages with no text and error pages. A first run of the fetch
+split its allowance evenly between hosts and never asked for most of the embedding sample; the
+rerun asked only for what had not been asked, so no page was requested twice.
+
+**As a signal, embeddings are far better than address order — where the link text says something.**
+In Turkey the words are in Turkish, Persian, Arabic and Russian ("Vize Uygulamaları", "درخواست ویزا
+و هزینه های ویزا"), which the English keyword scorer cannot read. In Austria the picks are about
+entering and staying, but mostly residence and work permits, and 62 could not be read — among them 12
+redirected to a page `robots.txt` disallows, 12 answered `404`, and 7 were `oesterreich.gv.at`
+link-redirects to `bmi.gv.at` or `bfa.gv.at`, which the trust rule refused because Austria's row does
+not list them. In Japan most embedding picks were links labelled only "Japanese" — the language
+switch to ministry interviews — so the anchor carried nothing.
+
+**But nearly all of what it found, the store already has.** Of Turkey's 47:
+- **14** are the migration office's pages in Persian, Arabic, Russian or German; the store holds the
+  English ones (`en.goc.gov.tr/entry-into-turkey`, `fee-amount`, the FAQ) and several German ones;
+- **6** are "apply through an authorised agent" pages whose twin for the same post the store holds
+  (`karaci-bk` ↔ `karachi-cg`, `dubai-bk` ↔ `dubai-cg`, and Doha, Kampala, Kigali, Rotterdam);
+- **about 10** are mission notices from 2016–2022 (fees for 2017, visa centres opened in 2017, a
+  2022 entry notice), each usually published twice, on a mission's Turkish and English hostnames;
+- **about 7 are new and current**: the agent pages for Islamabad, Lahore and Mumbai, Dhaka's notice
+  that from 1 February 2026 applications go only through Mosaic Visa, Dubai's 2026 fee notice, the
+  2024 notice that Chinese passport holders use the 30-day e-Visa (from two missions), and the
+  ministry's English consular-information page.
+
+The Turkish-language visa-regime list is a translation of `visa-information-for-foreigners.en.mfa`,
+which the corpus records as read. Every new page is one post's or one residence's, the kind entry 148
+leaves to live search.
+
+### What it means
+
+- **Item 75: recommended to close without adopting — the owner's call.** The shortlist is level on
+  accuracy (entry 239), saves ~31K tokens and 0.6s a corridor, and the argument that it would matter
+  more at scale failed here. What would reopen it: a corpus whose link-scoring pool pushes answers
+  past the 120 cut, or a destination whose answers are not in English (item 75's test 1).
+- **Embedding-ordered crawling is a real signal with a small yield today.** It turns one-in-a-hundred
+  into about half where link text is in another language, but multilingual embeddings find the same
+  page in every language the authority publishes, so a build would spend its budget on translations
+  unless language twins and host twins were collapsed first. On these three countries it would have
+  added about seven pages worth having. Not proposed; it would matter for a destination that
+  publishes guidance only in its own language, which none of the three does.
+- **Noticed, not acted on:** Austria's row trusts four domains and not `bmi.gv.at` or `bfa.gv.at`,
+  the ministry and office that issue much of its immigration guidance; the build's own links point
+  there. Adding a domain is a registry decision (entries 34, 38).
+
+**What limits this.** The labels are this session's reading of excerpts, blind but by one reader, not
+the owner's checking (entry 68). Three countries, 100 pages an arm. Test 2's added pages are weaker
+competitors than a bigger corpus's pages would be; that is the case it cannot see.
 
 ---
 

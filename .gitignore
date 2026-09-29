@@ -68,3 +68,5 @@ var/item70-2026-09-24/veto/*.json
 var/embed-replay-2026-09-28/vectors.sqlite
 var/oracle-refresh-2026-09-29/review.txt
 var/oracle-refresh-2026-09-29/r_*.txt
+# Page text a one-off sample fetched (entry 240): a copy of government pages, like var/pagetext.
+var/crawl-sample-*/pagetext/

@@ -139,11 +139,14 @@ and 0.6s a corridor, and a shortlist that degrades more gracefully if pools grow
 Today's ranking degrades as pools grow and embeddings barely do. No answer falls outside today's
 120 yet, which is why accuracy is level now; a corpus that grows pools past that — more pages per
 country, 100+ countries — is where embeddings would start to add answers, not only save tokens.
+**Contradicted by test 2 (entry 240):** growing the same pools does not move today's order; the
+table compares different countries.
 
 **Where the benefit could grow, untested:** other-language authorities (voyage-4 is multilingual;
 the keyword scorer's vocabulary is English), which expansion (item 64) will bring and none of the
 111 oracle answers is; and the build, where a crawl opens 3–15% of the addresses it records
-(entries 88, 183) — embedding link context to choose what to open (item 67's old follow-up).
+(entries 88, 183) — embedding link context to choose what to open (item 67's old follow-up; tested
+2026-09-29, entry 240: a strong signal, a small yield of new pages).
 **Where it stays flat:** selector accuracy given the page is on the list (~97% already), the ~0.6s
 of selector time (the plan call, ~29s, is the latency), and the per-corridor token saving.
 **Known weakness:** a traveller-neutral query under-ranks pages written for one traveller (Czechia's
@@ -153,6 +156,19 @@ UK list, the UAE residence-keyed service, entry 236) — the hybrid with keyword
 whose authority publishes mainly in its own language, and rerun stage 1 there; (2) simulate larger
 pools by adding stored pages from the country's corpus outside the captured pool and rerunning
 `sweep.py`; (3) only then, embed every store and grade live (entries 144, 145).
+
+**Test 2 ran on 2026-09-29 and removed the scaling argument (entry 240).** With every stored page
+outside the pool added (median pool 532 → 1,150), today's order still keeps 91 of 111 at a 40 cut
+and all 111 at 120; the table above is a cross-section of countries, not an effect of size.
+**Recommended: close this item without adopting — the owner's call.** Test 1 no longer needs
+expansion: the store already holds destinations whose stored text is mostly not English (Belgium,
+Mexico, Uruguay, Austria, Turkey, Indonesia, by a rough function-word count), though it needs new
+oracle rows, which is the owner's call (entry 68).
+
+**The crawl question, measured the same day (entry 240).** Among zero-scoring links a build never
+opened, the embedding-ranked 100 held visitor guidance in 47 cases in Turkey against 1 of 100 at
+random (Austria 3 against 0, Japan 2 against 0) — but about 40 of Turkey's 47 were translations,
+twin-host copies or pre-2023 notices of pages the store holds. Not proposed.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 

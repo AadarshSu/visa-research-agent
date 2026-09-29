@@ -33,3 +33,7 @@ but not to its Batch API.
 **Excerpt experiment (entry 238):** `excerpt_replay.py embed`, then `excerpt_replay.py excerpt.jsonl
 --variants excerpt_today,excerpt_embed --runs 5 --concurrency 1`; graded in `excerpt_grade.log`, read in
 `excerpt_substitutes.log` (`substitutes.py excerpt.jsonl excerpt_embed excerpt_today`).
+
+**Item 75's test 2 (entry 240):** `grow.py embed`, then `grow.py rank` — each pool grown with the
+stored pages the pool rule turned away, then cut as `sweep.py` cuts it. Logs in `grow_embed.log`
+and `grow.log`, per-role rows in `grow_results.json`.

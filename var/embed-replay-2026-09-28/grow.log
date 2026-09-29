@@ -1,0 +1,53 @@
+canada_IN_GB: pool 832, outside with text 1545
+canada_PH_PH: pool 825, outside with text 1540
+czechia_IN_GB: pool 438, outside with text 529
+france_IN_GB: pool 866, outside with text 552
+france_PH_PH: pool 863, outside with text 489
+germany_IN_GB: pool 570, outside with text 1549
+germany_PH_PH: pool 532, outside with text 1467
+japan_IN_GB: pool 179, outside with text 575
+japan_PH_PH: pool 145, outside with text 574
+netherlands_IN_GB: pool 585, outside with text 765
+netherlands_PH_PH: pool 561, outside with text 764
+singapore_IN_GB: pool 513, outside with text 1329
+singapore_PH_PH: pool 494, outside with text 1327
+sweden_IN_GB: pool 170, outside with text 915
+sweden_PH_PH: pool 164, outside with text 907
+united-arab-emirates_IN_GB: pool 605, outside with text 457
+united-arab-emirates_PH_PH: pool 602, outside with text 456
+united-kingdom_IN_GB: pool 567, outside with text 583
+united-kingdom_PH_PH: pool 424, outside with text 709
+united-states_IN_GB: pool 596, outside with text 808
+united-states_PH_PH: pool 576, outside with text 809
+
+roles kept, of 111, mean over seeds; top N plus 40 blind
+
+  cut 40:
+  arm                              +0.0x     +0.5x     +1.0x     +2.0x       all
+  median pool                        532       798      1058      1150      1150
+  link+text (today)                 91.0      91.7      91.0      91.0      91.0
+  link+embed [neutral]             109.0     109.0     109.3     109.0     109.0
+  link+embed [traveller]           109.0     108.0     107.7     107.3     107.0
+  link+text+embed [neutral]        108.0     106.3     106.0     106.0     106.0
+
+  cut 80:
+  arm                              +0.0x     +0.5x     +1.0x     +2.0x       all
+  median pool                        532       798      1058      1150      1150
+  link+text (today)                107.0     107.0     106.7     105.7     106.0
+  link+embed [neutral]             110.0     110.0     110.0     110.0     110.0
+  link+embed [traveller]           110.0     110.0     110.0     110.0     110.0
+  link+text+embed [neutral]        110.0     110.0     110.0     110.0     110.0
+
+  cut 120:
+  arm                              +0.0x     +0.5x     +1.0x     +2.0x       all
+  median pool                        532       798      1058      1150      1150
+  link+text (today)                111.0     111.0     111.0     111.0     111.0
+  link+embed [neutral]             111.0     111.0     111.0     111.0     111.0
+  link+embed [traveller]           111.0     110.7     110.3     110.0     110.0
+  link+text+embed [neutral]        110.0     110.0     110.0     110.0     110.0
+
+best answer's position: median, and roles with it past 120 (mean over seeds)
+  link+text (today)              13/0.0    15/0.0    19/0.0    14/0.0    14/0.0 
+  link+embed [neutral]            3/0.0     3/0.0     3/0.0     4/0.0     4/0.0 
+  link+embed [traveller]          3/0.0     3/0.3     3/0.7     3/1.0     3/1.0 
+  link+text+embed [neutral]       6/1.0     6/1.0     5/1.0     5/1.0     5/1.0 
