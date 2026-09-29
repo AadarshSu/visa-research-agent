@@ -422,13 +422,12 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
     assert set(totals) == {"IN/GB/tourism", "PH/PH/tourism"}
     for traveller, (held, answerable, _) in totals.items():
         assert held == answerable, f"{traveller} lost an answer the corpus used to hold"
-    # 47 over the ten countries entry 91 curated, plus the two Czech roles entry 127 added and the
-    # Dutch `general_entry` entry 128 added — the answers named from outside the selector's pool,
-    # all of them held by the corpus.
-    assert totals["IN/GB/tourism"][1] == 50
-    # 41 as entry 91 curated it, plus the Dutch `general_entry` — the same EES leaflet as the
-    # Indian row, because it is nationality-independent and nobody had looked (entry 129).
-    assert totals["PH/PH/tourism"][1] == 42
+    # 50 before the refresh of entry 239 — 47 over the ten countries entry 91 curated, the two Czech
+    # roles entry 127 added and the Dutch `general_entry` entry 128 added — and 60 after it, which
+    # answered ten more roles for this traveller from the rebuilt stores. All of them are held.
+    assert totals["IN/GB/tourism"][1] == 60
+    # 42 before the refresh (entry 91's 41 and entry 129's Dutch `general_entry`), 51 after it.
+    assert totals["PH/PH/tourism"][1] == 51
 
 
 def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> None:
@@ -477,7 +476,9 @@ def test_a_role_an_official_tool_settles_is_credited_and_kept_apart() -> None:
         for r in known_answers(oracle, corpus_of([], code="FR"), "france")
         if r.corridor == france.corridor
     )
-    assert set(row.settled) == set(france.tools)
+    # A role a page answers is not also tool-settled (the next test). Since the refresh of entry
+    # 239, France's FAQ states the fee while the Visa Wizard stays named for it.
+    assert set(row.settled) == set(france.tools) - set(france.answers)
     assert row.answerable == len(france.answers)
     assert row.held + len(row.settled) <= row.roles
 

@@ -1,0 +1,435 @@
+# Oracle refresh, 2026-09-29 (DECISIONS entry 239). Verdicts read from r_<destination>.txt and,
+# where a passage only hinted, checked with look.py. `add` puts a page under `answers`; `tool`
+# names a questionnaire (rule 11); `correct` changes what a row already said, with the reason.
+# Travellers: IN = Indian passport resident in Britain, PH = Filipino resident in the Philippines.
+
+canada:
+  add:
+    - {for: [IN, PH], role: visa_decision, url: "https://cic.gc.ca/ENGLISH/visit/visas.asp",
+       why: "the current visa-required list — \"Visa-required countries or territories\" names India, and the Philippines with its eTA exception; a newer text of the list the rows already credit"}
+    - {for: [PH], role: document_checklist, url: "http://www.cic.gc.ca/english/visit/apply-how.asp",
+       why: "\"All applicants need to include a digital copy of your valid (not expired) passport\", then the forms and supporting documents by situation; the Indian row already credits this page"}
+    - {for: [IN, PH], role: application_route, url: "https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp",
+       why: "Guide 5256: \"Most people must apply online. You can only apply on paper if you can't apply online\""}
+    - {for: [IN, PH], role: application_route, url: "https://ircc.canada.ca/english/information/applications/visa.asp",
+       why: "\"You can apply online or on paper (in specific situations) for: visitor visas\", then the steps from applying to biometrics to arrival"}
+    - {for: [IN, PH], role: application_route, url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa/paper-application.html",
+       why: "\"If you need a visitor visa to travel to Canada, you must apply online for one\", and when paper is allowed"}
+    - {for: [IN, PH], role: application_route, url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/biometrics/where-to-give.html",
+       why: "\"Giving your biometrics outside Canada ... at a visa application centre (VAC) by making an appointment\", with the centres by country"}
+    - {for: [PH], role: application_route, url: "http://www.cic.gc.ca/english/visit/apply-how.asp",
+       why: "the visitor visa application steps and the IRCC Portal to submit through; the Indian row already credits it"}
+    - {for: [PH], role: application_route, url: "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html",
+       why: "where to go in person to give biometrics and submit; the Indian row already credits it"}
+    - {for: [IN, PH], role: fees, url: "https://ircc.canada.ca/english/information/fees/result.asp?countrySelect=CA&lob=trv",
+       why: "the visitor visa fee table — per person, and \"maximum fee for a family of 5 or more ... $CAN: 500.00\""}
+    - {for: [IN, PH], role: fees, url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html",
+       why: "\"Visitor visa processing fee | Individual: $100 Family (5 or more people): $500\", with the $85 biometrics fee"}
+    - {for: [PH], role: fees, url: "http://www.cic.gc.ca/english/visit/apply-how.asp",
+       why: "\"Visitor visa processing fee Individual: $100\""}
+    - {for: [PH], role: fees, url: "https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp",
+       why: "\"Visitor visa - per person ... $CAN: $100\"; the Indian row already credits it"}
+    - {for: [IN, PH], role: general_entry, url: "https://ircc.canada.ca/english/information/applications/visa.asp",
+       why: "\"If you pass the identity check and meet the entry requirements, the border services officer stamps your passport ... normally allowed to stay in Canada for up to six months\""}
+    - {for: [IN, PH], role: general_entry, url: "https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp",
+       why: "\"The officer at the port of entry will determine whether you may enter Canada and how long you may stay ... generally valid for a period of six (6) months\""}
+    - {for: [PH], role: general_entry, url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/prepare-arrival.html",
+       why: "\"When you enter Canada ... The officer must be convinced that you're eligible for entry into Canada and you'll leave Canada at the end of your authorized stay\"; the Indian row already credits it"}
+  correct:
+    - {for: [PH], role: processing_times, action: to_tool,
+       url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html",
+       why: "credited as an answer in the Filipino row and as a tool in the Indian row; it computes a time from the reader's answers rather than stating one (rule 11), so both rows now name it as a tool. \"We process most applications in a few weeks or less\" (after-apply-next-steps) states no figure for this traveller"}
+    - {for: [PH], role: general_entry, action: answered,
+       why: "was unanswered — \"the entry-condition pages in the set are about importing a vehicle and about customs\" — but the rebuilt set holds the arrival and entry pages the Indian row credits"}
+
+czechia:
+  add:
+    - {for: [IN], role: visa_decision, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/list_of_states_whose_citizens_are_exempt/index.html",
+       why: "the ministry's own list, \"States whose citizens are exempt from the visa requirement for travel to the Schengen Area\", Albania to the footnotes, now with stored text; India is not on it. The list rule 7b names for the decision, read under the plan's rule 8f"}
+    - {for: [IN], role: document_checklist, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html",
+       why: "the ministry's tourism Schengen visa page: \"FILE THE APPLICATION PRESENTING THE FOLLOWING REQUIREMENTS: PASSPORT, APPLICATION FORM, PHOTO, FEE, BIOMETRIC DATA, SUPPORTING DOCUMENTS ON PURPOSE OF STAY ... ACCOMMODATION ... TRAVEL MEDICAL INSURANCE\" — the general list, beside the UK harmonised list it points to"}
+    - {for: [IN], role: application_route, url: "https://mzv.gov.cz/london/en/visa_and_consular_information/visa_information/schedule_appointment/an_appointment_system_has_been.mobi",
+       why: "the London embassy, the post for this traveller: \"the Czech Visa Application Centre operated by VFS Global Ltd. is accepting all visa applications\", its address, and \"you need to book an appointment in advance\""}
+    - {for: [IN], role: application_route, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html",
+       why: "\"1. FIND THE CONSULATE / VISA CENTER WHERE YOU WILL APPLY 2. SCHEDULE AN APPOINTMENT 3. FILE THE APPLICATION\" for a tourism Schengen visa"}
+    - {for: [IN], role: application_route, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/outsourcing/index.html",
+       why: "the ministry's list of visa centres, including \"UNITED KINGDOM – London\""}
+    - {for: [IN], role: fees, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/visa_fee_schedule/index.html",
+       why: "\"VISA FEES: STANDARD RATE - SCHENGEN VISA (type C, A) EUR 90\""}
+    - {for: [IN], role: fees, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/visa_fee_schedule/index$2548.html?action=setMonth&month=10&year=2026",
+       why: "the same fee table under a month's address, with slightly different stored text"}
+    - {for: [IN], role: processing_times, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html",
+       why: "\"The processing time for Schengen visa applications is 15 days ... can be extended to up to 45 days\""}
+    - {for: [IN], role: processing_times, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.mobi",
+       why: "the same tourism page's mobile text"}
+    - {for: [IN], role: processing_times, url: "https://mzv.gov.cz/london/en/visa_and_consular_information/visa_information/schedule_appointment/an_appointment_system_has_been.mobi",
+       why: "the London post: \"It can take up to 15 days (in some cases ... up to 45 days) to obtain a visa\""}
+    - {for: [IN], role: general_entry, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html",
+       why: "\"Visa holders need to fulfill entry conditions specified in the Schengen Border Code and can be asked upon entry to present documents on accommodation, finances, return air ticket\""}
+    - {for: [IN], role: general_entry, url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.mobi",
+       why: "the same tourism page's mobile text"}
+    - {for: [IN], role: general_entry, url: "https://ipc.gov.cz/en/life-in-the-eu/life-in-the-eu-third-country-nationals/short-term-stays-in-the-eu",
+       why: "\"a maximum duration of 90 days within any 180-day period ... If as a third country national you do not meet the Schengen entry requirements ... you may be denied entry\""}
+  correct:
+    - {for: [IN], role: visa_decision, action: answered, why: "was unanswered because the Los Angeles list held no text; the ministry's own list does"}
+    - {for: [IN], role: application_route, action: answered, why: "was unanswered for want of the London post's page; the rebuilt store holds its appointment page"}
+    - {for: [IN], role: fees, action: answered, why: "was unanswered with only other posts' fee pages; the ministry's own schedule is now held"}
+    - {for: [IN], role: processing_times, action: answered, why: "was unanswered; the ministry's tourism page and the London post both state it"}
+  excluded:
+    - {for: [IN], url: "https://mzv.gov.cz/public/65/fc/25/5898531_3416466_India_and_Morocco.pdf",
+       why: "the EU's list of supporting documents for applicants *in India*; this traveller applies in Britain, whose list the row credits (rule 5)"}
+    - {for: [IN], url: "https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the_2.html",
+       why: "the same ministry template for a Schengen visa for *employment*; rule 6"}
+
+france:
+  add:
+    - {for: [IN, PH], role: application_route, url: "https://france-visas.gouv.fr/en/la-demarche",
+       why: "\"The visa application process: 5 steps to complete your application\" — gather information, set up the online application, book the appointment, submit, track"}
+    - {for: [IN, PH], role: application_route, url: "https://www.service-public.gouv.fr/particuliers/actualites/A17574?lang=en",
+       why: "\"When you wish to obtain a visa to come to France, you must: check ... create an account on France-Visas; complete the visa application form ...\", then the appointment and tracking"}
+    - {for: [IN, PH], role: application_route, url: "https://www.service-public.gouv.fr/particuliers/vosdroits/F16146?lang=en",
+       why: "the Schengen short-stay visa sheet: \"You must complete your visa application online ... After completing your application on the internet, you must make an appointment at the French consulate\""}
+    - {for: [IN], role: application_route, url: "https://france-visas.gouv.fr/en/web/france-visas",
+       why: "\"To obtain a visa via France-Visas, you need to follow five steps\"; a second text of the France-Visas home page the row credits"}
+    - {for: [PH], role: application_route, url: "https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa",
+       why: "the ministry's steps — Visa Wizard, online application, \"submit it to your local visa centre\", track; the Indian row already credits it"}
+    - {for: [IN, PH], role: fees, url: "https://france-visas.gouv.fr/en/faq",
+       why: "\"Visa applicants must pay an application fee ... of €90 for short-stay visas\" — the FAQ the rows called unreadable (its cookie panel) now holds its text"}
+    - {for: [IN, PH], role: processing_times, url: "https://france-visas.gouv.fr/en/la-demarche",
+       why: "\"The decision-making time on visa applications is usually 15 days. This period may be extended up to 45 days\""}
+    - {for: [IN, PH], role: processing_times, url: "https://www.service-public.gouv.fr/particuliers/actualites/A17574?lang=en",
+       why: "\"the processing time is usually 15 days, but it can be longer\""}
+    - {for: [IN, PH], role: general_entry, url: "https://www.service-public.gouv.fr/particuliers/vosdroits/F21921?lang=en",
+       why: "\"You must complete all of the following conditions when crossing the border: Have a passport ... valid at least 3 months longer than the scheduled date of your departure ... Justify the purpose and conditions of your stay\", with the resources per day"}
+    - {for: [IN, PH], role: general_entry, url: "https://www.service-public.gouv.fr/particuliers/vosdroits/F1765?lang=en",
+       why: "\"Schengen area: what are the conditions for entry\" — the same border conditions, insurance of €30,000 and €65 or €120 a day"}
+    - {for: [IN, PH], role: general_entry, url: "https://www.service-public.gouv.fr/particuliers/vosdroits/F39104?lang=en",
+       why: "registration in the Entry/Exit System at the external border for any non-European national staying up to 3 months; the Indian row credits the ministry's EES page"}
+  correct:
+    - {for: [IN, PH], role: fees, action: answered, why: "was unanswered — \"No candidate prices a short-stay visa\" — and the FAQ, now readable, does. The Wizard stays named as a tool"}
+    - {for: [IN, PH], role: processing_times, action: answered, why: "was unanswered — \"every page says waiting times vary\" — but France-Visas' own process page and service-public state 15 days, up to 45"}
+
+germany:
+  add:
+    - {for: [IN], role: document_checklist, url: "https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164",
+       why: "the UK missions' C-visa list: \"Valid passport ... issued within the last 10 years ... Proof of a valid residence permit for the United Kingdom ... A fully biometric passport photo ... Reserved return airline/ ferry/ train ticket ... travel health insurance ... at least €30,000 ... Evidence of sufficient funds\""}
+    - {for: [PH], role: document_checklist, url: "https://manila.diplo.de/ph-en/service/visa/2543948-2543948",
+       why: "the Manila embassy's Schengen visa lists, including tourism: \"Your valid passport ... Two biometrical passport photos ... Itinerary ... and corresponding hotel reservations ... Your original bank certificate and bank statements for the last six months\""}
+    - {for: [IN], role: application_route, url: "https://uk.diplo.de/uk-en/02/visa",
+       why: "\"your place of residence determines which German Mission or Visa Application Centre you will need to contact ... Schengen visas (type C) can only be applied for through our external service provider TLScontact\""}
+    - {for: [IN], role: application_route, url: "https://uk.diplo.de/uk-en/02/visa/where-can-i-apply-for-my-visa-2448180",
+       why: "\"The German Embassy in London and the visa application centres in London and Manchester, operated by ... TLScontact, serve visa applicants residing in England\""}
+    - {for: [IN], role: application_route, url: "https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164",
+       why: "\"All C visas must be applied for with a Visa Application Centre run by our external service provider TLScontact\", after the VIDEX form and an appointment"}
+    - {for: [IN], role: application_route, url: "https://uk.diplo.de/uk-en/02/visa-faq-2442852",
+       why: "\"we will only accept visa applications from UK residents ... You will need to schedule an appointment with the respective Mission or the Visa Application Centre (VAC) operated by TLScontact\""}
+    - {for: [IN], role: application_route, url: "https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852",
+       why: "the same FAQ at its second address, with slightly different stored text"}
+    - {for: [IN], role: application_route, url: "https://uk.diplo.de/uk-en/02/appointment-waiting-ists-2771686",
+       why: "the waiting list for appointments with the service provider, by category — \"Tourism/ planned medical treatment\" first"}
+    - {for: [PH], role: application_route, url: "https://manila.diplo.de/ph-en/service/visa/2543948-2543948",
+       why: "\"Your application must be submitted personally at VFS Global in Manila or Cebu. Once you have obtained all necessary documents, please register for an appointment\""}
+    - {for: [PH], role: application_route, url: "https://manila.diplo.de/ph-en/service/visa",
+       why: "the Manila embassy serves residents of the Philippines; Schengen visa for up to 90 days, and the current wait for an appointment"}
+    - {for: [PH], role: application_route, url: "https://manila.diplo.de/ph-en/service/visa/2735728-2735728",
+       why: "the embassy's visa FAQ: \"Visa appointments for short-term stays in Germany are offered by our external service provider VFS\""}
+    - {for: [IN], role: fees, url: "https://uk.diplo.de/uk-en/02/2442868-2442868",
+       why: "\"Visa fees are €90 for Schengen (A or C) visas and €75 for national (D) visas\""}
+    - {for: [IN], role: fees, url: "https://uk.diplo.de/uk-en/02/visa-faq-2442852",
+       why: "\"Visa fees are €90 for Schengen (A or C) visas\""}
+    - {for: [IN], role: fees, url: "https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852",
+       why: "the same FAQ at its second address"}
+    - {for: [PH], role: fees, url: "https://manila.diplo.de/ph-en/service/visa/2543948-2543948",
+       why: "\"Visa fee EUR 90.00, payable in PHP\""}
+    - {for: [IN], role: processing_times, url: "https://uk.diplo.de/uk-en/02/visa-faq-2442852",
+       why: "\"A and C visa applications will usually be processed within 15 working days from the date the application is received\""}
+    - {for: [IN], role: processing_times, url: "https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852",
+       why: "the same FAQ at its second address"}
+    - {for: [IN], role: processing_times, url: "https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164",
+       why: "\"The processing time for a Schengen visa is appr. 15 working days from the date the application is received\""}
+    - {for: [PH], role: processing_times, url: "https://manila.diplo.de/ph-en/service/visa/2543948-2543948",
+       why: "\"processing of Schengen visa applications will take approx. 15 calendar days from the day of application\""}
+    - {for: [IN], role: general_entry, url: "https://uk.diplo.de/uk-en/02/visa-faq-2442852",
+       why: "\"passports and travel documents issued by countries outside the EU ... are only recognised as valid for entering and staying in Germany if they have been issued within the last ten years and if the passport validity exceeds the validity of the visa ... by at least three months\""}
+    - {for: [IN], role: general_entry, url: "https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852",
+       why: "the same FAQ at its second address"}
+    - {for: [IN, PH], role: general_entry, url: "https://www.auswaertiges-amt.de/en/visa-service/buergerservice/faq/32-sonstiges-606746?isLocal=false&isPreview=false",
+       why: "\"You can only enter Germany if you have valid identity papers ... valid at least for another three months ... documents ... that prove the purpose and circumstances of the visit ... sufficient funds\" — asked by a visa-free traveller, but the Schengen Borders Code conditions it states bind every entrant"}
+  correct:
+    - {for: [IN, PH], role: document_checklist, action: answered,
+       why: "was unanswered because Germany's missions were outside the trusted set (entry 33); the rebuilt store holds uk.diplo.de and manila.diplo.de, which list the documents"}
+    - {for: [IN, PH], role: general_entry, action: answered,
+       why: "was unanswered — nothing stated entry conditions — and the ministry's FAQ and the UK missions' FAQ now do"}
+  excluded:
+    - {for: [IN], url: "https://uk.diplo.de/resource/blob/2449824/5beb74da9516aa949a6d07d7a4b61bce/download-fees-data.pdf",
+       why: "the UK missions' fee sheet \"Last updated on 02 February 2020\", stating EUR 80 for a Schengen visa; the missions' own pages now say €90 (rule 9)"}
+    - {for: [IN], url: "https://india.diplo.de/in-en/2674158-2674158",
+       why: "one of the Indian missions' Schengen checklists, for applicants in India; this traveller applies in Britain (rule 5). The same holds for india.diplo.de's other checklists and fee pages"}
+
+japan:
+  add:
+    - {for: [PH], role: visa_decision, url: "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+       why: "\"Short-Term Stay ... All nationals of the countries and regions listed below require a visa to enter Japan ... Philippines\" — named, not inferred from an exemption list"}
+    - {for: [IN, PH], role: application_route, url: "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+       why: "\"you may apply for a visa at the consular section of the Diplomatic Mission of Japan with jurisdiction over your place of residence, at an accredited agency, the Japan Visa Application Centre, or online\", with the eVISA countries, the United Kingdom among them"}
+    - {for: [PH], role: application_route, url: "https://www.mofa.go.jp/j_info/visit/visa/faq.html",
+       why: "the ways a visa may be applied for — in person, by proxy, \"an accredited travel agent approved by the Japanese Embassy / Consulate General\", or online — and that some posts accept only some of them"}
+    - {for: [IN], role: application_route, url: "https://www.mofa.go.jp/j_info/visit/visa/visaonline.html",
+       why: "\"All foreign nationals/people residing in these countries/regions [the United Kingdom among them], except those who are exempt ... can apply for an eVISA through the JAPAN eVISA website\"; the Filipino row already credits it"}
+    - {for: [IN], role: application_route, url: "https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000205.html",
+       why: "the Edinburgh consulate's visa page: the application form, \"eVISA is available for Tourism\", in-person submission by appointment and collection"}
+    - {for: [IN], role: application_route, url: "https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000196.html",
+       why: "the consulate's temporary visitor page: the documents by purpose, \"eVISA is available for Tourism\""}
+    - {for: [IN], role: application_route, url: "https://www.uk.emb-japan.go.jp/itpr_en/index_000070.html",
+       why: "the London embassy's temporary visitor page: \"Documentation Tourism ➥ eVISA is available for Tourism\""}
+    - {for: [IN], role: application_route, url: "https://www.evisa.mofa.go.jp/faq",
+       why: "the eVISA FAQ: eligibility, how to apply, what to upload, how it is issued"}
+    - {for: [IN], role: application_route, url: "https://www.evisa.mofa.go.jp/personal/faq",
+       why: "the same FAQ at its signed-in address"}
+    - {for: [IN], role: application_route, url: "https://www.evisa.mofa.go.jp/pdf/personal_flowchart_en.pdf",
+       why: "the eVISA flow from application to examination, fee payment, issuance and the landing examination"}
+    - {for: [IN], role: application_route, url: "https://www.mofa.go.jp/j_info/visit/visa/page22e_000999.html",
+       why: "the ministry's FAQ about JAPAN eVISA: \"The entire process can be completed online\""}
+    - {for: [IN], role: fees, url: "https://www.uk.emb-japan.go.jp/itpr_en/index_000075.html",
+       why: "\"Visa Fees (as of 1st July 2026) ... Single Entry Visas Indian nationals ￡4.00\" at the London embassy"}
+    - {for: [IN], role: fees, url: "https://www.mofa.go.jp/files/101048885.pdf",
+       why: "the list of fees payable online by card: \"Single-entry visa General 15,000 Yen Indian 832 Yen\" — the eVISA route this traveller uses from Britain"}
+    - {for: [IN], role: processing_times, url: "https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000205.html",
+       why: "\"in most cases it will take 5 working days ... eVISA (online application) processing normally take on average 2 weeks\""}
+    - {for: [IN], role: processing_times, url: "https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html",
+       why: "\"In principle, the visa processing time is 5 working days from the day that the Embassy accepted documents\""}
+    - {for: [IN], role: processing_times, url: "https://www.evisa.mofa.go.jp/faq",
+       why: "\"It normally takes 5 working days for Japanese overseas establishment to examine and issue a visa after receipt of a complete application\""}
+    - {for: [IN], role: processing_times, url: "https://www.evisa.mofa.go.jp/personal/faq",
+       why: "the same FAQ at its signed-in address"}
+    - {for: [IN, PH], role: general_entry, url: "https://www.mofa.go.jp/j_info/visit/visa/system/index.html",
+       why: "\"Visas and Landing Permission\": \"holding a visa is only one of the requirements for a landing permission application at the port of entry of Japan and does not guarantee that the holder ... will be able to enter\""}
+    - {for: [PH], role: general_entry, url: "https://www.mofa.go.jp/j_info/visit/visa/index.html",
+       why: "\"A visa is one of the requirements for entering Japan ... and it does not guarantee to enter Japan\", then landing permission; the Indian row already credits it"}
+    - {for: [IN], role: general_entry, url: "https://www.uk.emb-japan.go.jp/itpr_en/index_000070.html",
+       why: "\"permission to enter Japan remains at the discretion of the immigration authorities ... take supporting documents with you for immigration inspection at the airport such as a return flight ticket ... and evidence of sufficient funds\" — the London text of the Edinburgh page the row credits"}
+  correct:
+    - {for: [PH], role: general_entry, action: answered,
+       why: "was unanswered — \"no candidate scored above zero\" — but the ministry's visa index and its landing-permission page state it for every traveller"}
+  excluded:
+    - {for: [IN, PH], url: "https://www.mofa.go.jp/j_info/visit/visa/procedure/fee.html",
+       why: "\"about 3,000 yen for a single-entry visa\", with the note that fees \"are to be revised on July 1, 2026\"; the revised table (pagewe_000001_00391) is what the rows credit (rule 9)"}
+
+netherlands:
+  add:
+    - {for: [IN], role: general_entry, url: "https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-united-kingdom",
+       why: "\"Step 6: Prepare for your trip ... a maximum of 90 days in any 180-day period ... You must show the visa upon departure and arrival. Border control may also ask you for other documents\""}
+    - {for: [PH], role: general_entry, url: "https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-philippines",
+       why: "the same Step 6 for applicants in the Philippines"}
+    - {for: [PH], role: general_entry, url: "https://www.netherlandsworldwide.nl/visa-the-netherlands/sponsor-invite-short-stay",
+       why: "\"To visit the Netherlands, you will need to prove you have at least €55 per person to spend for each day of your trip\", and the documents to \"show ... at Dutch border control\""}
+  notes:
+    - "visa_decision stays with the checker tool for both travellers, and the Indian row's fees stays unanswered: the London fee page still holds no text, and the readable fee pages are other posts' (rule 5)"
+
+singapore:
+  add:
+    - {for: [IN], role: visa_decision, url: "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements",
+       why: "\"If your travel document is issued by one of the countries/ places listed below, you will require a valid visa\" — the list names India; the Filipino row credits the same page for the opposite reading (rule 7b)"}
+    - {for: [IN, PH], role: general_entry, url: "https://ask.gov.sg/ica/questions/clos83fvy01mf5k0wu09z54te",
+       why: "ICA: \"You will have to satisfy the basic entry requirements ... A valid passport with at least 6 months' validity; A valid Singapore entry visa (if applicable); A confirmed return/ onward tickets ...; Sufficient funds\""}
+    - {for: [IN, PH], role: general_entry, url: "https://www.ica.gov.sg/public-education/visiting-singapore",
+       why: "\"Basic Entry Requirements: You must present yourself for immigration clearance ... satisfy the basic entry requirements\", the SG Arrival Card and the e-Pass"}
+    - {for: [IN], role: general_entry, url: "https://www.ica.gov.sg/enter-depart/entry_requirements/sg-arrival-card",
+       why: "the SG Arrival Card every visitor submits within three days before arrival; the Filipino row credits the same page at its newer address"}
+    - {for: [IN], role: general_entry, url: "https://ask.gov.sg/ica/questions/clos83fvw01lj5k0wp90sbtq5",
+       why: "\"You will require a passport that is valid for at least 6 months from the date of arrival in Singapore as part of the entry requirements\""}
+    - {for: [PH], role: general_entry, url: "https://mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa",
+       why: "\"All visitors to Singapore must meet the following entry requirements: Valid travel document (minimum validity of 6 months) ... Confirmed onward or return tickets\"; the Indian row already credits it"}
+    - {for: [PH], role: general_entry, url: "https://www.ica.gov.sg/enter-depart/entry_requirements",
+       why: "\"General Entry Requirements\" — passport, visa where required, the SG Arrival Card, biometrics, \"sufficient cash and proof of onward travel\"; the Indian row already credits it"}
+    - {for: [PH], role: general_entry, url: "https://ask.gov.sg/ica/questions/clre5y7ka00h4oimjoqv66jsh",
+       why: "\"The submission of the SG Arrival Card is one of the basic entry requirements to visit Singapore\""}
+
+sweden:
+  add:
+    - {for: [IN, PH], role: processing_times, url: "https://www.government.se/government-policy/migration-and-asylum/information-on-visas",
+       why: "\"Visa application decisions should be taken within 15 calendar days of the date on which the application was received\""}
+    - {for: [PH], role: document_checklist, url: "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html",
+       why: "the older address of the apply page the row credits, with its own text: \"Entry visa for a tourist visit You need to prepare: A valid passport ...\", the invitation or hotel booking, the photograph where a representative applies"}
+    - {for: [PH], role: application_route, url: "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html",
+       why: "\"Where you can apply for a Schengen visa: In many countries, Sweden has an agreement with an external service provider, VFS Global ... In some countries, you must submit your application to a Swedish embassy\""}
+    - {for: [PH], role: processing_times, url: "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html",
+       why: "\"It normally takes 15 days to receive a decision about an application\""}
+    - {for: [PH], role: general_entry, url: "https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html",
+       why: "\"the border police will check that you meet these requirements ... a passport valid for at least three months after you plan to leave ... a valid round-trip ticket ... SEK 700 for each day\""}
+    - {for: [IN, PH], role: general_entry, url: "https://www.government.se/press-releases/2025/10/entryexit-system--a-new-eu-system-for-border-controls",
+       why: "the Entry/Exit System at Sweden's external border from 12 October 2025, registering third-country travellers on entry; the France and Netherlands rows credit the equivalent pages"}
+
+united-arab-emirates:
+  add:
+    # The Indian traveller: the services keyed on nationality and a UK residence permit
+    - {for: [IN], role: visa_decision, url: "https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936",
+       why: "Dubai's \"Visa for Citizens of Certain Countries Resident Outside the UAE\": \"Beneficiaries of this service are nationals of India ... holding a ... residence permit issued by ... United Kingdom\" — the visa this traveller takes, 14 days' stay"}
+    - {for: [IN], role: visa_decision, url: "https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5",
+       why: "ICP's \"Issuance of a 60-day visa for nationals of certain countries residing abroad\": \"For nationals of the Republic of India ... who hold a valid visa, residence permit ... issued by the US, EU, or UK\""}
+    - {for: [IN], role: visa_decision, url: "https://icp.gov.ae/en/media-center/icp-expands-eligibility-for-uae-entry-visa-for-nationals-of-certain-countries",
+       why: "ICP's announcement of the same visa for these nationals with residence in the UK and the other listed countries, 14 or 60 days"}
+    - {for: [IN], role: document_checklist, url: "https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936",
+       why: "\"Requirements 1. A recent colour passport-sized photograph ... 2. A copy of your passport ... 3. A copy of your visa or residence permit\""}
+    - {for: [IN], role: document_checklist, url: "https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5",
+       why: "\"List of Required Documents for Service: Passport, Personal Photo, A copy of the visa/residence permit\""}
+    - {for: [IN], role: application_route, url: "https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936",
+       why: "\"Service Steps 1. Visit the website: https://smart.gdrfad.gov.ae 2. Register as a user ... 6. Once approved, the visa will be sent to the user's email address\""}
+    - {for: [IN], role: application_route, url: "https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5",
+       why: "the service's channel, the ICP Smart Services Website"}
+    - {for: [IN], role: fees, url: "https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5",
+       why: "\"Service fees Issuance fees - 250 AED ... Smart services fees - 100 AED\""}
+    - {for: [IN], role: fees, url: "https://icp.gov.ae/en/media-center/icp-expands-eligibility-for-uae-entry-visa-for-nationals-of-certain-countries",
+       why: "\"The fee for the 14-day visa is AED 100, while the fee for the 60-day visa is AED 250\""}
+    - {for: [IN], role: processing_times, url: "https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936",
+       why: "\"Expected Completion Time 48.0 Hour(s)\""}
+    - {for: [IN], role: general_entry, url: "https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5",
+       why: "\"The beneficiary's passport must be valid for at least (6) months. The pre-entry validity period ... is (30) days. The duration of stay ... is (60) days\""}
+    # Tourist visas either traveller can hold, and ICP's own account of how every visa works
+    - {for: [IN, PH], role: application_route, url: "https://icp.gov.ae/en/faq",
+       why: "\"You can apply through the following channels: The smart application, The official website of the Authority, Authorized typing and tourism offices\""}
+    - {for: [IN, PH], role: application_route, url: "https://icp.gov.ae/en/services-details?serviceid=64afe3c1035448005bd52e60",
+       why: "ICP's \"Issuance of a Visa\" for tourism, visits or treatment, through the smart app or website, sponsored by \"Tourism establishments authorized to issue visit visas for tourism purposes\""}
+    - {for: [IN, PH], role: application_route, url: "https://www.moet.gov.ae/entry-requirements",
+       why: "the tourism ministry: a tourist visa \"through travel agencies in the UAE\" or \"UAE embassies and consulates allow you to apply for a tourist visa\""}
+    - {for: [IN, PH], role: application_route, url: "https://www.moet.gov.ae/en/-/travel-requirements-for-the-uae-tourist-visa",
+       why: "the same ministry's \"Travel Requirements for the UAE Tourist Visa\", the same routes"}
+    - {for: [IN, PH], role: application_route, url: "https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8",
+       why: "Dubai's \"Issuing a tourist visa for several entries\": log in to the smart services system, search for the service, fill in the application, pay"}
+    - {for: [IN, PH], role: document_checklist, url: "https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936",
+       why: "Dubai's five-year multi-entry tourist visa: \"Requirements 1. A personal photo. 2. A passport copy valid for at least 6 months. 3. 6 months bank statement. 4. Health insurance. 5. Round-trip ticket\""}
+    - {for: [IN, PH], role: fees, url: "https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8",
+       why: "\"30 day tourist visa fee: AED 300. - 60 day tourist visa fee: AED 500. - In addition to value added tax (5%)\" for the multiple-entry tourist visa"}
+    - {for: [IN, PH], role: fees, url: "https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936",
+       why: "the five-year tourist visa's fees, itemised: \"Application Fee: AED 100 ... Issuance Fee: AED 500 ... Total: AED 3,713\" with the guarantee"}
+    - {for: [IN, PH], role: processing_times, url: "https://icp.gov.ae/en/faq",
+       why: "for visit visas: \"It is sent via email ... 48 hours after fulfilling all requirements\""}
+    - {for: [IN, PH], role: processing_times, url: "https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8",
+       why: "\"Expected Completion Time 48.0 Hour(s)\""}
+    - {for: [IN, PH], role: processing_times, url: "https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936",
+       why: "\"Expected Completion Time 48.0 Hour(s)\""}
+    - {for: [IN, PH], role: general_entry, url: "https://icp.gov.ae/en/faq",
+       why: "\"Health insurance and a travel ticket are required. Passport must be valid for at least 6 months. Permitted duration of stay: 30, 60, or 90 days\""}
+    - {for: [IN, PH], role: general_entry, url: "https://icp.gov.ae/en/services-details?serviceid=64afe3c1035448005bd52e60",
+       why: "\"Terms and Conditions: Valid Health Insurance Policy within the UAE, Passport valid for no less than 6 months, Return Travel Ticket\""}
+    - {for: [IN, PH], role: general_entry, url: "https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae",
+       why: "\"Passports must be valid for at least 6 months from the date of entry into the UAE\"; the Indian row recorded this page unverifiable, and it now holds text"}
+    - {for: [IN, PH], role: general_entry, url: "https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8",
+       why: "\"Terms And Conditions 1. A valid ... passport ... not less than (6) six months. 2. A travel ticket to continue his journey or a ticket to leave the country. 3. valid health insurance\""}
+    - {for: [IN, PH], role: general_entry, url: "https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936",
+       why: "the same Terms And Conditions for the five-year tourist visa"}
+  excluded:
+    - {for: [IN, PH], url: "https://gdrfad.gov.ae/en/services/d551ce89-52e8-11ea-0320-0050569629e8",
+       why: "\"Issuing a visit visa for a relative or friend for one entry\" — a different purpose (rule 6), as are Dubai's visit visas for exploring employment or business and for truck drivers"}
+    - {for: [PH], url: "https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936",
+       why: "names Philippine nationals, but only those holding a residence permit from the US, the EU, the UK or the other listed countries; this traveller lives in the Philippines"}
+
+united-kingdom:
+  add:
+    - {for: [IN, PH], role: visa_decision, url: "https://www.gov.uk/guidance/immigration-rules/immigration-rules-appendix-visitor-visa-national-list",
+       why: "the Immigration Rules' \"Appendix Visitor: Visa national list\", which names India and the Philippines — the list rule 7b names for the decision, read with Appendix V: a visa national \"must apply for and obtain entry clearance before they arrive\""}
+    - {for: [IN, PH], role: visa_decision, url: "https://www.gov.uk/government/publications/uk-visa-requirements-list-for-carriers/uk-visa-requirements-for-international-carriers",
+       why: "the carriers' list itself (the HTML attachment, not the publication page the Filipino row excludes): India under \"Nationals of countries and territories who need a visa to enter or transit the UK\", the Philippines under those who need one to enter or transit landside"}
+    - {for: [IN], role: document_checklist, url: "https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents",
+       why: "\"Visit visa: guide to supporting documents\" — the publication the Indian row credits in its HTML form; the Filipino row already credits this page"}
+    - {for: [PH], role: document_checklist, url: "https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents/guide-to-supporting-documents-visiting-the-uk",
+       why: "the guide itself, the numbered list the Indian row credits"}
+    - {for: [IN, PH], role: application_route, url: "https://www.gov.uk/visit-uk-holiday-family-friends",
+       why: "\"Visit the UK for a holiday or to see family or friends: step by step\" — check eligibility, check whether a visa is needed, \"Apply for a Standard Visitor visa\""}
+    - {for: [IN, PH], role: application_route, url: "https://www.gov.uk/find-a-visa-application-centre",
+       why: "\"Find the opening times, address and contact details for UK visa application centres outside the UK ... You must apply for your visa before you travel\""}
+    - {for: [IN, PH], role: application_route, url: "https://www.gov.uk/apply-to-come-to-the-uk/paying-fees-and-proving-your-identity",
+       why: "\"provide your biometric information ... usually by going to a visa application centre\", booking and attending the appointment"}
+    - {for: [IN, PH], role: application_route, url: "https://www.gov.uk/standard-visitor/apply-standard-visitor-visa?step-by-step-nav=0048cca7-04b2-4b3e-b4ef-ae2ef710e9f9",
+       why: "the apply page the rows credit, with its step-by-step navigation: \"you must apply online before you travel to the UK and attend an appointment at a visa application centre\""}
+    - {for: [PH], role: application_route, url: "https://www.gov.uk/apply-to-come-to-the-uk",
+       why: "\"Check if you need a visa ... Apply online ... Provide biometrics ... Get your decision\"; the Indian row already credits it"}
+    - {for: [IN, PH], role: fees, url: "https://www.gov.uk/standard-visitor",
+       why: "\"A Standard Visitor visa costs £135 for up to 6 months\""}
+    - {for: [IN, PH], role: fees, url: "https://www.gov.uk/visit-uk-holiday-family-friends",
+       why: "\"A Standard Visitor visa costs £135 and allows you to stay in the UK for up to 6 months\""}
+    - {for: [IN, PH], role: fees, url: "https://www.gov.uk/standard-visitor/apply-standard-visitor-visa?step-by-step-nav=0048cca7-04b2-4b3e-b4ef-ae2ef710e9f9",
+       why: "\"Standard Visitor visa £135 6 months\""}
+    - {for: [PH], role: fees, url: "https://www.gov.uk/standard-visitor/apply-standard-visitor-visa",
+       why: "\"Standard Visitor visa £135 6 months\"; the Indian row already credits it"}
+    - {for: [IN], role: fees, url: "https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-8-april-2026",
+       why: "the current fee table: \"Visit visa – short up to 6 months £127 £135\" from 8 April 2026"}
+    - {for: [PH], role: fees, url: "https://visa-fees.homeoffice.gov.uk/y/philippines/usd/visit/standard-visitor-visa---for-uk-isle-of-man-jersey-and-guernsey/all", seen: title_only,
+       why: "the Home Office fee table for a Standard Visitor visa applied for from the Philippines, in the dollars the traveller pays there. No stored text; the address leaves no other reading. The Indian row excludes the India table for the opposite reason: that traveller applies from Britain"}
+    - {for: [PH], role: processing_times, url: "https://www.gov.uk/standard-visitor/apply-standard-visitor-visa",
+       why: "\"you'll usually get a decision on your visa within 3 weeks\"; the Indian row already credits it"}
+    - {for: [IN, PH], role: general_entry, url: "https://www.gov.uk/uk-border-control/at-border-control",
+       why: "\"At border control You'll need to show your identity document ... Your passport (and visa if you have one) will be checked at border control. You'll usually be asked why you're coming to the UK\""}
+    - {for: [IN, PH], role: general_entry, url: "https://www.gov.uk/uk-border-control",
+       why: "\"Your identity document ... will be checked when you arrive at a UK port or airport ... It should be valid for the whole of your stay\", and what must be declared"}
+    - {for: [IN, PH], role: general_entry, url: "https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk",
+       why: "\"Your identity document should be valid for the whole of your stay ... You must have your visa, ETA or certificate of application before you travel\""}
+    - {for: [PH], role: general_entry, url: "https://www.gov.uk/evisa/travel-with-evisa",
+       why: "what to carry and show at the border with an eVisa; the Indian row already credits it"}
+  correct:
+    - {for: [IN, PH], role: visa_decision, action: answered,
+       why: "was unanswered — \"no page states it\" — but the Immigration Rules' visa-national list and the carriers' list both name India and the Philippines. The checker stays named as a tool"}
+    - {for: [PH], role: fees, action: to_tool, url: "https://www.gov.uk/visa-fees",
+       why: "the row's own note (entry 100) records this as a launcher — \"Use this tool to work out the cost ... Start now\" — credited as an answer and left uncorrected on purpose. It states no fee; it is a tool (rule 11), and the pages that state £135 are credited instead"}
+  excluded:
+    - {for: [IN, PH], url: "https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-1-may-2025",
+       why: "a superseded fee table (£127); the 8 April 2026 table and the Standard Visitor pages state £135 (rule 9). The same holds for the tables of 10 April 2024, 24 July 2024 and 9 April 2025"}
+
+united-states:
+  add:
+    - {for: [IN], role: visa_decision, url: "https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html", seen: mirror,
+       why: "\"You must be a citizen or national of the following countries to be eligible to travel to the United States under the VWP\" over the designated list, which now extracts and does not include India — the reading the Filipino row makes of the same page; the Indian row said the list did not extract"}
+    - {for: [IN, PH], role: visa_decision, url: "https://www.dhs.gov/visa-waiver-program",
+       why: "DHS: \"Current Program Countries: The following countries are currently designated for participation in the VWP\", a table from Andorra on, naming neither India nor the Philippines"}
+    - {for: [PH], role: document_checklist, url: "https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html", seen: mirror,
+       why: "\"Gather Required Documentation\" — passport valid six months beyond the stay, the DS-160 confirmation page, the fee receipt, a photograph; the Indian row already credits it, and the Filipino row recorded nothing naming what a B-2 applicant brings"}
+    - {for: [PH], role: application_route, url: "https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html", seen: mirror,
+       why: "\"How to Apply\" — Form DS-160, an interview at the embassy or consulate, fees; the Indian row already credits it"}
+    - {for: [IN, PH], role: application_route, url: "https://adoption.state.gov/content/dam/visas/VisaFlyer_B1B2-March-2015-Accessible.pdf",
+       why: "the State Department's B1/B2 leaflet: \"Applicants for visitor visas should generally apply at the nearest U.S. Embassy or Consulate in the country where they live ... Completing Form DS-160 ... is the first step\""}
+    - {for: [IN, PH], role: application_route, url: "https://adoption.state.gov/content/travel/en/us-visas.html", seen: mirror,
+       why: "\"Where to Apply for a U.S. Visa ... Find a U.S. Embassy or Consulate that processes visas in your country of nationality or residence\""}
+    - {for: [PH], role: fees, url: "https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html", seen: mirror,
+       why: "\"Fees - Pay the non-refundable visa application fee ... $185\"; the Indian row already credits it"}
+    - {for: [IN, PH], role: general_entry, url: "https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html", seen: mirror,
+       why: "\"Entering the United States: A visa allows a foreign citizen to travel to a U.S. port-of-entry ... and request permission to enter ... the CBP official will provide an admission stamp or a paper Form I-94\""}
+    - {for: [IN, PH], role: general_entry, url: "https://www.usa.gov/arrival-departure-record",
+       why: "the Form I-94 arrival record a CBP officer issues at the point of entry, and its $30 fee when applied for by land"}
+    - {for: [PH], role: general_entry, url: "https://www.dhs.gov/visit-united-states",
+       why: "\"The visa allows a foreign citizen to travel to the United States port of entry and request permission of the U.S. immigration inspector to enter\", with OBIM biometrics; the Indian row already credits it"}
+  correct:
+    - {for: [IN], role: visa_decision, action: answered, why: "was unanswered because the Visa Waiver list did not extract; it does now"}
+    - {for: [PH], role: document_checklist, action: answered, why: "was unanswered; the visitor visa page's own list, readable through the mirror, names the documents"}
+    - {for: [PH], role: application_route, action: answered, why: "was unanswered; the visitor visa page and the B1/B2 leaflet state it"}
+    - {for: [PH], role: general_entry, action: answered, why: "was unanswered; the visitor visa page's \"Entering the United States\" and DHS state it"}
+  notes:
+    - "processing_times stays unanswered for both: every page points to the per-post wait-time lookup, which the Indian row already names as a tool"
+
+# Carried across travellers: pages one row credits that sit in the other traveller's pool and say
+# the same thing to both. Pages keyed on one traveller's post, nationality or residence are not
+# carried: Manila's pages for the Indian row, Japan's eVISA for the Filipino one (it is not offered
+# in the Philippines), the UAE's services for nationals holding a UK or similar residence permit.
+harmonise:
+  add:
+    - {dest: canada, for: [PH], role: general_entry, url: "https://cic.gc.ca/english/visit/visa-exempt.asp", why: "\"You must meet some basic requirements\" to enter Canada — carried from the Indian row"}
+    - {dest: canada, for: [PH], role: general_entry, url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/eligibility.html", why: "the same basic requirements at canada.ca — carried from the Indian row"}
+    - {dest: canada, for: [PH], role: general_entry, url: "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html", why: "what a traveller needs to enter Canada — carried from the Indian row, which credits it for this role"}
+    - {dest: canada, for: [PH], role: general_entry, url: "https://cic.gc.ca/English/visit/visas-all.asp", why: "the same page at cic.gc.ca — carried from the Indian row"}
+    - {dest: canada, for: [PH], role: general_entry, url: "http://www.cic.gc.ca/english/visit/visas-all.asp", why: "the same page over http — carried from the Indian row"}
+    - {dest: canada, for: [IN], role: fees, url: "http://www.cic.gc.ca/english/visit/apply-how.asp", why: "\"Visitor visa processing fee Individual: $100\" — Canada publishes one fee for everybody"}
+    - {dest: france, for: [PH], role: application_route, url: "https://france-visas.gouv.fr/en", why: "\"To obtain a visa via France-Visas, you need to follow five steps\" — carried from the Indian row"}
+    - {dest: france, for: [PH], role: application_route, url: "https://france-visas.gouv.fr/en/web/france-visas", why: "the same home page's second text — carried from the Indian row"}
+    - {dest: france, for: [PH], role: general_entry, url: "https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/ees-the-new-european-border-entryexit-system-goes-live-on-10-april-2026", why: "the Entry/Exit System at the border — carried from the Indian row"}
+    - {dest: france, for: [PH], role: general_entry, url: "https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa", why: "\"All foreign nationals wishing to enter France must be able to submit statutory documents at the border\" — carried from the Indian row"}
+    - {dest: japan, for: [PH], role: application_route, url: "https://www.mofa.go.jp/j_info/visit/visa/procedure/note.html", why: "\"An application for visa is made ... at the Japanese Embassy / Consulate General with jurisdiction over the area in which the applicant lives\" — carried from the Indian row"}
+    - {dest: japan, for: [IN], role: application_route, url: "https://www.mofa.go.jp/j_info/visit/visa/faq.html", why: "the ways a visa may be applied for — carried from the Filipino row"}
+    - {dest: netherlands, for: [IN], role: general_entry, url: "https://www.netherlandsworldwide.nl/visa-the-netherlands/sponsor-invite-short-stay", why: "\"you will need to prove you have at least €55 per person ... for each day\", shown at Dutch border control — carried from the Filipino row"}
+    - {dest: singapore, for: [PH], role: general_entry, url: "https://ask.gov.sg/ica/questions/clos83fvw01lj5k0wp90sbtq5", why: "a passport valid six months from arrival \"as part of the entry requirements\" — carried from the Indian row"}
+    - {dest: singapore, for: [IN], role: general_entry, url: "https://ask.gov.sg/ica/questions/clre5y7ka00h4oimjoqv66jsh", why: "\"The submission of the SG Arrival Card is one of the basic entry requirements\" — carried from the Filipino row"}
+    - {dest: united-arab-emirates, for: [PH], role: application_route, url: "https://u.ae/en/information-and-services/visa-and-emirates-id/Apply-and-track-visa/where-to-apply-for-entry-permits-or-visas", why: "the online channels and the typing centres — carried from the Indian row"}
+    - {dest: united-arab-emirates, for: [PH], role: general_entry, url: "https://u.ae/en/information-and-services/passports-and-traveling/customs-regulations", why: "what may be brought in at the border — carried from the Indian row"}
+    - {dest: united-arab-emirates, for: [IN], role: processing_times, url: "https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8", why: "\"Expected Completion Time 48.0 Hour(s)\" for the single-entry tourist visa the Indian row credits for other roles — carried from the Filipino row"}
+    - {dest: united-arab-emirates, for: [IN], role: general_entry, url: "https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8", why: "the same service's Terms And Conditions — carried from the Filipino row"}
+    - {dest: united-kingdom, for: [PH], role: fees, url: "https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-8-april-2026", why: "the current fee table, £135 — carried from the Indian row"}
+    - {dest: united-kingdom, for: [PH], role: general_entry, url: "https://www.gov.uk/apply-to-come-to-the-uk/travelling-to-the-uk", why: "\"You must not travel to the UK before your visa application is approved\" — carried from the Indian row"}
+    - {dest: united-kingdom, for: [IN], role: general_entry, url: "https://www.gov.uk/entering-staying-uk/visit-and-transit-visas", why: "the entry conditions for a visitor on one page — carried from the Filipino row"}

@@ -35,9 +35,21 @@
 #
 # Ten corridors, one nationality and one residence: an Indian passport, applying from Britain, for
 # tourism. Built 2026-08-27, DECISIONS entry 87.
+#
+# **Refreshed 2026-09-29 against the stores rebuilt on 2026-09-25 (DECISIONS entry 239).** The rows
+# were curated before that rebuild and usually named one page per role, so a selector that picked
+# another page stating the same answer scored a miss (entries 236, 238). Every addition says so in
+# its `why`. What was read, per corridor and role: the top 8 by each of link, stored-text keywords
+# and embedding similarity, plus every page any recorded replay picked, kept only where the stored
+# text holds a passage of the role's kind — about 1,160 page-role pairs across the 21 rows, judged
+# by the same rules as before and recorded in var/oracle-refresh-2026-09-29/decisions.yaml. A page
+# identical to one already named was not re-read: `same_pages` credits it. Pages one traveller's row
+# credits were carried to the other's where they say the same thing to both; a post's, a
+# nationality's or a residence's own page was not. Twenty roles recorded `unanswered` are now
+# answered, and two answers that were tools moved to `tools`.
 
 # Hosts that publish one site under the same paths, so a pick at one is the page the row names at
-# another. A grading fact only; checked, never inferred (entry 236).
+# another. A grading fact only; checked, never inferred (entry 237).
 mirrors:
   - hosts: [travel.state.gov, adoption.state.gov, adoptions.state.gov]
     path_prefix: /content/travel/
@@ -67,6 +79,24 @@ corridors:
         - url: https://www.mofa.gov.ae/Visa-Exemptions-For-Non-Citizen
           seen: text
           why: the same document at another address — byte-identical stored text, 11,974 characters
+        - url: https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Dubai's "Visa for Citizens of Certain
+            Countries Resident Outside the UAE": "Beneficiaries of this service are nationals of
+            India ... holding a ... residence permit issued by ... United Kingdom" — the visa this
+            traveller takes, 14 days' stay
+        - url: https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): ICP's "Issuance of a 60-day visa for
+            nationals of certain countries residing abroad": "For nationals of the Republic of India
+            ... who hold a valid visa, residence permit ... issued by the US, EU, or UK"
+        - url: https://icp.gov.ae/en/media-center/icp-expands-eligibility-for-uae-entry-visa-for-nationals-of-certain-countries
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): ICP's announcement of the same visa for
+            these nationals with residence in the UK and the other listed countries, 14 or 60 days
       document_checklist:
         - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
           seen: text
@@ -81,6 +111,23 @@ corridors:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
           why: the same document at another address — byte-identical stored text, 5,885 characters
+        - url: https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Requirements 1. A recent colour passport-
+            sized photograph ... 2. A copy of your passport ... 3. A copy of your visa or residence
+            permit"
+        - url: https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "List of Required Documents for Service:
+            Passport, Personal Photo, A copy of the visa/residence permit"
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Dubai's five-year multi-entry tourist visa:
+            "Requirements 1. A personal photo. 2. A passport copy valid for at least 6 months. 3. 6
+            months bank statement. 4. Health insurance. 5. Round-trip ticket"
       application_route:
         - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
           seen: text
@@ -104,6 +151,46 @@ corridors:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
           why: the same document at another address — byte-identical stored text, 5,885 characters
+        - url: https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Service Steps 1. Visit the website:
+            https://smart.gdrfad.gov.ae 2. Register as a user ... 6. Once approved, the visa will be
+            sent to the user's email address"
+        - url: https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the service's channel, the ICP Smart
+            Services Website
+        - url: https://icp.gov.ae/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You can apply through the following
+            channels: The smart application, The official website of the Authority, Authorized
+            typing and tourism offices"
+        - url: https://icp.gov.ae/en/services-details?serviceid=64afe3c1035448005bd52e60
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): ICP's "Issuance of a Visa" for tourism,
+            visits or treatment, through the smart app or website, sponsored by "Tourism
+            establishments authorized to issue visit visas for tourism purposes"
+        - url: https://www.moet.gov.ae/entry-requirements
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the tourism ministry: a tourist visa
+            "through travel agencies in the UAE" or "UAE embassies and consulates allow you to apply
+            for a tourist visa"
+        - url: https://www.moet.gov.ae/en/-/travel-requirements-for-the-uae-tourist-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same ministry's "Travel Requirements
+            for the UAE Tourist Visa", the same routes
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Dubai's "Issuing a tourist visa for several
+            entries": log in to the smart services system, search for the service, fill in the
+            application, pay
       fees:
         - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
           seen: text
@@ -116,10 +203,55 @@ corridors:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
           why: the same document at another address — byte-identical stored text, 5,885 characters
+        - url: https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Service fees Issuance fees - 250 AED ...
+            Smart services fees - 100 AED"
+        - url: https://icp.gov.ae/en/media-center/icp-expands-eligibility-for-uae-entry-visa-for-nationals-of-certain-countries
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The fee for the 14-day visa is AED 100,
+            while the fee for the 60-day visa is AED 250"
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "30 day tourist visa fee: AED 300. - 60 day
+            tourist visa fee: AED 500. - In addition to value added tax (5%)" for the multiple-entry
+            tourist visa
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the five-year tourist visa's fees,
+            itemised: "Application Fee: AED 100 ... Issuance Fee: AED 500 ... Total: AED 3,713" with
+            the guarantee
       processing_times:
         - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
           seen: text
           why: '"Expected Completion Time 48.0 Hour(s)"'
+        - url: https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Expected Completion Time 48.0 Hour(s)"
+        - url: https://icp.gov.ae/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): for visit visas: "It is sent via email ...
+            48 hours after fulfilling all requirements"
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Expected Completion Time 48.0 Hour(s)"
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Expected Completion Time 48.0 Hour(s)"
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Expected Completion Time 48.0 Hour(s)" for
+            the single-entry tourist visa the Indian row credits for other roles — carried from the
+            Filipino row
       general_entry:
         - url: https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
           seen: text
@@ -129,6 +261,46 @@ corridors:
         - url: https://u.ae/en/information-and-services/passports-and-traveling/customs-regulations
           seen: text
           why: what may be brought in at the border, which is not part of the visa application
+        - url: https://icp.gov.ae/en/services-details?serviceid=68f5bcdb8c587a0011cb16d5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The beneficiary's passport must be valid
+            for at least (6) months. The pre-entry validity period ... is (30) days. The duration of
+            stay ... is (60) days"
+        - url: https://icp.gov.ae/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Health insurance and a travel ticket are
+            required. Passport must be valid for at least 6 months. Permitted duration of stay: 30,
+            60, or 90 days"
+        - url: https://icp.gov.ae/en/services-details?serviceid=64afe3c1035448005bd52e60
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Terms and Conditions: Valid Health
+            Insurance Policy within the UAE, Passport valid for no less than 6 months, Return Travel
+            Ticket"
+        - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Passports must be valid for at least 6
+            months from the date of entry into the UAE"; the Indian row recorded this page
+            unverifiable, and it now holds text
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Terms And Conditions 1. A valid ...
+            passport ... not less than (6) six months. 2. A travel ticket to continue his journey or
+            a ticket to leave the country. 3. valid health insurance"
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same Terms And Conditions for the five-
+            year tourist visa
+        - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same service's Terms And Conditions —
+            carried from the Filipino row
     unverifiable:
       - https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
       - https://u.ae/en/information-and-services/visa-and-emirates-id/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae/visa-on-arrival
@@ -138,6 +310,11 @@ corridors:
           states the same rule — "Indian passports holding an EU / British residence permits valid
           for at least 6 months" — but from the mission in Stockholm. Rule 5 prefers the post
           serving the traveller's residence, and this one serves Sweden.
+      - url: https://gdrfad.gov.ae/en/services/d551ce89-52e8-11ea-0320-0050569629e8
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): "Issuing a visit visa for a relative or
+          friend for one entry" — a different purpose (rule 6), as are Dubai's visit visas for
+          exploring employment or business and for truck drivers
     note: >-
       one page answers every role here, and it is the sharpest case in the fixture for why residence
       is not a detail: the UAE publishes a service keyed on Indian nationality *and* UK residence
@@ -162,6 +339,12 @@ corridors:
         - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
           seen: text
           why: the same document at another address — byte-identical stored text, 16,465 characters
+        - url: https://cic.gc.ca/ENGLISH/visit/visas.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the current visa-required list — "Visa-
+            required countries or territories" names India, and the Philippines with its eTA
+            exception; a newer text of the list the rows already credit
       document_checklist:
         - url: https://ircc.canada.ca/english/visit/apply-how.asp
           seen: text
@@ -197,6 +380,28 @@ corridors:
         - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
           seen: text
           why: the same document at another address — byte-identical stored text, 14,765 characters
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Guide 5256: "Most people must apply online.
+            You can only apply on paper if you can't apply online"
+        - url: https://ircc.canada.ca/english/information/applications/visa.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You can apply online or on paper (in
+            specific situations) for: visitor visas", then the steps from applying to biometrics to
+            arrival
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa/paper-application.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "If you need a visitor visa to travel to
+            Canada, you must apply online for one", and when paper is allowed
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/biometrics/where-to-give.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Giving your biometrics outside Canada ...
+            at a visa application centre (VAC) by making an appointment", with the centres by
+            country
       fees:
         - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
           seen: text
@@ -210,6 +415,21 @@ corridors:
         - url: https://www.ircc.canada.ca/english/information/fees/fees.asp
           seen: text
           why: the same document at another address — byte-identical stored text, 14,834 characters
+        - url: https://ircc.canada.ca/english/information/fees/result.asp?countrySelect=CA&lob=trv
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the visitor visa fee table — per person,
+            and "maximum fee for a family of 5 or more ... $CAN: 500.00"
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visitor visa processing fee | Individual:
+            $100 Family (5 or more people): $500", with the $85 biometrics fee
+        - url: http://www.cic.gc.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visitor visa processing fee Individual:
+            $100" — Canada publishes one fee for everybody
       general_entry:
         - url: https://cic.gc.ca/English/visit/visas-all.asp
           seen: text
@@ -235,6 +455,18 @@ corridors:
         - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/eligibility.html
           seen: text
           why: the same document at another address — byte-identical stored text, 1,860 characters
+        - url: https://ircc.canada.ca/english/information/applications/visa.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "If you pass the identity check and meet
+            the entry requirements, the border services officer stamps your passport ... normally
+            allowed to stay in Canada for up to six months"
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The officer at the port of entry will
+            determine whether you may enter Canada and how long you may stay ... generally valid for
+            a period of six (6) months"
     tools:
       processing_times: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html
     unanswered:
@@ -271,6 +503,40 @@ corridors:
         - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
           seen: text
           why: the same page at a second address — byte-identical stored text, 17,678 characters
+        - url: https://uk.diplo.de/uk-en/02/visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "your place of residence determines which
+            German Mission or Visa Application Centre you will need to contact ... Schengen visas
+            (type C) can only be applied for through our external service provider TLScontact"
+        - url: https://uk.diplo.de/uk-en/02/visa/where-can-i-apply-for-my-visa-2448180
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The German Embassy in London and the visa
+            application centres in London and Manchester, operated by ... TLScontact, serve visa
+            applicants residing in England"
+        - url: https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "All C visas must be applied for with a
+            Visa Application Centre run by our external service provider TLScontact", after the
+            VIDEX form and an appointment
+        - url: https://uk.diplo.de/uk-en/02/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "we will only accept visa applications from
+            UK residents ... You will need to schedule an appointment with the respective Mission or
+            the Visa Application Centre (VAC) operated by TLScontact"
+        - url: https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same FAQ at its second address, with
+            slightly different stored text
+        - url: https://uk.diplo.de/uk-en/02/appointment-waiting-ists-2771686
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the waiting list for appointments with the
+            service provider, by category — "Tourism/ planned medical treatment" first
       fees:
         - url: https://www.auswaertiges-amt.de/en/visa-service/-/215870
           seen: text
@@ -278,6 +544,20 @@ corridors:
         - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
           seen: text
           why: the same page at a second address
+        - url: https://uk.diplo.de/uk-en/02/2442868-2442868
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa fees are €90 for Schengen (A or C)
+            visas and €75 for national (D) visas"
+        - url: https://uk.diplo.de/uk-en/02/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa fees are €90 for Schengen (A or C)
+            visas"
+        - url: https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same FAQ at its second address
       processing_times:
         - url: https://www.auswaertiges-amt.de/en/visa-service/-/215870
           seen: text
@@ -286,15 +566,60 @@ corridors:
         - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
           seen: text
           why: the same page at a second address
-    unanswered:
-      document_checklist: >-
-        no candidate names a document. The nearest, 215870, says only to "consult the requirements
-        well in advance" — rule 4 of the adjudication prompt excludes exactly that. Germany's whole
-        mission network (india.diplo.de, uk.diplo.de), where the checklist lives, is outside the
-        trusted set by entry 33's governmental-marker gap.
-      general_entry: >-
-        nothing in the contention set states entry conditions; a search of all 45 stored bodies for
-        travel insurance, the EUR 30,000 cover or sufficient funds returns nothing.
+        - url: https://uk.diplo.de/uk-en/02/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "A and C visa applications will usually be
+            processed within 15 working days from the date the application is received"
+        - url: https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same FAQ at its second address
+        - url: https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The processing time for a Schengen visa is
+            appr. 15 working days from the date the application is received"
+      document_checklist:
+        - url: https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the UK missions' C-visa list: "Valid
+            passport ... issued within the last 10 years ... Proof of a valid residence permit for
+            the United Kingdom ... A fully biometric passport photo ... Reserved return airline/
+            ferry/ train ticket ... travel health insurance ... at least €30,000 ... Evidence of
+            sufficient funds"
+      general_entry:
+        - url: https://uk.diplo.de/uk-en/02/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "passports and travel documents issued by
+            countries outside the EU ... are only recognised as valid for entering and staying in
+            Germany if they have been issued within the last ten years and if the passport validity
+            exceeds the validity of the visa ... by at least three months"
+        - url: https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same FAQ at its second address
+        - url: https://www.auswaertiges-amt.de/en/visa-service/buergerservice/faq/32-sonstiges-606746?isLocal=false&isPreview=false
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You can only enter Germany if you have
+            valid identity papers ... valid at least for another three months ... documents ... that
+            prove the purpose and circumstances of the visit ... sufficient funds" — asked by a
+            visa-free traveller, but the Schengen Borders Code conditions it states bind every
+            entrant
+    excluded:
+      - url: https://uk.diplo.de/resource/blob/2449824/5beb74da9516aa949a6d07d7a4b61bce/download-fees-data.pdf
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): the UK missions' fee sheet "Last updated on
+          02 February 2020", stating EUR 80 for a Schengen visa; the missions' own pages now say €90
+          (rule 9)
+      - url: https://india.diplo.de/in-en/2674158-2674158
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): one of the Indian missions' Schengen
+          checklists, for applicants in India; this traveller applies in Britain (rule 5). The same
+          holds for india.diplo.de's other checklists and fee pages
     joint:
       - https://www.auswaertiges-amt.de/en/visa-service/231148-231148
   - corridor: france/IN/GB/tourism
@@ -313,6 +638,29 @@ corridors:
         - url: https://france-visas.gouv.fr/en
           seen: text
           why: '"To obtain a visa via France-Visas, you need to follow five steps"'
+        - url: https://france-visas.gouv.fr/en/la-demarche
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The visa application process: 5 steps to
+            complete your application" — gather information, set up the online application, book the
+            appointment, submit, track
+        - url: https://www.service-public.gouv.fr/particuliers/actualites/A17574?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "When you wish to obtain a visa to come to
+            France, you must: check ... create an account on France-Visas; complete the visa
+            application form ...", then the appointment and tracking
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F16146?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Schengen short-stay visa sheet: "You
+            must complete your visa application online ... After completing your application on the
+            internet, you must make an appointment at the French consulate"
+        - url: https://france-visas.gouv.fr/en/web/france-visas
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "To obtain a visa via France-Visas, you
+            need to follow five steps"; a second text of the France-Visas home page the row credits
       general_entry:
         - url: https://france-visas.gouv.fr/en/votre-arrivee-en-france
           seen: text
@@ -332,6 +680,42 @@ corridors:
           why: >-
             the Entry/Exit System and ETIAS at the border, from 10 April 2026 — an entry condition
             that is not part of the visa application
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F21921?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You must complete all of the following
+            conditions when crossing the border: Have a passport ... valid at least 3 months longer
+            than the scheduled date of your departure ... Justify the purpose and conditions of your
+            stay", with the resources per day
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F1765?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Schengen area: what are the conditions for
+            entry" — the same border conditions, insurance of €30,000 and €65 or €120 a day
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F39104?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): registration in the Entry/Exit System at
+            the external border for any non-European national staying up to 3 months; the Indian row
+            credits the ministry's EES page
+      fees:
+        - url: https://france-visas.gouv.fr/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa applicants must pay an application
+            fee ... of €90 for short-stay visas" — the FAQ the rows called unreadable (its cookie
+            panel) now holds its text
+      processing_times:
+        - url: https://france-visas.gouv.fr/en/la-demarche
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The decision-making time on visa
+            applications is usually 15 days. This period may be extended up to 45 days"
+        - url: https://www.service-public.gouv.fr/particuliers/actualites/A17574?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "the processing time is usually 15 days,
+            but it can be longer"
     tools:
       visa_decision: https://france-visas.gouv.fr/en/assistant-visa
       document_checklist: https://france-visas.gouv.fr/en/assistant-visa
@@ -344,12 +728,6 @@ corridors:
         requirements for Indian nationals" at 164.0, is about airport transit and not about tourism.
       document_checklist: >-
         the wizard "will also tell you what documents must be attached"; no page lists them
-      fees: >-
-        the wizard states "the relevant fee"; the only euro figures in the readable set are the EUR
-        877.50 student income threshold and the EUR 20 ETIAS charge
-      processing_times: >-
-        no readable candidate gives a figure; every page says waiting times vary by country and
-        season
     unverifiable:
       - https://france-visas.gouv.fr/en/royaume-uni
       - https://france-visas.gouv.fr/en/web/france-visas/inde
@@ -381,6 +759,12 @@ corridors:
             "Visiting the UK: guide to supporting documents" — a numbered list beginning with the
             travel document, then evidence of personal circumstances, funds and accommodation, with
             the translation rules
+        - url: https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visit visa: guide to supporting documents"
+            — the publication the Indian row credits in its HTML form; the Filipino row already
+            credits this page
       application_route:
         - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
           seen: text
@@ -396,12 +780,54 @@ corridors:
         - url: https://www.gov.uk/apply-to-come-to-the-uk/prove-your-identity
           seen: text
           why: the same document at another address — byte-identical stored text, 2,692 characters
+        - url: https://www.gov.uk/visit-uk-holiday-family-friends
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visit the UK for a holiday or to see
+            family or friends: step by step" — check eligibility, check whether a visa is needed,
+            "Apply for a Standard Visitor visa"
+        - url: https://www.gov.uk/find-a-visa-application-centre
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Find the opening times, address and
+            contact details for UK visa application centres outside the UK ... You must apply for
+            your visa before you travel"
+        - url: https://www.gov.uk/apply-to-come-to-the-uk/paying-fees-and-proving-your-identity
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "provide your biometric information ...
+            usually by going to a visa application centre", booking and attending the appointment
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa?step-by-step-nav=0048cca7-04b2-4b3e-b4ef-ae2ef710e9f9
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the apply page the rows credit, with its
+            step-by-step navigation: "you must apply online before you travel to the UK and attend
+            an appointment at a visa application centre"
       fees:
         - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
           seen: text
           why: >-
             "Standard Visitor visa £135, 6 months" — the sterling fee, which is what a traveller
             applying from Britain pays
+        - url: https://www.gov.uk/standard-visitor
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "A Standard Visitor visa costs £135 for up
+            to 6 months"
+        - url: https://www.gov.uk/visit-uk-holiday-family-friends
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "A Standard Visitor visa costs £135 and
+            allows you to stay in the UK for up to 6 months"
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa?step-by-step-nav=0048cca7-04b2-4b3e-b4ef-ae2ef710e9f9
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Standard Visitor visa £135 6 months"
+        - url: https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-8-april-2026
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the current fee table: "Visit visa – short
+            up to 6 months £127 £135" from 8 April 2026
       processing_times:
         - url: https://www.gov.uk/guidance/visa-processing-times-applications-outside-the-uk
           seen: text
@@ -425,13 +851,46 @@ corridors:
         - url: https://www.gov.uk/evisa/travel-with-evisa
           seen: text
           why: what to carry and show at the border with an eVisa
+        - url: https://www.gov.uk/uk-border-control/at-border-control
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "At border control You'll need to show your
+            identity document ... Your passport (and visa if you have one) will be checked at border
+            control. You'll usually be asked why you're coming to the UK"
+        - url: https://www.gov.uk/uk-border-control
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Your identity document ... will be checked
+            when you arrive at a UK port or airport ... It should be valid for the whole of your
+            stay", and what must be declared
+        - url: https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Your identity document should be valid for
+            the whole of your stay ... You must have your visa, ETA or certificate of application
+            before you travel"
+        - url: https://www.gov.uk/entering-staying-uk/visit-and-transit-visas
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the entry conditions for a visitor on one
+            page — carried from the Filipino row
+      visa_decision:
+        - url: https://www.gov.uk/guidance/immigration-rules/immigration-rules-appendix-visitor-visa-national-list
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Immigration Rules' "Appendix Visitor:
+            Visa national list", which names India and the Philippines — the list rule 7b names for
+            the decision, read with Appendix V: a visa national "must apply for and obtain entry
+            clearance before they arrive"
+        - url: https://www.gov.uk/government/publications/uk-visa-requirements-list-for-carriers/uk-visa-requirements-for-international-carriers
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the carriers' list itself (the HTML
+            attachment, not the publication page the Filipino row excludes): India under "Nationals
+            of countries and territories who need a visa to enter or transit the UK", the
+            Philippines under those who need one to enter or transit landside
     tools:
       visa_decision: https://www.gov.uk/check-uk-visa
-    unanswered:
-      visa_decision: >-
-        no candidate states whether an Indian national needs a visa. gov.uk/standard-visitor says
-        only "Depending on your nationality, you may not need a visa"; the answer is behind
-        gov.uk/check-uk-visa, which is entries 59 and 60's questionnaire.
     excluded:
       - url: https://visa-fees.homeoffice.gov.uk/y/india/inr/visit/standard-visitor-visa---for-uk-isle-of-man-jersey-and-guernsey/all
         why: >-
@@ -441,6 +900,11 @@ corridors:
           traveller applies from Britain and pays the GBP 135 on gov.uk. Entry 82 treated the per-
           nationality fee tables as the UK's missing answer; for a corridor whose residence is not
           the passport country they are keyed on the wrong dimension.
+      - url: https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-1-may-2025
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): a superseded fee table (£127); the 8 April
+          2026 table and the Standard Visitor pages state £135 (rule 9). The same holds for the
+          tables of 10 April 2024, 24 July 2024 and 9 April 2025
     joint:
       - https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents/guide-to-supporting-documents-visiting-the-uk
       - https://www.gov.uk/guidance/immigration-rules/immigration-rules-appendix-visitor-visa-national-list
@@ -488,6 +952,60 @@ corridors:
         - url: https://www.evisa.mofa.go.jp/index
           seen: text
           why: the eVISA system's own five-step flow, from verification to issuance
+        - url: https://www.mofa.go.jp/j_info/visit/visa/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "you may apply for a visa at the consular
+            section of the Diplomatic Mission of Japan with jurisdiction over your place of
+            residence, at an accredited agency, the Japan Visa Application Centre, or online", with
+            the eVISA countries, the United Kingdom among them
+        - url: https://www.mofa.go.jp/j_info/visit/visa/visaonline.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "All foreign nationals/people residing in
+            these countries/regions [the United Kingdom among them], except those who are exempt ...
+            can apply for an eVISA through the JAPAN eVISA website"; the Filipino row already
+            credits it
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000205.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Edinburgh consulate's visa page: the
+            application form, "eVISA is available for Tourism", in-person submission by appointment
+            and collection
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000196.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the consulate's temporary visitor page: the
+            documents by purpose, "eVISA is available for Tourism"
+        - url: https://www.uk.emb-japan.go.jp/itpr_en/index_000070.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the London embassy's temporary visitor
+            page: "Documentation Tourism ➥ eVISA is available for Tourism"
+        - url: https://www.evisa.mofa.go.jp/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the eVISA FAQ: eligibility, how to apply,
+            what to upload, how it is issued
+        - url: https://www.evisa.mofa.go.jp/personal/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same FAQ at its signed-in address
+        - url: https://www.evisa.mofa.go.jp/pdf/personal_flowchart_en.pdf
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the eVISA flow from application to
+            examination, fee payment, issuance and the landing examination
+        - url: https://www.mofa.go.jp/j_info/visit/visa/page22e_000999.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ministry's FAQ about JAPAN eVISA: "The
+            entire process can be completed online"
+        - url: https://www.mofa.go.jp/j_info/visit/visa/faq.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ways a visa may be applied for —
+            carried from the Filipino row
       fees:
         - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000203.html
           seen: text
@@ -497,6 +1015,17 @@ corridors:
         - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/pagewe_000001_00391.html
           seen: text
           why: '"approximately 15,000 yen for a single-entry visa" from 1 July 2026'
+        - url: https://www.uk.emb-japan.go.jp/itpr_en/index_000075.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa Fees (as of 1st July 2026) ... Single
+            Entry Visas Indian nationals ￡4.00" at the London embassy
+        - url: https://www.mofa.go.jp/files/101048885.pdf
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the list of fees payable online by card:
+            "Single-entry visa General 15,000 Yen Indian 832 Yen" — the eVISA route this traveller
+            uses from Britain
       processing_times:
         - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/day.html
           seen: text
@@ -504,6 +1033,26 @@ corridors:
         - url: https://www.edinburgh.uk.emb-japan.go.jp/files/100603564.pdf
           seen: text
           why: '"Visa processing normally takes at least 5 working days"'
+        - url: https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000205.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "in most cases it will take 5 working days
+            ... eVISA (online application) processing normally take on average 2 weeks"
+        - url: https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "In principle, the visa processing time is
+            5 working days from the day that the Embassy accepted documents"
+        - url: https://www.evisa.mofa.go.jp/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "It normally takes 5 working days for
+            Japanese overseas establishment to examine and issue a visa after receipt of a complete
+            application"
+        - url: https://www.evisa.mofa.go.jp/personal/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same FAQ at its signed-in address
       general_entry:
         - url: https://www.mofa.go.jp/j_info/visit/visa/index.html
           seen: text
@@ -516,6 +1065,25 @@ corridors:
           why: >-
             what to carry for immigration inspection at the airport — return ticket, host details,
             evidence of funds
+        - url: https://www.mofa.go.jp/j_info/visit/visa/system/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visas and Landing Permission": "holding a
+            visa is only one of the requirements for a landing permission application at the port of
+            entry of Japan and does not guarantee that the holder ... will be able to enter"
+        - url: https://www.uk.emb-japan.go.jp/itpr_en/index_000070.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "permission to enter Japan remains at the
+            discretion of the immigration authorities ... take supporting documents with you for
+            immigration inspection at the airport such as a return flight ticket ... and evidence of
+            sufficient funds" — the London text of the Edinburgh page the row credits
+    excluded:
+      - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/fee.html
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): "about 3,000 yen for a single-entry visa",
+          with the note that fees "are to be revised on July 1, 2026"; the revised table
+          (pagewe_000001_00391) is what the rows credit (rule 9)
     joint:
       - https://www.mofa.go.jp/j_info/visit/visa/faq.html
       - https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
@@ -539,6 +1107,18 @@ corridors:
             them. **It scores zero for every role**, so the selector is never shown it. The
             equivalent EES page is already a `general_entry` answer in the France row, so this is
             the same artefact judged the same way.
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-united-kingdom
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Step 6: Prepare for your trip ... a
+            maximum of 90 days in any 180-day period ... You must show the visa upon departure and
+            arrival. Border control may also ask you for other documents"
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/sponsor-invite-short-stay
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "you will need to prove you have at least
+            €55 per person ... for each day", shown at Dutch border control — carried from the
+            Filipino row
       document_checklist:
         - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom
           seen: text
@@ -621,12 +1201,23 @@ corridors:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
           why: '"You will usually receive a decision within two weeks"'
+        - url: https://www.government.se/government-policy/migration-and-asylum/information-on-visas
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa application decisions should be taken
+            within 15 calendar days of the date on which the application was received"
       general_entry:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
           why: >-
             the border-police conditions — passport valid three months past departure, return
             ticket, invitation or hotel booking, SEK 700 a day
+        - url: https://www.government.se/press-releases/2025/10/entryexit-system--a-new-eu-system-for-border-controls
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Entry/Exit System at Sweden's external
+            border from 12 October 2025, registering third-country travellers on entry; the France
+            and Netherlands rows credit the equivalent pages
     joint:
       - https://www.government.se/government-policy/migration-and-asylum/list-of-foreign-citizens-who-require-visa-for-entry-into-sweden
       - https://www.migrationsverket.se/en/you-have-received-a-decision/visiting-sweden/your-application-for-an-entry-visa-has-been-approved.html
@@ -648,6 +1239,12 @@ corridors:
         - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india
           seen: text
           why: the same document at another address — byte-identical stored text, 4,736 characters
+        - url: https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "If your travel document is issued by one
+            of the countries/ places listed below, you will require a valid visa" — the list names
+            India; the Filipino row credits the same page for the opposite reading (rule 7b)
       document_checklist:
         - url: https://www.ica.gov.sg/enter-depart/entry_requirements/visa_requirements/visa-detail-page/india
           seen: text
@@ -711,6 +1308,36 @@ corridors:
         - url: https://www.mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa
           seen: text
           why: the same document at another address — byte-identical stored text, 1,952 characters
+        - url: https://ask.gov.sg/ica/questions/clos83fvy01mf5k0wu09z54te
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): ICA: "You will have to satisfy the basic
+            entry requirements ... A valid passport with at least 6 months' validity; A valid
+            Singapore entry visa (if applicable); A confirmed return/ onward tickets ...; Sufficient
+            funds"
+        - url: https://www.ica.gov.sg/public-education/visiting-singapore
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Basic Entry Requirements: You must present
+            yourself for immigration clearance ... satisfy the basic entry requirements", the SG
+            Arrival Card and the e-Pass
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements/sg-arrival-card
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the SG Arrival Card every visitor submits
+            within three days before arrival; the Filipino row credits the same page at its newer
+            address
+        - url: https://ask.gov.sg/ica/questions/clos83fvw01lj5k0wp90sbtq5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You will require a passport that is valid
+            for at least 6 months from the date of arrival in Singapore as part of the entry
+            requirements"
+        - url: https://ask.gov.sg/ica/questions/clre5y7ka00h4oimjoqv66jsh
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The submission of the SG Arrival Card is
+            one of the basic entry requirements" — carried from the Filipino row
     note: >-
       the mission pages for Chennai, Mumbai and New Delhi state their own fees and times, and are
       deliberately excluded: rule 5 of the adjudication prompt prefers the post serving the
@@ -743,6 +1370,19 @@ corridors:
         - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
           seen: text
           why: the same page under a second subdomain
+        - url: https://adoption.state.gov/content/dam/visas/VisaFlyer_B1B2-March-2015-Accessible.pdf
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the State Department's B1/B2 leaflet:
+            "Applicants for visitor visas should generally apply at the nearest U.S. Embassy or
+            Consulate in the country where they live ... Completing Form DS-160 ... is the first
+            step"
+        - url: https://adoption.state.gov/content/travel/en/us-visas.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Where to Apply for a U.S. Visa ... Find a
+            U.S. Embassy or Consulate that processes visas in your country of nationality or
+            residence"
       fees:
         - url: https://travel.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
           seen: mirror
@@ -762,14 +1402,34 @@ corridors:
             "The visa allows a foreign citizen to travel to the United States port of entry and
             request permission of the U.S. immigration inspector to enter" — with OBIM biometrics;
             the conditions after the visa rather than the application
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Entering the United States: A visa allows
+            a foreign citizen to travel to a U.S. port-of-entry ... and request permission to enter
+            ... the CBP official will provide an admission stamp or a paper Form I-94"
+        - url: https://www.usa.gov/arrival-departure-record
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Form I-94 arrival record a CBP officer
+            issues at the point of entry, and its $30 fee when applied for by land
+      visa_decision:
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You must be a citizen or national of the
+            following countries to be eligible to travel to the United States under the VWP" over
+            the designated list, which now extracts and does not include India — the reading the
+            Filipino row makes of the same page; the Indian row said the list did not extract
+        - url: https://www.dhs.gov/visa-waiver-program
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): DHS: "Current Program Countries: The
+            following countries are currently designated for participation in the VWP", a table from
+            Andorra on, naming neither India nor the Philippines
     tools:
       processing_times: https://travel.state.gov/content/travel/en/us-visas/visa-information-resources/wait-times.html
     unanswered:
-      visa_decision: >-
-        nothing readable states it for an Indian passport. The nearest is the Visa Waiver Program
-        page, whose whole subject is who may travel without a visa — but its list of participating
-        countries did not extract into stored text, so whether India's absence is legible there
-        cannot be checked from disk. The corridor's own outcome, decision_not_found, agrees.
       processing_times: >-
         no candidate states a figure. Wait times are published as a per-post lookup, which is a tool
         rather than a page stating an answer.
@@ -827,6 +1487,12 @@ corridors:
             "1. One personal photo. 2. Copy of the passport. 3. Identity card for the country of
             origin for some nationalities (Iraq - Pakistan - Iran - Afghanistan)", a list this
             traveller is inside and outside the third line of
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Dubai's five-year multi-entry tourist visa:
+            "Requirements 1. A personal photo. 2. A passport copy valid for at least 6 months. 3. 6
+            months bank statement. 4. Health insurance. 5. Round-trip ticket"
       application_route:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
@@ -837,28 +1503,131 @@ corridors:
         - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Types-of-visas/tourist-visa
           seen: text
           why: the government platform's index of tourist visa routes and who issues each
+        - url: https://icp.gov.ae/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You can apply through the following
+            channels: The smart application, The official website of the Authority, Authorized
+            typing and tourism offices"
+        - url: https://icp.gov.ae/en/services-details?serviceid=64afe3c1035448005bd52e60
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): ICP's "Issuance of a Visa" for tourism,
+            visits or treatment, through the smart app or website, sponsored by "Tourism
+            establishments authorized to issue visit visas for tourism purposes"
+        - url: https://www.moet.gov.ae/entry-requirements
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the tourism ministry: a tourist visa
+            "through travel agencies in the UAE" or "UAE embassies and consulates allow you to apply
+            for a tourist visa"
+        - url: https://www.moet.gov.ae/en/-/travel-requirements-for-the-uae-tourist-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same ministry's "Travel Requirements
+            for the UAE Tourist Visa", the same routes
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Dubai's "Issuing a tourist visa for several
+            entries": log in to the smart services system, search for the service, fill in the
+            application, pay
+        - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Apply-and-track-visa/where-to-apply-for-entry-permits-or-visas
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the online channels and the typing centres
+            — carried from the Indian row
       fees:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
           why: >-
             "30-day tourist visa fee: AED 252. 60-day tourist visa fee: AED 352. In addition to
             value added tax (5%)." Priced in the currency the traveller pays
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "30 day tourist visa fee: AED 300. - 60 day
+            tourist visa fee: AED 500. - In addition to value added tax (5%)" for the multiple-entry
+            tourist visa
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the five-year tourist visa's fees,
+            itemised: "Application Fee: AED 100 ... Issuance Fee: AED 500 ... Total: AED 3,713" with
+            the guarantee
       processing_times:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
           why: '"Expected Completion Time 48.0 Hour(s)"'
+        - url: https://icp.gov.ae/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): for visit visas: "It is sent via email ...
+            48 hours after fulfilling all requirements"
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Expected Completion Time 48.0 Hour(s)"
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Expected Completion Time 48.0 Hour(s)"
       general_entry:
         - url: https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
           seen: text
           why: >-
             the same page's Terms And Conditions — a passport valid for at least six months, and a
             ticket to leave the UAE
+        - url: https://icp.gov.ae/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Health insurance and a travel ticket are
+            required. Passport must be valid for at least 6 months. Permitted duration of stay: 30,
+            60, or 90 days"
+        - url: https://icp.gov.ae/en/services-details?serviceid=64afe3c1035448005bd52e60
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Terms and Conditions: Valid Health
+            Insurance Policy within the UAE, Passport valid for no less than 6 months, Return Travel
+            Ticket"
+        - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Passports must be valid for at least 6
+            months from the date of entry into the UAE"; the Indian row recorded this page
+            unverifiable, and it now holds text
+        - url: https://gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Terms And Conditions 1. A valid ...
+            passport ... not less than (6) six months. 2. A travel ticket to continue his journey or
+            a ticket to leave the country. 3. valid health insurance"
+        - url: https://www.gdrfad.gov.ae/en/services/7fe37963-b7f8-11ed-5210-4cd98f768936
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same Terms And Conditions for the five-
+            year tourist visa
+        - url: https://u.ae/en/information-and-services/passports-and-traveling/customs-regulations
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): what may be brought in at the border —
+            carried from the Indian row
     excluded:
       - url: https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/visa-fees
         why: >-
           the top `fees` candidate at **126.4**, titled "Visa fees and fines", and it prices nothing:
           "Visa charges are stated on each service card on the websites of ICP and GDRFA-D." It
           defers to the page that actually answers, which scores **0.0** for the role.
+      - url: https://gdrfad.gov.ae/en/services/d551ce89-52e8-11ea-0320-0050569629e8
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): "Issuing a visit visa for a relative or
+          friend for one entry" — a different purpose (rule 6), as are Dubai's visit visas for
+          exploring employment or business and for truck drivers
+      - url: https://gdrfad.gov.ae/en/services/9017d6d0-8fb5-11f1-5210-4cd98f768936
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): names Philippine nationals, but only those
+          holding a residence permit from the US, the EU, the UK or the other listed countries; this
+          traveller lives in the Philippines
     note: >-
       **This row was curated wrongly the first time and is the reason the corrections table gained a
       line.** It was built from a two-role dump and recorded five roles as unanswered, on the
@@ -880,6 +1649,12 @@ corridors:
             "Philippines (Some citizens of the Philippines may be eligible for an eTA if they meet
             certain requirements.)" — named in the visa-required list, with the one exception spelled
             out, which is a statement about this passport rather than an omission from a list
+        - url: https://cic.gc.ca/ENGLISH/visit/visas.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the current visa-required list — "Visa-
+            required countries or territories" names India, and the Philippines with its eTA
+            exception; a newer text of the list the rows already credit
       document_checklist:
         - url: https://ircc.canada.ca/english/visit/apply-how.asp
           seen: text
@@ -892,22 +1667,124 @@ corridors:
             "Guide 5256 — Applying for a visitor visa (temporary resident visa)", whose "Step 1.
             Gather documents" is the checklist. Named here for the same reason the Indian row names
             it, and it is a guide index rather than the list itself
+        - url: http://www.cic.gc.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "All applicants need to include a digital
+            copy of your valid (not expired) passport", then the forms and supporting documents by
+            situation; the Indian row already credits this page
       application_route:
         - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
           seen: text
           why: the visitor visa application steps, from outside Canada
-      processing_times:
-        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
           seen: text
-          why: the current processing times tool's own page, giving times per application type
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): Guide 5256: "Most people must apply online.
+            You can only apply on paper if you can't apply online"
+        - url: https://ircc.canada.ca/english/information/applications/visa.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You can apply online or on paper (in
+            specific situations) for: visitor visas", then the steps from applying to biometrics to
+            arrival
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa/paper-application.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "If you need a visitor visa to travel to
+            Canada, you must apply online for one", and when paper is allowed
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/biometrics/where-to-give.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Giving your biometrics outside Canada ...
+            at a visa application centre (VAC) by making an appointment", with the centres by
+            country
+        - url: http://www.cic.gc.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the visitor visa application steps and the
+            IRCC Portal to submit through; the Indian row already credits it
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/corporate/contact-ircc/offices/find-visa-application-centre.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): where to go in person to give biometrics
+            and submit; the Indian row already credits it
       fees:
         - url: https://ircc.canada.ca/english/information/fees/fees.asp
           seen: text
           why: the immigration application fee schedule, which carries the visitor visa fee
+        - url: https://ircc.canada.ca/english/information/fees/result.asp?countrySelect=CA&lob=trv
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the visitor visa fee table — per person,
+            and "maximum fee for a family of 5 or more ... $CAN: 500.00"
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visitor visa processing fee | Individual:
+            $100 Family (5 or more people): $500", with the $85 biometrics fee
+        - url: http://www.cic.gc.ca/english/visit/apply-how.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visitor visa processing fee Individual:
+            $100"
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visitor visa - per person ... $CAN: $100";
+            the Indian row already credits it
+      general_entry:
+        - url: https://ircc.canada.ca/english/information/applications/visa.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "If you pass the identity check and meet
+            the entry requirements, the border services officer stamps your passport ... normally
+            allowed to stay in Canada for up to six months"
+        - url: https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The officer at the port of entry will
+            determine whether you may enter Canada and how long you may stay ... generally valid for
+            a period of six (6) months"
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/prepare-arrival.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "When you enter Canada ... The officer must
+            be convinced that you're eligible for entry into Canada and you'll leave Canada at the
+            end of your authorized stay"; the Indian row already credits it
+        - url: https://cic.gc.ca/english/visit/visa-exempt.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You must meet some basic requirements" to
+            enter Canada — carried from the Indian row
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/eligibility.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same basic requirements at canada.ca —
+            carried from the Indian row
+        - url: https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): what a traveller needs to enter Canada —
+            carried from the Indian row, which credits it for this role
+        - url: https://cic.gc.ca/English/visit/visas-all.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same page at cic.gc.ca — carried from
+            the Indian row
+        - url: http://www.cic.gc.ca/english/visit/visas-all.asp
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same page over http — carried from the
+            Indian row
+    tools:
+      processing_times: https://www.canada.ca/en/immigration-refugees-citizenship/services/application/check-processing-times.html
     unanswered:
-      general_entry: >-
-        the entry-condition pages in the set are about importing a vehicle and about customs on
-        return, neither of which states what this traveller must satisfy at the border.
+      processing_times: >-
+        credited as an answer in the Filipino row and as a tool in the Indian row; it computes a
+        time from the reader's answers rather than stating one (rule 11), so both rows now name it
+        as a tool. "We process most applications in a few weeks or less" (after-apply-next-steps)
+        states no figure for this traveller
     unverifiable:
       - https://www.canada.ca/content/dam/ircc/documents/pdf/english/kits/forms/imm5484/01-05-2026/imm5484e.pdf
     excluded:
@@ -950,25 +1827,60 @@ corridors:
             Germany are responsible for issuing visas. Ratione loci competence... lies with the
             mission responsible for the area in which you have your ordinary residence or domicile"
             — the route keyed on residence, which is what this corridor turns on
+        - url: https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Your application must be submitted
+            personally at VFS Global in Manila or Cebu. Once you have obtained all necessary
+            documents, please register for an appointment"
+        - url: https://manila.diplo.de/ph-en/service/visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Manila embassy serves residents of the
+            Philippines; Schengen visa for up to 90 days, and the current wait for an appointment
+        - url: https://manila.diplo.de/ph-en/service/visa/2735728-2735728
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the embassy's visa FAQ: "Visa appointments
+            for short-term stays in Germany are offered by our external service provider VFS"
       fees:
         - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
           seen: text
           why: >-
             "The processing fee for a Schengen visa is normally EUR 90 and for a national visa (for
             longer stays) EUR 75", with the waiver categories listed under it
+        - url: https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa fee EUR 90.00, payable in PHP"
       processing_times:
         - url: https://www.auswaertiges-amt.de/en/visa-service/215870-215870
           seen: text
           why: >-
             "As a rule, missions require up to 15 calendar days to reach a decision on a correct
             application for a Schengen visa"
-    unanswered:
-      document_checklist: >-
-        deferred in the page's own words: "you should consult the requirements well in advance of
-        your departure date to find out about the documentation which has to be submitted". The
-        ministry names no documents; the mission does, and no mission page is in the corpus.
-      general_entry: >-
-        nothing states the conditions this traveller must satisfy at the border.
+        - url: https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "processing of Schengen visa applications
+            will take approx. 15 calendar days from the day of application"
+      document_checklist:
+        - url: https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Manila embassy's Schengen visa lists,
+            including tourism: "Your valid passport ... Two biometrical passport photos ...
+            Itinerary ... and corresponding hotel reservations ... Your original bank certificate
+            and bank statements for the last six months"
+      general_entry:
+        - url: https://www.auswaertiges-amt.de/en/visa-service/buergerservice/faq/32-sonstiges-606746?isLocal=false&isPreview=false
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You can only enter Germany if you have
+            valid identity papers ... valid at least for another three months ... documents ... that
+            prove the purpose and circumstances of the visit ... sufficient funds" — asked by a
+            visa-free traveller, but the Schengen Borders Code conditions it states bind every
+            entrant
     note: >-
       **also re-curated after a first pass read three candidates deep**, and by the same mechanism
       the UAE row failed on: `visa-service/215870-215870` — "Visas for Germany" — answers three roles
@@ -987,6 +1899,40 @@ corridors:
             the embassy in Manila — the post serving this traveller — setting out the main steps:
             check the Visa Wizard, "create an account and complete your application online on the
             portal", then submit it to the visa application centre
+        - url: https://france-visas.gouv.fr/en/la-demarche
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The visa application process: 5 steps to
+            complete your application" — gather information, set up the online application, book the
+            appointment, submit, track
+        - url: https://www.service-public.gouv.fr/particuliers/actualites/A17574?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "When you wish to obtain a visa to come to
+            France, you must: check ... create an account on France-Visas; complete the visa
+            application form ...", then the appointment and tracking
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F16146?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Schengen short-stay visa sheet: "You
+            must complete your visa application online ... After completing your application on the
+            internet, you must make an appointment at the French consulate"
+        - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ministry's steps — Visa Wizard, online
+            application, "submit it to your local visa centre", track; the Indian row already
+            credits it
+        - url: https://france-visas.gouv.fr/en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "To obtain a visa via France-Visas, you
+            need to follow five steps" — carried from the Indian row
+        - url: https://france-visas.gouv.fr/en/web/france-visas
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same home page's second text — carried
+            from the Indian row
       general_entry:
         - url: https://france-visas.gouv.fr/en/votre-arrivee-en-france
           seen: text
@@ -996,6 +1942,53 @@ corridors:
             visa, if required. Proof of accommodation covering the whole duration of the stay."
             **Readable for the first time after entry 92's rebuild** — this page is on
             france-visas.gouv.fr, which held stored text for 12 pages before it and 104 after
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F21921?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You must complete all of the following
+            conditions when crossing the border: Have a passport ... valid at least 3 months longer
+            than the scheduled date of your departure ... Justify the purpose and conditions of your
+            stay", with the resources per day
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F1765?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Schengen area: what are the conditions for
+            entry" — the same border conditions, insurance of €30,000 and €65 or €120 a day
+        - url: https://www.service-public.gouv.fr/particuliers/vosdroits/F39104?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): registration in the Entry/Exit System at
+            the external border for any non-European national staying up to 3 months; the Indian row
+            credits the ministry's EES page
+        - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/ees-the-new-european-border-entryexit-system-goes-live-on-10-april-2026
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Entry/Exit System at the border —
+            carried from the Indian row
+        - url: https://www.diplomatie.gouv.fr/en/services-to-foreigners/visiting-france/requesting-a-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "All foreign nationals wishing to enter
+            France must be able to submit statutory documents at the border" — carried from the
+            Indian row
+      fees:
+        - url: https://france-visas.gouv.fr/en/faq
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa applicants must pay an application
+            fee ... of €90 for short-stay visas" — the FAQ the rows called unreadable (its cookie
+            panel) now holds its text
+      processing_times:
+        - url: https://france-visas.gouv.fr/en/la-demarche
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The decision-making time on visa
+            applications is usually 15 days. This period may be extended up to 45 days"
+        - url: https://www.service-public.gouv.fr/particuliers/actualites/A17574?lang=en
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "the processing time is usually 15 days,
+            but it can be longer"
     tools:
       visa_decision: https://france-visas.gouv.fr/en/assistant-visa
       document_checklist: https://france-visas.gouv.fr/en/assistant-visa
@@ -1007,9 +2000,6 @@ corridors:
       document_checklist: >-
         the same page says the wizard "will also tell you what documents must be attached to your
         application", which names a tool rather than listing anything.
-      fees: >-
-        the same sentence, "along with the relevant fee". No candidate prices a short-stay visa.
-      processing_times: nothing states one.
     unverifiable:
       - https://www.france-visas.gouv.fr/en/short-stay-visa
       - https://www.diplomatie.gouv.fr/fr/services-aux-francais/preparer-son-expatriation/dossiers-pays-de-l-expatriation/philippines
@@ -1046,39 +2036,148 @@ corridors:
           why: >-
             "Visit visa: guide to supporting documents" — what a Standard Visitor must provide, which
             is the checklist for this route
+        - url: https://www.gov.uk/government/publications/visitor-visa-guide-to-supporting-documents/guide-to-supporting-documents-visiting-the-uk
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the guide itself, the numbered list the
+            Indian row credits
       application_route:
         - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
           seen: text
           why: >-
             "Visit the UK as a Standard Visitor" and how to apply, which is the route for tourism
-      fees:
-        - url: https://www.gov.uk/visa-fees
+        - url: https://www.gov.uk/visit-uk-holiday-family-friends
           seen: text
           why: >-
-            the published fee schedule for every visa type, which is keyed on the visa rather than on
-            the passport and so answers this traveller as it does any other
+            Added in the 2026-09-29 refresh (entry 239): "Visit the UK for a holiday or to see
+            family or friends: step by step" — check eligibility, check whether a visa is needed,
+            "Apply for a Standard Visitor visa"
+        - url: https://www.gov.uk/find-a-visa-application-centre
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Find the opening times, address and
+            contact details for UK visa application centres outside the UK ... You must apply for
+            your visa before you travel"
+        - url: https://www.gov.uk/apply-to-come-to-the-uk/paying-fees-and-proving-your-identity
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "provide your biometric information ...
+            usually by going to a visa application centre", booking and attending the appointment
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa?step-by-step-nav=0048cca7-04b2-4b3e-b4ef-ae2ef710e9f9
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the apply page the rows credit, with its
+            step-by-step navigation: "you must apply online before you travel to the UK and attend
+            an appointment at a visa application centre"
+        - url: https://www.gov.uk/apply-to-come-to-the-uk
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Check if you need a visa ... Apply online
+            ... Provide biometrics ... Get your decision"; the Indian row already credits it
+      fees:
+        - url: https://www.gov.uk/standard-visitor
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "A Standard Visitor visa costs £135 for up
+            to 6 months"
+        - url: https://www.gov.uk/visit-uk-holiday-family-friends
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "A Standard Visitor visa costs £135 and
+            allows you to stay in the UK for up to 6 months"
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa?step-by-step-nav=0048cca7-04b2-4b3e-b4ef-ae2ef710e9f9
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Standard Visitor visa £135 6 months"
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Standard Visitor visa £135 6 months"; the
+            Indian row already credits it
+        - url: https://visa-fees.homeoffice.gov.uk/y/philippines/usd/visit/standard-visitor-visa---for-uk-isle-of-man-jersey-and-guernsey/all
+          seen: title_only
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Home Office fee table for a Standard
+            Visitor visa applied for from the Philippines, in the dollars the traveller pays there.
+            No stored text; the address leaves no other reading. The Indian row excludes the India
+            table for the opposite reason: that traveller applies from Britain
+        - url: https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-8-april-2026
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the current fee table, £135 — carried from
+            the Indian row
       processing_times:
         - url: https://www.gov.uk/guidance/visa-processing-times-applications-outside-the-uk
           seen: text
           why: >-
             "Visa processing times: applications outside the UK", which is where this traveller
             applies
+        - url: https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "you'll usually get a decision on your visa
+            within 3 weeks"; the Indian row already credits it
       general_entry:
         - url: https://www.gov.uk/entering-staying-uk/visit-and-transit-visas
           seen: text
           why: the entry conditions for a visitor, collected on one page
+        - url: https://www.gov.uk/uk-border-control/at-border-control
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "At border control You'll need to show your
+            identity document ... Your passport (and visa if you have one) will be checked at border
+            control. You'll usually be asked why you're coming to the UK"
+        - url: https://www.gov.uk/uk-border-control
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Your identity document ... will be checked
+            when you arrive at a UK port or airport ... It should be valid for the whole of your
+            stay", and what must be declared
+        - url: https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Your identity document should be valid for
+            the whole of your stay ... You must have your visa, ETA or certificate of application
+            before you travel"
+        - url: https://www.gov.uk/evisa/travel-with-evisa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): what to carry and show at the border with
+            an eVisa; the Indian row already credits it
+        - url: https://www.gov.uk/apply-to-come-to-the-uk/travelling-to-the-uk
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "You must not travel to the UK before your
+            visa application is approved" — carried from the Indian row
+      visa_decision:
+        - url: https://www.gov.uk/guidance/immigration-rules/immigration-rules-appendix-visitor-visa-national-list
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Immigration Rules' "Appendix Visitor:
+            Visa national list", which names India and the Philippines — the list rule 7b names for
+            the decision, read with Appendix V: a visa national "must apply for and obtain entry
+            clearance before they arrive"
+        - url: https://www.gov.uk/government/publications/uk-visa-requirements-list-for-carriers/uk-visa-requirements-for-international-carriers
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the carriers' list itself (the HTML
+            attachment, not the publication page the Filipino row excludes): India under "Nationals
+            of countries and territories who need a visa to enter or transit the UK", the
+            Philippines under those who need one to enter or transit landside
     tools:
       visa_decision: https://www.gov.uk/check-uk-visa
-    unanswered:
-      visa_decision: >-
-        no page states it for a Philippine passport. The checker works it out, which is entries 59
-        and 60's outcome and is the same one the Indian row reaches.
+      fees: https://www.gov.uk/visa-fees
     excluded:
       - url: https://www.gov.uk/government/publications/uk-visa-requirements-list-for-carriers
         why: >-
           the top candidate for `visa_decision` at 114.0 and it does not contain the list. The
           publication page carries a cookie banner and a description; the country data is in an
           attachment. A selector that reads it has spent a fetch and learned nothing.
+      - url: https://www.gov.uk/government/publications/visa-regulations-revised-table/home-office-immigration-and-nationality-fees-1-may-2025
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): a superseded fee table (£127); the 8 April
+          2026 table and the Standard Visitor pages state £135 (rule 9). The same holds for the
+          tables of 10 April 2024, 24 July 2024 and 9 April 2025
     note: >-
       five of six roles, and the missing one is the load-bearing one — the same shape as the Indian
       row. The United Kingdom is the fixture's standing case that answering five roles and refusing
@@ -1113,6 +2212,12 @@ corridors:
           why: >-
             the countries with visa exemption arrangements; the Philippines is not among them, so a
             Philippine passport needs a visa — the same reading the Indian row makes of the same page
+        - url: https://www.mofa.go.jp/j_info/visit/visa/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Short-Term Stay ... All nationals of the
+            countries and regions listed below require a visa to enter Japan ... Philippines" —
+            named, not inferred from an exemption list
       document_checklist:
         - url: https://www.mofa.go.jp/files/000121323.pdf
           seen: text
@@ -1129,6 +2234,25 @@ corridors:
         - url: https://www.mofa.go.jp/j_info/visit/visa/visaonline.html
           seen: text
           why: the eVISA route and who may use it
+        - url: https://www.mofa.go.jp/j_info/visit/visa/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "you may apply for a visa at the consular
+            section of the Diplomatic Mission of Japan with jurisdiction over your place of
+            residence, at an accredited agency, the Japan Visa Application Centre, or online", with
+            the eVISA countries, the United Kingdom among them
+        - url: https://www.mofa.go.jp/j_info/visit/visa/faq.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ways a visa may be applied for — in
+            person, by proxy, "an accredited travel agent approved by the Japanese Embassy /
+            Consulate General", or online — and that some posts accept only some of them
+        - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/note.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "An application for visa is made ... at the
+            Japanese Embassy / Consulate General with jurisdiction over the area in which the
+            applicant lives" — carried from the Indian row
       fees:
         - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/pagewe_000001_00391.html
           seen: text
@@ -1139,9 +2263,19 @@ corridors:
         - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/day.html
           seen: text
           why: the standard number of working days from application to issuance
-    unanswered:
-      general_entry: >-
-        no candidate scored above zero for it at all, which is true of the Indian row as well.
+      general_entry:
+        - url: https://www.mofa.go.jp/j_info/visit/visa/system/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visas and Landing Permission": "holding a
+            visa is only one of the requirements for a landing permission application at the port of
+            entry of Japan and does not guarantee that the holder ... will be able to enter"
+        - url: https://www.mofa.go.jp/j_info/visit/visa/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "A visa is one of the requirements for
+            entering Japan ... and it does not guarantee to enter Japan", then landing permission;
+            the Indian row already credits it
     unverifiable:
       - https://www.mofa.go.jp/j_info/visit/visa/short/philippine.html
     excluded:
@@ -1151,6 +2285,11 @@ corridors:
           Short-Term Stay Visa' for nationals of CIS Countries, Ukraine, and Georgia". Rule 6
           excludes it on audience. It is the clearest trap in this half of the fixture: two documents
           with byte-identical titles at the same path depth, one of which is for this traveller.
+      - url: https://www.mofa.go.jp/j_info/visit/visa/procedure/fee.html
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): "about 3,000 yen for a single-entry visa",
+          with the note that fees "are to be revised on July 1, 2026"; the revised table
+          (pagewe_000001_00391) is what the rows credit (rule 9)
     note: >-
       the row that most repays having been built. Japan answers five roles for a Filipino applying
       at home against six for an Indian applying from Britain, and it answers them from
@@ -1174,6 +2313,17 @@ corridors:
             within a 180-day period), regardless of whether they need a short-stay visa". **Zero for
             every role**, so the selector is never shown it, while the pool's best candidate is
             `.../entering-without-visa`, whose audience is travellers who do not need one.
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-philippines
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same Step 6 for applicants in the
+            Philippines
+        - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/sponsor-invite-short-stay
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "To visit the Netherlands, you will need to
+            prove you have at least €55 per person to spend for each day of your trip", and the
+            documents to "show ... at Dutch border control"
       document_checklist:
         - url: https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/philippines
           seen: title_only
@@ -1238,6 +2388,13 @@ corridors:
             "You need to prepare: A valid passport... valid for at least three months after the entry
             visa's expiration date, issued within the past ten years, and have at least two blank
             pages. A completed Schengen visa form... individual medical travel insurance"
+        - url: https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the older address of the apply page the row
+            credits, with its own text: "Entry visa for a tourist visit You need to prepare: A valid
+            passport ...", the invitation or hotel booking, the photograph where a representative
+            applies
       application_route:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
@@ -1245,6 +2402,12 @@ corridors:
             "In some countries, you must submit your application to a Swedish embassy or
             consulate-general. In a number of countries, Sweden is represented by another Schengen
             country" — the route stated, with the per-residence detail behind a country selector
+        - url: https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Where you can apply for a Schengen visa:
+            In many countries, Sweden has an agreement with an external service provider, VFS Global
+            ... In some countries, you must submit your application to a Swedish embassy"
       fees:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
@@ -1253,12 +2416,34 @@ corridors:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
           why: '"It normally takes 15 days to receive a decision about an application."'
+        - url: https://www.government.se/government-policy/migration-and-asylum/information-on-visas
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa application decisions should be taken
+            within 15 calendar days of the date on which the application was received"
+        - url: https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "It normally takes 15 days to receive a
+            decision about an application"
       general_entry:
         - url: https://www.migrationsverket.se/en/you-want-to-apply/visiting-sweden/visiting-sweden-for-up-to-90-days-entry-visa.html
           seen: text
           why: >-
             "Sweden requires that you have SEK 700 for each day of your visit", and medical travel
             insurance covering at least EUR 30,000 valid in all Schengen countries
+        - url: https://www.migrationsverket.se/English/Private-individuals/Visiting-Sweden/Visit-Sweden-up-to-90-days---apply-for-a-visa.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "the border police will check that you meet
+            these requirements ... a passport valid for at least three months after you plan to
+            leave ... a valid round-trip ticket ... SEK 700 for each day"
+        - url: https://www.government.se/press-releases/2025/10/entryexit-system--a-new-eu-system-for-border-controls
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Entry/Exit System at Sweden's external
+            border from 12 October 2025, registering third-country travellers on entry; the France
+            and Netherlands rows credit the equivalent pages
     note: >-
       **the row that moved most, and twice.** The first pass read three candidates deep, found the
       page for *extending* a visa rather than applying, and recorded none of the six. The re-check
@@ -1286,6 +2471,41 @@ corridors:
             the SG Arrival Card and health declaration every visitor must submit within three days
             of arrival — the entry condition that actually binds a visa-free traveller, and the only
             thing this corridor asks of them
+        - url: https://ask.gov.sg/ica/questions/clos83fvy01mf5k0wu09z54te
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): ICA: "You will have to satisfy the basic
+            entry requirements ... A valid passport with at least 6 months' validity; A valid
+            Singapore entry visa (if applicable); A confirmed return/ onward tickets ...; Sufficient
+            funds"
+        - url: https://www.ica.gov.sg/public-education/visiting-singapore
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Basic Entry Requirements: You must present
+            yourself for immigration clearance ... satisfy the basic entry requirements", the SG
+            Arrival Card and the e-Pass
+        - url: https://mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "All visitors to Singapore must meet the
+            following entry requirements: Valid travel document (minimum validity of 6 months) ...
+            Confirmed onward or return tickets"; the Indian row already credits it
+        - url: https://www.ica.gov.sg/enter-depart/entry_requirements
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "General Entry Requirements" — passport,
+            visa where required, the SG Arrival Card, biometrics, "sufficient cash and proof of
+            onward travel"; the Indian row already credits it
+        - url: https://ask.gov.sg/ica/questions/clre5y7ka00h4oimjoqv66jsh
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The submission of the SG Arrival Card is
+            one of the basic entry requirements to visit Singapore"
+        - url: https://ask.gov.sg/ica/questions/clos83fvw01lj5k0wp90sbtq5
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): a passport valid six months from arrival
+            "as part of the entry requirements" — carried from the Indian row
     not_applicable:
       document_checklist: >-
         there is no visa application, so there are no documents to bring to one. The traveller's
@@ -1331,6 +2551,12 @@ corridors:
             Philippines — so a Filipino needs a visitor visa. travel.state.gov stores nothing and
             publishes the same tree under adoption.state.gov, which is the only reason this is
             readable at all
+        - url: https://www.dhs.gov/visa-waiver-program
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): DHS: "Current Program Countries: The
+            following countries are currently designated for participation in the VWP", a table from
+            Andorra on, naming neither India nor the Philippines
       fees:
         - url: https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html
           seen: mirror
@@ -1338,16 +2564,58 @@ corridors:
             "Non-petition-based nonimmigrant visa (except E): $185.00 — includes B Visitor Visa:
             Business, Tourism, Medical treatment", which is this corridor's category. Found by
             ranking stored body text; it link-scores 16.4
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Fees - Pay the non-refundable visa
+            application fee ... $185"; the Indian row already credits it
+      document_checklist:
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Gather Required Documentation" — passport
+            valid six months beyond the stay, the DS-160 confirmation page, the fee receipt, a
+            photograph; the Indian row already credits it, and the Filipino row recorded nothing
+            naming what a B-2 applicant brings
+      application_route:
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "How to Apply" — Form DS-160, an interview
+            at the embassy or consulate, fees; the Indian row already credits it
+        - url: https://adoption.state.gov/content/dam/visas/VisaFlyer_B1B2-March-2015-Accessible.pdf
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the State Department's B1/B2 leaflet:
+            "Applicants for visitor visas should generally apply at the nearest U.S. Embassy or
+            Consulate in the country where they live ... Completing Form DS-160 ... is the first
+            step"
+        - url: https://adoption.state.gov/content/travel/en/us-visas.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Where to Apply for a U.S. Visa ... Find a
+            U.S. Embassy or Consulate that processes visas in your country of nationality or
+            residence"
+      general_entry:
+        - url: https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visitor.html
+          seen: mirror
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Entering the United States: A visa allows
+            a foreign citizen to travel to a U.S. port-of-entry ... and request permission to enter
+            ... the CBP official will provide an admission stamp or a paper Form I-94"
+        - url: https://www.usa.gov/arrival-departure-record
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the Form I-94 arrival record a CBP officer
+            issues at the point of entry, and its $30 fee when applied for by land
+        - url: https://www.dhs.gov/visit-united-states
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The visa allows a foreign citizen to
+            travel to the United States port of entry and request permission of the U.S. immigration
+            inspector to enter", with OBIM biometrics; the Indian row already credits it
     unanswered:
-      document_checklist: >-
-        the candidates are 2000s-era travel.state.gov paths with no stored text, USCIS form
-        instructions for immigrant petitions, and an office-finder. Nothing names what a B-2
-        applicant brings.
-      application_route: >-
-        the top candidates are a green card application and the J-1 exchange visitor programme,
-        neither of which is a tourism route.
       processing_times: nothing states one for a visitor visa.
-      general_entry: nothing states entry conditions for this traveller.
     note: >-
       the Visa Waiver country list is recorded as unreadable in the Indian row, and it reads here —
       because the mirror was found. The same page, the same fixture, and the difference is which
@@ -1378,32 +2646,100 @@ corridors:
             proof of accommodation, three months of UK bank statements. **It scores zero for every
             role on the anchor scorer**, so `_choose_what_to_read` never shows it to the selector,
             and no arm of `selection-recall` can reach it. Found by ranking stored body text.
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ministry's tourism Schengen visa page:
+            "FILE THE APPLICATION PRESENTING THE FOLLOWING REQUIREMENTS: PASSPORT, APPLICATION FORM,
+            PHOTO, FEE, BIOMETRIC DATA, SUPPORTING DOCUMENTS ON PURPOSE OF STAY ... ACCOMMODATION
+            ... TRAVEL MEDICAL INSURANCE" — the general list, beside the UK harmonised list it
+            points to
       general_entry:
         - url: https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF
           seen: text
           why: >-
             the same document's "General requirements for all applicants" states the entry-relevant
             duties — onward travel, means of subsistence, accommodation. Also outside the pool.
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "Visa holders need to fulfill entry
+            conditions specified in the Schengen Border Code and can be asked upon entry to present
+            documents on accommodation, finances, return air ticket"
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.mobi
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same tourism page's mobile text
+        - url: https://ipc.gov.cz/en/life-in-the-eu/life-in-the-eu-third-country-nationals/short-term-stays-in-the-eu
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "a maximum duration of 90 days within any
+            180-day period ... If as a third country national you do not meet the Schengen entry
+            requirements ... you may be denied entry"
+      visa_decision:
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/list_of_states_whose_citizens_are_exempt/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ministry's own list, "States whose
+            citizens are exempt from the visa requirement for travel to the Schengen Area", Albania
+            to the footnotes, now with stored text; India is not on it. The list rule 7b names for
+            the decision, read under the plan's rule 8f
+      application_route:
+        - url: https://mzv.gov.cz/london/en/visa_and_consular_information/visa_information/schedule_appointment/an_appointment_system_has_been.mobi
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the London embassy, the post for this
+            traveller: "the Czech Visa Application Centre operated by VFS Global Ltd. is accepting
+            all visa applications", its address, and "you need to book an appointment in advance"
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "1. FIND THE CONSULATE / VISA CENTER WHERE
+            YOU WILL APPLY 2. SCHEDULE AN APPOINTMENT 3. FILE THE APPLICATION" for a tourism
+            Schengen visa
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/outsourcing/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the ministry's list of visa centres,
+            including "UNITED KINGDOM – London"
+      fees:
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/visa_fee_schedule/index.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "VISA FEES: STANDARD RATE - SCHENGEN VISA
+            (type C, A) EUR 90"
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/visa_fee_schedule/index$2548.html?action=setMonth&month=10&year=2026
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same fee table under a month's address,
+            with slightly different stored text
+      processing_times:
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): "The processing time for Schengen visa
+            applications is 15 days ... can be extended to up to 45 days"
+        - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.mobi
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the same tourism page's mobile text
+        - url: https://mzv.gov.cz/london/en/visa_and_consular_information/visa_information/schedule_appointment/an_appointment_system_has_been.mobi
+          seen: text
+          why: >-
+            Added in the 2026-09-29 refresh (entry 239): the London post: "It can take up to 15 days
+            (in some cases ... up to 45 days) to obtain a visa"
     unverifiable:
       - https://mzv.gov.cz/london/en/visa_and_consular_information/visa_information/index.mobi
-    unanswered:
-      visa_decision: >-
-        the pool's best candidate is the Los Angeles consulate's "List of States Whose Citizens Are
-        Exempt from Visa Requirement", and its stored text holds the heading and the site
-        navigation and no list. `.../types_of_visas/` cites Regulation 2018/1806 by name without
-        enumerating it. Nothing in the store settles an Indian passport either way.
-      application_route: >-
-        the best pooled candidate is the **Erbil** consulate's "How to apply for a visa" and the
-        best unpooled one is the supporting-documents list for applicants in **India** — both the
-        wrong post. The London embassy's own "Visas" page is in the corpus, is also outside the
-        pool, and the index holds no body for it, so it is recorded unverifiable rather than
-        credited or dismissed.
-      fees: >-
-        the candidates are the Los Angeles consulate's Czech-language fee page and Washington's
-        consular information. Neither is the post this traveller uses.
-      processing_times: >-
-        the best candidates are `ipc.gov.cz` pages on changing a name or a travel document, which
-        are residence-permit obligations rather than a visa queue.
+    excluded:
+      - url: https://mzv.gov.cz/public/65/fc/25/5898531_3416466_India_and_Morocco.pdf
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): the EU's list of supporting documents for
+          applicants *in India*; this traveller applies in Britain, whose list the row credits (rule
+          5)
+      - url: https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the_2.html
+        why: >-
+          Added in the 2026-09-29 refresh (entry 239): the same ministry template for a Schengen
+          visa for *employment*; rule 6
     note: >-
       Curated to answer one question and it answered it: **is there an answer the anchor scorer
       excludes?** Yes — the checklist that fits this traveller precisely is unpooled, while the

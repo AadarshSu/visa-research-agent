@@ -576,9 +576,11 @@ def test_the_fixture_can_now_name_a_page_the_selector_is_never_shown() -> None:
     assert widened, "the fixture can no longer name a page outside the pool"
     czechia = oracle.for_corridor("czechia/IN/GB/tourism")
     assert czechia is not None and czechia.curated_from == "whole_corpus"
-    assert czechia.answering_urls("document_checklist") == {
-        "https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF"
-    }
+    # Since the refresh of entry 239 the ministry's own tourism list stands beside it; the page
+    # outside the pool must still be among the answers.
+    assert "https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF" in czechia.answering_urls(
+        "document_checklist"
+    )
 
 
 def test_a_role_is_pooled_when_any_one_of_its_answers_is(tmp_path: Path) -> None:

@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [239](#239-the-selection-oracle-is-refreshed-and-the-embedding-results-change-with-it) | **The selection oracle is refreshed, and the embedding results change with it** — 235 answers added from the rebuilt stores, 20 unanswered roles answered, 92 → 111 gradeable roles; re-graded, the embedding-ordered 40 + 40 packet is 1.6 roles a run behind today's (under the bar) at 60% less input, embedding excerpts tie, and link + embeddings keeps 109 of 111 answers at a 40 cut against today's 91 |
 | [238](#238-embedding-chosen-excerpts-tie-with-todays-and-the-oracle-cannot-see-the-difference) | **Measured: embedding-chosen excerpts tie with today's; the oracle cannot see the difference** — graded 81.0 against 84.6, but 16 of the 19 lost role-runs picked a page stating the answer the oracle does not list, often the traveller's own embassy; corrected, 0.4 a run. Both item 67 tests were limited more by the oracle than by the ceiling |
 | [237](#237-the-oracle-declares-the-state-departments-mirror-hosts-and-grading-credits-them) | **The oracle declares mirror hosts, and grading credits them** — `travel.state.gov` picks now count for the `adoption.state.gov` pages the oracle names; item 67's stage 2 re-grades to 85.0 against 77.6, and today's arm to 28 of 28 core roles |
 | [236](#236-embeddings-earn-no-place-in-ranking-and-item-67-closes) | **Measured: embeddings earn no place in ranking; item 67 closes** — at 120 + 40 blind today's order keeps 91 of 92 oracle roles and every embedding arm 88–90; the selector on link + embeddings at 40 + 40 graded 7.6 roles a run lower, half of it pages the oracle does not list, to save 0.6s. Found: the oracle predates the rebuild, and a mirror address is not credited |
@@ -280,6 +281,63 @@ s more pressing |
 
 ---
 
+## 239. The selection oracle is refreshed, and the embedding results change with it
+
+**2026-09-29 · the owner: "refresh the oracle".** Entries 236 and 238 found most of item 67's
+measured losses were correct pages the oracle did not list: it was curated 2026-08-27 to 09-04,
+before every store was rebuilt on 09-25, and usually named one page per role (known problem 41).
+The refresh changes `oracle/selection_oracle.yaml` and three tests pinned to its old shape; nothing
+the app says or decides changes. Tools: `var/oracle-refresh-2026-09-29/`.
+
+**How it was re-curated.** Per corridor and role, the candidates were the top 8 by each of link,
+stored-text keywords and embedding similarity, plus every page any recorded replay picked — so every
+arm compared so far was judged in full — kept only where the stored text holds a passage of the
+role's kind, and not re-read where `same_pages` already credits it: about 1,160 page-role pairs.
+Each was judged by the rules the rows already used (`adjudicate_roles.txt` 4 to 7b, rule 11 for
+tools), with the deciding passage recorded in `decisions.yaml`, and checked against the stored page
+where a passage only hinted. Pages one traveller's row credits were carried to the other's where
+they say the same thing to both, never a post's, a nationality's or a residence's own page.
+`apply.py` inserts lines only, so the diff shows exactly what the refresh added; every addition's
+`why` opens "Added in the 2026-09-29 refresh".
+
+**What it found.**
+
+| | |
+| --- | --- |
+| answers added | 235, across all 21 rows |
+| roles `unanswered` → answered | 20: the UK's decision for both travellers (the Immigration Rules' visa-national list and the carriers' list name India and the Philippines); the US Indian decision (the Visa Waiver list now extracts); Germany's checklist and entry conditions for both (the missions, `uk.diplo.de` and `manila.diplo.de`, were outside the trusted set when curated); Czechia's decision, route, fees and processing (the ministry's lists and the London post); France's fees and processing for both (the FAQ's €90, "usually 15 days"); Japan's Filipino entry conditions; Canada's Filipino entry conditions; the US Filipino checklist, route and entry conditions |
+| answers that were tools | 2, moved to `tools`: Canada `PH/PH` processing (the time calculator, a tool in the Indian row already) and UK `PH/PH` fees (`gov.uk/visa-fees`, the launcher entry 100 recorded and left) |
+| exclusions recorded | 11: superseded fee tables (UK, Japan, Germany), other posts' lists, other purposes |
+| gradeable roles | 92 → 111 (60 for the Indian traveller, 51 for the Filipino) |
+
+Every answer the refreshed oracle names is held by the corpus (`coverage`'s regression test: held
+equals answerable for both travellers).
+
+**What the embedding tests say now** (same results files, no new calls):
+
+| | before (entries 236–238) | refreshed |
+| --- | --- | --- |
+| today's 120 + 40: roles the cut keeps | 91 / 92 | 111 / 111 |
+| link + embeddings at 40 + 40: roles the cut keeps | 84 / 92 | **109 / 111** (today's order at 40: 91) |
+| … at 20 + 40 | 76 / 92 | **103 / 111** (today's order: 62) |
+| selector, today's 120 + 40 | 85.0 / 92 | **108.0 / 111**, every run |
+| selector, link + embeddings 40 + 40 | 77.6 / 92 | **106.4 / 111** (105–108) — 1.6 a run behind, under the 3-role bar |
+| selector, embedding-chosen excerpts | 81.0 against 84.6 | **107.8 against 107.4** — a tie |
+
+**So the embedding-ordered shortlist is now measured, not argued: at 40 + 40 it is level with
+today's 120 + 40 within the bar,** on 21.5K input tokens instead of 52.8K and 5.7s instead of 6.3s
+of selector time. What that buys is small — about 31K tokens and 0.6s a corridor — and it would
+cost embedding every store once (68,006 stored pages, about 430M characters: roughly 110–165M
+tokens with overlap, within what is left of Voyage's free 200M or about $13–20 at list price) plus a
+dependency. Whether to adopt it is the owner's call; it is recorded as TODO item 75.
+
+**What still limits this.** The judgement is this session's reading of stored passages, not the
+owner's checking (entry 68). The candidate set was every recorded arm's picks plus three rankings'
+top 8, so a future arm's picks outside those can still go unjudged — the refresh is a better floor,
+not a ceiling. Other-language answers remain untested: none of the 111 is in another language.
+
+---
+
 ## 238. Embedding-chosen excerpts tie with today's, and the oracle cannot see the difference
 
 **2026-09-29 · the owner:** run the excerpt experiment from entry 236's follow-ups, and "are we
@@ -329,7 +387,7 @@ rule 5 prefers in principle and its rows, written before the rebuild stored thos
   8g — with Thailand the clear selection miss (entries 221, 222).
 
 **Nothing is adopted.** A tie buys nothing, and adoption would need window vectors for every stored
-page. What would make either test decisive is the oracle, which is the owner's call (entry 68).
+page. Re-graded against the refreshed oracle (entry 239), still a tie: 107.8 against 107.4. What would make either test decisive is the oracle, which is the owner's call (entry 68).
 
 ---
 
@@ -462,7 +520,7 @@ input tokens — about $0.06 a corridor at `gpt-5.6-terra`'s list input price, u
 bills per token is not known here. Today's 120 + 40 scores 84.4 now, not entry 195's 80.0 — the
 stores were rebuilt since — which is why it was re-run beside the new arm.
 
-**So item 67 closes without adopting anything, on the saving rather than the loss.** Corrected, the
+**Re-graded against the refreshed oracle (entry 239): 1.6 a run behind, under the bar.** **So item 67 closes without adopting anything, on the saving rather than the loss.** Corrected, the
 smaller embedding-ranked packet is roughly level with today's — between a small loss and no result
 — and buys 0.6s and a few cents for a new vendor and a second index to keep. The traveller query
 (which would need a live call) was not sent to the selector; it is the arm most likely to recover the

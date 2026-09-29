@@ -40,6 +40,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 61. Decide whether a corridor's five renders should grow | `soon` |
+|  | 75. Decide whether to adopt the embedding-ordered shortlist — measured level at 40 + 40 | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it | `soon` |
@@ -111,6 +112,20 @@ so fifty countries is ~$12 and ~10 hours. No model cost to build; stage-2 corrid
 ---
 
 ## Next up
+
+### 75. Decide whether to adopt the embedding-ordered shortlist — `soon`, the owner's call
+
+**Measured (entry 239):** against the refreshed oracle, the selector shown the top 40 by link +
+embedding rank plus the 40 blind scores 106.4 of 111 roles a run against today's 120 + 40 at 108.0 —
+1.6 behind, under the 3-role bar — on 21.5K input tokens instead of 52.8K and 5.7s instead of 6.3s.
+The ranking itself is far better at small cuts (109 of 111 kept at 40, today's order 91).
+
+**What adoption costs:** embedding every store once (68,006 pages, about 110–165M tokens, likely
+inside what is left of Voyage's free 200M, else about $13–20), re-embedding pages a build changes,
+and a Voyage dependency — or a local multilingual model (bge-m3), untested here. The role queries
+are traveller-neutral, so no call is needed per request. **What it buys:** about 31K input tokens
+and 0.6s a corridor, and a shortlist that degrades more gracefully if pools grow with expansion
+(item 64). It changes recall, so it would be graded live over several runs (entries 144, 145).
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
@@ -461,7 +476,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
-| 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235, 236, 238 | No place in ranking: at today's cut the order already keeps 91 of 92 answers; a 40 + 40 embedding cut is roughly level once pages the oracle does not list are credited, for 0.6s. The oracle predates the rebuild (known problem 41); its mirror-address gap is fixed (entry 237). Embedding-chosen excerpts tie (entry 238). Both tests were limited by the oracle more than by the ceiling |
+| 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235–239 | No gain at today's cut (it already keeps every answer); an embedding-ordered 40 + 40 packet is level within the bar, re-graded on the refreshed oracle — adoption is item 75. Other-language pages stay untested |
 | 74. Let a traveller report a corridor that did not work | 09-27 | 233 | A copied log can predate what the traveller saw: a stored corridor writes none. Nothing notifies the owner of a new report |
 | 73. Tell the traveller exactly why their corridor was refused | 09-27 | 232 | A search outage with no corpus was a bare 500, and every plan-stage fault one sentence; messages read from the code, not collected from live runs |
 | — The full rebuild of every store | 09-25 | 193, 203, 204 | All 55 rebuilt and graded; stores hold every oracle answer. The archived-year veto was dropping filed guidance, widened |
