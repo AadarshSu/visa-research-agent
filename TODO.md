@@ -127,6 +127,33 @@ are traveller-neutral, so no call is needed per request. **What it buys:** about
 and 0.6s a corridor, and a shortlist that degrades more gracefully if pools grow with expansion
 (item 64). It changes recall, so it would be graded live over several runs (entries 144, 145).
 
+**Does the benefit grow with scale? The data says yes, in one respect (2026-09-29, from
+`embed-replay-2026-09-28/rank_results.json`).** The best answer's position by pool size:
+
+| pool | today's order: median / outside top 40 | link + embeddings: median / outside top 40 |
+| --- | --- | --- |
+| under 300 pages (24 answers) | 2 / 0 | 2 / 0 |
+| 300–600 (57) | 24 / 10 | 3 / 2 |
+| 600–1,000 (30) | 26 / 10 | 6 / 0 |
+
+Today's ranking degrades as pools grow and embeddings barely do. No answer falls outside today's
+120 yet, which is why accuracy is level now; a corpus that grows pools past that — more pages per
+country, 100+ countries — is where embeddings would start to add answers, not only save tokens.
+
+**Where the benefit could grow, untested:** other-language authorities (voyage-4 is multilingual;
+the keyword scorer's vocabulary is English), which expansion (item 64) will bring and none of the
+111 oracle answers is; and the build, where a crawl opens 3–15% of the addresses it records
+(entries 88, 183) — embedding link context to choose what to open (item 67's old follow-up).
+**Where it stays flat:** selector accuracy given the page is on the list (~97% already), the ~0.6s
+of selector time (the plan call, ~29s, is the latency), and the per-corridor token saving.
+**Known weakness:** a traveller-neutral query under-ranks pages written for one traveller (Czechia's
+UK list, the UAE residence-keyed service, entry 236) — the hybrid with keywords protects them.
+
+**Next tests, cheapest first:** (1) curate oracle rows for two or three expansion destinations
+whose authority publishes mainly in its own language, and rerun stage 1 there; (2) simulate larger
+pools by adding stored pages from the country's corpus outside the captured pool and rerunning
+`sweep.py`; (3) only then, embed every store and grade live (entries 144, 145).
+
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
 **Settled already.** EUR-Lex pages may reach AWS's challenge-token host (entry 201). Allowing
