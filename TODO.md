@@ -39,7 +39,8 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | --- | --- | --- |
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
-| **Next up** | 61. Decide whether a corridor's five renders should grow | `soon` |
+| **Next up** | 76. Test the search boost with the selector — measured offline: 100 of 111 at a 40 cut | `soon` |
+|  | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it | `soon` |
@@ -116,6 +117,19 @@ in (entry 241). Where no English version exists, that loses the answer: check th
 ---
 
 ## Next up
+
+### 76. Test the search boost with the selector — `soon`
+
+**Measured offline (entry 243):** fusing the pages only live search found as a third ranking keeps
+100 of 111 oracle answers at a 40-page cut against today's 91 (embeddings: 109), and all 20 in
+entry 241's non-English corridors at 60. It needs no vendor or index, so it is the cheap route to
+entry 242's saving — about half the selector's input — if the selector keeps its score.
+
+**Next:** the selector replay (`replay_embed.py`-style variant, through Personas, one call at a
+time) of `+search` at 40 + 40 and 60 + 40 against today's 120 + 40, five runs, on all 27 oracle
+corridors; graded with `grade.py --alias`. Under ~3 roles a run is no result (item 67's bar). Worth
+first: recording search's full result list per corridor, since a page both sources returned is
+labelled `corpus` today and the boost cannot see it.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 

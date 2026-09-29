@@ -1,0 +1,11 @@
+oracle roles kept, of 111, at the top N plus 40 blind (mean pages shown in brackets)
+arm                                   20          30          40          60          80         120
+today (link + text)            62 (  59)   79 (  69)   91 (  79)  102 (  98)  107 ( 118)  111 ( 156)
++search as a third ranking     89 (  59)   94 (  69)  100 (  78)  102 (  98)  107 ( 118)  111 ( 156)
+link + embeddings             103 (  59)  108 (  69)  109 (  79)  109 (  99)  110 ( 118)  111 ( 157)
+search always shown            96 (  81)  100 (  90)  104 (  98)  107 ( 116)  109 ( 134)  111 ( 170)
+
+best answer's median position:
+  today (link + text)          13
+  +search as a third ranking   5
+  link + embeddings            3

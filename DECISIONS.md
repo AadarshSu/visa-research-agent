@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [243](#243-a-boost-for-search-found-pages-recovers-most-of-what-a-smaller-cut-loses-without-embeddings) | **Measured: a boost for search-found pages recovers most of what a smaller cut loses, without embeddings** — search as a third fused ranking keeps 100 of 111 answers at a 40 cut against today's 91 and embeddings' 109, and 19 of 20 in the non-English corridors, beating embeddings there; the selector has not been run on it |
 | [242](#242-embeddings-are-not-adopted-until-expansion-gives-them-a-job) | **Embeddings are not adopted until expansion gives them a job** — the owner closes item 75: level on accuracy across 27 corridors, but the saving does not pay for a vendor and a second index; three triggers reopen it |
 | [241](#241-in-destinations-whose-visa-pages-are-not-in-english-embeddings-tie-again-and-the-keyword-gate-drops-a-malay-answer) | **Measured: where visa pages are not in English, embeddings tie again — and the keyword gate drops a Malay answer** — six oracle rows curated for Malaysia, Indonesia and Uruguay; the selector scores 19.0 against 18.8 of 20 on half the input; the Malay visa list is kept out of the pool by keywords and ranks 1st of 520 unpooled pages by embeddings |
 | [240](#240-a-growing-pool-does-not-hurt-todays-ranking-and-embeddings-find-guidance-among-unopened-links--mostly-copies) | **Measured: a growing pool does not hurt today's ranking; embeddings find guidance among unopened links, mostly copies** — every stored page outside the pool added, today's order still keeps 91 at a 40 cut and 111 at 120, so item 75's scaling argument fails; among zero-scoring unopened links, 47 of 100 embedding picks in Turkey were visitor guidance against 1 of 100 at random, but nearly all are translations or twin-host copies of stored pages |
@@ -281,6 +282,50 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 243. A boost for search-found pages recovers most of what a smaller cut loses, without embeddings
+
+**2026-09-29 · the owner: "test the search boost offline".** No network, no model; nothing in
+`src/` changed. `var/search-boost-2026-09-29/boost.py`, `boost21.log`, `boost6.log`.
+
+**Why.** Pages that only live search found for this traveller are 6% of the 21 English corridors'
+pools, 15% of today's top 40 — and 36% of the oracle's answers and 42% of the selector's picks
+(measured on the 2026-09-28 replay). Today's fusion does not use where a page came from, though
+entry 183's learned ranker found it the strongest single signal. So a smaller cut drops them, which
+is where the embedding shortlist lost its traveller-specific pages (entries 236, 239).
+
+**The test.** The same cuts as `sweep.py`, top N plus the 40 best-linked pages without text:
+
+| roles kept, 21 English corridors (of 111) | 20 | 30 | 40 | 60 | 80 | 120 |
+| --- | --- | --- | --- | --- | --- | --- |
+| today: link + text | 62 | 79 | 91 | 102 | 107 | **111** |
+| **+ search as a third fused ranking** | 89 | 94 | **100** | 102 | 107 | 111 |
+| search pages always shown (shortlist grows by ~19) | 96 | 100 | 104 | 107 | 109 | 111 |
+| link + embeddings | 103 | 108 | **109** | 109 | 110 | 111 |
+
+| roles kept, entry 241's six (of 20) | 20 | 30 | 40 | 60 | 120 |
+| --- | --- | --- | --- | --- | --- |
+| today | 13 | 18 | 18 | 19 | 20 |
+| **+ search** | 19 | 19 | 19 | **20** | **20** |
+| link + embeddings | 16 | 19 | 19 | 19 | 19 |
+
+"Search as a third ranking" ranks, per role, the pages only search found by that role's link score,
+and fuses it beside link and text exactly as they are fused with each other — no weights. The best
+answer's median position moves from 13th to 5th (embeddings: 3rd).
+
+**What it shows.** At a 40 cut the boost recovers 9 of the 18 roles today's order loses, with no
+vendor and no index; in the non-English corridors it beats embeddings. What it still loses at 40
+is concentrated: 5 of its 11 misses are Germany's, and 2 each Czechia's and the Netherlands' — pages
+the corpus holds and keywords rank low, which embeddings keep in 10 of the 11.
+
+**Caveats.** A page search and the corpus both returned usually carries the corpus's version and
+`found_by: corpus` (the resolver keeps the better link score), so "search-found" undercounts what
+search saw, and a boost on search's full result list may behave differently. The cuts are tuned on
+the same corridors they are graded on. Nothing here says what the selector does with the shorter
+list; entries 236–241 found its score can differ from the cut's by several roles. **Not adopted**;
+the selector test is TODO item 76.
 
 ---
 
