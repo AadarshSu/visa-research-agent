@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [242](#242-embeddings-are-not-adopted-until-expansion-gives-them-a-job) | **Embeddings are not adopted until expansion gives them a job** — the owner closes item 75: level on accuracy across 27 corridors, but the saving does not pay for a vendor and a second index; three triggers reopen it |
 | [241](#241-in-destinations-whose-visa-pages-are-not-in-english-embeddings-tie-again-and-the-keyword-gate-drops-a-malay-answer) | **Measured: where visa pages are not in English, embeddings tie again — and the keyword gate drops a Malay answer** — six oracle rows curated for Malaysia, Indonesia and Uruguay; the selector scores 19.0 against 18.8 of 20 on half the input; the Malay visa list is kept out of the pool by keywords and ranks 1st of 520 unpooled pages by embeddings |
 | [240](#240-a-growing-pool-does-not-hurt-todays-ranking-and-embeddings-find-guidance-among-unopened-links--mostly-copies) | **Measured: a growing pool does not hurt today's ranking; embeddings find guidance among unopened links, mostly copies** — every stored page outside the pool added, today's order still keeps 91 at a 40 cut and 111 at 120, so item 75's scaling argument fails; among zero-scoring unopened links, 47 of 100 embedding picks in Turkey were visitor guidance against 1 of 100 at random, but nearly all are translations or twin-host copies of stored pages |
 | [239](#239-the-selection-oracle-is-refreshed-and-the-embedding-results-change-with-it) | **The selection oracle is refreshed, and the embedding results change with it** — 235 answers added from the rebuilt stores, 20 unanswered roles answered, 92 → 111 gradeable roles; re-graded, the embedding-ordered 40 + 40 packet is 1.6 roles a run behind today's (under the bar) at 60% less input, embedding excerpts tie, and link + embeddings keeps 109 of 111 answers at a 40 cut against today's 91 |
@@ -280,6 +281,40 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 242. Embeddings are not adopted until expansion gives them a job
+
+**2026-09-29 · the owner: "we can close the item with these conclusions until further expansion."**
+Closes TODO item 75. Nothing in `src/` changes.
+
+**Why not.** Across 27 corridors in four languages (entries 239–241) the embedding-ordered shortlist
+is level with today's on what the selector finds, and no answer changed. What it saves — about half
+the selector's input, a few cents, 0.6–2s of a ~55s request — does not pay for what it adds: a
+second vendor (and a rule for when it is down that is not a quiet fallback), a second index to
+re-embed on every rebuild, and about 110–165M tokens to embed the stores once. Correctness comes
+first (entry 147), and embeddings did not move it. The owner's criterion — level everywhere, so any
+positive counts — was argued against on that carrying cost, not on the measurements.
+
+**Where each use stands.** Ordering the shortlist: level, cheaper to read. Excerpts: a tie (238).
+Growing pools: today's order does not degrade (240). Ordering a crawl's unopened links: a strong
+signal whose finds the store mostly already holds as translations and twin hosts (240). Admitting
+pages to the pool: the one mechanism with a job — the keyword gate kept the Malay visa list out,
+and embeddings ranked it first (241).
+
+**What reopens it.**
+- **Expansion (item 64) to a destination that states its visa rules only in its own language**,
+  where the keyword gate would lose the decision. Test an embedding admission to the pool first.
+- **Selector input cost binding** — Personas' per-token price, or item 59's 272K threshold. The
+  embedding order is the way to halve the packet without losing roles; today's order cut to 40 loses
+  18 of 111.
+- **Answers falling past the 120 cut** as corpora grow with link-scoring pages.
+
+**Kept:** the scripts in `var/embed-replay-2026-09-28/`, `var/crawl-sample-2026-09-29/` and
+`var/embed-test1-2026-09-29/`, the six new oracle rows, and `vectors.sqlite` (not committed).
+**Cheaper fix for the Malay case, not done:** its link lost points to an "off-scope: student" penalty
+from the site's navigation, and the lexicon has no Malay terms.
 
 ---
 

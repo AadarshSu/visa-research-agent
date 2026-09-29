@@ -40,7 +40,6 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 61. Decide whether a corridor's five renders should grow | `soon` |
-|  | 75. Decide whether to adopt the embedding-ordered shortlist — measured level at 40 + 40 | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
 |  | 7. Put it somewhere others can open it | `soon` |
@@ -109,74 +108,14 @@ above all (entry 6). Candidates, safest first:
 Corpus builds were 42–56 queries and ~22 minutes a country two at a time in the 2026-09-25 rebuild,
 so fifty countries is ~$12 and ~10 hours. No model cost to build; stage-2 corridors cost search only.
 
+**Watch for a destination that states its visa rules only in its own language (entry 242).** The
+keyword gate kept Malaysia's Malay visa list out of the pool, harmlessly because the English one got
+in (entry 241). Where no English version exists, that loses the answer: check the new rows'
+`visa_decision` page is pooled, and if not, reopen embeddings as a pool admission (item 75, Done).
+
 ---
 
 ## Next up
-
-### 75. Decide whether to adopt the embedding-ordered shortlist — `soon`, the owner's call
-
-**Measured (entry 239):** against the refreshed oracle, the selector shown the top 40 by link +
-embedding rank plus the 40 blind scores 106.4 of 111 roles a run against today's 120 + 40 at 108.0 —
-1.6 behind, under the 3-role bar — on 21.5K input tokens instead of 52.8K and 5.7s instead of 6.3s.
-The ranking itself is far better at small cuts (109 of 111 kept at 40, today's order 91).
-
-**What adoption costs:** embedding every store once (68,006 pages, about 110–165M tokens, likely
-inside what is left of Voyage's free 200M, else about $13–20), re-embedding pages a build changes,
-and a Voyage dependency — or a local multilingual model (bge-m3), untested here. The role queries
-are traveller-neutral, so no call is needed per request. **What it buys:** about 31K input tokens
-and 0.6s a corridor, and a shortlist that degrades more gracefully if pools grow with expansion
-(item 64). It changes recall, so it would be graded live over several runs (entries 144, 145).
-
-**Does the benefit grow with scale? The data says yes, in one respect (2026-09-29, from
-`embed-replay-2026-09-28/rank_results.json`).** The best answer's position by pool size:
-
-| pool | today's order: median / outside top 40 | link + embeddings: median / outside top 40 |
-| --- | --- | --- |
-| under 300 pages (24 answers) | 2 / 0 | 2 / 0 |
-| 300–600 (57) | 24 / 10 | 3 / 2 |
-| 600–1,000 (30) | 26 / 10 | 6 / 0 |
-
-Today's ranking degrades as pools grow and embeddings barely do. No answer falls outside today's
-120 yet, which is why accuracy is level now; a corpus that grows pools past that — more pages per
-country, 100+ countries — is where embeddings would start to add answers, not only save tokens.
-**Contradicted by test 2 (entry 240):** growing the same pools does not move today's order; the
-table compares different countries.
-
-**Where the benefit could grow, untested:** other-language authorities (voyage-4 is multilingual;
-the keyword scorer's vocabulary is English), which expansion (item 64) will bring and none of the
-111 oracle answers is; and the build, where a crawl opens 3–15% of the addresses it records
-(entries 88, 183) — embedding link context to choose what to open (item 67's old follow-up; tested
-2026-09-29, entry 240: a strong signal, a small yield of new pages).
-**Where it stays flat:** selector accuracy given the page is on the list (~97% already), the ~0.6s
-of selector time (the plan call, ~29s, is the latency), and the per-corridor token saving.
-**Known weakness:** a traveller-neutral query under-ranks pages written for one traveller (Czechia's
-UK list, the UAE residence-keyed service, entry 236) — the hybrid with keywords protects them.
-
-**Next tests, cheapest first:** (1) curate oracle rows for two or three expansion destinations
-whose authority publishes mainly in its own language, and rerun stage 1 there; (2) simulate larger
-pools by adding stored pages from the country's corpus outside the captured pool and rerunning
-`sweep.py`; (3) only then, embed every store and grade live (entries 144, 145).
-
-**Test 2 ran on 2026-09-29 and removed the scaling argument (entry 240).** With every stored page
-outside the pool added (median pool 532 → 1,150), today's order still keeps 91 of 111 at a 40 cut
-and all 111 at 120; the table above is a cross-section of countries, not an effect of size.
-
-**Test 1 ran the same day (entry 241):** six rows curated for Malaysia, Indonesia and Uruguay, whose
-visa pages are mostly Malay, Indonesian and Spanish. The selector scored 19.0 against today's 18.8
-of 20 on 21.9K input tokens against 45.5K — a tie again, on half the input. Language bit at the pool
-gate instead: the Malay visa list is kept out by keywords and ranks 1st of 520 unpooled pages by
-embeddings.
-
-**Where it stands — the owner's call.** The owner's criterion (entry 241): level on accuracy
-everywhere, so any positive counts. On 27 corridors the shortlist is level and saves about half the
-selector's input and 0.6–2s. **Next, if adopted: test 3** — embed every store once (about 110–165M
-tokens; about 171M free left) and grade live over several runs (entries 144, 145), with an embedding
-admission to the pool (a few unpooled pages per role beside the keyword five) as a second arm.
-
-**The crawl question, measured the same day (entry 240).** Among zero-scoring links a build never
-opened, the embedding-ranked 100 held visitor guidance in 47 cases in Turkey against 1 of 100 at
-random (Austria 3 against 0, Japan 2 against 0) — but about 40 of Turkey's 47 were translations,
-twin-host copies or pre-2023 notices of pages the store holds. Not proposed.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
@@ -527,6 +466,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 75. Decide whether to adopt the embedding-ordered shortlist | 09-29 | 239–242 | **Not adopted.** Level on accuracy across 27 corridors in four languages at half the selector's input, but no answer changed; the saving (cents, 0.6–2s) does not pay for a vendor and a second index. Reopen at expansion to a destination that publishes only in its own language, if selector input cost binds, or if answers fall past the 120 cut |
 | 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235–239 | No gain at today's cut (it already keeps every answer); an embedding-ordered 40 + 40 packet is level within the bar, re-graded on the refreshed oracle — adoption is item 75. Other-language pages stay untested |
 | 74. Let a traveller report a corridor that did not work | 09-27 | 233 | A copied log can predate what the traveller saw: a stored corridor writes none. Nothing notifies the owner of a new report |
 | 73. Tell the traveller exactly why their corridor was refused | 09-27 | 232 | A search outage with no corpus was a bare 500, and every plan-stage fault one sentence; messages read from the code, not collected from live runs |
