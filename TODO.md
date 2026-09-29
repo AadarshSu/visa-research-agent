@@ -39,7 +39,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | --- | --- | --- |
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
-| **Next up** | 76. Test the search boost with the selector — measured offline: 100 of 111 at a 40 cut | `soon` |
+| **Next up** | 77. Make the stored-text score credit the traveller's own post | `soon` |
 |  | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -118,18 +118,19 @@ in (entry 241). Where no English version exists, that loses the answer: check th
 
 ## Next up
 
-### 76. Test the search boost with the selector — `soon`
+### 77. Make the stored-text score credit the traveller's own post, not any mention of the nationality — `soon`
 
-**Measured offline (entry 243):** fusing the pages only live search found as a third ranking keeps
-100 of 111 oracle answers at a 40-page cut against today's 91 (embeddings: 109), and all 20 in
-entry 241's non-English corridors at 60. It needs no vendor or index, so it is the cheap route to
-entry 242's saving — about half the selector's input — if the selector keeps its score.
+**Found in entry 244.** The misses of every smaller shortlist trace here, not to missing keywords.
+`score_body`'s "+40 nationality" fires on any page naming the traveller's country, so an Indian in
+Britain is shown the German embassy *in India*'s pages at 85 while the UK mission's score 25–37;
+"+20 tourism" fires on any mention of tourism, and decision tables never mention a purpose; the text
+score has no residence signal although the link score does. Candidate fixes, none measured: a
+residence signal in `score_body`; nationality credit only where the page is not another post's.
 
-**Next:** the selector replay (`replay_embed.py`-style variant, through Personas, one call at a
-time) of `+search` at 40 + 40 and 60 + 40 against today's 120 + 40, five runs, on all 27 oracle
-corridors; graded with `grade.py --alias`. Under ~3 roles a run is no result (item 67's bar). Worth
-first: recording search's full result list per corridor, since a page both sources returned is
-labelled `corpus` today and the boost cannot see it.
+It changes what the selector is shown, so it is a recall change (entries 146, 158): measure it
+offline with `boost.py`'s cuts against the 27-corridor oracle, then the selector replay, several
+runs. If it lets a smaller cut keep today's score, it is the saving entries 242 and 244 could not
+get for free.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
@@ -480,6 +481,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 76. Test the search boost with the selector | 09-30 | 243, 244 | Offline 129 of 131 at a 40 cut once `CandidatePage.searched` records every page search returned; the selector scores 124.2–124.4 against 126.6 on 45–60% less input — corpus-only answers are displaced. Not adopted; the cause is item 77 |
 | 75. Decide whether to adopt the embedding-ordered shortlist | 09-29 | 239–242 | **Not adopted.** Level on accuracy across 27 corridors in four languages at half the selector's input, but no answer changed; the saving (cents, 0.6–2s) does not pay for a vendor and a second index. Reopen at expansion to a destination that publishes only in its own language, if selector input cost binds, or if answers fall past the 120 cut |
 | 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235–239 | No gain at today's cut (it already keeps every answer); an embedding-ordered 40 + 40 packet is level within the bar, re-graded on the refreshed oracle — adoption is item 75. Other-language pages stay untested |
 | 74. Let a traveller report a corridor that did not work | 09-27 | 233 | A copied log can predate what the traveller saw: a stored corridor writes none. Nothing notifies the owner of a new report |

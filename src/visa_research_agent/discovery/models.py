@@ -215,6 +215,15 @@ class CandidatePage(StrictModel):
     shortlisted URLs against a 3,216-entry store by hand (DECISIONS entry 48). Recorded here, the
     recall log answers it for free the next time the question comes up.
     """
+    searched: bool = False
+    """Whether this corridor's live search returned the page, whichever stage's version was kept.
+
+    `found_by` names the version that won, and when search and the corpus both return a page the
+    corpus's usually does — its anchor text outscores a search title — so `found_by` alone says
+    "corpus" for a page search also found. Pages search returned are 36% of the oracle's answers
+    and 6% of the pool (entry 243); this records that fact without changing what the page is scored
+    on. Nothing reads it to rank yet (TODO item 76).
+    """
 
     def combined(self, role: DiscoveryRole) -> float:
         """Blend link and body evidence, weighting the page's own text more heavily.

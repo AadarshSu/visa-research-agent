@@ -800,6 +800,53 @@ async def test_a_corpus_that_out_covers_a_crawl_replaces_it(tmp_path: Path) -> N
     assert "document_checklist" in by_role
 
 
+class _Captured(Exception):
+    pass
+
+
+@pytest.mark.anyio
+async def test_a_page_search_returned_stays_marked_searched_when_the_corpus_version_wins(
+    tmp_path: Path,
+) -> None:
+    """Search and the corpus describe the same page; the corpus's anchor text outscores search's
+    title, so its version is kept — and `found_by` says `corpus`. Whether search returned the page
+    is a separate fact, and the one entry 243 found predicts an answer, so it must survive."""
+
+    requests: list[httpx.Request] = []
+    search_only = f"https://{AUTHORITY}/visa/search-only.html"
+    resolver, provider = build_resolver(tmp_path, requests, [EXEMPTIONS, search_only])
+    provider.title = ""
+    seen = datetime(2026, 8, 22, 12, 0, tzinfo=UTC)
+    corpus = corpus_of(padding=DEFAULT_CRAWL_PAGES + 1)
+    corpus.entries = [
+        CorpusEntry(
+            url=EXEMPTIONS,
+            link_text="Visa Exemption Countries and Regions",
+            first_seen=seen,
+            last_seen=seen,
+        )
+        if entry.url == EXEMPTIONS
+        else entry
+        for entry in corpus.entries
+    ]
+    resolver.corpus = corpus
+    offered: dict[str, CandidatePage] = {}
+
+    async def capture(destination, corridor, candidates, stored_scores, notes, trace):  # type: ignore[no-untyped-def]
+        offered.update(candidates)
+        raise _Captured
+
+    resolver._choose_what_to_read = capture  # type: ignore[method-assign]
+    with pytest.raises(_Captured):
+        await resolver.resolve(destination(), corridor())
+
+    assert offered[EXEMPTIONS].found_by == "corpus", "the corpus's anchor text should have won"
+    assert offered[EXEMPTIONS].searched
+    assert offered[search_only].found_by == "search" and offered[search_only].searched
+    corpus_only = next(u for u, c in offered.items() if u not in {EXEMPTIONS, search_only})
+    assert not offered[corpus_only].searched
+
+
 @pytest.mark.anyio
 async def test_a_destination_nobody_has_built_still_crawls(tmp_path: Path) -> None:
     """The conditional entry 48 requires. Removing the crawl is conditional on having a map."""

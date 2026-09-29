@@ -75,6 +75,10 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   level again in Malaysia, Indonesia and Uruguay on half the input, with the Malay visa list kept
   out of the pool by the keyword gate (entry 241).** **The owner closed item 75 without
   adopting, until expansion gives embeddings a job (entry 242).**
+  A boost for pages live search returned (entries 243, 244) kept every answer offline but cost the
+  selector ~2 roles a run at a 40–60 cut, and the misses trace to the stored-text score's
+  nationality and purpose bonuses — TODO item 77. `CandidatePage.searched` now records every page
+  search returned.
   The Voyage account has a card on it now, for the rate limit; by this repository's count about
   171M of its free 200M tokens are left.
 

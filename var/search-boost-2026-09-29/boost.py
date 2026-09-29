@@ -13,7 +13,8 @@ cut to the top N plus the 40 best-linked pages with no stored text, as `sweep.py
 - link + embeddings: entry 239's arm, for comparison.
 
 A page search and the corpus both returned usually carries the corpus's version and `found_by:
-corpus` (the resolver keeps the better link score), so "search-found" undercounts what search saw.
+corpus` (the resolver keeps the better link score), so on captures from before
+`CandidatePage.searched` (entry 244) "search-found" undercounts what search saw.
 
 usage: boost.py            (the 21 corridors of the 2026-09-24 capture)
        EMBED_CAPTURES=var/embed-test1-2026-09-29/cap/new boost.py   (entry 241's six)
@@ -35,8 +36,14 @@ from visa_research_agent.discovery.selection_recall import load_oracle  # noqa: 
 CUTS = (20, 30, 40, 60, 80, 120)
 
 
+def was_searched(candidate) -> bool:
+    """Search returned it. Captures from before `CandidatePage.searched` know only the label."""
+
+    return candidate.searched or candidate.found_by == "search"
+
+
 def search_ranking(cap) -> dict[str, list[str]]:
-    found = [c for c in cap["pool"] if c.found_by == "search"]
+    found = [c for c in cap["pool"] if was_searched(c)]
     return {
         role: [
             c.link.url
@@ -65,7 +72,7 @@ def main() -> None:
             PageTextStore(common.PAGETEXT).text_for_selection(cap["code"], answers - texts.keys())
         )
         link, text = common.link_ranking(cap), common.text_ranking(cap)
-        searched = {c.link.url for c in cap["pool"] if c.found_by == "search"}
+        searched = {c.link.url for c in cap["pool"] if was_searched(c)}
         orders = {
             "today (link + text)": common.fused_order(cap, [link, text]),
             "+search as a third ranking": common.fused_order(
@@ -119,4 +126,5 @@ def main() -> None:
         print(f"  {arm:28} {statistics.median(values):.0f}")
 
 
-main()
+if __name__ == "__main__":
+    main()

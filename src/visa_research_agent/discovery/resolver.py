@@ -916,7 +916,11 @@ class CorridorResolver:
                     continue
                 if url not in search_candidates:
                     search_candidates[url] = CandidatePage(
-                        link=link, link_scores=score(link), title=result.title, found_by="search"
+                        link=link,
+                        link_scores=score(link),
+                        title=result.title,
+                        found_by="search",
+                        searched=True,
                     )
                 if url not in seeds:
                     seeds.append(url)
@@ -976,6 +980,8 @@ class CorridorResolver:
             # repairing what this line broke.
             existing = candidates.get(entry.url)
             if existing is None or stored.link_scores.best()[1] > existing.link_scores.best()[1]:
+                # The corpus's evidence wins; the fact that search returned the page stays true.
+                stored.searched = existing is not None and existing.searched
                 candidates[entry.url] = stored
 
         # 3. Crawl to pinpoint — only when the corpus has not already out-covered it.
@@ -1034,6 +1040,7 @@ class CorridorResolver:
         for candidate in crawled:
             existing = candidates.get(candidate.link.url)
             if existing is None or candidate.link_scores.best()[1] > existing.link_scores.best()[1]:
+                candidate.searched = existing is not None and existing.searched
                 candidates[candidate.link.url] = candidate
         for url, candidate in candidates.items():
             if not candidate.title:

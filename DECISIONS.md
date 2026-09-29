@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [244](#244-recording-every-page-search-returned-makes-the-boost-strong-offline-and-the-selector-still-loses-two-roles-a-run) | **Measured: recording every page search returned makes the boost strong offline, and the selector still loses two roles a run** — `CandidatePage.searched` added; the boost keeps 129 of 131 answers at a 40 cut (today 109, embeddings 128), but the selector scores 124.2–124.4 against 126.6 on 45–60% less input; and the misses trace to the stored-text bonuses, not missing keywords |
 | [243](#243-a-boost-for-search-found-pages-recovers-most-of-what-a-smaller-cut-loses-without-embeddings) | **Measured: a boost for search-found pages recovers most of what a smaller cut loses, without embeddings** — search as a third fused ranking keeps 100 of 111 answers at a 40 cut against today's 91 and embeddings' 109, and 19 of 20 in the non-English corridors, beating embeddings there; the selector has not been run on it |
 | [242](#242-embeddings-are-not-adopted-until-expansion-gives-them-a-job) | **Embeddings are not adopted until expansion gives them a job** — the owner closes item 75: level on accuracy across 27 corridors, but the saving does not pay for a vendor and a second index; three triggers reopen it |
 | [241](#241-in-destinations-whose-visa-pages-are-not-in-english-embeddings-tie-again-and-the-keyword-gate-drops-a-malay-answer) | **Measured: where visa pages are not in English, embeddings tie again — and the keyword gate drops a Malay answer** — six oracle rows curated for Malaysia, Indonesia and Uruguay; the selector scores 19.0 against 18.8 of 20 on half the input; the Malay visa list is kept out of the pool by keywords and ranks 1st of 520 unpooled pages by embeddings |
@@ -285,6 +286,77 @@ s more pressing |
 
 ---
 
+## 244. Recording every page search returned makes the boost strong offline, and the selector still loses two roles a run
+
+**2026-09-30 · the owner: find what keywords miss Germany, Czechia and the Netherlands; record
+search's full result list for the boost; run the selector test.** Tools and logs:
+`var/search-boost-2026-09-29/`.
+
+### 1. The misses are not missing keywords
+
+The eleven roles entry 243's boost lost at a 40 cut were read one by one. **Most of their answers
+rank first by link** — Germany's visa table 1st of 418, the Netherlands' "apply in the United
+Kingdom" 1st of 269, the UK embassy's fee page 1st of 12 — and fall because their stored-text score
+ranks them 70th to 110th, which the fusion averages in. The stored-text score's traveller bonuses
+cause it:
+
+- **"+40 nationality" fires on any page that mentions the traveller's country.** For an Indian in
+  Britain the pages that mention India most are the German embassy *in India*'s (`india.diplo.de`,
+  85 points) and the Dutch checklists for applicants *in* India for every purpose — the wrong post
+  under rule 5 — while the UK mission's pages score 25–37.
+- **"+20 tourism" fires on any mention of tourism**, including the Dutch seafarer and medical
+  checklists; a decision table (Germany's, Czechia's) never mentions a purpose and misses it.
+- **The text score has no residence signal.** The link score does (`residence:GB+40`), which is why
+  the UK pages rank first by link and sink once text is fused in.
+
+Genuine vocabulary gaps exist and are smaller: "What documents do I need for a C visa?" scores 0 on
+its link; the Dutch EES leaflet is linked under a Chinese heading. Not fixed; TODO item 77.
+
+### 2. `CandidatePage.searched`
+
+`found_by` names the version of a page that won, and when search and the corpus both return one, the
+corpus's usually wins on its anchor text — so `found_by` said `corpus` for pages search had found.
+`searched` now records that search returned the page, and both merges in `resolve` carry it when
+another stage's version replaces search's. Nothing reads it to rank; a test in
+`test_discovery_resolver.py` fails without the merge change.
+
+### 3. Offline, on fresh captures of all 27 oracle corridors
+
+Re-captured with the flag (239 searches, no model). Searched pages are 7% of the pools (the label
+said 6%) and **42% of the oracle's answers**.
+
+| roles kept, of 131 | top 20 | 40 | 60 | 120 |
+| --- | --- | --- | --- | --- |
+| today: link + text | 75 | 109 | 121 | **131** |
+| + search as a third fused ranking | 121 | **129** | 130 | 131 |
+| link + embeddings | 119 | 128 | 128 | 130 |
+
+The best answer's median position: 13th today, 3rd with the boost, 4th with embeddings.
+
+### 4. The selector, through Personas, five runs over the same 27 corridors
+
+| shown to the selector | roles a run, of 131 | per run | input | seconds |
+| --- | --- | --- | --- | --- |
+| today: 120 + 40 | **126.6** | 127, 126, 127, 127, 126 | 51.2K | 7.1 |
+| boosted 40 + 40 | 124.2 | 125, 124, 125, 123, 124 | 20.7K | 5.9 |
+| boosted 60 + 40 | 124.4 | 124, 125, 124, 125, 124 | 28.4K | 6.3 |
+
+**2.2–2.4 roles a run behind — under item 67's 3-role bar, but lower in every run, and the losses
+are genuine** (`losses.py`): Czechia's decision (0 of 5 against 5 of 5; the boosted arm picked the
+Los Angeles consulate's copy of the list, whose stored text is 772 characters and holds no list) and
+France's processing time for both travellers (0 against 5; `la-demarche` is not in the boosted list,
+and what was picked says only that "waiting times … will vary"). Neither answer page was returned by
+search: today they sit 47th and 84th of 160, and the boost pushes them below 60. The offline count
+credited France at 60 through a second oracle page that neither arm's selector ever picks.
+
+**So the boost trades corpus-only answers for search-found ones.** It is the same size of trade as
+the embedding shortlist's (entry 239: 1.6 a run behind on the English corridors), with no vendor or
+index. Neither is adopted; today's 120 + 40 keeps every answer. Item 76 closes. The cause in §1 is
+the better lever: a text score that credits the traveller's own post instead of any mention of the
+nationality would lift exactly the pages both smaller cuts lose.
+
+---
+
 ## 243. A boost for search-found pages recovers most of what a smaller cut loses, without embeddings
 
 **2026-09-29 · the owner: "test the search boost offline".** No network, no model; nothing in
@@ -325,7 +397,7 @@ the corpus holds and keywords rank low, which embeddings keep in 10 of the 11.
 search saw, and a boost on search's full result list may behave differently. The cuts are tuned on
 the same corridors they are graded on. Nothing here says what the selector does with the shorter
 list; entries 236–241 found its score can differ from the cut's by several roles. **Not adopted**;
-the selector test is TODO item 76.
+the selector test is TODO item 76 — run in entry 244.
 
 ---
 
