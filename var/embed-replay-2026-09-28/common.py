@@ -9,6 +9,7 @@ input only: nothing here reaches a packet except through which candidates are sh
 
 import hashlib
 import json
+import os
 import re
 import sqlite3
 from array import array
@@ -22,7 +23,10 @@ from visa_research_agent.discovery.selection_recall import load_oracle, same_pag
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-CAPTURES = ROOT / "var/selection-replay-2026-09-24/cap/new"
+# Another capture directory can stand in, as item 75's test 1 does (entry 241).
+CAPTURES = Path(
+    os.environ.get("EMBED_CAPTURES") or ROOT / "var/selection-replay-2026-09-24/cap/new"
+)
 PAGETEXT = ROOT / "var/pagetext"
 ORACLE = ROOT / "oracle/selection_oracle.yaml"
 VECTORS = HERE / "vectors.sqlite"

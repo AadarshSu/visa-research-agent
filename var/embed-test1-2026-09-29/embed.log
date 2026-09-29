@@ -1,0 +1,55 @@
+indonesia_IN_GB: pool 757, with text 594
+indonesia_PH_PH: pool 758, with text 591
+malaysia_IN_GB: pool 309, with text 214
+malaysia_PH_PH: pool 305, with text 211
+uruguay_IN_GB: pool 55, with text 33
+uruguay_PH_PH: pool 55, with text 33
+
+6 corridors, 1676 pages with stored text, 1301 unique chunks, 3,676,334 characters — roughly 919,083 to 1,225,444 tokens — and 54 role queries. Model voyage-4-large, 1024 dims.
+query: 54 texts, 0 already embedded, 54 to do
+  32 embedded, 826 tokens, ~40,495 tokens/min
+  54 embedded, 1,413 tokens, ~44,681 tokens/min
+document: 1301 texts, 0 already embedded, 1301 to do
+  32 embedded, 24,464 tokens, ~1,413,179 tokens/min
+  64 embedded, 52,367 tokens, ~1,310,960 tokens/min
+  96 embedded, 79,346 tokens, ~1,279,309 tokens/min
+  128 embedded, 103,780 tokens, ~1,431,802 tokens/min
+  160 embedded, 130,565 tokens, ~1,502,949 tokens/min
+  192 embedded, 158,003 tokens, ~1,439,611 tokens/min
+  224 embedded, 182,061 tokens, ~1,431,236 tokens/min
+  256 embedded, 214,581 tokens, ~1,537,407 tokens/min
+  288 embedded, 239,932 tokens, ~1,583,876 tokens/min
+  320 embedded, 263,754 tokens, ~1,538,348 tokens/min
+  352 embedded, 292,683 tokens, ~1,518,579 tokens/min
+  384 embedded, 323,252 tokens, ~1,547,830 tokens/min
+  416 embedded, 349,570 tokens, ~1,587,178 tokens/min
+  448 embedded, 378,452 tokens, ~1,612,303 tokens/min
+  480 embedded, 407,342 tokens, ~1,658,320 tokens/min
+  512 embedded, 437,107 tokens, ~1,697,721 tokens/min
+  544 embedded, 464,553 tokens, ~1,663,718 tokens/min
+  576 embedded, 491,615 tokens, ~1,692,888 tokens/min
+  608 embedded, 519,424 tokens, ~1,666,230 tokens/min
+  640 embedded, 548,136 tokens, ~1,693,525 tokens/min
+  672 embedded, 581,827 tokens, ~1,713,607 tokens/min
+  704 embedded, 616,474 tokens, ~1,767,806 tokens/min
+  736 embedded, 645,204 tokens, ~1,731,147 tokens/min
+  768 embedded, 680,806 tokens, ~1,766,336 tokens/min
+  800 embedded, 706,091 tokens, ~1,778,305 tokens/min
+  832 embedded, 731,618 tokens, ~1,803,048 tokens/min
+  864 embedded, 759,338 tokens, ~1,830,885 tokens/min
+  896 embedded, 786,776 tokens, ~1,856,600 tokens/min
+  928 embedded, 809,943 tokens, ~1,858,149 tokens/min
+  960 embedded, 831,624 tokens, ~1,862,348 tokens/min
+  992 embedded, 853,794 tokens, ~1,875,973 tokens/min
+  1024 embedded, 879,021 tokens, ~1,890,170 tokens/min
+  1056 embedded, 909,061 tokens, ~1,916,528 tokens/min
+  1088 embedded, 938,943 tokens, ~1,930,932 tokens/min
+  1120 embedded, 971,976 tokens, ~1,954,404 tokens/min
+  1152 embedded, 1,008,261 tokens, ~1,989,087 tokens/min
+  1184 embedded, 1,031,107 tokens, ~2,001,979 tokens/min
+  1216 embedded, 1,059,042 tokens, ~2,019,702 tokens/min
+  1248 embedded, 1,081,683 tokens, ~2,027,319 tokens/min
+  1280 embedded, 1,103,978 tokens, ~2,037,043 tokens/min
+  1301 embedded, 1,126,853 tokens, ~2,045,714 tokens/min
+
+done: 1,128,266 tokens used this run. Vectors in /Users/aadarsh/Documents/Visa Research Agent/var/embed-replay-2026-09-28/vectors.sqlite

@@ -78,14 +78,15 @@ def test_the_committed_oracle_loads_and_says_what_it_claims() -> None:
 
     oracle = load_oracle(REPOSITORY / DEFAULT_ORACLE_PATH)
 
-    assert len(oracle.corridors) == 21
+    assert len(oracle.corridors) == 27
     travellers = {"/".join(c.corridor.split("/")[1:]) for c in oracle.corridors}
     # Two curated travellers over the same ten countries, plus Czechia for the Indian one — the
     # eleventh country and the only row curated from outside the pool (entry 127). The second
     # traveller is what makes any number from this fixture a statement about more than one profile:
-    # known problem 29, entry 91.
+    # known problem 29, entry 91. Entry 241 added both travellers for Malaysia, Indonesia and
+    # Uruguay, whose visa pages are mostly not in English.
     assert travellers == {"IN/GB/tourism", "PH/PH/tourism"}
-    assert len({c.corridor for c in oracle.corridors}) == 21
+    assert len({c.corridor for c in oracle.corridors}) == 27
     for corridor in oracle.corridors:
         assert corridor.text_held <= corridor.contention
         for role in [*corridor.answers, *corridor.tools, *corridor.unanswered]:

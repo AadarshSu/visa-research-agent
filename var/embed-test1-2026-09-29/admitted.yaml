@@ -1,0 +1,10 @@
+# Unpooled pages judged to answer a role (entry 241), found reading admit.py's review.
+malaysia_IN_GB:
+  visa_decision:
+    - https://www.imi.gov.my/index.php/perkhidmatan-utama/visa/keperluan-visa-mengikut-negara
+malaysia_PH_PH:
+  visa_decision:
+    - https://www.imi.gov.my/index.php/perkhidmatan-utama/visa/keperluan-visa-mengikut-negara
+indonesia_IN_GB:
+  visa_decision:
+    - https://kemlu.go.id/washington/publikasi/travel-regulations-to-indonesia

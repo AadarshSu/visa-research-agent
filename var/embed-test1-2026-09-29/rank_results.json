@@ -1,0 +1,1262 @@
+[
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 69,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 3,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 46,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 26,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 15,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 16,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 16,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 69,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 16,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": false,
+  "best_answer_position": 202,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 32,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 15,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 32,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 28,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 61,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 15,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 10,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 10,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 10,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 10,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 82,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 10,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 22,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": false,
+  "best_answer_position": 238,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 29,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "document_checklist",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 15,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "application_route",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 19,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "fees",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 19,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "processing_times",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 54,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 15,
+  "pool": 757
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+text (today)",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+text (today)",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "indonesia_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "general_entry",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 758
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "link+text (today)",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 25,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 7,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 18,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 7,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 18,
+  "pool": 309
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "link+text (today)",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 25,
+  "pool": 305
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 305
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 7,
+  "pool": 305
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 305
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 305
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 7,
+  "pool": 305
+ },
+ {
+  "corridor": "malaysia_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 305
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text (today)",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text (today)",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text (today)",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text (today)",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text (today)",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 8,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 8,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [neutral]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 6,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 6,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [neutral]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 11,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 11,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [neutral]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 15,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 8,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 8,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "embed only [traveller]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 6,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 6,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+embed [traveller]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_IN_GB",
+  "arm": "link+text+embed [traveller]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text (today)",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text (today)",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text (today)",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text (today)",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text (today)",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 8,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 8,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [neutral]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 6,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 6,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [neutral]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 11,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 11,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [neutral]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 12,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "embed only [traveller]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 4,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 1,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 3,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 3,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 3,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+embed [traveller]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 3,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "visa_decision",
+  "kind": "English text",
+  "reachable": true,
+  "best_answer_position": 5,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "document_checklist",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 11,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "application_route",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "fees",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 11,
+  "pool": 55
+ },
+ {
+  "corridor": "uruguay_PH_PH",
+  "arm": "link+text+embed [traveller]",
+  "role": "processing_times",
+  "kind": "other-language text",
+  "reachable": true,
+  "best_answer_position": 9,
+  "pool": 55
+ }
+]

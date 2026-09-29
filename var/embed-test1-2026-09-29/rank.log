@@ -1,0 +1,32 @@
+arm                               reachable     core  median pos   English text   other-language text   no stored text
+link+text (today)                 20/20       9/9             12   12/12   8/8   0/0
+embed only [neutral]              20/20       9/9              8   12/12   8/8   0/0
+link+embed [neutral]              19/20       9/9              6   11/12   8/8   0/0
+link+text+embed [neutral]         20/20       9/9             11   12/12   8/8   0/0
+embed only [traveller]            20/20       9/9              6   12/12   8/8   0/0
+link+embed [traveller]            19/20       9/9              5   11/12   8/8   0/0
+link+text+embed [traveller]       20/20       9/9             10   12/12   8/8   0/0
+
+best answering page's position, per corridor and role:
+  indonesia_IN_GB            application_route  link+text (today):22  embed only:16  link+embed:22  link+text+embed:32  embed only:10  link+embed:22  link+text+embed:19
+  indonesia_IN_GB            document_checklist link+text (today):22  embed only:16  link+embed:9  link+text+embed:15  embed only:10  link+embed:9  link+text+embed:15
+  indonesia_IN_GB            fees               link+text (today):3  embed only:12  link+embed:22  link+text+embed:28  embed only:10  link+embed:22  link+text+embed:19
+  indonesia_IN_GB            general_entry      link+text (today):26  embed only:16  link+embed:9  link+text+embed:15  embed only:10  link+embed:9  link+text+embed:15
+  indonesia_IN_GB            processing_times   link+text (today):46  embed only:69  link+embed:202  link+text+embed:61  embed only:82  link+embed:238  link+text+embed:54
+  indonesia_IN_GB            visa_decision      link+text (today):69  embed only:15  link+embed:22  link+text+embed:32  embed only:10  link+embed:22  link+text+embed:29
+  indonesia_PH_PH            general_entry      link+text (today):1  embed only:1  link+embed:1  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  indonesia_PH_PH            visa_decision      link+text (today):1  embed only:1  link+embed:1  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  malaysia_IN_GB             visa_decision      link+text (today):25  embed only:5  link+embed:7  link+text+embed:18  embed only:4  link+embed:7  link+text+embed:18
+  malaysia_PH_PH             visa_decision      link+text (today):25  embed only:5  link+embed:7  link+text+embed:12  embed only:5  link+embed:7  link+text+embed:12
+  uruguay_IN_GB              application_route  link+text (today):12  embed only:5  link+embed:4  link+text+embed:4  embed only:5  link+embed:4  link+text+embed:4
+  uruguay_IN_GB              document_checklist link+text (today):12  embed only:8  link+embed:6  link+text+embed:11  embed only:8  link+embed:6  link+text+embed:9
+  uruguay_IN_GB              fees               link+text (today):12  embed only:8  link+embed:6  link+text+embed:11  embed only:8  link+embed:6  link+text+embed:9
+  uruguay_IN_GB              processing_times   link+text (today):12  embed only:5  link+embed:4  link+text+embed:4  embed only:5  link+embed:4  link+text+embed:4
+  uruguay_IN_GB              visa_decision      link+text (today):5  embed only:9  link+embed:1  link+text+embed:5  embed only:15  link+embed:1  link+text+embed:5
+  uruguay_PH_PH              application_route  link+text (today):12  embed only:5  link+embed:4  link+text+embed:4  embed only:4  link+embed:3  link+text+embed:9
+  uruguay_PH_PH              document_checklist link+text (today):12  embed only:8  link+embed:6  link+text+embed:11  embed only:4  link+embed:3  link+text+embed:11
+  uruguay_PH_PH              fees               link+text (today):12  embed only:8  link+embed:6  link+text+embed:11  embed only:4  link+embed:3  link+text+embed:11
+  uruguay_PH_PH              processing_times   link+text (today):12  embed only:5  link+embed:4  link+text+embed:4  embed only:4  link+embed:3  link+text+embed:9
+  uruguay_PH_PH              visa_decision      link+text (today):5  embed only:9  link+embed:1  link+text+embed:5  embed only:12  link+embed:1  link+text+embed:5
+
+per-role rows written to /Users/aadarsh/Documents/Visa Research Agent/var/embed-replay-2026-09-28/rank_results.json

@@ -330,6 +330,15 @@ TODO item 62, and 8.14–8.16 are what the new sections raised.
   error body that says whether a `500` is the platform or the provider, so a client can tell "retry
   in a minute" from "your request is wrong". **Again on 2026-09-25:** among 20 plan calls sent one
   at a time, four answered `502` or `504` (0.5–30s) between successes.
+- **8.24 A content filter refused a packet of government visa pages, then passed the same packet**
+  [observed, 2026-09-29]. One selection call (~56k input tokens: Indonesian immigration and
+  embassy pages about visas on arrival) answered `AGENT_ERROR: Agent failed: Error code: 400` —
+  "This content was flagged for possible cybersecurity risk. If this seems wrong, try rephrasing
+  your request. To get authorized for security work, …". Four earlier runs of the byte-identical
+  packet had succeeded, and a retry minutes later succeeded too; 59 of 60 calls in the batch passed.
+  *Suggest:* say which layer flags (Personas or the provider), whether a flag is deterministic,
+  and how an app doing non-security work is meant to avoid or appeal one — a production request
+  that hits it fails a traveller's plan with no way to rephrase.
 
 ## 9. Signing a user in
 

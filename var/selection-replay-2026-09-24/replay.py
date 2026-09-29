@@ -10,6 +10,7 @@ usage: replay.py OUT --arms new,old --variants baseline --runs 3 [--only japan_I
 import argparse
 import asyncio
 import json
+import os
 import time
 from pathlib import Path
 
@@ -31,6 +32,12 @@ from visa_research_agent.research.personas import (
 
 ROOT = Path("/Users/aadarsh/Documents/Visa Research Agent")
 SCRATCH = Path(__file__).parent
+# Other captures can stand in (entry 241): EMBED_CAPTURES names a `cap/new`.
+CAP = (
+    Path(os.environ["EMBED_CAPTURES"]).parent
+    if os.environ.get("EMBED_CAPTURES")
+    else SCRATCH / "cap"
+)
 TEXT = {
     "new": ROOT / "var/pagetext",
     "old": ROOT / "var/_backup_before_pilot_2026-09-25/pagetext",
@@ -38,7 +45,7 @@ TEXT = {
 
 
 def load_capture(arm: str, name: str) -> dict:
-    data = json.loads((SCRATCH / "cap" / arm / f"{name}.json").read_text(encoding="utf-8"))
+    data = json.loads((CAP / arm / f"{name}.json").read_text(encoding="utf-8"))
     candidates = {}
     for row in data["candidates"]:
         c = CandidatePage.model_validate(row)
@@ -128,7 +135,7 @@ async def main():
     done = already(out)
     prompt = load_selection_prompt()
     jobs = []
-    names = sorted(x.stem for x in (SCRATCH / "cap" / "new").glob("*.json"))
+    names = sorted(x.stem for x in (CAP / "new").glob("*.json"))
     if a.only:
         names = [n for n in names if n in a.only.split(",")]
     for arm in a.arms.split(","):

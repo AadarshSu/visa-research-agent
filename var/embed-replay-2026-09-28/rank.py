@@ -124,7 +124,15 @@ def main() -> None:
         for (corridor, role), per_arm in sorted(by_key.items()):
             cells = "  ".join(f"{arm.split(' [')[0][:18]}:{pos}" for arm, pos in per_arm.items())
             print(f"  {corridor:26} {role:18} {cells}")
-    out = Path(__file__).resolve().parent / "rank_results.json"
+    # Beside the experiment whose captures were read, so a run over other captures (entry 241)
+    # cannot overwrite this one's results.
+    here = Path(__file__).resolve().parent
+    experiment = (
+        here
+        if common.CAPTURES.is_relative_to(here.parent / "selection-replay-2026-09-24")
+        else common.CAPTURES.parents[1]
+    )
+    out = experiment / "rank_results.json"
     out.write_text(json.dumps(report, indent=1), encoding="utf-8")
     print(f"\nper-role rows written to {out}")
 

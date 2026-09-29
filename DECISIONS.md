@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [241](#241-in-destinations-whose-visa-pages-are-not-in-english-embeddings-tie-again-and-the-keyword-gate-drops-a-malay-answer) | **Measured: where visa pages are not in English, embeddings tie again — and the keyword gate drops a Malay answer** — six oracle rows curated for Malaysia, Indonesia and Uruguay; the selector scores 19.0 against 18.8 of 20 on half the input; the Malay visa list is kept out of the pool by keywords and ranks 1st of 520 unpooled pages by embeddings |
 | [240](#240-a-growing-pool-does-not-hurt-todays-ranking-and-embeddings-find-guidance-among-unopened-links--mostly-copies) | **Measured: a growing pool does not hurt today's ranking; embeddings find guidance among unopened links, mostly copies** — every stored page outside the pool added, today's order still keeps 91 at a 40 cut and 111 at 120, so item 75's scaling argument fails; among zero-scoring unopened links, 47 of 100 embedding picks in Turkey were visitor guidance against 1 of 100 at random, but nearly all are translations or twin-host copies of stored pages |
 | [239](#239-the-selection-oracle-is-refreshed-and-the-embedding-results-change-with-it) | **The selection oracle is refreshed, and the embedding results change with it** — 235 answers added from the rebuilt stores, 20 unanswered roles answered, 92 → 111 gradeable roles; re-graded, the embedding-ordered 40 + 40 packet is 1.6 roles a run behind today's (under the bar) at 60% less input, embedding excerpts tie, and link + embeddings keeps 109 of 111 answers at a 40 cut against today's 91 |
 | [238](#238-embedding-chosen-excerpts-tie-with-todays-and-the-oracle-cannot-see-the-difference) | **Measured: embedding-chosen excerpts tie with today's; the oracle cannot see the difference** — graded 81.0 against 84.6, but 16 of the 19 lost role-runs picked a page stating the answer the oracle does not list, often the traveller's own embassy; corrected, 0.4 a run. Both item 67 tests were limited more by the oracle than by the ceiling |
@@ -279,6 +280,86 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 241. In destinations whose visa pages are not in English, embeddings tie again — and the keyword gate drops a Malay answer
+
+**2026-09-29 · the owner: "curate oracle rows for test (1) and do that experiment first, we need to
+make sure we have explored the extent of the viability of embeddings because it being even on
+everything means anywhere it gets a positive it can be worthwhile."** Item 75's test 1. Nothing in
+`src/` changed; the oracle gains six rows and two tests their counts. Tools and logs:
+`var/embed-test1-2026-09-29/`.
+
+**The destinations.** Of the stored pages that mention visas, the share in English is lowest for
+Malaysia (16%), Indonesia (31%) and Uruguay (37%) — Malay, Indonesian, Spanish. Each was captured
+for both oracle travellers (`IN/GB`, `PH/PH`) against today's stores: 40 searches, no model.
+
+**The rows.** Curated from each pool by the rules the other rows use, reading the top 10 by link,
+keywords and both embedding queries plus the top 25 of both fused orders, with passage tests in all
+four languages so no arm's shortlist went unjudged — about 430 page-role pairs. Uruguay requires a
+visa of both (the Interior Ministry's table: "Necesita Visa (5)", "necesita autorización previa");
+Malaysia exempts both ("India** citizen: visa exempts until 31st December 2026"; ASEAN nationals for
+a month); Indonesia exempts Filipinos (Presidential Regulation 95 of 2024) and gives Indians a visa
+on arrival. So 20 roles are gradeable; the visa-free rows' application roles are `not_applicable`,
+Malaysia's entry conditions sit on pages whose stored text is navigation only (`unverifiable`), and
+Uruguay's consulates in Madrid, Asunción, Rosario, Sydney and Stockholm are other posts (rule 5).
+Every answer the rows name is held by the store (`coverage`'s test: held equals answerable, now 72
+and 59).
+
+**What language the answers are in.** Uruguay's eight are Spanish only. Malaysia's decision is
+stated in English and in Malay; Indonesia's in English and Indonesian.
+
+| stage 1: roles kept, of 20 | top 20 | 30 | 40 | 60 | 120 (shipped) | median position |
+| --- | --- | --- | --- | --- | --- | --- |
+| today's order | 13 | 18 | 18 | 19 | **20** | 12 |
+| link + embeddings (neutral) | 16 | 19 | 19 | 19 | 19 | 6 |
+| link + text + embeddings (traveller) | 18 | 19 | 19 | 20 | 20 | 10 |
+
+Malaysia's decision sits 25th in today's order and 7th with embeddings; Indonesia's Indian decision
+69th and 22nd. The one role link + embeddings loses at 120 is Indonesia's visa-on-arrival processing
+time, 46th in today's order and 202nd with embeddings — and no arm's selector ever picks it.
+
+| stage 2, the selector through Personas, 5 runs | roles a run, of 20 | input | seconds |
+| --- | --- | --- | --- |
+| today's 120 + 40 | 18.8 (19, 19, 18, 19, 19) | 45.5K | 7.8 |
+| link + embeddings, 40 + 40 | **19.0** (19 every run) | 21.9K | 5.8 |
+
+A tie, on half the input — the same result as the 21 English corridors (entry 239: 106.4 against
+108.0 of 111). The keyword scorer ranks the Spanish pages well (Uruguay's answers sit 5th to 12th
+of 55), and where a destination publishes in two languages, an English page carries the answer.
+
+**Where language did bite: the pool gate, not the ordering.** The Malay version of Malaysia's visa
+list states both travellers' answer and never enters the pool: its link scores −26 (an "off-scope:
+student" penalty from the site's navigation) and its stored text scores only for
+`application_route`, on the English word "eVisa" — nothing in "Visa tidak diperlukan" registers as
+a decision. Among the 520 stored pages the pool rule turned away, embeddings rank it **1st** for the
+decision; keywords do not rank it at all (`admit.py`). The one other unpooled answer found, the
+Indonesian embassy in Washington's travel-regulations page listing India for a visa on arrival (a
+COVID-era notice, in English), ranks 1st by embeddings and 2nd by keywords, just under the bar of 5
+admitted per role. Neither loss cost an answer, because the English twin or other pages were in the
+pool. It would for a destination that states its decision only in its own language, which none of
+these three does.
+
+**Also found:** one of the 60 selector calls was refused by a content filter — "flagged for possible
+cybersecurity risk" — on a packet of Indonesian government pages that passed four times before and
+once again on retry (OFSELF_FEEDBACK 8.24).
+
+**What it means for item 75.** Across 27 corridors and two languages of test, the embedding-ordered
+shortlist is level with today's on what the selector finds, and consistently positive on cost: about
+half the selector's input and 0.6–2s. By the owner's criterion — level everywhere, so any positive
+counts — it qualifies, and adoption is the owner's call. What it would take is item 75's test 3:
+embed every store once (about 110–165M tokens; about 171M of Voyage's free tokens are left by this
+repository's count) and grade live over several runs (entries 144, 145). **An embedding admission
+to the pool** — a few unpooled pages per role by embedding, beside the keyword five — is the one
+lever with a mechanism for a non-English destination; it would have admitted both unpooled answers
+here. Not built.
+
+**What limits this.** Six rows judged by one reader, not the owner (entry 68). Uruguay's pool (55)
+is smaller than every cut, so its rows cannot separate one ranking from another; 12 of the 20 roles
+are Malaysia's and Indonesia's. The unpooled review read only the top 10 per signal, so other
+unpooled answers may exist. The oracle's rows are curated from the pool (`curated_from: pool`), so
+they cannot see what the gate drops; the Malay list was found beside them, not by them.
 
 ---
 

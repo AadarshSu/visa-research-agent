@@ -424,10 +424,12 @@ def test_the_committed_oracle_holds_for_every_curated_traveller() -> None:
         assert held == answerable, f"{traveller} lost an answer the corpus used to hold"
     # 50 before the refresh of entry 239 — 47 over the ten countries entry 91 curated, the two Czech
     # roles entry 127 added and the Dutch `general_entry` entry 128 added — and 60 after it, which
-    # answered ten more roles for this traveller from the rebuilt stores. All of them are held.
-    assert totals["IN/GB/tourism"][1] == 60
-    # 42 before the refresh (entry 91's 41 and entry 129's Dutch `general_entry`), 51 after it.
-    assert totals["PH/PH/tourism"][1] == 51
+    # answered ten more roles for this traveller from the rebuilt stores; 72 once entry 241 added
+    # Malaysia, Indonesia and Uruguay (12). All of them are held.
+    assert totals["IN/GB/tourism"][1] == 72
+    # 42 before the refresh (entry 91's 41 and entry 129's Dutch `general_entry`), 51 after it,
+    # 59 with entry 241's three destinations (8).
+    assert totals["PH/PH/tourism"][1] == 59
 
 
 def test_the_traveller_moves_what_is_answerable_which_is_the_whole_point() -> None:

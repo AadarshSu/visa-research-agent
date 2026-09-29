@@ -160,10 +160,18 @@ pools by adding stored pages from the country's corpus outside the captured pool
 **Test 2 ran on 2026-09-29 and removed the scaling argument (entry 240).** With every stored page
 outside the pool added (median pool 532 → 1,150), today's order still keeps 91 of 111 at a 40 cut
 and all 111 at 120; the table above is a cross-section of countries, not an effect of size.
-**Recommended: close this item without adopting — the owner's call.** Test 1 no longer needs
-expansion: the store already holds destinations whose stored text is mostly not English (Belgium,
-Mexico, Uruguay, Austria, Turkey, Indonesia, by a rough function-word count), though it needs new
-oracle rows, which is the owner's call (entry 68).
+
+**Test 1 ran the same day (entry 241):** six rows curated for Malaysia, Indonesia and Uruguay, whose
+visa pages are mostly Malay, Indonesian and Spanish. The selector scored 19.0 against today's 18.8
+of 20 on 21.9K input tokens against 45.5K — a tie again, on half the input. Language bit at the pool
+gate instead: the Malay visa list is kept out by keywords and ranks 1st of 520 unpooled pages by
+embeddings.
+
+**Where it stands — the owner's call.** The owner's criterion (entry 241): level on accuracy
+everywhere, so any positive counts. On 27 corridors the shortlist is level and saves about half the
+selector's input and 0.6–2s. **Next, if adopted: test 3** — embed every store once (about 110–165M
+tokens; about 171M free left) and grade live over several runs (entries 144, 145), with an embedding
+admission to the pool (a few unpooled pages per role beside the keyword five) as a second arm.
 
 **The crawl question, measured the same day (entry 240).** Among zero-scoring links a build never
 opened, the embedding-ranked 100 held visitor guidance in 47 cases in Turkey against 1 of 100 at

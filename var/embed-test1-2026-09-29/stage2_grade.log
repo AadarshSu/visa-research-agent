@@ -1,0 +1,14 @@
+new  emb_link_embed_neutral_c40 corridors  6 runs/corr 5  roles/run  19.0 of 20  core  9.0/9 other 10.0/11  per-run totals [19, 19, 19, 19, 19]  always 19 sometimes 0 never 1  picks  9.3  input  21.9k   5.8s
+     indonesia_IN_GB              pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool   80  visa_decis:5/5  general_en:5/5
+     malaysia_IN_GB               pool   80  visa_decis:5/5
+     malaysia_PH_PH               pool   80  visa_decis:5/5
+     uruguay_IN_GB                pool   50  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   50  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+new  fusion120_blind40      corridors  6 runs/corr 5  roles/run  18.8 of 20  core  8.8/9 other 10.0/11  per-run totals [19, 19, 18, 19, 19]  always 18 sometimes 1 never 1  picks  9.8  input  45.5k   7.8s
+     indonesia_IN_GB              pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool  160  visa_decis:4/5  general_en:5/5
+     malaysia_IN_GB               pool  160  visa_decis:5/5
+     malaysia_PH_PH               pool  160  visa_decis:5/5
+     uruguay_IN_GB                pool   55  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   55  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5

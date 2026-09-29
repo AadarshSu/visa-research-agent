@@ -71,11 +71,12 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   **The selection oracle was then refreshed against the rebuilt stores (entry 239)** — 92 → 111
   gradeable roles — and on it an embedding-ordered 40 + 40 shortlist is level with today's 120 + 40
   within the bar at 60% less selector input; whether to adopt it is TODO item 75. **Item 75's test 2
-  then removed the argument that it would matter more at scale, and embeddings ordering a crawl's
-  unopened links found guidance well but mostly copies of stored pages (entry 240);
-  recommended: close item 75 without adopting — the owner's call.** The Voyage account has a card
-  on it now, for the rate limit; by this repository's count about 175M of its free 200M tokens are
-  left.
+  then removed the argument that it would matter more at scale (entry 240), and test 1 found it
+  level again in Malaysia, Indonesia and Uruguay on half the input, with the Malay visa list kept
+  out of the pool by the keyword gate (entry 241). By the owner's criterion — level everywhere, so
+  any positive counts — adoption is theirs to decide; the next step is item 75's test 3.**
+  The Voyage account has a card on it now, for the rate limit; by this repository's count about
+  171M of its free 200M tokens are left.
 
 ## Where things are
 

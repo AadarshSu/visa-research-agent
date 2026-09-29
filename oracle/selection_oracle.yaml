@@ -2747,3 +2747,515 @@ corridors:
       runner-up is a *student* visa checklist. The row is otherwise thin on purpose: roles that
       could not be established from the store are left `unanswered` rather than filled with the
       nearest plausible page, and `visa_decision` being among them is itself worth knowing.
+  - corridor: malaysia/IN/GB/tourism
+    contention: 309
+    text_held: 214
+    answers:
+      visa_decision:
+        - url: https://www.imi.gov.my/index.php/en/main-services/visa/visa-requirement-by-country
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the Immigration Department's list,
+            in English — India is on the list of countries needing a visa with the note
+            'India** citizen: visa exempts until 31st December 2026' — an Indian
+            passport needs no visa for a social visit
+    not_applicable:
+      document_checklist: >-
+        no visa application, so there are no documents to bring to one
+      application_route: >-
+        there is nothing to apply for
+      fees: >-
+        no application, no fee
+      processing_times: >-
+        nothing is processed
+    unanswered:
+      general_entry: >-
+        the pages that state it — 'Entry requirements into Malaysia' and the Malaysia
+        Digital Arrival Card notices — hold only the site's navigation in the store (about
+        2,500 characters each), so nobody could judge them; they are listed as unverifiable.
+        The visa list's yellow-fever condition applies to arrivals from risk countries,
+        which neither traveller's country is
+    unverifiable:
+      - https://www.imi.gov.my/index.php/en/main-services/entry-requirement-into-malaysia-en
+      - https://www.imi.gov.my/index.php/en/pengumuman/malaysia-digital-arrival-card-mdac-for-foreign-visitors-2
+      - https://www.imi.gov.my/index.php/en/pengumuman/malaysia-digital-arrival-card-mdac
+    excluded:
+      - url: https://www.imi.gov.my/index.php/en/main-services/visa/entri-for-indian-nationals
+        why: >-
+          describes eNTRI, a 15-day online registration for Indian nationals, which the
+          page does not date; the visa list states a 30-day exemption in force until 31
+          December 2026, and the two cannot both describe entry today
+      - url: https://www.imi.gov.my/index.php/perkhidmatan-utama/visa/evisa/entri-bagi-warga-india
+        why: >-
+          the eNTRI page in Malay, excluded for the same reason
+    note: >-
+      The Malay version of the visa list, https://www.imi.gov.my/index.php/perkhidmatan-
+      utama/visa/keperluan-visa-mengikut-negara, states the same rule and is not in the pool:
+      its link scores -26 (an 'off-scope: student' penalty) and its stored text scores only
+      for application_route, on the English word 'eVisa' — nothing in 'Visa tidak diperlukan'
+      registers as a decision. Curated for item 75's test 1 (entry 241).
+  - corridor: malaysia/PH/PH/tourism
+    contention: 305
+    text_held: 211
+    answers:
+      visa_decision:
+        - url: https://www.imi.gov.my/index.php/en/main-services/visa/visa-requirement-by-country
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the Immigration Department's list,
+            in English — 'Visa is not required for a stay of less than one (1) month for
+            ASEAN nationals except Myanmar' — the Philippines is an ASEAN member
+    not_applicable:
+      document_checklist: >-
+        no visa application, so there are no documents to bring to one
+      application_route: >-
+        there is nothing to apply for
+      fees: >-
+        no application, no fee
+      processing_times: >-
+        nothing is processed
+    unanswered:
+      general_entry: >-
+        the pages that state it — 'Entry requirements into Malaysia' and the Malaysia
+        Digital Arrival Card notices — hold only the site's navigation in the store (about
+        2,500 characters each), so nobody could judge them; they are listed as unverifiable.
+        The visa list's yellow-fever condition applies to arrivals from risk countries,
+        which neither traveller's country is
+    unverifiable:
+      - https://www.imi.gov.my/index.php/en/main-services/entry-requirement-into-malaysia-en
+      - https://www.imi.gov.my/index.php/en/pengumuman/malaysia-digital-arrival-card-mdac-for-foreign-visitors-2
+      - https://www.imi.gov.my/index.php/en/pengumuman/malaysia-digital-arrival-card-mdac
+    note: >-
+      The Malay version of the visa list, https://www.imi.gov.my/index.php/perkhidmatan-
+      utama/visa/keperluan-visa-mengikut-negara, states the same rule and is not in the pool:
+      its link scores -26 (an 'off-scope: student' penalty) and its stored text scores only
+      for application_route, on the English word 'eVisa' — nothing in 'Visa tidak diperlukan'
+      registers as a decision. Curated for item 75's test 1 (entry 241).
+  - corridor: indonesia/IN/GB/tourism
+    contention: 757
+    text_held: 594
+    answers:
+      visa_decision:
+        - url: https://evisa.imigrasi.go.id/front/info/evoa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the eVisa portal's list of
+            passports eligible for the (electronic) visa on arrival names India: a visa
+            is needed, and it is issued on arrival or online (8g)
+        - url: https://kemlu.go.id/chicago/pelayanan-perwakilan/untuk-wna-warga-negara-asing/visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'LIST OF SUBJECTS TO VISA ON
+            ARRIVAL … India' — in English
+        - url: https://kemlu.go.id/id/lima/pelayanan-perwakilan/visa-elektronik-saat-kedatangan-(e-voa)
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'VoA Countries … 32. India' — in
+            English
+        - url: https://www.kemlu.go.id/id/sofia/pelayanan-perwakilan/bebas-visa-kunjungan
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'subyek Visa Kunjungan Saat
+            Kedatangan Khusus Wisata … 22) India' — the visa-on-arrival list, in
+            Indonesian
+        - url: https://jakartapusat.imigrasi.go.id/faqs
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Negara mana saja yang terdaftar
+            dalam daftar Electronic Visa on Arrival (E-VOA)? … 28. India' — in
+            Indonesian
+        - url: https://jogja.imigrasi.go.id/how-to-get-an-indonesia-visa-on-arrival
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the visa-on-arrival country list,
+            'Filipina Finlandia … India Inggris', under 'Who Can Get an Indonesia Visa
+            on Arrival'
+      document_checklist:
+        - url: https://evisa.imigrasi.go.id/front/info/evoa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'The documents to request an
+            Visitor Visa are as follows: Full biodata page of passport with at least 6
+            months validity … Passport size photograph … Email address; and A valid
+            Mastercard, Visa, or JCB credit card'
+        - url: https://evisa.imigrasi.go.id/front/faqs/university
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the same portal's FAQ: passport
+            biodata page, photograph, email address and a credit card
+        - url: https://kemlu.go.id/copenhagen/pelayanan-perwakilan/visa/visa-on-arrival-and-e-visa-on-arrival
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): for the visa on arrival: 'Passport
+            with minimum validity of 6 months … Return Flight tickets, Visa Fee (Rp
+            500.000) … Proof of health insurance' — a visa on arrival is not a post's
+            process, so rule 5 does not exclude an embassy stating it
+        - url: https://hub.bps.go.id/travel-and-visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Required documents: A passport
+            that is still valid for at least 6 (six) months; A return ticket or a
+            connecting ticket'
+      application_route:
+        - url: https://evisa.imigrasi.go.id/front/info/evoa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the electronic visa on arrival is
+            applied for on this portal before travel, or a visa on arrival is obtained
+            'at the port of entry'
+        - url: https://kemlu.go.id/copenhagen/pelayanan-perwakilan/visa/visa-on-arrival-and-e-visa-on-arrival
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'foreign travellers can also get
+            their visa on arrival before their actual arrival in Indonesia through e-VoA
+            … apply e-VoA please visit https://evisa.imigrasi.go.id/'
+        - url: https://kemlu.go.id/chicago/pelayanan-perwakilan/untuk-wna-warga-negara-asing/visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'To obtain an Electronic Visa On
+            Arrival, please access: evisa.imigrasi.go.id'
+        - url: https://kemlu.go.id/id/lima/pelayanan-perwakilan/visa-elektronik-saat-kedatangan-(e-voa)
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'The electronic Visa on Arrival
+            was now possible to obtain by online prior to entering Indonesia, accessible
+            at: https://molina.imigrasi.go.id/'
+        - url: https://kemlu.go.id/caracas/pelayanan-perwakilan/visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Visa on Arrival and Electronic
+            Visa on Arrival (e-VoA)' through the portal before departure
+        - url: https://jogja.imigrasi.go.id/how-to-get-an-indonesia-visa-on-arrival
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Where to get it Airport: Soekarno
+            Hatta, Jakarta, Ngurah Rai, Denpasar, Bali …'
+        - url: https://sampit.imigrasi.go.id/e-voa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'HOW TO APPLY 01 Register Create
+            account on Molina website. 02 Upload … 03 Payment … 04 Download Receive
+            e-VoA PDF instantly'
+        - url: https://hub.bps.go.id/travel-and-visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): a visa on arrival 'upon arrival at
+            Immigration Border Controls in certain airports, seaports, and border posts'
+      fees:
+        - url: https://evisa.imigrasi.go.id/front/info/evoa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'The Visitor Visa fee is IDR
+            500.000,00'
+        - url: https://kemlu.go.id/copenhagen/pelayanan-perwakilan/visa/visa-on-arrival-and-e-visa-on-arrival
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Visa Fee (Rp 500.000)'
+        - url: https://kemlu.go.id/id/lima/pelayanan-perwakilan/visa-elektronik-saat-kedatangan-(e-voa)
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Visa on Arrival costs Rp. 500.000
+            for 30 days'
+        - url: https://kemlu.go.id/caracas/pelayanan-perwakilan/visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'The VoA/e-VoA costs Rp. 500.000'
+        - url: https://jogja.imigrasi.go.id/how-to-get-an-indonesia-visa-on-arrival
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Visa on Arrival costs Rp 500.000'
+        - url: https://soekarnohatta.imigrasi.go.id/layanan-publik/warga-negara-asing/visa-kunjungan-satu-kali/indeks-b211a
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Tarif PNBP Visa Kunjungan Saat
+            Kedatangan Khusus Wisata (Visa on Arrival): Rp500.000' — in Indonesian
+        - url: https://evisa.imigrasi.go.id/front/faq/4eb7326f-ddfb-4e61-a24a-fb02adceb67f
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the portal's visa-on-arrival
+            entry: 'Stay Up to 30 days (extendable for another 30 days) Cost Rp500.000'
+      processing_times:
+        - url: https://sampit.imigrasi.go.id/e-voa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): '04 Download Receive e-VoA PDF
+            instantly' — issued on payment
+      general_entry:
+        - url: https://evisa.imigrasi.go.id/front/faqs/university
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'foreigners who wish to enter
+            Indonesia must hold a passport with an expiration date at least 6 (six)
+            months from the date of arrival … Immigration Officer reserves the right to
+            ask for your return ticket at entry'
+        - url: https://evisa.imigrasi.go.id/front/info/evoa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Foreigners who wish to enter
+            Indonesia must hold a passport with an expiration date at least 6 (six)
+            months from the date of arrival'
+        - url: https://hub.bps.go.id/travel-and-visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): passport valid six months and a
+            return or onward ticket, at the border
+    excluded:
+      - url: https://kemlu.go.id/id/newdelhi/pelayanan-perwakilan/formulir-pengajuan-visa
+        why: >-
+          the embassy in New Delhi's visit-visa application, for applicants in India; this
+          traveller applies from Britain (rule 5), and a visa on arrival needs no embassy
+      - url: https://imigrasi.go.id/wna/daftar-visa-indonesia/F1
+        why: >-
+          the F1 visa on arrival, 7 days, 'eligible for specific countries' at named
+          border posts — not the 30-day tourist visa on arrival an Indian passport
+          receives
+    note: >-
+      The embassy in Copenhagen's visa-on-arrival page answers the checklist, route and fee,
+      but not the decision: it gives the rule for '86 countries' with the list behind a link
+      (7b). Curated for item 75's test 1 (entry 241).
+  - corridor: indonesia/PH/PH/tourism
+    contention: 758
+    text_held: 591
+    answers:
+      visa_decision:
+        - url: https://kemlu.go.id/en/doha/pelayanan-perwakilan/visa/bebas-visa-kunjungan
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the Visa Exemption under
+            Presidential Regulation 95 of 2024, eligible nationals '… 13. Philippines …'
+            — in English
+        - url: https://kemlu.go.id/marseille/pelayanan-perwakilan/visa-exemption
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Visit Visa Exemption (BVK) as
+            outlined in Presidential Regulation No. 95/2024: a) Nationals of the
+            following countries … ii. Philippines' — in English
+        - url: https://kemlu.go.id/etc/informasi-bebas-visa-kunjungan-ke-republik-indonesia
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Berdasarkan Peraturan Presiden
+            Nomor 95 Tahun 2024 … Brunei Darussalam; Filipina; Kamboja …' — the
+            ministry's own notice, in Indonesian
+        - url: https://kemlu.go.id/id/newdelhi/pelayanan-perwakilan/formulir-pengajuan-visa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the list of countries with Bebas
+            Visa Kunjungan for ordinary passports, 'Filipina – 30 hari' — in Indonesian;
+            the decision is not a post's, so rule 5 does not apply
+        - url: https://kupang.imigrasi.go.id/bebas-visa-kunjungan
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Daftar Negara Bebas … Brunei
+            Darussalam Filipina Kamboja …' — in Indonesian
+      general_entry:
+        - url: https://kemlu.go.id/en/doha/pelayanan-perwakilan/visa/bebas-visa-kunjungan
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Hold a passport valid for at
+            least six (6) months from the intended date of entry … Hold a confirmed
+            return ticket or onward ticket'
+        - url: https://kemlu.go.id/marseille/pelayanan-perwakilan/visa-exemption
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Travelers must present a national
+            passport valid for at least six (6) months … Proof of onward or return
+            tickets is required'
+        - url: https://evisa.imigrasi.go.id/front/faqs/university
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'foreigners who wish to enter
+            Indonesia must hold a passport with an expiration date at least 6 (six)
+            months from the date of arrival' — true of every foreigner
+        - url: https://evisa.imigrasi.go.id/front/info/evoa
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the same six-month rule, stated
+            for every foreigner entering
+    not_applicable:
+      document_checklist: >-
+        no visa application, so there are no documents to bring to one
+      application_route: >-
+        the exemption is given at the border; there is nothing to apply for
+      fees: >-
+        'Visa exemption arrangement cost IDR 0' (A1 Tourism Visa Exemption)
+      processing_times: >-
+        nothing is processed
+    excluded:
+      - url: https://jogja.imigrasi.go.id/tag/bebas-visa-kunjungan
+        why: >-
+          a 2023 news post naming the ten exempt countries of that year's regulation; the
+          2024 regulation's list is what applies, and other pages state it
+    note: >-
+      The eVisa portal's visa-on-arrival list also names the Philippines; it is not this
+      traveller's decision, since a visa-exempt Filipino needs no visa on arrival. Curated for
+      item 75's test 1 (entry 241).
+  - corridor: uruguay/IN/GB/tourism
+    contention: 55
+    text_held: 33
+    answers:
+      visa_decision:
+        - url: https://www.gub.uy/ministerio-interior/comunicacion/publicaciones/regimen-visas-admision
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the Interior Ministry's table:
+            'India Necesita Visa (5)' for an ordinary passport, footnote (5) 'Necesita
+            autorización previa' — in Spanish
+      document_checklist:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Requisitos para ingresar a
+            Uruguay: Formulario completo y firmado Carta invitación o reserva de hotel
+            Pasaporte vigente por al menos 6 meses … 1 foto tamaño pasaporte Reserva de
+            viaje' — the foreign ministry's general list
+        - url: https://www.gub.uy/tramites/inicio-solicitud-visas
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Requisitos Formulario / Ficha de
+            inscripción. Carta invitación o reserva de hotel y solvencia económica …
+            Pasaporte vigente por al menos 6 meses … 1 foto tamaño pasaporte. Reserva de
+            viaje'
+      application_route:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/visas-para-ingresar-uruguay
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Los Consulados de la República en
+            el exterior son los encargados de recibir las solicitudes de visa … deberán
+            contactarse con el Consulado más cercano'
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the same instruction: apply at a
+            Uruguayan consulate, which issues the visa once the Dirección Nacional de
+            Migración authorises it
+        - url: https://www.gub.uy/tramites/inicio-solicitud-visas
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the consular affairs directorate's
+            procedure for starting a visa application at a consulate
+      fees:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Costo: US$ 42 (se cobra solo si
+            la visa es otorgada)'
+        - url: https://www.gub.uy/tramites/inicio-solicitud-visas
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Costos 3 pesos consulares = 42
+            USD (únicamente si la visa es otorgada)'
+      processing_times:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/visas-para-ingresar-uruguay
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'La autorización de la visa es
+            otorgada por la Dirección Nacional de Migraciones y suele tomar al menos 20
+            días hábiles'
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the same: 'suele tomar al menos 20
+            días hábiles'
+    unanswered:
+      general_entry: >-
+        no page states conditions at the border beyond the visa's own requirements; the
+        passport-validity rule appears only as a requirement of the visa application
+    excluded:
+      - url: https://www.gub.uy/ministerio-relaciones-exteriores/consulado-general-madrid/visas/visa-turismo
+        why: >-
+          the consulates in Madrid, Asunción, Rosario and Sydney and the embassies in
+          Sweden and the Dominican Republic state their own requirements, fees and
+          timings; rule 5 excludes each, and the store holds no Uruguayan post serving
+          this traveller
+      - url: https://www.gub.uy/ministerio-relaciones-exteriores/embajada-republica-oriental-del-uruguay-republica-dominicana/tramites-consulares/ciudadanos
+        why: >-
+          for Dominican citizens (rule 6)
+    note: >-
+      Uruguay's visa pages are in Spanish; the pool is 55 pages, smaller than the 40 + 40 and
+      120 + 40 cuts, so these rows cannot separate one ranking from another. Curated for item
+      75's test 1 (entry 241).
+  - corridor: uruguay/PH/PH/tourism
+    contention: 55
+    text_held: 33
+    answers:
+      visa_decision:
+        - url: https://www.gub.uy/ministerio-interior/comunicacion/publicaciones/regimen-visas-admision
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the Interior Ministry's table:
+            'Filipinas Necesita Visa (5)' for an ordinary passport, footnote (5)
+            'Necesita autorización previa' — in Spanish
+      document_checklist:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Requisitos para ingresar a
+            Uruguay: Formulario completo y firmado Carta invitación o reserva de hotel
+            Pasaporte vigente por al menos 6 meses … 1 foto tamaño pasaporte Reserva de
+            viaje' — the foreign ministry's general list
+        - url: https://www.gub.uy/tramites/inicio-solicitud-visas
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Requisitos Formulario / Ficha de
+            inscripción. Carta invitación o reserva de hotel y solvencia económica …
+            Pasaporte vigente por al menos 6 meses … 1 foto tamaño pasaporte. Reserva de
+            viaje'
+      application_route:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/visas-para-ingresar-uruguay
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Los Consulados de la República en
+            el exterior son los encargados de recibir las solicitudes de visa … deberán
+            contactarse con el Consulado más cercano'
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the same instruction: apply at a
+            Uruguayan consulate, which issues the visa once the Dirección Nacional de
+            Migración authorises it
+        - url: https://www.gub.uy/tramites/inicio-solicitud-visas
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the consular affairs directorate's
+            procedure for starting a visa application at a consulate
+      fees:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Costo: US$ 42 (se cobra solo si
+            la visa es otorgada)'
+        - url: https://www.gub.uy/tramites/inicio-solicitud-visas
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'Costos 3 pesos consulares = 42
+            USD (únicamente si la visa es otorgada)'
+      processing_times:
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/visas-para-ingresar-uruguay
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): 'La autorización de la visa es
+            otorgada por la Dirección Nacional de Migraciones y suele tomar al menos 20
+            días hábiles'
+        - url: https://www.gub.uy/ministerio-relaciones-exteriores/comunicacion/publicaciones/regimen-de-visas-por-pais-1
+          seen: text
+          why: >-
+            Curated for item 75's test 1 (entry 241): the same: 'suele tomar al menos 20
+            días hábiles'
+    unanswered:
+      general_entry: >-
+        no page states conditions at the border beyond the visa's own requirements; the
+        passport-validity rule appears only as a requirement of the visa application
+    excluded:
+      - url: https://www.gub.uy/ministerio-relaciones-exteriores/consulado-general-madrid/visas/visa-turismo
+        why: >-
+          the consulates in Madrid, Asunción, Rosario and Sydney and the embassies in
+          Sweden and the Dominican Republic state their own requirements, fees and
+          timings; rule 5 excludes each, and the store holds no Uruguayan post serving
+          this traveller
+      - url: https://www.gub.uy/ministerio-relaciones-exteriores/embajada-republica-oriental-del-uruguay-republica-dominicana/tramites-consulares/ciudadanos
+        why: >-
+          for Dominican citizens (rule 6)
+    note: >-
+      Uruguay's visa pages are in Spanish; the pool is 55 pages, smaller than the 40 + 40 and
+      120 + 40 cuts, so these rows cannot separate one ranking from another. Curated for item
+      75's test 1 (entry 241).
