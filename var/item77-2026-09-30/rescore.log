@@ -1,0 +1,14 @@
+V0 recomputation mismatches against the captured scores: 0
+
+oracle roles kept, of 131, at the top N plus 40 blind
+variant   arm         20    40    60   120  median pos  pool
+V0        today       75   109   121   131          13   494
+V0        boost      121   129   130   131           3   494
+V1        today       75   110   121   131          13   495
+V1        boost      121   129   130   131           3   495
+V2        today       85   113   122   131          12   494
+V2        boost      123   129   130   131           3   494
+V3        today       89   114   122   131          11   494
+V3        boost      123   129   130   131           3   494
+V4        today       90   117   123   131          12   494
+V4        boost      123   129   131   131           3   494

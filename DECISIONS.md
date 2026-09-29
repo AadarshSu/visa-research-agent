@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [245](#245-the-stored-text-score-credits-the-travellers-own-post-and-a-60--40-shortlist-becomes-level) | **Shipped: the stored-text score credits the traveller's own post** — the nationality bonus stops reading a URL's host, the post serving the traveller is credited and another post penalised, and a decision stops earning the tourism bonus; at today's cut the selector finds every decision and checklist in every run (127.0 of 131 against 126.6), and with the search boost a 60 + 40 shortlist is level (125.8) on 45% less input |
 | [244](#244-recording-every-page-search-returned-makes-the-boost-strong-offline-and-the-selector-still-loses-two-roles-a-run) | **Measured: recording every page search returned makes the boost strong offline, and the selector still loses two roles a run** — `CandidatePage.searched` added; the boost keeps 129 of 131 answers at a 40 cut (today 109, embeddings 128), but the selector scores 124.2–124.4 against 126.6 on 45–60% less input; and the misses trace to the stored-text bonuses, not missing keywords |
 | [243](#243-a-boost-for-search-found-pages-recovers-most-of-what-a-smaller-cut-loses-without-embeddings) | **Measured: a boost for search-found pages recovers most of what a smaller cut loses, without embeddings** — search as a third fused ranking keeps 100 of 111 answers at a 40 cut against today's 91 and embeddings' 109, and 19 of 20 in the non-English corridors, beating embeddings there; the selector has not been run on it |
 | [242](#242-embeddings-are-not-adopted-until-expansion-gives-them-a-job) | **Embeddings are not adopted until expansion gives them a job** — the owner closes item 75: level on accuracy across 27 corridors, but the saving does not pay for a vendor and a second index; three triggers reopen it |
@@ -283,6 +284,69 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 245. The stored-text score credits the traveller's own post, and a 60 + 40 shortlist becomes level
+
+**2026-09-30 · the owner: "work on item 77".** TODO item 77, from entry 244's finding that every
+smaller shortlist's misses ranked first by link and 70th to 110th by stored text. Tools and logs:
+`var/item77-2026-09-30/`.
+
+**The change** (`score_body`, `_credit_the_post`), active only when the caller passes the
+traveller's `residence` — which `PageTextStore.score_held`, `CorridorResolver._stored_text_scores`
+and `contention` now do, and a page fetched live does not:
+- **the nationality bonus reads the title and the URL's path, never its host.** A host names the
+  post that published a page — `india.diplo.de` is Germany's embassy *in* India — not who it is for.
+  `_describes_country` already keeps this rule for links, with the same example in its docstring;
+- **the post serving the traveller is credited, another post penalised**, on the post-specific
+  roles: `residence_weight` where the title or path names the country of residence, and
+  `mission_affinity`'s own-post bonus or other-post penalty — the link scorer's two signals;
+- **the purpose bonus no longer reaches `visa_decision`.** A country table never names a purpose,
+  so it lost to any page that happened to mention tourism.
+
+**Measured offline first** (`rescore.py`: every stored page in the 27 captured oracle corridors
+re-scored, the pool rebuilt from the new scores, the cuts graded; today's scorer, recomputed,
+reproduces the captured scores with 0 mismatches):
+
+| roles kept, of 131 | top 20 | 40 | 60 | 120 |
+| --- | --- | --- | --- | --- |
+| today's scorer | 75 | 109 | 121 | 131 |
+| host ignored for nationality | 75 | 110 | 121 | 131 |
+| + residence credit | 85 | 113 | 122 | 131 |
+| + own / other post | 89 | 114 | 122 | 131 |
+| + no purpose bonus on the decision (V4) | 90 | 117 | 123 | 131 |
+| V4 with entry 244's search boost | 123 | 129 | **131** | 131 |
+
+The shipped function withholds the purpose bonus before the breadth dampening rather than after,
+which is cleaner and differs from V4 in one cell (115 rather than 117 at 40 without the boost); with
+the boost and at 120 the two are identical (`rescore_src.log`).
+
+**The selector, through Personas, five runs over the same 27 corridors:**
+
+| shown to the selector | roles a run, of 131 | decision + checklist, of 44 | input | seconds |
+| --- | --- | --- | --- | --- |
+| today: 120 + 40 | 126.6 | 43.2 | 51.2K | 7.1 |
+| **V4: 120 + 40** | **127.0** (127, 126, 128, 127, 127) | **44.0** | 51.0K | 7.1 |
+| search boost: 60 + 40 (entry 244) | 124.4 | 42.8 | 28.4K | 6.3 |
+| **V4 + search boost: 60 + 40** | **125.8** (126, 126, 126, 126, 125) | **43.8** | **28.2K** | 6.5 |
+
+- **At today's cut the change is level or better**: every decision and every checklist in every
+  run. That is why it ships.
+- **With the boost, a 60 + 40 shortlist is level with today's** — 0.8 of a role a run behind, under
+  item 67's bar, with more decisions and checklists found — on 45% less selector input. Czechia's
+  decision and France's Filipino processing time, which the boost alone lost, are back. Still lost:
+  France's Indian processing time (`la-demarche`, not returned by search and still under the 60 cut)
+  and Germany's Filipino entry conditions (1 of 5 against 2 of 5).
+
+**Not shipped: the smaller shortlist.** Showing the selector 60 + 40 with the boost is the saving
+entries 242 and 244 were after, now with no measured loss beyond noise; it changes what the selector
+is shown, so it is the owner's call and TODO item 78. The selector runs used V4, not the shipped
+function; they differ only where noted above.
+
+**Caveats.** The oracle is 27 corridors judged by one reader (entry 68). A page fetched live is still
+scored the old way. `mission_domains` (the link scorer's "a page on the mission's own host is the
+own post") is not applied to text; the measurement did not include it.
 
 ---
 

@@ -1070,7 +1070,9 @@ class CorridorResolver:
         #
         # The same scores decide what stored text may put back into the selector's pool at step 4
         # (entry 158), so they are computed once here and kept whether or not they may rank.
-        stored_scores = self._stored_text_scores(destination, corridor, nationality, candidates)
+        stored_scores = self._stored_text_scores(
+            destination, corridor, nationality, candidates, residence, other_posts
+        )
         scored_from_text = self._score_from_text(stored_scores, candidates)
         if scored_from_text:
             notes.append(
@@ -1376,6 +1378,8 @@ class CorridorResolver:
         corridor: Corridor,
         nationality: Country,
         candidates: dict[str, CandidatePage],
+        residence: Country | None = None,
+        other_posts: frozenset[str] = frozenset(),
     ) -> dict[str, RoleScores]:
         """Score, by stored text, every candidate whose page text the index holds.
 
@@ -1400,6 +1404,8 @@ class CorridorResolver:
             corridor=corridor,
             nationality=nationality,
             lexicon=self.lexicon,
+            residence=residence,
+            other_posts=other_posts,
         )
 
     def _score_from_text(

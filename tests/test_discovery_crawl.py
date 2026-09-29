@@ -32,6 +32,7 @@ from visa_research_agent.discovery.crawl import (
 from visa_research_agent.discovery.lexicon import get_country_registry, get_lexicon
 from visa_research_agent.discovery.models import Corridor, PageLink, RoleScores
 from visa_research_agent.discovery.scoring import (
+    foreign_post_labels,
     is_archived,
     is_boilerplate,
     rank_for_role,
@@ -321,6 +322,72 @@ def test_a_students_own_pages_are_not_vetoed_for_a_study_corridor() -> None:
     student = link_for("https://immigration.gov.example/visa/student.html", "Student Visa")
 
     assert wrong_audience(student, corridor(purpose="study"), lexicon) is None
+
+
+FEE_PAGE = "Visa fees for Schengen visas are EUR 90. Tourism visits of up to 90 days."
+
+
+def post_aware(url: str, title: str, text: str = FEE_PAGE) -> RoleScores:
+    registry = get_country_registry()
+    residence = registry.require("GB")
+    return score_body(
+        text,
+        title,
+        corridor(),
+        get_lexicon(),
+        registry.require("IN"),
+        url=url,
+        residence=residence,
+        other_posts=foreign_post_labels(registry, None, residence),
+    )
+
+
+def test_a_host_naming_the_nationality_is_the_post_that_published_it_not_the_audience() -> None:
+    """`india.diplo.de` is Germany's embassy *in* India. Read as "written for Indians" it scored 85
+    for an Indian in Britain and outranked the UK embassy's own pages (entry 245)."""
+
+    registry = get_country_registry()
+    url = "https://india.embassy.gov.example/visa/fees.html"
+    blind = score_body(
+        FEE_PAGE, "Visa fees", corridor(), get_lexicon(), registry.require("IN"), url=url
+    )
+    aware = post_aware(url, "Visa fees")
+
+    assert any(s.startswith("body-nationality") for s in blind.signals["fees"])
+    assert not any(s.startswith("body-nationality") for s in aware.signals["fees"])
+    assert aware.score_for("fees") < blind.score_for("fees"), "another post's fee page must lose"
+
+
+def test_the_post_serving_the_traveller_is_credited_by_its_path_or_title() -> None:
+    own = post_aware("https://immigration.gov.example/uk-en/visa/fees.html", "Visa fees")
+    general = post_aware("https://immigration.gov.example/visa/fees.html", "Visa fees")
+
+    assert own.score_for("fees") > general.score_for("fees")
+    assert own.score_for("visa_decision") == general.score_for("visa_decision"), (
+        "the decision is the same at every post and takes no post signal"
+    )
+
+
+def test_a_country_table_is_not_outscored_by_a_page_that_merely_mentions_tourism() -> None:
+    table = "Table of countries whose citizens require a visa. India yes."
+    tourist = "Do you need a visa? Tourism visits of up to 90 days."
+    url = "https://immigration.gov.example/visa/table.html"
+
+    assert post_aware(url, "Visa requirements", table).score_for("visa_decision") == (
+        post_aware(url, "Visa requirements", tourist).score_for("visa_decision")
+    )
+
+
+def test_without_a_residence_the_stored_text_score_is_unchanged() -> None:
+    """Only stored-text scoring passes a residence; a page fetched live is scored as before."""
+
+    registry = get_country_registry()
+    url = "https://india.embassy.gov.example/visa/fees.html"
+    scores = score_body(
+        FEE_PAGE, "Visa fees", corridor(), get_lexicon(), registry.require("IN"), url=url
+    )
+
+    assert scores.score_for("fees") == 25 + 40 + 20
 
 
 def test_a_comprehensive_nationality_page_is_not_penalised_for_breadth() -> None:

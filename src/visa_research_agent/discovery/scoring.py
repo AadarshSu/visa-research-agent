@@ -12,6 +12,7 @@ No model is involved. Scores are explainable, repeatable, and free.
 """
 
 import re
+from urllib.parse import urlsplit
 
 from visa_research_agent.discovery.lexicon import (
     Country,
@@ -638,12 +639,34 @@ def score_body(
     nationality: Country,
     *,
     url: str = "",
+    residence: Country | None = None,
+    other_posts: frozenset[str] = frozenset(),
 ) -> RoleScores:
-    """Score a page from its own text, confirming or contradicting what the link suggested."""
+    """Score a page from its own text, confirming or contradicting what the link suggested.
 
+    **With `residence`, the traveller signals follow the rules the link scorer already keeps**
+    (DECISIONS entry 245, TODO item 77). Measured on the 27 oracle corridors, the pages every
+    smaller shortlist lost ranked first by link and 70th to 110th by stored text, because this
+    score credited the wrong things:
+
+    - the nationality bonus read the URL's *host*, so `india.diplo.de` — the German embassy in
+      India — read as written for Indians and outscored the UK embassy for an Indian in Britain.
+      With `residence` it reads the title and the path only, as `_describes_country` does;
+    - nothing credited the post serving the traveller. With `residence` a page whose title or path
+      names the country of residence earns `residence_weight` on the post-specific roles, and
+      `mission_affinity` adds the own post's bonus or the other post's penalty, as for links;
+    - the purpose bonus reached `visa_decision`, which a country table never earns by mentioning
+      tourism, so the table lost to any page that did. With `residence` it no longer does.
+
+    Without `residence` nothing changes. Only stored-text scoring passes it (`score_held`); a page
+    fetched live is scored as before, which the measurement did not cover.
+    """
+
+    post_aware = residence is not None
     haystack = f"{title}\n{text}".lower()
-    # Where the page says it is about this nationality, as opposed to merely mentioning it.
-    identity = f"{title}\n{searchable_url(url)}".lower()
+    # Where the page says it is about this nationality, as opposed to merely mentioning it. A host
+    # names the post that published the page, never who it is for, once the post is known.
+    identity = f"{title}\n{searchable_url(_path_of(url) if post_aware else url)}".lower()
     scores: dict[str, float] = {}
     signals: dict[str, list[str]] = {}
 
@@ -694,9 +717,11 @@ def score_body(
         shared_reasons.append(f"body-nationality:{nationality.code}+{lexicon.nationality_weight:g}")
 
     purpose_terms = lexicon.purposes.get(corridor.purpose)
-    if purpose_terms and any(_contains_phrase(haystack, term) for term in purpose_terms.terms):
-        shared += purpose_terms.weight
-        shared_reasons.append(f"body-purpose:{corridor.purpose}+{purpose_terms.weight:g}")
+    purpose_weight = (
+        purpose_terms.weight
+        if purpose_terms and any(_contains_phrase(haystack, t) for t in purpose_terms.terms)
+        else 0.0
+    )
 
     # In the body, a wrong-audience word only counts against the page when it is in the title,
     # because a passing mention in a list of visa types is normal and harmless.
@@ -716,6 +741,11 @@ def score_body(
     for scored_role in list(scores):
         scores[scored_role] += shared
         signals[scored_role].extend(shared_reasons)
+        # A country table never names a purpose, so with the post known the bonus stops reaching
+        # the decision, where it only rewarded pages that happened to mention tourism (entry 245).
+        if purpose_weight and not (post_aware and scored_role == "visa_decision"):
+            scores[scored_role] += purpose_weight
+            signals[scored_role].append(f"body-purpose:{corridor.purpose}+{purpose_weight:g}")
 
     # A page that scores on many roles is usually a directory, not an answer, so breadth is
     # dampened. The exception is a page written for this nationality: Singapore's per-nationality
@@ -727,7 +757,52 @@ def score_body(
         for scored_role in list(scores):
             scores[scored_role] *= factor
             signals[scored_role].append(f"breadth:{breadth}x{factor:.2f}")
+
+    if residence is not None:
+        _credit_the_post(scores, signals, url, title, lexicon, nationality, residence, other_posts)
     return RoleScores(scores=scores, signals=signals)
+
+
+def _path_of(url: str) -> str:
+    parts = urlsplit(url)
+    return parts.path + (f"?{parts.query}" if parts.query else "")
+
+
+def _credit_the_post(
+    scores: dict[str, float],
+    signals: dict[str, list[str]],
+    url: str,
+    title: str,
+    lexicon: Lexicon,
+    nationality: Country,
+    residence: Country,
+    other_posts: frozenset[str],
+) -> None:
+    """The link scorer's two post signals, applied to a page scored by its own text (entry 245).
+
+    After the breadth dampening, as the link scorer adds them after its own: they say which post a
+    page belongs to, which is not something a directory has more of.
+    """
+
+    if residence.code != nationality.code:
+        about = PageLink(url=url, text=title[:300], heading="", depth=0, discovered_from="")
+        if _describes_country(about, residence):
+            for role in POST_SPECIFIC_ROLES:
+                if role in scores:
+                    scores[role] += lexicon.residence_weight
+                    signals[role].append(
+                        f"body-residence:{residence.code}+{lexicon.residence_weight:g}"
+                    )
+    affinity = mission_affinity(url, residence, lexicon, other_posts=other_posts)
+    if affinity is not None:
+        adjustment = (
+            lexicon.mission_host_bonus if affinity == "own" else lexicon.other_mission_penalty
+        )
+        label = "body-mission" if affinity == "own" else "body-other-mission"
+        for role in POST_SPECIFIC_ROLES:
+            if role in scores:
+                scores[role] += adjustment
+                signals[role].append(f"{label}{adjustment:+g}")
 
 
 def rank_for_role(

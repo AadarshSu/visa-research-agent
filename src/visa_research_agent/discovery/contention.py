@@ -169,6 +169,8 @@ def contention_for(
                 corridor=corridor,
                 nationality=nationality,
                 lexicon=lexicon,
+                residence=residence,
+                other_posts=other_posts,
             ),
         )
         taken = {candidate.link.url for candidate in admitted}

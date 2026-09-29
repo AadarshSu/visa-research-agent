@@ -417,6 +417,8 @@ class PageTextStore:
         corridor: Corridor,
         nationality: Country,
         lexicon: Lexicon,
+        residence: Country | None = None,
+        other_posts: frozenset[str] = frozenset(),
     ) -> dict[str, RoleScores]:
         """Score, by their own text, whichever of these candidates the index holds.
 
@@ -451,7 +453,15 @@ class PageTextStore:
                 ).fetchall()
                 for url, body, title in rows:
                     scored[str(url)] = score_body(
-                        str(body), str(title), corridor, lexicon, nationality, url=str(url)
+                        str(body),
+                        str(title),
+                        corridor,
+                        lexicon,
+                        nationality,
+                        url=str(url),
+                        # The post serving the traveller, as the link scorer credits it (entry 245).
+                        residence=residence,
+                        other_posts=other_posts,
                     )
         return scored
 

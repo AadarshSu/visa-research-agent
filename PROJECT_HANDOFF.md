@@ -78,7 +78,9 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   A boost for pages live search returned (entries 243, 244) kept every answer offline but cost the
   selector ~2 roles a run at a 40–60 cut, and the misses trace to the stored-text score's
   nationality and purpose bonuses — TODO item 77. `CandidatePage.searched` now records every page
-  search returned.
+  search returned. **Item 77 shipped (entry 245):** the stored-text score now credits the
+  traveller's own post; at today's cut the selector finds every decision and checklist in every
+  run, and with the boost a 60 + 40 shortlist is level on 45% less input — adopting that is item 78.
   The Voyage account has a card on it now, for the rate limit; by this repository's count about
   171M of its free 200M tokens are left.
 

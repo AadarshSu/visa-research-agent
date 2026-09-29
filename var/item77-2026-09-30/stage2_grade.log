@@ -1,0 +1,140 @@
+new  fusion120_blind40      corridors 27 runs/corr 5  roles/run 126.6 of 131  core 43.2/44 other 83.4/87  per-run totals [127, 126, 127, 127, 126]  always 125 sometimes 3 never 3  picks 10.8  input  51.2k   7.1s
+     canada_IN_GB                 pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     canada_PH_PH                 pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     czechia_IN_GB                pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     france_IN_GB                 pool  160  applicatio:5/5  fees:0/5  processing:5/5  general_en:5/5
+     france_PH_PH                 pool  160  applicatio:5/5  fees:0/5  processing:5/5  general_en:5/5
+     germany_IN_GB                pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     germany_PH_PH                pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:2/5
+     indonesia_IN_GB              pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool  160  visa_decis:3/5  general_en:5/5
+     japan_IN_GB                  pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     japan_PH_PH                  pool  141  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     malaysia_IN_GB               pool  160  visa_decis:5/5
+     malaysia_PH_PH               pool  160  visa_decis:5/5
+     netherlands_IN_GB            pool  160  document_c:5/5  applicatio:5/5  processing:5/5  general_en:5/5
+     netherlands_PH_PH            pool  160  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_IN_GB              pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_PH_PH              pool  160  visa_decis:5/5  general_en:5/5
+     sweden_IN_GB                 pool  137  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     sweden_PH_PH                 pool  137  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_IN_GB   pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_PH_PH   pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_IN_GB         pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_PH_PH         pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-states_IN_GB          pool  160  visa_decis:3/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     united-states_PH_PH          pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     uruguay_IN_GB                pool   55  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   55  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+new  search_boost_c40       corridors 27 runs/corr 5  roles/run 124.2 of 131  core 42.8/44 other 81.4/87  per-run totals [125, 124, 125, 123, 124]  always 123 sometimes 3 never 5  picks 10.2  input  20.7k   5.9s
+     canada_IN_GB                 pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     canada_PH_PH                 pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     czechia_IN_GB                pool   80  visa_decis:0/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     france_IN_GB                 pool   80  applicatio:5/5  fees:1/5  processing:0/5  general_en:5/5
+     france_PH_PH                 pool   80  applicatio:5/5  fees:0/5  processing:0/5  general_en:5/5
+     germany_IN_GB                pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     germany_PH_PH                pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:1/5
+     indonesia_IN_GB              pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool   80  visa_decis:5/5  general_en:5/5
+     japan_IN_GB                  pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     japan_PH_PH                  pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     malaysia_IN_GB               pool   80  visa_decis:5/5
+     malaysia_PH_PH               pool   80  visa_decis:5/5
+     netherlands_IN_GB            pool   80  document_c:5/5  applicatio:5/5  processing:5/5  general_en:5/5
+     netherlands_PH_PH            pool   80  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_IN_GB              pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_PH_PH              pool   80  visa_decis:5/5  general_en:5/5
+     sweden_IN_GB                 pool   65  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     sweden_PH_PH                 pool   65  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_IN_GB   pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_PH_PH   pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_IN_GB         pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_PH_PH         pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-states_IN_GB          pool   80  visa_decis:4/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     united-states_PH_PH          pool   80  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     uruguay_IN_GB                pool   46  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   46  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+new  search_boost_c60       corridors 27 runs/corr 5  roles/run 124.4 of 131  core 42.8/44 other 81.6/87  per-run totals [124, 125, 124, 125, 124]  always 123 sometimes 3 never 5  picks 11.0  input  28.4k   6.3s
+     canada_IN_GB                 pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     canada_PH_PH                 pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     czechia_IN_GB                pool  100  visa_decis:0/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     france_IN_GB                 pool  100  applicatio:5/5  fees:1/5  processing:0/5  general_en:5/5
+     france_PH_PH                 pool  100  applicatio:5/5  fees:0/5  processing:0/5  general_en:5/5
+     germany_IN_GB                pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     germany_PH_PH                pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:2/5
+     indonesia_IN_GB              pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool  100  visa_decis:4/5  general_en:5/5
+     japan_IN_GB                  pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     japan_PH_PH                  pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     malaysia_IN_GB               pool  100  visa_decis:5/5
+     malaysia_PH_PH               pool  100  visa_decis:5/5
+     netherlands_IN_GB            pool  100  document_c:5/5  applicatio:5/5  processing:5/5  general_en:5/5
+     netherlands_PH_PH            pool  100  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_IN_GB              pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_PH_PH              pool  100  visa_decis:5/5  general_en:5/5
+     sweden_IN_GB                 pool   85  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     sweden_PH_PH                 pool   85  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_IN_GB   pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_PH_PH   pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_IN_GB         pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_PH_PH         pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-states_IN_GB          pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     united-states_PH_PH          pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     uruguay_IN_GB                pool   55  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   55  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+new  v4_boost_c60           corridors 27 runs/corr 5  roles/run 125.8 of 131  core 43.8/44 other 82.0/87  per-run totals [126, 126, 126, 126, 125]  always 125 sometimes 1 never 5  picks 11.1  input  28.2k   6.5s
+     canada_IN_GB                 pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     canada_PH_PH                 pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     czechia_IN_GB                pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     france_IN_GB                 pool  100  applicatio:5/5  fees:0/5  processing:0/5  general_en:5/5
+     france_PH_PH                 pool  100  applicatio:5/5  fees:0/5  processing:5/5  general_en:5/5
+     germany_IN_GB                pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     germany_PH_PH                pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:0/5
+     indonesia_IN_GB              pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool  100  visa_decis:4/5  general_en:5/5
+     japan_IN_GB                  pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     japan_PH_PH                  pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     malaysia_IN_GB               pool  100  visa_decis:5/5
+     malaysia_PH_PH               pool  100  visa_decis:5/5
+     netherlands_IN_GB            pool  100  document_c:5/5  applicatio:5/5  processing:5/5  general_en:5/5
+     netherlands_PH_PH            pool  100  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_IN_GB              pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_PH_PH              pool  100  visa_decis:5/5  general_en:5/5
+     sweden_IN_GB                 pool   85  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     sweden_PH_PH                 pool   85  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_IN_GB   pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_PH_PH   pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_IN_GB         pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_PH_PH         pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-states_IN_GB          pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     united-states_PH_PH          pool  100  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     uruguay_IN_GB                pool   53  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   53  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+new  v4_c120                corridors 27 runs/corr 5  roles/run 127.0 of 131  core 44.0/44 other 83.0/87  per-run totals [127, 126, 128, 127, 127]  always 126 sometimes 2 never 3  picks 10.6  input  51.0k   7.1s
+     canada_IN_GB                 pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     canada_PH_PH                 pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     czechia_IN_GB                pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     france_IN_GB                 pool  160  applicatio:5/5  fees:0/5  processing:5/5  general_en:5/5
+     france_PH_PH                 pool  160  applicatio:5/5  fees:0/5  processing:5/5  general_en:5/5
+     germany_IN_GB                pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     germany_PH_PH                pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:1/5
+     indonesia_IN_GB              pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:0/5  general_en:5/5
+     indonesia_PH_PH              pool  160  visa_decis:5/5  general_en:5/5
+     japan_IN_GB                  pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     japan_PH_PH                  pool  141  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:4/5  processing:5/5  general_en:5/5
+     malaysia_IN_GB               pool  160  visa_decis:5/5
+     malaysia_PH_PH               pool  160  visa_decis:5/5
+     netherlands_IN_GB            pool  160  document_c:5/5  applicatio:5/5  processing:5/5  general_en:5/5
+     netherlands_PH_PH            pool  160  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_IN_GB              pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     singapore_PH_PH              pool  160  visa_decis:5/5  general_en:5/5
+     sweden_IN_GB                 pool  137  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     sweden_PH_PH                 pool  137  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_IN_GB   pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-arab-emirates_PH_PH   pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_IN_GB         pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-kingdom_PH_PH         pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5  general_en:5/5
+     united-states_IN_GB          pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     united-states_PH_PH          pool  160  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  general_en:5/5
+     uruguay_IN_GB                pool   53  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5
+     uruguay_PH_PH                pool   53  visa_decis:5/5  document_c:5/5  applicatio:5/5  fees:5/5  processing:5/5

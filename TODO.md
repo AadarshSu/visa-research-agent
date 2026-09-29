@@ -39,7 +39,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | --- | --- | --- |
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
-| **Next up** | 77. Make the stored-text score credit the traveller's own post | `soon` |
+| **Next up** | 78. Decide whether to show the selector 60 + 40 pages with the search boost | `soon` |
 |  | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -118,19 +118,15 @@ in (entry 241). Where no English version exists, that loses the answer: check th
 
 ## Next up
 
-### 77. Make the stored-text score credit the traveller's own post, not any mention of the nationality — `soon`
+### 78. Decide whether to show the selector 60 + 40 pages with the search boost — `soon`, the owner's call
 
-**Found in entry 244.** The misses of every smaller shortlist trace here, not to missing keywords.
-`score_body`'s "+40 nationality" fires on any page naming the traveller's country, so an Indian in
-Britain is shown the German embassy *in India*'s pages at 85 while the UK mission's score 25–37;
-"+20 tourism" fires on any mention of tourism, and decision tables never mention a purpose; the text
-score has no residence signal although the link score does. Candidate fixes, none measured: a
-residence signal in `score_body`; nationality credit only where the page is not another post's.
-
-It changes what the selector is shown, so it is a recall change (entries 146, 158): measure it
-offline with `boost.py`'s cuts against the 27-corridor oracle, then the selector replay, several
-runs. If it lets a smaller cut keep today's score, it is the saving entries 242 and 244 could not
-get for free.
+**Measured (entry 245):** with the stored-text score crediting the traveller's own post (shipped)
+and pages live search returned fused as a third ranking (`CandidatePage.searched`, entry 244), a
+60 + 40 shortlist scores 125.8 of 131 roles a run against today's 127.0 at 120 + 40 — 1.2 behind,
+under the 3-role bar — with 43.8 of 44 decisions and checklists, on 28.2K input tokens against
+51.0K. Still lost: France's Indian processing time. It changes what the selector is shown, so a
+live comparison over several runs comes first (entries 144, 145). Shipping it means: a `search`
+ranking in `fusion_order` (per role, the searched pages by link score) and a smaller shortlist size.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
@@ -481,6 +477,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 77. Make the stored-text score credit the traveller's own post | 09-30 | 244, 245 | Shipped: nationality from title and path only, a residence credit and the own/other-post signals on post roles, no purpose bonus on the decision. At today's cut every decision and checklist in every run (127.0 against 126.6); with the search boost 60 + 40 becomes level (item 78) |
 | 76. Test the search boost with the selector | 09-30 | 243, 244 | Offline 129 of 131 at a 40 cut once `CandidatePage.searched` records every page search returned; the selector scores 124.2–124.4 against 126.6 on 45–60% less input — corpus-only answers are displaced. Not adopted; the cause is item 77 |
 | 75. Decide whether to adopt the embedding-ordered shortlist | 09-29 | 239–242 | **Not adopted.** Level on accuracy across 27 corridors in four languages at half the selector's input, but no answer changed; the saving (cents, 0.6–2s) does not pay for a vendor and a second index. Reopen at expansion to a destination that publishes only in its own language, if selector input cost binds, or if answers fall past the 120 cut |
 | 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235–239 | No gain at today's cut (it already keeps every answer); an embedding-ordered 40 + 40 packet is level within the bar, re-graded on the refreshed oracle — adoption is item 75. Other-language pages stay untested |
