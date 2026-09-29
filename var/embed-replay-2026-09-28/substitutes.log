@@ -1,0 +1,184 @@
+
+=== canada_IN_GB fees: embeddings 4/5, today 5/5
+  oracle https://cic.gc.ca/english/information/applications/guides/5256ETOC.asp
+     why: "Visitor visa - per person ... $100", with $500 as the family maximum
+  oracle https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/guide-5256-applying-visitor-visa-temporary-resident-visa.html
+     why: the same fee table on canada.ca
+  oracle https://ircc.canada.ca/english/information/fees/fees.asp
+     why: IRCC's fee list — '"Visitor visa - per person ... 100.00"'
+  oracle https://www.ircc.canada.ca/english/information/fees/fees.asp
+     why: the same document at another address — byte-identical stored text, 14,834 characters
+  emb 5/5 https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html
+     «Total fees Type of fee | Amount | Who needs to pay this fee Visitor visa processing fee | Amount: Individual: $100 Family (5 or more people): $500 | Who needs to pay this fee: All applicants Biometrics fee | Amount: Individual: $85 Family: up»
+  emb 3/5 https://ircc.canada.ca/english/information/applications/visa.asp
+     «le for security, health or financial reasons. Find out more about inadmissibility . Individual applicant: CAD $85 Families applying at the same time : maximum total fee of CAD $170 Groups of 3 or more performing artists and their staff who ap»
+
+=== czechia_IN_GB document_checklist: embeddings 0/5, today 5/5
+  oracle https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF
+     why: the European Commission implementing decision "establishing the list of supporting documents to be submitted by applicants for short stay visas in the United Kingdom", which is this traveller exactly — an Indian passport
+  emb 5/5 https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html
+     «ING THE FOLLOWING REQUIREMENTS: → PASSPORT → APPLICATION FORM → PHOTO → FEE → BIOMETRIC DATA (FINGERPRINTS) → SUPPORTING DOCUMENTS ON ˃ PURPOSE OF STAY (for example organized trip reservation, individual trip reservation, travel agency confirmation, plan of jo»
+  emb 5/5 https://mzv.gov.cz/jnp/en/information_for_aliens/supporting_documents_overview
+     «Supporting Documents Overview | Ministry of Foreign Affairs of the Czech Republic This webpage uses Cookies and JavaScript in order to work properly.»
+  emb 3/5 https://mzv.gov.cz/jnp/en/information_for_aliens/supporting_documents_overview/passport.html
+     «quest necessary information at e-mail address wwwadmin@mzv.cz Skip to menu The Ministry > Entry & Residence > Supporting Documents... > Passport Passport When applying for a Schengen visa or a long-term visa / residence permit , the passport must • have been»
+
+=== czechia_IN_GB general_entry: embeddings 0/5, today 5/5
+  oracle https://mzv.gov.cz/public/d3/71/2a/4835385_2943205_UK_EN.PDF
+     why: the same document's "General requirements for all applicants" states the entry-relevant duties — onward travel, means of subsistence, accommodation. Also outside the pool.
+  emb 5/5 https://mzv.gov.cz/jnp/en/information_for_aliens/short_stay_visa/visa_for_a_stay_up_to_90_days_for_the.html
+     «ot automatically grant the right of entry to the Schengen Area / Czech Republic. Visa holders need to fulfill entry conditions specified in the Schengen Border Code and can be asked upon entry to present documents on accommodation, finances, return air tic»
+
+=== france_PH_PH general_entry: embeddings 0/5, today 5/5
+  oracle https://france-visas.gouv.fr/en/votre-arrivee-en-france
+     why: "Documents to be presented on arrival in France... A valid passport issued less than 10 years before and valid for at least 3 months after the envisaged departure date. A valid visa, if required. Proof of accommodation c
+
+=== japan_IN_GB application_route: embeddings 0/5, today 5/5
+  oracle https://www.mofa.go.jp/j_info/visit/visa/procedure/note.html
+     why: "An application for visa is made by the applicant him/herself at the Japanese Embassy / Consulate General with jurisdiction over the area in which the applicant lives"
+  oracle https://www.edinburgh.uk.emb-japan.go.jp/files/100603564.pdf
+     why: eligibility for the eVISA from the UK — not a British citizen, permission to reside in the UK, tourism, under 90 days — and its four steps
+  oracle https://www.evisa.mofa.go.jp/index
+     why: the eVISA system's own five-step flow, from verification to issuance
+  emb 5/5 https://www.evisa.mofa.go.jp/faq
+     «JAPAN eVISA_FAQ Top Frequently asked questions (About JAPAN eVISA) Q1 What is JAPAN eVISA? Q2 What types of visas can I apply for through JAP»
+  emb 5/5 https://www.mofa.go.jp/j_info/visit/visa/visaonline.html
+     «The JAPAN eVISA system (electronic visa) | Ministry of Foreign Affairs of Japan Top > Consular Services > VISA > The JAPAN eVISA system (electron»
+  emb 5/5 https://www.uk.emb-japan.go.jp/itpr_en/sightseeing.html
+     «paper stuck to the application form using a glue stick (Do not use blu tack, double sided tape, etc) Valid UK eVisa & Share Code / Entry Clearance to prove your immigration status ◆ 'Your immigration status' page printout from www.gov.uk showing»
+  emb 4/5 https://www.evisa.mofa.go.jp/pdf/personal_flowchart_en.pdf
+     «ssuance Notification of non-issuance Japanese overseas establishment After fee payment(if necessary) Check of eVISA at departure airport * Display "Visa issuance notice" on your device Arrival in Japan Examinations for landing in Japan»
+
+=== japan_IN_GB fees: both 0/5
+  today 5/5 https://www.evisa.mofa.go.jp/index
+     «xamination result The results of your visa application will be sent to your registered e-mail address. Step 4 Visa fees payment You will receive a notification email on visa fee. Pay the fee online by your credit card. Step 5 eVISA issuance procedu»
+  today 5/5 https://www.uk.emb-japan.go.jp/itpr_en/index_000070.html
+     «erm Stay Visa Working Holiday Visa Volunteer Visa Spouse or Child of Japanese National Visa Medical Stay Visa Visa Fees Visa Agents List (PDF) Certificate of Eligibility Overseas Travel Insurance FAQ Back to Top»
+
+=== japan_IN_GB general_entry: embeddings 1/5, today 0/5
+  oracle https://www.mofa.go.jp/j_info/visit/visa/index.html
+     why: "landing permission is granted by an immigration officer at the port of entry when a foreigner meets the requirement for entry into Japan" — the conditions after the visa, not the application
+  oracle https://www.edinburgh.uk.emb-japan.go.jp/itpr_ja/00_000196.html
+     why: what to carry for immigration inspection at the airport — return ticket, host details, evidence of funds
+
+=== japan_PH_PH fees: embeddings 3/5, today 5/5
+  oracle https://www.mofa.go.jp/j_info/visit/visa/procedure/pagewe_000001_00391.html
+     why: the ministry's fee table for each visa type, which is the same page the Indian row names as its second `fees` answer
+  emb 5/5 https://www.evisa.mofa.go.jp/index
+     «xamination result The results of your visa application will be sent to your registered e-mail address. Step 4 Visa fees payment You will receive a notification email on visa fee. Pay the fee online by your credit card. Step 5 eVISA issuance procedu»
+
+=== netherlands_IN_GB general_entry: embeddings 0/5, today 1/5
+  oracle https://www.government.nl/site/binaries/site-content/collections/documents/2025/09/15/leaflets-entry-exit-system/ees-leaflet-a5-en-digital.pdf
+     why: the Dutch government's Entry/Exit System leaflet, which states what happens at the border for "non-EU nationals travelling to the European countries using the EES for a short stay (up to 90 days within a 180-day period),
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/schengen-visa/apply-united-kingdom
+     «nt when you can collect it. You can also have someone else collect your passport for you. If you collect your passport yourself, bring the following with you: a valid form of ID the proof of payment provided by VFS Global If someone else collects your passport for you, they must bring the following»
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/checklist-schengen-visa-tourism/united-kingdom
+     «ow that you are legally residing in the country where you submit your visa application using, for instance: a passport or other travel document a British residence permit, valid for at least 1 months after you leave the Schengen area a printout of your eVisa showing your immigration status, issued by UKVI. Also bring the letter»
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/visa-required
+     «ravel plans. Disclaimer The result you get is not legally binding. You cannot refer to it as a legal basis at border control or in order to be granted access to your flight. The result only applies to travel to the Netherlands. If you will travel to or t»
+  emb 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/entering-without-visa
+     «nçais Are you visiting the Netherlands for 90 days or less? Answer up to 10 questions to check the travel and entry requirements for your trip. If you live in the Netherlands and are returning from abroad, check which documents you need to re-enter. Error: J»
+
+=== netherlands_PH_PH general_entry: both 0/5
+  today 5/5 https://www.netherlandsworldwide.nl/visa-the-netherlands/visa-required
+     «ravel plans. Disclaimer The result you get is not legally binding. You cannot refer to it as a legal basis at border control or in order to be granted access to your flight. The result only applies to travel to the Netherlands. If you will travel to or t»
+
+=== united-arab-emirates_IN_GB visa_decision: embeddings 4/5, today 5/5
+  oracle https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+     why: "Visa on arrival for citizens of the Republic of India residing in (America, Britain, European Union countries)" — this exact corridor, nationality and residence together, granting 14 days
+  oracle https://www.mofa.gov.ae/en/visa-exemptions-for-non-citizen
+     why: "Republic of India Visa Required" in the ministry's per-country table — true of the passport, but blind to the residence, which is what turns this corridor into a visa on arrival
+  oracle https://www.mofa.gov.ae/Visa-Exemptions-For-Non-Citizen
+     why: the same document at another address — byte-identical stored text, 11,974 characters
+  emb 5/5 https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
+     «Check if you need a visa to enter the UAE | The Official Platform of the UAE Government U.Ask Related eServices Visa eligibility Related eServices Apply f»
+  emb 4/5 https://www.moet.gov.ae/en/entry-requirements
+     «ly for a tourist visa. Categories Exempt from Tourist Visa Citizens of the Gulf Cooperation Council countries do not need a visa to enter the UAE. They can enter the country after presenting their passport issued by one of the GCC countries. Citizens of a fe»
+
+=== united-arab-emirates_IN_GB document_checklist: embeddings 4/5, today 5/5
+  oracle https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+     why: "Requirements: 1. A valid passport ... 2. residence visa issued by UK ... 3. Personal photo (white background)"
+  oracle https://www.gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+     why: "Requirements: 1. One personal photo. 2. Copy of the passport" for the single-entry tourist visa, the other route into the UAE for this traveller
+  oracle https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+     why: the same document at another address — byte-identical stored text, 5,885 characters
+
+=== united-arab-emirates_IN_GB fees: embeddings 4/5, today 5/5
+  oracle https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+     why: "Fees 253" for this service
+  oracle https://www.gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+     why: "30-day tourist visa fee: AED 252 ... 60-day tourist visa fee: AED 352", plus 5% value added tax
+  oracle https://gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+     why: the same document at another address — byte-identical stored text, 5,885 characters
+  emb 5/5 https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/visa-fees
+     «Visa fees and fines | The Official Platform of the UAE Government U.Ask Visa fees Visa service fees Visa charges are stated on each servic»
+  emb 5/5 https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
+     «bai Updated on: 13 Jul 2026 Prev topic General provisions for the residence visa View all Services Next topic Visa fees and fines»
+  emb 5/5 https://u.ae/en/information-and-services/visiting-and-exploring-the-uae/Tourist-services-and-information/Customs-clearance
+     «ah Customs Dept. services . Money declaration Passengers travelling out of or entering the UAE with more than AED 60,000 in cash or an amount equivalent to this in other currencies, financial instruments, precious metals or valuable stones, must»
+  emb 5/5 https://icp.gov.ae/en/media-center/icp-expands-eligibility-for-uae-entry-visa-for-nationals-of-certain-countries
+     «a. Visa holders are required to leave the UAE before the expiry of their authorized stay. An overstay fine of AED 50 per day will apply to violators. The fee for the 14-day visa is AED 100, while the fee for the 60-day visa is AED 250. Latest Po»
+  emb 3/5 https://www.gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+     «Fill out the application information where applicable. 4. Pay the service fees (if any). Fees -30 day tourist visa fee: AED 300. - 60 day tourist visa fee: AED 500. - In addition to value added tax (5%). - Security deposit: There is no security dep»
+
+=== united-arab-emirates_IN_GB processing_times: embeddings 0/5, today 5/5
+  oracle https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+     why: "Expected Completion Time 48.0 Hour(s)"
+  emb 4/5 https://www.gdrfad.gov.ae/en/services/f9e586fe-0642-11ec-0320-0050569629e8
+     «nnels Digital channels (website/smart application): The service is available 24/7 Expected Completion Time 48.0 Hour(s) Additional Information Only accredited tourism offices in the emirate can issue this kind of visa. Related Services 1. Renewal»
+  emb 3/5 https://www.gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+     «nnels Digital channels (website/smart application): The service is available 24/7 Expected Completion Time 48.0 Hour(s) Additional Information Note: The total amount of the visa may vary more or less depending on the circumstances surrounding the»
+
+=== united-arab-emirates_IN_GB general_entry: embeddings 0/5, today 5/5
+  oracle https://www.gdrfad.gov.ae/en/services/727c91b1-52eb-11ea-0320-0050569629e8
+     why: "Terms And Conditions: The traveller should not have any restrictions that prevent him from entering the country. The validity of the passport ... no less than 6 months"
+  oracle https://u.ae/en/information-and-services/passports-and-traveling/customs-regulations
+     why: what may be brought in at the border, which is not part of the visa application
+  emb 5/5 https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/do-you-need-an-entry-permit-or-a-visa-to-enter-the-uae
+     «Visit Abu Dhabi Apply for a Dubai tourist visa – VisitDubai.com Issuance of a visit visa – GDRFA, Dubai Note: Passports must be valid for at least 6 months from the date of entry into the UAE. Lists of countries eligible for visa on arrival may vary from time to time. Please check wit»
+  emb 5/5 https://u.ae/en/information-and-services/visa-and-emirates-id/Types-of-visas/tourist-visa
+     «sa is extendable once for 30 days. GCC residency must be valid for at least 1 year from the arrival date. The passport of GCC residents must be valid at least 6 months from the arrival date. The profession of the applicant must be on the list of professions approved for issuing the visa (subject»
+  emb 4/5 https://www.moet.gov.ae/en/entry-requirements
+     «Entry Requirements | Ministry of Economy & Tourism - UAE Entry Requirements MOE Popular Search Keywords Search in the Website Advanced Search Popul»
+  emb 3/5 https://www.gdrfad.gov.ae/en/services/f9e586fb-0642-11ec-0320-0050569629e8
+     «sport or travel document to enter the country and return to the country in which he resides or from which the passport or document was issued, and the validity period of the passport or travel document is not less than (6) six months. 2. A travel ticket to continue his journey or a ticket»
+
+=== united-kingdom_IN_GB general_entry: both 0/5
+  today 4/5 https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+     «application because you’re waiting for a decision on your EU Settlement Scheme application You may be delayed at the border if your passport or national identity card is not linked to your UK Visas and Immigration account . If you’re unable to link your»
+
+=== united-kingdom_PH_PH fees: embeddings 3/5, today 4/5
+  oracle https://www.gov.uk/visa-fees
+     why: the published fee schedule for every visa type, which is keyed on the visa rather than on the passport and so answers this traveller as it does any other
+  emb 5/5 https://www.gov.uk/visit-uk-holiday-family-friends
+     «A to come to the UK Step 3 : Apply for a visa Apply for a Standard Visitor visa A Standard Visitor visa costs £135 and allows you to stay in the UK for up to 6 months. There's a different way to apply if: you're a Chinese citizen visiting as»
+  emb 5/5 https://www.gov.uk/standard-visitor-visa
+     «You must apply for a Standard Visitor visa online before you travel to the UK. A Standard Visitor visa costs £135 for up to 6 months. The earliest you can apply is 3 months before you travel. If you visit the UK regularly, you can choose to»
+  emb 5/5 https://www.gov.uk/standard-visitor/apply-standard-visitor-visa
+     «the UK for up to 6 months without needing a visa or an ETA You can check if you need a visa before you apply. Visa fees You can apply for a Standard Visitor visa, or if you visit the UK regularly you can choose to apply for a long-term Standard Vis»
+  emb 5/5 https://www.gov.uk/uk-border-control
+     «hing over your duty-free allowance banned or restricted goods in the UK goods that you plan to sell more than €10,000 (or its equivalent) in cash, if you’re coming from outside the EU You and your baggage may be checked for anything you must»
+
+=== united-kingdom_PH_PH general_entry: both 0/5
+  today 5/5 https://www.gov.uk/evisa/travel-with-evisa
+     «t you’ve added to your UKVI account. Your eVisa will be checked when you: leave and enter the UK, either by a border control officer or when you use the eGates check in with your carrier to return to the UK The country you’re visiting might have other en»
+  today 4/5 https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+     «application because you’re waiting for a decision on your EU Settlement Scheme application You may be delayed at the border if your passport or national identity card is not linked to your UK Visas and Immigration account . If you’re unable to link your»
+
+=== united-states_IN_GB general_entry: both 0/5
+  today 3/5 https://adoption.state.gov/content/travel/en/us-visas/Visa-Reciprocity-and-Civil-Documents-by-Country/India.html
+     «s Unavailable Passports & Other Travel Documents Types Available: Regular Passport: (Type P). Dark blue. Most passports are valid for 10 years. Issued by the Ministry of External Affairs through the Central Passport Organization and its network of 37 Passport Of»
+
+=== united-states_PH_PH visa_decision: embeddings 1/5, today 2/5
+  oracle https://adoption.state.gov/content/travel/en/us-visas/tourism-visit/visa-waiver-program.html
+     why: "You must be a citizen or national of the following countries to be eligible to travel to the United States under the VWP" over the designated list, which does not include the Philippines — so a Filipino needs a visitor 
+  emb 5/5 https://www.usa.gov/tourist-visa
+     «isa, also known as a tourist visa. Learn how to get and renew this type of nonimmigrant visa. Find out if you need a visa to visit the U.S. Check if your country participates in the U.S. Visa Waiver Program (VWP). If you qualify for a waiver, you will»
+  emb 5/5 https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-visa-services.html
+     «An applicant travelling to provide charitable services as determined by Visa Services: No Fee Other - When a Visa is Not Required - Visa Waiver Program Citizens of Visa Waiver Program participating countries, and meeting requirements pay a small fee. Select U»
+  emb 4/5 https://www.dhs.gov/visit-united-states
+     «to all international visitors (with limited exemptions) entering the United States, but not to U.S. citizens. Visa Waiver Program: Passport Requirements Timeline - As of October 26, 2006, any passport issued on or after this date by a Visa Waiver Prog»
+  emb 4/5 https://www.usa.gov/visit-united-states
+     «a tourist Learn about travel documents to enter the U.S., including non-immigrant visas, Form I-94, and ESTA. Visa Waiver Program and ESTA application The Visa Waiver Program allows citizens of participating countries to travel to the U.S. for tourism»
+  emb 3/5 https://adoption.state.gov/content/travel/en/us-visas/visa-information-resources/fees/fees-reciprocity-tables.html
+     «d when the visa is issued. More Information A-Z Index Latest News What is a U.S. Visa? Diversity Visa Program Visa Waiver Program Fraud Warning Find a U.S. Embassy or Consulate In the United States: Visit the USA FAQs: About Visas - The Basics IV Sche»

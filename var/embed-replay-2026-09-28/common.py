@@ -219,17 +219,18 @@ def fused_order(cap, rankings: list[dict[str, list[str]]]) -> list[CandidatePage
     return order + [c for c in cap["pool"] if c.link.url not in seen]
 
 
-def shown(cap, order) -> list[CandidatePage]:
-    """Top `SHOWN` plus the `BLIND` best-linked candidates with no stored text, in fused order —
-    `fusion_top_with_blind(120, 40)` from the 2026-09-24 replay."""
+def shown(cap, order, top: int | None = None) -> list[CandidatePage]:
+    """Top `top` (default `SHOWN`) plus the `BLIND` best-linked candidates with no stored text, in
+    fused order — `fusion_top_with_blind(120, 40)` from the 2026-09-24 replay."""
 
-    chosen = order[:SHOWN]
+    top = SHOWN if top is None else top
+    chosen = order[:top]
     blind = sorted(
-        (c for c in order[SHOWN:] if c.link.url not in cap["held"]),
+        (c for c in order[top:] if c.link.url not in cap["held"]),
         key=lambda c: (-c.link_scores.best()[1], c.link.url),
     )[:BLIND]
     blind_urls = {c.link.url for c in blind}
-    return chosen + [c for c in order[SHOWN:] if c.link.url in blind_urls]
+    return chosen + [c for c in order[top:] if c.link.url in blind_urls]
 
 
 # --- crediting an answer, as grade.py --alias does ----------------------------------------------

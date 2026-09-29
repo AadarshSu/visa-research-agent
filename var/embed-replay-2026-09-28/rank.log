@@ -1,0 +1,104 @@
+arm                               reachable     core  median pos   English text   other-language text   no stored text
+link+text (today)                 91/92      28/28            13   90/91   1/1   0/0
+embed only [neutral]              88/92      27/28            10   87/91   1/1   0/0
+link+embed [neutral]              88/92      27/28             5   87/91   1/1   0/0
+link+text+embed [neutral]         90/92      27/28            10   89/91   1/1   0/0
+embed only [traveller]            85/92      24/28             6   84/91   1/1   0/0
+link+embed [traveller]            88/92      27/28             3   87/91   1/1   0/0
+link+text+embed [traveller]       90/92      27/28             5   89/91   1/1   0/0
+
+best answering page's position, per corridor and role:
+  canada_IN_GB               application_route  link+text (today):43  embed only:2  link+embed:3  link+text+embed:14  embed only:2  link+embed:3  link+text+embed:2
+  canada_IN_GB               document_checklist link+text (today):43  embed only:2  link+embed:3  link+text+embed:14  embed only:2  link+embed:3  link+text+embed:2
+  canada_IN_GB               fees               link+text (today):51  embed only:4  link+embed:4  link+text+embed:10  embed only:4  link+embed:4  link+text+embed:10
+  canada_IN_GB               general_entry      link+text (today):26  embed only:18  link+embed:20  link+text+embed:75  embed only:19  link+embed:14  link+text+embed:74
+  canada_IN_GB               visa_decision      link+text (today):78  embed only:108  link+embed:25  link+text+embed:94  embed only:97  link+embed:52  link+text+embed:104
+  canada_PH_PH               application_route  link+text (today):55  embed only:2  link+embed:3  link+text+embed:20  embed only:2  link+embed:3  link+text+embed:14
+  canada_PH_PH               document_checklist link+text (today):55  embed only:2  link+embed:3  link+text+embed:20  embed only:2  link+embed:3  link+text+embed:14
+  canada_PH_PH               fees               link+text (today):51  embed only:4  link+embed:4  link+text+embed:10  embed only:4  link+embed:4  link+text+embed:15
+  canada_PH_PH               processing_times   link+text (today):11  embed only:49  link+embed:5  link+text+embed:5  embed only:5  link+embed:5  link+text+embed:5
+  canada_PH_PH               visa_decision      link+text (today):78  embed only:110  link+embed:25  link+text+embed:94  embed only:13  link+embed:1  link+text+embed:18
+  czechia_IN_GB              document_checklist link+text (today):24  embed only:156  link+embed:358  link+text+embed:154  embed only:164  link+embed:362  link+text+embed:154
+  czechia_IN_GB              general_entry      link+text (today):24  embed only:156  link+embed:358  link+text+embed:154  embed only:164  link+embed:362  link+text+embed:154
+  france_IN_GB               application_route  link+text (today):12  embed only:9  link+embed:3  link+text+embed:3  embed only:7  link+embed:3  link+text+embed:8
+  france_IN_GB               general_entry      link+text (today):6  embed only:6  link+embed:6  link+text+embed:6  embed only:5  link+embed:6  link+text+embed:5
+  france_PH_PH               application_route  link+text (today):5  embed only:9  link+embed:3  link+text+embed:3  embed only:1  link+embed:3  link+text+embed:5
+  france_PH_PH               general_entry      link+text (today):69  embed only:6  link+embed:44  link+text+embed:18  embed only:3  link+embed:43  link+text+embed:17
+  germany_IN_GB              application_route  link+text (today):37  embed only:62  link+embed:21  link+text+embed:38  embed only:53  link+embed:34  link+text+embed:39
+  germany_IN_GB              fees               link+text (today):37  embed only:62  link+embed:21  link+text+embed:38  embed only:53  link+embed:34  link+text+embed:39
+  germany_IN_GB              processing_times   link+text (today):37  embed only:62  link+embed:21  link+text+embed:38  embed only:53  link+embed:34  link+text+embed:39
+  germany_IN_GB              visa_decision      link+text (today):57  embed only:17  link+embed:1  link+text+embed:19  embed only:123  link+embed:19  link+text+embed:64
+  germany_PH_PH              application_route  link+text (today):22  embed only:50  link+embed:4  link+text+embed:21  embed only:50  link+embed:3  link+text+embed:21
+  germany_PH_PH              fees               link+text (today):22  embed only:50  link+embed:4  link+text+embed:21  embed only:50  link+embed:3  link+text+embed:21
+  germany_PH_PH              processing_times   link+text (today):22  embed only:50  link+embed:4  link+text+embed:21  embed only:50  link+embed:3  link+text+embed:21
+  germany_PH_PH              visa_decision      link+text (today):36  embed only:17  link+embed:1  link+text+embed:13  embed only:44  link+embed:1  link+text+embed:18
+  japan_IN_GB                application_route  link+text (today):38  embed only:3  link+embed:3  link+text+embed:14  embed only:1  link+embed:3  link+text+embed:9
+  japan_IN_GB                document_checklist link+text (today):2  embed only:2  link+embed:2  link+text+embed:2  embed only:2  link+embed:2  link+text+embed:2
+  japan_IN_GB                fees               link+text (today):10  embed only:4  link+embed:10  link+text+embed:10  embed only:6  link+embed:9  link+text+embed:4
+  japan_IN_GB                general_entry      link+text (today):26  embed only:1  link+embed:23  link+text+embed:24  embed only:25  link+embed:32  link+text+embed:33
+  japan_IN_GB                processing_times   link+text (today):5  embed only:5  link+embed:3  link+text+embed:5  embed only:1  link+embed:3  link+text+embed:5
+  japan_IN_GB                visa_decision      link+text (today):7  embed only:21  link+embed:1  link+text+embed:1  embed only:51  link+embed:17  link+text+embed:7
+  japan_PH_PH                application_route  link+text (today):3  embed only:16  link+embed:9  link+text+embed:3  embed only:5  link+embed:3  link+text+embed:3
+  japan_PH_PH                document_checklist link+text (today):2  embed only:2  link+embed:2  link+text+embed:2  embed only:2  link+embed:2  link+text+embed:2
+  japan_PH_PH                fees               link+text (today):10  embed only:4  link+embed:10  link+text+embed:10  embed only:3  link+embed:10  link+text+embed:10
+  japan_PH_PH                processing_times   link+text (today):5  embed only:5  link+embed:5  link+text+embed:5  embed only:13  link+embed:5  link+text+embed:5
+  japan_PH_PH                visa_decision      link+text (today):1  embed only:19  link+embed:1  link+text+embed:1  embed only:23  link+embed:1  link+text+embed:1
+  netherlands_IN_GB          application_route  link+text (today):66  embed only:3  link+embed:3  link+text+embed:27  embed only:3  link+embed:3  link+text+embed:22
+  netherlands_IN_GB          document_checklist link+text (today):43  embed only:2  link+embed:23  link+text+embed:32  embed only:32  link+embed:28  link+text+embed:39
+  netherlands_IN_GB          general_entry      link+text (today):52  embed only:123  link+embed:288  link+text+embed:64  embed only:122  link+embed:322  link+text+embed:63
+  netherlands_IN_GB          processing_times   link+text (today):4  embed only:5  link+embed:5  link+text+embed:5  embed only:5  link+embed:5  link+text+embed:5
+  netherlands_PH_PH          application_route  link+text (today):3  embed only:12  link+embed:3  link+text+embed:3  embed only:3  link+embed:8  link+text+embed:3
+  netherlands_PH_PH          document_checklist link+text (today):23  embed only:2  link+embed:2  link+text+embed:2  embed only:2  link+embed:2  link+text+embed:2
+  netherlands_PH_PH          fees               link+text (today):4  embed only:27  link+embed:9  link+text+embed:4  embed only:4  link+embed:4  link+text+embed:4
+  netherlands_PH_PH          general_entry      link+text (today):48  embed only:111  link+embed:262  link+text+embed:56  embed only:116  link+embed:290  link+text+embed:55
+  netherlands_PH_PH          processing_times   link+text (today):5  embed only:5  link+embed:5  link+text+embed:5  embed only:8  link+embed:5  link+text+embed:5
+  singapore_IN_GB            application_route  link+text (today):1  embed only:35  link+embed:12  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  singapore_IN_GB            document_checklist link+text (today):1  embed only:55  link+embed:12  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  singapore_IN_GB            fees               link+text (today):1  embed only:35  link+embed:12  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  singapore_IN_GB            general_entry      link+text (today):107  embed only:25  link+embed:1  link+text+embed:17  embed only:20  link+embed:11  link+text+embed:17
+  singapore_IN_GB            processing_times   link+text (today):1  embed only:55  link+embed:12  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  singapore_IN_GB            visa_decision      link+text (today):1  embed only:55  link+embed:12  link+text+embed:1  embed only:1  link+embed:1  link+text+embed:1
+  singapore_PH_PH            general_entry      link+text (today):59  embed only:208  link+embed:27  link+text+embed:64  embed only:188  link+embed:28  link+text+embed:64
+  singapore_PH_PH            visa_decision      link+text (today):31  embed only:92  link+embed:18  link+text+embed:36  embed only:122  link+embed:33  link+text+embed:31
+  sweden_IN_GB               application_route  link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:1  link+text+embed:2
+  sweden_IN_GB               document_checklist link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:1  link+text+embed:2
+  sweden_IN_GB               fees               link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:1  link+text+embed:2
+  sweden_IN_GB               general_entry      link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:1  link+text+embed:2
+  sweden_IN_GB               processing_times   link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:1  link+text+embed:2
+  sweden_IN_GB               visa_decision      link+text (today):1  embed only:9  link+embed:1  link+text+embed:1  embed only:27  link+embed:4  link+text+embed:1
+  sweden_PH_PH               application_route  link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:2  link+text+embed:2
+  sweden_PH_PH               document_checklist link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:2  link+text+embed:2
+  sweden_PH_PH               fees               link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:2  link+text+embed:2
+  sweden_PH_PH               general_entry      link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:2  link+text+embed:2
+  sweden_PH_PH               processing_times   link+text (today):2  embed only:1  link+embed:2  link+text+embed:2  embed only:1  link+embed:2  link+text+embed:2
+  sweden_PH_PH               visa_decision      link+text (today):1  embed only:10  link+embed:1  link+text+embed:1  embed only:8  link+embed:1  link+text+embed:1
+  united-arab-emirates_IN_GB application_route  link+text (today):3  embed only:3  link+embed:8  link+text+embed:3  embed only:3  link+embed:1  link+text+embed:1
+  united-arab-emirates_IN_GB document_checklist link+text (today):13  embed only:10  link+embed:18  link+text+embed:24  embed only:6  link+embed:1  link+text+embed:1
+  united-arab-emirates_IN_GB fees               link+text (today):13  embed only:10  link+embed:18  link+text+embed:24  embed only:6  link+embed:1  link+text+embed:1
+  united-arab-emirates_IN_GB general_entry      link+text (today):13  embed only:110  link+embed:41  link+text+embed:24  embed only:6  link+embed:1  link+text+embed:1
+  united-arab-emirates_IN_GB processing_times   link+text (today):13  embed only:110  link+embed:41  link+text+embed:24  embed only:6  link+embed:1  link+text+embed:1
+  united-arab-emirates_IN_GB visa_decision      link+text (today):1  embed only:97  link+embed:6  link+text+embed:7  embed only:6  link+embed:1  link+text+embed:1
+  united-arab-emirates_PH_PH application_route  link+text (today):3  embed only:10  link+embed:8  link+text+embed:3  embed only:9  link+embed:8  link+text+embed:3
+  united-arab-emirates_PH_PH document_checklist link+text (today):37  embed only:10  link+embed:22  link+text+embed:42  embed only:9  link+embed:8  link+text+embed:32
+  united-arab-emirates_PH_PH fees               link+text (today):37  embed only:10  link+embed:22  link+text+embed:42  embed only:9  link+embed:8  link+text+embed:32
+  united-arab-emirates_PH_PH general_entry      link+text (today):37  embed only:10  link+embed:22  link+text+embed:42  embed only:9  link+embed:8  link+text+embed:32
+  united-arab-emirates_PH_PH processing_times   link+text (today):37  embed only:10  link+embed:22  link+text+embed:42  embed only:9  link+embed:8  link+text+embed:32
+  united-arab-emirates_PH_PH visa_decision      link+text (today):1  embed only:97  link+embed:6  link+text+embed:7  embed only:170  link+embed:13  link+text+embed:7
+  united-kingdom_IN_GB       application_route  link+text (today):30  embed only:8  link+embed:3  link+text+embed:13  embed only:2  link+embed:3  link+text+embed:12
+  united-kingdom_IN_GB       document_checklist link+text (today):2  embed only:2  link+embed:2  link+text+embed:2  embed only:8  link+embed:8  link+text+embed:2
+  united-kingdom_IN_GB       fees               link+text (today):30  embed only:8  link+embed:3  link+text+embed:13  embed only:2  link+embed:3  link+text+embed:12
+  united-kingdom_IN_GB       general_entry      link+text (today):31  embed only:64  link+embed:62  link+text+embed:19  embed only:81  link+embed:86  link+text+embed:19
+  united-kingdom_IN_GB       processing_times   link+text (today):30  embed only:5  link+embed:3  link+text+embed:13  embed only:2  link+embed:3  link+text+embed:12
+  united-kingdom_PH_PH       application_route  link+text (today):38  embed only:8  link+embed:3  link+text+embed:14  embed only:13  link+embed:3  link+text+embed:14
+  united-kingdom_PH_PH       document_checklist link+text (today):8  embed only:14  link+embed:8  link+text+embed:8  embed only:8  link+embed:8  link+text+embed:8
+  united-kingdom_PH_PH       fees               link+text (today):10  embed only:53  link+embed:10  link+text+embed:4  embed only:82  link+embed:15  link+text+embed:4
+  united-kingdom_PH_PH       general_entry      link+text (today):50  embed only:57  link+embed:57  link+text+embed:31  embed only:61  link+embed:52  link+text+embed:48
+  united-kingdom_PH_PH       processing_times   link+text (today):35  embed only:5  link+embed:5  link+text+embed:28  embed only:5  link+embed:5  link+text+embed:29
+  united-states_IN_GB        application_route  link+text (today):38  embed only:2  link+embed:18  link+text+embed:2  embed only:2  link+embed:7  link+text+embed:2
+  united-states_IN_GB        document_checklist link+text (today):38  embed only:2  link+embed:18  link+text+embed:2  embed only:2  link+embed:7  link+text+embed:2
+  united-states_IN_GB        fees               link+text (today):4  embed only:2  link+embed:3  link+text+embed:2  embed only:2  link+embed:3  link+text+embed:2
+  united-states_IN_GB        general_entry      link+text (today):141  embed only:41  link+embed:43  link+text+embed:64  embed only:18  link+embed:35  link+text+embed:53
+  united-states_PH_PH        fees               link+text (today):4  embed only:4  link+embed:3  link+text+embed:4  embed only:4  link+embed:3  link+text+embed:4
+  united-states_PH_PH        visa_decision      link+text (today):7  embed only:7  link+embed:1  link+text+embed:1  embed only:26  link+embed:1  link+text+embed:1
+
+per-role rows written to /Users/aadarsh/Documents/Visa Research Agent/var/embed-replay-2026-09-28/rank_results.json

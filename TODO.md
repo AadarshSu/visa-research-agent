@@ -37,8 +37,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 
 | | | |
 | --- | --- | --- |
-| **Now** | 67. Test hybrid ranking with embeddings of stored page text — on Voyage's free tokens | `next` |
-|  | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
+| **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
@@ -68,60 +67,8 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 ## Now — pick these up in this order
 
 **Reordered by the owner, 2026-09-27:** item 67 (embeddings, on Voyage) first, then 57, then
-expansion (64), which asks the owner before a batch. On 2026-09-26 item 63 moved to *Next up* as
+expansion (64), which asks the owner before a batch. Item 67 closed on 2026-09-29 (entry 236). On 2026-09-26 item 63 moved to *Next up* as
 ongoing work, and items 60 (Fast mode) and 65 (GPT-6 Sol) were removed.
-
-### 67. Test hybrid ranking with embeddings of stored page text — `next`, on Voyage's free tokens
-
-**Source (entry 235):** Voyage 4, on the free tokens a new account starts with — a test source the
-owner chose, not an adoption. Needs `VOYAGE_API_KEY` in `.env`. Personas offers chat only (entry 188)
-and OpenAI is out of credit. A local multilingual model (bge-m3, multilingual-e5) stays the fallback
-if embeddings are adopted and Voyage's price or dependency is not.
-
-**Why.** What separates the model selector from the heuristics is judgement, not information: same
-inputs, 83% of answers against 53–60% (entry 183). Embeddings match meaning, so they may rank "what
-to bring" or another language (known problem 13) where keywords cannot.
-
-**The question is hybrid, not replacement.** `fusion_order` is already a hybrid — reciprocal-rank
-fusion of link rank and stored-text keyword rank — and entry 183 measured it beating both parts at 35
-a corridor: link 74/92, text 62/92, fused 77/92. So the test is whether embedding rank earns a place
-as a **third RRF input**, and whether it adds to the keyword scorer or replaces it. Expected, not
-measured:
-- **Embeddings alone cannot cover the pool.** Only ~49% of candidates shown to the selector have
-  stored text; the rest rank on their link alone, which an embedding cannot see (entry 158's failure).
-- **They fail in different places.** Embeddings are good at paraphrase and language; keywords at a
-  nationality, a country code, and near-identical per-nationality pages. RRF gains most when its
-  inputs err differently.
-- **RRF has no fitted weights**, which matters with 21 oracle corridors — entry 183's learned ranker
-  learned one feature.
-
-**Build offline:** for the test, embed only the oracle corridors' pools, not all of `var/pagetext/`
-— `var/embed-replay-2026-09-28/`, written and checked on fake data, not yet run (its README has the
-steps). `voyage-4-large` at 1024 dimensions, 4,000-character chunks, a page scoring by its best chunk
-— **ranking input, never evidence** (entries 78, 83). Role queries are tried two ways: traveller-
-neutral, which can be embedded offline, and naming passport and residence, which would need a live
-call if it wins. Embedding the whole store waits for a result.
-
-**Measure offline** against `oracle/selection_oracle.yaml`, via `var/selection-replay-2026-09-24/`,
-at the pre-filter cut (bar: `fusion_order`'s 80.0 of 90), four arms:
-1. link + text — today's baseline;
-2. embeddings alone, plus the 40 blind pages;
-3. link + embeddings;
-4. link + text + embeddings.
-
-3 against 4 says whether embeddings add to the keyword scorer or replace it. Report the roles each arm
-gains, split by pages with and without English text — a gain that is all multilingual is narrower and
-more convincing than a small overall lift. **Treat under ~3 roles as no result:** 90 roles over 21
-corridors, with K tuned on those same corridors. As a *selector* (bar: the model's 83%) try it once,
-expecting a loss — the gap is judgement (entry 183). Record per-request time. Any adoption is a recall
-change, graded live over several runs; using Voyage past its free tokens is the owner's call.
-
-**If embeddings win on ranking, the next question is the build.** A build opens only 3–15% of the
-addresses it records, chosen on a ~29-character link (entries 88, 183), and page embeddings cannot
-exist before a page is read. So test focused crawling — follow first the links on pages whose text
-embeds close to a role — against item 68's plainer lever of opening more.
-
----
 
 ### 57. Stream the plan to the screen as it is written — `next`, **progress shipped (entry 226); the rest is the owner's decision**
 
@@ -514,6 +461,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 67. Test hybrid ranking with embeddings of stored page text | 09-29 | 235, 236 | No place in ranking: at today's cut the order already keeps 91 of 92 answers; a 40 + 40 embedding cut is roughly level once pages the oracle does not list are credited, for 0.6s. The oracle predates the rebuild and misses mirror addresses (known problem 41). Other-language pages stay untested |
 | 74. Let a traveller report a corridor that did not work | 09-27 | 233 | A copied log can predate what the traveller saw: a stored corridor writes none. Nothing notifies the owner of a new report |
 | 73. Tell the traveller exactly why their corridor was refused | 09-27 | 232 | A search outage with no corpus was a bare 500, and every plan-stage fault one sentence; messages read from the code, not collected from live runs |
 | — The full rebuild of every store | 09-25 | 193, 203, 204 | All 55 rebuilt and graded; stores hold every oracle answer. The archived-year veto was dropping filed guidance, widened |

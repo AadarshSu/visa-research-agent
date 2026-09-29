@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [236](#236-embeddings-earn-no-place-in-ranking-and-item-67-closes) | **Measured: embeddings earn no place in ranking; item 67 closes** — at 120 + 40 blind today's order keeps 91 of 92 oracle roles and every embedding arm 88–90; the selector on link + embeddings at 40 + 40 graded 7.6 roles a run lower, half of it pages the oracle does not list, to save 0.6s. Found: the oracle predates the rebuild, and a mirror address is not credited |
 | [235](#235-item-67-becomes-a-hybrid-test-run-on-voyages-free-tokens) | **Item 67 becomes a hybrid test, on Voyage's free tokens** — embeddings as a third input to `fusion_order`'s rank fusion, graded in four arms against the pre-filter bar; Voyage 4 chosen for the test, not adopted; nothing measured |
 | [187](#187-scoring-links-with-their-context-would-recover-2-of-83-answer-pages-japans-remaining-gap-is-a-refusal) | **Link context would recover 2 of 83 answer pages** — 48 already score, 32 are search seeds; Japan's 7 remaining misses are Edinburgh's consulate answering `403` to everything; problem 2 is a later refinement, rebuild with entry 186 first |
 | [186](#186-a-scored-link-may-read-past-its-hosts-even-share-and-one-that-scored-nothing-may-not--measured-on-four-countries) | **A scored link may read past its host's even share; one scoring nothing may not** — `scored_host_ceiling`, corpus builds only; Japan's oracle pages read 0/20 → 12/20, the UK's 13/17 → 17/17, Australia's immigration host absent → 267 pages; `gov.uk` stops at 392 and mostly visa guidance; the Netherlands unchanged |
@@ -274,6 +275,132 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 236. Embeddings earn no place in ranking, and item 67 closes
+
+**2026-09-29. Item 67's first stage, run: every pooled page's stored text in the 21 oracle corridors
+embedded with `voyage-4-large` (6,584 chunks, 4.57M tokens, about two minutes once a card was on the
+account — about 2% of the free 200M), then ranked offline by `var/embed-replay-2026-09-28/rank.py`
+and `sweep.py`; then the selector itself, through Personas, on the most promising smaller cut. No
+code in `src/` changed; `fusion_order` stays link + text.**
+
+**Why the first attempt stalled.** With no payment method, Voyage holds an account to its lowest rate
+limit (commonly quoted as 3 requests and 10K tokens a minute; its docs only say the higher tier needs
+a card). One request of 32 chunks is ~23K tokens, over a minute's allowance, so almost every request
+was refused and waited out a back-off: 96 of 192 queries and no page chunk in a session. With a card,
+tier 1 is 3M tokens and 2,000 requests a minute, and the job ran at ~2.2M tokens a minute. Voyage
+says free tokens still apply with a card; its Batch API is the exception and should not be used.
+
+**At the shipped cut there is nothing to gain.** Today's link + text order, cut to 120 plus the 40
+best-linked pages with no stored text, keeps **91 of 92** oracle roles (the recorded "80.0 of 90" is
+the *selector's* score on that cut, entry 195, not the cut's). Every embedding arm keeps fewer:
+
+| arm | kept at 120 + 40 | core roles | median position of best answer |
+| --- | --- | --- | --- |
+| link + text (today) | **91**/92 | 28/28 | 13 |
+| embeddings only, neutral query | 88 | 27 | 10 |
+| link + embeddings, neutral | 88 | 27 | 5 |
+| link + text + embeddings, neutral | 90 | 27 | 10 |
+| embeddings only, traveller query | 85 | 24 | 6 |
+| link + embeddings, traveller | 88 | 27 | **3** |
+| link + text + embeddings, traveller | 90 | 27 | 5 |
+
+The loss every embedding arm shares is Czechia `IN/GB`'s checklist and entry roles, one 6K-character
+English PDF on `mzv.gov.cz` that embeddings place ~155th of 438 and link + embeddings ~360th.
+
+**Where embeddings win is the smaller cut.** They move the answering page up; today's order leaves it
+deep and relies on the wide cut to reach it (`sweep.py`, top N plus 40 blind):
+
+| arm | 20 | 30 | 40 | 60 | 80 | 120 |
+| --- | --- | --- | --- | --- | --- | --- |
+| link + text (today) | 49 | 59 | 74 | 86 | 90 | 91 |
+| link + embeddings, neutral | 70 | 82 | 82 | 87 | 88 | 88 |
+| link + embeddings, traveller | **76** | 78 | **84** | 87 | 87 | 88 |
+| link + text + embeddings, traveller | 67 | 72 | 82 | 85 | 89 | 90 |
+
+At 40 + 40, link + embeddings keeps 10 more roles than today's order at 40 — over item 67's 3-role
+bar — and 7 fewer than today's order at 120. That is a trade for the latency and cost goals, not an
+accuracy gain: entry 195's 120 + 40 packet was ~53K input tokens, and its top 80 (34K) scored 79.7
+against 80.0, so the selector has tolerated a smaller packet before.
+
+**What this does not answer.**
+- **Language.** 91 of 92 oracle answers have English stored text; the one that does not is kept by
+  every arm. Known problem 13 (other-language pages) is untested by this oracle, not refuted.
+- **Keywords add to embeddings, at 120.** Link + text + embeddings keeps 90 against link +
+  embeddings' 88; below 60 the keyword ranking drags it down. At the shipped cut, "add" rather than
+  "replace" is the answer to item 67's arms 3 against 4.
+- **The traveller query** helps link + embeddings at 20 (76 against 70) and hurts embeddings alone at
+  120 (85 against 88) — it would also need a live embedding call per request.
+
+**Stage 2, the selector on the smaller packet (the owner asked for it).** `replay_embed.py
+--variants fusion120_blind40,emb_link_embed_neutral_c40 --runs 5 --concurrency 1`, 210 calls, none
+failed; graded with `grade.py --alias` (`stage2_grade.log`):
+
+| shown to the selector | roles a run, of 92 | per run | decision + checklist, of 28 | input | seconds |
+| --- | --- | --- | --- | --- | --- |
+| today: link + text, 120 + 40 | **84.4** | 85, 86, 84, 84, 83 | **27.4** | 52.8K | 6.3 |
+| link + embeddings (neutral), 40 + 40 | 76.8 | 78, 75, 76, 78, 77 | 25.8 | 21.5K | 5.7 |
+
+**Half of that gap is the oracle, not the selector.** The owner asked whether embeddings found right
+pages the oracle does not list. It can: the oracle was curated 2026-08-27 to 09-04, every store was
+rebuilt on 09-25, and it credits only the pages it names. `substitutes.py` (`substitutes.log`)
+prints, for each role one arm answered less often, the oracle's answers with their deciding sentence
+and every page the losing arm picked instead whose stored text holds a matching passage. Read by hand,
+the 39 role-runs the embedding arm lost (against 1 gained, Japan `IN/GB` entry) divide three ways:
+
+| | role-runs | where |
+| --- | --- | --- |
+| **the answer was picked; the oracle does not list the page** | 19 | Czechia entry conditions (the ministry's 90-day page: entry conditions, accommodation, funds, return ticket); Japan `IN/GB` route (the eVISA system pages); UAE `IN/GB` entry ("Passports must be valid for at least 6 months"); fees in Canada `IN/GB` ("$100"), UK `PH/PH` ("£135") and UAE `IN/GB`; US `PH/PH` decision (below) |
+| **arguable — a general page where the oracle's rules want the traveller's** | 11 | Czechia checklist (the ministry's general list against the EU's list for applicants in the UK, rule 5); France `PH/PH` entry (the 90-in-180 rule against what is shown at the border); UAE `IN/GB` decision (1) |
+| **lost** | 9 | UAE `IN/GB` processing (5) — only the Dubai page for Indians resident in Britain states "48 hours", and the arm never picked it; Japan `PH/PH` fees (2); UAE `IN/GB` checklist (1); Netherlands `IN/GB` entry (1) |
+
+So the net gap of 38 role-runs, 7.6 roles a run, is **3.8 a run** once the first row is credited and
+**1.6** if the arguable row goes to the embedding arm too — at or under item 67's 3-role bar, not
+over it. Where both arms missed a role equally, the check found no unlisted answer only the embedding
+arm picked; today's arm had two borderline UK border pages. The judgement in the table is the
+session's reading of matched passages, not the owner's checking (entry 68).
+
+**What is genuinely lost has one shape: the page for this traveller.** The UAE service page for
+Indians resident in Britain and the EU's checklist for applicants in the UK both name the traveller,
+which the keyword scorer rewards and a traveller-neutral embedding query cannot see.
+
+**Two grading defects this found, which touch every grade against the oracle.**
+- **A mirror address is not credited.** The oracle names the US Visa Waiver page at
+  `adoption.state.gov`, because `travel.state.gov` stores no text; both arms picked the
+  `travel.state.gov` original in all five runs and were credited 2 and 1. `--alias` credits `www.`,
+  the language redirect and identical stored text, and a page with no stored text matches none.
+- **The oracle predates the rebuild.** Pages the stores gained on 09-25 were never read by its
+  curator, so a selector that picks a new page holding the answer scores as a miss. It undercounts
+  whichever arm leans on new pages — here, the embedding arm.
+
+**What it saves is small.** 0.6s a call (the selector is ~6s of a ~55s corridor, entry 171) and 31K
+input tokens — about $0.06 a corridor at `gpt-5.6-terra`'s list input price, uncached; what Personas
+bills per token is not known here. Today's 120 + 40 scores 84.4 now, not entry 195's 80.0 — the
+stores were rebuilt since — which is why it was re-run beside the new arm.
+
+**So item 67 closes without adopting anything, on the saving rather than the loss.** Corrected, the
+smaller embedding-ranked packet is roughly level with today's — between a small loss and no result
+— and buys 0.6s and a few cents for a new vendor and a second index to keep. The traveller query
+(which would need a live call) was not sent to the selector; it is the arm most likely to recover the
+traveller-specific pages above. K and the cuts were tuned on these same 21 corridors.
+
+**Other-language pages, checked from the picks without the oracle (the owner's question).** Of the
+pools' stored pages, a function-word test flags 491 unique pages as not English, and 149 of those
+carry a language marker in their address (`/ar/`, `/de/`, `/fr/`, …; UAE 56, Germany 32); the rest
+are mostly tables and forms in English. The embedding arm's shortlists held 53 flagged pages of 827
+shown, today's 96 of 2,346. Across five runs of 21 corridors the selector picked a flagged page 13
+times in the embedding arm and 11 in today's, and the only genuinely non-English one — service-public's
+"Coût du visa selon les pays", picked 3 of 5 by the embedding arm alone — states no fee; it links
+France-Visas' fee tool, which the oracle already names. So in these corridors embeddings found no
+answer in another language, and the owner's expectation holds: the pages a foreign traveller needs
+are published in English.
+
+**Left open, with what would reopen it.** A destination whose authority publishes visa guidance
+mainly in its own language, which none of the 21 corridors is. Focused crawling (item 67's follow-up) was conditional on a ranking
+win and is not pursued. `vectors.sqlite` (not committed) keeps the pools' vectors, and Voyage still
+has ~195M of its free tokens on the account.
 
 ---
 

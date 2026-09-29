@@ -30,7 +30,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 starts from `POST /visa-plans/stream`, and the plan arrives whole. **Whether any plan content may
 appear before validation is the owner's decision** — the candidates are in TODO item 57.
 
-**The owner's order, 2026-09-27:** item **67** (embeddings, on Voyage's free tokens), then 57, then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
+**The owner's order, 2026-09-27:** item **67** (embeddings, on Voyage's free tokens — closed 2026-09-29, entry 236), then 57, then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
 under *Next up*. Items 60 (Fast mode) and 65 (GPT-6 Sol) were removed. Hosting and Ofself (items 7,
 20, 55) can run alongside.
 
@@ -67,8 +67,9 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   has only been seen filling from the sandbox user and a fake Ofself. The grant expires 2026-10-17.
 - **OpenAI has been out of credit since 2026-09-16.** Nothing waits on it — model calls go through
   Personas (entry 188) — except `model_route: openai`. Item 67 (embeddings) moved to Voyage's free
-  tokens (entry 235); the owner has a key, and the scripts in `var/embed-replay-2026-09-28/` are
-  written and checked on fake data, not yet run.
+  tokens (entry 235) and **closed on 2026-09-29 without adopting anything** (entry 236): no gain at
+  the shipped cut, and a smaller embedding-ranked packet is roughly level for 0.6s saved. The
+  Voyage account has a card on it now, for the rate limit; the free tokens still cover it.
 
 ## Where things are
 
@@ -258,6 +259,13 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 
 36. **A correct "no visa required" can read as a thin corridor** in any metric that counts unanswered
     roles. The oracle records `not_applicable` only where a page answers `visa_decision` (entry 94).
+
+41. **The selection oracle predates the rebuild and misses mirror addresses (entry 236).** Curated
+    2026-08-27 to 09-04, it credits only pages it names, so a selector picking a page the 09-25
+    rebuild added scores a miss even when the page states the answer — half of item 67's measured
+    loss. And `--alias` does not credit a page picked at an address with no stored text, such as
+    `travel.state.gov` for the `adoption.state.gov` mirror the oracle names. Every selection grade
+    reads low by an unknown amount; compare arms run side by side, never a number on file.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (entry 58), **3** (entries 34,
 38), **4** (entries 56, 57), **7** (entry 152), **18** (entry 42), **21** and **22** (entry 157),

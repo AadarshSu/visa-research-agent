@@ -1,0 +1,236 @@
+canada_IN_GB: pool 832, with text 527
+canada_PH_PH: pool 825, with text 527
+czechia_IN_GB: pool 438, with text 330
+france_IN_GB: pool 866, with text 316
+france_PH_PH: pool 863, with text 312
+germany_IN_GB: pool 570, with text 447
+germany_PH_PH: pool 532, with text 418
+japan_IN_GB: pool 179, with text 114
+japan_PH_PH: pool 145, with text 84
+netherlands_IN_GB: pool 585, with text 274
+netherlands_PH_PH: pool 561, with text 260
+singapore_IN_GB: pool 513, with text 406
+singapore_PH_PH: pool 494, with text 397
+sweden_IN_GB: pool 170, with text 143
+sweden_PH_PH: pool 164, with text 137
+united-arab-emirates_IN_GB: pool 605, with text 443
+united-arab-emirates_PH_PH: pool 602, with text 438
+united-kingdom_IN_GB: pool 567, with text 475
+united-kingdom_PH_PH: pool 424, with text 337
+united-states_IN_GB: pool 596, with text 284
+united-states_PH_PH: pool 576, with text 282
+
+21 corridors, 6951 pages with stored text, 6584 unique chunks, 18,951,531 characters — roughly 4,737,882 to 6,317,177 tokens — and 192 role queries. Model voyage-4-large, 1024 dims.
+query: 192 texts, 96 already embedded, 96 to do
+  32 embedded, 848 tokens, ~40,416 tokens/min
+  64 embedded, 1,724 tokens, ~45,007 tokens/min
+  96 embedded, 2,600 tokens, ~47,093 tokens/min
+document: 6584 texts, 0 already embedded, 6584 to do
+  32 embedded, 12,934 tokens, ~589,858 tokens/min
+  64 embedded, 32,464 tokens, ~756,882 tokens/min
+  96 embedded, 55,754 tokens, ~838,279 tokens/min
+  128 embedded, 84,261 tokens, ~941,229 tokens/min
+  160 embedded, 101,894 tokens, ~945,059 tokens/min
+  192 embedded, 124,876 tokens, ~956,729 tokens/min
+  224 embedded, 139,435 tokens, ~975,169 tokens/min
+  256 embedded, 158,562 tokens, ~937,879 tokens/min
+  288 embedded, 171,493 tokens, ~911,865 tokens/min
+  320 embedded, 188,450 tokens, ~944,718 tokens/min
+  352 embedded, 201,133 tokens, ~960,238 tokens/min
+  384 embedded, 219,385 tokens, ~979,463 tokens/min
+  416 embedded, 242,034 tokens, ~979,166 tokens/min
+  448 embedded, 265,696 tokens, ~1,016,314 tokens/min
+  480 embedded, 295,123 tokens, ~1,066,154 tokens/min
+  512 embedded, 318,258 tokens, ~1,099,274 tokens/min
+  544 embedded, 340,187 tokens, ~1,128,642 tokens/min
+  576 embedded, 360,658 tokens, ~1,163,746 tokens/min
+  608 embedded, 379,578 tokens, ~1,142,528 tokens/min
+  640 embedded, 410,318 tokens, ~1,193,540 tokens/min
+  672 embedded, 438,795 tokens, ~1,232,839 tokens/min
+  704 embedded, 465,922 tokens, ~1,262,984 tokens/min
+  736 embedded, 490,868 tokens, ~1,298,007 tokens/min
+  768 embedded, 510,649 tokens, ~1,315,217 tokens/min
+  800 embedded, 533,587 tokens, ~1,341,756 tokens/min
+  832 embedded, 558,799 tokens, ~1,373,405 tokens/min
+  864 embedded, 578,174 tokens, ~1,387,708 tokens/min
+  896 embedded, 599,213 tokens, ~1,402,288 tokens/min
+  928 embedded, 621,929 tokens, ~1,427,712 tokens/min
+  960 embedded, 640,691 tokens, ~1,436,503 tokens/min
+  992 embedded, 661,651 tokens, ~1,456,739 tokens/min
+  1024 embedded, 673,759 tokens, ~1,459,034 tokens/min
+  1056 embedded, 690,056 tokens, ~1,467,116 tokens/min
+  1088 embedded, 716,642 tokens, ~1,491,763 tokens/min
+  1120 embedded, 735,227 tokens, ~1,504,235 tokens/min
+  1152 embedded, 757,449 tokens, ~1,520,482 tokens/min
+  1184 embedded, 783,479 tokens, ~1,544,799 tokens/min
+  1216 embedded, 809,560 tokens, ~1,567,440 tokens/min
+  1248 embedded, 832,331 tokens, ~1,581,062 tokens/min
+  1280 embedded, 853,983 tokens, ~1,596,333 tokens/min
+  1312 embedded, 877,636 tokens, ~1,614,929 tokens/min
+  1344 embedded, 898,686 tokens, ~1,625,218 tokens/min
+  1376 embedded, 925,091 tokens, ~1,643,371 tokens/min
+  1408 embedded, 949,554 tokens, ~1,656,912 tokens/min
+  1440 embedded, 975,697 tokens, ~1,672,263 tokens/min
+  1472 embedded, 1,002,798 tokens, ~1,692,670 tokens/min
+  1504 embedded, 1,027,601 tokens, ~1,705,170 tokens/min
+  1536 embedded, 1,059,408 tokens, ~1,730,314 tokens/min
+  1568 embedded, 1,085,424 tokens, ~1,745,451 tokens/min
+  1600 embedded, 1,109,653 tokens, ~1,757,729 tokens/min
+  1632 embedded, 1,131,947 tokens, ~1,768,767 tokens/min
+  1664 embedded, 1,156,644 tokens, ~1,781,193 tokens/min
+  1696 embedded, 1,179,623 tokens, ~1,792,141 tokens/min
+  1728 embedded, 1,201,383 tokens, ~1,799,676 tokens/min
+  1760 embedded, 1,223,971 tokens, ~1,810,834 tokens/min
+  1792 embedded, 1,248,956 tokens, ~1,822,964 tokens/min
+  1824 embedded, 1,276,226 tokens, ~1,832,956 tokens/min
+  1856 embedded, 1,301,581 tokens, ~1,846,987 tokens/min
+  1888 embedded, 1,331,745 tokens, ~1,863,307 tokens/min
+  1920 embedded, 1,361,884 tokens, ~1,879,882 tokens/min
+  1952 embedded, 1,391,986 tokens, ~1,893,745 tokens/min
+  1984 embedded, 1,420,294 tokens, ~1,908,618 tokens/min
+  2016 embedded, 1,452,162 tokens, ~1,925,995 tokens/min
+  2048 embedded, 1,474,942 tokens, ~1,933,084 tokens/min
+  2080 embedded, 1,500,506 tokens, ~1,930,314 tokens/min
+  2112 embedded, 1,523,425 tokens, ~1,939,692 tokens/min
+  2144 embedded, 1,545,430 tokens, ~1,945,242 tokens/min
+  2176 embedded, 1,567,072 tokens, ~1,938,677 tokens/min
+  2208 embedded, 1,588,578 tokens, ~1,940,213 tokens/min
+  2240 embedded, 1,606,732 tokens, ~1,938,121 tokens/min
+  2272 embedded, 1,627,187 tokens, ~1,936,243 tokens/min
+  2304 embedded, 1,647,327 tokens, ~1,940,310 tokens/min
+  2336 embedded, 1,670,979 tokens, ~1,947,411 tokens/min
+  2368 embedded, 1,691,199 tokens, ~1,951,569 tokens/min
+  2400 embedded, 1,710,761 tokens, ~1,955,545 tokens/min
+  2432 embedded, 1,727,782 tokens, ~1,956,532 tokens/min
+  2464 embedded, 1,749,222 tokens, ~1,957,068 tokens/min
+  2496 embedded, 1,767,737 tokens, ~1,958,955 tokens/min
+  2528 embedded, 1,789,449 tokens, ~1,964,059 tokens/min
+  2560 embedded, 1,811,507 tokens, ~1,969,327 tokens/min
+  2592 embedded, 1,834,654 tokens, ~1,974,967 tokens/min
+  2624 embedded, 1,850,791 tokens, ~1,972,842 tokens/min
+  2656 embedded, 1,870,395 tokens, ~1,976,276 tokens/min
+  2688 embedded, 1,901,396 tokens, ~1,987,817 tokens/min
+  2720 embedded, 1,922,012 tokens, ~1,991,194 tokens/min
+  2752 embedded, 1,946,848 tokens, ~1,998,224 tokens/min
+  2784 embedded, 1,978,086 tokens, ~2,009,650 tokens/min
+  2816 embedded, 1,996,880 tokens, ~2,010,896 tokens/min
+  2848 embedded, 2,017,321 tokens, ~2,013,742 tokens/min
+  2880 embedded, 2,045,787 tokens, ~2,024,612 tokens/min
+  2912 embedded, 2,065,452 tokens, ~2,026,100 tokens/min
+  2944 embedded, 2,086,736 tokens, ~2,029,299 tokens/min
+  2976 embedded, 2,110,395 tokens, ~2,033,406 tokens/min
+  3008 embedded, 2,132,595 tokens, ~2,036,980 tokens/min
+  3040 embedded, 2,151,423 tokens, ~2,038,338 tokens/min
+  3072 embedded, 2,178,580 tokens, ~2,046,897 tokens/min
+  3104 embedded, 2,204,840 tokens, ~2,050,578 tokens/min
+  3136 embedded, 2,221,893 tokens, ~2,050,009 tokens/min
+  3168 embedded, 2,252,381 tokens, ~2,060,371 tokens/min
+  3200 embedded, 2,274,702 tokens, ~2,063,293 tokens/min
+  3232 embedded, 2,300,119 tokens, ~2,070,058 tokens/min
+  3264 embedded, 2,320,341 tokens, ~2,071,351 tokens/min
+  3296 embedded, 2,341,289 tokens, ~2,073,950 tokens/min
+  3328 embedded, 2,358,320 tokens, ~2,072,544 tokens/min
+  3360 embedded, 2,380,533 tokens, ~2,076,119 tokens/min
+  3392 embedded, 2,398,296 tokens, ~2,075,405 tokens/min
+  3424 embedded, 2,416,588 tokens, ~2,076,140 tokens/min
+  3456 embedded, 2,433,857 tokens, ~2,076,088 tokens/min
+  3488 embedded, 2,455,274 tokens, ~2,077,339 tokens/min
+  3520 embedded, 2,474,501 tokens, ~2,079,837 tokens/min
+  3552 embedded, 2,487,923 tokens, ~2,075,096 tokens/min
+  3584 embedded, 2,506,525 tokens, ~2,074,655 tokens/min
+  3616 embedded, 2,527,959 tokens, ~2,077,427 tokens/min
+  3648 embedded, 2,550,596 tokens, ~2,081,598 tokens/min
+  3680 embedded, 2,569,142 tokens, ~2,080,650 tokens/min
+  3712 embedded, 2,585,979 tokens, ~2,072,700 tokens/min
+  3744 embedded, 2,600,244 tokens, ~2,071,493 tokens/min
+  3776 embedded, 2,618,430 tokens, ~2,070,207 tokens/min
+  3808 embedded, 2,636,163 tokens, ~2,069,013 tokens/min
+  3840 embedded, 2,653,095 tokens, ~2,063,100 tokens/min
+  3872 embedded, 2,669,456 tokens, ~2,063,664 tokens/min
+  3904 embedded, 2,683,210 tokens, ~2,060,182 tokens/min
+  3936 embedded, 2,696,959 tokens, ~2,057,270 tokens/min
+  3968 embedded, 2,711,402 tokens, ~2,055,362 tokens/min
+  4000 embedded, 2,723,441 tokens, ~2,052,052 tokens/min
+  4032 embedded, 2,736,121 tokens, ~2,049,319 tokens/min
+  4064 embedded, 2,747,988 tokens, ~2,045,915 tokens/min
+  4096 embedded, 2,767,834 tokens, ~2,048,056 tokens/min
+  4128 embedded, 2,784,654 tokens, ~2,048,597 tokens/min
+  4160 embedded, 2,807,431 tokens, ~2,052,431 tokens/min
+  4192 embedded, 2,831,493 tokens, ~2,057,456 tokens/min
+  4224 embedded, 2,856,454 tokens, ~2,062,535 tokens/min
+  4256 embedded, 2,879,248 tokens, ~2,065,496 tokens/min
+  4288 embedded, 2,899,919 tokens, ~2,068,466 tokens/min
+  4320 embedded, 2,923,291 tokens, ~2,068,993 tokens/min
+  4352 embedded, 2,944,577 tokens, ~2,071,046 tokens/min
+  4384 embedded, 2,966,335 tokens, ~2,072,177 tokens/min
+  4416 embedded, 2,988,080 tokens, ~2,072,236 tokens/min
+  4448 embedded, 3,010,158 tokens, ~2,075,433 tokens/min
+  4480 embedded, 3,036,268 tokens, ~2,079,699 tokens/min
+  4512 embedded, 3,057,452 tokens, ~2,081,640 tokens/min
+  4544 embedded, 3,077,460 tokens, ~2,082,220 tokens/min
+  4576 embedded, 3,102,456 tokens, ~2,086,543 tokens/min
+  4608 embedded, 3,122,861 tokens, ~2,087,661 tokens/min
+  4640 embedded, 3,143,360 tokens, ~2,089,157 tokens/min
+  4672 embedded, 3,164,147 tokens, ~2,091,405 tokens/min
+  4704 embedded, 3,183,948 tokens, ~2,092,247 tokens/min
+  4736 embedded, 3,205,917 tokens, ~2,089,436 tokens/min
+  4768 embedded, 3,229,973 tokens, ~2,092,557 tokens/min
+  4800 embedded, 3,259,157 tokens, ~2,098,625 tokens/min
+  4832 embedded, 3,278,971 tokens, ~2,099,475 tokens/min
+  4864 embedded, 3,296,091 tokens, ~2,098,135 tokens/min
+  4896 embedded, 3,316,733 tokens, ~2,099,677 tokens/min
+  4928 embedded, 3,338,539 tokens, ~2,099,220 tokens/min
+  4960 embedded, 3,356,595 tokens, ~2,097,975 tokens/min
+  4992 embedded, 3,382,363 tokens, ~2,100,483 tokens/min
+  5024 embedded, 3,406,578 tokens, ~2,103,900 tokens/min
+  5056 embedded, 3,430,491 tokens, ~2,092,839 tokens/min
+  5088 embedded, 3,453,999 tokens, ~2,094,971 tokens/min
+  5120 embedded, 3,489,810 tokens, ~2,104,642 tokens/min
+  5152 embedded, 3,525,372 tokens, ~2,113,322 tokens/min
+  5184 embedded, 3,558,714 tokens, ~2,120,732 tokens/min
+  5216 embedded, 3,579,767 tokens, ~2,122,165 tokens/min
+  5248 embedded, 3,599,755 tokens, ~2,123,100 tokens/min
+  5280 embedded, 3,620,398 tokens, ~2,122,429 tokens/min
+  5312 embedded, 3,645,107 tokens, ~2,125,181 tokens/min
+  5344 embedded, 3,668,225 tokens, ~2,126,993 tokens/min
+  5376 embedded, 3,687,580 tokens, ~2,126,747 tokens/min
+  5408 embedded, 3,702,920 tokens, ~2,126,144 tokens/min
+  5440 embedded, 3,721,621 tokens, ~2,125,010 tokens/min
+  5472 embedded, 3,740,585 tokens, ~2,124,225 tokens/min
+  5504 embedded, 3,758,304 tokens, ~2,124,662 tokens/min
+  5536 embedded, 3,779,864 tokens, ~2,126,692 tokens/min
+  5568 embedded, 3,801,321 tokens, ~2,129,248 tokens/min
+  5600 embedded, 3,821,396 tokens, ~2,129,409 tokens/min
+  5632 embedded, 3,842,344 tokens, ~2,129,658 tokens/min
+  5664 embedded, 3,863,748 tokens, ~2,131,678 tokens/min
+  5696 embedded, 3,886,554 tokens, ~2,134,288 tokens/min
+  5728 embedded, 3,911,939 tokens, ~2,137,187 tokens/min
+  5760 embedded, 3,934,367 tokens, ~2,139,907 tokens/min
+  5792 embedded, 3,951,657 tokens, ~2,139,208 tokens/min
+  5824 embedded, 3,975,258 tokens, ~2,122,604 tokens/min
+  5856 embedded, 3,995,793 tokens, ~2,123,730 tokens/min
+  5888 embedded, 4,019,658 tokens, ~2,125,229 tokens/min
+  5920 embedded, 4,038,405 tokens, ~2,124,989 tokens/min
+  5952 embedded, 4,061,335 tokens, ~2,125,182 tokens/min
+  5984 embedded, 4,088,375 tokens, ~2,129,972 tokens/min
+  6016 embedded, 4,111,392 tokens, ~2,131,600 tokens/min
+  6048 embedded, 4,135,230 tokens, ~2,134,156 tokens/min
+  6080 embedded, 4,158,544 tokens, ~2,136,149 tokens/min
+  6112 embedded, 4,179,338 tokens, ~2,137,147 tokens/min
+  6144 embedded, 4,198,000 tokens, ~2,131,357 tokens/min
+  6176 embedded, 4,227,030 tokens, ~2,136,735 tokens/min
+  6208 embedded, 4,256,044 tokens, ~2,141,492 tokens/min
+  6240 embedded, 4,282,681 tokens, ~2,143,237 tokens/min
+  6272 embedded, 4,304,500 tokens, ~2,144,806 tokens/min
+  6304 embedded, 4,328,107 tokens, ~2,147,111 tokens/min
+  6336 embedded, 4,348,618 tokens, ~2,146,779 tokens/min
+  6368 embedded, 4,381,884 tokens, ~2,153,807 tokens/min
+  6400 embedded, 4,406,672 tokens, ~2,156,004 tokens/min
+  6432 embedded, 4,431,132 tokens, ~2,157,350 tokens/min
+  6464 embedded, 4,454,740 tokens, ~2,159,046 tokens/min
+  6496 embedded, 4,478,081 tokens, ~2,161,272 tokens/min
+  6528 embedded, 4,506,077 tokens, ~2,166,246 tokens/min
+  6560 embedded, 4,533,592 tokens, ~2,169,428 tokens/min
+  6584 embedded, 4,565,280 tokens, ~2,175,474 tokens/min
+
+done: 4,567,880 tokens used this run. Vectors in /Users/aadarsh/Documents/Visa Research Agent/var/embed-replay-2026-09-28/vectors.sqlite

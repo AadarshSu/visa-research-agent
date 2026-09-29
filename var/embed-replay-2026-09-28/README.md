@@ -20,4 +20,12 @@ this machine. Embeddings are ranking input only; nothing here changes what a pla
    the embedding arm rather than comparing with the recorded 80.0: `var/pagetext` has been rebuilt
    since then.
 
+5. `sweep.py` — no network, no model: the same arms at smaller cuts (top 20–120 plus 40 blind).
+
 Under ~3 roles of difference is no result (item 67).
+
+**Run 2026-09-29 (DECISIONS entry 236):** `embed.log`, `rank.log`, `sweep.log`, and stage 2's
+`stage2.jsonl`, `stage2.log`, `stage2_grade.log` beside this file. An `emb_…_c<N>` variant shows the
+top N instead of 120, plus the 40 blind.
+Voyage needs a payment method on the account for a usable rate limit; the free tokens still apply,
+but not to its Batch API.
