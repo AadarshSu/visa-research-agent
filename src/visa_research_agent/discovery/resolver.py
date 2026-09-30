@@ -730,6 +730,7 @@ class CorridorResolver:
         text_scoring_coverage_bar: float = DEFAULT_TEXT_COVERAGE_BAR,
         selection_shown: int = DEFAULT_SELECTION_SHOWN,
         selection_blind: int = DEFAULT_SELECTION_BLIND,
+        selection_boost_searched: bool = False,
         selector: CandidateSelector | None = None,
         pinned: list[str] | None = None,
         always_read: list[tuple[PageLink, str]] | None = None,
@@ -772,6 +773,9 @@ class CorridorResolver:
         # with no stored text on their links alone (entries 194, 195).
         self.selection_shown = selection_shown
         self.selection_blind = selection_blind
+        # Whether pages live search returned are fused in as a third ranking (entries 243–245).
+        # Off: adopting it, with a shorter list, is the owner's call (TODO item 78).
+        self.selection_boost_searched = selection_boost_searched
         # Chooses what to fetch by reading stored page text, replacing `_shortlist` as the recall
         # gate. Optional and off unless one is supplied: without it the corridor behaves exactly as
         # it did before, which keeps the heuristic path as the regression baseline.
@@ -1277,6 +1281,7 @@ class CorridorResolver:
             lambda url: url in held,
             shown=self.selection_shown,
             blind=self.selection_blind,
+            boost_searched=self.selection_boost_searched,
         )
         taken: set[str] = set()
         by_id: dict[str, CandidatePage] = {}
@@ -1327,9 +1332,10 @@ class CorridorResolver:
             if admitted_shown
             else ""
         )
+        boosted = " and on search having returned them" if self.selection_boost_searched else ""
         withheld_note = (
             f"; {len(withheld)} of the {len(pool)} were not shown to it — it saw the "
-            f"{self.selection_shown} ranked likeliest on their links and stored text, and "
+            f"{self.selection_shown} ranked likeliest on their links and stored text{boosted}, and "
             f"{len(offered) - self.selection_shown} more with no stored text on their links "
             "alone, because a longer list chose worse (entry 194)"
             if withheld

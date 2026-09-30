@@ -105,6 +105,7 @@ not — and stored text ranks, it never speaks).
 ### Finding the right page: ranking, recall, judgement
 | | |
 | --- | --- |
+| [246](#246-live-the-boosted-60--40-shortlist-gives-the-same-decisions-and-loses-frances-processing-time-for-one-traveller) | **Measured live: the boosted 60 + 40 shortlist gives the same decisions and checklists, and loses France's Filipino processing time** — ten corridors, three runs an arm: decisions 30 of 30 and checklists 26 of 30 in both, 159 roles against 163, on 44% less selector input; `selection_boost_searched` is in the code and off; **the owner kept 120 + 40** |
 | [245](#245-the-stored-text-score-credits-the-travellers-own-post-and-a-60--40-shortlist-becomes-level) | **Shipped: the stored-text score credits the traveller's own post** — the nationality bonus stops reading a URL's host, the post serving the traveller is credited and another post penalised, and a decision stops earning the tourism bonus; at today's cut the selector finds every decision and checklist in every run (127.0 of 131 against 126.6), and with the search boost a 60 + 40 shortlist is level (125.8) on 45% less input |
 | [244](#244-recording-every-page-search-returned-makes-the-boost-strong-offline-and-the-selector-still-loses-two-roles-a-run) | **Measured: recording every page search returned makes the boost strong offline, and the selector still loses two roles a run** — `CandidatePage.searched` added; the boost keeps 129 of 131 answers at a 40 cut (today 109, embeddings 128), but the selector scores 124.2–124.4 against 126.6 on 45–60% less input; and the misses trace to the stored-text bonuses, not missing keywords |
 | [243](#243-a-boost-for-search-found-pages-recovers-most-of-what-a-smaller-cut-loses-without-embeddings) | **Measured: a boost for search-found pages recovers most of what a smaller cut loses, without embeddings** — search as a third fused ranking keeps 100 of 111 answers at a 40 cut against today's 91 and embeddings' 109, and 19 of 20 in the non-English corridors, beating embeddings there; the selector has not been run on it |
@@ -284,6 +285,98 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 246. Live, the boosted 60 + 40 shortlist gives the same decisions and loses France's processing time for one traveller
+
+**2026-09-30 · the owner: "work on item 78".** TODO item 78 asked for a live comparison over several
+runs before the decision. Tools and raw runs: `var/item78-2026-09-30/` (`compare.sh`, `arm.py`,
+`grade.py`, `compare.log`, `grade.log`).
+
+**In the code, and off.** `fusion_order` and `shown_to_selector` take `boost_searched`, and
+`CorridorResolver` takes `selection_boost_searched`: per role, every page live search returned
+(`CandidatePage.searched`), by that role's link score, fused as a third ranking with no weight.
+Default `False`, and the shortlist stays 120 + 40 — nothing a traveller gets has changed. On the 27
+captured corridors it gives the order entries 244 and 245 measured, with and without the boost (54
+orders, 0 differ).
+
+**The run.** Ten corridors — Germany, France, Czechia, Japan, the Netherlands and Canada `IN/GB`;
+Germany, France, Singapore and the United Kingdom `PH/PH` — three runs in each arm, through the
+path `POST /visa-plans` takes (item 70's `run.py`), one at a time through Personas. Arms: today's
+120 + 40, and 60 + 40 with the boost. Each run had empty corridor and plan folders; each arm its own
+copy of the corpus; the evidence cache shared and cleared for neither (entry 136), the arm going
+first alternating by round.
+
+| 30 runs an arm | today: 120 + 40 | boosted: 60 + 40 |
+| --- | --- | --- |
+| plans answered | 30 | 30 |
+| decision stated / `verified` | 28 / 23 | 28 / 22 |
+| roles filled, of 180 | 163 | 159 |
+| — `visa_decision` | 30 | 30 |
+| — `document_checklist` | 26 | 26 |
+| — `application_route` / `fees` | 27 / 25 | 27 / 25 |
+| — `processing_times` | 27 | 24 |
+| — `general_entry` | 28 | 27 |
+| selector input, mean tokens | 54.3K | 30.6K (−44%) |
+| selector seconds, mean | 6.0 | 5.6 |
+| request seconds, median | 44.4 | 41.6 |
+
+- **The decision was the same in every corridor**, and the same page or its twin address carried it
+  (Canada's boosted arm read `cic.gc.ca/english/visit/visas.asp` where today's read `canada.ca`'s
+  two pages; both `verified`, visa required). The United Kingdom `PH/PH` left the decision open in
+  2 of 3 runs in **both** arms — entry 204's kind of flip, not the shortlist's.
+- **The one real loss is France `PH/PH`'s processing time: 3 of 3 against 0 of 3.** Its page,
+  `france-visas.gouv.fr/en/la-demarche`, was not returned by search and was withheld from the
+  selector in all six boosted France runs. For `IN/GB` both arms filled the role from
+  `…/en/royaume-uni` in every run, so that traveller lost nothing. That run of today's arm which
+  read `la-demarche` also designated it the checklist once, and one France `PH/PH` run was
+  `verified` in today's arm and none in the boosted one.
+- The fourth role of the four is Germany `IN/GB`'s `general_entry`, 1 of 3 against 0 of 3 — inside
+  what identical runs differ by (entry 144).
+- **`general_entry` is filled from a different page in four corridors** — Canada, the Netherlands,
+  Singapore and the United Kingdom `PH/PH` (`grade.log` lists each). Both arms fill the role;
+  whether the boosted arm's page is as good was not read.
+- **Seconds:** the selector call is 0.4s faster. The boosted arm's mean request time (54.1s against
+  46.0s) is one 383s France run, the rest level; read the medians.
+- **Dollars:** at entry 159's prices selection was 63% of a $0.251 corridor, so 44% less selector
+  input is of the order of 6–7 cents a fresh corridor. Not re-priced on Personas, which bills
+  Ofself's account.
+
+**What this does and does not show.** It agrees with the replay (entry 245): level on decisions and
+checklists, about one role in forty behind, and the loss is a named page rather than noise. Thirty
+runs an arm over ten corridors, several chosen because the replay had shown a difference there;
+"filled" is the adjudicator's credit, not a check that the page is right (entry 68).
+
+**Why `la-demarche` falls, and a vocabulary fix that was measured and not shipped** (`where.py`,
+`times.py`, `noise.py`, `after.log`). The page is France's general "how to apply" page. It ranks
+for `visa_decision` only (16th–18th by text, ~90th by link) and for `processing_times` not at all:
+it says "the decision-making time on visa applications is usually 15 days", and the lexicon has no
+such phrase. On the captures it is 22nd and 27th in today's order and 58th and 67th boosted, each
+search-returned page having moved ahead of it; live, search returned more pages (36–52 against
+26–33), which is what put it past 60. Of the oracle's 51 processing-time answer pages with stored
+text, 17 score nothing for the role — France's, GOV.UK's Standard Visitor page ("How long it takes
+to get a decision"), Dubai's service pages ("Expected Completion Time"), Uruguay's in Spanish.
+
+Adding `decision-making time`, `how long it takes` and `completion time` was tried: 46 of the 51
+then score, **and nothing else improves.** `la-demarche` ranks 36th of 36 for the role — it scores
+on all six roles, so the breadth dampening treats it as the directory it is — and its position in
+either order does not move. 269 more stored pages score the role, and today's order at a 40 cut
+keeps 112 of 131 roles where it kept 115 (60 and 120 unchanged; boosted unchanged at every cut).
+Reverted. The page is an answer because France publishes the time nowhere narrower, which a
+keyword cannot say; what keeps it is the size of the cut.
+
+**Embeddings would not have kept it either** (checked on the vectors entry 242 kept). They do see
+what keywords cannot — `la-demarche` ranks 15th of ~315 for `processing_times` — but a page 15th
+for its best role is 76th in a link + embedding order, and 102nd–111th with the boost. Entry 242's
+conclusion stands for this case.
+
+**The owner's decision: "let's stick with current 120 + 40 and close this."** The saving is paid for
+with one traveller's processing time on one destination, and correctness comes before optimisation
+(entry 147). TODO item 78 closes. `selection_boost_searched` stays in the code, off and tested.
+**What would reopen it:** selector input cost binding (entry 242's second condition); the arm to run
+first is 100 + 40 with the boost, not run live — on the live search counts `la-demarche` would sit
+near 60 for `PH/PH` and 75–80 for `IN/GB`, so 100 is the first cut with room.
 
 ---
 

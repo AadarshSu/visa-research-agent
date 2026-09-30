@@ -328,7 +328,10 @@ def admitted_on_text(
 
 
 def fusion_order(
-    pool: Sequence[CandidatePage], text_scores: Mapping[str, RoleScores]
+    pool: Sequence[CandidatePage],
+    text_scores: Mapping[str, RoleScores],
+    *,
+    boost_searched: bool = False,
 ) -> list[CandidatePage]:
     """The pool, likeliest first: per role, reciprocal-rank fusion of link and stored-text rank,
     then the roles taken in turn so every role's best candidates come before any role's tenth.
@@ -338,10 +341,18 @@ def fusion_order(
     text push link-scored pages out. A page scoring nothing for any role on either comes last, in
     pool order. Ties break by address, so the order is the same on every run.
 
+    **`boost_searched` fuses a third ranking beside the two** (entries 243–245): per role, the pages
+    live search returned for this traveller, by that role's link score and then address — every one
+    of them, whatever it scores, because being returned is the signal. Search-found pages are 7% of
+    a pool and 42% of the oracle's answers, and the link and text rankings do not know where a page
+    came from. It is a ranking like the others, with no weight. Off unless the caller asks: whether
+    the selector is shown a shorter list on the strength of it is the owner's call, TODO item 78.
+
     It decides who is shown, never what anyone is told: the scores are withheld from the packet as
     they always were, and entry 78's rule is untouched.
     """
 
+    searched = [c for c in pool if c.searched] if boost_searched else []
     per_role: dict[str, list[str]] = {}
     for role in ROLE_ORDER:
         fused: dict[str, float] = {}
@@ -358,7 +369,8 @@ def fusion_order(
             ),
             key=lambda c: (-text_scores[c.link.url].score_for(role), c.link.url),
         )
-        for ranking in (by_link, by_text):
+        by_search = sorted(searched, key=lambda c: (-c.link_scores.score_for(role), c.link.url))
+        for ranking in (by_link, by_text, by_search):
             for rank, candidate in enumerate(ranking, start=1):
                 url = candidate.link.url
                 fused[url] = fused.get(url, 0.0) + 1 / (FUSION_RANK_CONSTANT + rank)
@@ -384,6 +396,7 @@ def shown_to_selector(
     *,
     shown: int = DEFAULT_SELECTION_SHOWN,
     blind: int = DEFAULT_SELECTION_BLIND,
+    boost_searched: bool = False,
 ) -> tuple[list[CandidatePage], list[CandidatePage]]:
     """Which of the pool the selector sees, in the order it sees them, and which it does not.
 
@@ -399,7 +412,7 @@ def shown_to_selector(
     withheld — nothing is dropped silently.
     """
 
-    ordered = fusion_order(pool, text_scores)
+    ordered = fusion_order(pool, text_scores, boost_searched=boost_searched)
     if len(ordered) <= shown:
         return ordered, []
     rest = ordered[shown:]

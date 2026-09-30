@@ -7,7 +7,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-27 — update this line when you touch the handoff |
+| **Last updated** | 2026-09-30 — update this line when you touch the handoff |
 | **Tests** | 1,018 in a checkout without `var/`: 1,015 passing and 3 skipped (the opt-in browser test, and two that need the corpora), run 2026-09-27; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
@@ -80,7 +80,11 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
   nationality and purpose bonuses — TODO item 77. `CandidatePage.searched` now records every page
   search returned. **Item 77 shipped (entry 245):** the stored-text score now credits the
   traveller's own post; at today's cut the selector finds every decision and checklist in every
-  run, and with the boost a 60 + 40 shortlist is level on 45% less input — adopting that is item 78.
+  run, and with the boost a 60 + 40 shortlist is level on 45% less input.
+  **Item 78's live comparison ran on 2026-09-30 (entry 246):** the boost is in the code and off;
+  over ten corridors, three runs an arm, 60 + 40 with it gave the same decisions and checklists on
+  44% less selector input and lost France `PH/PH`'s processing time in every run. **The owner
+  kept 120 + 40 and closed the item**; what would reopen it is in the entry.
   The Voyage account has a card on it now, for the rate limit; by this repository's count about
   171M of its free 200M tokens are left.
 

@@ -39,8 +39,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | --- | --- | --- |
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
-| **Next up** | 78. Decide whether to show the selector 60 + 40 pages with the search boost | `soon` |
-|  | 79. Score pages fetched live with the post-aware stored-text fixes | `soon` |
+| **Next up** | 79. Score pages fetched live with the post-aware stored-text fixes | `soon` |
 |  | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -118,30 +117,6 @@ in (entry 241). Where no English version exists, that loses the answer: check th
 ---
 
 ## Next up
-
-### 78. Decide whether to show the selector 60 + 40 pages with the search boost — `soon`, the owner's call
-
-**Measured (entry 245):** with the stored-text score crediting the traveller's own post (shipped)
-and pages live search returned fused as a third ranking (`CandidatePage.searched`, entry 244), a
-60 + 40 shortlist scores 125.8 of 131 roles a run against today's 127.0 at 120 + 40 — 1.2 behind,
-under the 3-role bar — with 43.8 of 44 decisions and checklists, on 28.2K input tokens against
-51.0K. Still lost: France's Indian processing time. It changes what the selector is shown, so a
-live comparison over several runs comes first (entries 144, 145). Shipping it means: a `search`
-ranking in `fusion_order` (per role, the searched pages by link score) and a smaller shortlist size.
-
-### 79. Score pages fetched live with the post-aware stored-text fixes — `soon`
-
-**The owner, 2026-09-30.** Entry 245's fixes to `score_body` — nationality from the title and path
-and never the host, the traveller's own post credited and another post penalised, no purpose bonus
-on the decision — apply only when the caller passes `residence`, which stored-text scoring does and
-the fetched-body call in `CorridorResolver` (`fetched_candidate.body_scores = score_body(...)`)
-does not. So a page is scored one way before it is fetched and another after.
-
-**Do:** pass `residence` and `other_posts` there too. **Measure first:** what reads `body_scores`
-after the fetch (`combined`, `rank_for_role`, the shortlist's heuristic path) and whether any
-recorded corridor's roles or refusals move — the recall logs replay it without a network. The
-adjudicator, not this score, fills roles on the model route, so the effect may be nil; say so if it
-is.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
@@ -492,6 +467,7 @@ The reasoning is in the DECISIONS entry; this is the index. Code comments cite s
 
 | Was | Done | Entry | What building it found |
 | --- | --- | --- | --- |
+| 78. Decide whether to show the selector 60 + 40 pages with the search boost | 09-30 | 246 | Closed, not adopted: live over ten corridors the boosted 60 + 40 gave the same decisions and checklists on 44% less selector input and lost France `PH/PH`'s processing time in every run; a vocabulary fix and embeddings were both checked and neither keeps the page. The owner kept 120 + 40; the boost stays in the code, off |
 | 77. Make the stored-text score credit the traveller's own post | 09-30 | 244, 245 | Shipped: nationality from title and path only, a residence credit and the own/other-post signals on post roles, no purpose bonus on the decision. At today's cut every decision and checklist in every run (127.0 against 126.6); with the search boost 60 + 40 becomes level (item 78) |
 | 76. Test the search boost with the selector | 09-30 | 243, 244 | Offline 129 of 131 at a 40 cut once `CandidatePage.searched` records every page search returned; the selector scores 124.2–124.4 against 126.6 on 45–60% less input — corpus-only answers are displaced. Not adopted; the cause is item 77 |
 | 75. Decide whether to adopt the embedding-ordered shortlist | 09-29 | 239–242 | **Not adopted.** Level on accuracy across 27 corridors in four languages at half the selector's input, but no answer changed; the saving (cents, 0.6–2s) does not pay for a vendor and a second index. Reopen at expansion to a destination that publishes only in its own language, if selector input cost binds, or if answers fall past the 120 cut |

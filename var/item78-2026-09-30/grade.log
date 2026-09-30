@@ -1,0 +1,177 @@
+
+## canada/IN/GB
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 42877 tok 7.407s total 53.3s
+  today    run 2: resolved/answered visa_required=True verified roles 6/6 select 42889 tok 6.203s total 47.1s
+  today    run 3: resolved/answered visa_required=True verified roles 6/6 select 42889 tok 5.107s total 42.9s
+  boost60  run 1: resolved/answered visa_required=True verified roles 6/6 select 27982 tok 5.981s total 51.5s
+  boost60  run 2: resolved/answered visa_required=True verified roles 6/6 select 27313 tok 6.059s total 47.2s
+  boost60  run 3: resolved/answered visa_required=True verified roles 6/6 select 27313 tok 5.227s total 52.3s
+
+## czechia/IN/GB
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 57371 tok 9.33s total 45.3s
+  today    run 2: resolved/answered visa_required=True verified roles 6/6 select 57371 tok 7.072s total 39.6s
+  today    run 3: resolved/answered visa_required=True verified roles 6/6 select 57371 tok 6.953s total 39.1s
+  boost60  run 1: resolved/answered visa_required=True verified roles 6/6 select 34217 tok 4.853s total 38.9s
+  boost60  run 2: resolved/answered visa_required=True verified roles 6/6 select 34217 tok 5.187s total 36.3s
+  boost60  run 3: resolved/answered visa_required=True verified roles 6/6 select 34217 tok 5.366s total 38.6s
+
+## france/IN/GB
+  today    run 1: resolved/answered visa_required=True partial roles 6/6 select 52545 tok 6.108s total 91.4s
+  today    run 2: resolved/answered visa_required=True partial roles 5/6 select 52513 tok 5.057s total 55.0s
+  today    run 3: resolved/answered visa_required=True partial roles 6/6 select 52510 tok 3.829s total 56.6s
+  boost60  run 1: resolved/answered visa_required=True partial roles 5/6 select 30213 tok 5.625s total 382.7s
+  boost60  run 2: resolved/answered visa_required=True partial roles 6/6 select 30643 tok 4.777s total 78.7s
+  boost60  run 3: resolved/answered visa_required=True partial roles 5/6 select 30640 tok 4.498s total 51.8s
+
+## france/PH/PH
+  today    run 1: resolved/answered visa_required=True partial roles 6/6 select 50762 tok 5.662s total 80.4s
+  today    run 2: resolved/answered visa_required=True verified roles 6/6 select 50762 tok 6.154s total 64.7s
+  today    run 3: resolved/answered visa_required=True partial roles 4/6 select 50762 tok 5.953s total 46.5s
+  boost60  run 1: resolved/answered visa_required=True partial roles 4/6 select 29542 tok 5.938s total 59.6s
+  boost60  run 2: resolved/answered visa_required=True partial roles 5/6 select 29578 tok 7.044s total 51.9s
+  boost60  run 3: resolved/answered visa_required=True partial roles 5/6 select 29578 tok 5.288s total 51.4s
+
+## germany/IN/GB
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 56985 tok 8.6s total 57.1s
+  today    run 2: resolved/answered visa_required=True verified roles 5/6 select 56878 tok 5.694s total 46.6s
+  today    run 3: resolved/answered visa_required=True verified roles 5/6 select 56878 tok 8.64s total 48.6s
+  boost60  run 1: resolved/answered visa_required=True verified roles 5/6 select 31881 tok 4.775s total 40.8s
+  boost60  run 2: resolved/answered visa_required=True verified roles 5/6 select 31786 tok 5.101s total 42.7s
+  boost60  run 3: resolved/answered visa_required=True verified roles 5/6 select 31786 tok 6.873s total 43.8s
+
+## germany/PH/PH
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 56534 tok 5.305s total 35.3s
+  today    run 2: resolved/answered visa_required=True verified roles 6/6 select 56534 tok 4.831s total 34.3s
+  today    run 3: resolved/answered visa_required=True verified roles 6/6 select 56534 tok 6.651s total 45.4s
+  boost60  run 1: resolved/answered visa_required=True verified roles 6/6 select 29629 tok 4.02s total 33.8s
+  boost60  run 2: resolved/answered visa_required=True verified roles 6/6 select 29629 tok 3.493s total 35.6s
+  boost60  run 3: resolved/answered visa_required=True verified roles 6/6 select 29629 tok 5.936s total 38.4s
+
+## japan/IN/GB
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 59178 tok 6.785s total 42.3s
+  today    run 2: resolved/answered visa_required=True verified roles 6/6 select 59178 tok 6.341s total 35.5s
+  today    run 3: resolved/answered visa_required=True verified roles 6/6 select 59178 tok 7.821s total 44.0s
+  boost60  run 1: resolved/answered visa_required=True verified roles 6/6 select 34898 tok 18.312s total 50.7s
+  boost60  run 2: resolved/answered visa_required=True verified roles 6/6 select 34898 tok 6.396s total 42.1s
+  boost60  run 3: resolved/answered visa_required=True verified roles 6/6 select 34898 tok 5.443s total 42.8s
+
+## netherlands/IN/GB
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 57023 tok 4.771s total 33.9s
+  today    run 2: resolved/answered visa_required=True verified roles 6/6 select 57023 tok 3.792s total 35.4s
+  today    run 3: resolved/answered visa_required=True verified roles 6/6 select 57023 tok 4.192s total 37.3s
+  boost60  run 1: resolved/answered visa_required=True verified roles 6/6 select 30584 tok 3.257s total 41.1s
+  boost60  run 2: resolved/answered visa_required=True verified roles 6/6 select 30584 tok 5.007s total 38.2s
+  boost60  run 3: resolved/answered visa_required=True verified roles 6/6 select 30918 tok 3.278s total 33.1s
+
+## singapore/PH/PH
+  today    run 1: resolved/answered visa_required=False verified roles 2/6 select 52533 tok 5.561s total 31.9s
+  today    run 2: resolved/answered visa_required=False verified roles 2/6 select 52533 tok 5.356s total 24.8s
+  today    run 3: resolved/answered visa_required=False verified roles 2/6 select 52533 tok 5.949s total 25.7s
+  boost60  run 1: resolved/answered visa_required=False verified roles 2/6 select 31924 tok 5.336s total 28.9s
+  boost60  run 2: resolved/answered visa_required=False verified roles 2/6 select 31675 tok 3.864s total 29.6s
+  boost60  run 3: resolved/answered visa_required=False verified roles 2/6 select 31675 tok 4.942s total 26.2s
+
+## united-kingdom/PH/PH
+  today    run 1: resolved/answered visa_required=True verified roles 6/6 select 57226 tok 4.509s total 44.6s
+  today    run 2: resolved/answered visa_required=None partial roles 6/6 select 57226 tok 4.916s total 50.3s
+  today    run 3: resolved/answered visa_required=None partial roles 6/6 select 57226 tok 6.579s total 44.1s
+  boost60  run 1: resolved/answered visa_required=None partial roles 6/6 select 25291 tok 6.611s total 39.6s
+  boost60  run 2: resolved/answered visa_required=None partial roles 6/6 select 25291 tok 4.543s total 44.0s
+  boost60  run 3: resolved/answered visa_required=True verified roles 6/6 select 25291 tok 4.613s total 31.6s
+
+## totals
+  today    runs 30, roles filled 163, decision filled 30, checklist filled 26, plan answered 30, verified 23, decision stated 28
+           select input: mean 54,294.8 median 56,706.0 (n=30)
+           select seconds: mean 6.0 median 6.0 (n=30)
+           roles input: mean 28,808.6 median 30,689.0 (n=30)
+           request seconds: mean 46.0 median 44.4 (n=30)
+  boost60  runs 30, roles filled 159, decision filled 30, checklist filled 26, plan answered 30, verified 22, decision stated 28
+           select input: mean 30,590.7 median 30,612.0 (n=30)
+           select seconds: mean 5.6 median 5.2 (n=30)
+           roles input: mean 28,855.9 median 28,360.5 (n=30)
+           request seconds: mean 54.1 median 41.6 (n=30)
+
+## roles whose chosen page differs between the arms
+  canada/IN/GB visa_decision
+    today    2x https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/entry-requirements-country.html
+    today    1x https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/check-visa-eta.html
+    boost60  3x https://cic.gc.ca/english/visit/visas.asp
+  canada/IN/GB general_entry
+    today    3x https://ircc.canada.ca/english/information/applications/visa.asp
+    boost60  1x https://travel.gc.ca/returning/customs/entering-canada
+    boost60  1x https://www.cbsa-asfc.gc.ca/travel-voyage/ivc-rnc-eng.html
+    boost60  1x https://ircc.canada.ca/english/information/applications/visa.asp
+  france/IN/GB document_checklist
+    today    3x None
+    today    2x https://france-visas.gouv.fr/en/sejour-touristique-de-moins-de-3-mois
+    today    1x https://uk.diplomatie.gouv.fr/en/applying-for-a-visa
+    boost60  3x None
+    boost60  2x https://france-visas.gouv.fr/en/sejour-touristique-de-moins-de-3-mois
+    boost60  1x https://france-visas.gouv.fr/en/assistant-visa
+  france/PH/PH document_checklist
+    today    3x None
+    today    1x https://france-visas.gouv.fr/en/sejour-touristique-de-moins-de-3-mois
+    today    1x https://france-visas.gouv.fr/en/la-demarche
+    boost60  3x None
+    boost60  1x https://france-visas.gouv.fr/en/assistant-visa
+    boost60  1x https://france-visas.gouv.fr/en/sejour-touristique-de-moins-de-3-mois
+  france/PH/PH application_route
+    today    2x https://www.france-visas.gouv.fr/en/philippines
+    today    1x https://france-visas.gouv.fr/philippines
+    boost60  3x https://www.france-visas.gouv.fr/en/philippines
+  france/PH/PH fees
+    today    1x https://www.france-visas.gouv.fr/en/philippines
+    today    1x https://france-visas.gouv.fr/philippines
+    today    1x None
+    boost60  2x None
+    boost60  2x https://www.service-public.gouv.fr/particuliers/vosdroits/R56972?lang=en
+    boost60  1x https://www.france-visas.gouv.fr/en/philippines
+  france/PH/PH processing_times
+    today    3x https://france-visas.gouv.fr/en/la-demarche
+    boost60  3x None
+  germany/IN/GB visa_decision
+    today    2x https://www.auswaertiges-amt.de/en/einreiseundaufenthalt/-/231148
+    today    1x https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+    boost60  3x https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+  germany/IN/GB document_checklist
+    today    2x https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164
+    today    1x https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164?openAccordionId=item-2655292-6-panel
+    boost60  3x https://uk.diplo.de/uk-en/02/visa/what-documents-do-i-need-for-a-c-visa-2442164
+  germany/IN/GB application_route
+    today    2x https://uk.diplo.de/uk-en/02/visa/where-can-i-apply-for-my-visa-2448180
+    today    1x https://uk.diplo.de/uk-en/02/visa/where-can-i-apply-for-my-visa/2448180
+    boost60  3x https://uk.diplo.de/uk-en/02/visa/where-can-i-apply-for-my-visa-2448180
+  germany/IN/GB processing_times
+    today    3x https://uk.diplo.de/uk-en/02/visa-faq-2442852
+    boost60  3x https://uk.diplo.de/uk-en/02/visa/visa-faq-2442852
+  germany/IN/GB general_entry
+    today    2x None
+    today    1x https://australien.diplo.de/au-en/service/visa/ees-etias
+    boost60  3x None
+  germany/PH/PH visa_decision
+    today    2x https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+    today    1x https://www.auswaertiges-amt.de/en/einreiseundaufenthalt/-/231148
+    boost60  3x https://www.auswaertiges-amt.de/en/visa-service/231148-231148
+  germany/PH/PH application_route
+    today    2x https://manila.diplo.de/ph-en/service/visa
+    today    1x https://manila.diplo.de/ph-en/service/visa/2543948-2543948
+    boost60  3x https://manila.diplo.de/ph-en/service/visa
+  japan/IN/GB visa_decision
+    today    3x http://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+    boost60  3x https://www.mofa.go.jp/j_info/visit/visa/short/novisa.html
+  netherlands/IN/GB general_entry
+    today    3x None
+    today    3x https://www.netherlandsworldwide.nl/visa-the-netherlands/entering-without-visa
+    boost60  2x https://www.netherlandsworldwide.nl/travel-netherlands/how-long-can-i-visit-the-netherlands-for
+    boost60  1x None
+    boost60  1x https://www.netherlandsworldwide.nl/visa-the-netherlands/entering-without-visa
+  singapore/PH/PH general_entry
+    today    3x https://www.mfa.gov.sg/visiting-singapore/check-if-you-need-a-singapore-visa
+    boost60  3x https://www.ica.gov.sg/enter-transit-depart/entering-singapore
+  united-kingdom/PH/PH fees
+    today    2x https://visa-fees.homeoffice.gov.uk/y/philippines/usd/visit/all
+    today    1x https://visa-fees.homeoffice.gov.uk/y/philippines/usd/visit/standard-visitor-visa---for-uk-isle-of-man-jersey-and-guernsey/all
+    boost60  3x https://visa-fees.homeoffice.gov.uk/y/philippines/usd/visit/standard-visitor-visa---for-uk-isle-of-man-jersey-and-guernsey/all
+  united-kingdom/PH/PH general_entry
+    today    3x https://www.gov.uk/uk-border-control/before-you-leave-for-the-uk
+    boost60  3x https://www.gov.uk/uk-border-control/at-border-control

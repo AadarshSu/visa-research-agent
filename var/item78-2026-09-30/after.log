@@ -1,0 +1,28 @@
+total: 2761 stored pages score the role, 1411 pooled; pools sum to 13330
+oracle roles kept, of 131, at the top N plus 40 blind
+variant   arm         20    40    60   120  median pos  pool
+SRC       today       90   112   123   131          11   494
+SRC       boost      123   129   131   131           3   494
+answer pages with stored text: 46 scored for the role, 5 did not
+
+## france_PH_PH: https://france-visas.gouv.fr/en/la-demarche
+  pool 862, search returned 26 of them; this page searched=False, stored text=yes
+  visa_decision        link    92 of 658   text     16 of 42
+  document_checklist   link     unranked   text     97 of 99
+  application_route    link     unranked   text   225 of 240
+  fees                 link     unranked   text     45 of 51
+  processing_times     link     unranked   text     36 of 36
+  general_entry        link     unranked   text     65 of 67
+  today  : position 22 of 862 (2 search-returned pages ahead of it); first shown at a cut of 22
+  boosted: position 58 of 862 (25 search-returned pages ahead of it); first shown at a cut of 58
+
+## france_IN_GB: https://france-visas.gouv.fr/en/la-demarche
+  pool 864, search returned 33 of them; this page searched=False, stored text=yes
+  visa_decision        link    90 of 659   text     18 of 44
+  document_checklist   link     unranked   text     96 of 98
+  application_route    link     unranked   text   225 of 240
+  fees                 link     unranked   text     45 of 51
+  processing_times     link     unranked   text     36 of 36
+  general_entry        link     unranked   text     65 of 67
+  today  : position 27 of 864 (5 search-returned pages ahead of it); first shown at a cut of 27
+  boosted: position 67 of 864 (31 search-returned pages ahead of it); first shown at a cut of 67

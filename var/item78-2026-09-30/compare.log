@@ -1,0 +1,73 @@
+== round 1, today
+germany/IN/GB run 1: research resolved, plan answered, True (57.1s)
+germany/PH/PH run 1: research resolved, plan answered, True (35.3s)
+france/IN/GB run 1: research resolved, plan answered, True (91.4s)
+france/PH/PH run 1: research resolved, plan answered, True (80.4s)
+czechia/IN/GB run 1: research resolved, plan answered, True (45.3s)
+japan/IN/GB run 1: research resolved, plan answered, True (42.3s)
+singapore/PH/PH run 1: research resolved, plan answered, False (31.9s)
+netherlands/IN/GB run 1: research resolved, plan answered, True (33.9s)
+united-kingdom/PH/PH run 1: research resolved, plan answered, True (44.6s)
+canada/IN/GB run 1: research resolved, plan answered, True (53.3s)
+done
+== round 1, boost60
+germany/IN/GB run 1: research resolved, plan answered, True (40.8s)
+germany/PH/PH run 1: research resolved, plan answered, True (33.8s)
+france/IN/GB run 1: research resolved, plan answered, True (382.7s)
+france/PH/PH run 1: research resolved, plan answered, True (59.6s)
+czechia/IN/GB run 1: research resolved, plan answered, True (38.9s)
+japan/IN/GB run 1: research resolved, plan answered, True (50.7s)
+singapore/PH/PH run 1: research resolved, plan answered, False (28.9s)
+netherlands/IN/GB run 1: research resolved, plan answered, True (41.1s)
+united-kingdom/PH/PH run 1: research resolved, plan answered, None (39.6s)
+canada/IN/GB run 1: research resolved, plan answered, True (51.5s)
+done
+== round 2, boost60
+germany/IN/GB run 2: research resolved, plan answered, True (42.7s)
+germany/PH/PH run 2: research resolved, plan answered, True (35.6s)
+france/IN/GB run 2: research resolved, plan answered, True (78.7s)
+france/PH/PH run 2: research resolved, plan answered, True (51.9s)
+czechia/IN/GB run 2: research resolved, plan answered, True (36.3s)
+japan/IN/GB run 2: research resolved, plan answered, True (42.1s)
+singapore/PH/PH run 2: research resolved, plan answered, False (29.6s)
+netherlands/IN/GB run 2: research resolved, plan answered, True (38.2s)
+united-kingdom/PH/PH run 2: research resolved, plan answered, None (44.0s)
+canada/IN/GB run 2: research resolved, plan answered, True (47.2s)
+done
+== round 2, today
+germany/IN/GB run 2: research resolved, plan answered, True (46.6s)
+germany/PH/PH run 2: research resolved, plan answered, True (34.3s)
+france/IN/GB run 2: research resolved, plan answered, True (55.0s)
+france/PH/PH run 2: research resolved, plan answered, True (64.7s)
+czechia/IN/GB run 2: research resolved, plan answered, True (39.6s)
+japan/IN/GB run 2: research resolved, plan answered, True (35.5s)
+singapore/PH/PH run 2: research resolved, plan answered, False (24.8s)
+netherlands/IN/GB run 2: research resolved, plan answered, True (35.4s)
+united-kingdom/PH/PH run 2: research resolved, plan answered, None (50.3s)
+canada/IN/GB run 2: research resolved, plan answered, True (47.1s)
+done
+== round 3, today
+germany/IN/GB run 3: research resolved, plan answered, True (48.6s)
+germany/PH/PH run 3: research resolved, plan answered, True (45.4s)
+france/IN/GB run 3: research resolved, plan answered, True (56.6s)
+france/PH/PH run 3: research resolved, plan answered, True (46.5s)
+czechia/IN/GB run 3: research resolved, plan answered, True (39.1s)
+japan/IN/GB run 3: research resolved, plan answered, True (44.0s)
+singapore/PH/PH run 3: research resolved, plan answered, False (25.7s)
+netherlands/IN/GB run 3: research resolved, plan answered, True (37.3s)
+united-kingdom/PH/PH run 3: research resolved, plan answered, None (44.1s)
+canada/IN/GB run 3: research resolved, plan answered, True (42.9s)
+done
+== round 3, boost60
+germany/IN/GB run 3: research resolved, plan answered, True (43.8s)
+germany/PH/PH run 3: research resolved, plan answered, True (38.4s)
+france/IN/GB run 3: research resolved, plan answered, True (51.8s)
+france/PH/PH run 3: research resolved, plan answered, True (51.4s)
+czechia/IN/GB run 3: research resolved, plan answered, True (38.6s)
+japan/IN/GB run 3: research resolved, plan answered, True (42.8s)
+singapore/PH/PH run 3: research resolved, plan answered, False (26.2s)
+netherlands/IN/GB run 3: research resolved, plan answered, True (33.1s)
+united-kingdom/PH/PH run 3: research resolved, plan answered, True (31.6s)
+canada/IN/GB run 3: research resolved, plan answered, True (52.3s)
+done
+all done

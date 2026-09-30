@@ -307,6 +307,39 @@ def test_a_page_with_no_stored_text_still_ranks_on_its_link() -> None:
     assert unread in order[:2]
 
 
+def test_a_page_search_returned_is_lifted_only_when_the_boost_is_asked_for() -> None:
+    """Entries 243–245: the pages live search returned for this traveller are fused as a third
+    ranking, so one of them passes a better-linked page search did not return. Off by default —
+    showing the selector a shorter list on the strength of it is the owner's call (TODO item 78)."""
+
+    corpus = [linked(f"https://a.gov.example/corpus-{i}", fees=90.0 - i) for i in range(3)]
+    found = linked("https://a.gov.example/found", fees=50.0)
+    found.searched = True
+
+    assert fusion_order([*corpus, found], {})[-1] is found
+    assert fusion_order([*corpus, found], {}, boost_searched=True)[0] is found
+
+    offered, withheld = shown_to_selector(
+        [*corpus, found], {}, lambda url: True, shown=1, blind=0, boost_searched=True
+    )
+    assert offered == [found]
+    assert len(withheld) == 3
+
+
+def test_a_searched_page_the_links_score_nothing_for_is_still_ranked_by_the_boost() -> None:
+    """Being returned by search is the signal, so the search ranking holds every searched page —
+    as it was measured (entry 244) — and a page nothing else ranks no longer comes last."""
+
+    scored = linked("https://a.gov.example/scored", fees=10.0)
+    unscored = linked("https://a.gov.example/unscored")
+    found = linked("https://a.gov.example/found")
+    found.searched = True
+
+    order = fusion_order([unscored, found, scored], {}, boost_searched=True)
+
+    assert order.index(found) < order.index(unscored)
+
+
 def test_a_pool_no_larger_than_the_cut_is_shown_whole() -> None:
     pool = [linked(f"https://a.gov.example/{i}", fees=float(i)) for i in range(5)]
 
