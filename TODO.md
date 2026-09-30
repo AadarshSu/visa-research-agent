@@ -40,6 +40,7 @@ running a corridor to reading a code path, and measure a proposed fix before imp
 | **Now** | 57. Stream the plan to the screen — progress shipped; content is the owner's call | `next` |
 |  | 64. Expand from 55 countries to 100+ — ask the owner before a batch | `next` |
 | **Next up** | 78. Decide whether to show the selector 60 + 40 pages with the search boost | `soon` |
+|  | 79. Score pages fetched live with the post-aware stored-text fixes | `soon` |
 |  | 61. Decide whether a corridor's five renders should grow | `soon` |
 |  | 2. Reviewed authority domains for governments with no hostname marker | `soon` |
 |  | 4. Decide the client-side retrieval question | `soon` |
@@ -127,6 +128,20 @@ under the 3-role bar — with 43.8 of 44 decisions and checklists, on 28.2K inpu
 51.0K. Still lost: France's Indian processing time. It changes what the selector is shown, so a
 live comparison over several runs comes first (entries 144, 145). Shipping it means: a `search`
 ranking in `fusion_order` (per role, the searched pages by link score) and a smaller shortlist size.
+
+### 79. Score pages fetched live with the post-aware stored-text fixes — `soon`
+
+**The owner, 2026-09-30.** Entry 245's fixes to `score_body` — nationality from the title and path
+and never the host, the traveller's own post credited and another post penalised, no purpose bonus
+on the decision — apply only when the caller passes `residence`, which stored-text scoring does and
+the fetched-body call in `CorridorResolver` (`fetched_candidate.body_scores = score_body(...)`)
+does not. So a page is scored one way before it is fetched and another after.
+
+**Do:** pass `residence` and `other_posts` there too. **Measure first:** what reads `body_scores`
+after the fetch (`combined`, `rank_for_role`, the shortlist's heuristic path) and whether any
+recorded corridor's roles or refusals move — the recall logs replay it without a network. The
+adjudicator, not this score, fills roles on the model route, so the effect may be nil; say so if it
+is.
 
 ### 61. Decide whether a corridor's five renders should grow — `soon`
 
