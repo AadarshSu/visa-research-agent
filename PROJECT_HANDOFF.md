@@ -8,7 +8,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-09-30 — update this line when you touch the handoff |
-| **Tests** | 1,018 in a checkout without `var/`: 1,015 passing and 3 skipped (the opt-in browser test, and two that need the corpora), run 2026-09-27; `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
+| **Tests** | 1,027 on the owner's machine, with `var/` present: 1,026 passing and 1 skipped (the opt-in browser test), run 2026-09-30; two more skip in a checkout without the corpora. `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
 | --- | --- |
@@ -26,13 +26,18 @@ stands, what to do next, and what is known to be broken. The history of how it g
 
 ## Next session — start here
 
-**Item 57's progress half shipped on 2026-09-26 (entry 226):** the page now streams each step as it
-starts from `POST /visa-plans/stream`, and the plan arrives whole. **Whether any plan content may
-appear before validation is the owner's decision** — the candidates are in TODO item 57.
+**The owner, 2026-09-30 (entry 247): scale and speed are where they want them.** The owner is still
+running their own performance and accuracy checks. Optimising further and adding countries are not
+this phase's work; both are under *Parked* in [TODO.md](TODO.md) and come back as required. **Do not
+propose either unprompted.**
 
-**The owner's order, 2026-09-27:** item **67** (embeddings, on Voyage's free tokens — closed 2026-09-29, entry 236), then 57, then **64** (expansion — ask the owner before a batch). **Item 63** (accurate answers) is ongoing
-under *Next up*. Items 60 (Fast mode) and 65 (GPT-6 Sol) were removed. Hosting and Ofself (items 7,
-20, 55) can run alongside.
+**Next to explore, with the owner: growing the app from one answer into a workflow on Ofself's
+schemas (TODO item 80).** Nothing is designed. Do not start it without the owner.
+
+**This phase's queue** is TODO's *Now*: 80, then **63** (accurate answers, ongoing), **55** (what is
+left of the Ofself adapter), **71** (the traveller's city and the one post that serves them), **79**
+(a small scoring consistency fix), **4** (the client-side retrieval decision) and **20** (durable
+stores).
 
 **Where item 63 was left (entries 214–224).**
 - The second round of ten destinations, `IN/IN`, twice each: decisions 5 → 7 of 10, checklists
@@ -55,38 +60,25 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 
 ## Waiting, or shipped and not measured
 
-- **Decisions waiting on the owner:** item 57, whether plan content may stream before validation;
-  item 61, whether a corridor's five renders should grow; item
-  7, whether to store a refusal before deploying (entry 151).
+- **Decisions waiting on the owner:** item 4, whether the traveller's own browser may fetch what the
+  agent was refused; item 71's open questions. Parked with their items: whether a corridor's five
+  renders should grow (item 61), and whether to store a refusal (entry 151).
 - **Questions for Ofself:** does it host apps, and does any of its apps record a trip before it
   happens (TODO item 55).
 - **Not measured live:** entry 178's plan reuse has never been timed; of the 2026-09-25 rebuild,
   only entry 204's corridors and item 63's ten have been run; entries 134 and 135 were never priced
-  (entry 136).
+  (entry 136). On the server, no plan and no corridor has been timed.
 - **Ofself sign-in** works for real, but the owner's account holds no travel records, so the form
-  has only been seen filling from the sandbox user and a fake Ofself. The grant expires 2026-10-17.
+  has only been seen filling from the sandbox user and a fake Ofself. **The grant expires
+  2026-10-17.**
 - **OpenAI has been out of credit since 2026-09-16.** Nothing waits on it — model calls go through
-  Personas (entry 188) — except `model_route: openai`. Item 67 (embeddings) moved to Voyage's free
-  tokens (entry 235) and **closed on 2026-09-29 without adopting anything** (entries 236–238).
-  **The selection oracle was then refreshed against the rebuilt stores (entry 239)** — 92 → 111
-  gradeable roles — and on it an embedding-ordered 40 + 40 shortlist is level with today's 120 + 40
-  within the bar at 60% less selector input; whether to adopt it is TODO item 75. **Item 75's test 2
-  then removed the argument that it would matter more at scale (entry 240), and test 1 found it
-  level again in Malaysia, Indonesia and Uruguay on half the input, with the Malay visa list kept
-  out of the pool by the keyword gate (entry 241).** **The owner closed item 75 without
-  adopting, until expansion gives embeddings a job (entry 242).**
-  A boost for pages live search returned (entries 243, 244) kept every answer offline but cost the
-  selector ~2 roles a run at a 40–60 cut, and the misses trace to the stored-text score's
-  nationality and purpose bonuses — TODO item 77. `CandidatePage.searched` now records every page
-  search returned. **Item 77 shipped (entry 245):** the stored-text score now credits the
-  traveller's own post; at today's cut the selector finds every decision and checklist in every
-  run, and with the boost a 60 + 40 shortlist is level on 45% less input.
-  **Item 78's live comparison ran on 2026-09-30 (entry 246):** the boost is in the code and off;
-  over ten corridors, three runs an arm, 60 + 40 with it gave the same decisions and checklists on
-  44% less selector input and lost France `PH/PH`'s processing time in every run. **The owner
-  kept 120 + 40 and closed the item**; what would reopen it is in the entry.
-  The Voyage account has a card on it now, for the rate limit; by this repository's count about
-  171M of its free 200M tokens are left.
+  Personas (entry 188) — except `model_route: openai`.
+- **Measured and not adopted, 2026-09-27 to 09-30:** embeddings for ranking or for the shortlist
+  (entries 235–242), and a boost for pages live search returned (entries 243, 244, 246). The boost
+  is in the code and off (`selection_boost_searched`); the shortlist stays 120 + 40. What did ship
+  is entry 245: the stored-text score credits the traveller's own post. What would reopen each is in
+  its entry. The Voyage account has a card on it, for the rate limit, and about 171M of its free
+  200M tokens left by this repository's count.
 
 ## Where things are
 
@@ -113,8 +105,8 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
 - **A reference corridor:** `germany/IN/GB/tourism` answered visa required, `verified`, five fresh
   runs of five through the real API route on 2026-09-25, with the same checklist source and place to
   apply. Japan `IN/GB` answers "visa required", `verified`, 8 of 8 (entry 197).
-- **Leftovers to tidy, not urgent:** the pilot's uncommitted logs under `var/rebuild-pilot-2026-09-25/`;
-  `nohup.out`. The store and cache backups were moved to the Trash on 2026-09-26.
+- **Leftovers to tidy, not urgent:** uncommitted run outputs under `var/` (`git status` lists
+  them — the pilot's logs, item 63's rounds, the embedding and boost captures) and `nohup.out`.
 
 ## Rebuilding a store
 
@@ -136,8 +128,8 @@ back and `merge` resets `built_at`. What was rebuilt is what the `done.txt` file
 ## Where it stands
 
 **The goal:** visa plans where every claim is grounded in an official government source, and the
-traveller is told plainly what could not be verified. The owner's open goals and where each stands
-are the table at the top of [TODO.md](TODO.md).
+traveller is told plainly what could not be verified. What this phase is for, and where each earlier
+goal ended, is at the top of [TODO.md](TODO.md).
 
 | | |
 | --- | --- |
@@ -177,9 +169,10 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 2. **The trust rule's governmental half fails for governments with no hostname marker.** 16 of the
    51 countries measured have none (entry 65). The fix is a reviewed row per country with its
    evidence — TLS certificate, Wikidata, or the owner's judgement — never a wider regex (entries 33,
-   66, 110, 111). All 55 current rows are done; every new country (item 64) may need one. Schengen's
-   visa decision is answered by the EU tier (entry 201). Frozen in `tests/test_trust_coverage.py`.
-   TODO item 2.
+   66, 110, 111). All 55 current rows are done; every new country (item 64, parked) may need one.
+   Schengen's visa decision is answered by the EU tier (entry 201). Frozen in
+   `tests/test_trust_coverage.py`.
+   TODO item 2, parked.
 
 5. **A request with every cache cold has never been timed.** A fresh corridor through the web app
    measures ~55s (entry 171). The main live lever left in research is search, three queries per
@@ -203,7 +196,7 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
     give different roles and decisions — Egypt `BD/SA` credits its decision 1 run in 3 on a
     byte-identical packet (entry 204); South Korea's wrong checklist is ~1 in 18. Because a refusal is
     never stored and a resolution is kept three weeks, a flipping corridor is retried until one run
-    resolves — TODO item 7 (entry 151).
+    resolves — the owner's open decision, parked under TODO item 7 (entry 151).
 
 11. **Bot-blocked portals are a real limit, but not the largest.** `visa-discover audit` buckets every
     unreadable page by typed outcome. Most `403`s were challenges, answered by our renderer (entries

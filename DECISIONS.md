@@ -281,10 +281,57 @@ s more pressing |
 ### Whether this is a product
 | | |
 | --- | --- |
+| [247](#247-scale-and-speed-are-where-the-owner-wants-them-optimisation-and-expansion-wait-until-required-and-a-workflow-on-ofselfs-schemas-is-next-to-explore) | **Scale and speed are where the owner wants them** — optimisation and expansion are parked until something requires them; TODO is cut to this phase's work; growing the app into a workflow on Ofself's schemas is next to explore, with nothing designed |
 | [182](#182-the-owner-names-five-goals-unordered-and-the-docs-are-brought-back-to-where-things-are) | **The owner names five goals, unordered** — model calls through Ofself Personas, ~30s with progress on screen, a URL, accurate and useful answers, 100+ countries; what each waits on, and where two of them pull against each other |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 247. Scale and speed are where the owner wants them; optimisation and expansion wait until required, and a workflow on Ofself's schemas is next to explore
+
+**2026-09-30. The owner's statement of direction. Changes TODO, the handoff, the README and
+CLAUDE.md; no code.**
+
+### What the owner said
+
+The owner is largely happy with where the project is on scale and performance, and is still running
+their own performance and accuracy checks. They no longer want to optimise it or take it to more
+countries in this phase: **those are added as required.** What they want to explore next is
+expanding the project into more of a **workflow**, now that it is part of Ofself's ecosystem and can
+read the schemas its users hold data in. That is to be explored later, with the owner, and was asked
+for as a vague TODO item and no more.
+
+### What it changes
+
+- **It supersedes entry 182's goals as the shape of the queue.** Of the five: Personas is done
+  (entry 188) and hosting is live (entry 231); accuracy stays open as item 63; **the ~30s target is
+  parked at ~55s a fresh request** (entry 171) and **100+ countries is parked at 55**.
+- **TODO is cut to this phase's work** — items 80 (the workflow, to explore), 63, 55, 71, 79, 4 and
+  20, chosen by the owner item by item. Everything else that was queued is under a *Parked* section,
+  each cut to what it is and what to do first, with its number kept because code and entries cite
+  it: expansion (64, 2), speed and cost (58, 59, 61), what was never run on the server (item 7's
+  leftovers, with entry 151's question), and everything that was under *Later*.
+- ***Smaller things* keeps only the defects that can change what a traveller sees**; the build,
+  crawl and tooling ones are listed once under *Parked*.
+
+### What it does not change
+
+- **Every rule in CLAUDE.md, and every standing decision.** Entry 184 still holds: when work that
+  makes a live request better is picked up, an offline fix is preferred to a per-request one.
+- **Entry 148's order** — correctness, then optimisation, then expansion — still breaks a tie when
+  parked work comes back.
+- **Parked is not rejected.** Nothing here argues against any parked item; what was measured about
+  each stands. An item returns when the owner asks for it or when something it blocks is needed.
+
+### What the workflow item will meet
+
+Nothing about it is designed, so this is only what is already known to stand in its way. Three rules
+bound it as they are written today, and each moves only by its own decision entry: nothing is
+written back to Ofself and a plan is never a stored fact (entries 44, 180, and the six rules in TODO
+item 55); the app never submits, books or fills anything; and any field added to `TravellerProfile`
+is sent to the model on every plan.
 
 ---
 

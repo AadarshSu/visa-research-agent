@@ -266,13 +266,15 @@ Corridor ─▶ search ─▶ corpus ─▶ crawl ─▶ select ─▶ fetch ─
    already offers more pages than a crawl could visit** (entry 51). Budget is shared between hosts
    (a `www.` host and its bare host count as one, entry 163), walked in waves of one page per host,
    results handled in frontier order so the answer never depends on which site answered first.
-   3b. **Stored text is scored** for every candidate the index holds (`text_scores`).
+   3b. **Stored text is scored** for every candidate the index holds (`text_scores`), crediting the
+   traveller's own post and penalising another's on post-specific roles (entry 245).
 4. **Select** (`discovery/selection.py`, `discovery_selector: model`). The pool is every candidate
    whose link scores above zero for some role, plus the five best per role the link scored zero and
    stored text puts back (`admitted_on_text`, entry 158). It is then cut: `fusion_order` — per role,
    reciprocal-rank fusion of link rank and stored-text rank — shows the model the top 120 plus the 40
-   best-linked candidates with no stored text (entries 194, 195). The notes and the recall log record
-   what was withheld. The model reads stored excerpts and picks up to 20 pages; its `Selection` type
+   best-linked candidates with no stored text (entries 194, 195). A third ranking, of the pages live
+   search returned, is in the code and off (`selection_boost_searched`, entry 246). The notes and the
+   recall log record what was withheld. The model reads stored excerpts and picks up to 20 pages; its `Selection` type
    holds ids and no prose. With no stored text the heuristic shortlist is used instead, and the notes
    say so. Selection rule 11 keeps an announcement together with the later page saying it took
    effect (entry 222).

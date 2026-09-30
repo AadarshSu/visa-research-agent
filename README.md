@@ -34,7 +34,7 @@ approval, and it never submits, books or fills anything on anyone's behalf.
 - **Degrades honestly.** Every source resolves to a typed outcome; a plan is `verified` or `partial`;
   a corridor that cannot be established is refused with a diagnosis.
 
-**Not deployed yet.** It runs locally, and a plan requires signing in with
+**Hosted on one AWS EC2 instance**, and it runs locally; either way a plan requires signing in with
 [Ofself](CRUX.md). Whether an answer is **correct** is checked by the owner outside this repository;
 the project's own measures report whether a corridor answered, never whether it was right.
 
