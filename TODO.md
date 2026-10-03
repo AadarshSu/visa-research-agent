@@ -98,7 +98,8 @@ session*. What changed in the plan along the way, all on the owner's decisions: 
   Japan transit's probably-wrong "visa required" from the short-stay exemption list; whether a
   tourism-only exemption settles another purpose (Thailand study); whether the form asks a length of
   stay and the three transit facts (known problem 43); whether a plan may state a conditional "no
-  visa". The stores were past the stale ceiling during it (known problem 42).
+  visa". The owner answered on 2026-10-03 — see *Next session* in PROJECT_HANDOFF. The stale ceiling
+  is now 90 days (entry 249).
 - **Proposed, not measured:** de-duplicate near-identical series before the selector's cut —
   Australia once read seven quarterly reports while its step-by-step page was cut.
 

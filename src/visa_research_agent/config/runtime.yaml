@@ -74,8 +74,12 @@ model_route: personas
 source_cache_ttl_hours: 24
 
 # The refusal threshold. Once cached evidence is older than this and cannot be refreshed, the
-# source is refused rather than served, so out-of-date guidance can never look current.
-source_maximum_stale_hours: 168
+# source is refused rather than served. Below it, a page that cannot be refreshed is served from
+# the cache flagged stale, with its original retrieval date, and the plan can never be `verified`
+# — so out-of-date guidance can never look current. 90 days since 2026-10-03, the owner's decision
+# (DECISIONS entry 249): a store a week past its rebuild is still the best evidence there is, and
+# refusing it turned whole corridors away while no refresh job exists (TODO item 20).
+source_maximum_stale_hours: 2160
 
 # How long a plan the model wrote may be reused, in hours, for a request whose inputs are exactly the
 # same: the same traveller, the same pages with the same text and retrieval time, the same prompt and

@@ -237,6 +237,7 @@ not — and stored text ranks, it never speaks).
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [234](#234-the-page-stops-showing-unresolved-questions-and-a-visa-type-starts-with-a-capital) | **The page stops showing unresolved questions, and a visa type starts with a capital** — the owner's call: the questions stay in the plan and in reports; Canada's "visitor visa." opened the decision |
 | [233](#233-a-traveller-can-report-a-result-with-its-run-attached) | **A traveller can report a result, with its run attached** — the owner's item 74: one tap on a refusal, a message on a plan; the server keeps the corridor's four codes, copies the run's log and the build; `var/reports/`, `visa-discover reports` |
+| [249](#249-the-stale-ceiling-is-90-days-a-store-past-its-rebuild-is-served-flagged-stale-rather-than-refused) | **The stale ceiling is 90 days** — the owner's decision: 168 → 2160 hours; a page that cannot be refreshed is served from the cache flagged stale and the plan stays `partial`; the five corridors entry 248 lost all resolve |
 | [248](#248-business-study-and-transit-measured-for-the-first-time-business-answers-like-tourism-study-needs-a-length-of-stay-transit-needs-three-facts-the-form-never-asks) | **Business, study and transit, measured** — 51 corridors with a same-day tourism control: business 9 decisions as tourism's 9, study 7, transit 3; the stores are past the stale ceiling (Vietnam refuses in every purpose); transit needs layover, airside and onward country; Japan transit probably wrong from the short-stay exemption list; four questions for the owner |
 | [232](#232-every-refusal-says-which-kind-it-is) | **Every refusal says which kind it is** — the owner's item 73: seven causes in `detail.cause`, each with its own heading and next step; a failed model call no longer reads as a missing page, and a search outage is no longer a bare 500 |
 | [231](#231-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
@@ -290,6 +291,51 @@ s more pressing |
 
 ---
 
+## 249. The stale ceiling is 90 days: a store past its rebuild is served, flagged stale, rather than refused
+
+**2026-10-03. The owner's decision, after entry 248. `source_maximum_stale_hours` 168 → 2160 in
+`config/runtime.yaml`; `visa-discover corridor` now reads the window from the policy instead of its
+own hard-coded 168.**
+
+### What the owner said
+
+"If the stores are stale it's fine, we will just do our best to refresh on the timer we have
+decided — don't not use the stale stores, especially during the testing phase."
+
+### Why
+
+Entry 248 found every store past the 168-hour ceiling a week after the 2026-09-24 to 26 rebuild. A
+page that needs a browser and misses a corridor's five renders, or whose host's `robots.txt` cannot
+be read, falls back to the retrieval cache; past the ceiling that fallback was refused, and Vietnam
+refused in every purpose, tourism included. **Nothing refreshes the stores on a schedule** — TODO
+item 20's weekly job is not built — so the ceiling was turning a missing job into refused corridors.
+
+### What it keeps
+
+Entry 4 is unchanged in everything but the number. A page served from the cache past the TTL is
+flagged `is_stale`, keeps its original `retrieved_at`, and a plan resting on one is graded `partial`
+and can never be `verified` (`VisaPlan.validate_status_matches_evidence`). Past 90 days a page is
+still refused. A `401`/`403`, a `Disallow` or a challenge is still final; the cache is served only
+where a fetch failed or could not be made. Stored page text still ranks and never speaks (entries 78,
+83): the ceiling governs the retrieval cache, not the page-text index.
+
+### Measured
+
+The five corridors entry 248 lost to the ceiling, rerun once each with 2160
+(`var/purposes-2026-10-03/stale2160/`): all five resolved. Vietnam tourism, business and study
+"visa required" and transit open, each `partial` because a page was served stale — the exemption
+table, whose `robots.txt` still answered 502; South Korea business "visa required", `verified`, the
+Chennai table rendered this time.
+
+### Rejected
+
+- **No ceiling.** A page cached once and never re-fetched would be served for ever; 90 days bounds
+  that while no refresh job exists.
+- **A higher ceiling only for testing.** The owner wants the stores used; a ceiling that differs
+  between testing and the hosted app would make a test answer something a traveller cannot get.
+
+---
+
 ## 248. Business, study and transit, measured for the first time: business answers like tourism, study needs a length of stay, transit needs three facts the form never asks
 
 **2026-10-03. A measurement for item 63, asked for by the owner: every earlier round was tourism.
@@ -321,7 +367,7 @@ one on a single flip (known problem 10).
   whose host's `robots.txt` fails, cannot fall back to a stored copy 184–190 hours old. Vietnam
   refused in every purpose, tourism included (the Ministry's exemption table; its `robots.txt`
   answered 502), and South Korea business lost the Chennai exemption table tourism decides from.
-  Correct under entry 4; a weekly refresh (item 20) is what prevents it. Thailand tourism refused
+  Correct under entry 4 as it stood; **the owner raised the ceiling to 90 days (entry 249)**. Thailand tourism refused
   for its own reason: a July 2026 announcement of 30-day visa-free entry for India that no page read
   confirms took effect (rule 8i's bound held).
 - **Business answers like tourism** — 9 decisions and 8 checklists in both. Thailand business is

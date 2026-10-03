@@ -232,10 +232,13 @@ def build_resolver(
         renderer=renderer,
         maximum_renders=settings.maximum_crawl_renders,
     )
+    # The reviewed policy's window, as the API's fetcher uses: a corridor run from the command
+    # line must serve and refuse the same stale pages a traveller's request would (entry 249).
+    policy = get_runtime_policy()
     live_fetcher = LiveSourceFetcher(
         FileSourceCache(settings.cache_directory),
-        ttl_hours=24.0,
-        maximum_stale_hours=168.0,
+        ttl_hours=policy.source_cache_ttl_hours,
+        maximum_stale_hours=policy.source_maximum_stale_hours,
         timeout_seconds=settings.source_fetch_timeout_seconds,
         concurrency=settings.source_fetch_concurrency,
         maximum_characters=settings.maximum_source_characters,

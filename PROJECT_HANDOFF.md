@@ -54,12 +54,15 @@ stores).
 **Purposes other than tourism, measured 2026-10-03 (entry 248).** 51 corridors, one run each, with a
 same-day tourism control: business answers as tourism does (9 decisions, 8 checklists each), study 7
 and 6, transit 3 and 1. Review page:
-[Corridors Beyond Tourism](https://claude.ai/artifact/6P4pYoYzkh2nHvVvCEX12z). **Four questions wait on
-the owner** (entry 248, *What it does not decide*): Japan transit's probably-wrong "visa required";
-whether a tourism-only exemption settles another purpose (Thailand study); whether the form asks a
-length of stay and the three transit facts (known problem 43); whether a plan may state a conditional
-"no visa". **The stores are past the stale ceiling** (known problem 42) — rebuild or refresh before
-grading anything else live.
+[Corridors Beyond Tourism](https://claude.ai/artifact/6P4pYoYzkh2nHvVvCEX12z). **The owner answered entry 248's
+questions on 2026-10-03, not yet built:** (1) a short-stay exemption list does **not** decide a
+transit question — Japan transit is wrong, and Vietnam transit's judge made the same move; (2) a
+tourism-only exemption says nothing about other purposes, so it does not hold another purpose's
+decision open, case by case; (3) asked whether new form fields would change the search queries —
+they would not unless chosen to (`corridor_queries` uses only the purpose word); (4) a plan **may**
+state a conditional answer. Each changes the prompts, so each needs entry 248's corridors re-run and
+Japan `IN/GB` and Singapore `PH/PH` several times first. **The stale ceiling is now 90 days** (entry 249, the owner's decision): stale pages are
+served, flagged, rather than refused.
 
 **A fix that changes what a plan may conclude is the owner's decision** (entries 206–209 are the
 pattern). Record each in DECISIONS and CORRECTIONS.
@@ -280,12 +283,10 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 36. **A correct "no visa required" can read as a thin corridor** in any metric that counts unanswered
     roles. The oracle records `not_applicable` only where a page answers `visa_decision` (entry 94).
 
-42. **The stores outlive `source_maximum_stale_hours` (168) a week after a rebuild.** A page that
-    needs a browser and misses a corridor's five renders, or whose host's `robots.txt` fails, then has
-    no stored copy to fall back on and the role goes unfilled. On 2026-10-03, 184–190 hours after the
-    rebuild, Vietnam refused in every purpose (its Ministry's `robots.txt` answered 502) and South
-    Korea business lost its decision page (entry 248). Correct under entry 4; nothing refreshes the
-    stores on a schedule. TODO item 20's weekly refresh job.
+42. **Nothing refreshes the stores on a schedule.** TODO item 20's weekly job is not built. Since
+    entry 249 a page that cannot be refreshed is served from the cache flagged stale for up to 90
+    days, so an old store costs a `verified` grade, not an answer; past 90 days it is refused. Entry
+    248 had lost five corridors to the old 168-hour ceiling; all five resolve under 2160.
 
 43. **The traveller profile cannot hold the facts transit and study turn on.** Transit: layover
     length, whether the traveller leaves the airport, and the onward country (Turkey's e-ATV applies
