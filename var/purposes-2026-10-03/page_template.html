@@ -1,0 +1,260 @@
+<title>Corridors Beyond Tourism</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a findings ledger on top, then a destination × purpose grid read like a passport-control board; each cell opens the plan's evidence. */
+:root {
+  --bg: #f5f6f3; --surface: #ffffff; --ink: #1d2523; --muted: #5d6965; --line: #d9ded9;
+  --accent: #1f5f73;
+  --yes: #8a3b12; --yes-bg: #fbeee4;
+  --no: #1d6b45; --no-bg: #e3f3ea;
+  --open: #6b5a12; --open-bg: #f6f0d6;
+  --refused: #4b5563; --refused-bg: #eceef0;
+  --flag: #a3271f; --flag-bg: #fbe9e7;
+  --display: "Fraunces", Georgia, serif;
+  --body: "Public Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121715; --surface: #1a201e; --ink: #e6ebe8; --muted: #9aa6a1; --line: #2c3532;
+  --accent: #7cc0d4;
+  --yes: #f2a77c; --yes-bg: #3a2418; --no: #7fd3a6; --no-bg: #17301f;
+  --open: #e3cf73; --open-bg: #332d12; --refused: #b4bcc6; --refused-bg: #262b30;
+  --flag: #ff8f85; --flag-bg: #3a1c19; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121715; --surface: #1a201e; --ink: #e6ebe8; --muted: #9aa6a1; --line: #2c3532;
+  --accent: #7cc0d4;
+  --yes: #f2a77c; --yes-bg: #3a2418; --no: #7fd3a6; --no-bg: #17301f;
+  --open: #e3cf73; --open-bg: #332d12; --refused: #b4bcc6; --refused-bg: #262b30;
+  --flag: #ff8f85; --flag-bg: #3a1c19; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); padding-inline: 16px; padding-block: 32px 64px; }
+main { max-width: 1120px; margin: 0 auto; display: grid; gap: 40px; }
+h1, h2 { font-family: var(--display); font-weight: 650; text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(28px, 4vw, 40px); }
+h2 { font-size: 22px; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--accent); overflow-wrap: anywhere; }
+a:focus-visible, summary:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+header { display: grid; gap: 12px; }
+.lede { color: var(--muted); }
+section { display: grid; gap: 16px; }
+
+.tally { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 500 12px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+td.num { text-align: right; }
+tr.control td { color: var(--muted); }
+
+.findings { display: grid; gap: 12px; counter-reset: f; }
+.finding { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 6px; }
+.finding.severe { border-color: var(--flag); }
+.finding h3 { margin: 0; font: 600 16px/1.35 var(--body); }
+.finding .kind { font: 500 11px var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.finding.severe .kind { color: var(--flag); }
+.finding .kind { color: var(--muted); }
+.finding p { color: var(--ink); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.grid-wrap { overflow-x: auto; }
+.board { display: grid; grid-template-columns: minmax(130px, 1fr) repeat(4, minmax(150px, 1.4fr)); gap: 6px; min-width: 760px; }
+.board .head { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 4px; }
+.board .dest { font-weight: 600; padding: 10px 4px; display: flex; flex-direction: column; justify-content: center; }
+.board .dest small { font: 400 12px var(--mono); color: var(--muted); }
+.cell { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; background: var(--surface); text-align: left; font: inherit; color: inherit; cursor: pointer; display: grid; gap: 4px; align-content: start; }
+.cell:hover { border-color: var(--accent); }
+.cell[aria-pressed="true"] { outline: 2px solid var(--accent); }
+.cell.empty { cursor: default; background: transparent; border-style: dashed; color: var(--muted); font-size: 13px; }
+.pill { display: inline-block; font: 600 12px/1 var(--body); padding: 4px 7px; border-radius: 4px; justify-self: start; }
+.pill.yes { color: var(--yes); background: var(--yes-bg); }
+.pill.no { color: var(--no); background: var(--no-bg); }
+.pill.open { color: var(--open); background: var(--open-bg); }
+.pill.refused { color: var(--refused); background: var(--refused-bg); }
+.meta { font: 400 12px var(--mono); color: var(--muted); }
+.flagmark { font: 600 11px var(--mono); color: var(--flag); }
+
+.detail { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 20px; display: grid; gap: 14px; }
+.detail h3 { margin: 0; font: 650 20px var(--display); }
+.detail dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin: 0; }
+.detail dt { font: 500 12px var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+.detail dd { margin: 0; min-width: 0; }
+.detail ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.note { background: var(--flag-bg); color: var(--ink); border-radius: 4px; padding: 10px 12px; }
+.note.plain { background: var(--refused-bg); }
+@media (max-width: 640px) { .detail dl { grid-template-columns: 1fr; } .detail dt { padding-top: 6px; } }
+footer { color: var(--muted); font-size: 13px; display: grid; gap: 6px; }
+code { font: 13px var(--mono); }
+</style>
+
+<main>
+<header>
+  <span class="eyebrow">Item 63 · purposes round · 3 October 2026</span>
+  <h1>Corridors Beyond Tourism</h1>
+  <p class="lede">51 corridors, one run each, through the same path <code>POST /visa-plans</code> takes: the ten second-round destinations for an Indian passport applying from India, Germany and Japan applying from the UK, and three US passports studying in Schengen. Business, study and transit were run first; tourism was run afterwards on the same stores as a control. This page records whether each corridor answered. Whether the answers are right is yours to grade.</p>
+</header>
+
+<section>
+  <h2>What answered</h2>
+  <div class="tally">
+  <table>
+    <thead><tr><th>Purpose</th><th class="num">Corridors</th><th class="num">Decision stated</th><th class="num">Decision open</th><th class="num">Refused</th><th class="num">Checklist linked</th></tr></thead>
+    <tbody id="tally"></tbody>
+  </table>
+  </div>
+  <p class="lede">Indian-passport corridors only; the three US study probes are counted separately in the grid. One run each, so a single flip moves a row by one. Model variance on identical inputs is about 1 in 3 for the flakiest corridors (known problem 10).</p>
+</section>
+
+<section>
+  <h2>Findings, most serious first</h2>
+  <div class="findings">
+    <article class="finding severe">
+      <span class="kind">Probably wrong · owner's decision</span>
+      <h3>Japan transit says "visa required" from the short-stay exemption list</h3>
+      <p>The plan rests on India's absence from Japan's short-term visa-exemption list. That list governs entering Japan, not changing planes, and rule 8f requires the list to be this trip's. The embassy fee page it also read says Transit Visas have not been issued since 1 July 2026, and the plan's first open question asks which route applies at all. Status is <code>partial</code>, but the headline still says a visa is required.</p>
+    </article>
+    <article class="finding severe">
+      <span class="kind">Product gap · transit</span>
+      <h3>Transit answers turn on three facts the form never asks</h3>
+      <p>Layover length, whether the traveller leaves the airport, and the onward country. The judge found the deciding page in most transit corridors: Korea (visa-free under 24 hours airside), South Africa (no transit visa at four airports), Spain (India is on its airport-transit-visa list), Turkey (an e-ATV only for connections to Mexico, Panama, Colombia or Venezuela). With only yes, no or unverified available, each correct conditional answer became an open decision. Turkey's became a full refusal, discarding a complete answer.</p>
+    </article>
+    <article class="finding severe">
+      <span class="kind">Infrastructure · not purpose</span>
+      <h3>The stores are past the 168-hour stale ceiling</h3>
+      <p>The stores were rebuilt 24–26 September. Today a page that needs a browser and misses the corridor's five renders, or whose host's robots.txt fails, can no longer fall back to its stored copy. This refused Korea business (the Chennai exemption table) and Vietnam in every purpose, tourism included (the Ministry's exemption table; its robots.txt answered 502). The refusals are correct under the rules; a weekly refresh (TODO item 20) is what prevents them.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Owner's decision · study</span>
+      <h3>Thailand study: the answer was on two pages and neither was taken alone</h3>
+      <p>Thailand's 2026 notices say the exemption and visa-on-arrival schemes cover tourism only and do not affect other visa categories; the e-Visa Non-Immigrant ED page names the student visa and its documents. Together they say a study trip needs the ED visa. No single page says so for India, so the decision went unfilled and the found checklist was discarded. Whether a tourism-only exemption may settle "visa required" for another purpose would change what a plan may conclude.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Product gap · study</span>
+      <h3>Study needs a length of stay</h3>
+      <p>A two-week course and a degree have different answers. The plans handled the missing field well: Spain, Japan, Switzerland, France, Germany and Spain for US passports each asked how long the course is rather than assuming. Switzerland and Japan found the long-stay student checklist. The traveller profile has no field to answer with.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Safe · EU tier</span>
+      <h3>The EU's short-stay rule did not produce a false "no visa" for study</h3>
+      <p>France, Germany and Spain for a US passport studying all held the decision open and asked the duration. France read France-Visas' own United States page (visa needed beyond 90 days). Spain for an Indian passport cites both the EU regulation and the New Delhi embassy's study-visa page.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">To grade</span>
+      <h3>Two visa-free transit answers and one business decision</h3>
+      <p>China transit says no visa (verified) on the National Immigration Administration's 24-hour rule for all nationalities, airside only; the headline does not carry that limit. Germany transit says no visa (verified) on the India embassy's notice that Indians no longer need an airport transit visa. Thailand business says visa required (verified) on the MFA's "foreigners wishing to conduct business must apply for a Non-B"; whether that covers a short meeting is the question.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Caught overclaim</span>
+      <h3>Switzerland study: the plan writer refused what the judge assumed</h3>
+      <p>The judge credited the federal visa list as placing India in Annex I, but the readable text holds only the footnotes, not the country table. The plan writer saw no India entry and left the decision open, which is the correct result.</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Every corridor</h2>
+  <div class="legend">
+    <span><span class="pill yes">Visa required</span></span>
+    <span><span class="pill no">No visa</span></span>
+    <span><span class="pill open">Decision open</span></span>
+    <span><span class="pill refused">Refused</span></span>
+    <span>✓ = checklist linked · <span class="flagmark">FLAG</span> = see findings</span>
+  </div>
+  <div class="grid-wrap"><div class="board" id="board"></div></div>
+  <div class="detail" id="detail" hidden></div>
+</section>
+
+<footer>
+  <p>Raw runs: <code>var/purposes-2026-10-03/runs/&lt;corridor&gt;/1/</code>, each with the selection, roles and plan packets and answers. Runner: <code>var/purposes-2026-10-03/run.py</code>.</p>
+  <p>Refusal causes and flags are from reading each run's recall log and roles answer.</p>
+</footer>
+</main>
+
+<script>
+const ROWS = __ROWS__;
+const NOTES = __NOTES__;
+const PURPOSES = ["tourism", "business", "study", "transit"];
+const DESTS = ["australia","china","new-zealand","south-africa","south-korea","spain","switzerland","thailand","turkey","vietnam","germany","japan"];
+const by = {};
+for (const r of ROWS) by[r.corridor] = r;
+
+function key(dest, purpose) {
+  const res = (dest === "germany" || dest === "japan") ? "IN/GB" : "IN/IN";
+  return `${dest}/${res}/${purpose}`;
+}
+function verdict(r) {
+  if (r.research !== "resolved") return ["refused", "Refused"];
+  if (r.visa_required === true) return ["yes", "Visa required"];
+  if (r.visa_required === false) return ["no", "No visa"];
+  return ["open", "Decision open"];
+}
+const title = s => s.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+
+// Tally
+const tbody = document.getElementById("tally");
+for (const p of PURPOSES) {
+  const rs = DESTS.map(d => by[key(d, p)]).filter(Boolean);
+  const c = k => rs.filter(r => verdict(r)[0] === k).length;
+  const tr = document.createElement("tr");
+  if (p === "tourism") tr.className = "control";
+  tr.innerHTML = `<td>${title(p)}${p === "tourism" ? " (control)" : ""}</td><td class="num">${rs.length}</td><td class="num">${c("yes") + c("no")}</td><td class="num">${c("open")}</td><td class="num">${c("refused")}</td><td class="num">${rs.filter(r => (r.checklist || []).length).length}</td>`;
+  tbody.appendChild(tr);
+}
+
+// Board
+const board = document.getElementById("board");
+const detail = document.getElementById("detail");
+board.insertAdjacentHTML("beforeend", `<div class="head">Destination</div>` + PURPOSES.map(p => `<div class="head">${p}</div>`).join(""));
+let pressed = null;
+function cellFor(k) {
+  const r = by[k];
+  if (!r) { const d = document.createElement("div"); d.className = "cell empty"; d.textContent = "not run"; return d; }
+  const [cls, label] = verdict(r);
+  const b = document.createElement("button");
+  b.className = "cell"; b.type = "button"; b.setAttribute("aria-pressed", "false");
+  b.innerHTML = `<span class="pill ${cls}">${label}</span><span class="meta">${r.status || "—"}${(r.checklist || []).length ? " · ✓" : ""} · ${Math.round(r.seconds)}s</span>${NOTES[k] && NOTES[k].flag ? '<span class="flagmark">FLAG</span>' : ""}`;
+  b.addEventListener("click", () => show(k, b));
+  return b;
+}
+for (const d of DESTS) {
+  const res = (d === "germany" || d === "japan") ? "IN · from GB" : "IN · from IN";
+  board.insertAdjacentHTML("beforeend", `<div class="dest">${title(d)}<small>${res}</small></div>`);
+  for (const p of PURPOSES) board.appendChild(cellFor(key(d, p)));
+}
+board.insertAdjacentHTML("beforeend", `<div class="dest">US study probes<small>US · from US</small></div>`);
+for (const d of ["france", "germany", "spain"]) {
+  const k = `${d}/US/US/study`;
+  const c = cellFor(k);
+  const m = c.querySelector(".meta"); if (m) m.textContent = title(d) + " · " + m.textContent;
+  board.appendChild(c);
+}
+
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+const links = xs => xs && xs.length ? `<ul>${xs.map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a></li>`).join("")}</ul>` : "<span class=\"meta\">none</span>";
+const list = xs => xs && xs.length ? `<ul>${xs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "<span class=\"meta\">none</span>";
+
+function show(k, btn) {
+  if (pressed) pressed.setAttribute("aria-pressed", "false");
+  pressed = btn; btn.setAttribute("aria-pressed", "true");
+  const r = by[k]; const n = NOTES[k];
+  const [, label] = verdict(r);
+  let html = `<h3>${esc(k)}</h3>`;
+  if (n) html += `<div class="note ${n.flag ? "" : "plain"}">${esc(n.text)}</div>`;
+  html += "<dl>";
+  html += `<dt>Answer</dt><dd>${label}${r.visa_type ? " · " + esc(r.visa_type) : ""}${r.status ? " · " + r.status : ""}</dd>`;
+  if (r.research !== "resolved") {
+    html += `<dt>Refusal</dt><dd>${esc(r.detail || "")}</dd>`;
+  } else {
+    if (r.explanation) html += `<dt>Explanation</dt><dd>${esc(r.explanation)}</dd>`;
+    html += `<dt>Decision rests on</dt><dd>${links(r.decision)}</dd>`;
+    html += `<dt>Checklist</dt><dd>${links(r.checklist)}</dd>`;
+    html += `<dt>Where to apply</dt><dd>${r.where ? links([r.where]) : '<span class="meta">none</span>'}</dd>`;
+    html += `<dt>Steps</dt><dd>${list(r.steps)}</dd>`;
+    html += `<dt>Open questions</dt><dd>${list(r.questions)}</dd>`;
+  }
+  html += "</dl>";
+  detail.innerHTML = html; detail.hidden = false;
+  detail.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
+}
+</script>

@@ -237,6 +237,7 @@ not — and stored text ranks, it never speaks).
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [234](#234-the-page-stops-showing-unresolved-questions-and-a-visa-type-starts-with-a-capital) | **The page stops showing unresolved questions, and a visa type starts with a capital** — the owner's call: the questions stay in the plan and in reports; Canada's "visitor visa." opened the decision |
 | [233](#233-a-traveller-can-report-a-result-with-its-run-attached) | **A traveller can report a result, with its run attached** — the owner's item 74: one tap on a refusal, a message on a plan; the server keeps the corridor's four codes, copies the run's log and the build; `var/reports/`, `visa-discover reports` |
+| [248](#248-business-study-and-transit-measured-for-the-first-time-business-answers-like-tourism-study-needs-a-length-of-stay-transit-needs-three-facts-the-form-never-asks) | **Business, study and transit, measured** — 51 corridors with a same-day tourism control: business 9 decisions as tourism's 9, study 7, transit 3; the stores are past the stale ceiling (Vietnam refuses in every purpose); transit needs layover, airside and onward country; Japan transit probably wrong from the short-stay exemption list; four questions for the owner |
 | [232](#232-every-refusal-says-which-kind-it-is) | **Every refusal says which kind it is** — the owner's item 73: seven causes in `detail.cause`, each with its own heading and next step; a failed model call no longer reads as a missing page, and a search outage is no longer a bare 500 |
 | [231](#231-the-app-is-hosted-on-one-aws-ec2-instance-and-its-stores-live-on-that-instances-disk) | **Hosted on one AWS EC2 instance** — Ubuntu, systemd, Caddy on an sslip.io name; stores on the EBS root disk, which survives restarts and is lost on terminate; HTTPS and sign-in seen working, a plan and a corridor timing there not yet |
 | [230](#230-the-landing-page-is-redesigned-bolder) | **The landing page is redesigned, bolder** — the owner found the polish too timid: a dark hero, the form as a plan-request ticket with a live route line, a how-it-works strip, and each plan panel under a dark numbered header; every sentence on it checked against the code |
@@ -286,6 +287,77 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 248. Business, study and transit, measured for the first time: business answers like tourism, study needs a length of stay, transit needs three facts the form never asks
+
+**2026-10-03. A measurement for item 63, asked for by the owner: every earlier round was tourism.
+No code changed. Review page: [Corridors Beyond Tourism](https://claude.ai/artifact/6P4pYoYzkh2nHvVvCEX12z).
+Raw runs: `var/purposes-2026-10-03/runs/`; runner `var/purposes-2026-10-03/run.py` (item 63's
+runner with the purpose in the key).**
+
+### What was run
+
+One run each, in-process through the path `POST /visa-plans` takes, sequentially, on the stores as
+they stood: the second round's ten destinations `IN/IN` and Germany and Japan `IN/GB`, for business,
+study and transit (36), then three US passports studying in Schengen (France, Germany, Spain), then
+the same twelve for **tourism on the same day as a control**. 51 corridors in all.
+
+| purpose (12 corridors) | decision stated | decision open | refused | checklist linked |
+| --- | --- | --- | --- | --- |
+| tourism (control) | 9 | 1 | 2 | 8 |
+| business | 9 | 1 | 2 | 8 |
+| study | 7 | 3 | 2 | 6 |
+| transit | 3 | 5 | 4 | 1 |
+
+These count what answered, not what is right (known problem 26). One run each, so a row moves by
+one on a single flip (known problem 10).
+
+### What it showed
+
+- **The control was needed: the stores are past `source_maximum_stale_hours`.** They were rebuilt
+  2026-09-24 to 26; today a page that needs a browser and misses the corridor's five renders, or
+  whose host's `robots.txt` fails, cannot fall back to a stored copy 184–190 hours old. Vietnam
+  refused in every purpose, tourism included (the Ministry's exemption table; its `robots.txt`
+  answered 502), and South Korea business lost the Chennai exemption table tourism decides from.
+  Correct under entry 4; a weekly refresh (item 20) is what prevents it. Thailand tourism refused
+  for its own reason: a July 2026 announcement of 30-day visa-free entry for India that no page read
+  confirms took effect (rule 8i's bound held).
+- **Business answers like tourism** — 9 decisions and 8 checklists in both. Thailand business is
+  `verified` "visa required" on the MFA's "foreigners wishing to conduct business must apply for a
+  Non-Immigrant B"; whether that covers a short meeting is for the owner.
+- **Study needs a length of stay the profile does not hold.** Every plan that met the question asked
+  it rather than assuming — Spain, Japan, Switzerland, and all three US probes. **The EU tier did not
+  produce a false "no visa" for a long study stay:** France, Germany and Spain for a US passport all
+  held the decision open; France read France-Visas' own United States page. Thailand study refused
+  on a decision spread over two pages: the 2026 notices limit the exemption to tourism, and the
+  Non-Immigrant ED page names the student visa; neither alone states it for India, so the found ED
+  checklist was discarded with the corridor. Switzerland study: the judge credited the federal list
+  as placing India in Annex I, from text that holds only its footnotes; the plan writer held the
+  decision open, correctly.
+- **Transit answers turn on three facts the form never asks** — layover length, whether the
+  traveller leaves the airport, and the onward country. The judge found the deciding page in most
+  transit corridors (Korea: visa-free under 24 hours airside; South Africa: no transit visa at four
+  airports; Spain: India is on its airport-transit-visa list; Turkey: an e-ATV only for connections
+  to Mexico, Panama, Colombia or Venezuela), and each correct conditional answer became an open
+  decision; **Turkey's became a refusal**, discarding a complete answer. China (24-hour airside rule
+  for all nationalities) and Germany (the India embassy's notice that Indians no longer need an
+  airport transit visa) were stated "no visa", `verified`; China's headline does not carry the
+  24-hour airside limit.
+- **Japan transit is probably wrong.** It states "visa required" from India's absence from the
+  short-term visa-exemption list, which governs entry, not changing planes — rule 8f requires this
+  trip's list — while the embassy page it also read says Transit Visas have not been issued since
+  1 July 2026. Status `partial`, headline "visa required".
+
+### What it does not decide
+
+Each of these changes what a plan may conclude or what the traveller is asked, so each is **the
+owner's decision** (entries 206–209): whether rule 8f's "this trip's list" should name transit
+explicitly; whether a tourism-only exemption may settle "visa required" for another purpose; whether
+the form asks a length of stay for study and the three transit facts; and whether a conditional
+answer ("no visa if you stay airside under 24 hours") is something a plan may state. Nothing was
+changed in code or prompts.
 
 ---
 

@@ -7,7 +7,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | | |
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
-| **Last updated** | 2026-09-30 — update this line when you touch the handoff |
+| **Last updated** | 2026-10-03 — update this line when you touch the handoff |
 | **Tests** | 1,027 on the owner's machine, with `var/` present: 1,026 passing and 1 skipped (the opt-in browser test), run 2026-09-30; two more skip in a checkout without the corpora. `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
@@ -50,6 +50,16 @@ stores).
   at a time; fixed by selection rule 11 and roles rule 7b (entries 220–222). The regression set was
   `verified` in all ten runs after.
 - The SharePoint countries and Korea were rebuilt on 2026-09-26 (entry 223).
+
+**Purposes other than tourism, measured 2026-10-03 (entry 248).** 51 corridors, one run each, with a
+same-day tourism control: business answers as tourism does (9 decisions, 8 checklists each), study 7
+and 6, transit 3 and 1. Review page:
+[Corridors Beyond Tourism](https://claude.ai/artifact/6P4pYoYzkh2nHvVvCEX12z). **Four questions wait on
+the owner** (entry 248, *What it does not decide*): Japan transit's probably-wrong "visa required";
+whether a tourism-only exemption settles another purpose (Thailand study); whether the form asks a
+length of stay and the three transit facts (known problem 43); whether a plan may state a conditional
+"no visa". **The stores are past the stale ceiling** (known problem 42) — rebuild or refresh before
+grading anything else live.
 
 **A fix that changes what a plan may conclude is the owner's decision** (entries 206–209 are the
 pattern). Record each in DECISIONS and CORRECTIONS.
@@ -269,6 +279,20 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
 
 36. **A correct "no visa required" can read as a thin corridor** in any metric that counts unanswered
     roles. The oracle records `not_applicable` only where a page answers `visa_decision` (entry 94).
+
+42. **The stores outlive `source_maximum_stale_hours` (168) a week after a rebuild.** A page that
+    needs a browser and misses a corridor's five renders, or whose host's `robots.txt` fails, then has
+    no stored copy to fall back on and the role goes unfilled. On 2026-10-03, 184–190 hours after the
+    rebuild, Vietnam refused in every purpose (its Ministry's `robots.txt` answered 502) and South
+    Korea business lost its decision page (entry 248). Correct under entry 4; nothing refreshes the
+    stores on a schedule. TODO item 20's weekly refresh job.
+
+43. **The traveller profile cannot hold the facts transit and study turn on.** Transit: layover
+    length, whether the traveller leaves the airport, and the onward country (Turkey's e-ATV applies
+    only to four onward countries). Study: the length of stay, which separates a short course from a
+    long-stay national visa. The plans ask rather than assume, so a correct conditional answer comes
+    out as an open decision — or, where no page is credited as the decision, a refusal (entry 248).
+    Adding a field is the owner's decision.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (entry 58), **3** (entries 34,
 38), **4** (entries 56, 57), **7** (entry 152), **18** (entry 42), **21** and **22** (entry 157),
