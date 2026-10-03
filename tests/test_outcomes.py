@@ -228,3 +228,18 @@ def test_an_unverified_decision_outranks_a_no_that_nobody_stated() -> None:
 
 def test_a_missing_checklist_is_still_partial_where_a_visa_is_needed() -> None:
     assert resolve_plan_status(RetrievalReport(), has_checklist_source=False) == "partial"
+
+
+def test_a_conditional_decision_is_never_verified() -> None:
+    """Entry 250: a decision that holds on a fact the traveller has not confirmed — the layover, the
+    length of stay — is graded as an open one is, even where a page stated no visa is needed."""
+
+    assert (
+        resolve_plan_status(
+            RetrievalReport(),
+            has_checklist_source=False,
+            no_visa_required=True,
+            decision_is_conditional=True,
+        )
+        == "partial"
+    )

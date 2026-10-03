@@ -10,7 +10,8 @@ Follow these rules:
 4. If the evidence does not support an answer, use null where allowed and record a specific
    unresolved question. Do not fill gaps with assumptions. Two silences are answers: an
    authority's visa-required list that leaves the traveller's country out (rule 8e), and an
-   authority's visa-exemption list that leaves it out (rule 8f). Those rules say when.
+   authority's visa-exemption list that leaves it out (rule 8f). Those rules say when. A decision
+   that holds on a fact about the trip the profile does not record is rule 8k's.
 5. If official sources disagree, record the disagreement as an unresolved question, naming what each
    says. Do not silently select a preferred version, and do not assert one is correct.
 6. Use only source_id values present in the research packet. Cite the visa decision, application
@@ -132,10 +133,14 @@ Follow these rules:
    - The list must be the authority's list for travellers like this one: entering the destination
      for this purpose, on this passport type. A list of who is exempt from a transit visa, an
      electronic visa or a different kind of visa says nothing about the visa this trip needs, and a
-     page about one other nationality is not a list.
+     page about one other nationality is not a list. A transit trip is its own purpose: a traveller
+     changing planes without passing immigration does not enter the destination, so a list of who
+     may enter or stay without a visa — a short-term stay or visitor exemption list — decides
+     nothing about transit. Only a list about transit decides a transit trip.
    - If any source states that this traveller needs no visa, or describes an exemption they might
      meet — by residence, a visa held for another country, transit, or anything else — rule 5
-     governs and visa_required is null.
+     governs and visa_required is null, unless rule 8k applies. An exemption limited to another
+     purpose is not one they might meet (rule 8l).
    - Cite the list as the decision source. Say in the explanation that the
      traveller's country is not on the authority's exemption list for their passport, so they can
      check that list themselves.
@@ -187,6 +192,35 @@ Follow these rules:
    - Cite both as decision sources, and say in the explanation that the country is named in the announcement and the later source says the
      revision took effect on its date, so the traveller can check both.
    - Where rule 8h also applies, because no source establishes the date, rule 8h governs.
+8k. A decision may hold on a fact about this trip that the traveller profile does not record — the
+   length of the layover or the stay, whether a transit traveller leaves the airport's transit area,
+   the onward destination, a visa or residence permit held for another country. Where that fact is
+   what keeps the decision open, and a source for this passport and purpose states the answer for
+   one side of it, state that answer in visa_required and name the fact in decision_condition. It
+   holds only within these bounds:
+   - decision_condition names only the fact the answer turns on, as one plain clause the traveller
+     can check, starting with "you": "you stay in the airport's transit area and connect within 24
+     hours", "your course lasts more than 90 days", "you do not hold a valid visa for the United
+     States, Canada or the United Kingdom". Conditions every traveller meets — a valid passport, an
+     onward ticket — are steps, not part of it.
+   - The side stated must be stated by a source, and no source may contradict it. Where sources
+     disagree about one side only, the other side may still be stated, and the disagreement is an
+     unresolved question under rule 5.
+   - Where sources state both sides, choose for a transit trip the side where the traveller stays in
+     the transit area; otherwise the side on which this traveller needs a visa, because a traveller
+     told to get one who turns out not to need it loses less than one told the reverse.
+   - The explanation says what the sources state for the other side, or that they state nothing
+     about it, and cites every source it rests on. Record an unresolved question asking the
+     traveller to confirm the fact.
+   - It does not apply to a decision no page could be read for (rules 8b, 8c), or an announced change
+     (rules 8h, 8i).
+   - Where visa_required is false under it, rule 8e's shape applies to the side stated.
+   - Leave decision_condition null whenever the decision holds for this traveller as described.
+8l. An exemption a source limits to another purpose — visa-free entry for tourism only, where this
+   trip is for study or business — says nothing about this trip, either way. It is not a statement
+   that this traveller needs no visa and not an exemption they might meet: it neither decides the
+   question nor holds it open. Decide from the sources for this trip's purpose, and say in the
+   explanation that the exemption covers only the other purpose.
 8j. visa_type names the visa this traveller applies for, in a source's own words, whenever
    visa_required is true and a source read for this traveller names it — "Visitor visa (Tourist
    stream) (subclass 600)", "C-3-9 (Tourist visa)". A source listing several visas settles it:

@@ -93,6 +93,7 @@ def resolve_plan_status(
     decision_is_unverified: bool = False,
     no_visa_required: bool = False,
     names_unread_pages: bool = False,
+    decision_is_conditional: bool = False,
 ) -> PlanStatus:
     """Grade a run: verified only when every source was retrieved and is current.
 
@@ -119,9 +120,12 @@ def resolve_plan_status(
     confirmed" means a null decision for any reason** — until 2026-09-14 extraction passed only the
     case where a block or a questionnaire stood in for it, so a model leaving the decision open from
     cleanly read pages was graded verified (TODO item 53). `VisaPlan` now refuses that combination.
+
+    A decision that holds only on a fact about the trip the traveller has not confirmed — the
+    layover, the length of stay — is graded the same way (entry 250).
     """
 
-    if decision_is_unverified:
+    if decision_is_unverified or decision_is_conditional:
         return "partial"
     if not has_checklist_source and not no_visa_required:
         return "partial"

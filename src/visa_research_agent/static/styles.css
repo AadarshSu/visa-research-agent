@@ -792,6 +792,19 @@ button:disabled {
   background: var(--violet-soft);
 }
 
+/* The fact a conditional decision holds on sits directly under the answer, as heavy as the answer
+   itself: the decision is wrong for a traveller on the other side of it (entry 250). */
+.decision-condition {
+  margin: 0 0 14px;
+  padding: 12px 16px;
+  border-left: 4px solid var(--blue);
+  border-radius: 6px;
+  background: var(--blue-soft);
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
 /* Incomplete evidence is named above the guidance in one line, and set out in full at the end.
    Both halves matter: a partial plan must not look complete, and a wall of caveats above the answer
    buries the answer. */

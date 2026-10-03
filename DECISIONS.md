@@ -237,6 +237,7 @@ not — and stored text ranks, it never speaks).
 | [20](#20-the-traveller-becomes-input-countries-become-codes) | The traveller becomes input; countries become codes |
 | [234](#234-the-page-stops-showing-unresolved-questions-and-a-visa-type-starts-with-a-capital) | **The page stops showing unresolved questions, and a visa type starts with a capital** — the owner's call: the questions stay in the plan and in reports; Canada's "visitor visa." opened the decision |
 | [233](#233-a-traveller-can-report-a-result-with-its-run-attached) | **A traveller can report a result, with its run attached** — the owner's item 74: one tap on a refusal, a message on a plan; the server keeps the corridor's four codes, copies the run's log and the build; `var/reports/`, `visa-discover reports` |
+| [250](#250-transit-is-its-own-purpose-an-exemption-for-another-purpose-says-nothing-and-a-plan-may-state-an-answer-that-holds-on-a-fact-about-the-trip) | **Transit, other purposes and conditional answers** — the owner's answers to entry 248: a short-stay list never decides transit, another purpose's exemption says nothing, and `decision_condition` lets a plan state an answer that holds on a trip fact, shown beside it and never `verified`; transit 3 → 8 decisions, 8 of them conditional |
 | [249](#249-the-stale-ceiling-is-90-days-a-store-past-its-rebuild-is-served-flagged-stale-rather-than-refused) | **The stale ceiling is 90 days** — the owner's decision: 168 → 2160 hours; a page that cannot be refreshed is served from the cache flagged stale and the plan stays `partial`; the five corridors entry 248 lost all resolve |
 | [248](#248-business-study-and-transit-measured-for-the-first-time-business-answers-like-tourism-study-needs-a-length-of-stay-transit-needs-three-facts-the-form-never-asks) | **Business, study and transit, measured** — 51 corridors with a same-day tourism control: business 9 decisions as tourism's 9, study 7, transit 3; the stores are past the stale ceiling (Vietnam refuses in every purpose); transit needs layover, airside and onward country; Japan transit probably wrong from the short-stay exemption list; four questions for the owner |
 | [232](#232-every-refusal-says-which-kind-it-is) | **Every refusal says which kind it is** — the owner's item 73: seven causes in `detail.cause`, each with its own heading and next step; a failed model call no longer reads as a missing page, and a search outage is no longer a bare 500 |
@@ -288,6 +289,80 @@ s more pressing |
 | [58](#58-the-twenty-corridor-measurement-it-passes-the-bar-and-the-bar-was-nearly-the-wrong-question) | **The twenty-corridor measurement** — passes, marginally, against a bar set in advance |
 | [64](#64-the-control-arm-built-run-on-three-corridors-and-deleted) | **The control arm, run then deleted** — 0 of 8 cited hosts passed the trust rule, and one should have |
 | [63](#63-why-a-traveller-goes-unanswered-becomes-a-count-and-the-first-count-contradicts-the-assumption) | **Why a traveller goes unanswered becomes a count** — and the posture cost 0 of 15 lost pages |
+
+---
+
+## 250. Transit is its own purpose, an exemption for another purpose says nothing, and a plan may state an answer that holds on a fact about the trip
+
+**2026-10-03. The owner's answers to entry 248's questions. Prompts (roles rules 7b–7d, plan rules
+4, 8f, 8k, 8l), a new `decision_condition` on the plan, its grading, and the plan page.**
+
+### What the owner said
+
+1. Does a short-stay exemption list decide a transit question? **"No, probably not."**
+2. Does a tourism-only exemption settle another purpose? **"Yes probably, depends case to case —
+   but a tourism-only exemption says nothing about other purposes."**
+3. Would asking the layover or length of stay on the form change the search queries? Answered: no,
+   unless chosen — `corridor_queries` uses only the purpose word, and transit searches already found
+   the deciding pages. No field was added.
+4. May a plan state a conditional answer — "no visa if you stay airside under 24 hours"? **"Yes."**
+   The shape proposed and accepted: the condition is shown beside the decision, repeated as a
+   question for the traveller, and the plan is never `verified`.
+
+### What changed
+
+- **Transit (1).** Roles rule 7b and plan rule 8f: a traveller changing planes without passing
+  immigration does not enter, so a list of who may enter or stay without a visa decides nothing about
+  transit; only a page or list about transit does.
+- **Another purpose (2).** Roles rule 7d and plan rule 8l: an exemption a source limits to another
+  purpose neither decides the question nor holds it open; decide from the sources for this purpose.
+  8f's "an exemption they might meet" no longer counts one.
+- **Conditional answers (4).** Roles rule 7c credits a page stating the answer for this passport and
+  purpose on one side of a trip fact the profile lacks — layover, length of stay, leaving the transit
+  area, onward destination, a visa held for another country. Plan rule 8k states that side in
+  `visa_required` and names the fact in `decision_condition`: one clause starting "you", only the
+  deciding fact, never contradicted by another source; where both sides are stated, the airside side
+  for transit and otherwise the side needing a visa. The explanation gives the other side or says
+  the sources are silent on it. `VisaPlan` refuses a condition beside an open decision or a
+  `verified` status; extraction drops one the decision cannot carry; `resolve_plan_status` grades a
+  conditional plan `partial`. The page shows "Only if …" directly under the decision.
+- **A first draft of 8k and 7c was too strict** and is not what shipped: it required a source to
+  state *both* sides. China and Germany transit, stated "no visa" before, went open, and Japan study
+  refused; France for a US student held open over a disagreement about short courses only. Fixed to
+  "one side, uncontradicted" and re-run.
+
+### Measured
+
+Japan `IN/GB` and Singapore `PH/PH` tourism, three runs each after both drafts: visa required and no
+visa, all `verified`, no condition — rule 8e unchanged. Then the 51 corridors of entry 248 once each
+(`var/purposes-2026-10-03/rules250/`, transit and three study corridors from `rules250b/` after the
+fix), with entry 249's stale ceiling in force for all of them:
+
+| 12 corridors each | first round: stated / open / refused / checklist | after: stated (conditional) / open / refused / checklist |
+| --- | --- | --- |
+| tourism | 9 / 1 / 2 / 8 | 12 (0) / 0 / 0 / 11 |
+| business | 9 / 1 / 2 / 8 | 11 (0) / 1 / 0 / 12 |
+| study | 7 / 3 / 2 / 6 | 10 (1) / 2 / 0 / 8 |
+| transit | 3 / 5 / 4 / 1 | 8 (8) / 1 / 3 / 4 |
+
+One batch stalled for 83 minutes on a model call; the power log shows the Mac had gone into clamshell
+sleep nine seconds before that run began, so it was restarted, and nothing was changed for it (a
+draft fix and an Ofself feedback item were withdrawn before pushing — CORRECTIONS). Two changes are
+mixed in this: the stale ceiling recovered Vietnam and South Korea business, and
+selection variance gave New Zealand tourism its waiver list and Thailand tourism its in-force notice
+for the first time. What the rules did: Japan transit's wrong "visa required" is gone — it refuses,
+as Vietnam transit does, because no page about transit there was read; eleven answers carry a
+condition (China, Korea, Germany, South Africa transit "no visa" airside; Turkey's e-ATV for four
+onward countries; Spain and France for a US student beyond 90 days; Japan study with a Certificate of
+Eligibility); Thailand study resolves and keeps the ED checklist, its decision still open because no
+page says Indians must hold the ED visa. South Africa study was open in one run and stated in the
+other: its visitor exemption list now says nothing about study.
+
+### Left for the owner
+
+Three conditions are worded worse than the rule asks: New Zealand transit strings four facts, Spain
+transit names "one of the stated exemptions" without naming them, South Africa transit adds "are not
+a deportee". One run each; not yet seen whether rewording the rule's examples fixes them.
 
 ---
 

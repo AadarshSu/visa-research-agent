@@ -8,7 +8,7 @@ stands, what to do next, and what is known to be broken. The history of how it g
 | --- | --- |
 | **Repository** | `github.com/AadarshSu/visa-research-agent` |
 | **Last updated** | 2026-10-03 — update this line when you touch the handoff |
-| **Tests** | 1,027 on the owner's machine, with `var/` present: 1,026 passing and 1 skipped (the opt-in browser test), run 2026-09-30; two more skip in a checkout without the corpora. `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
+| **Tests** | 1,030 on the owner's machine, with `var/` present: 1,029 passing and 1 skipped (the opt-in browser test), run 2026-10-03; two more skip in a checkout without the corpora. `ruff` and `mypy --strict` clean. The suite is blocked from the network (`tests/conftest.py`, entry 45) |
 
 | Question | File |
 | --- | --- |
@@ -54,14 +54,12 @@ stores).
 **Purposes other than tourism, measured 2026-10-03 (entry 248).** 51 corridors, one run each, with a
 same-day tourism control: business answers as tourism does (9 decisions, 8 checklists each), study 7
 and 6, transit 3 and 1. Review page:
-[Corridors Beyond Tourism](https://claude.ai/artifact/6P4pYoYzkh2nHvVvCEX12z). **The owner answered entry 248's
-questions on 2026-10-03, not yet built:** (1) a short-stay exemption list does **not** decide a
-transit question — Japan transit is wrong, and Vietnam transit's judge made the same move; (2) a
-tourism-only exemption says nothing about other purposes, so it does not hold another purpose's
-decision open, case by case; (3) asked whether new form fields would change the search queries —
-they would not unless chosen to (`corridor_queries` uses only the purpose word); (4) a plan **may**
-state a conditional answer. Each changes the prompts, so each needs entry 248's corridors re-run and
-Japan `IN/GB` and Singapore `PH/PH` several times first. **The stale ceiling is now 90 days** (entry 249, the owner's decision): stale pages are
+[Corridors Beyond Tourism](https://claude.ai/artifact/6P4pYoYzkh2nHvVvCEX12z). **The owner's answers to entry 248 are built and measured (entry 250):** a short-stay list never
+decides transit, an exemption for another purpose says nothing, and a plan may state an answer that
+holds on a trip fact (`decision_condition`, shown as "Only if …", never `verified`). Transit went from
+3 to 8 decisions, 8 of them conditional; Japan transit's wrong "visa required" now refuses. **Open
+for the owner:** three conditions are worded worse than the rule asks (New Zealand, Spain, South
+Africa transit). **The stale ceiling is now 90 days** (entry 249, the owner's decision): stale pages are
 served, flagged, rather than refused.
 
 **A fix that changes what a plan may conclude is the owner's decision** (entries 206–209 are the
@@ -113,6 +111,9 @@ several times first.** Rule 8e's bounds live only in the prompt, and a packet ch
     takes `SELECT_PROMPT=`.
   - `probe_render.py` renders pages with the project's renderer and prints what came back.
   - `var/selection-replay-2026-09-24/` replays only the selection call over fixed pools.
+- **Keep the Mac awake and the lid open for a long batch.** A run in progress freezes in clamshell
+  sleep and resumes only on wake; on 2026-10-03 one sat 83 minutes that way (`pmset -g log` shows
+  it). The runner is resumable, so a stalled batch can be stopped and restarted.
 - **Run anything that fetches or renders from the owner's Terminal panel** (or Bash with the sandbox
   off): Chromium cannot start in the sandboxed shell.
 - **A reference corridor:** `germany/IN/GB/tourism` answered visa required, `verified`, five fresh
@@ -288,12 +289,11 @@ numbers. Each says what is true now; how it was learned is in the DECISIONS entr
     days, so an old store costs a `verified` grade, not an answer; past 90 days it is refused. Entry
     248 had lost five corridors to the old 168-hour ceiling; all five resolve under 2160.
 
-43. **The traveller profile cannot hold the facts transit and study turn on.** Transit: layover
-    length, whether the traveller leaves the airport, and the onward country (Turkey's e-ATV applies
-    only to four onward countries). Study: the length of stay, which separates a short course from a
-    long-stay national visa. The plans ask rather than assume, so a correct conditional answer comes
-    out as an open decision — or, where no page is credited as the decision, a refusal (entry 248).
-    Adding a field is the owner's decision.
+43. **The traveller profile cannot hold the facts transit and study turn on** — layover, leaving
+    the airport, onward country, length of stay. Since entry 250 a plan states the answer for the
+    side a source states and shows the fact beside it ("Only if …"), graded `partial`; no field was
+    added, and the search queries do not need one. A corridor still refuses where no page about the
+    purpose was read — Japan, Vietnam, Switzerland and Thailand transit.
 
 **Retired numbers**, kept so the numbering keeps its meaning: **1** (entry 58), **3** (entries 34,
 38), **4** (entries 56, 57), **7** (entry 152), **18** (entry 42), **21** and **22** (entry 157),

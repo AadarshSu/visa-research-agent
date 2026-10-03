@@ -897,6 +897,9 @@ class VisaPlanDraft(StrictModel):
 
     destination: str = Field(min_length=1)
     visa_required: bool | None
+    decision_condition: str | None = None
+    """The fact about this trip the decision holds on, where the profile does not record it — see
+    `VisaPlan.decision_condition`."""
     visa_type: str | None
     explanation: str = Field(min_length=1)
     decision_source_ids: list[str] = Field(min_length=1)
@@ -916,6 +919,17 @@ class VisaPlan(StrictModel):
 
     destination: str = Field(min_length=1)
     visa_required: bool | None
+    decision_condition: str | None = None
+    """The fact about this trip that `visa_required` holds on, where the traveller profile does not
+    record it — "you stay in the airport's transit area and connect within 24 hours" — or `None`
+    when the decision holds for this traveller as described.
+
+    The owner's decision, entry 250: a plan may state a conditional answer. A transit answer turns
+    on the layover, whether the traveller leaves the airport and the onward country, and a study
+    answer on the length of stay; the profile holds none of them, so a correct answer the sources
+    state for one side of such a fact used to come out as an open decision. The interface shows the
+    condition beside the decision, and a conditional plan is never `verified`, because the
+    traveller has not confirmed the fact it rests on."""
     visa_type: str | None
     explanation: str = Field(min_length=1)
     decision_source_ids: list[str] = Field(min_length=1)
@@ -994,6 +1008,21 @@ class VisaPlan(StrictModel):
                 # Held here as well as in extraction, which missed it: it downgraded only a
                 # decision a block or a questionnaire stood in for (TODO item 53).
                 raise ValueError("a verified plan cannot leave the visa decision unconfirmed")
+            if self.decision_condition is not None:
+                raise ValueError(
+                    "a verified plan cannot rest on a condition the traveller has not confirmed"
+                )
+        return self
+
+    @model_validator(mode="after")
+    def validate_condition_has_a_decision(self) -> "VisaPlan":
+        """A condition qualifies a stated decision; beside an open one it would qualify nothing."""
+
+        if self.decision_condition is not None:
+            if self.visa_required is None:
+                raise ValueError("a decision condition needs a stated decision to qualify")
+            if not self.decision_condition.strip():
+                raise ValueError("a decision condition cannot be blank")
         return self
 
     @model_validator(mode="after")

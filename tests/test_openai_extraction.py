@@ -712,6 +712,60 @@ async def test_a_verified_plan_cannot_be_built_around_an_open_decision() -> None
 
 
 @pytest.mark.anyio
+async def test_a_conditional_decision_is_kept_and_never_verified() -> None:
+    """Entry 250, the owner: a plan may state an answer that holds on a fact about the trip the
+    profile does not record. The traveller has not confirmed that fact, so the plan is `partial`
+    however cleanly its pages were read — the golden draft alone grades `verified`."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={
+                "decision_condition": "you stay in the airport's transit area for under 24 hours"
+            }
+        )
+    )
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.decision_condition == "you stay in the airport's transit area for under 24 hours"
+    assert plan.visa_required is not None
+    assert plan.status == "partial"
+    with pytest.raises(ValidationError, match="condition the traveller has not confirmed"):
+        VisaPlan.model_validate({**plan.model_dump(), "status": "verified"})
+
+
+@pytest.mark.anyio
+async def test_a_condition_is_dropped_where_the_decision_is_open() -> None:
+    """A condition qualifies a stated decision. Where the model left the decision open, or a block
+    or questionnaire forced it open, there is nothing for it to qualify, and the plan itself refuses
+    the pair so no other path can build one."""
+
+    generator = FakeStructuredPlanGenerator(
+        load_golden_draft().model_copy(
+            update={
+                "visa_required": None,
+                "decision_condition": "your course lasts 90 days or less",
+                "unresolved_questions": ["How long is the course?"],
+            }
+        )
+    )
+    fetched_sources = await FixtureSourceFetcher().fetch(singapore_config())
+
+    plan = await OpenAIVisaPlanExtractor(generator, maximum_input_characters=80_000).extract(
+        singapore_config(), DEFAULT_TRAVELLER_PROFILE, fetched_sources
+    )
+
+    assert plan.decision_condition is None
+    with pytest.raises(ValidationError, match="needs a stated decision"):
+        VisaPlan.model_validate(
+            {**plan.model_dump(), "decision_condition": "your course lasts 90 days or less"}
+        )
+
+
+@pytest.mark.anyio
 async def test_the_model_is_told_where_the_guidance_lives_but_never_quoted_it() -> None:
     """It is named, not read. A page this program could not open cannot be evidence of anything it
     says, so the packet carries the URL and the authority and no content at all."""

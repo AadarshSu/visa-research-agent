@@ -399,6 +399,10 @@ class OpenAIVisaPlanExtractor:
         # verified — is allowed only where this is `False`, which this line makes reachable only
         # from a page (DECISIONS entry 95).
         visa_required = None if destination.decision_is_unverified else draft.visa_required
+        # A condition qualifies a stated decision only (entry 250): where the decision was
+        # overridden to open, or the model left it open, there is nothing for it to qualify.
+        condition = (draft.decision_condition or "").strip()
+        decision_condition = condition if visa_required is not None and condition else None
         entry_only = visa_required is False
 
         # Likely checklist pages discovery could not open, named so the traveller can (item 9). Only
@@ -462,6 +466,7 @@ class OpenAIVisaPlanExtractor:
             plan = VisaPlan(
                 destination=draft.destination,
                 visa_required=visa_required,
+                decision_condition=decision_condition,
                 visa_type=draft.visa_type,
                 explanation=draft.explanation,
                 decision_source_ids=draft.decision_source_ids,
@@ -486,6 +491,7 @@ class OpenAIVisaPlanExtractor:
                     decision_is_unverified=visa_required is None,
                     no_visa_required=visa_required is False,
                     names_unread_pages=bool(refused or unread_checklists or unread_visa_pages),
+                    decision_is_conditional=decision_condition is not None,
                 ),
                 unavailable_sources=[
                     *report.failures,

@@ -1,0 +1,102 @@
+{
+ "before": {
+  "japan/IN/GB/transit": {
+   "flag": true,
+   "text": "Probably wrong: decided from the short-term visa-exemption list, which governs entry, not changing planes (rule 8f: this trip's list). The embassy says Transit Visas have not been issued since 1 July 2026."
+  },
+  "turkey/IN/IN/transit": {
+   "flag": true,
+   "text": "The judge had the full conditional answer: an e-ATV only for connections to Mexico, Panama, Colombia or Venezuela; no transit visa airside. It depends on the onward country, which the form does not ask, so the corridor was refused."
+  },
+  "thailand/IN/IN/study": {
+   "flag": true,
+   "text": "Caused by the purpose. The 2026 notices limit the exemption to tourism; the Non-Immigrant ED page names the student visa. No single page states it for India, so the decision went unfilled and the ED checklist was discarded."
+  },
+  "south-korea/IN/IN/business": {
+   "flag": false,
+   "text": "Stale store. The Chennai consulate's exemption table, which tourism decides from, needed a browser, missed the five renders, and its stored copy was 189 hours old."
+  },
+  "vietnam/IN/IN/business": {
+   "flag": false,
+   "text": "Stale store. The Ministry's exemption table: its robots.txt answered 502, so it was not requested, and the stored copy was 189 hours old. Same in every purpose."
+  },
+  "vietnam/IN/IN/study": {
+   "flag": false,
+   "text": "Stale store, as Vietnam business."
+  },
+  "vietnam/IN/IN/transit": {
+   "flag": false,
+   "text": "Stale store, as Vietnam business."
+  },
+  "vietnam/IN/IN/tourism": {
+   "flag": false,
+   "text": "Stale store, as Vietnam business. This is the control: tourism refused too."
+  },
+  "thailand/IN/IN/tourism": {
+   "flag": false,
+   "text": "Not purpose. A July 2026 announcement gives India 30-day visa-free tourism once published; no page read confirmed it took effect."
+  },
+  "switzerland/IN/IN/study": {
+   "flag": false,
+   "text": "The judge credited India in Annex I from a page whose readable text has only the footnotes. The plan writer saw no India entry and held the decision open, correctly."
+  },
+  "spain/IN/IN/transit": {
+   "flag": false,
+   "text": "The judge found India on Spain's airport-transit-visa list. Exemptions such as holding a US visa may apply, so the decision stayed open (rule 8f)."
+  },
+  "china/IN/IN/transit": {
+   "flag": true,
+   "text": "No visa, verified, on the 24-hour airside rule for all nationalities. The headline did not carry the 24-hour, airside-only limit."
+  },
+  "thailand/IN/IN/business": {
+   "flag": true,
+   "text": "To grade: visa required, verified, on the MFA's 'foreigners wishing to conduct business must apply for a Non-Immigrant B'. Does that cover a short meeting?"
+  }
+ },
+ "after": {
+  "japan/IN/GB/transit": {
+   "flag": false,
+   "text": "Decision 1: the short-stay exemption list no longer decides transit. No page about transit through Japan was found, so the corridor refuses instead of answering wrongly."
+  },
+  "vietnam/IN/IN/transit": {
+   "flag": false,
+   "text": "Decision 1: the entry exemption table no longer decides transit, and no page about transit through Vietnam was found."
+  },
+  "new-zealand/IN/IN/transit": {
+   "flag": true,
+   "text": "Wording: the condition strings several facts together. The prompt asks for only the deciding fact."
+  },
+  "spain/IN/IN/transit": {
+   "flag": true,
+   "text": "Wording: 'you do not meet one of the stated airport-transit-visa exemptions' does not name the exemptions."
+  },
+  "south-africa/IN/IN/transit": {
+   "flag": true,
+   "text": "Wording: 'and are not a deportee' is a fact every ordinary traveller meets."
+  },
+  "turkey/IN/IN/transit": {
+   "flag": false,
+   "text": "Only the e-ATV announcement was read this run, so the stated side is the visa side for four onward countries; the plan says the sources state nothing about other destinations."
+  },
+  "thailand/IN/IN/study": {
+   "flag": false,
+   "text": "Decision 2: the judge set aside the tourism-only exemption and credited the MFA's ED page, so the corridor resolves and keeps the ED checklist. The plan leaves the decision open because no page says Indians must hold it."
+  },
+  "south-africa/IN/IN/study": {
+   "flag": false,
+   "text": "Decision 2 cuts both ways: the visitor exemption list now says nothing about study. Open in one run, stated in this one."
+  },
+  "thailand/IN/IN/tourism": {
+   "flag": false,
+   "text": "Rule 8i: this run read both the July announcement and the notice that it took effect on 15 September 2026."
+  },
+  "new-zealand/IN/IN/tourism": {
+   "flag": false,
+   "text": "Rule 8f: this run selected the visa-waiver list (INZ 1018), which no earlier run had."
+  },
+  "germany/US/US/study": {
+   "flag": false,
+   "text": "The Federal Foreign Office list marks the US 'no', and its footnote 3 lets US citizens apply for a residence permit after entering, even beyond three months."
+  }
+ }
+}

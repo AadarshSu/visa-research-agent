@@ -17,6 +17,7 @@ for res in sorted(glob.glob(sys.argv[1] + "/*/*/result.json")):
             visa_required=p["visa_required"],
             status=p["status"],
             visa_type=p["visa_type"],
+            decision_condition=p.get("decision_condition"),
             explanation=p.get("explanation"),
             decision=[by_id[i]["url"] for i in p["decision_source_ids"] if i in by_id],
             checklist=[by_id[i]["url"] for i in p["application_document_source_ids"] if i in by_id],

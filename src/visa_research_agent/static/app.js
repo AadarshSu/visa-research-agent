@@ -305,6 +305,14 @@ function renderDecision(plan, ctx) {
     element("span", `status-chip status-chip--${plan.status}`, plan.status === "verified" ? "Evidence verified" : "Evidence partial"),
   );
   header.append(chips);
+  // A decision that holds only on a fact about the trip the traveller has not confirmed — the
+  // layover, the length of stay — says so beside the answer, never only in the explanation below
+  // it: "No visa required" read alone would be wrong for the other side of it (entry 250).
+  if (plan.decision_condition) {
+    container.append(
+      element("p", "decision-condition", `Only if ${plan.decision_condition.replace(/\.$/, "")}.`),
+    );
+  }
   // A partial plan must not look complete, so it says so above the guidance — but briefly. The
   // reasons and links are long enough to bury the answer, so they sit with the other caveats at the
   // end instead.

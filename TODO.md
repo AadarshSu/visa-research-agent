@@ -94,12 +94,9 @@ session*. What changed in the plan along the way, all on the owner's decisions: 
 **Open.**
 - South Korea's rare wrong checklist — *Smaller things*.
 - About 30 of the rebuilt countries have had no corridor run.
-- **Purposes other than tourism (entry 248), one run each:** four questions wait on the owner —
-  Japan transit's probably-wrong "visa required" from the short-stay exemption list; whether a
-  tourism-only exemption settles another purpose (Thailand study); whether the form asks a length of
-  stay and the three transit facts (known problem 43); whether a plan may state a conditional "no
-  visa". The owner answered on 2026-10-03 — see *Next session* in PROJECT_HANDOFF. The stale ceiling
-  is now 90 days (entry 249).
+- **Purposes other than tourism (entries 248–250).** The owner's answers are built: transit,
+  other-purpose exemptions and conditional answers (entry 250). Left: three conditions worded worse
+  than the rule asks (New Zealand, Spain, South Africa transit), and every number here is one run.
 - **Proposed, not measured:** de-duplicate near-identical series before the selector's cut —
   Australia once read seven quarterly reports while its step-by-step page was cut.
 

@@ -59,7 +59,7 @@ tr.control td { color: var(--muted); }
 
 .legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
 .grid-wrap { overflow-x: auto; }
-.board { display: grid; grid-template-columns: minmax(130px, 1fr) repeat(4, minmax(150px, 1.4fr)); gap: 6px; min-width: 760px; }
+.board { display: grid; grid-template-columns: minmax(130px, 1fr) repeat(4, minmax(150px, 1.4fr)); gap: 6px; min-width: 760px; align-items: start; }
 .board .head { font: 500 12px var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 6px 4px; }
 .board .dest { font-weight: 600; padding: 10px 4px; display: flex; flex-direction: column; justify-content: center; }
 .board .dest small { font: 400 12px var(--mono); color: var(--muted); }
@@ -84,6 +84,10 @@ tr.control td { color: var(--muted); }
 .note { background: var(--flag-bg); color: var(--ink); border-radius: 4px; padding: 10px 12px; }
 .note.plain { background: var(--refused-bg); }
 @media (max-width: 640px) { .detail dl { grid-template-columns: 1fr; } .detail dt { padding-top: 6px; } }
+.switch { display: flex; gap: 6px; flex-wrap: wrap; }
+.switch button { font: 500 13px var(--body); padding: 6px 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.switch button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.cond { font: 500 12px/1.35 var(--body); color: var(--accent); }
 footer { color: var(--muted); font-size: 13px; display: grid; gap: 6px; }
 code { font: 13px var(--mono); }
 </style>
@@ -93,13 +97,14 @@ code { font: 13px var(--mono); }
   <span class="eyebrow">Item 63 · purposes round · 3 October 2026</span>
   <h1>Corridors Beyond Tourism</h1>
   <p class="lede">51 corridors, one run each, through the same path <code>POST /visa-plans</code> takes: the ten second-round destinations for an Indian passport applying from India, Germany and Japan applying from the UK, and three US passports studying in Schengen. Business, study and transit were run first; tourism was run afterwards on the same stores as a control. This page records whether each corridor answered. Whether the answers are right is yours to grade.</p>
+  <p class="lede"><strong>Updated after your decisions.</strong> The same 51 corridors were run again with stale pages served for up to 90 days (entry 249) and the three rules you approved (entry 250): a short-stay exemption list does not decide transit, an exemption for another purpose says nothing about this trip, and a plan may state an answer that holds on a fact about the trip, with that fact shown beside it. Use the switch above the grid to compare.</p>
 </header>
 
 <section>
   <h2>What answered</h2>
   <div class="tally">
   <table>
-    <thead><tr><th>Purpose</th><th class="num">Corridors</th><th class="num">Decision stated</th><th class="num">Decision open</th><th class="num">Refused</th><th class="num">Checklist linked</th></tr></thead>
+    <thead><tr><th>Purpose</th><th>Round</th><th class="num">Decision stated</th><th class="num">of which conditional</th><th class="num">Decision open</th><th class="num">Refused</th><th class="num">Checklist linked</th></tr></thead>
     <tbody id="tally"></tbody>
   </table>
   </div>
@@ -107,7 +112,43 @@ code { font: 13px var(--mono); }
 </section>
 
 <section>
-  <h2>Findings, most serious first</h2>
+  <h2>After your decisions</h2>
+  <div class="findings">
+    <article class="finding">
+      <span class="kind">Fixed · decision 1</span>
+      <h3>Japan transit no longer says "visa required"</h3>
+      <p>The short-stay exemption list no longer decides transit, in the role judge or the plan. No page about transit through Japan was found, so the corridor now refuses rather than giving the wrong answer. Vietnam transit, which had made the same move, refuses for the same reason.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Working · decision 4</span>
+      <h3>Eleven answers now carry their condition</h3>
+      <p>China transit says no visa only if you stay in the restricted area for under 24 hours; South Korea the same; Germany only if you stay airside and fly on outside Schengen; Turkey's e-ATV only if you connect to Mexico, Panama, Colombia or Venezuela; Spain and France for a US student only for more than 90 days; Japan study only if you hold a Certificate of Eligibility. The condition is shown directly under the decision on the plan page, and a conditional plan is never <code>verified</code>.</p>
+    </article>
+    <article class="finding severe">
+      <span class="kind">To grade · wording</span>
+      <h3>Three conditions are worded worse than they should be</h3>
+      <p>New Zealand transit strings four facts into one clause. Spain transit says "you do not meet one of the stated airport-transit-visa exemptions" without naming them. South Africa transit adds "and are not a deportee", which every ordinary traveller meets. The prompt asks for only the deciding fact; these did not keep to it.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Working · decision 2</span>
+      <h3>Thailand study resolves instead of refusing, and keeps its checklist</h3>
+      <p>The role judge set aside the tourism-only exemption and credited the Ministry's page naming the ED visa for study. The plan still leaves the decision open because no page says Indians must hold it, which is the case-by-case you allowed. South Africa study left the decision open once and stated it once across two runs: the visitor exemption list now says nothing about study, so the answer rests on whether a study-visa page is read.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Mine · fixed before measuring</span>
+      <h3>A first draft of the conditional rule was too strict</h3>
+      <p>It required a source to state both sides of the condition. China and Germany transit, which had answered "no visa", went open, and Japan study refused. It now states the side a source states, provided none contradicts it. Japan from the UK and Singapore for a Philippine passport were run three times each after both drafts: unchanged, verified, no condition.</p>
+    </article>
+    <article class="finding">
+      <span class="kind">Infrastructure</span>
+      <h3>One batch stalled for 83 minutes because the Mac was asleep</h3>
+      <p>The lid was closed nine seconds before Singapore's third regression run began, and the run froze until it was found; the power log shows it. The batch was restarted and nothing was changed for it. Separately, one plan call answered 504 from Personas and was rerun.</p>
+    </article>
+  </div>
+</section>
+
+<section>
+  <h2>Findings from the first round</h2>
   <div class="findings">
     <article class="finding severe">
       <span class="kind">Probably wrong · owner's decision</span>
@@ -161,23 +202,27 @@ code { font: 13px var(--mono); }
     <span><span class="pill refused">Refused</span></span>
     <span>✓ = checklist linked · <span class="flagmark">FLAG</span> = see findings</span>
   </div>
+  <div class="switch" role="group" aria-label="Round">
+    <button type="button" id="round-after" aria-pressed="true">After your decisions</button>
+    <button type="button" id="round-before" aria-pressed="false">First round</button>
+  </div>
   <div class="grid-wrap"><div class="board" id="board"></div></div>
   <div class="detail" id="detail" hidden></div>
 </section>
 
 <footer>
-  <p>Raw runs: <code>var/purposes-2026-10-03/runs/&lt;corridor&gt;/1/</code>, each with the selection, roles and plan packets and answers. Runner: <code>var/purposes-2026-10-03/run.py</code>.</p>
+  <p>Raw runs: first round <code>var/purposes-2026-10-03/runs/</code>; after your decisions <code>rules250/</code>, with transit and three study corridors from <code>rules250b/</code> after the conditional rule was corrected. Each run folder holds the selection, roles and plan packets and answers. Runner: <code>var/purposes-2026-10-03/run.py</code>.</p>
   <p>Refusal causes and flags are from reading each run's recall log and roles answer.</p>
 </footer>
 </main>
 
 <script>
-const ROWS = __ROWS__;
-const NOTES = __NOTES__;
+const ROUNDS = { before: __ROWS__, after: __ROWS_AFTER__ };
+const NOTES = { before: __NOTES__, after: __NOTES_AFTER__ };
 const PURPOSES = ["tourism", "business", "study", "transit"];
 const DESTS = ["australia","china","new-zealand","south-africa","south-korea","spain","switzerland","thailand","turkey","vietnam","germany","japan"];
-const by = {};
-for (const r of ROWS) by[r.corridor] = r;
+const index = rows => Object.fromEntries(rows.map(r => [r.corridor, r]));
+const BY = { before: index(ROUNDS.before), after: index(ROUNDS.after) };
 
 function key(dest, purpose) {
   const res = (dest === "germany" || dest === "japan") ? "IN/GB" : "IN/IN";
@@ -190,59 +235,75 @@ function verdict(r) {
   return ["open", "Decision open"];
 }
 const title = s => s.split("-").map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 
-// Tally
+// Tally: both rounds, side by side per purpose
 const tbody = document.getElementById("tally");
 for (const p of PURPOSES) {
-  const rs = DESTS.map(d => by[key(d, p)]).filter(Boolean);
-  const c = k => rs.filter(r => verdict(r)[0] === k).length;
-  const tr = document.createElement("tr");
-  if (p === "tourism") tr.className = "control";
-  tr.innerHTML = `<td>${title(p)}${p === "tourism" ? " (control)" : ""}</td><td class="num">${rs.length}</td><td class="num">${c("yes") + c("no")}</td><td class="num">${c("open")}</td><td class="num">${c("refused")}</td><td class="num">${rs.filter(r => (r.checklist || []).length).length}</td>`;
-  tbody.appendChild(tr);
+  for (const round of ["before", "after"]) {
+    const rs = DESTS.map(d => BY[round][key(d, p)]).filter(Boolean);
+    const c = k => rs.filter(r => verdict(r)[0] === k).length;
+    const tr = document.createElement("tr");
+    if (round === "before") tr.className = "control";
+    tr.innerHTML = `<td>${round === "after" ? "" : title(p)}</td><td>${round === "after" ? "After" : "First"}</td><td class="num">${c("yes") + c("no")}</td><td class="num">${rs.filter(r => r.decision_condition).length}</td><td class="num">${c("open")}</td><td class="num">${c("refused")}</td><td class="num">${rs.filter(r => (r.checklist || []).length).length}</td>`;
+    tbody.appendChild(tr);
+  }
 }
 
-// Board
 const board = document.getElementById("board");
 const detail = document.getElementById("detail");
-board.insertAdjacentHTML("beforeend", `<div class="head">Destination</div>` + PURPOSES.map(p => `<div class="head">${p}</div>`).join(""));
+let round = "after";
 let pressed = null;
+
 function cellFor(k) {
-  const r = by[k];
+  const r = BY[round][k];
   if (!r) { const d = document.createElement("div"); d.className = "cell empty"; d.textContent = "not run"; return d; }
   const [cls, label] = verdict(r);
+  const note = NOTES[round][k];
   const b = document.createElement("button");
   b.className = "cell"; b.type = "button"; b.setAttribute("aria-pressed", "false");
-  b.innerHTML = `<span class="pill ${cls}">${label}</span><span class="meta">${r.status || "—"}${(r.checklist || []).length ? " · ✓" : ""} · ${Math.round(r.seconds)}s</span>${NOTES[k] && NOTES[k].flag ? '<span class="flagmark">FLAG</span>' : ""}`;
+  b.innerHTML = `<span class="pill ${cls}">${label}</span>${r.decision_condition ? `<span class="cond">only if ${esc(r.decision_condition)}</span>` : ""}<span class="meta">${r.status || "—"}${(r.checklist || []).length ? " · ✓" : ""} · ${Math.round(r.seconds)}s</span>${note && note.flag ? '<span class="flagmark">FLAG</span>' : ""}`;
   b.addEventListener("click", () => show(k, b));
   return b;
 }
-for (const d of DESTS) {
-  const res = (d === "germany" || d === "japan") ? "IN · from GB" : "IN · from IN";
-  board.insertAdjacentHTML("beforeend", `<div class="dest">${title(d)}<small>${res}</small></div>`);
-  for (const p of PURPOSES) board.appendChild(cellFor(key(d, p)));
+function drawBoard() {
+  board.innerHTML = `<div class="head">Destination</div>` + PURPOSES.map(p => `<div class="head">${p}</div>`).join("");
+  for (const d of DESTS) {
+    const res = (d === "germany" || d === "japan") ? "IN · from GB" : "IN · from IN";
+    board.insertAdjacentHTML("beforeend", `<div class="dest">${title(d)}<small>${res}</small></div>`);
+    for (const p of PURPOSES) board.appendChild(cellFor(key(d, p)));
+  }
+  board.insertAdjacentHTML("beforeend", `<div class="dest">US study probes<small>US · from US</small></div>`);
+  for (const d of ["france", "germany", "spain"]) {
+    const c = cellFor(`${d}/US/US/study`);
+    const m = c.querySelector(".meta"); if (m) m.textContent = title(d) + " · " + m.textContent;
+    board.appendChild(c);
+  }
+  detail.hidden = true; pressed = null;
 }
-board.insertAdjacentHTML("beforeend", `<div class="dest">US study probes<small>US · from US</small></div>`);
-for (const d of ["france", "germany", "spain"]) {
-  const k = `${d}/US/US/study`;
-  const c = cellFor(k);
-  const m = c.querySelector(".meta"); if (m) m.textContent = title(d) + " · " + m.textContent;
-  board.appendChild(c);
+for (const [id, value] of [["round-after", "after"], ["round-before", "before"]]) {
+  document.getElementById(id).addEventListener("click", () => {
+    round = value;
+    document.getElementById("round-after").setAttribute("aria-pressed", String(value === "after"));
+    document.getElementById("round-before").setAttribute("aria-pressed", String(value === "before"));
+    drawBoard();
+  });
 }
+drawBoard();
 
-const esc = s => String(s).replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
 const links = xs => xs && xs.length ? `<ul>${xs.map(u => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u)}</a></li>`).join("")}</ul>` : "<span class=\"meta\">none</span>";
 const list = xs => xs && xs.length ? `<ul>${xs.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "<span class=\"meta\">none</span>";
 
 function show(k, btn) {
   if (pressed) pressed.setAttribute("aria-pressed", "false");
   pressed = btn; btn.setAttribute("aria-pressed", "true");
-  const r = by[k]; const n = NOTES[k];
+  const r = BY[round][k]; const n = NOTES[round][k];
   const [, label] = verdict(r);
-  let html = `<h3>${esc(k)}</h3>`;
+  let html = `<h3>${esc(k)} <span class="meta">· ${round === "after" ? "after your decisions" : "first round"}</span></h3>`;
   if (n) html += `<div class="note ${n.flag ? "" : "plain"}">${esc(n.text)}</div>`;
   html += "<dl>";
   html += `<dt>Answer</dt><dd>${label}${r.visa_type ? " · " + esc(r.visa_type) : ""}${r.status ? " · " + r.status : ""}</dd>`;
+  if (r.decision_condition) html += `<dt>Only if</dt><dd>${esc(r.decision_condition)}</dd>`;
   if (r.research !== "resolved") {
     html += `<dt>Refusal</dt><dd>${esc(r.detail || "")}</dd>`;
   } else {
